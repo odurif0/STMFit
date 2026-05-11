@@ -7,24 +7,20 @@ Packages:
 - `packages/STMMolecularFit.jl` — STM/SXM integration, slide extraction, comparisons.
 - `packages/STMMolecularFitGUI.jl` — GUI.
 
-Unit tests:
-```bash
-julia --project=. test/runtests.jl
-```
-
-Workflows (`test/scripts/`), each standalone:
+Tests & workflows (`test/`), each standalone:
 
 | Script | Purpose |
 |---|---|
-| `inspect_one_file.jl <file.sxm>` | Deep 1D vs 2D ell vs 2D circ on a single file |
-| `batch_triage_2d.jl <dir>` | Fast 2D-only batch, pre-filter valid files |
-| `batch_full.jl [N] [--chunk i/n]` | Full 1D + 2D batch: fits, plots, enriched summary |
-| `summarize.jl [summary.tsv]` | Print stats from a summary TSV |
+| `test/runtests.jl` | Unit tests |
+| `test/inspect_one_file.jl <file.sxm>` | Deep 1D vs 2D ell vs 2D circ on a single file |
+| `test/batch_full.jl [N] [--chunk i/n]` | Full 1D + 2D batch: fits, plots, enriched summary |
+| `test/summarize.jl [summary.tsv]` | Print stats from a summary TSV |
 
 Example:
 ```bash
-julia --project=. test/scripts/batch_full.jl 48 --chunk 1/4 \
-  > results/logs/batch.log 2>&1 &
+julia --project=. test/inspect_one_file.jl 240817_004.sxm
+julia --project=. test/batch_full.jl 48 --chunk 1/4 > results/logs/batch.log 2>&1 &
+julia --project=. test/summarize.jl results/best_plots/summary_overlap060_hard.tsv
 ```
 
 Runtime outputs → `results/`.
