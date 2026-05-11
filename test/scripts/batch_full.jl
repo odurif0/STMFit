@@ -1,16 +1,16 @@
 #!/usr/bin/env julia
-# Centralize best 1D vs 2D comparison plots for valid files.
-# For each valid file: runs 2D sweep + 1D fit, saves ONE best plot.
-# All plots in a flat results/best_plots/ directory.
+# Full 1D + 2D batch pipeline: fits, best-plots, and enriched summary.
+# For each file: 1D slide fit + 2D elliptical chain + 2D circular chain + 6-panel plot.
+# Standalone: discovers .sxm files directly if no triage TSV is present.
 # Usage:
-#   julia --project=. scripts/centralize_best_plots.jl [N_files]
-#   julia --project=. scripts/centralize_best_plots.jl [N_files] --chunk i/n
+#   julia --project=. test/scripts/batch_full.jl [N_files]
+#   julia --project=. test/scripts/batch_full.jl [N_files] --chunk i/n
 
 using STMMolecularFit, GaussianFit2D, GaussianFit1D
 using DelimitedFiles, Plots, Printf, Statistics
-include(joinpath(@__DIR__, "common.jl"))
 
-const DATA_DIR = DEFAULT_DATA_DIR
+const DATA_DIR = get(ENV, "STMFIT_DATA_DIR", "/home/durif/Rebecca/data/data/20240817_LHe_Cu100")
+list_sxm_files(dir) = sort([f for f in readdir(dir) if endswith(lowercase(f), ".sxm")])
 const TSV = "results/batch_triage_20240817_relaxed.tsv"
 const OUTDIR = "results/best_plots"
 
@@ -368,7 +368,16 @@ end
 # ── 2D config (relaxed) ──
 pcfg = GaussianFit2D.PatternConfig(filepath="", channel="Z", direction="fwd",
     stride=1, flatten="plane+rows", smooth_radius_px=1, output_dir=OUTDIR, no_plot=false)
-ccfg = make_chain_config(circular=false, maxtime=10.0, maxiter=10000)
+ccfg = GaussianFit2D.ChainSweepConfig(n_min=2, n_max=14,
+    spacing_min_nm=0.35, spacing_max_nm=0.75, fit_width_nm=0.15,
+    support_threshold_fraction=0.20, support_noise_k=2.5, support_padding_nm=0.20,
+    max_overlap=0.6,
+    global_maxtime=10.0, global_maxiter=10000, cv_folds=3,
+    sigma_parallel_min_nm=SIGMA_MIN_HARMONIZED_NM,
+    sigma_parallel_max_nm=SIGMA_MAX_HARMONIZED_NM,
+    sigma_perp_min_nm=SIGMA_MIN_HARMONIZED_NM,
+    sigma_perp_max_nm=SIGMA_MAX_HARMONIZED_NM,
+    intelligent_sweep=true, fuse_z_bwd=true)
 # Circular 2D config (same settings, circular sigmas)
 ccfg_circ = deepcopy(ccfg)
 ccfg_circ.chain_circular_sigmas = true

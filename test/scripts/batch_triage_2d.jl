@@ -1,7 +1,7 @@
 #!/usr/bin/env julia
-# Batch triage: try 2D chain sweep (consensus Z/Current) on every .sxm file,
-# recording success/failure in a TSV summary.
-# Usage: julia --project=. scripts/batch_triage.jl <directory> [output.tsv] [N_files] [--chunk i/n]
+# Fast 2D-only batch triage: chain sweep on every .sxm file, outputs TSV.
+# Pre-filter step before the full batch. No 1D, no plots.
+# Usage: julia --project=. test/scripts/batch_triage_2d.jl <directory> [output.tsv] [N_files] [--chunk i/n]
 
 using STMMolecularFit
 using GaussianFit2D

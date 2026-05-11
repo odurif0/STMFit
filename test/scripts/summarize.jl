@@ -1,4 +1,5 @@
-#!/usr/bin/env julia
+# Print classification stats, exact/tolerant agreement rates, N counts from a summary TSV.
+# Usage: julia --project=. test/scripts/summarize.jl [summary.tsv]
 
 using DelimitedFiles, Printf, Statistics
 

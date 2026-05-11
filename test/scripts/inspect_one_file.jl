@@ -1,16 +1,18 @@
 #!/usr/bin/env julia
-# Compare elliptical vs circular (chain_circular_sigmas=true) 2D chain fits + 1D slide fit.
-# Usage: julia --project=. scripts/compare_circular_elliptical.jl <filepath.sxm> [output_dir]
+# Deep single-file comparison: 1D slide vs 2D elliptical vs 2D circular chain fits.
+# Usage: julia --project=. test/scripts/inspect_one_file.jl <filepath.sxm> [output_dir]
 
 using STMMolecularFit, GaussianFit2D, GaussianFit1D
 using Plots, Printf, Statistics
-include(joinpath(@__DIR__, "common.jl"))
 
 const FWHM_SIGMA = 2.355
 const FWHM_MIN_1D_NM = 0.45
 const FWHM_MAX_1D_NM = 1.20
-const SIGMA_MIN_HARMONIZED_NM = FWHM_MIN_1D_NM / FWHM_SIGMA
-const SIGMA_MAX_HARMONIZED_NM = FWHM_MAX_1D_NM / FWHM_SIGMA
+const SIGMA_MIN = FWHM_MIN_1D_NM / FWHM_SIGMA
+const SIGMA_MAX = FWHM_MAX_1D_NM / FWHM_SIGMA
+const SPACING_MIN = 0.35
+const SPACING_MAX = 0.75
+const OVERLAP = 0.60
 const COLORMAP_RESID = cgrad([:blue, :lightgray, :red])
 
 function _ellipse!(p, x0, y0, a, b, angle; color=:cyan, alpha=0.3, label="")
@@ -23,7 +25,7 @@ function _ellipse!(p, x0, y0, a, b, angle; color=:cyan, alpha=0.3, label="")
 end
 
 function main()
-    length(ARGS) >= 1 || error("Usage: julia --project=. scripts/compare_circular_elliptical.jl <filepath.sxm> [output_dir]")
+    length(ARGS) >= 1 || error("Usage: julia --project=. test/scripts/inspect_one_file.jl <filepath.sxm> [output_dir]")
     filepath = ARGS[1]
     output_dir = length(ARGS) >= 2 ? ARGS[2] : "results/circ_vs_ell"
     mkpath(output_dir)
@@ -38,7 +40,16 @@ function main()
 
     # ── 2D config base (widths harmonized with 1D FWHM bounds 0.45..1.20 nm) ──
     function make_ccfg(; circular=false)
-        return make_chain_config(circular=circular, maxtime=10.0, maxiter=10000)
+        return GaussianFit2D.ChainSweepConfig(
+            n_min=2, n_max=14,
+            spacing_min_nm=SPACING_MIN, spacing_max_nm=SPACING_MAX,
+            max_overlap=OVERLAP, fit_width_nm=0.15,
+            support_threshold_fraction=0.20, support_noise_k=2.5, support_padding_nm=0.20,
+            global_maxtime=10.0, global_maxiter=10000, cv_folds=3,
+            sigma_parallel_min_nm=SIGMA_MIN, sigma_parallel_max_nm=SIGMA_MAX,
+            sigma_perp_min_nm=SIGMA_MIN, sigma_perp_max_nm=SIGMA_MAX,
+            intelligent_sweep=true, fuse_z_bwd=true,
+            chain_circular_sigmas=circular)
     end
 
     # ── 1D config (from centralize_best_plots.jl) ──
