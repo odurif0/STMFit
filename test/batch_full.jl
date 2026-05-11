@@ -417,6 +417,11 @@ for (idx, (fn, n2d_tsv, bic2d_tsv)) in enumerate(to_process)
         scfg_file = deepcopy(scfg); scfg_file.output_dir = file_dir
         fcfg_file = deepcopy(fcfg); fcfg_file.output_dir = file_dir
         slide = STMMolecularFit.extract_slide(img, scfg_file)
+        if isempty(slide.x) || isempty(slide.y)
+            @warn("$fn: empty slide profile (no molecule found?), skipping")
+            push!(summary_lines, join([fn, "no_molecule", "0", "", "", "", "", "", "", "", ""], '\t'))
+            continue
+        end
         fit_1d = STMMolecularFit.fit_slide(slide, fcfg_file)
         best1d = GaussianFit1D.best_result(fit_1d.fit_run)
         x_1d, y_1d = fit_1d.fit_run.x, fit_1d.fit_run.y
@@ -478,7 +483,9 @@ for (idx, (fn, n2d_tsv, bic2d_tsv)) in enumerate(to_process)
                               outpath, file_dir], '\t'))
         end
     catch e
-        println("FAILED: $(sprint(showerror, e)[1:80])")
+        msg = sprint(showerror, e)
+        msg_short = length(msg) <= 80 ? msg : msg[1:min(end, 80)] * "..."
+        println("FAILED: $msg_short")
         open(summary_file, "a") do io
             row = fill("ERR", length(SUMMARY_HEADER))
             row[1] = fn
