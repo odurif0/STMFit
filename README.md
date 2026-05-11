@@ -7,16 +7,14 @@ Packages:
 - `packages/STMMolecularFit.jl` — STM/SXM integration, slide extraction, comparisons.
 - `packages/STMMolecularFitGUI.jl` — GUI.
 
-Tests & workflows (`test/`), each standalone:
+Workflows (`test/`), each standalone:
 
 | Script | Purpose |
 |---|---|
-| `test/runtests.jl` | Unit tests |
-| `test/inspect_one_file.jl <file.sxm>` | Deep 1D vs 2D ell vs 2D circ on a single file |
-| `test/batch_full.jl [N] [--chunk i/n]` | Full 1D + 2D batch: fits, plots, enriched summary |
-| `test/summarize.jl [summary.tsv]` | Print stats from a summary TSV |
+| `inspect_one_file.jl <file.sxm>` | Deep 1D vs 2D ell vs 2D circ on a single file |
+| `batch_full.jl [N] [--chunk i/n]` | Full 1D + 2D batch: fits, plots, enriched summary |
+| `summarize.jl [summary.tsv]` | Print stats from a summary TSV |
 
-Example:
 ```bash
 julia --project=. test/inspect_one_file.jl 240817_004.sxm
 julia --project=. test/batch_full.jl 48 --chunk 1/4 > results/logs/batch.log 2>&1 &
