@@ -1,0 +1,18 @@
+name = "STMMolecularFitGUI"
+uuid = "e4f8c9d2-a3b1-4c6d-9e5f-7a81b2d3c4f0"
+version = "0.1.0"
+authors = ["OD"]
+
+[deps]
+HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
+JSON3 = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
+GaussianFit1D = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+PlotlyJS = "f0f68f2c-4968-5e81-91da-67840de0976a"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+Stipple = "4acbeb90-81a0-11ea-1966-bdaff8155998"
+
+[compat]
+JSON3 = "1.14"
+PlotlyJS = "0.18"
+Stipple = "0.31"
+julia = "1.10"

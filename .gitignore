@@ -1,0 +1,7 @@
+*.log
+results/
+**/results/
+**/Manifest.toml
+!.julia/Manifest.toml
+.DS_Store
+.theme

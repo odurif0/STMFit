@@ -1,0 +1,33 @@
+# Manifest.toml — versioned for reproducibility
+
+# Benchmark / autoresearch (not for publication)
+benchmark/
+
+# Planning documents (internal, not for users)
+plans/
+
+# Legacy Python GUI (deprecated, kept for history)
+legacy/
+
+# Runtime data
+240314_Cu100_039_Image/
+251206_038/
+mysample/
+rebecca_history.json
+
+# Distribution artifacts
+dist/
+
+*_results.txt
+*.png
+*.jld2
+*.html
+dash_cache_dir/
+dash_sessions/
+__pycache__/
+
+# Editor / IDE config
+.codex
+.codex/
+.opencode/
+.theme

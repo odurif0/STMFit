@@ -1,0 +1,5 @@
+results/
+*.png
+*.tsv
+*.jld2
+.DS_Store

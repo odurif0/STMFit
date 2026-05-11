@@ -1,0 +1,19 @@
+name = "STMFit"
+uuid = "4388d685-9525-4201-a430-3dbdd6db7f01"
+version = "0.1.0"
+authors = ["OD"]
+
+[deps]
+GaussianFit1D = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+GaussianFit2D = "c6f47f04-09bf-4c7d-9d9c-2d0fd3f20f2a"
+STMMolecularFit = "8b7d0e4f-8ff6-4eb1-980b-88b12dc096fd"
+STMFitCore = "4d8f3c22-9b76-4f91-a75b-40a4f4a6a001"
+
+[sources]
+GaussianFit1D = {path = "packages/GaussianFit1D.jl"}
+GaussianFit2D = {path = "packages/GaussianFit2D.jl"}
+STMMolecularFit = {path = "packages/STMMolecularFit.jl"}
+STMFitCore = {path = "packages/STMFitCore.jl"}
+
+[compat]
+julia = "1.10"

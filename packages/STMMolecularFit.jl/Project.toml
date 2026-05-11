@@ -1,0 +1,21 @@
+name = "STMMolecularFit"
+uuid = "8b7d0e4f-8ff6-4eb1-980b-88b12dc096fd"
+version = "0.1.0"
+authors = ["OD"]
+
+[deps]
+ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
+DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+LsqFit = "2fda8390-95c7-5789-9bda-21331edee243"
+Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
+OptimizationNLopt = "4e6fcdb7-1186-4e1f-a706-475e75c168bb"
+GaussianFit1D = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+GaussianFit2D = "c6f47f04-09bf-4c7d-9d9c-2d0fd3f20f2a"
+STMFitCore = "4d8f3c22-9b76-4f91-a75b-40a4f4a6a001"
+Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+
+[compat]
+julia = "1.10"
