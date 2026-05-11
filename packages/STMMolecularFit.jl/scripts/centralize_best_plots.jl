@@ -8,8 +8,9 @@
 
 using STMMolecularFit, GaussianFit2D, GaussianFit1D
 using DelimitedFiles, Plots, Printf, Statistics
+include(joinpath(@__DIR__, "common.jl"))
 
-const DATA_DIR = "/home/durif/Rebecca/data/data/20240817_LHe_Cu100"
+const DATA_DIR = DEFAULT_DATA_DIR
 const TSV = "results/batch_triage_20240817_relaxed.tsv"
 const OUTDIR = "results/best_plots"
 
@@ -322,14 +323,19 @@ function make_best_plot(best_ell, ctx_ell, ccfg_ell, best_circ, ctx_circ, ccfg_c
     savefig(fig, outpath)
 end
 
-# ── Load valid files from TSV ──
-data = readdlm(TSV)
+# ── Load candidate files: prefer triage TSV when present, otherwise standalone discovery ──
 cands = Tuple{String,Int,Float64}[]
-for i in 2:size(data, 1)
-    data[i, 5] isa Bool && data[i, 5] || continue
-    push!(cands, (string(data[i, 1]), Int(data[i, 3]), Float64(data[i, 4])))
+if isfile(TSV)
+    data = readdlm(TSV)
+    for i in 2:size(data, 1)
+        data[i, 5] isa Bool && data[i, 5] || continue
+        push!(cands, (string(data[i, 1]), Int(data[i, 3]), Float64(data[i, 4])))
+    end
+    sort!(cands, by = x -> x[3])
+else
+    @warn "Triage TSV not found: $TSV; discovering SXM files directly from $DATA_DIR"
+    cands = [(fn, 0, Inf) for fn in list_sxm_files(DATA_DIR)]
 end
-sort!(cands, by = x -> x[3])
 to_process_base = cands[1:min(N_FILES, length(cands))]
 to_process_all = CHUNK_TOTAL == 1 ? to_process_base : [f for (i, f) in enumerate(to_process_base) if mod1(i, CHUNK_TOTAL) == CHUNK_IDX]
 if CHUNK_TOTAL > 1
@@ -362,16 +368,7 @@ end
 # ── 2D config (relaxed) ──
 pcfg = GaussianFit2D.PatternConfig(filepath="", channel="Z", direction="fwd",
     stride=1, flatten="plane+rows", smooth_radius_px=1, output_dir=OUTDIR, no_plot=false)
-ccfg = GaussianFit2D.ChainSweepConfig(n_min=2, n_max=14,
-    spacing_min_nm=0.35, spacing_max_nm=0.75, fit_width_nm=0.15,
-    support_threshold_fraction=0.20, support_noise_k=2.5, support_padding_nm=0.20,
-    max_overlap=0.6,
-    global_maxtime=10.0, global_maxiter=10000, cv_folds=3,
-    sigma_parallel_min_nm=SIGMA_MIN_HARMONIZED_NM,
-    sigma_parallel_max_nm=SIGMA_MAX_HARMONIZED_NM,
-    sigma_perp_min_nm=SIGMA_MIN_HARMONIZED_NM,
-    sigma_perp_max_nm=SIGMA_MAX_HARMONIZED_NM,
-    intelligent_sweep=true, fuse_z_bwd=true)
+ccfg = make_chain_config(circular=false, maxtime=10.0, maxiter=10000)
 # Circular 2D config (same settings, circular sigmas)
 ccfg_circ = deepcopy(ccfg)
 ccfg_circ.chain_circular_sigmas = true

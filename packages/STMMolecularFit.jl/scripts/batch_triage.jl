@@ -1,7 +1,7 @@
 #!/usr/bin/env julia
 # Batch triage: try 2D chain sweep (consensus Z/Current) on every .sxm file,
 # recording success/failure in a TSV summary.
-# Usage: julia --project=. scripts/batch_triage.jl <directory> [output.tsv]
+# Usage: julia --project=. scripts/batch_triage.jl <directory> [output.tsv] [N_files] [--chunk i/n]
 
 using STMMolecularFit
 using GaussianFit2D
@@ -12,8 +12,40 @@ const FWHM_SIGMA = 2.355
 const SIGMA_MIN_HARMONIZED_NM = 0.45 / FWHM_SIGMA
 const SIGMA_MAX_HARMONIZED_NM = 1.20 / FWHM_SIGMA
 
-const DATA_DIR = length(ARGS) >= 1 ? ARGS[1] : error("Usage: julia batch_triage.jl <directory>")
-const OUT_TSV = length(ARGS) >= 2 ? ARGS[2] : "results/batch_triage_$(Dates.format(now(), "YYYYmmdd_HHMM")).tsv"
+function _parse_cli(args)
+    length(args) >= 1 || error("Usage: julia batch_triage.jl <directory> [output.tsv] [N_files] [--chunk i/n]")
+    data_dir = args[1]
+    out_tsv = length(args) >= 2 && !startswith(args[2], "--") ? args[2] : "results/batch_triage_$(Dates.format(now(), "YYYYmmdd_HHMM")).tsv"
+    n_files = typemax(Int)
+    chunk_idx = 1
+    chunk_total = 1
+    i = 3
+    while i <= length(args)
+        arg = args[i]
+        if arg == "--chunk"
+            i < length(args) || error("--chunk requires i/n")
+            chunk_arg = args[i+1]
+            i += 2
+        elseif startswith(arg, "--chunk=")
+            chunk_arg = split(arg, "=", limit=2)[2]
+            i += 1
+        elseif startswith(arg, "--")
+            error("Unknown option: $arg")
+        else
+            n_files = parse(Int, arg)
+            i += 1
+            continue
+        end
+        parts = split(chunk_arg, "/")
+        length(parts) == 2 || error("Invalid --chunk '$chunk_arg'; expected i/n")
+        chunk_idx = parse(Int, parts[1])
+        chunk_total = parse(Int, parts[2])
+    end
+    1 <= chunk_idx <= chunk_total || error("chunk index must satisfy 1 <= i <= n")
+    return data_dir, out_tsv, n_files, chunk_idx, chunk_total
+end
+
+const DATA_DIR, OUT_TSV, N_FILES, CHUNK_IDX, CHUNK_TOTAL = _parse_cli(ARGS)
 mkpath(dirname(abspath(OUT_TSV)))
 
 function find_sxm(dir::String)
@@ -83,7 +115,10 @@ ccfg = GaussianFit2D.ChainSweepConfig(
     intelligent_sweep=true, fuse_z_bwd=true)
 
 # ── Find files, skip already-processed ──
-sxm_files = find_sxm(DATA_DIR)
+sxm_all = find_sxm(DATA_DIR)
+sxm_base = sxm_all[1:min(N_FILES, length(sxm_all))]
+sxm_files = CHUNK_TOTAL == 1 ? sxm_base : [fp for (i, fp) in enumerate(sxm_base) if mod1(i, CHUNK_TOTAL) == CHUNK_IDX]
+CHUNK_TOTAL > 1 && @printf("Chunk %d/%d: %d of %d selected files\n", CHUNK_IDX, CHUNK_TOTAL, length(sxm_files), length(sxm_base))
 already = Set{String}()
 if isfile(OUT_TSV)
     for line in eachline(OUT_TSV)
@@ -95,7 +130,7 @@ if isfile(OUT_TSV)
     end
 end
 to_process = [fp for fp in sxm_files if !(basename(fp) in already)]
-println("Found $(length(sxm_files)) .sxm files, $(length(already)) already done, $(length(to_process)) to process")
+println("Found $(length(sxm_all)) .sxm files, selected $(length(sxm_files)), $(length(already)) already done, $(length(to_process)) to process")
 
 # ── Process and write progressively ──
 println("Writing TSV to $OUT_TSV")

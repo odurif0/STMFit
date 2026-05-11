@@ -4,6 +4,7 @@
 
 using STMMolecularFit, GaussianFit2D, GaussianFit1D
 using Plots, Printf, Statistics
+include(joinpath(@__DIR__, "common.jl"))
 
 const FWHM_SIGMA = 2.355
 const FWHM_MIN_1D_NM = 0.45
@@ -37,19 +38,7 @@ function main()
 
     # ── 2D config base (widths harmonized with 1D FWHM bounds 0.45..1.20 nm) ──
     function make_ccfg(; circular=false)
-        return GaussianFit2D.ChainSweepConfig(
-            n_min=2, n_max=14,
-            spacing_min_nm=0.35, spacing_max_nm=0.75,
-            max_overlap=0.6,
-            fit_width_nm=0.15,
-            support_threshold_fraction=0.20, support_noise_k=2.5, support_padding_nm=0.20,
-            global_maxtime=10.0, global_maxiter=10000, cv_folds=3,
-            intelligent_sweep=true, fuse_z_bwd=true,
-            sigma_parallel_min_nm=SIGMA_MIN_HARMONIZED_NM,
-            sigma_parallel_max_nm=SIGMA_MAX_HARMONIZED_NM,
-            sigma_perp_min_nm=SIGMA_MIN_HARMONIZED_NM,
-            sigma_perp_max_nm=SIGMA_MAX_HARMONIZED_NM,
-            chain_circular_sigmas=circular)
+        return make_chain_config(circular=circular, maxtime=10.0, maxiter=10000)
     end
 
     # ── 1D config (from centralize_best_plots.jl) ──

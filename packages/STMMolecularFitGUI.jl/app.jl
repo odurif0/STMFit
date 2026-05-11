@@ -5,7 +5,7 @@ Usage:
     julia --project=. app.jl
 
 Requires GaussianFit1D (core package) to be installed first:
-    julia -e 'using Pkg; Pkg.develop(path="/home/durif/Git/GaussianFit1D.jl")'
+    julia -e 'using Pkg; Pkg.develop(path="/home/durif/Git/STMFit/packages/GaussianFit1D.jl")'
 """
 
 println("Starting Multi-Gaussian Fit GUI...")

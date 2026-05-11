@@ -8,19 +8,24 @@ using GaussianFit2D
 using GaussianFit1D
 using DelimitedFiles
 using Printf
+include(joinpath(@__DIR__, "common.jl"))
 
-const DATA_DIR = "/home/durif/Rebecca/data/data/20240817_LHe_Cu100"
+const DATA_DIR = DEFAULT_DATA_DIR
 const TSV = "results/batch_triage_20240817_relaxed.tsv"
 const N_TOP = length(ARGS) >= 1 ? parse(Int, ARGS[1]) : 15
 
-# Load 2D results, pick top N_TOP by BIC among valid
-data = readdlm(TSV)
 candidates = Tuple{String,Int,Float64}[]
-for i in 2:size(data, 1)
-    data[i, 5] isa Bool && data[i, 5] || continue
-    push!(candidates, (string(data[i, 1]), Int(data[i, 3]), Float64(data[i, 4])))
+if isfile(TSV)
+    data = readdlm(TSV)
+    for i in 2:size(data, 1)
+        data[i, 5] isa Bool && data[i, 5] || continue
+        push!(candidates, (string(data[i, 1]), Int(data[i, 3]), Float64(data[i, 4])))
+    end
+    sort!(candidates, by = x -> x[3])
+else
+    @warn "Triage TSV not found: $TSV; comparing first $N_TOP SXM files directly"
+    candidates = [(fn, 0, Inf) for fn in list_sxm_files(DATA_DIR)]
 end
-sort!(candidates, by = x -> x[3])
 top = candidates[1:min(N_TOP, length(candidates))]
 
 println("=== 1D vs 2D comparison — top $(length(top)) valid files ===")
@@ -46,8 +51,10 @@ for (fn, n2d, bic2d) in top
         dn = n2d - n1d
         mark = dn == 0 ? "✓" : @sprintf("%+d", dn)
         
-        # Also get 2D spacing from TSV
-        sp2d = Float64(data[findfirst(row -> string(row[1]) == fn, eachrow(data)), 7])
+        sp2d = NaN
+        if isfile(TSV)
+            sp2d = Float64(data[findfirst(row -> string(row[1]) == fn, eachrow(data)), 7])
+        end
         
         println(rpad(fn, 24), rpad(n1d, 6), rpad(round(sbic1d, digits=0), 10),
                 rpad(n2d, 6), rpad(round(bic2d, digits=0), 10), rpad(mark, 6),

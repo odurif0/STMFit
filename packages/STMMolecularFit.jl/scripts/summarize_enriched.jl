@@ -2,7 +2,8 @@
 
 using DelimitedFiles, Printf, Statistics
 
-const SUMMARY = length(ARGS) >= 1 ? ARGS[1] : "results/best_plots/summary_harmonized.tsv"
+const SUMMARY = isdefined(Main, :SUMMARY_OVERRIDE) ? Main.SUMMARY_OVERRIDE :
+    (length(ARGS) >= 1 ? ARGS[1] : "results/best_plots/summary_harmonized.tsv")
 
 function parse_set(s)
     s = strip(String(s))
