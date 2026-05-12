@@ -20,7 +20,7 @@ using OptimizationNLopt
 using LsqFit
 using JLD2
 using Base.Threads  # for parallel sweep
-using STMFitCore: FWHM_TO_SIGMA, effective_spacing_min, sigma_from_fwhm
+using STMFitCore: FWHM_TO_SIGMA, effective_spacing_min, sigma_from_fwhm, adjacent_kappa_max, kappa_penalty
 
 # Types and configuration (must come first)
 include("types.jl")

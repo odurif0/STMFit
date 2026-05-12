@@ -295,8 +295,8 @@ function _make_objective_function(x, y, n_peaks, asymmetric_edges, use_log_ampli
         if kappa_max > 0 && n_peaks > 1
             deltas = [_get_delta(full_buf, j) for j in 1:(n_peaks-1)]
             sigmas = [_get_sigma(full_buf, k) for k in 0:(n_peaks-1)]
-            κ = STMFitCore.adjacent_kappa_max(deltas, sigmas)
-            rss *= (1.0 + STMFitCore.kappa_penalty(κ; kappa_max, weight=kappa_weight))
+            κ = adjacent_kappa_max(deltas, sigmas)
+            rss *= (1.0 + kappa_penalty(κ; kappa_max, weight=kappa_weight))
         end
         return rss
     end
@@ -584,7 +584,7 @@ function _fit_one(n_peaks::Int, x::Vector{Float64}, y::Vector{Float64}, cfg::Fit
     if n_peaks > 1
         deltas = [_get_delta(fit.popt, j) for j in 1:(n_peaks-1)]
         sigmas = [_get_sigma(fit.popt, k) for k in 0:(n_peaks-1)]
-        kappa_val = STMFitCore.adjacent_kappa_max(deltas, sigmas)
+        kappa_val = adjacent_kappa_max(deltas, sigmas)
     end
     result = FitResult(
         n_peaks=n_peaks,
