@@ -73,6 +73,8 @@ function _get_sigma(params::AbstractVector{<:Real}, i::Int)
 end
 
 function _get_delta(params::AbstractVector{<:Real}, j::Int)
+    """j is 1-based inter-peak delta index (j=1 → first spacing Δ₁).
+    Contrast with _get_amplitude()/_get_sigma() which use 0-based peak index i."""
     return params[3 + 3 * j]
 end
 
@@ -268,7 +270,7 @@ end
 # ===========================================================================
 
 function _make_objective_function(x, y, n_peaks, asymmetric_edges, use_log_amplitude=false;
-                                   kappa_max=25.0, kappa_weight=1.0)
+                                   kappa_max=15.0, kappa_weight=1.0)
     """Create the RSS objective (1-arg, compatible with NLopt via wrapper).
 
     Baseline is always fixed at 0 (data is pre-offset so y.min() = 0).
@@ -287,6 +289,9 @@ function _make_objective_function(x, y, n_peaks, asymmetric_edges, use_log_ampli
                                         y_buf=y_buf)
         rss = sum(abs2, residuals)
         # Condition-number penalty for adjacent overlap
+        # NOTE: penalty is applied only in the global (NLopt) stage, not in
+        # the local LM refinement. This guides global search away from
+        # pathological peak merging while keeping the final fit unbiased.
         if kappa_max > 0 && n_peaks > 1
             deltas = [_get_delta(full_buf, j) for j in 1:(n_peaks-1)]
             sigmas = [_get_sigma(full_buf, k) for k in 0:(n_peaks-1)]

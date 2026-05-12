@@ -68,6 +68,7 @@ const SUMMARY_HEADER = [
     "Nset_ell_10", "Nset_circ_10", "Nset_1D_10", "common_N_10",
     "Nset_ell_hybrid", "Nset_circ_hybrid", "Nset_1D_hybrid", "common_N_hybrid",
     "threshold_ell_hybrid", "threshold_circ_hybrid", "threshold_1D_hybrid",
+    "kappa_ell", "kappa_circ", "kappa_1D",
     "best_plot", "file_dir"
 ]
 
@@ -480,6 +481,7 @@ for (idx, (fn, n2d_tsv, bic2d_tsv)) in enumerate(to_process)
                               _setstr(nset_ell_10), _setstr(nset_circ_10), _setstr(nset_1d_10), _setstr(common10),
                               _setstr(nset_ell_h), _setstr(nset_circ_h), _setstr(nset_1d_h), _setstr(commonh),
                               thr_ell, thr_circ, thr_1d,
+                              best_ell.kappa_max_adj, best_circ.kappa_max_adj, best1d.kappa_max_adj,
                               outpath, file_dir], '\t'))
         end
     catch e

@@ -55,7 +55,7 @@ Examples:
             default = nothing
 
         "--kappa-max"
-            help = "Condition-number penalty threshold for adjacent overlap (0 = disabled; default: 25)"
+            help = "Condition-number penalty threshold for adjacent overlap (0 = disabled; default: 15)"
             arg_type = Float64
             default = nothing
 

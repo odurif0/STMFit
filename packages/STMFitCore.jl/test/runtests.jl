@@ -22,8 +22,8 @@ end
     # Coincident: κ = Inf
     @test overlap_condition_number(0.0, 0.2) == Inf
 
-    # Known value: d = σ → ρ = exp(-0.5), κ = (1+exp(-0.5))/(1-exp(-0.5))
-    kappa_known = (1.0 + exp(-0.5)) / (1.0 - exp(-0.5))
+    # Known value: d = σ → ρ = exp(-0.25), κ = (1+exp(-0.25))/(1-exp(-0.25))
+    kappa_known = (1.0 + exp(-0.25)) / (1.0 - exp(-0.25))
     @test overlap_condition_number(0.5, 0.5) ≈ kappa_known atol=0.01
 
     # Penalty zero below threshold

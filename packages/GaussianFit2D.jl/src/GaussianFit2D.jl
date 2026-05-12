@@ -89,7 +89,7 @@ Base.@kwdef mutable struct ChainSweepConfig
     fuse_z_bwd::Bool = true
     residual_peak_snr_threshold::Float64 = 3.5
     max_overlap::Float64 = 0.60
-    kappa_max::Float64 = 25.0     # condition-number penalty threshold (0 = disabled)
+    kappa_max::Float64 = 15.0     # condition-number penalty threshold (0 = disabled)
     kappa_weight::Float64 = 1.0   # penalty strength
     min_amplitude_fraction::Float64 = 0.3  # reject models with any peak amplitude < 30% of max (matches 1D)
     max_iter::Int = 300
@@ -1294,6 +1294,7 @@ function _fit_chain_n(xs, ys, zimg, x, y, z, noise, n::Int, axisctx, ccfg::Chain
     p_global = p0
     global_success = true  # default true if we skip NLopt
     if !ccfg.skip_global
+        # κ penalty (global NLopt stage only; LM refinement is unbiased)
         objective = let km=ccfg.kappa_max, kw=ccfg.kappa_weight, nf=n, ax=axisctx, c=ccfg
             (u, _) -> begin
                 rss_val = sum(abs2, z .- model(xy, u))
