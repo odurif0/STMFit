@@ -14,7 +14,7 @@ list_sxm_files(dir) = sort([f for f in readdir(dir) if endswith(lowercase(f), ".
 const TSV = "results/batch_triage_20240817_relaxed.tsv"
 const OUTDIR = "results/best_plots"
 const EXCLUDE = Set(["240817_001.sxm", "240817_010.sxm", "240817_011.sxm", "240817_012.sxm",
-                      "240817_014.sxm", "240817_020.sxm", "240817_025.sxm"])
+                      "240817_013.sxm", "240817_014.sxm", "240817_020.sxm", "240817_025.sxm"])
 
 function _parse_cli(args)
     n_files = 48
