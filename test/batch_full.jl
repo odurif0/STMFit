@@ -162,12 +162,12 @@ end
 
 function _write_scores_1d(path::String, results)
     open(path, "w") do io
-        println(io, join(["N", "sBIC", "delta", "competitive", "chi2"], '\t'))
+        println(io, join(["N", "sBIC", "delta", "competitive", "chi2", "kappa"], '\t'))
         vals = [r.student_bic for r in results if r.success]
         best = isempty(vals) ? Inf : minimum(vals)
         for r in sort(results; by=r -> r.n_peaks)
             r.success || continue
-            println(io, join([r.n_peaks, r.student_bic, r.student_bic - best, r.competitive, r.chi2_red], '\t'))
+            println(io, join([r.n_peaks, r.student_bic, r.student_bic - best, r.competitive, r.chi2_red, r.kappa_max_adj], '\t'))
         end
     end
 end

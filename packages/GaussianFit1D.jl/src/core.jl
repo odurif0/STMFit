@@ -270,7 +270,7 @@ end
 # ===========================================================================
 
 function _make_objective_function(x, y, n_peaks, asymmetric_edges, use_log_amplitude=false;
-                                   kappa_max=15.0, kappa_weight=1.0)
+                                   kappa_max=8.0, kappa_weight=1.0)
     """Create the RSS objective (1-arg, compatible with NLopt via wrapper).
 
     Baseline is always fixed at 0 (data is pre-offset so y.min() = 0).

@@ -27,7 +27,7 @@ Base.@kwdef mutable struct FitConfig
     fwhm_max::Float64               = 1.2
     fwhm_min::Float64               = 0.45
     max_overlap::Float64            = 0.6
-    kappa_max::Float64              = 15.0   # condition-number penalty threshold (0 = disabled)
+    kappa_max::Float64              = 8.0    # condition-number penalty threshold (0 = disabled)
     kappa_weight::Float64           = 1.0    # penalty strength relative to RSS
 
     # --- Baseline ---

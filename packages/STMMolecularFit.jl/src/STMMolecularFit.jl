@@ -98,7 +98,7 @@ Base.@kwdef mutable struct FitSlideConfig
     fwhm_min::Float64 = 0.45
     fwhm_max::Float64 = 1.2
     max_overlap::Float64 = 0.6
-    kappa_max::Float64 = 15.0
+    kappa_max::Float64 = 8.0
     kappa_weight::Float64 = 1.0
     amplitude_min_fraction::Float64 = 0.3
     global_maxtime::Float64 = 8.0

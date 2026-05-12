@@ -1,10 +1,26 @@
-# Print classification stats, exact/tolerant agreement rates, N counts from a summary TSV.
-# Usage: julia --project=. test/scripts/summarize.jl [summary.tsv]
+# Print classification stats, exact/tolerant agreement rates, N counts from summary TSV(s).
+# Usage:
+#   julia --project=. test/summarize.jl results/best_plots/summary_overlap060_hard_combined.tsv
+#   julia --project=. test/summarize.jl results/best_plots/summary_overlap060_hard_chunk0*of04.tsv
 
 using DelimitedFiles, Printf, Statistics
 
-const SUMMARY = isdefined(Main, :SUMMARY_OVERRIDE) ? Main.SUMMARY_OVERRIDE :
-    (length(ARGS) >= 1 ? ARGS[1] : "results/best_plots/summary_harmonized.tsv")
+summaries = isempty(ARGS) ? ["results/best_plots/summary_harmonized.tsv"] : ARGS
+files = String[]
+for s in summaries
+    if isfile(s)
+        push!(files, s)
+    elseif endswith(s, ".tsv")
+        @warn "$s not found, skipping"
+    else
+        # Glob-like: treat as prefix and find matching .tsv files in same dir
+        dir, pat = dirname(s), basename(s)
+        matched = sort([f for f in readdir(dir; join=true) if endswith(f, ".tsv") && startswith(basename(f), pat)])
+        isempty(matched) && (@warn "no .tsv files matching '$s'"; continue)
+        append!(files, matched)
+    end
+end
+isempty(files) && error("No summary files found")
 
 function parse_set(s)
     s = strip(String(s))
@@ -23,10 +39,25 @@ function counts(vals)
     return sort(collect(d); by=x -> string(x[1]))
 end
 
-isfile(SUMMARY) || error("Summary not found: $SUMMARY")
-data = readdlm(SUMMARY, '\t', String)
+# Read first file (with header)
+global data = readdlm(files[1], '\t', String)
+# Append data rows from remaining files
+for i in 2:length(files)
+    global data
+    f = files[i]
+    isfile(f) || (println("WARN: $f not found"); continue)
+    d2 = readdlm(f, '\t', String)
+    data = vcat(data, d2[2:end, :])
+end
+
 header = vec(data[1, :])
-idx(name) = findfirst(==(name), header) === nothing ? error("Missing column $name") : findfirst(==(name), header)
+ncol = length(header)
+
+function idx(name::String)
+    i = findfirst(==(name), header)
+    i === nothing && error("Missing column: $name")
+    return i
+end
 
 rows = []
 for i in 2:size(data, 1)
@@ -35,7 +66,7 @@ for i in 2:size(data, 1)
 end
 
 if isempty(rows)
-    println("No ok rows in $SUMMARY")
+    println("No ok rows across $(length(files)) file(s)")
     exit()
 end
 
@@ -52,7 +83,7 @@ d1_e = N1d .- Nell
 d1_c = N1d .- Ncirc
 
 println("=== Enriched summary stats ===")
-println("summary: $SUMMARY")
+println("files: $(join(basename.(files), ", "))")
 println("n ok = $(length(rows))")
 println("\nClassification counts: ", counts(classes))
 println("\nExact agreements:")

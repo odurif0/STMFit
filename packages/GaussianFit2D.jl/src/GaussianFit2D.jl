@@ -89,7 +89,7 @@ Base.@kwdef mutable struct ChainSweepConfig
     fuse_z_bwd::Bool = true
     residual_peak_snr_threshold::Float64 = 3.5
     max_overlap::Float64 = 0.60
-    kappa_max::Float64 = 15.0     # condition-number penalty threshold (0 = disabled)
+    kappa_max::Float64 = 8.0      # condition-number penalty threshold (0 = disabled)
     kappa_weight::Float64 = 1.0   # penalty strength
     min_amplitude_fraction::Float64 = 0.3  # reject models with any peak amplitude < 30% of max (matches 1D)
     max_iter::Int = 300
@@ -2067,7 +2067,7 @@ function _plot_chain_sweep(results::Vector{ChainModelResult}, best::ChainModelRe
     if best.n > 0 && best.success
         _b, feats, _ts, _us, _spars, _sperps = _decode_chain(best.params, best.n, ctx.axisctx, ccfg;
                                                               amp_min=best.amp_min, amp_range=best.amp_range)
-        scatter!(p1, [f.x_nm for f in feats], [f.y_nm for f in feats]; color=:cyan, marker=:cross, label="lobes")
+        scatter!(p1, [f.x_nm for f in feats], [f.y_nm for f in feats]; color=:red, marker=:cross, markersize=10, linewidth=2.5, label="lobes")
     end
     p2 = heatmap(xs, ys, pred_img; aspect_ratio=:equal, title="Ordered chain model N=$(best.n)", xlabel="x (nm)", ylabel="y (nm)")
     p3 = heatmap(xs, ys, (zimg .- pred_img) .* mask ./ max(ctx.noise, EPS); aspect_ratio=:equal, title="Residuals / noise", xlabel="x (nm)", ylabel="y (nm)")
@@ -2099,7 +2099,7 @@ function _plot_chain_model_grid(r::ChainModelResult, ctx, cfg::PatternConfig, cc
     if r.n > 0
         _b, feats, _ts, _us, _spars, _sperps = _decode_chain(r.params, r.n, ctx.axisctx, ccfg;
                                                               amp_min=r.amp_min, amp_range=r.amp_range)
-        scatter!(p1, [f.x_nm for f in feats], [f.y_nm for f in feats]; color=:cyan, marker=:cross, label=false)
+        scatter!(p1, [f.x_nm for f in feats], [f.y_nm for f in feats]; color=:red, marker=:cross, markersize=10, linewidth=2.5, label=false)
     end
     p2 = heatmap(xs, ys, pred_img; aspect_ratio=:equal, title="Chain model N=$(r.n)", xlabel="x (nm)", ylabel="y (nm)")
     p3 = heatmap(xs, ys, resid; aspect_ratio=:equal, title="Residual / noise", xlabel="x (nm)", ylabel="y (nm)")
