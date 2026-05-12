@@ -284,8 +284,8 @@ function _make_objective_function(x, y, n_peaks, asymmetric_edges, use_log_ampli
         rss = sum(abs2, residuals)
         # Condition-number penalty for adjacent overlap
         if kappa_max > 0 && n_peaks > 1
-            deltas = [params_vec[3 + 3*j] for j in 1:(n_peaks-1)]
-            sigmas = [params_vec[4 + 3*k] for k in 0:(n_peaks-1)]
+            deltas = [params_vec[2 + 3*j] for j in 1:(n_peaks-1)]
+            sigmas = [params_vec[3 + 3*k] for k in 0:(n_peaks-1)]
             κ = STMFitCore.adjacent_kappa_max(deltas, sigmas)
             rss *= (1.0 + STMFitCore.kappa_penalty(κ; kappa_max, weight=kappa_weight))
         end
