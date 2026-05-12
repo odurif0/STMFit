@@ -1891,7 +1891,7 @@ function _plot_result(img::SXMImage, cfg::PatternConfig, result::PatternFitResul
         xs_chain = [f.x_nm for f in chain.features]
         ys_chain = [f.y_nm for f in chain.features]
         plot!(p2, xs_chain, ys_chain; linewidth=2.5, color=color, label=false)
-        scatter!(p2, xs_chain, ys_chain; marker=:circle, markersize=5, color=color, label=false)
+        scatter!(p2, xs_chain, ys_chain; marker=:cross, markersize=10, color=color, linewidth=2.5, label=false)
     end
     p3 = heatmap(xs, ys, pred; aspect_ratio=:equal, title="Chain-constrained Gaussian refinement ($(length(result.features)) fitted)", xlabel="x (nm)", ylabel="y (nm)")
     for f in result.features

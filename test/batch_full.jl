@@ -210,11 +210,14 @@ function make_best_plot(best_ell, ctx_ell, ccfg_ell, best_circ, ctx_circ, ccfg_c
             _, feats, _, _, _, _ = GaussianFit2D._decode_chain(best.params, n, ax_ctx, ccfg;
                 amp_min=best.amp_min, amp_range=best.amp_range)
             axis_angle = atan(ax, ay)
+            xs_c = Float64[]; ys_c = Float64[]
             for f in feats
                 a_ell = f.sigma_x_nm * FWHM_SIGMA / 2
                 b_ell = f.sigma_y_nm * FWHM_SIGMA / 2
                 _ellipse!(p, f.x_nm, f.y_nm, a_ell, b_ell, axis_angle; color=:cyan, alpha=0.4, label="")
+                push!(xs_c, f.x_nm); push!(ys_c, f.y_nm)
             end
+            scatter!(p, xs_c, ys_c; marker=:cross, markersize=10, color=:cyan, linewidth=2.5, label="")
         end
     end
 
