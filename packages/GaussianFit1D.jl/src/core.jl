@@ -72,6 +72,10 @@ function _get_sigma(params::AbstractVector{<:Real}, i::Int)
     return params[4 + 3 * i]
 end
 
+function _get_delta(params::AbstractVector{<:Real}, j::Int)
+    return params[3 + 3 * j]
+end
+
 function _get_amplitude(params::AbstractVector{<:Real}, i::Int; use_log::Bool=false)
     v = params[2 + 3 * i]
     return use_log ? exp(v) : v
@@ -284,8 +288,8 @@ function _make_objective_function(x, y, n_peaks, asymmetric_edges, use_log_ampli
         rss = sum(abs2, residuals)
         # Condition-number penalty for adjacent overlap
         if kappa_max > 0 && n_peaks > 1
-            deltas = [params_vec[2 + 3*j] for j in 1:(n_peaks-1)]
-            sigmas = [params_vec[3 + 3*k] for k in 0:(n_peaks-1)]
+            deltas = [_get_delta(full_buf, j) for j in 1:(n_peaks-1)]
+            sigmas = [_get_sigma(full_buf, k) for k in 0:(n_peaks-1)]
             κ = STMFitCore.adjacent_kappa_max(deltas, sigmas)
             rss *= (1.0 + STMFitCore.kappa_penalty(κ; kappa_max, weight=kappa_weight))
         end
@@ -573,8 +577,8 @@ function _fit_one(n_peaks::Int, x::Vector{Float64}, y::Vector{Float64}, cfg::Fit
     # Post-fit: max adjacent condition number (from full params with y0 prepended)
     kappa_val = 1.0
     if n_peaks > 1
-        deltas = [fit.popt[3 + 3*i] for i in 1:(n_peaks-1)]   # delta_i at full index 3+3i
-        sigmas = [fit.popt[4 + 3*k] for k in 0:(n_peaks-1)]   # sigma_k at full index 4+3k
+        deltas = [_get_delta(fit.popt, j) for j in 1:(n_peaks-1)]
+        sigmas = [_get_sigma(fit.popt, k) for k in 0:(n_peaks-1)]
         kappa_val = STMFitCore.adjacent_kappa_max(deltas, sigmas)
     end
     result = FitResult(
