@@ -4,7 +4,8 @@ export FWHM_TO_SIGMA,
        sigma_from_fwhm, fwhm_from_sigma,
        PhysicalChainConstraints,
        effective_spacing_min, support_n_bounds, chain_can_fit_support,
-       endpoint_overrun, best_valid_or_best
+       endpoint_overrun, best_valid_or_best,
+       overlap_condition_number, kappa_penalty, adjacent_kappa_max
 
 const FWHM_TO_SIGMA = 2 * sqrt(2 * log(2))
 
@@ -73,6 +74,55 @@ function best_valid_or_best(results; score = r -> getproperty(r, :bic))
     ok = [r for r in results if getproperty(r, :success) && isfinite(score(r))]
     isempty(ok) && return nothing
     return sort(ok; by=score)[1]
+end
+
+# ===========================================================================
+# Overlap condition number κ
+# ===========================================================================
+
+"""
+    overlap_condition_number(d, sigma) -> Float64
+
+Condition number κ = (1+ρ)/(1-ρ) of the 2×2 Gram matrix for two unit-amplitude
+Gaussians separated by `d` with width `sigma`. ρ = exp(-d²/(4σ²)) is their
+normalized correlation. Returns 1.0 (well-separated) to Inf (coincident).
+"""
+function overlap_condition_number(d::Real, sigma::Real)
+    sigma <= 0 && return Inf
+    d <= 0 && return Inf
+    rho = exp(-0.25 * (Float64(d) / Float64(sigma))^2)
+    rho >= 1.0 && return Inf
+    return (1.0 + rho) / (1.0 - rho)
+end
+
+"""
+    kappa_penalty(kappa; kappa_max=25.0, weight=1.0) -> Float64
+
+Progressive penalty on condition number: zero for κ ≤ κ_max,
+then `weight × ((κ - κ_max)/κ_max)²`.
+"""
+function kappa_penalty(kappa::Real; kappa_max::Real=25.0, weight::Real=1.0)
+    Float64(kappa_max) <= 0 && return 0.0
+    Float64(kappa) <= Float64(kappa_max) && return 0.0
+    return Float64(weight) * ((Float64(kappa) - Float64(kappa_max)) / Float64(kappa_max))^2
+end
+
+"""
+    adjacent_kappa_max(deltas, sigmas) -> Float64
+
+Maximum condition number across all adjacent peak pairs.
+Uses σ = max(σ_i, σ_{i+1}) for each pair.
+"""
+function adjacent_kappa_max(deltas::AbstractVector{<:Real}, sigmas::AbstractVector{<:Real})
+    isempty(deltas) && return 1.0
+    length(sigmas) < length(deltas) + 1 && return Inf
+    kmax = 1.0
+    for i in eachindex(deltas)
+        sigma_local = max(Float64(sigmas[i]), Float64(sigmas[i + 1]))
+        k = overlap_condition_number(deltas[i], sigma_local)
+        k > kmax && (kmax = k)
+    end
+    return kmax
 end
 
 end # module

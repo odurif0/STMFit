@@ -98,6 +98,7 @@ Base.@kwdef mutable struct FitSlideConfig
     fwhm_min::Float64 = 0.45
     fwhm_max::Float64 = 1.2
     max_overlap::Float64 = 0.6
+    kappa_max::Float64 = 25.0
     amplitude_min_fraction::Float64 = 0.3
     global_maxtime::Float64 = 8.0
     global_maxiter::Int = 5000
@@ -658,6 +659,7 @@ function fit_slide(profile_file::String, cfg::FitSlideConfig=FitSlideConfig(); n
         "fwhm_min" => cfg.fwhm_min,
         "fwhm_max" => cfg.fwhm_max,
         "max_overlap" => cfg.max_overlap,
+        "kappa_max" => cfg.kappa_max,
         "amplitude_min_fraction" => cfg.amplitude_min_fraction,
         "global_maxtime" => cfg.global_maxtime,
         "global_maxiter" => cfg.global_maxiter,

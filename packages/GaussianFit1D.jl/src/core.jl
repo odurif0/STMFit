@@ -263,11 +263,13 @@ end
 # 5. Fitting: NLopt global + Levenberg-Marquardt local
 # ===========================================================================
 
-function _make_objective_function(x, y, n_peaks, asymmetric_edges, use_log_amplitude=false)
+function _make_objective_function(x, y, n_peaks, asymmetric_edges, use_log_amplitude=false;
+                                   kappa_max=25.0, kappa_weight=1.0)
     """Create the RSS objective (1-arg, compatible with NLopt via wrapper).
 
     Baseline is always fixed at 0 (data is pre-offset so y.min() = 0).
     Uses pre-allocated buffers to avoid allocations on every call.
+    When kappa_max > 0 and n_peaks > 1, adds a progressive κ penalty.
     """
     n_params_inner = 3 * n_peaks + (asymmetric_edges && n_peaks >= 2 ? 2 : 0)
     full_buf = zeros(n_params_inner + 1)  # +1 for y0=0
@@ -279,7 +281,15 @@ function _make_objective_function(x, y, n_peaks, asymmetric_edges, use_log_ampli
                                         asymmetric_edges=asymmetric_edges,
                                         use_log_amplitude=use_log_amplitude,
                                         y_buf=y_buf)
-        return sum(abs2, residuals)
+        rss = sum(abs2, residuals)
+        # Condition-number penalty for adjacent overlap
+        if kappa_max > 0 && n_peaks > 1
+            deltas = [params_vec[3 + 3*j] for j in 1:(n_peaks-1)]
+            sigmas = [params_vec[4 + 3*k] for k in 0:(n_peaks-1)]
+            κ = STMFitCore.adjacent_kappa_max(deltas, sigmas)
+            rss *= (1.0 + STMFitCore.kappa_penalty(κ; kappa_max, weight=kappa_weight))
+        end
+        return rss
     end
     return objective
 end
@@ -334,7 +344,8 @@ function fit_model(x::Vector{Float64}, y::Vector{Float64}, n_peaks::Int, cfg::Fi
         end
     end
 
-    objective_1arg = _make_objective_function(x, y, n_peaks, asymmetric, cfg.use_log_amplitude)
+    objective_1arg = _make_objective_function(x, y, n_peaks, asymmetric, cfg.use_log_amplitude;
+                                               kappa_max=cfg.kappa_max, kappa_weight=cfg.kappa_weight)
     # Optimization.jl expects f(u, p); the second argument p is unused
     objective_opt(u, _) = objective_1arg(u)
 
@@ -559,12 +570,20 @@ function _fit_one(n_peaks::Int, x::Vector{Float64}, y::Vector{Float64}, cfg::Fit
         return nothing
     end
     m = compute_metrics(y, fit.y_fit, n_params; student_nu=cfg.student_nu, noise_estimate=cfg.noise_estimate)
+    # Post-fit: max adjacent condition number (from full params with y0 prepended)
+    kappa_val = 1.0
+    if n_peaks > 1
+        deltas = [fit.popt[3 + 3*i] for i in 1:(n_peaks-1)]   # delta_i at full index 3+3i
+        sigmas = [fit.popt[4 + 3*k] for k in 0:(n_peaks-1)]   # sigma_k at full index 4+3k
+        kappa_val = STMFitCore.adjacent_kappa_max(deltas, sigmas)
+    end
     result = FitResult(
         n_peaks=n_peaks,
         popt=fit.popt, pcov=fit.pcov, perr=fit.perr,
         y_fit=fit.y_fit, success=fit.success, warnings=fit.warnings,
         bic=m.bic, student_bic=m.student_bic, aic=m.aic, aicc=m.aicc, r_squared=m.r_squared,
         chi2_red=m.chi2_red, dof=m.dof, rss=m.rss, n_params=m.n_params,
+        kappa_max_adj=kappa_val,
     )
     return result
 end
@@ -872,16 +891,17 @@ function export_results(x, y, all_results, cfg::FitConfig)
         @printf(f, "# spacing_min_effective = %.6f %s\n", _effective_min_spacing(cfg), x_unit)
         @printf(f, "# spacing_min_effective_source = max(min_spacing, sqrt(-2log(max_overlap))*sigma_max)\n")
         @printf(f, "# max_overlap = %.6f\n", cfg.max_overlap)
+        @printf(f, "# kappa_max = %.1f\n", cfg.kappa_max)
         write(f, "#\n")
-        @printf(f, "# %8s  %10s  %6s  %10s  %10s  %8s  %10s  %10s  %4s  %4s\n",
-                "n_peaks", bic_label, "d"*bic_label, "AICc", "AIC", "R2", "chi2_red", "RSS", "BEST", "COMP")
+        @printf(f, "# %8s  %10s  %6s  %10s  %10s  %8s  %10s  %10s  %6s  %4s  %4s\n",
+                "n_peaks", bic_label, "d"*bic_label, "AICc", "AIC", "R2", "chi2_red", "RSS", "kappa", "BEST", "COMP")
         for r in all_results
             bval = cfg.use_student_bic ? r.student_bic : r.bic
             tag = r === best ? "   *" : ""
             comp = r.competitive && r !== best ? "  +" : ""
-            @printf(f, "# %8d  %10.1f  %6.1f  %10.1f  %10.1f  %8.4f  %10.4f  %10.4f%s%s\n",
+            @printf(f, "# %8d  %10.1f  %6.1f  %10.1f  %10.1f  %8.4f  %10.4f  %10.4f  %6.1f%s%s\n",
                     r.n_peaks, bval, r.delta_bic, r.aicc, r.aic,
-                    r.r_squared, r.chi2_red, r.rss, tag, comp)
+                    r.r_squared, r.chi2_red, r.rss, r.kappa_max_adj, tag, comp)
         end
         bic_thresh = cfg.bic_competition_threshold
         @printf(f, "# * = BEST, + = competitive (dBIC <= %.0f)\n#\n\n", bic_thresh)
@@ -923,6 +943,7 @@ function export_results(x, y, all_results, cfg::FitConfig)
                 spacings = [popt[3 + 3 * i] for i in 1:(n_peaks - 1)]
                 parts = join([@sprintf("%.6f", s) for s in spacings], ",")
                 write(f, "spacing($x_unit),$parts\n")
+                @printf(f, "kappa_max_adj,%.4f\n", r.kappa_max_adj)
             end
 
             write(f, "\n# Residuals: x($x_unit), y_data, y_fit, residual\n")
@@ -1022,6 +1043,9 @@ function print_summary(all_results, best_res, cfg::FitConfig)
                  for (i, s) in enumerate(spacings)]
         println("\n  SPACING BETWEEN ADJACENT PEAKS:")
         println("  " * join(parts, "  |  "))
+        @printf("\n  Max adjacent κ = %.1f  (threshold = %.1f)%s\n",
+                best_res.kappa_max_adj, cfg.kappa_max,
+                best_res.kappa_max_adj > cfg.kappa_max ? "  ← EXCEEDS THRESHOLD" : "")
     end
 
     if !isempty(best_res.warnings)

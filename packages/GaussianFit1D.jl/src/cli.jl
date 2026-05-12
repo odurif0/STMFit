@@ -54,6 +54,16 @@ Examples:
             arg_type = Float64
             default = nothing
 
+        "--kappa-max"
+            help = "Condition-number penalty threshold for adjacent overlap (0 = disabled; default: 25)"
+            arg_type = Float64
+            default = nothing
+
+        "--kappa-weight"
+            help = "Penalty strength relative to RSS (default: 1.0)"
+            arg_type = Float64
+            default = nothing
+
         "--amplitude-min-fraction"
             help = "Min amplitude as fraction of max(y) (when amplitude-min not set; default: 0.7)"
             arg_type = Float64
@@ -146,6 +156,8 @@ function config_from_args(args)
         ("fwhm-min", "fwhm_min"),
         ("fwhm-max", "fwhm_max"),
         ("max-overlap", "max_overlap"),
+        ("kappa-max", "kappa_max"),
+        ("kappa-weight", "kappa_weight"),
         ("amplitude-min-fraction", "amplitude_min_fraction"),
         ("amplitude-min", "amplitude_min"),
         ("amplitude-max", "amplitude_max"),
@@ -196,6 +208,8 @@ function main_cli()
                 ("fwhm-min", "fwhm_min"),
                 ("fwhm-max", "fwhm_max"),
                 ("max-overlap", "max_overlap"),
+        ("kappa-max", "kappa_max"),
+        ("kappa-weight", "kappa_weight"),
                 ("amplitude-min-fraction", "amplitude_min_fraction"),
                 ("amplitude-min", "amplitude_min"),
                 ("amplitude-max", "amplitude_max"),

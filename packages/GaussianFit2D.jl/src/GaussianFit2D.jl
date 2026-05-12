@@ -8,7 +8,7 @@ using OptimizationNLopt
 using Plots
 using Printf
 using Statistics
-using STMFitCore: effective_spacing_min, endpoint_overrun
+using STMFitCore: effective_spacing_min, endpoint_overrun, overlap_condition_number, kappa_penalty, adjacent_kappa_max
 
 export SXMImage, SXMChannel, PatternConfig, PatternFitResult, MolecularFeature,
        MolecularChain
@@ -89,6 +89,8 @@ Base.@kwdef mutable struct ChainSweepConfig
     fuse_z_bwd::Bool = true
     residual_peak_snr_threshold::Float64 = 3.5
     max_overlap::Float64 = 0.60
+    kappa_max::Float64 = 25.0     # condition-number penalty threshold (0 = disabled)
+    kappa_weight::Float64 = 1.0   # penalty strength
     min_amplitude_fraction::Float64 = 0.3  # reject models with any peak amplitude < 30% of max (matches 1D)
     max_iter::Int = 300
     global_maxtime::Float64 = 15.0
@@ -115,6 +117,7 @@ Base.@kwdef mutable struct ChainModelResult
     sigma_parallel_nm::Float64 = Inf
     sigma_perp_nm::Float64 = Inf
     overlap::Float64 = Inf
+    kappa_max_adj::Float64 = 1.0   # max adjacent condition number
     endpoint_overrun_nm::Float64 = Inf
     bound_like::Int = 0
     valid::Bool = false
@@ -1291,7 +1294,18 @@ function _fit_chain_n(xs, ys, zimg, x, y, z, noise, n::Int, axisctx, ccfg::Chain
     p_global = p0
     global_success = true  # default true if we skip NLopt
     if !ccfg.skip_global
-        objective = (u, _) -> sum(abs2, z .- model(xy, u))
+        objective = let km=ccfg.kappa_max, kw=ccfg.kappa_weight, nf=n, ax=axisctx, c=ccfg
+            (u, _) -> begin
+                rss_val = sum(abs2, z .- model(xy, u))
+                if km > 0 && nf > 1
+                    _, _, ts, _, spars, sperps = _decode_chain(u, nf, ax, c;
+                                                               amp_min=amp_min, amp_range=amp_range)
+                    κ = adjacent_kappa_max(diff(ts), max.(spars, sperps))
+                    rss_val *= (1.0 + kappa_penalty(κ; kappa_max=km, weight=kw))
+                end
+                return rss_val
+            end
+        end
         nlop = OptimizationNLopt.NLopt.Opt(:GN_DIRECT_L, np)
         nlop.xtol_rel = ccfg.global_tol
         nlop.ftol_rel = ccfg.global_tol
@@ -1347,6 +1361,7 @@ function _chain_metrics!(r::ChainModelResult, axisctx, ccfg::ChainSweepConfig)
     r.sigma_parallel_nm = mean(spars)
     r.sigma_perp_nm = mean(sperps)
     r.overlap = _chain_overlap(feats, mean(spars), mean(sperps))
+    r.kappa_max_adj = isempty(ds) ? 1.0 : adjacent_kappa_max(ds, max.(spars, sperps))
     r.endpoint_overrun_nm = endpoint_overrun(ts, axisctx.tmin, axisctx.tmax)
     near(v, lo, hi) = (v - lo) / max(hi - lo, EPS) < 0.03 || (hi - v) / max(hi - lo, EPS) < 0.03
     spacing_min_eff = _effective_spacing_min_nm(ccfg)
@@ -1969,10 +1984,10 @@ function _write_chain_sweep(results::Vector{ChainModelResult}, best::ChainModelR
     mkpath(cfg.output_dir)
     summary = joinpath(cfg.output_dir, "chain_model_selection.tsv")
     open(summary, "w") do io
-        println(io, "N\tn_params\tsuccess\tvalid\ttrain_nll\tcv_nll_mean\tcv_nll_std\tbic\taicc\tbic_per_pixel\taicc_per_pixel\trss\tchi2_reduced\tmad\tresidual_peak_snr\tmean_spacing_nm\tspacing_cv\tmax_lateral_nm\tsigma_parallel_nm\tsigma_perp_nm\toverlap\tendpoint_overrun_nm\tbound_like\treason\twarnings\tselected")
+        println(io, "N\tn_params\tsuccess\tvalid\ttrain_nll\tcv_nll_mean\tcv_nll_std\tbic\taicc\tbic_per_pixel\taicc_per_pixel\trss\tchi2_reduced\tmad\tresidual_peak_snr\tmean_spacing_nm\tspacing_cv\tmax_lateral_nm\tsigma_parallel_nm\tsigma_perp_nm\toverlap\tkappa_max_adj\tendpoint_overrun_nm\tbound_like\treason\twarnings\tselected")
         for r in results
             npx = max(1, length(ctx.z))
-            println(io, "$(r.n)\t$(_chain_nparams(r.n, ccfg))\t$(r.success)\t$(r.valid)\t$(r.train_nll)\t$(r.cv_nll_mean)\t$(r.cv_nll_std)\t$(r.bic)\t$(r.aicc)\t$(r.bic/npx)\t$(r.aicc/npx)\t$(r.rss)\t$(r.chi2_reduced)\t$(r.mad)\t$(r.residual_peak_snr)\t$(r.mean_spacing_nm)\t$(r.spacing_cv)\t$(r.max_lateral_nm)\t$(r.sigma_parallel_nm)\t$(r.sigma_perp_nm)\t$(r.overlap)\t$(r.endpoint_overrun_nm)\t$(r.bound_like)\t$(r.reason)\t$(r.valid ? "" : r.reason)\t$(r === best)")
+            println(io, "$(r.n)\t$(_chain_nparams(r.n, ccfg))\t$(r.success)\t$(r.valid)\t$(r.train_nll)\t$(r.cv_nll_mean)\t$(r.cv_nll_std)\t$(r.bic)\t$(r.aicc)\t$(r.bic/npx)\t$(r.aicc/npx)\t$(r.rss)\t$(r.chi2_reduced)\t$(r.mad)\t$(r.residual_peak_snr)\t$(r.mean_spacing_nm)\t$(r.spacing_cv)\t$(r.max_lateral_nm)\t$(r.sigma_parallel_nm)\t$(r.sigma_perp_nm)\t$(r.overlap)\t$(r.kappa_max_adj)\t$(r.endpoint_overrun_nm)\t$(r.bound_like)\t$(r.reason)\t$(r.valid ? "" : r.reason)\t$(r === best)")
         end
     end
     params = joinpath(cfg.output_dir, "chain_selected_lobes.tsv")
@@ -2003,6 +2018,7 @@ function _write_chain_sweep(results::Vector{ChainModelResult}, best::ChainModelR
         println(io, "spacing_min_effective_source\tmax(spacing_min_nm, sqrt(-2log(max_overlap))*sigma_max)")
         println(io, "spacing_max_nm\t$(ccfg.spacing_max_nm)")
         println(io, "max_overlap\t$(ccfg.max_overlap)")
+        println(io, "kappa_max\t$(ccfg.kappa_max)")
         println(io, "sigma_parallel_min_nm\t$(ccfg.sigma_parallel_min_nm)")
         println(io, "sigma_parallel_max_nm\t$(ccfg.sigma_parallel_max_nm)")
         println(io, "sigma_perp_min_nm\t$(ccfg.sigma_perp_min_nm)")
