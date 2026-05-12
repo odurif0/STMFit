@@ -204,7 +204,7 @@ function make_best_plot(best_ell, ctx_ell, ccfg_ell, best_circ, ctx_circ, ccfg_c
             end
             push!(rx, bx); push!(ry, by)
         end
-        plot!(p, rx, ry; color=:lime, linewidth=2, alpha=0.8, label="")
+        plot!(p, rx, ry; color=:white, linewidth=2, alpha=0.9, label="")
         # FWHM ellipses/circles (cyan)
         if n > 0 && best.success
             _, feats, _, _, _, _ = GaussianFit2D._decode_chain(best.params, n, ax_ctx, ccfg;
@@ -217,7 +217,7 @@ function make_best_plot(best_ell, ctx_ell, ccfg_ell, best_circ, ctx_circ, ccfg_c
                 _ellipse!(p, f.x_nm, f.y_nm, a_ell, b_ell, axis_angle; color=:cyan, alpha=0.4, label="")
                 push!(xs_c, f.x_nm); push!(ys_c, f.y_nm)
             end
-            scatter!(p, xs_c, ys_c; marker=:cross, markersize=10, color=:cyan, linewidth=2.5, label="")
+            scatter!(p, xs_c, ys_c; marker=:cross, markersize=10, color=:red, linewidth=2.5, label="")
         end
     end
 
