@@ -13,6 +13,8 @@ const DATA_DIR = get(ENV, "STMFIT_DATA_DIR", "/home/durif/Rebecca/data/data/2024
 list_sxm_files(dir) = sort([f for f in readdir(dir) if endswith(lowercase(f), ".sxm")])
 const TSV = "results/batch_triage_20240817_relaxed.tsv"
 const OUTDIR = "results/best_plots"
+const EXCLUDE = Set(["240817_001.sxm", "240817_010.sxm", "240817_011.sxm", "240817_012.sxm",
+                      "240817_014.sxm", "240817_020.sxm", "240817_025.sxm"])
 
 function _parse_cli(args)
     n_files = 48
@@ -337,6 +339,8 @@ else
     @warn "Triage TSV not found: $TSV; discovering SXM files directly from $DATA_DIR"
     cands = [(fn, 0, Inf) for fn in list_sxm_files(DATA_DIR)]
 end
+# Exclude files that are not chitosan chains
+cands = [(fn, n, bic) for (fn, n, bic) in cands if !(fn in EXCLUDE)]
 to_process_base = cands[1:min(N_FILES, length(cands))]
 to_process_all = CHUNK_TOTAL == 1 ? to_process_base : [f for (i, f) in enumerate(to_process_base) if mod1(i, CHUNK_TOTAL) == CHUNK_IDX]
 if CHUNK_TOTAL > 1
