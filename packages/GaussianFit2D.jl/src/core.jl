@@ -744,7 +744,8 @@ end
 function _chain_nparams(n::Int, ccfg::Union{ChainSweepConfig,Nothing}=nothing)
     n == 0 && return 1
     n_sigmas = (ccfg !== nothing && ccfg.chain_circular_sigmas) ? n : 2n
-    return 1 + n + 1 + (n-1) + n + n_sigmas
+    n_angles = (ccfg !== nothing && ccfg.chain_rotatable_lobes) ? n : 0
+    return 1 + n + 1 + (n-1) + n + n_sigmas + n_angles
 end
 
 function _residual_peak_snr(x, y, z, pred, noise)
@@ -904,6 +905,13 @@ function _decode_chain(p::AbstractVector, n::Int, axisctx, ccfg::ChainSweepConfi
         j += n
         sperps = [ccfg.sigma_perp_min_nm + (ccfg.sigma_perp_max_nm - ccfg.sigma_perp_min_nm) * _rsigmoid(p[j+k-1]) for k in 1:n]
     end
+    j += n
+    # Per-lobe rotation angle θ ∈ [0, π/2] (sigmoid-encoded)
+    if ccfg.chain_rotatable_lobes
+        angles = [(π/2) * _rsigmoid(p[j+k-1]) for k in 1:n]
+    else
+        angles = zeros(n)
+    end
     ts = Float64[t0]
     for d in deltas
         push!(ts, ts[end] + d)
@@ -915,7 +923,7 @@ function _decode_chain(p::AbstractVector, n::Int, axisctx, ccfg::ChainSweepConfi
     for k in 1:n
         xk = ox + ts[k] * ax + us[k] * px
         yk = oy + ts[k] * ay + us[k] * py
-        push!(feats, MolecularFeature(amps[k], xk, yk, spars[k], sperps[k], amps[k]))
+        push!(feats, MolecularFeature(amps[k], xk, yk, spars[k], sperps[k], amps[k], angles[k]))
     end
     return b0, feats, ts, us, spars, sperps
 end
@@ -925,8 +933,19 @@ function _chain_model_values(x, y, p, n::Int, axisctx, ccfg::ChainSweepConfig;
     b0, feats, _ts, _us, _spars, _sperps = _decode_chain(p, n, axisctx, ccfg;
                                                           amp_min=amp_min, amp_range=amp_range)
     pred = fill(b0, length(x))
+    ax, ay = axisctx.axis
     for f in feats
-        @. pred += f.amplitude * exp(-0.5 * ((((x - f.x_nm)*axisctx.axis[1] + (y - f.y_nm)*axisctx.axis[2])/f.sigma_x_nm)^2 + (((x - f.x_nm)*axisctx.perp[1] + (y - f.y_nm)*axisctx.perp[2])/f.sigma_y_nm)^2))
+        # Per-lobe rotation: rotate the global axis by f.angle
+        if !ccfg.chain_rotatable_lobes || abs(f.angle) < 1e-12
+            @. pred += f.amplitude * exp(-0.5 * ((((x - f.x_nm)*ax + (y - f.y_nm)*ay)/f.sigma_x_nm)^2 + (((x - f.x_nm)*(-ay) + (y - f.y_nm)*ax)/f.sigma_y_nm)^2))
+        else
+            ca, sa = cos(f.angle), sin(f.angle)
+            laxis_x = ax*ca - ay*sa    # lobe major axis
+            laxis_y = ax*sa + ay*ca
+            lperp_x = -laxis_y          # lobe minor axis
+            lperp_y = laxis_x
+            @. pred += f.amplitude * exp(-0.5 * ((((x - f.x_nm)*laxis_x + (y - f.y_nm)*laxis_y)/f.sigma_x_nm)^2 + (((x - f.x_nm)*lperp_x + (y - f.y_nm)*lperp_y)/f.sigma_y_nm)^2))
+        end
     end
     return pred
 end
@@ -1046,16 +1065,30 @@ function _pack_chain_initial(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConf
             push!(p, sperp_trans)
         end
     end
+    # Per-lobe rotation angle θ ∈ [0, π/2] (sigmoid-encoded)
+    if ccfg.chain_rotatable_lobes
+        for _ in 1:n
+            push!(p, _rlogit(0.01))  # start near θ = 0 (aligned with chain axis)
+        end
+    end
     return p, amp_min_val, amp_range_val
 end
 
-function _fit_chain_n(xs, ys, zimg, x, y, z, noise, n::Int, axisctx, ccfg::ChainSweepConfig; starts::Int=ccfg.multistart)
+function _fit_chain_n(xs, ys, zimg, x, y, z, noise, n::Int, axisctx, ccfg::ChainSweepConfig; starts::Int=ccfg.multistart,
+                     warm_start::Union{Vector{Float64},Nothing}=nothing)
     n == 0 && return ChainModelResult(n=0, params=[median(z)], success=true)
     if !_chain_can_fit_support(n, axisctx, ccfg)
         return ChainModelResult(n=n, success=false, valid=false,
             reason=@sprintf("infeasible support: min span %.4f > support %.4f", _chain_min_span(n, ccfg), _chain_support_length(axisctx)))
     end
-    p0, amp_min, amp_range = _pack_chain_initial(xs, ys, zimg, n, axisctx, ccfg)
+    if warm_start !== nothing
+        p0 = warm_start
+        amp_max_data = max(maximum(zimg), EPS)
+        amp_min = ccfg.min_amplitude_fraction * amp_max_data
+        amp_range = max(amp_max_data - amp_min, EPS)
+    else
+        p0, amp_min, amp_range = _pack_chain_initial(xs, ys, zimg, n, axisctx, ccfg)
+    end
     xy = vcat(reshape(x, 1, :), reshape(y, 1, :))
     model = (xydata, p) -> _chain_model_values(view(xydata,1,:), view(xydata,2,:), p, n, axisctx, ccfg;
                                                 amp_min=amp_min, amp_range=amp_range)
@@ -1080,11 +1113,44 @@ function _fit_chain_n(xs, ys, zimg, x, y, z, noise, n::Int, axisctx, ccfg::Chain
             j += 1
         end
     end
+    # Per-lobe rotation angle θ ∈ [0, π/2] (sigmoid-encoded)
+    if ccfg.chain_rotatable_lobes
+        for _ in 1:n
+            lower[j] = -5.0; upper[j] = 5.0   # sigmoid maps ℝ → (0, π/2)
+            j += 1
+        end
+    end
     p0 = clamp.(p0, lower .+ 1e-9, upper .- 1e-9)
 
     p_global = p0
     global_success = true  # default true if we skip NLopt
-    if !ccfg.skip_global
+    best_rss = Inf
+    if ccfg.chain_rotatable_lobes && !ccfg.skip_global
+        # Multi-start local: avoid NLopt global (which fails in high dimension with θ).
+        # First start from θ≈0, then perturbed starts. Keep best RSS.
+        n_starts = max(starts, 10)
+        for s in 1:n_starts
+            if s == 1
+                p_start = p0  # θ ≈ 0
+            else
+                # Deterministic perturbation: vary with start index
+                p_start = p0 .+ 0.1 .* (upper .- lower) .*
+                          sin.(Float64(s) .+ (1:np) ./ np .* 2π)
+                p_start = max.(min.(p_start, upper .- 1e-9), lower .+ 1e-9)
+            end
+            local fit
+            try
+                fit = curve_fit(model, xy, z, p_start; lower=lower, upper=upper, maxIter=ccfg.max_iter, autodiff=:finite)
+                rss_val = sum(abs2, z .- model(xy, fit.param))
+                if rss_val < best_rss
+                    best_rss = rss_val
+                    p_global = fit.param
+                    global_success = true
+                end
+            catch
+            end
+        end
+    elseif !ccfg.skip_global
         # κ penalty (global NLopt stage only; LM refinement is unbiased)
         objective = let km=ccfg.kappa_max, kw=ccfg.kappa_weight, nf=n, ax=axisctx, c=ccfg
             (u, _) -> begin
