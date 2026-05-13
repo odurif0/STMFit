@@ -744,8 +744,8 @@ end
 function _chain_nparams(n::Int, ccfg::Union{ChainSweepConfig,Nothing}=nothing)
     n == 0 && return 1
     n_sigmas = (ccfg !== nothing && ccfg.chain_circular_sigmas) ? n : 2n
-    n_angles = (ccfg !== nothing && ccfg.chain_rotatable_lobes) ? n : 0
-    return 1 + n + 1 + (n-1) + n + n_sigmas + n_angles
+    n_tilt = (ccfg !== nothing && ccfg.chain_tilted_baseline) ? 2 : 0
+    return 1 + n + 1 + (n-1) + n + n_sigmas + n_tilt
 end
 
 function _residual_peak_snr(x, y, z, pred, noise)
@@ -868,6 +868,10 @@ function _decode_chain(p::AbstractVector, n::Int, axisctx, ccfg::ChainSweepConfi
     n == 0 && return p[1], MolecularFeature[], Float64[], Float64[], Float64[], Float64[]
     b0 = p[1]
     j = 2
+    # Baseline tilt offset: shift j past bx,by when present in param vector
+    if ccfg.chain_tilted_baseline
+        j = 4  # skip p[2]=bx, p[3]=by
+    end
     if !isnan(amp_min) && !isnan(amp_range) && amp_range > EPS
         amps = [amp_min + amp_range * clamp(_rsigmoid(p[j+k-1]), 1e-9, 1.0-1e-9) for k in 1:n]
     else
@@ -905,13 +909,6 @@ function _decode_chain(p::AbstractVector, n::Int, axisctx, ccfg::ChainSweepConfi
         j += n
         sperps = [ccfg.sigma_perp_min_nm + (ccfg.sigma_perp_max_nm - ccfg.sigma_perp_min_nm) * _rsigmoid(p[j+k-1]) for k in 1:n]
     end
-    j += n
-    # Per-lobe rotation angle θ ∈ [0, π/2] (sigmoid-encoded)
-    if ccfg.chain_rotatable_lobes
-        angles = [(π/2) * _rsigmoid(p[j+k-1]) for k in 1:n]
-    else
-        angles = zeros(n)
-    end
     ts = Float64[t0]
     for d in deltas
         push!(ts, ts[end] + d)
@@ -923,7 +920,7 @@ function _decode_chain(p::AbstractVector, n::Int, axisctx, ccfg::ChainSweepConfi
     for k in 1:n
         xk = ox + ts[k] * ax + us[k] * px
         yk = oy + ts[k] * ay + us[k] * py
-        push!(feats, MolecularFeature(amps[k], xk, yk, spars[k], sperps[k], amps[k], angles[k]))
+        push!(feats, MolecularFeature(amps[k], xk, yk, spars[k], sperps[k], amps[k]))
     end
     return b0, feats, ts, us, spars, sperps
 end
@@ -932,20 +929,16 @@ function _chain_model_values(x, y, p, n::Int, axisctx, ccfg::ChainSweepConfig;
                              amp_min::Float64=NaN, amp_range::Float64=NaN)
     b0, feats, _ts, _us, _spars, _sperps = _decode_chain(p, n, axisctx, ccfg;
                                                           amp_min=amp_min, amp_range=amp_range)
-    pred = fill(b0, length(x))
+    # Tilted baseline: b0 + bx·x + by·y
+    if ccfg.chain_tilted_baseline
+        bx = p[2]; by = p[3]
+        pred = @. b0 + bx*x + by*y
+    else
+        pred = fill(b0, length(x))
+    end
     ax, ay = axisctx.axis
     for f in feats
-        # Per-lobe rotation: rotate the global axis by f.angle
-        if !ccfg.chain_rotatable_lobes || abs(f.angle) < 1e-12
-            @. pred += f.amplitude * exp(-0.5 * ((((x - f.x_nm)*ax + (y - f.y_nm)*ay)/f.sigma_x_nm)^2 + (((x - f.x_nm)*(-ay) + (y - f.y_nm)*ax)/f.sigma_y_nm)^2))
-        else
-            ca, sa = cos(f.angle), sin(f.angle)
-            laxis_x = ax*ca - ay*sa    # lobe major axis
-            laxis_y = ax*sa + ay*ca
-            lperp_x = -laxis_y          # lobe minor axis
-            lperp_y = laxis_x
-            @. pred += f.amplitude * exp(-0.5 * ((((x - f.x_nm)*laxis_x + (y - f.y_nm)*laxis_y)/f.sigma_x_nm)^2 + (((x - f.x_nm)*lperp_x + (y - f.y_nm)*lperp_y)/f.sigma_y_nm)^2))
-        end
+        @. pred += f.amplitude * exp(-0.5 * ((((x - f.x_nm)*ax + (y - f.y_nm)*ay)/f.sigma_x_nm)^2 + (((x - f.x_nm)*(-ay) + (y - f.y_nm)*ax)/f.sigma_y_nm)^2))
     end
     return pred
 end
@@ -969,6 +962,10 @@ function _pack_chain_initial(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConf
     end
 
     p = Float64[quantile(vec(zimg), 0.05)]
+    # Tilted baseline: init bx=0, by=0 (no tilt)
+    if ccfg.chain_tilted_baseline
+        push!(p, 0.0); push!(p, 0.0)
+    end
 
     if have_1d_init
         # Use 1D bootstrap centers and amplitudes
@@ -1065,12 +1062,6 @@ function _pack_chain_initial(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConf
             push!(p, sperp_trans)
         end
     end
-    # Per-lobe rotation angle θ ∈ [0, π/2] (sigmoid-encoded)
-    if ccfg.chain_rotatable_lobes
-        for _ in 1:n
-            push!(p, _rlogit(0.01))  # start near θ = 0 (aligned with chain axis)
-        end
-    end
     return p, amp_min_val, amp_range_val
 end
 
@@ -1097,6 +1088,11 @@ function _fit_chain_n(xs, ys, zimg, x, y, z, noise, n::Int, axisctx, ccfg::Chain
     lower = fill(-10.0, np); upper = fill(10.0, np)
     lower[1] = -5.0; upper[1] = 5.0
     j = 2
+    # Tilted baseline: bx, by (raw linear, bounded)
+    if ccfg.chain_tilted_baseline
+        lower[j] = -1.0; upper[j] = 1.0; j += 1  # bx (per nm)
+        lower[j] = -1.0; upper[j] = 1.0; j += 1  # by (per nm)
+    end
     for _ in 1:n; lower[j] = -5.0; upper[j] = 5.0; j += 1 end  # sigmoid-transformed amplitude
     lower[j] = -4.0; upper[j] = 4.0; j += 1  # t0
     for _ in 1:n-1; lower[j] = -5.0; upper[j] = 5.0; j += 1 end  # deltas
@@ -1113,44 +1109,11 @@ function _fit_chain_n(xs, ys, zimg, x, y, z, noise, n::Int, axisctx, ccfg::Chain
             j += 1
         end
     end
-    # Per-lobe rotation angle θ ∈ [0, π/2] (sigmoid-encoded)
-    if ccfg.chain_rotatable_lobes
-        for _ in 1:n
-            lower[j] = -5.0; upper[j] = 5.0   # sigmoid maps ℝ → (0, π/2)
-            j += 1
-        end
-    end
     p0 = clamp.(p0, lower .+ 1e-9, upper .- 1e-9)
 
     p_global = p0
     global_success = true  # default true if we skip NLopt
-    best_rss = Inf
-    if ccfg.chain_rotatable_lobes && !ccfg.skip_global
-        # Multi-start local: avoid NLopt global (which fails in high dimension with θ).
-        # First start from θ≈0, then perturbed starts. Keep best RSS.
-        n_starts = max(starts, 10)
-        for s in 1:n_starts
-            if s == 1
-                p_start = p0  # θ ≈ 0
-            else
-                # Deterministic perturbation: vary with start index
-                p_start = p0 .+ 0.1 .* (upper .- lower) .*
-                          sin.(Float64(s) .+ (1:np) ./ np .* 2π)
-                p_start = max.(min.(p_start, upper .- 1e-9), lower .+ 1e-9)
-            end
-            local fit
-            try
-                fit = curve_fit(model, xy, z, p_start; lower=lower, upper=upper, maxIter=ccfg.max_iter, autodiff=:finite)
-                rss_val = sum(abs2, z .- model(xy, fit.param))
-                if rss_val < best_rss
-                    best_rss = rss_val
-                    p_global = fit.param
-                    global_success = true
-                end
-            catch
-            end
-        end
-    elseif !ccfg.skip_global
+    if !ccfg.skip_global
         # κ penalty (global NLopt stage only; LM refinement is unbiased)
         objective = let km=ccfg.kappa_max, kw=ccfg.kappa_weight, nf=n, ax=axisctx, c=ccfg
             (u, _) -> begin

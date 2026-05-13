@@ -586,6 +586,25 @@ function _fit_one(n_peaks::Int, x::Vector{Float64}, y::Vector{Float64}, cfg::Fit
         sigmas = [_get_sigma(fit.popt, k) for k in 0:(n_peaks-1)]
         kappa_val = adjacent_kappa_max(deltas, sigmas)
     end
+    # Ghost peak detection: reject models where any peak is pinned at the
+    # amplitude lower bound with a completely unconstrained center.
+    if n_peaks > 1 && !isempty(fit.perr)
+        amp_bound = cfg.amplitude_min_fraction * maximum(y)
+        centers = _params_to_centers(fit.popt, n_peaks)
+        median_sp = length(centers) >= 2 ? median(diff(centers)) : 1.0
+        n_ghost = 0
+        for i in 0:(n_peaks-1)
+            ampl = _get_amplitude(fit.popt, i)
+            cent_idx = 3 + 3*i  # center param index in full params
+            cent_err = length(fit.perr) >= cent_idx ? fit.perr[cent_idx] : 0.0
+            if abs(ampl - amp_bound) < 1e-8 && cent_err > 2.0 * median_sp
+                n_ghost += 1
+            end
+        end
+        if n_ghost >= 2  # allow at most 1 ghost (edge case with tight support)
+            return nothing
+        end
+    end
     result = FitResult(
         n_peaks=n_peaks,
         popt=fit.popt, pcov=fit.pcov, perr=fit.perr,
