@@ -385,7 +385,8 @@ ccfg = GaussianFit2D.ChainSweepConfig(n_min=2, n_max=14,
     sigma_parallel_max_nm=SIGMA_MAX_HARMONIZED_NM,
     sigma_perp_min_nm=SIGMA_MIN_HARMONIZED_NM,
     sigma_perp_max_nm=SIGMA_MAX_HARMONIZED_NM,
-    intelligent_sweep=true, fuse_z_bwd=true)
+    intelligent_sweep=true, fuse_z_bwd=true,
+    chain_tilted_baseline=true)
 # Circular 2D config (same settings, circular sigmas)
 ccfg_circ = deepcopy(ccfg)
 ccfg_circ.chain_circular_sigmas = true
