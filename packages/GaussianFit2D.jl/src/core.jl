@@ -194,6 +194,12 @@ function preprocess_channel(img::SXMImage, ch::SXMChannel, cfg::PatternConfig)
     stride = max(1, cfg.stride)
     xs, ys = _coordinate_vectors(img; stride=stride)
     z = ch.data[1:stride:end, 1:stride:end] .* scale
+    # Replace NaN/Inf with median of finite values (matches STMMolecularFit)
+    finite_vals = z[isfinite.(z)]
+    if !isempty(finite_vals)
+        fill_val = median(finite_vals)
+        z[.!isfinite.(z)] .= fill_val
+    end
     raw = copy(z)
 
     if occursin("plane", lowercase(cfg.flatten))
@@ -663,6 +669,9 @@ function _fused_roi_data(img::SXMImage, cfg::PatternConfig)
     scale, _ = _value_scale(ch_bwd.unit)
     stride = max(1, cfg.stride)
     z_bwd = ch_bwd.data[1:stride:end, 1:stride:end] .* scale
+    # Replace NaN/Inf with median (matches preprocess_channel)
+    finite_bwd = z_bwd[isfinite.(z_bwd)]
+    if !isempty(finite_bwd); z_bwd[.!isfinite.(z_bwd)] .= median(finite_bwd); end
     if occursin("plane", lowercase(cfg.flatten))
         z_bwd .-= _plane_fit(xs, ys, z_bwd)
     end
@@ -678,8 +687,15 @@ function _fused_roi_data(img::SXMImage, cfg::PatternConfig)
     noise = max(noise_fwd, noise_bwd)
     # ROI mask from fused data
     _rxs, _rys, mask = molecule_roi_mask_fused(img, cfg, zs_fused)
+    if count(mask) == 0
+        mask = trues(size(zs_fused))  # fallback: use whole image
+    end
     vals = z_fused[mask]
-    z0 = z_fused .- quantile(vals, 0.05)
+    if isempty(vals)
+        z0 = z_fused  # no valid data to reference
+    else
+        z0 = z_fused .- quantile(vals, 0.05)
+    end
     xflat, yflat, zflat = _flatten_roi(z0, mask, xs, ys)
     return xs, ys, z0, mask, xflat, yflat, zflat, max(noise, EPS)
 end
