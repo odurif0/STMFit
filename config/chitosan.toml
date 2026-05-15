@@ -1,0 +1,57 @@
+# STMFit calibration — Chitosan on Cu(100)
+# STM: Nanomics, LHe temperature, ~0.02 nm/px
+# Molecule: chitosan oligomers, expected N=6 ± 1
+#
+# To create a new calibration: copy this file, adjust parameters,
+# and pass it to batch_full.jl via `--config path/to/calibration.toml`
+
+[model]
+# ── Physical constraints ──
+spacing_min_nm = 0.35          # minimum inter-lobe spacing
+spacing_max_nm = 0.75          # maximum inter-lobe spacing
+max_overlap = 0.60             # maximum lobe overlap fraction
+sigma_parallel_min_nm = 0.191  # FWHM 0.45 nm / 2.355
+sigma_parallel_max_nm = 0.509  # FWHM 1.20 nm / 2.355
+fit_width_nm = 0.15            # tube half-width around axis
+
+# ── Support detection ──
+support_threshold_fraction = 0.25   # fraction of max signal for support
+support_noise_k = 2.5               # noise multiplier for threshold
+support_padding_nm = 0.05           # edge padding (~2.5 px)
+support_min_length_nm = 1.0         # minimum support length
+support_baseline_quantile = 0.10    # baseline quantile for profile
+
+# ── Optimization ──
+global_maxtime = 10.0          # NLopt timeout per N (seconds)
+global_maxiter = 10000         # NLopt max iterations
+max_iter = 300                 # LsqFit max iterations
+multistart = 1                 # number of random starts (1 = bootstrap only)
+
+# ── Model selection ──
+cv_folds = 5                   # cross-validation folds
+bic_cv_margin = 100            # ΔBIC threshold for CV tiebreaker
+cv_ratio_threshold = 2.0       # CV ratio threshold for override
+
+# ── Penalties ──
+kappa_max = 8.0                # condition number threshold (0 = disabled)
+kappa_weight = 1.0             # penalty strength
+min_amplitude_fraction = 0.3   # minimum lobe amplitude (fraction of max data)
+
+# ── Variants ──
+chain_tilted_baseline = true   # linear tilt in 2D background
+chain_circular_sigmas = false  # σ∥=σ⟂ (circular model)
+
+[preprocessing]
+stride = 1                     # subsampling stride
+flatten = "plane+rows"         # background flattening method
+smooth_radius_px = 1           # preprocessing smoothing radius
+
+# ── Notes ──
+# Calibrated on: 240817 dataset (27 files, chitosan on Cu(100))
+# Date: 2025-05-15
+# Key changes from defaults:
+#   - support_threshold_fraction: 0.20 → 0.25 (tighter support, less edge noise)
+#   - support_padding_nm: 0.20 → 0.05 (minimal edge extension)
+#   - cv_folds: 3 → 5 (better CV discrimination)
+# Impact: fixed 019 (N=8→N=6), 036 (N=7→N=6), 039 (N=7→N=6)
+#         improved absolute BIC on clean files (033: 1349→1162)

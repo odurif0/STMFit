@@ -321,7 +321,8 @@ function _make_objective_function(x, y, n_peaks, asymmetric_edges, use_log_ampli
     Uses pre-allocated buffers to avoid allocations on every call.
     When kappa_max > 0 and n_peaks > 1, adds a progressive κ penalty.
     """
-    n_params_inner = 3 * n_peaks + (asymmetric_edges && n_peaks >= 2 ? 2 : 0)
+    n_params_inner = 3 * n_peaks + (asymmetric_edges && n_peaks >= 2 ? 2 : 0) +
+                     (peak_profile == :pseudo_voigt ? 1 : 0)
     full_buf = zeros(n_params_inner + 1)  # +1 for y0=0
     y_buf = similar(x)  # pre-alloc output buffer for multi_gaussian
     # y0 at index 1 is always 0
@@ -845,6 +846,38 @@ function run_model_comparison(x::Vector{Float64}, y::Vector{Float64}, cfg::FitCo
 
     if isempty(results_list)
         return results_list
+    end
+
+    # ── Fix Student-t BIC with global noise (consistent with 2D) ──
+    # Per-fit noise adapts to RSS → better fits don't get rewarded (issue #002).
+    # Use a SINGLE noise estimate for all models in the sweep:
+    #   1. If cfg.noise_estimate is already set (finite), use it directly.
+    #      This enables cross-profile comparison (share Gaussian's noise with
+    #      pseudo-Voigt/Lorentzian sweeps by setting noise_estimate beforehand).
+    #   2. Otherwise, compute once from the lowest-RSS model's residuals (most
+    #      signal removed) and store it in cfg.noise_estimate so subsequent
+    #      sweeps with the same config object reuse the same reference.
+    if cfg.use_student_bic
+        if isfinite(cfg.noise_estimate)
+            noise_fixed = cfg.noise_estimate
+        else
+            r_ref = results_list[argmin([r.rss for r in results_list])]
+            noise_fixed = 1.4826 * median(abs.((y .- r_ref.y_fit) .- median(y .- r_ref.y_fit)))
+            if noise_fixed > 0 && isfinite(noise_fixed)
+                cfg.noise_estimate = noise_fixed  # store for cross-profile reuse
+            end
+        end
+        if noise_fixed > 0 && isfinite(noise_fixed)
+            nu = cfg.student_nu
+            n_eff = length(y)
+            for r in results_list
+                resid = y .- r.y_fit
+                student_nll = sum(0.5 * (nu + 1) .* log1p.((resid ./ noise_fixed) .^ 2 ./ nu))
+                r.student_bic = 2 * student_nll + r.n_params * log(n_eff)
+                r.aicc = 2 * student_nll + 2 * r.n_params + (2 * r.n_params * (r.n_params + 1)) / max(n_eff - r.n_params - 1, 1)
+                r.chi2_red = r.rss / max(1, n_eff - r.n_params) / max(noise_fixed^2, 1e-12)
+            end
+        end
     end
 
     # Tag competitive
