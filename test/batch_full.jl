@@ -493,7 +493,7 @@ pcfg = GaussianFit2D.PatternConfig(filepath="", channel="Z", direction="fwd",
     stride=1, flatten="plane+rows", smooth_radius_px=1, output_dir=OUTDIR, no_plot=false)
 ccfg = GaussianFit2D.ChainSweepConfig(n_min=2, n_max=14,
     spacing_min_nm=0.35, spacing_max_nm=0.75, fit_width_nm=0.15,
-    support_threshold_fraction=0.25, support_noise_k=2.5, support_padding_nm=0.05,
+    support_threshold_fraction=0.25, support_noise_k=2.5, support_padding_nm=0.20,
     max_overlap=0.6,
     global_maxtime=10.0, global_maxiter=10000, cv_folds=5,
     multistart=1,      # bootstrap only (fast; default is 1)

@@ -17,7 +17,7 @@ fit_width_nm = 0.15            # tube half-width around axis
 # ── Support detection ──
 support_threshold_fraction = 0.25   # fraction of max signal for support
 support_noise_k = 2.5               # noise multiplier for threshold
-support_padding_nm = 0.05           # edge padding (~2.5 px)
+support_padding_nm = 0.20           # edge padding (harmonized with 1D)
 support_min_length_nm = 1.0         # minimum support length
 support_baseline_quantile = 0.10    # baseline quantile for profile
 
