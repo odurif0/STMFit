@@ -13,8 +13,11 @@ const DATA_DIR = get(ENV, "STMFIT_DATA_DIR", "/home/durif/Rebecca/data/data/2024
 list_sxm_files(dir) = sort([f for f in readdir(dir) if endswith(lowercase(f), ".sxm")])
 const TSV = "results/batch_triage_20240817_relaxed.tsv"
 const OUTDIR = "results/best_plots"
-const EXCLUDE = Set(["240817_001.sxm", "240817_010.sxm", "240817_011.sxm", "240817_012.sxm",
-                      "240817_013.sxm", "240817_014.sxm", "240817_020.sxm", "240817_025.sxm"])
+const EXCLUDE = Set(["240817_001.sxm", "240817_008.sxm", "240817_009.sxm",
+                      "240817_010.sxm", "240817_011.sxm", "240817_012.sxm",
+                      "240817_013.sxm", "240817_014.sxm", "240817_016.sxm",
+                      "240817_020.sxm", "240817_022.sxm", "240817_023.sxm",
+                      "240817_025.sxm", "240817_028.sxm"])
 
 function _parse_cli(args)
     n_files = 48
