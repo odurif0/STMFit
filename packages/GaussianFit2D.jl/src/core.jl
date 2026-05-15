@@ -208,15 +208,59 @@ function preprocess_channel(img::SXMImage, ch::SXMChannel, cfg::PatternConfig)
     return xs, ys, raw, z, z_smooth, scaled_unit, noise
 end
 
+function _otsu_threshold(signal::AbstractMatrix{Float64})
+    v = vec(signal)
+    v = v[isfinite.(v) .& (v .> 0)]
+    isempty(v) && return 0.0
+    nbins = 128
+    lo, hi = minimum(v), maximum(v)
+    hi <= lo && return 0.0
+    bin_edges = range(lo, hi, length=nbins+1)
+    counts = zeros(Int, nbins)
+    for x in v
+        idx = min(nbins, max(1, Int(floor((x-lo)/(hi-lo)*(nbins-1)))+1))
+        counts[idx] += 1
+    end
+    total = sum(counts)
+    total == 0 && return 0.0
+    sumB, wB, max_var, best = 0.0, 0.0, 0.0, 0
+    bin_centers = (bin_edges[1:end-1] .+ bin_edges[2:end]) ./ 2
+    sumT = sum(bin_centers .* counts)
+    for i in 1:nbins
+        wB += counts[i]
+        wB == 0 && continue
+        wF = total - wB
+        wF <= 0 && break
+        sumB += bin_centers[i] * counts[i]
+        mB = sumB / wB
+        mF = (sumT - sumB) / wF
+        var_between = wB * wF * (mB - mF)^2 / (total^2)
+        if var_between > max_var
+            max_var = var_between
+            best = i
+        end
+    end
+    return best > 0 ? bin_centers[best] : 0.0
+end
+
+function _adaptive_roi_threshold(signal::AbstractMatrix{Float64}, noise::Float64, roi_threshold_fraction::Float64, roi_noise_k::Float64)
+    maxsig = maximum(signal)
+    maxsig <= EPS && return 0.0
+    threshold_otsu = _otsu_threshold(signal)
+    threshold_frac = roi_threshold_fraction * maxsig
+    threshold_noise = roi_noise_k * noise
+    return max(threshold_otsu, threshold_frac, threshold_noise)
+end
+
 function molecule_roi_mask(img::SXMImage, cfg::PatternConfig)
     ch = get_channel(img, cfg.roi_channel; direction="fwd")
-    xs, ys, _raw, z, z_smooth, _unit, _noise = preprocess_channel(img, ch, cfg)
+    xs, ys, _raw, z, z_smooth, _unit, noise = preprocess_channel(img, ch, cfg)
     signal = z_smooth .- minimum(z_smooth)
-    maxsig = maximum(signal)
-    if maxsig <= EPS
+    if maximum(signal) <= EPS
         return xs, ys, trues(size(z_smooth))
     end
-    mask = signal .>= cfg.roi_threshold_fraction * maxsig
+    threshold = _adaptive_roi_threshold(signal, noise, cfg.roi_threshold_fraction, 2.5)
+    mask = signal .>= threshold
     mask = _largest_component(mask)
     mask = _dilate_mask(mask, max(0, cfg.roi_dilate_px ÷ max(1, cfg.stride)))
     return xs, ys, mask
@@ -701,7 +745,10 @@ function molecule_roi_mask_fused(img, cfg::PatternConfig, z_smooth)
     if maxsig <= EPS
         return nothing, nothing, trues(size(z_smooth))
     end
-    mask = signal .>= cfg.roi_threshold_fraction * maxsig
+    noise = 1.4826 * median(abs.(vec(z_smooth) .- median(vec(z_smooth))))
+    noise = max(noise, std(vec(z_smooth))*0.1, EPS)
+    threshold = _adaptive_roi_threshold(signal, noise, cfg.roi_threshold_fraction, 2.5)
+    mask = signal .>= threshold
     mask = _largest_component(mask)
     mask = _dilate_mask(mask, max(0, cfg.roi_dilate_px ÷ max(1, cfg.stride)))
     size_z = size(z_smooth)
