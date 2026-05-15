@@ -493,6 +493,7 @@ ccfg = GaussianFit2D.ChainSweepConfig(n_min=2, n_max=14,
     support_threshold_fraction=0.25, support_noise_k=2.5, support_padding_nm=0.05,
     max_overlap=0.6,
     global_maxtime=10.0, global_maxiter=10000, cv_folds=5,
+    multistart=1,      # bootstrap only (fast; default is 1)
     sigma_parallel_min_nm=SIGMA_MIN_HARMONIZED_NM,
     sigma_parallel_max_nm=SIGMA_MAX_HARMONIZED_NM,
     sigma_perp_min_nm=SIGMA_MIN_HARMONIZED_NM,
@@ -519,18 +520,29 @@ end
 println("Generating best plots in $OUTDIR/ ...")
 ntot = length(to_process)
 t0 = time()
-for (idx, (fn, n2d_tsv, bic2d_tsv)) in enumerate(to_process)
-    fp = joinpath(DATA_DIR, fn)
-    file_base = splitext(fn)[1]
-    file_dir = joinpath(OUTDIR, file_base)
+summary_lock = ReentrantLock()
+n_parallel = min(4, Threads.nthreads(), ntot)
+println("Processing $ntot files ($n_parallel parallel workers)...")
+flush(stdout)
+
+processed = Threads.Atomic{Int}(0)
+
+Threads.@threads for idx in 1:ntot
+    local fn, n2d_tsv, bic2d_tsv = to_process[idx]
+    local fp = joinpath(DATA_DIR, fn)
+    local file_base = splitext(fn)[1]
+    local file_dir = joinpath(OUTDIR, file_base)
     mkpath(file_dir)
-    outpath = joinpath(OUTDIR, replace(fn, r"\.sxm$"i => "_best.png"))
-    pct = idx / ntot * 100
-    elapsed = time() - t0
-    eta = idx > 1 ? elapsed / (idx-1) * (ntot - idx + 1) : 0
-    eta_min = eta > 0 ? div(round(Int, eta), 60) : 0
-    eta_sec = eta > 0 ? round(Int, eta) % 60 : 0
-    @printf("[%2d/%2d %3.0f%%  ETA %d:%02d] %-24s ", idx, ntot, pct, eta_min, eta_sec, fn)
+    local outpath = joinpath(OUTDIR, replace(fn, r"\.sxm$"i => "_best.png"))
+    
+    Threads.atomic_add!(processed, 1)
+    local done = processed[]
+    local pct = done / ntot * 100
+    local elapsed = time() - t0
+    local eta = done > 0 ? elapsed / done * (ntot - done) : 0
+    local eta_min = eta > 0 ? div(round(Int, eta), 60) : 0
+    local eta_sec = eta > 0 ? round(Int, eta) % 60 : 0
+    @printf("[%2d/%2d %3.0f%%  ETA %d:%02d] %-24s\n", done, ntot, pct, eta_min, eta_sec, fn)
     flush(stdout)
     try
         # 1D fit
@@ -540,9 +552,12 @@ for (idx, (fn, n2d_tsv, bic2d_tsv)) in enumerate(to_process)
         slide = STMMolecularFit.extract_slide(img, scfg_file)
         if isempty(slide.x) || isempty(slide.y)
             @warn("$fn: empty slide profile (no molecule found?), skipping")
-            push!(summary_lines, join([fn, "no_molecule", "0", "", "", "", "", "", "", "", ""], '\t'))
-            continue
-        end
+            lock(summary_lock) do
+                open(summary_file, "a") do io
+                    println(io, join([fn, "no_molecule", "0", "", "", "", "", "", "", "", ""], '\t'))
+                end
+            end
+        else
         fit_1d = STMMolecularFit.fit_slide(slide, fcfg_file)
         best1d = GaussianFit1D.best_result(fit_1d.fit_run)
         x_1d, y_1d = fit_1d.fit_run.x, fit_1d.fit_run.y
@@ -596,9 +611,10 @@ for (idx, (fn, n2d_tsv, bic2d_tsv)) in enumerate(to_process)
         mismatch_ell = _support_mismatch(support_1d, support_ell)
         mismatch_circ = _support_mismatch(support_1d, support_circ)
 
-        # Write summary progressively
-        eff_source = "refined"  # always from circ→ell LsqFit now
-        open(summary_file, "a") do io
+        # Write summary (thread-safe)
+        eff_source = "refined"
+        lock(summary_lock) do
+            open(summary_file, "a") do io
             println(io, join([fn, "ok", classif,
                               best_ell_sweep.n, best_circ_sweep.n, best1d.n_peaks,
                               best_n_eff, eff_source,
@@ -615,17 +631,21 @@ for (idx, (fn, n2d_tsv, bic2d_tsv)) in enumerate(to_process)
                               best_ell_sweep.kappa_max_adj, best_circ_sweep.kappa_max_adj, best1d.kappa_max_adj,
                               outpath, file_dir], '\t'))
         end
+        end  # lock
+        end  # else
     catch e
         msg = sprint(showerror, e)
         msg_short = length(msg) <= 80 ? msg : msg[1:min(end, 80)] * "..."
         println("FAILED: $msg_short")
-        open(summary_file, "a") do io
+        lock(summary_lock) do
+            open(summary_file, "a") do io
             row = fill("ERR", length(SUMMARY_HEADER))
             row[1] = fn
             row[2] = "error"
             row[3] = "PROBLEMATIC"
             println(io, join(row, '\t'))
         end
+        end  # lock
     end
 end
 

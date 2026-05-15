@@ -6,19 +6,21 @@ authors = ["OD"]
 [deps]
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 GaussianFit1D = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
 GaussianFit2D = "c6f47f04-09bf-4c7d-9d9c-2d0fd3f20f2a"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
-STMMolecularFit = "8b7d0e4f-8ff6-4eb1-980b-88b12dc096fd"
 STMFitCore = "4d8f3c22-9b76-4f91-a75b-40a4f4a6a001"
+STMMolecularFit = "8b7d0e4f-8ff6-4eb1-980b-88b12dc096fd"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [sources]
 GaussianFit1D = {path = "packages/GaussianFit1D.jl"}
 GaussianFit2D = {path = "packages/GaussianFit2D.jl"}
-STMMolecularFit = {path = "packages/STMMolecularFit.jl"}
 STMFitCore = {path = "packages/STMFitCore.jl"}
+STMMolecularFit = {path = "packages/STMMolecularFit.jl"}
 
 [compat]
+Documenter = "1.17.0"
 julia = "1.10"
