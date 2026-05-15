@@ -113,9 +113,27 @@ function _center_errors(perr::AbstractVector{<:Real}, n_peaks::Int)
     return cerr
 end
 
+function _center_center_corr(pcov_inner::Matrix{Float64}, n_peaks::Int)
+    # Correlation matrix of absolute center positions from inner covariance.
+    # Inner layout: [A_0, mu_0, σ_0, A_1, Δ_1, σ_1, ...]
+    # mu_0 at inner index 2, delta_j at inner index 3+3*j
+    J = zeros(n_peaks, size(pcov_inner, 1))
+    for i in 0:(n_peaks-1)
+        J[i+1, 2] = 1.0  # mu_0
+        for j in 1:i
+            J[i+1, 3 + 3*j] = 1.0  # delta_j
+        end
+    end
+    cov_cc = J * pcov_inner * J'
+    d = sqrt.(max.(diag(cov_cc), 0.0))
+    all(d .> 0) || return nothing
+    return Diagonal(1.0 ./ d) * cov_cc * Diagonal(1.0 ./ d)
+end
+
 function multi_gaussian(x::AbstractVector{<:Real}, params::AbstractVector{<:Real};
                         n_peaks::Int=0, asymmetric_edges::Bool=false,
                         use_log_amplitude::Bool=false,
+                        peak_profile::Symbol=:gaussian,
                         y_buf::Union{Vector{Float64},Nothing}=nothing)
     """y0 + sum_i A_i * exp(-0.5 * ((x - mu_i) / sigma_i)^2)
 
@@ -146,7 +164,17 @@ function multi_gaussian(x::AbstractVector{<:Real}, params::AbstractVector{<:Real
                 @inbounds sigma = params[4 + 3 * i]
                 @inbounds amp_raw = params[2 + 3 * i]
                 amp = use_log_amplitude ? exp(amp_raw) : amp_raw
-                @. y_model += amp * exp(-0.5 * ((x - mu) / sigma)^2)
+                z = (x .- mu) ./ sigma
+                if peak_profile == :lorentzian
+                    @. y_model += amp / (1.0 + z * z)
+                elseif peak_profile == :pseudo_voigt
+                    eta = params[end - 2]  # before edge sigmas
+                    G = exp.(-0.5 .* z .* z)
+                    L = 1.0 ./ (1.0 .+ z .* z)
+                    @. y_model += amp * ((1.0 - eta) * G + eta * L)
+                else
+                    @. y_model += amp * exp(-0.5 * z * z)
+                end
             end
         end
 
@@ -166,13 +194,23 @@ function multi_gaussian(x::AbstractVector{<:Real}, params::AbstractVector{<:Real
 
         return y_model
     else
-        # Symmetric: broadcast-fused
+        # Symmetric: broadcast-fused with profile dispatch
         for i in 0:(n_peaks - 1)
             @inbounds mu    = centers[i+1]
             @inbounds sigma = params[4 + 3 * i]
             @inbounds amp_raw = params[2 + 3 * i]
             amp = use_log_amplitude ? exp(amp_raw) : amp_raw
-            @. y_model += amp * exp(-0.5 * ((x - mu) / sigma)^2)
+            z = (x .- mu) ./ sigma
+            if peak_profile == :lorentzian
+                @. y_model += amp / (1.0 + z * z)
+            elseif peak_profile == :pseudo_voigt
+                eta = params[end]  # global η is the last parameter
+                G = exp.(-0.5 .* z .* z)
+                L = 1.0 ./ (1.0 .+ z .* z)
+                @. y_model += amp * ((1.0 - eta) * G + eta * L)
+            else  # :gaussian (default)
+                @. y_model += amp * exp(-0.5 * z * z)
+            end
         end
         return y_model
     end
@@ -245,6 +283,12 @@ function build_bounds(n_peaks::Int, x::Vector{Float64}, y::Vector{Float64}, cfg:
         push!(upper, sigma_max)
     end
 
+    # Pseudo-Voigt global η parameter
+    if cfg.peak_profile == :pseudo_voigt
+        push!(lower, 0.0)
+        push!(upper, 1.0)
+    end
+
     return lower, upper
 end
 
@@ -270,7 +314,7 @@ end
 # ===========================================================================
 
 function _make_objective_function(x, y, n_peaks, asymmetric_edges, use_log_amplitude=false;
-                                   kappa_max=8.0, kappa_weight=1.0)
+                                   kappa_max=8.0, kappa_weight=1.0, peak_profile::Symbol=:gaussian)
     """Create the RSS objective (1-arg, compatible with NLopt via wrapper).
 
     Baseline is always fixed at 0 (data is pre-offset so y.min() = 0).
@@ -286,6 +330,7 @@ function _make_objective_function(x, y, n_peaks, asymmetric_edges, use_log_ampli
         residuals = y - multi_gaussian(x, full_buf; n_peaks=n_peaks,
                                         asymmetric_edges=asymmetric_edges,
                                         use_log_amplitude=use_log_amplitude,
+                                        peak_profile=peak_profile,
                                         y_buf=y_buf)
         rss = sum(abs2, residuals)
         # Condition-number penalty for adjacent overlap
@@ -354,7 +399,8 @@ function fit_model(x::Vector{Float64}, y::Vector{Float64}, n_peaks::Int, cfg::Fi
     end
 
     objective_1arg = _make_objective_function(x, y, n_peaks, asymmetric, cfg.use_log_amplitude;
-                                               kappa_max=cfg.kappa_max, kappa_weight=cfg.kappa_weight)
+                                               kappa_max=cfg.kappa_max, kappa_weight=cfg.kappa_weight,
+                                               peak_profile=cfg.peak_profile)
     # Optimization.jl expects f(u, p); the second argument p is unused
     objective_opt(u, _) = objective_1arg(u)
 
@@ -392,12 +438,14 @@ function fit_model(x::Vector{Float64}, y::Vector{Float64}, n_peaks::Int, cfg::Fi
         return multi_gaussian(xdata, lm_buf; n_peaks=n_peaks,
                               asymmetric_edges=asymmetric,
                               use_log_amplitude=cfg.use_log_amplitude,
+                              peak_profile=cfg.peak_profile,
                               y_buf=lm_y_buf)
     end
 
     popt_inner = Float64[]
     perr_inner = Float64[]
-    pcov = nothing
+    pcov_inner = nothing
+    pcorr_inner = nothing
     success = true
 
     try
@@ -409,13 +457,20 @@ function fit_model(x::Vector{Float64}, y::Vector{Float64}, n_peaks::Int, cfg::Fi
         popt_inner = fit.param
         # Estimate covariance; may fail for ill-conditioned problems
         try
-            pcov = estimate_covar(fit)
-            if any(isinf.(pcov)) || any(isnan.(pcov))
+            pcov_inner = estimate_covar(fit)
+            if any(isinf.(pcov_inner)) || any(isnan.(pcov_inner))
                 push!(warnings_list,
                       "Covariance matrix ill-conditioned. Uncertainties unreliable.")
                 perr_inner = fill(NaN, length(popt_inner))
+                pcov_inner = nothing
             else
-                perr_inner = sqrt.(diag(pcov))
+                perr_inner = sqrt.(diag(pcov_inner))
+                # Correlation matrix from covariance
+                d_sq = sqrt.(max.(diag(pcov_inner), 0.0))
+                if all(d_sq .> 0)
+                    D_inv = Diagonal(1.0 ./ d_sq)
+                    pcorr_inner = D_inv * pcov_inner * D_inv
+                end
             end
         catch cov_e
             push!(warnings_list,
@@ -432,9 +487,31 @@ function fit_model(x::Vector{Float64}, y::Vector{Float64}, n_peaks::Int, cfg::Fi
     # Reconstruct full params vector (y0 = 0 prepended)
     popt = vcat([0.0], popt_inner)
     perr = vcat([0.0], perr_inner)
+    np1 = length(popt)
+
+    # Full covariance and correlation (with y0 row/col)
+    pcov_full = nothing
+    pcorr_full = nothing
+    if pcov_inner !== nothing
+        ni = size(pcov_inner, 1)
+        pcov_full = zeros(np1, np1)
+        pcov_full[2:end, 2:end] = pcov_inner
+        if pcorr_inner !== nothing
+            pcorr_full = zeros(np1, np1)
+            pcorr_full[1, 1] = 1.0
+            pcorr_full[2:end, 2:end] = pcorr_inner
+        end
+    end
+
+    # Center-center correlation (from inner covariance via Jacobian)
+    cc_corr = nothing
+    if pcov_inner !== nothing && n_peaks > 1
+        cc_corr = _center_center_corr(pcov_inner, n_peaks)
+    end
 
     y_fit = multi_gaussian(x, popt; n_peaks=n_peaks, asymmetric_edges=asymmetric,
-                            use_log_amplitude=cfg.use_log_amplitude)
+                            use_log_amplitude=cfg.use_log_amplitude,
+                            peak_profile=cfg.peak_profile)
 
     # Bound-at-limit warnings (full vector: y0=0 at index 1)
     x_unit = cfg.x_unit
@@ -458,7 +535,8 @@ function fit_model(x::Vector{Float64}, y::Vector{Float64}, n_peaks::Int, cfg::Fi
     end
 
     return FitResult(
-        popt=popt, pcov=pcov, perr=perr,
+        popt=popt, pcov=pcov_full, pcorr=pcorr_full,
+        center_center_corr=cc_corr, perr=perr,
         y_fit=y_fit, success=success,
         warnings=warnings_list,
     )
@@ -572,8 +650,11 @@ end
 function _fit_one(n_peaks::Int, x::Vector{Float64}, y::Vector{Float64}, cfg::FitConfig;
                  p0::Union{Vector{Float64},Nothing}=nothing,
                  maxtime_override::Union{Float64,Nothing}=nothing)
+    cfg.peak_profile in (:gaussian, :lorentzian, :pseudo_voigt) ||
+        error("peak_profile must be :gaussian, :lorentzian, or :pseudo_voigt, got :$(cfg.peak_profile)")
     n_extra = (cfg.asymmetric_edges && n_peaks >= 2) ? 2 : 0
-    n_params = 1 + 3 * n_peaks + n_extra
+    n_voigt = cfg.peak_profile == :pseudo_voigt ? 1 : 0
+    n_params = 1 + 3 * n_peaks + n_extra + n_voigt
     fit = fit_model(x, y, n_peaks, cfg; p0=p0, maxtime_override=maxtime_override)
     if !fit.success || isempty(fit.popt)
         return nothing
@@ -605,6 +686,7 @@ function _fit_one(n_peaks::Int, x::Vector{Float64}, y::Vector{Float64}, cfg::Fit
             return nothing
         end
     end
+    resid_diag = compute_residual_diagnostics(y .- fit.y_fit)
     result = FitResult(
         n_peaks=n_peaks,
         popt=fit.popt, pcov=fit.pcov, perr=fit.perr,
@@ -612,6 +694,7 @@ function _fit_one(n_peaks::Int, x::Vector{Float64}, y::Vector{Float64}, cfg::Fit
         bic=m.bic, student_bic=m.student_bic, aic=m.aic, aicc=m.aicc, r_squared=m.r_squared,
         chi2_red=m.chi2_red, dof=m.dof, rss=m.rss, n_params=m.n_params,
         kappa_max_adj=kappa_val,
+        residual_diagnostics=resid_diag,
     )
     return result
 end
@@ -974,6 +1057,17 @@ function export_results(x, y, all_results, cfg::FitConfig)
                 @printf(f, "kappa_max_adj,%.4f\n", r.kappa_max_adj)
             end
 
+            if r.residual_diagnostics !== nothing
+                rd = r.residual_diagnostics
+                @printf(f, "durbin_watson,%.4f\n", rd.durbin_watson)
+                @printf(f, "durbin_watson_p,%.4f\n", rd.durbin_watson_p)
+                @printf(f, "runs_n,%d\n", rd.runs_n)
+                @printf(f, "runs_expected,%.1f\n", rd.runs_expected)
+                @printf(f, "runs_p,%.4f\n", rd.runs_p)
+                @printf(f, "residual_rms,%.6f\n", rd.residual_rms)
+                @printf(f, "residual_max,%.6f\n", rd.residual_max)
+            end
+
             write(f, "\n# Residuals: x($x_unit), y_data, y_fit, residual\n")
             residuals = y - y_fit
             for (xi, yi, fi, ri) in zip(x, y, y_fit, residuals)
@@ -1076,11 +1170,39 @@ function print_summary(all_results, best_res, cfg::FitConfig)
                 best_res.kappa_max_adj > cfg.kappa_max ? "  ← EXCEEDS THRESHOLD" : "")
     end
 
+    # Center-center correlation
+    if best_res.center_center_corr !== nothing && n_peaks > 1
+        cc = best_res.center_center_corr
+        max_corr, max_i, max_j = 0.0, 0, 0
+        for i in 1:size(cc, 1), j in (i+1):size(cc, 2)
+            if abs(cc[i, j]) > abs(max_corr)
+                max_corr, max_i, max_j = cc[i, j], i, j
+            end
+        end
+        if abs(max_corr) > 0.5
+            @printf("\n  Max center-center correlation: %.3f (peaks %d ↔ %d)%s\n",
+                    max_corr, max_i, max_j,
+                    abs(max_corr) > 0.9 ? "  ← HIGH" : "")
+        end
+    end
+
     if !isempty(best_res.warnings)
         println("\n  WARNINGS:")
         for w in best_res.warnings
             println("    - $w")
         end
+    end
+
+    # Residual diagnostics
+    if best_res.residual_diagnostics !== nothing
+        rd = best_res.residual_diagnostics
+        println("\n  RESIDUAL DIAGNOSTICS:")
+        dw_flag = rd.durbin_watson < 1.5 ? "  ← positive autocorrelation" :
+                  rd.durbin_watson > 2.5 ? "  ← negative autocorrelation" : ""
+        @printf("    Durbin-Watson: %.3f (p=%.3f)%s\n", rd.durbin_watson, rd.durbin_watson_p, dw_flag)
+        runs_flag = rd.runs_p < 0.05 ? "  ← non-random" : ""
+        @printf("    Runs: %d (expected %.1f, p=%.3f)%s\n", rd.runs_n, rd.runs_expected, rd.runs_p, runs_flag)
+        @printf("    RMS: %.6f  Max: %.6f\n", rd.residual_rms, rd.residual_max)
     end
 
     println(repeat("=", 80))

@@ -71,6 +71,7 @@ Base.@kwdef mutable struct ChainSweepConfig
     max_overlap::Float64 = 0.60
     kappa_max::Float64 = 8.0      # condition-number penalty threshold (0 = disabled)
     kappa_weight::Float64 = 1.0   # penalty strength
+    peak_profile::Symbol = :gaussian  # :gaussian only for 2D currently
     min_amplitude_fraction::Float64 = 0.3  # reject models with any peak amplitude < 30% of max (matches 1D)
     max_iter::Int = 300
     global_maxtime::Float64 = 15.0
@@ -84,6 +85,7 @@ end
 Base.@kwdef mutable struct ChainModelResult
     n::Int = 0
     params::Vector{Float64} = Float64[]
+    param_perr::Vector{Float64} = Float64[]
     success::Bool = false
     train_nll::Float64 = Inf
     cv_nll_mean::Float64 = Inf
@@ -99,6 +101,7 @@ Base.@kwdef mutable struct ChainModelResult
     sigma_perp_nm::Float64 = Inf
     overlap::Float64 = Inf
     kappa_max_adj::Float64 = 1.0   # max adjacent condition number
+    residual_diagnostics::Union{ResidualDiagnostics,Nothing} = nothing
     endpoint_overrun_nm::Float64 = Inf
     bound_like::Int = 0
     valid::Bool = false

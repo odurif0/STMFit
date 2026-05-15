@@ -8,7 +8,7 @@ using OptimizationNLopt
 using Plots
 using Printf
 using Statistics
-using STMFitCore: effective_spacing_min, endpoint_overrun, overlap_condition_number, kappa_penalty, adjacent_kappa_max
+using STMFitCore: effective_spacing_min, endpoint_overrun, overlap_condition_number, kappa_penalty, adjacent_kappa_max, ResidualDiagnostics, compute_residual_diagnostics
 
 export SXMImage, SXMChannel, PatternConfig, PatternFitResult, MolecularFeature,
        MolecularChain

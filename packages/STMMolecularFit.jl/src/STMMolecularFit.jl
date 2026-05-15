@@ -104,6 +104,7 @@ Base.@kwdef mutable struct FitSlideConfig
     global_maxtime::Float64 = 8.0
     global_maxiter::Int = 5000
     asymmetric_edges::Bool = false
+    peak_profile::Symbol = :gaussian
     output_dir::String = "results/slide_fit"
     no_plot::Bool = false
 end
@@ -666,6 +667,7 @@ function fit_slide(profile_file::String, cfg::FitSlideConfig=FitSlideConfig(); n
         "global_maxtime" => cfg.global_maxtime,
         "global_maxiter" => cfg.global_maxiter,
         "asymmetric_edges" => cfg.asymmetric_edges,
+        "peak_profile" => cfg.peak_profile,
         "no_show" => true,
     ))
     if isfinite(noise_estimate)

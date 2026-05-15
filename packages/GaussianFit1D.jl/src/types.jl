@@ -8,7 +8,7 @@ Replaces the CONFIG `Dict{String,Any}` with typed structs.
 # Constants
 # ===========================================================================
 
-const MGF_VERSION = "4.1.0"  # bump on breaking config/cache changes
+const MGF_VERSION = "5.0.0"  # pseudo-Voigt, residual diagnostics, covariance
 
 # ===========================================================================
 # FitConfig — immutable configuration
@@ -29,6 +29,7 @@ Base.@kwdef mutable struct FitConfig
     max_overlap::Float64            = 0.6
     kappa_max::Float64              = 8.0    # condition-number penalty threshold (0 = disabled)
     kappa_weight::Float64           = 1.0    # penalty strength relative to RSS
+    peak_profile::Symbol            = :gaussian  # :gaussian | :lorentzian | :pseudo_voigt
 
     # --- Baseline ---
     offset_to_zero::Bool            = true
@@ -37,7 +38,6 @@ Base.@kwdef mutable struct FitConfig
     amplitude_min_fraction::Float64 = 0.3
     amplitude_min::Union{Float64,Nothing} = nothing
     amplitude_max::Union{Float64,Nothing} = nothing
-
     # --- Center bounds ---
     edge_sigma_min::Float64         = 1.0
     edge_sigma_max::Float64         = 4.0
@@ -81,6 +81,8 @@ Base.@kwdef mutable struct FitResult
     n_peaks::Int                    = 0
     popt::Vector{Float64}           = Float64[]
     pcov::Union{Matrix{Float64},Nothing} = nothing
+    pcorr::Union{Matrix{Float64},Nothing} = nothing
+    center_center_corr::Union{Matrix{Float64},Nothing} = nothing
     perr::Vector{Float64}           = Float64[]
     y_fit::Vector{Float64}          = Float64[]
     success::Bool                   = false
@@ -98,6 +100,7 @@ Base.@kwdef mutable struct FitResult
     rss::Float64                    = Inf
     n_params::Int                   = 0
     kappa_max_adj::Float64          = 1.0    # max adjacent condition number from fit
+    residual_diagnostics::Union{ResidualDiagnostics,Nothing} = nothing
 
     # Model comparison
     competitive::Bool               = false

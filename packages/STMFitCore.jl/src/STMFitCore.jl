@@ -5,7 +5,8 @@ export FWHM_TO_SIGMA,
        PhysicalChainConstraints,
        effective_spacing_min, support_n_bounds, chain_can_fit_support,
        endpoint_overrun, best_valid_or_best,
-       overlap_condition_number, kappa_penalty, adjacent_kappa_max
+       overlap_condition_number, kappa_penalty, adjacent_kappa_max,
+       durbin_watson, runs_test, ResidualDiagnostics, compute_residual_diagnostics
 
 const FWHM_TO_SIGMA = 2 * sqrt(2 * log(2))
 
@@ -123,6 +124,90 @@ function adjacent_kappa_max(deltas::AbstractVector{<:Real}, sigmas::AbstractVect
         k > kmax && (kmax = k)
     end
     return kmax
+end
+
+# ===========================================================================
+# Residual diagnostics
+# ===========================================================================
+
+# Normal CDF via Abramowitz & Stegun approximation (no external dependency)
+function _norm_cdf(x::Float64)
+    x < -8.0 && return 0.0
+    x > 8.0 && return 1.0
+    t = 1.0 / (1.0 + 0.2316419 * abs(x))
+    d = 0.3989422804014327  # 1/√(2π)
+    p = d * exp(-0.5 * x * x) *
+        ((((1.330274429 * t - 1.821255978) * t + 1.781477937) * t -
+          0.356563782) * t + 0.319381530) * t
+    return x > 0 ? 1.0 - p : p
+end
+
+"""
+    durbin_watson(residuals) -> (dw_stat, p_value)
+
+Durbin-Watson statistic for residual autocorrelation.
+DW ≈ 2 → no autocorrelation. DW < 1.5 → positive autocorrelation (missed structure).
+Returns (NaN, NaN) for fewer than 5 points.
+"""
+function durbin_watson(residuals::AbstractVector{<:Real})
+    n = length(residuals)
+    n < 5 && return (NaN, NaN)
+    rss = sum(abs2, residuals)
+    rss <= 0 && return (NaN, NaN)
+    dw = sum(abs2, diff(residuals)) / rss
+    z = (dw - 2.0) / (2.0 / sqrt(n))
+    p = 2.0 * min(1.0, _norm_cdf(-abs(z)))
+    return (Float64(dw), p)
+end
+
+"""
+    runs_test(residuals) -> (n_runs, expected, p_value)
+
+Wald-Wolfowitz runs test on residual signs.
+Too few runs → systematic bias. Too many → oscillation/overfitting.
+"""
+function runs_test(residuals::AbstractVector{<:Real})
+    n = length(residuals)
+    n < 5 && return (0, NaN, NaN)
+    signs = residuals .> 0
+    n_pos = count(signs)
+    n_neg = n - n_pos
+    (n_pos == 0 || n_neg == 0) && return (1, NaN, NaN)
+    n_runs = 1
+    for i in 2:n
+        signs[i] != signs[i-1] && (n_runs += 1)
+    end
+    expected = 1.0 + 2.0 * n_pos * n_neg / n
+    var_runs = 2.0 * n_pos * n_neg * (2*n_pos*n_neg - n) / (n*n*(n-1))
+    z = var_runs > 0 ? (n_runs - expected) / sqrt(var_runs) : 0.0
+    p = 2.0 * min(1.0, _norm_cdf(-abs(z)))
+    return (n_runs, expected, p)
+end
+
+Base.@kwdef struct ResidualDiagnostics
+    durbin_watson::Float64     = NaN
+    durbin_watson_p::Float64   = NaN
+    runs_n::Int                = 0
+    runs_expected::Float64     = NaN
+    runs_p::Float64            = NaN
+    residual_rms::Float64      = NaN
+    residual_max::Float64      = NaN
+end
+
+"""
+    compute_residual_diagnostics(residuals) -> ResidualDiagnostics
+
+Compute all residual diagnostics: Durbin-Watson, runs test, RMS, max.
+"""
+function compute_residual_diagnostics(residuals::AbstractVector{<:Real})
+    dw, dw_p = durbin_watson(residuals)
+    rn, re, rp = runs_test(residuals)
+    return ResidualDiagnostics(
+        durbin_watson=dw, durbin_watson_p=dw_p,
+        runs_n=rn, runs_expected=re, runs_p=rp,
+        residual_rms=sqrt(sum(abs2, residuals) / length(residuals)),
+        residual_max=maximum(abs, residuals),
+    )
 end
 
 end # module

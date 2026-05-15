@@ -1,5 +1,6 @@
 using Test
 using STMFitCore
+using Random
 
 @testset "STMFitCore constraints" begin
     c = PhysicalChainConstraints(spacing_min_nm=0.35, spacing_max_nm=0.75,
@@ -42,4 +43,41 @@ end
     # Single pair: d=0.5, σ=(0.3+0.3)/2=0.3 → uses max(0.3,0.3)=0.3
     kappa_pair = overlap_condition_number(0.5, 0.3)
     @test adjacent_kappa_max([0.5], [0.3, 0.3]) ≈ kappa_pair atol=0.01
+end
+
+@testset "Residual diagnostics" begin
+    # Durbin-Watson on pure noise ≈ 2
+    rng = MersenneTwister(42)
+    noise = randn(rng, 200)
+    dw, dw_p = durbin_watson(noise)
+    @test 1.5 < dw < 2.5
+    @test dw_p > 0.01
+
+    # DW on autocorrelated series << 2
+    ar1 = cumsum(randn(rng, 200)) * 0.1
+    dw_ar, _ = durbin_watson(ar1)
+    @test dw_ar < 1.5
+
+    # DW edge cases
+    @test durbin_watson(Float64[]) === (NaN, NaN)
+    @test durbin_watson([1.0, 2.0]) === (NaN, NaN)
+
+    # Runs test on alternating signs → many runs
+    alt = repeat([1.0, -1.0], 50)
+    rn, re, rp = runs_test(alt)
+    @test rn == 100
+    @test rp < 0.05
+
+    # Runs on uniform signs → 1 run
+    @test runs_test(ones(10)) === (1, NaN, NaN)
+
+    # Round-trip compute_residual_diagnostics
+    rd = compute_residual_diagnostics(noise)
+    @test isfinite(rd.durbin_watson)
+    @test isfinite(rd.durbin_watson_p)
+    @test isfinite(rd.residual_rms)
+    @test isfinite(rd.residual_max)
+    @test rd.runs_n > 0
+    @test isfinite(rd.runs_expected)
+    @test isfinite(rd.runs_p)
 end

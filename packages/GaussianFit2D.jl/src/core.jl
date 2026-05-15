@@ -590,6 +590,7 @@ function _finalize_chain_result!(r::ChainModelResult, zfit::AbstractVector{Float
     r.chi2_reduced = r.rss / max(1, length(zfit) - pcount) / max(noise^2, EPS)
     r.mad = median(abs.(resid))
     _chain_metrics!(r, axisctx, ccfg)
+    r.residual_diagnostics = compute_residual_diagnostics(resid)
     r.mdl = 0.0  # backward compat
     checks = String[]
     isfinite(r.cv_nll_mean) || push!(checks, "CV failed")
@@ -1072,87 +1073,125 @@ function _fit_chain_n(xs, ys, zimg, x, y, z, noise, n::Int, axisctx, ccfg::Chain
         return ChainModelResult(n=n, success=false, valid=false,
             reason=@sprintf("infeasible support: min span %.4f > support %.4f", _chain_min_span(n, ccfg), _chain_support_length(axisctx)))
     end
-    if warm_start !== nothing
-        p0 = warm_start
-        amp_max_data = max(maximum(zimg), EPS)
-        amp_min = ccfg.min_amplitude_fraction * amp_max_data
-        amp_range = max(amp_max_data - amp_min, EPS)
-    else
-        p0, amp_min, amp_range = _pack_chain_initial(xs, ys, zimg, n, axisctx, ccfg)
-    end
-    xy = vcat(reshape(x, 1, :), reshape(y, 1, :))
-    model = (xydata, p) -> _chain_model_values(view(xydata,1,:), view(xydata,2,:), p, n, axisctx, ccfg;
-                                                amp_min=amp_min, amp_range=amp_range)
 
+    # Compute shared bounds/parameters independent of start position
+    xy = vcat(reshape(x, 1, :), reshape(y, 1, :))
     np = _chain_nparams(n, ccfg)
     lower = fill(-10.0, np); upper = fill(10.0, np)
     lower[1] = -5.0; upper[1] = 5.0
     j = 2
-    # Tilted baseline: bx, by (raw linear, bounded)
     if ccfg.chain_tilted_baseline
-        lower[j] = -1.0; upper[j] = 1.0; j += 1  # bx (per nm)
-        lower[j] = -1.0; upper[j] = 1.0; j += 1  # by (per nm)
+        lower[j] = -1.0; upper[j] = 1.0; j += 1
+        lower[j] = -1.0; upper[j] = 1.0; j += 1
     end
-    for _ in 1:n; lower[j] = -5.0; upper[j] = 5.0; j += 1 end  # sigmoid-transformed amplitude
-    lower[j] = -4.0; upper[j] = 4.0; j += 1  # t0
-    for _ in 1:n-1; lower[j] = -5.0; upper[j] = 5.0; j += 1 end  # deltas
-    for _ in 1:n; lower[j] = -3.0; upper[j] = 3.0; j += 1 end  # u
-    # spars (n) and sperps (n)
+    for _ in 1:n; lower[j] = -5.0; upper[j] = 5.0; j += 1 end
+    lower[j] = -4.0; upper[j] = 4.0; j += 1
+    for _ in 1:n-1; lower[j] = -5.0; upper[j] = 5.0; j += 1 end
+    for _ in 1:n; lower[j] = -3.0; upper[j] = 3.0; j += 1 end
     if ccfg.chain_circular_sigmas
-        for _ in 1:n
-            lower[j] = -5.0; upper[j] = 5.0
-            j += 1
-        end
+        for _ in 1:n; lower[j] = -5.0; upper[j] = 5.0; j += 1 end
     else
-        for _ in 1:(2n)
-            lower[j] = -5.0; upper[j] = 5.0
-            j += 1
-        end
+        for _ in 1:(2n); lower[j] = -5.0; upper[j] = 5.0; j += 1 end
     end
-    p0 = clamp.(p0, lower .+ 1e-9, upper .- 1e-9)
 
-    p_global = p0
-    global_success = true  # default true if we skip NLopt
-    if !ccfg.skip_global
-        # κ penalty (global NLopt stage only; LM refinement is unbiased)
-        objective = let km=ccfg.kappa_max, kw=ccfg.kappa_weight, nf=n, ax=axisctx, c=ccfg
-            (u, _) -> begin
-                rss_val = sum(abs2, z .- model(xy, u))
-                if km > 0 && nf > 1
-                    _, _, ts, _, spars, sperps = _decode_chain(u, nf, ax, c;
-                                                               amp_min=amp_min, amp_range=amp_range)
-                    κ = adjacent_kappa_max(diff(ts), max.(spars, sperps))
-                    rss_val *= (1.0 + kappa_penalty(κ; kappa_max=km, weight=kw))
+    function _run_one_start(p_start, amp_min, amp_range)
+        model_f = (xydata, p) -> _chain_model_values(view(xydata,1,:), view(xydata,2,:), p, n, axisctx, ccfg;
+                                                      amp_min=amp_min, amp_range=amp_range)
+        p_start = clamp.(p_start, lower .+ 1e-9, upper .- 1e-9)
+
+        p_global = p_start
+        if !ccfg.skip_global
+            objective = let km=ccfg.kappa_max, kw=ccfg.kappa_weight, nf=n, ax=axisctx, c=ccfg
+                (u, _) -> begin
+                    rss_val = sum(abs2, z .- model_f(xy, u))
+                    if km > 0 && nf > 1
+                        _, _, ts, _, spars, sperps = _decode_chain(u, nf, ax, c;
+                                                                   amp_min=amp_min, amp_range=amp_range)
+                        κ = adjacent_kappa_max(diff(ts), max.(spars, sperps))
+                        rss_val *= (1.0 + kappa_penalty(κ; kappa_max=km, weight=kw))
+                    end
+                    return rss_val
                 end
-                return rss_val
+            end
+            nlop = OptimizationNLopt.NLopt.Opt(:GN_DIRECT_L, np)
+            nlop.xtol_rel = ccfg.global_tol
+            nlop.ftol_rel = ccfg.global_tol
+            nlop.maxtime  = ccfg.global_maxtime
+            prob = OptimizationProblem(objective, p_start; lb=lower, ub=upper)
+            try
+                sol = solve(prob, nlop; maxiters=ccfg.global_maxiter)
+                p_global = sol.u
+            catch
+                # NLopt failed, keep p_start for LM fallback
             end
         end
-        nlop = OptimizationNLopt.NLopt.Opt(:GN_DIRECT_L, np)
-        nlop.xtol_rel = ccfg.global_tol
-        nlop.ftol_rel = ccfg.global_tol
-        nlop.maxtime  = ccfg.global_maxtime
-        prob = OptimizationProblem(objective, p0; lb=lower, ub=upper)
-        global_success = false
+
+        p_final = p_global
+        perr_local = fill(NaN, length(p_global))
         try
-            sol = solve(prob, nlop; maxiters=ccfg.global_maxiter)
-            p_global = sol.u
-            global_success = true
-        catch e
-            # If NLopt fails but we have good 1D init, fall through to LM
-            length(ccfg.init_centers_t) >= n || return ChainModelResult(n=n, success=false, reason="NLopt failed: $e")
+            fit = curve_fit(model_f, xy, z, p_global; lower=lower, upper=upper, maxIter=ccfg.max_iter, autodiff=:finite)
+            p_final = fit.param
+            try
+                pcov = estimate_covar(fit)
+                perr_local = sqrt.(max.(diag(pcov), 0.0))
+            catch
+            end
+        catch
+        end
+        pred = model_f(xy, p_final)
+        rss = sum(abs2, z .- pred)
+        nll = _student_nll(z .- pred, noise, ccfg.student_nu)
+        return (params=p_final, rss=rss, nll=nll, perr=perr_local)
+    end
+
+    # ── Multistart loop ──
+    best_result = nothing
+    best_rss = Inf
+    best_perr = Float64[]
+    best_amp_min = NaN; best_amp_range = NaN
+
+    effective_starts = max(1, warm_start !== nothing ? 1 : starts)
+    for s in 1:effective_starts
+        if warm_start !== nothing
+            p_start = warm_start
+            amp_max_data = max(maximum(zimg), EPS)
+            amp_min = ccfg.min_amplitude_fraction * amp_max_data
+            amp_range = max(amp_max_data - amp_min, EPS)
+        elseif s == 1
+            p_start, amp_min, amp_range = _pack_chain_initial(xs, ys, zimg, n, axisctx, ccfg)
+        else
+            # Random perturbation around the standard init for diversity
+            p_start, amp_min, amp_range = _pack_chain_initial(xs, ys, zimg, n, axisctx, ccfg)
+            # Add noise to deltas (spacing variation) and sigmas
+            # Param order: b0, [bx,by if tilted], amps(n), t0, deltas(n-1), us(n), [spars(n)], [sperps(n)]
+            delta_start = n + 3 + (ccfg.chain_tilted_baseline ? 2 : 0)  # 1-based index of first delta
+            for i in delta_start:(delta_start + n - 2)
+                p_start[i] += 0.5 * randn()
+            end
+            # Perturb sigma parameters
+            sigma_start = delta_start + (n - 1) + n  # after deltas and us
+            n_sigma = ccfg.chain_circular_sigmas ? n : 2n
+            for i in sigma_start:(sigma_start + n_sigma - 1)
+                p_start[i] += 0.5 * randn()
+            end
+        end
+
+        res = _run_one_start(p_start, amp_min, amp_range)
+        if res.rss < best_rss
+            best_rss = res.rss
+            best_result = res
+            best_perr = res.perr
+            best_amp_min = amp_min
+            best_amp_range = amp_range
         end
     end
 
-    p_final = p_global
-    try
-        fit = curve_fit(model, xy, z, p_global; lower=lower, upper=upper, maxIter=ccfg.max_iter, autodiff=:finite)
-        p_final = fit.param
-    catch
+    if best_result === nothing
+        return ChainModelResult(n=n, success=false, reason="all starts failed")
     end
-    pred = model(xy, p_final)
-    nll = _student_nll(z .- pred, noise, ccfg.student_nu)
-    return ChainModelResult(n=n, params=p_final, success=true, train_nll=nll,
-                            amp_min=amp_min, amp_range=amp_range)
+    return ChainModelResult(n=n, params=best_result.params, success=true, train_nll=best_result.nll,
+                            amp_min=best_amp_min, amp_range=best_amp_range,
+                            param_perr=best_perr)
 end
 
 function _chain_overlap(feats::Vector{MolecularFeature}, spar::Float64, sperp::Float64)
@@ -1200,14 +1239,19 @@ function _chain_cv_score(xs, ys, zimg, x, y, z, noise, n, axisctx, ccfg::ChainSw
     folds = max(2, ccfg.cv_folds)
     t = (x .- axisctx.origin[1]) .* axisctx.axis[1] .+ (y .- axisctx.origin[2]) .* axisctx.axis[2]
     tmin, tmax = extrema(t)
+    # Lighter config for CV fits: skip global NLopt, fewer LM iterations
+    ccfg_cv = deepcopy(ccfg)
+    ccfg_cv.skip_global = true
+    ccfg_cv.max_iter = max(50, ccfg.max_iter ÷ 2)
+    ccfg_cv.multistart = 1  # single start per CV fold
     scores = Float64[]
     for fold in 1:folds
         val = [mod(floor(Int, (t[i]-tmin)/(tmax-tmin+EPS)*folds), folds) + 1 == fold for i in eachindex(t)]
         train = .!val
         sum(train) > 10 && sum(val) > 5 || continue
-        r = _fit_chain_n(xs, ys, zimg, x[train], y[train], z[train], noise, n, axisctx, ccfg; starts=max(3, ccfg.multistart ÷ 4))
+        r = _fit_chain_n(xs, ys, zimg, x[train], y[train], z[train], noise, n, axisctx, ccfg_cv; starts=1)
         r.success || continue
-        pred = _chain_model_values(x[val], y[val], r.params, n, axisctx, ccfg;
+        pred = _chain_model_values(x[val], y[val], r.params, n, axisctx, ccfg_cv;
                                    amp_min=r.amp_min, amp_range=r.amp_range)
         push!(scores, _student_nll(z[val] .- pred, noise, ccfg.student_nu) / sum(val))
     end
@@ -1257,7 +1301,8 @@ function chain_gaussian_sweep(img::SXMImage, cfg::PatternConfig, ccfg::ChainSwee
     n_max_data = max(1, Int(floor(axis_length / spacing_min_eff)) + 1)
     n_max_eff = min(ccfg.n_max, n_max_data)
 
-    # effective sample size (pixels in fit mask ÷ typical spatial correlation factor)
+    # Effective sample size (pixels in fit mask ÷ typical spatial correlation factor).
+    # ÷9 ≈ 3×3 px block = 1 independent obs. Conservative: larger n_eff → more BIC penalty.
     n_eff = max(10, length(zfit) ÷ 9)
     results = ChainModelResult[]
 
@@ -1503,7 +1548,8 @@ function chain_direct_fit(img::SXMImage, cfg::PatternConfig, ccfg::ChainSweepCon
     end
     axisctx_full = _weighted_roi_axis(x, y, z)
     xfit, yfit, zfit, axisctx, fit_keep, support_meta = _chain_fit_data(x, y, z, axisctx_full, ccfg)
-    # effective sample size (pixels in fit mask ÷ typical spatial correlation factor)
+    # Effective sample size (pixels in fit mask ÷ typical spatial correlation factor).
+    # ÷9 ≈ 3×3 px block = 1 independent obs. Conservative: larger n_eff → more BIC penalty.
     n_eff = max(10, length(zfit) ÷ 9)
     n = ccfg.n_min
     r = _fit_chain_n(xs, ys, zimg, xfit, yfit, zfit, noise, n, axisctx, ccfg)
