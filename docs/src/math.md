@@ -169,3 +169,15 @@ by roughly 5×.
 
 The k-fold method remains available via `cv_method="kfold"` for validation
 or when the linear approximation is suspected to be inadequate.
+
+## Multistart Optimization
+
+Each N in the 2D sweep runs NLopt DIRECT_L (global) followed by LsqFit
+Levenberg-Marquardt (local). The `multistart` parameter controls how many
+randomly perturbed restarts are attempted.
+
+**Default: `multistart=1`**. Benchmarked on chitosan STM data, all restarts
+converge to the same minimum (identical BIC and RSS). The NLopt DIRECT_L
+algorithm is sufficiently robust for this landscape — additional starts add
+linear time cost with no improvement in fit quality. Increase only if you
+observe convergence to a clearly wrong local minimum.
