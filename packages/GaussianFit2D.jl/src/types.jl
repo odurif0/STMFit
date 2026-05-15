@@ -80,7 +80,7 @@ Base.@kwdef mutable struct ChainSweepConfig
     global_tol::Float64 = 1e-5
     chain_circular_sigmas::Bool = false  # circular gaussians (spar=sperp per peak, fewer params)
     chain_tilted_baseline::Bool = false   # add linear tilt bx·x + by·y to baseline (+2 params)
-    selection_criterion::String = "bic"  # model selection: "bic" | "aicc" | "cv"
+    selection_criterion::String = "gcv"  # model selection: "bic" | "aicc" | "cv" | "gcv"
 end
 
 Base.@kwdef mutable struct ChainModelResult
@@ -91,6 +91,7 @@ Base.@kwdef mutable struct ChainModelResult
     train_nll::Float64 = Inf
     cv_nll_mean::Float64 = Inf
     cv_nll_std::Float64 = Inf
+    gcv::Float64 = Inf           # Generalized Cross-Validation (analytical, no refit)
     bic::Float64 = Inf
     aicc::Float64 = Inf
     mdl::Float64 = Inf

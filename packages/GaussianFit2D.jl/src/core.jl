@@ -591,6 +591,9 @@ function _finalize_chain_result!(r::ChainModelResult, zfit::AbstractVector{Float
     r.aicc = 2full_nll + 2pcount + (2pcount*(pcount+1)) / max(n_eff-pcount-1, 1)
     resid = zfit .- pred
     r.rss = sum(abs2, resid)
+    # GCV = (n / (n - p)²) × RSS — analytical, no refit needed
+    nd = length(zfit)
+    r.gcv = nd > pcount ? nd / (nd - pcount)^2 * r.rss : Inf
     r.chi2_reduced = r.rss / max(1, length(zfit) - pcount) / max(noise^2, EPS)
     r.mad = median(abs.(resid))
     _chain_metrics!(r, axisctx, ccfg)
@@ -1285,6 +1288,8 @@ function _select_chain_model(results::Vector{ChainModelResult}, ccfg::ChainSweep
         best = argmin(r -> r.aicc, succ)
     elseif criterion == "cv"
         best = argmin(r -> r.cv_nll_mean, succ)
+    elseif criterion == "gcv"
+        best = argmin(r -> r.gcv, succ)
     else
         best = argmin(r -> r.bic, succ)
     end

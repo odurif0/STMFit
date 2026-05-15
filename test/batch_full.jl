@@ -111,12 +111,13 @@ function _best_valid_or_best(results, best_raw)
     return sort(valid; by=r -> r.bic)[1]
 end
 
-function _select_effective_best(results_ell, results_circ)
-    """Select best N using effective_BIC(N) = min(ell_BIC(N), circ_BIC(N)).
-    Circular model is nested within elliptical → circ_BIC is a legitimate lower bound.
-    CV score (cross-validation NLL) acts as tiebreaker when BIC difference is small."""
-    valid_ell = [r for r in results_ell if r.success && r.valid && isfinite(r.bic)]
-    valid_circ = [r for r in results_circ if r.success && r.valid && isfinite(r.bic)]
+function _select_effective_best(results_ell, results_circ; criterion="gcv")
+    """Select best N using effective_criterion(N) = min(ell_criterion(N), circ_criterion(N)).
+    Circular model is nested within elliptical → circ metric is a legitimate lower bound.
+    Default criterion is GCV (analytical, no refit needed). Fallback to BIC for tiebreaking."""
+    scorefun = criterion == "gcv" ? (r -> r.gcv) : (r -> r.bic)
+    valid_ell = [r for r in results_ell if r.success && r.valid && isfinite(scorefun(r))]
+    valid_circ = [r for r in results_circ if r.success && r.valid && isfinite(scorefun(r))]
     if isempty(valid_ell) && isempty(valid_circ)
         return nothing, 0
     end
@@ -124,20 +125,21 @@ function _select_effective_best(results_ell, results_circ)
     circ_by_n = Dict(r.n => r for r in valid_circ)
     all_ns = sort(unique(vcat(collect(keys(ell_by_n)), collect(keys(circ_by_n)))))
     
-    # Pass 1: find best N by effective BIC
-    best_n_bic = 0
-    best_bic = Inf
+    # Pass 1: find best N by effective criterion
+    best_n = 0
+    best_score = Inf
     for n in all_ns
-        bic_ell = haskey(ell_by_n, n) ? ell_by_n[n].bic : Inf
-        bic_circ = haskey(circ_by_n, n) ? circ_by_n[n].bic : Inf
-        eff_bic = min(bic_ell, bic_circ)
-        if eff_bic < best_bic
-            best_bic = eff_bic
-            best_n_bic = n
+        s_ell = haskey(ell_by_n, n) ? scorefun(ell_by_n[n]) : Inf
+        s_circ = haskey(circ_by_n, n) ? scorefun(circ_by_n[n]) : Inf
+        eff = min(s_ell, s_circ)
+        if eff < best_score
+            best_score = eff
+            best_n = n
         end
     end
+    final_n = best_n
     
-    # Pass 2: check if CV score strongly disagrees with BIC
+    # CV tiebreaker: override if CV strongly disagrees
     best_n_cv = 0
     best_cv = Inf
     for n in all_ns
@@ -150,19 +152,14 @@ function _select_effective_best(results_ell, results_circ)
         end
     end
     
-    # CV tiebreaker
-    final_n = best_n_bic
-    if best_n_cv > 0 && best_n_cv != best_n_bic
-        bic_at_cv = min(get(ell_by_n, best_n_cv, nothing) !== nothing ? ell_by_n[best_n_cv].bic : Inf,
-                        get(circ_by_n, best_n_cv, nothing) !== nothing ? circ_by_n[best_n_cv].bic : Inf)
-        margin = bic_at_cv - best_bic
-        cv_at_bic = Inf
-        for r in [get(ell_by_n, best_n_bic, nothing), get(circ_by_n, best_n_bic, nothing)]
+    if best_n_cv > 0 && best_n_cv != best_n && isfinite(best_cv)
+        cv_at_best = Inf
+        for r in [get(ell_by_n, best_n, nothing), get(circ_by_n, best_n, nothing)]
             r === nothing && continue
-            if isfinite(r.cv_nll_mean); cv_at_bic = min(cv_at_bic, r.cv_nll_mean); end
+            if isfinite(r.cv_nll_mean); cv_at_best = min(cv_at_best, r.cv_nll_mean); end
         end
-        cv_ratio = isfinite(cv_at_bic) && best_cv > 0 ? cv_at_bic / best_cv : 1.0
-        if cv_ratio > 2.0 || (margin < 100 && best_n_cv < best_n_bic)
+        cv_ratio = isfinite(cv_at_best) && best_cv > 0 ? cv_at_best / best_cv : 1.0
+        if cv_ratio > 2.0 && best_n_cv < best_n
             final_n = best_n_cv
         end
     end
@@ -564,8 +561,8 @@ for (idx, (fn, n2d_tsv, bic2d_tsv)) in enumerate(to_process)
         best_ell_raw = isempty(results_ell) ? best_circ_raw : results_ell[1]
         best_ell_sweep = isempty(results_ell) ? best_circ_sweep : _best_valid_or_best(results_ell, best_ell_raw)
 
-        # Effective best: use min(ell_BIC, circ_BIC) per N for model selection
-        best_eff, best_n_eff = _select_effective_best(results_ell, results_circ)
+        # Effective best: use min(ell_GCV, circ_GCV) per N for model selection (default GCV)
+        best_eff, best_n_eff = _select_effective_best(results_ell, results_circ; criterion="gcv")
         if best_eff === nothing
             best_eff = best_ell_sweep; best_n_eff = best_ell_sweep.n
         end

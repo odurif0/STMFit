@@ -28,9 +28,11 @@ max_iter = 300                 # LsqFit max iterations
 multistart = 1                 # number of random starts (1 = bootstrap only)
 
 # ── Model selection ──
-cv_folds = 5                   # cross-validation folds
-bic_cv_margin = 100            # ΔBIC threshold for CV tiebreaker
-cv_ratio_threshold = 2.0       # CV ratio threshold for override
+selection_criterion = "gcv"     # "bic" | "aicc" | "cv" | "gcv" (default: gcv)
+cv_method = "gcv"               # "gcv" (analytical, free) | "kfold" (refit, slow)
+cv_folds = 5                    # cross-validation folds (only for cv_method="kfold")
+bic_cv_margin = 100             # ΔBIC threshold for CV tiebreaker
+cv_ratio_threshold = 2.0        # CV ratio threshold for override
 
 # ── Penalties ──
 kappa_max = 8.0                # condition number threshold (0 = disabled)
