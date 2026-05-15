@@ -50,7 +50,8 @@ GaussianFit2D.ChainSweepConfig(
     min_amplitude_fraction = 0.3, # Min lobe amplitude (fraction of max data)
 
     # ── Cross-validation ──
-    cv_folds           = 5,       # Number of CV folds
+    cv_folds           = 5,       # Number of CV folds (kfold only)
+    cv_method          = "gcv",   # "gcv" (analytical, free) | "kfold" (refit per fold)
     student_nu         = 4.0,     # Student-t degrees of freedom
     residual_peak_snr_threshold = 3.5,
 

@@ -579,9 +579,13 @@ function _finalize_chain_result!(r::ChainModelResult, zfit::AbstractVector{Float
                                   zimg::AbstractMatrix{Float64}, xfit::AbstractVector{Float64},
                                   yfit::AbstractVector{Float64}, axisctx, ccfg::ChainSweepConfig)
     r.train_nll = _student_nll(zfit .- pred, noise, ccfg.student_nu) / length(zfit)
-    r.cv_nll_mean, r.cv_nll_std = _chain_cv_score(xs, ys, zimg, xfit, yfit, zfit, noise, n, axisctx, ccfg)
-    r.residual_peak_snr = _residual_peak_snr(xfit, yfit, zfit, pred, noise)
     pcount = _chain_nparams(n, ccfg)
+    if ccfg.cv_method == "kfold"
+        r.cv_nll_mean, r.cv_nll_std = _chain_kfold_score(xs, ys, zimg, xfit, yfit, zfit, noise, n, axisctx, ccfg)
+    else
+        r.cv_nll_mean, r.cv_nll_std = _chain_gcv_score(zfit, pred, noise, pcount, ccfg.student_nu)
+    end
+    r.residual_peak_snr = _residual_peak_snr(xfit, yfit, zfit, pred, noise)
     full_nll = r.train_nll * length(z)
     r.bic = 2full_nll + pcount * log(n_eff)
     r.aicc = 2full_nll + 2pcount + (2pcount*(pcount+1)) / max(n_eff-pcount-1, 1)
@@ -1234,16 +1238,24 @@ function _chain_metrics!(r::ChainModelResult, axisctx, ccfg::ChainSweepConfig)
     end
 end
 
-function _chain_cv_score(xs, ys, zimg, x, y, z, noise, n, axisctx, ccfg::ChainSweepConfig)
+function _chain_gcv_score(zfit, pred, noise, n_params, student_nu)
+    ndata = length(zfit)
+    ndata <= n_params && return Inf, 0.0
+    resid = zfit .- pred
+    scale = ndata / (ndata - n_params)
+    gcv_nll = _student_nll(resid .* scale, noise, student_nu) / ndata
+    return gcv_nll, 0.0
+end
+
+function _chain_kfold_score(xs, ys, zimg, x, y, z, noise, n, axisctx, ccfg::ChainSweepConfig)
     n == 0 && return _student_nll(z .- median(z), noise, ccfg.student_nu), 0.0
     folds = max(2, ccfg.cv_folds)
     t = (x .- axisctx.origin[1]) .* axisctx.axis[1] .+ (y .- axisctx.origin[2]) .* axisctx.axis[2]
     tmin, tmax = extrema(t)
-    # Lighter config for CV fits: skip global NLopt, fewer LM iterations
     ccfg_cv = deepcopy(ccfg)
     ccfg_cv.skip_global = true
     ccfg_cv.max_iter = max(50, ccfg.max_iter ÷ 2)
-    ccfg_cv.multistart = 1  # single start per CV fold
+    ccfg_cv.multistart = 1
     scores = Float64[]
     for fold in 1:folds
         val = [mod(floor(Int, (t[i]-tmin)/(tmax-tmin+EPS)*folds), folds) + 1 == fold for i in eachindex(t)]
@@ -1257,6 +1269,11 @@ function _chain_cv_score(xs, ys, zimg, x, y, z, noise, n, axisctx, ccfg::ChainSw
     end
     isempty(scores) && return Inf, Inf
     return mean(scores), length(scores) > 1 ? std(scores)/sqrt(length(scores)) : 0.0
+end
+
+function _chain_cv_score(xs, ys, zimg, x, y, z, noise, n, axisctx, ccfg::ChainSweepConfig)
+    ccfg.cv_method == "kfold" && return _chain_kfold_score(xs, ys, zimg, x, y, z, noise, n, axisctx, ccfg)
+    error("_chain_cv_score: use _chain_gcv_score or _chain_kfold_score directly")
 end
 
 function _select_chain_model(results::Vector{ChainModelResult}, ccfg::ChainSweepConfig)

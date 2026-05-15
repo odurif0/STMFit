@@ -38,6 +38,7 @@ Base.@kwdef mutable struct ChainSweepConfig
     n_max::Int = 14
     multistart::Int = 20
     cv_folds::Int = 5
+    cv_method::String = "gcv"   # "gcv" (analytical, free) | "kfold" (refit per fold, slow)
     rng_seed::Int = 4321
     student_nu::Float64 = 4.0
     spacing_min_nm::Float64 = 0.35

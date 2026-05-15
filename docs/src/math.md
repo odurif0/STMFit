@@ -145,3 +145,27 @@ poorly constrained relative to each other — the κ penalty helps avoid this.
 The 2D fit also uses LsqFit for local refinement. Parameter errors are
 extracted from `estimate_covar(fit)` and stored per result. These are
 errors in the *encoded* (sigmoid-transformed) parameter space.
+
+## Generalized Cross-Validation (GCV)
+
+The default CV method (`cv_method="gcv"`) replaces expensive k-fold
+cross-validation with an analytical approximation:
+
+```
+GCV = (1/n) · Σ ρ_ν(r_i · n/(n-p))
+```
+
+where `n` is the number of data points, `p` the number of model parameters,
+`r_i` the residuals, and `ρ_ν` the Student-t loss function.
+
+GCV is derived from leave-one-out CV under the linear approximation of the
+model at the optimum. For converged nonlinear fits it provides an excellent
+approximation of LOOCV at zero computational cost.
+
+**Performance**: k-fold CV requires `k` full refits per N value in the sweep,
+typically adding 80–100s per N for 5-fold CV on 2D images. GCV replaces this
+with a single O(n) pass over the residuals, reducing the total 2D sweep time
+by roughly 5×.
+
+The k-fold method remains available via `cv_method="kfold"` for validation
+or when the linear approximation is suspected to be inadequate.
