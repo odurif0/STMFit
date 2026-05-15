@@ -181,3 +181,27 @@ converge to the same minimum (identical BIC and RSS). The NLopt DIRECT_L
 algorithm is sufficiently robust for this landscape — additional starts add
 linear time cost with no improvement in fit quality. Increase only if you
 observe convergence to a clearly wrong local minimum.
+
+## ROI Detection with Otsu Thresholding
+
+The 2D ROI (region of interest) mask isolates the molecular chain from the
+substrate background. A poor ROI that includes most of the image inflates
+`n_eff`, artificially raising BIC and potentially causing overfitting
+(e.g., selecting N=8 when N=6 is correct).
+
+The threshold is computed as:
+
+```
+threshold = max(threshold_otsu, roi_threshold_fraction × max_signal, roi_noise_k × noise)
+```
+
+- **Otsu's method**: maximizes inter-class variance of the signal histogram,
+  automatically adapting to different background levels across images.
+- **Fraction-based**: `roi_threshold_fraction × max_signal` — the original
+  fixed threshold, kept as a lower bound.
+- **Noise-based**: `roi_noise_k × noise` — ensures the threshold stays above
+  the noise floor.
+
+Without Otsu, images with elevated backgrounds (e.g., 034/035 where the Cu
+substrate contributes more signal) produced ROIs covering ~88% of the image.
+With Otsu, all images produce comparable ROIs of ~12-14%.
