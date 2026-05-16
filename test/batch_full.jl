@@ -1,13 +1,14 @@
 #!/usr/bin/env julia
 # Full 1D + 2D batch pipeline: fits, best-plots, and enriched summary.
 # For each file: 1D slide fit + 2D elliptical chain + 2D circular chain + 6-panel plot.
-# Standalone: discovers .sxm files directly if no triage TSV is present.
+# Configuration loaded from config/chitosan.toml (or --config path/to/calibration.toml).
 # Usage:
-#   julia --project=. test/scripts/batch_full.jl [N_files]
-#   julia --project=. test/scripts/batch_full.jl [N_files] --chunk i/n
+#   julia --project=. test/batch_full.jl [N_files]
+#   julia --project=. test/batch_full.jl [N_files] --config config/my_system.toml
+#   julia --project=. test/batch_full.jl [N_files] --chunk i/n
 
 using STMMolecularFit, GaussianFit2D, GaussianFit1D
-using DelimitedFiles, Plots, Printf, Statistics
+using DelimitedFiles, Plots, Printf, Statistics, TOML
 
 const DATA_DIR = get(ENV, "STMFIT_DATA_DIR", "/home/durif/Rebecca/data/data/20240817_LHe_Cu100")
 list_sxm_files(dir) = sort([f for f in readdir(dir) if endswith(lowercase(f), ".sxm")])
@@ -23,6 +24,7 @@ function _parse_cli(args)
     n_files = 48
     chunk_idx = 1
     chunk_total = 1
+    config_file = "config/chitosan.toml"
     i = 1
     while i <= length(args)
         arg = args[i]
@@ -33,6 +35,15 @@ function _parse_cli(args)
         elseif startswith(arg, "--chunk=")
             chunk_arg = split(arg, "=", limit=2)[2]
             i += 1
+        elseif arg == "--config"
+            i < length(args) || error("--config requires a file path")
+            config_file = args[i + 1]
+            i += 2
+            continue
+        elseif startswith(arg, "--config=")
+            config_file = split(arg, "=", limit=2)[2]
+            i += 1
+            continue
         elseif startswith(arg, "--")
             error("Unknown option: $arg")
         else
@@ -49,17 +60,13 @@ function _parse_cli(args)
     chunk_total >= 1 || error("chunk total must be >= 1")
     1 <= chunk_idx <= chunk_total || error("chunk index must satisfy 1 <= i <= n")
     n_files >= 0 || error("N_files must be >= 0")
-    return n_files, chunk_idx, chunk_total
+    return n_files, chunk_idx, chunk_total, config_file
 end
 
-const N_FILES, CHUNK_IDX, CHUNK_TOTAL = _parse_cli(ARGS)
+const N_FILES, CHUNK_IDX, CHUNK_TOTAL, CONFIG_FILE = _parse_cli(ARGS)
 mkpath(OUTDIR)
 
 const FWHM_SIGMA = 2.355
-const FWHM_MIN_1D_NM = 0.45
-const FWHM_MAX_1D_NM = 1.20
-const SIGMA_MIN_HARMONIZED_NM = FWHM_MIN_1D_NM / FWHM_SIGMA
-const SIGMA_MAX_HARMONIZED_NM = FWHM_MAX_1D_NM / FWHM_SIGMA
 const COLORMAP_RESID = cgrad([:blue, :lightgray, :red])
 const SUMMARY_HEADER = [
     "filepath", "status", "classification",
@@ -488,28 +495,58 @@ if length(already_done) > 0
     println("  $(length(already_done)) files already done, $(length(to_process)) remaining")
 end
 
-# ── 2D config (relaxed) ──
+# ── Load calibration ──
+@info "Loading calibration from $CONFIG_FILE"
+cfg_toml = TOML.parsefile(CONFIG_FILE)
+model = cfg_toml["model"]
+preproc = cfg_toml["preprocessing"]
+
+const FWHM_SIGMA = 2.355
+const SIGMA_MIN_HARMONIZED_NM = model["sigma_parallel_min_nm"]
+const SIGMA_MAX_HARMONIZED_NM = model["sigma_parallel_max_nm"]
+
+# ── 2D config (from calibration) ──
 pcfg = GaussianFit2D.PatternConfig(filepath="", channel="Z", direction="fwd",
-    stride=1, flatten="plane+rows", smooth_radius_px=1, output_dir=OUTDIR, no_plot=false)
+    stride=get(preproc, "stride", 1),
+    flatten=get(preproc, "flatten", "plane+rows"),
+    smooth_radius_px=get(preproc, "smooth_radius_px", 1),
+    output_dir=OUTDIR, no_plot=false)
 ccfg = GaussianFit2D.ChainSweepConfig(n_min=2, n_max=14,
-    spacing_min_nm=0.35, spacing_max_nm=0.75, fit_width_nm=0.15,
-    support_noise_k=2.5, support_padding_nm=0.20,
-    max_overlap=0.6,
-    global_maxtime=10.0, global_maxiter=10000, cv_folds=5,
-    multistart=1,      # bootstrap only (fast; default is 1)
+    spacing_min_nm=model["spacing_min_nm"], spacing_max_nm=model["spacing_max_nm"],
+    fit_width_nm=model["fit_width_nm"],
+    support_noise_k=model["support_noise_k"],
+    support_padding_nm=model["support_padding_nm"],
+    support_min_length_nm=get(model, "support_min_length_nm", 1.0),
+    support_baseline_quantile=get(model, "support_baseline_quantile", 0.10),
+    max_overlap=model["max_overlap"],
+    global_maxtime=model["global_maxtime"], global_maxiter=model["global_maxiter"],
+    max_iter=get(model, "max_iter", 300),
+    multistart=get(model, "multistart", 1),
+    cv_folds=get(model, "cv_folds", 5),
+    cv_method=get(model, "cv_method", "gcv"),
+    selection_criterion=get(model, "selection_criterion", "gcv"),
     sigma_parallel_min_nm=SIGMA_MIN_HARMONIZED_NM,
     sigma_parallel_max_nm=SIGMA_MAX_HARMONIZED_NM,
-    sigma_perp_min_nm=SIGMA_MIN_HARMONIZED_NM,
-    sigma_perp_max_nm=SIGMA_MAX_HARMONIZED_NM,
-    intelligent_sweep=true, fuse_z_bwd=true,
-    chain_tilted_baseline=true)
+    sigma_perp_min_nm=model["sigma_parallel_min_nm"],
+    sigma_perp_max_nm=model["sigma_parallel_max_nm"],
+    kappa_max=get(model, "kappa_max", 8.0),
+    kappa_weight=get(model, "kappa_weight", 1.0),
+    min_amplitude_fraction=get(model, "min_amplitude_fraction", 0.3),
+    chain_tilted_baseline=get(model, "chain_tilted_baseline", true),
+    intelligent_sweep=true, fuse_z_bwd=true)
 # Circular 2D config (same settings, circular sigmas)
 ccfg_circ = deepcopy(ccfg)
 ccfg_circ.chain_circular_sigmas = true
 
-# ── 1D config ──
-scfg = STMMolecularFit.SlideConfig(width_nm=0.70, support_noise_k=2.5, support_padding_nm=0.20, output_dir=OUTDIR, no_plot=true)
-fcfg = STMMolecularFit.FitSlideConfig(min_spacing=0.35, max_spacing=0.75, max_overlap=0.6, output_dir=OUTDIR)
+# ── 1D config (from calibration) ──
+scfg = STMMolecularFit.SlideConfig(
+    width_nm=get(model, "fit_width_nm", 0.70),
+    support_noise_k=model["support_noise_k"],
+    support_padding_nm=model["support_padding_nm"],
+    output_dir=OUTDIR, no_plot=true)
+fcfg = STMMolecularFit.FitSlideConfig(
+    min_spacing=model["spacing_min_nm"], max_spacing=model["spacing_max_nm"],
+    max_overlap=model["max_overlap"], output_dir=OUTDIR)
 
 # ── Process ──
 # Write header once if summary file is new
