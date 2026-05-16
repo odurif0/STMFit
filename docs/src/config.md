@@ -37,7 +37,6 @@ GaussianFit2D.ChainSweepConfig(
     multistart         = 1,       # Number of random starts
 
     # ── Support detection ──
-    support_threshold_fraction = 0.20,
     support_noise_k    = 2.5,
     support_padding_nm = 0.20,
     support_min_length_nm = 1.0,

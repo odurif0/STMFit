@@ -493,7 +493,7 @@ pcfg = GaussianFit2D.PatternConfig(filepath="", channel="Z", direction="fwd",
     stride=1, flatten="plane+rows", smooth_radius_px=1, output_dir=OUTDIR, no_plot=false)
 ccfg = GaussianFit2D.ChainSweepConfig(n_min=2, n_max=14,
     spacing_min_nm=0.35, spacing_max_nm=0.75, fit_width_nm=0.15,
-    support_threshold_fraction=0.25, support_noise_k=2.5, support_padding_nm=0.20,
+    support_noise_k=2.5, support_padding_nm=0.20,
     max_overlap=0.6,
     global_maxtime=10.0, global_maxiter=10000, cv_folds=5,
     multistart=1,      # bootstrap only (fast; default is 1)
@@ -508,8 +508,7 @@ ccfg_circ = deepcopy(ccfg)
 ccfg_circ.chain_circular_sigmas = true
 
 # ── 1D config ──
-scfg = STMMolecularFit.SlideConfig(width_nm=0.70, support_threshold_fraction=0.20,
-    support_noise_k=2.5, support_padding_nm=0.20, output_dir=OUTDIR, no_plot=true)
+scfg = STMMolecularFit.SlideConfig(width_nm=0.70, support_noise_k=2.5, support_padding_nm=0.20, output_dir=OUTDIR, no_plot=true)
 fcfg = STMMolecularFit.FitSlideConfig(min_spacing=0.35, max_spacing=0.75, max_overlap=0.6, output_dir=OUTDIR)
 
 # ── Process ──

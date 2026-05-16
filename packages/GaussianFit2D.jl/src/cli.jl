@@ -176,10 +176,10 @@ function _arg_settings()
             help = "Quantile robuste de baseline du profil axial pour support auto"
             arg_type = Float64
             default = 0.10
-        "--chain-support-threshold-fraction"
-            help = "Seuil relatif du profil axial pour garder seulement le support longitudinal actif"
+        "--chain-support-noise-k"
+            help = "Support detection: noise multiplier threshold"
             arg_type = Float64
-            default = 0.25
+            default = 2.5
         "--chain-support-noise-k"
             help = "Seuil bruit du support auto: baseline + k*MAD; combiné au seuil contraste par max()"
             arg_type = Float64
@@ -283,7 +283,6 @@ function main_cli()
                                 lateral_max_nm=args["chain-lateral-max-nm"],
                                 fit_width_nm=args["chain-fit-width-nm"],
                                 support_baseline_quantile=args["chain-support-baseline-quantile"],
-                                support_threshold_fraction=args["chain-support-threshold-fraction"],
                                 support_noise_k=args["chain-support-noise-k"],
                                 support_padding_nm=args["chain-support-padding-nm"],
                                 support_min_length_nm=args["chain-support-min-length-nm"],
@@ -334,7 +333,6 @@ function main_cli()
                                 lateral_max_nm=args["chain-lateral-max-nm"],
                                 fit_width_nm=args["chain-fit-width-nm"],
                                 support_baseline_quantile=args["chain-support-baseline-quantile"],
-                                support_threshold_fraction=args["chain-support-threshold-fraction"],
                                 support_noise_k=args["chain-support-noise-k"],
                                 support_padding_nm=args["chain-support-padding-nm"],
                                 support_min_length_nm=args["chain-support-min-length-nm"],
@@ -371,7 +369,6 @@ function main_cli()
                                 spacing_max_nm=args["chain-spacing-max-nm"],
                                 lateral_max_nm=args["chain-lateral-max-nm"],
                                 fit_width_nm=args["chain-fit-width-nm"],
-                                support_threshold_fraction=args["chain-support-threshold-fraction"],
                                 support_noise_k=args["chain-support-noise-k"],
                                 support_padding_nm=args["chain-support-padding-nm"],
                                 support_min_length_nm=args["chain-support-min-length-nm"],

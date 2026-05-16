@@ -46,7 +46,6 @@ Base.@kwdef mutable struct ChainSweepConfig
     lateral_max_nm::Float64 = 0.35
     fit_width_nm::Float64 = 0.45
     support_baseline_quantile::Float64 = 0.10
-    support_threshold_fraction::Float64 = 0.25
     support_noise_k::Float64 = 2.5
     support_padding_nm::Float64 = 0.20
     support_min_length_nm::Float64 = 1.0

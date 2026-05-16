@@ -44,7 +44,7 @@ function main()
             n_min=2, n_max=14,
             spacing_min_nm=SPACING_MIN, spacing_max_nm=SPACING_MAX,
             max_overlap=OVERLAP, fit_width_nm=0.15,
-            support_threshold_fraction=0.20, support_noise_k=2.5, support_padding_nm=0.20,
+            support_noise_k=2.5, support_padding_nm=0.20,
             global_maxtime=10.0, global_maxiter=10000, cv_folds=3,
             sigma_parallel_min_nm=SIGMA_MIN, sigma_parallel_max_nm=SIGMA_MAX,
             sigma_perp_min_nm=SIGMA_MIN, sigma_perp_max_nm=SIGMA_MAX,
@@ -54,7 +54,7 @@ function main()
 
     # ── 1D config (from centralize_best_plots.jl) ──
     scfg = STMMolecularFit.SlideConfig(
-        width_nm=0.30, support_threshold_fraction=0.20,
+        width_nm=0.30,
         support_noise_k=2.5, support_padding_nm=0.20,
         output_dir=output_dir, no_plot=true)
     fcfg = STMMolecularFit.FitSlideConfig(min_spacing=0.35, max_spacing=0.75, max_overlap=0.6, output_dir=output_dir)

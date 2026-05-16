@@ -63,7 +63,6 @@ Base.@kwdef mutable struct SlideConfig
     slide_mode::Symbol = :ridge_mean   # :ridge_mean (crest+disc avg, recommended) | :mean | :ridge
     n_samples::Int = 900
     baseline_quantile::Float64 = 0.10
-    support_threshold_fraction::Float64 = 0.20
     support_noise_k::Float64 = 2.5
     support_smooth_radius::Int = 5
     support_padding_nm::Float64 = 0.20
@@ -459,9 +458,9 @@ function _support_from_baseline(dist, y, cfg::SlideConfig)
     peak = maximum(ys)
     low = ys[ys .<= baseline]
     noise = isempty(low) ? _mad_std(ys) : _mad_std(low)
-    threshold_contrast = baseline + cfg.support_threshold_fraction * max(peak - baseline, EPS)
+    threshold_contrast = baseline + 0.0  # unused, kept for compatibility
     threshold_noise = baseline + cfg.support_noise_k * max(noise, EPS)
-    threshold = max(threshold_contrast, threshold_noise)
+    threshold = threshold_noise
     active = findall(>(threshold), ys)
     isempty(active) && error("No active support found")
     runs = UnitRange{Int}[]
@@ -835,7 +834,6 @@ end
 function compare_2d_1d_by_N(filepath::String;
         output_dir::String = "results/comparison_2d_1d_by_N",
         slide_width_nm::Float64 = 0.30,
-        support_threshold_fraction::Float64 = 0.20,
         support_noise_k::Float64 = 2.5,
         support_padding_nm::Float64 = 0.20,
         n_min::Int = 2, n_max::Int = 14,
@@ -874,7 +872,7 @@ function compare_2d_1d_by_N(filepath::String;
     # ━━━ 1D extraction + fit ━━━
     println("Extracting 1D slide...")
     slide_cfg = SlideConfig(
-        width_nm=slide_width_nm, support_threshold_fraction=support_threshold_fraction,
+        width_nm=slide_width_nm,
         support_noise_k=support_noise_k, support_padding_nm=support_padding_nm,
         output_dir=output_dir, no_plot=true)
     img_own = read_sxm(filepath)
@@ -900,7 +898,7 @@ function compare_2d_1d_by_N(filepath::String;
         n_min=n_min, n_max=n_max,
         spacing_min_nm=spacing_min_nm, spacing_max_nm=spacing_max_nm,
         fit_width_nm=fit_width_nm,
-        support_threshold_fraction=support_threshold_fraction, support_noise_k=support_noise_k,
+        support_noise_k=support_noise_k,
         support_padding_nm=support_padding_nm,
         max_overlap=max_overlap,
         sigma_parallel_min_nm=fit_cfg.fwhm_min / GaussianFit1D.FWHM_TO_SIGMA,

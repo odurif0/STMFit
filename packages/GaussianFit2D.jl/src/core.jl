@@ -868,16 +868,14 @@ function _active_t_support(t, z, ccfg::ChainSweepConfig)
     peak = maximum(prof)
     low = prof[prof .<= baseline]
     noise = isempty(low) ? _mad_std(prof) : _mad_std(low)
-    threshold_contrast = baseline + ccfg.support_threshold_fraction * max(peak - baseline, EPS)
     threshold_noise = baseline + ccfg.support_noise_k * max(noise, EPS)
-    thr = max(threshold_contrast, threshold_noise)
+    thr = threshold_noise
     active = findall(i -> counts[i] > 0 && prof[i] >= thr, eachindex(prof))
     base_meta = (support_method="auto_axis_profile_support",
                  profile_bins=nb, baseline=baseline, peak=peak,
                  noise_sigma_profile=noise, threshold=thr,
-                 threshold_contrast=threshold_contrast, threshold_noise=threshold_noise,
+                 threshold_noise=threshold_noise,
                  baseline_quantile=ccfg.support_baseline_quantile,
-                 threshold_fraction=ccfg.support_threshold_fraction,
                  noise_k=ccfg.support_noise_k, padding_nm=ccfg.support_padding_nm,
                  min_support_nm=ccfg.support_min_length_nm, active_bins=length(active))
     isempty(active) && return tlo, thi, merge(base_meta, (fallback="no_active_bins", active_components_raw=0, active_components_after_min_length=0))
