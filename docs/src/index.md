@@ -26,11 +26,17 @@ The default is `config/chitosan.toml` (chitosan on Cu(100), Nanomics STM).
 
 To calibrate for a new system:
 1. Copy `config/chitosan.toml` → `config/my_system.toml`
-2. Adjust `support_threshold_fraction`, `support_padding_nm`,
-   `spacing_min_nm`, `spacing_max_nm`, sigma bounds, etc.
+2. Adjust the noise-based support parameters (`support_noise_k`,
+   `support_padding_nm`), `spacing_min_nm`, `spacing_max_nm`, sigma bounds,
+   and the model-selection fields.
 3. Run batch with `--config config/my_system.toml`
 
-Track absolute BIC values (not just winning N) to validate calibration.
+Track the selected `N_ell`, score curves, residuals, support length, and
+absolute score values (not just the winning N) to validate calibration.
+
+For the chitosan reference set, `benchmarks/chitosan_240817.toml` records
+evaluation-only quality classes (`clean_target`, `poor_quality`, `excluded`).
+It is not used by the fitting code and must not become a selection prior.
 
 ## Research Journal
 
@@ -47,20 +53,20 @@ will thank present you.
 | Component | Role |
 |-----------|------|
 | `STMFitCore.jl` | Shared utilities: κ penalty, spacing constraints |
-| `GaussianFit1D.jl` | 1D slide profile fitting (bootstrap for 2D) |
+| `GaussianFit1D.jl` | 1D slide profile fitting and QC comparison |
 | `GaussianFit2D.jl` | 2D chain model: circular + elliptical Gaussian lobes |
-| `STMMolecularFit.jl` | Orchestration: SXM I/O, slide extraction, 1D→2D bridge |
+| `STMMolecularFit.jl` | Orchestration: SXM I/O, slide extraction, batch summaries |
 
 ## Pipeline (v6)
 
 ```
-SXM image → slide profile (1D) → peak fitting → bootstrap
-                                      ↓
-         2D circular sweep (N = 2..14, adaptive)
+SXM image ─┬→ slide profile (1D) → peak fitting → QC comparison
+           │
+           └→ 2D circular sweep (N adaptive, independent deterministic init)
               │
          circ→ell LsqFit refinement (∀N, warm-started from circ)
               │
-         min(BIC_circ, BIC_ell_refined) → N* candidate
+         best N by configured criterion (default GCV)
               │
-         CV tiebreaker (ΔBIC < 100 or CV ratio > 2) → N* final
+         outputs: N_ell, N_circ, N_eff, support/residual QC
 ```

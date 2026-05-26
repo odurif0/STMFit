@@ -7,8 +7,8 @@ const OUT = "results/profile_compare"
 mkpath(OUT)
 
 scfg = STMMolecularFit.SlideConfig(
-    width_nm=0.30, support_threshold_fraction=0.20,
-    support_noise_k=2.5, support_padding_nm=0.20,
+    width_nm=0.30,
+    support_noise_k=2.5, support_padding_nm=0.25,
     output_dir=OUT, no_plot=true)
 
 img = STMMolecularFit.read_sxm(FILE)

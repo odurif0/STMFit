@@ -1,9 +1,13 @@
+import Pkg
+Pkg.activate(normpath(joinpath(@__DIR__, "..")))
+
 using Documenter, GaussianFit2D, GaussianFit1D, STMMolecularFit, STMFitCore
 
 makedocs(
     sitename = "STMFit",
     modules = [GaussianFit2D, GaussianFit1D, STMMolecularFit, STMFitCore],
     format = Documenter.HTML(prettyurls = false),
+    checkdocs = :none,
     pages = [
         "Home" => "index.md",
         "Pipeline" => "pipeline.md",
@@ -15,4 +19,4 @@ makedocs(
     ],
 )
 
-deploydocs(repo = "github.com/...")
+deploydocs(repo = "github.com/odurif0/STMFit.git")

@@ -69,7 +69,7 @@ Base.@kwdef mutable struct ChainSweepConfig
     fuse_z_bwd::Bool = true
     residual_peak_snr_threshold::Float64 = 3.5
     max_overlap::Float64 = 0.60
-    kappa_max::Float64 = 8.0      # condition-number penalty threshold (0 = disabled)
+    kappa_max::Float64 = 10.0     # condition-number penalty threshold (0 = disabled)
     kappa_weight::Float64 = 1.0   # penalty strength
     peak_profile::Symbol = :gaussian  # :gaussian only for 2D currently
     min_amplitude_fraction::Float64 = 0.3  # reject models with any peak amplitude < 30% of max (matches 1D)
@@ -78,6 +78,7 @@ Base.@kwdef mutable struct ChainSweepConfig
     global_maxiter::Int = 5000
     global_tol::Float64 = 1e-5
     chain_circular_sigmas::Bool = false  # circular gaussians (spar=sperp per peak, fewer params)
+    shared_sigma_types::Int = 0           # 0: per-lobe sigmas; 1/2: shared widths by alternating lobe type
     chain_tilted_baseline::Bool = false   # add linear tilt bx·x + by·y to baseline (+2 params)
     selection_criterion::String = "gcv"  # model selection: "bic" | "aicc" | "cv" | "gcv"
 end

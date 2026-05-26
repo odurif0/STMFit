@@ -34,7 +34,7 @@ for fn in ["240817_003.sxm", "240817_034.sxm"]
         spacing_min_nm=0.35, spacing_max_nm=0.75, fit_width_nm=0.15,
         sigma_parallel_min_nm=0.45/2.355, sigma_parallel_max_nm=1.20/2.355,
         sigma_perp_min_nm=0.45/2.355, sigma_perp_max_nm=1.20/2.355,
-        support_threshold_fraction=0.25, support_noise_k=2.5, support_padding_nm=0.05,
+        support_noise_k=2.5, support_padding_nm=0.25,
         max_overlap=0.6, global_maxtime=10.0))
     
     fit_mask = ctx.mask

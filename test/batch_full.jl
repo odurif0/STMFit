@@ -18,7 +18,9 @@ const EXCLUDE = Set(["240817_001.sxm", "240817_008.sxm", "240817_009.sxm",
                       "240817_010.sxm", "240817_011.sxm", "240817_012.sxm",
                       "240817_013.sxm", "240817_014.sxm", "240817_016.sxm",
                       "240817_020.sxm", "240817_022.sxm", "240817_023.sxm",
-                      "240817_025.sxm", "240817_028.sxm"])
+                      "240817_025.sxm", "240817_028.sxm", "240817_056.sxm",
+                      "240817_057.sxm", "240817_063.sxm",
+                      "240817_015.sxm", "240817_027.sxm"])
 
 function _parse_cli(args)
     n_files = 48
@@ -80,9 +82,13 @@ const SUMMARY_HEADER = [
     "Nset_ell_10", "Nset_circ_10", "Nset_1D_10", "common_N_10",
     "Nset_ell_hybrid", "Nset_circ_hybrid", "Nset_1D_hybrid", "common_N_hybrid",
     "threshold_ell_hybrid", "threshold_circ_hybrid", "threshold_1D_hybrid",
+    "ambiguous_ell", "runnerup_N_ell", "delta_GCV_ell", "delta_GCV_rel_ell",
+    "ambiguous_eff", "runnerup_N_eff", "delta_GCV_eff", "delta_GCV_rel_eff",
     "kappa_ell", "kappa_circ", "kappa_1D",
     "best_plot", "file_dir"
 ]
+
+const GCV_AMBIGUITY_REL_THRESHOLD = 0.05
 
 _bilinear_interp(xs, ys, z, x0, y0) = begin
     ix = clamp(searchsortedlast(xs, x0), 1, length(xs)-1)
@@ -103,6 +109,50 @@ end
 
 _setstr(v) = isempty(v) ? "{}" : "{" * join(v, ",") * "}"
 
+function _write_summary_row(io, row)
+    length(row) == length(SUMMARY_HEADER) || error("summary row has $(length(row)) columns; expected $(length(SUMMARY_HEADER))")
+    println(io, join(row, '\t'))
+end
+
+function _error_summary_row(fn::AbstractString)
+    row = fill("ERR", length(SUMMARY_HEADER))
+    row[1] = fn
+    row[2] = "error"
+    row[3] = "PROBLEMATIC"
+    return row
+end
+
+function _ok_summary_row(fn, classif, best_ell_sweep, best_circ_sweep, best1d,
+                         best_n_eff, eff_source, best_ell_raw, best_circ_raw,
+                         qc, ambiguity, outpath, file_dir)
+    n1d = best1d === nothing ? "NA" : best1d.n_peaks
+    sBIC_1d = best1d === nothing ? "NA" : round(best1d.student_bic, digits=3)
+    chi2_1d = best1d === nothing ? "NA" : best1d.chi2_red
+    kappa_1d = best1d === nothing ? "NA" : best1d.kappa_max_adj
+    dN_1d_ell = best1d === nothing ? "NA" : best1d.n_peaks - best_ell_sweep.n
+    dN_1d_circ = best1d === nothing ? "NA" : best1d.n_peaks - best_circ_sweep.n
+
+    return [fn, "ok", classif,
+            best_ell_sweep.n, best_circ_sweep.n, n1d,
+            best_n_eff, eff_source,
+            best_circ_sweep.n - best_ell_sweep.n,
+            dN_1d_ell,
+            dN_1d_circ,
+            round(best_ell_sweep.bic, digits=3), round(best_circ_sweep.bic, digits=3), sBIC_1d,
+            best_ell_raw.n, round(best_ell_raw.bic, digits=3), best_ell_raw.valid,
+            best_circ_raw.n, round(best_circ_raw.bic, digits=3), best_circ_raw.valid,
+            best_ell_sweep.valid, best_circ_sweep.valid, best_ell_sweep.reason, best_circ_sweep.reason,
+            best_ell_sweep.chi2_reduced, best_circ_sweep.chi2_reduced, chi2_1d,
+            qc.support_1d, qc.support_ell, qc.support_circ, qc.mismatch_ell, qc.mismatch_circ,
+            _setstr(qc.nset_ell_10), _setstr(qc.nset_circ_10), _setstr(qc.nset_1d_10), _setstr(qc.common10),
+            _setstr(qc.nset_ell_h), _setstr(qc.nset_circ_h), _setstr(qc.nset_1d_h), _setstr(qc.commonh),
+            qc.thr_ell, qc.thr_circ, qc.thr_1d,
+            ambiguity.amb_ell, ambiguity.runner_ell, ambiguity.dgcv_ell, ambiguity.dgcv_rel_ell,
+            ambiguity.amb_eff, ambiguity.runner_eff, ambiguity.dgcv_eff, ambiguity.dgcv_rel_eff,
+            best_ell_sweep.kappa_max_adj, best_circ_sweep.kappa_max_adj, kappa_1d,
+            outpath, file_dir]
+end
+
 function _nset(results, best_score::Float64, threshold::Float64, scorefun)
     ns = Int[]
     for r in results
@@ -115,29 +165,86 @@ function _nset(results, best_score::Float64, threshold::Float64, scorefun)
     return sort(unique(ns))
 end
 
-function _best_valid_or_best(results, best_raw)
-    valid = [r for r in results if getproperty(r, :success) && getproperty(r, :valid) && isfinite(getproperty(r, :bic))]
+function _scorefun(criterion::AbstractString)
+    c = lowercase(String(criterion))
+    c == "gcv" && return r -> getproperty(r, :gcv)
+    c == "aicc" && return r -> getproperty(r, :aicc)
+    c == "cv" && return r -> getproperty(r, :cv_nll_mean)
+    return r -> getproperty(r, :bic)
+end
+
+_valid_scored(results, scorefun) = [r for r in results if getproperty(r, :success) && getproperty(r, :valid) && isfinite(scorefun(r))]
+
+function _best_by_n(results, scorefun)
+    by_n = Dict{Int,Any}()
+    for r in _valid_scored(results, scorefun)
+        n = getproperty(r, :n)
+        if !haskey(by_n, n) || scorefun(r) < scorefun(by_n[n])
+            by_n[n] = r
+        end
+    end
+    return by_n
+end
+
+function _best_valid_or_best(results, best_raw; criterion="gcv")
+    scorefun = _scorefun(criterion)
+    valid = _valid_scored(results, scorefun)
     isempty(valid) && return best_raw
-    return sort(valid; by=r -> r.bic)[1]
+    return sort(valid; by=scorefun)[1]
+end
+
+function _ambiguity_stats(results, selected_n::Int; criterion="gcv", rel_threshold=GCV_AMBIGUITY_REL_THRESHOLD)
+    lowercase(String(criterion)) == "gcv" || return (false, "NA", NaN, NaN)
+    by_n = _best_by_n(results, r -> r.gcv)
+    selected = get(by_n, selected_n, nothing)
+    selected === nothing && return (false, "NA", NaN, NaN)
+    others = sort([r for (n, r) in by_n if n != selected_n]; by=r -> r.gcv)
+    isempty(others) && return (false, "NA", NaN, NaN)
+    runner = first(others)
+    delta = runner.gcv - selected.gcv
+    rel = delta / max(abs(selected.gcv), eps(Float64))
+    return (rel <= rel_threshold, runner.n, delta, rel)
+end
+
+function _effective_score_by_n(results_ell, results_circ, scorefun)
+    by_n = Dict{Int,Float64}()
+    for r in vcat(_valid_scored(results_ell, scorefun), _valid_scored(results_circ, scorefun))
+        by_n[r.n] = min(get(by_n, r.n, Inf), scorefun(r))
+    end
+    return by_n
+end
+
+function _effective_ambiguity_stats(results_ell, results_circ, selected_n::Int; rel_threshold=GCV_AMBIGUITY_REL_THRESHOLD)
+    by_n = _effective_score_by_n(results_ell, results_circ, r -> r.gcv)
+    selected_score = get(by_n, selected_n, Inf)
+    isfinite(selected_score) || return (false, "NA", NaN, NaN)
+    others = sort([(n, s) for (n, s) in by_n if n != selected_n && isfinite(s)]; by=x -> x[2])
+    isempty(others) && return (false, "NA", NaN, NaN)
+    runner_n, runner_score = first(others)
+    delta = runner_score - selected_score
+    rel = delta / max(abs(selected_score), eps(Float64))
+    return (rel <= rel_threshold, runner_n, delta, rel)
 end
 
 function _select_effective_best(results_ell, results_circ; criterion="gcv")
     """Select best N using effective_criterion(N) = min(ell_criterion(N), circ_criterion(N)).
     Circular model is nested within elliptical → circ metric is a legitimate lower bound.
-    Default criterion is GCV (analytical, no refit needed). Fallback to BIC for tiebreaking."""
-    scorefun = criterion == "gcv" ? (r -> r.gcv) : (r -> r.bic)
-    valid_ell = [r for r in results_ell if r.success && r.valid && isfinite(scorefun(r))]
-    valid_circ = [r for r in results_circ if r.success && r.valid && isfinite(scorefun(r))]
+    Default criterion is GCV (analytical, no refit needed)."""
+    scorefun = _scorefun(criterion)
+    valid_ell = _valid_scored(results_ell, scorefun)
+    valid_circ = _valid_scored(results_circ, scorefun)
     if isempty(valid_ell) && isempty(valid_circ)
-        return nothing, 0
+        return nothing, 0, "NA"
     end
     ell_by_n = Dict(r.n => r for r in valid_ell)
     circ_by_n = Dict(r.n => r for r in valid_circ)
     all_ns = sort(unique(vcat(collect(keys(ell_by_n)), collect(keys(circ_by_n)))))
-    
-    # Pass 1: find best N by effective criterion
+
+    # Find best N by the configured effective criterion only:
+    # effective_score(N) = min(score_ell(N), score_circ(N)).
     best_n = 0
     best_score = Inf
+    best_source = "NA"
     for n in all_ns
         s_ell = haskey(ell_by_n, n) ? scorefun(ell_by_n[n]) : Inf
         s_circ = haskey(circ_by_n, n) ? scorefun(circ_by_n[n]) : Inf
@@ -145,47 +252,24 @@ function _select_effective_best(results_ell, results_circ; criterion="gcv")
         if eff < best_score
             best_score = eff
             best_n = n
+            best_source = s_ell <= s_circ ? "ell" : "circ"
         end
     end
-    final_n = best_n
-    
-    # CV tiebreaker: override if CV strongly disagrees
-    best_n_cv = 0
-    best_cv = Inf
-    for n in all_ns
-        for r in [get(ell_by_n, n, nothing), get(circ_by_n, n, nothing)]
-            r === nothing && continue
-            if isfinite(r.cv_nll_mean) && r.cv_nll_mean < best_cv
-                best_cv = r.cv_nll_mean
-                best_n_cv = n
-            end
-        end
-    end
-    
-    if best_n_cv > 0 && best_n_cv != best_n && isfinite(best_cv)
-        cv_at_best = Inf
-        for r in [get(ell_by_n, best_n, nothing), get(circ_by_n, best_n, nothing)]
-            r === nothing && continue
-            if isfinite(r.cv_nll_mean); cv_at_best = min(cv_at_best, r.cv_nll_mean); end
-        end
-        cv_ratio = isfinite(cv_at_best) && best_cv > 0 ? cv_at_best / best_cv : 1.0
-        if cv_ratio > 2.0 && best_n_cv < best_n
-            final_n = best_n_cv
-        end
-    end
-    
-    r_ell = get(ell_by_n, final_n, nothing)
-    r_circ = get(circ_by_n, final_n, nothing)
-    if r_ell !== nothing && r_circ !== nothing
-        best_result = r_ell.bic <= r_circ.bic + 10 ? r_ell : r_circ
-    elseif r_ell !== nothing
+
+    r_ell = get(ell_by_n, best_n, nothing)
+    r_circ = get(circ_by_n, best_n, nothing)
+    if best_source == "ell" && r_ell !== nothing
         best_result = r_ell
-    elseif r_circ !== nothing
+    elseif best_source == "circ" && r_circ !== nothing
         best_result = r_circ
+    elseif r_ell !== nothing
+        best_result = r_ell; best_source = "ell"
+    elseif r_circ !== nothing
+        best_result = r_circ; best_source = "circ"
     else
-        return nothing, 0
+        return nothing, 0, "NA"
     end
-    return best_result, final_n
+    return best_result, best_n, best_source
 end
 
 function _refine_circ_to_ell(results_circ, img, pcfg, ccfg_ell, ctx_circ)
@@ -211,8 +295,10 @@ function _refine_circ_to_ell(results_circ, img, pcfg, ccfg_ell, ctx_circ)
         r_c.success || continue
         n = r_c.n
         try
-            # Expand circ params to elliptical format
-            n_prefix = 3  # b0, bx, by
+            # Expand circular sigma params to elliptical format.  Works for both
+            # per-lobe sigmas and shared K-type sigmas because the sigma block is
+            # always the final block in the parameter vector.
+            n_prefix = 1 + (ccfg_refine.chain_tilted_baseline ? 2 : 0)
             split_idx = n_prefix + n + 1 + (n - 1) + n
             p_init = vcat(r_c.params[1:split_idx],
                           r_c.params[(split_idx+1):end],
@@ -258,6 +344,7 @@ end
 function _classification(best_ell, best_circ, best1d, common10, commonhybrid)
     !best_ell.valid && return "PROBLEMATIC"
     !best_circ.valid && return "PROBLEMATIC"
+    best1d === nothing && return best_ell.n == best_circ.n ? "ROBUST_2D_ONLY" : "PROBLEMATIC_1D_FAIL"
     ns = [best_ell.n, best_circ.n, best1d.n_peaks]
     length(unique(ns)) == 1 && return "ROBUST"
     !isempty(common10) && return "TOLERANT_10"
@@ -268,7 +355,7 @@ end
 
 function _write_scores(path::String, results, score_label::String, scorefun, selected)
     open(path, "w") do io
-        println(io, join(["N", score_label, "delta_raw", "delta_valid", "valid", "raw_best", "selected", "reason", "chi2", "cv_nll_mean", "cv_nll_std"], '\t'))
+        println(io, join(["N", score_label, "delta_raw", "delta_valid", "BIC", "GCV", "AICc", "valid", "raw_best", "selected", "reason", "chi2", "cv_nll_mean", "cv_nll_std"], '\t'))
         vals = [scorefun(r) for r in results if getproperty(r, :success) && isfinite(scorefun(r))]
         best_raw = isempty(vals) ? Inf : minimum(vals)
         valid_vals = [scorefun(r) for r in results if getproperty(r, :success) && getproperty(r, :valid) && isfinite(scorefun(r))]
@@ -277,7 +364,11 @@ function _write_scores(path::String, results, score_label::String, scorefun, sel
             getproperty(r, :success) || continue
             s = scorefun(r)
             isfinite(s) || continue
-            println(io, join([r.n, s, s - best_raw, s - best_valid, getproperty(r, :valid), abs(s - best_raw) <= 1e-9, r === selected, getproperty(r, :reason), getproperty(r, :chi2_reduced), getproperty(r, :cv_nll_mean), getproperty(r, :cv_nll_std)], '\t'))
+            println(io, join([r.n, s, s - best_raw, s - best_valid,
+                              getproperty(r, :bic), getproperty(r, :gcv), getproperty(r, :aicc),
+                              getproperty(r, :valid), abs(s - best_raw) <= 1e-9, r === selected,
+                              getproperty(r, :reason), getproperty(r, :chi2_reduced),
+                              getproperty(r, :cv_nll_mean), getproperty(r, :cv_nll_std)], '\t'))
         end
     end
 end
@@ -294,9 +385,70 @@ function _write_scores_1d(path::String, results)
     end
 end
 
-function make_best_plot(best_ell, ctx_ell, ccfg_ell, best_circ, ctx_circ, ccfg_circ, best_1d, x_1d, y_1d, cfg_1d, slide_mode, outpath)
+function _quality_warnings(n_eff::Integer, n_1d, support_1d::Real, support_2d::Real)
+    warnings = String[]
+    if n_1d === nothing
+        push!(warnings, "1D fit failed; 2D result only")
+        mismatch = _support_mismatch(support_1d, support_2d)
+        if isfinite(mismatch) && mismatch > 1.0
+            push!(warnings, @sprintf("support mismatch: 1D %.1fnm vs 2D %.1fnm", support_1d, support_2d))
+        end
+        return warnings
+    end
+    n_delta = n_1d - n_eff
+    mismatch = _support_mismatch(support_1d, support_2d)
+    if isfinite(mismatch) && mismatch > 1.0
+        push!(warnings, @sprintf("support mismatch: 1D %.1fnm vs 2D %.1fnm", support_1d, support_2d))
+    end
+    if n_delta >= 4
+        push!(warnings, "1D overcounts by +$n_delta peaks")
+    elseif n_delta <= -4
+        push!(warnings, "1D undercounts by $(abs(n_delta)) peaks")
+    end
+    return warnings
+end
+
+function _selection_diagnostics(best_ell_sweep, best_circ_sweep, best1d, best_eff,
+                                results_ell, results_circ, fit_1d, slide, ctx_ell, ctx_circ)
+    thr_ell = max(10.0, 0.01 * abs(best_ell_sweep.bic))
+    thr_circ = max(10.0, 0.01 * abs(best_circ_sweep.bic))
+    thr_1d = best1d === nothing ? NaN : max(10.0, 0.01 * abs(best1d.student_bic))
+
+    nset_ell_10 = _nset(results_ell, best_ell_sweep.bic, 10.0, r -> r.bic)
+    nset_circ_10 = _nset(results_circ, best_circ_sweep.bic, 10.0, r -> r.bic)
+    nset_1d_10 = best1d === nothing ? Int[] : _nset_1d(fit_1d.fit_run.all_results, best1d.student_bic, 10.0)
+    common10 = _intersect3(nset_ell_10, nset_circ_10, nset_1d_10)
+
+    nset_ell_h = _nset(results_ell, best_ell_sweep.bic, thr_ell, r -> r.bic)
+    nset_circ_h = _nset(results_circ, best_circ_sweep.bic, thr_circ, r -> r.bic)
+    nset_1d_h = best1d === nothing ? Int[] : _nset_1d(fit_1d.fit_run.all_results, best1d.student_bic, thr_1d)
+    commonh = _intersect3(nset_ell_h, nset_circ_h, nset_1d_h)
+
+    support_1d = slide.support_length_nm
+    support_ell = _support_length(ctx_ell)
+    support_circ = _support_length(ctx_circ)
+
+    return (;
+        thr_ell, thr_circ, thr_1d,
+        nset_ell_10, nset_circ_10, nset_1d_10, common10,
+        nset_ell_h, nset_circ_h, nset_1d_h, commonh,
+        support_1d, support_ell, support_circ,
+        mismatch_ell=_support_mismatch(support_1d, support_ell),
+        mismatch_circ=_support_mismatch(support_1d, support_circ),
+        classif=_classification(best_eff, best_circ_sweep, best1d, common10, commonh),
+    )
+end
+
+function make_best_plot(best_ell, ctx_ell, ccfg_ell, best_circ, ctx_circ, ccfg_circ, best_1d, x_1d, y_1d, cfg_1d, slide_mode, outpath; warnings=String[])
     """6-panel (2×3) comparison: ell 2D | circ 2D | 1D  |  ell residuals | circ residuals | 1D residuals."""
-    n_ell, n_circ, n1d = best_ell.n, best_circ.n, best_1d.n_peaks
+    n_ell, n_circ = best_ell.n, best_circ.n
+    n1d = best_1d === nothing ? 0 : best_1d.n_peaks
+
+    function _add_roi_contour!(p, ctx; color=:white, linewidth=1.6)
+        contour!(p, ctx.xs, ctx.ys, Float64.(ctx.mask);
+                 levels=[0.5], color=color, linewidth=linewidth,
+                 colorbar=false, label="")
+    end
 
     # ── Common helper: add overlays to a 2D panel ──
     function _add_2d_overlays!(p, best, ctx, ccfg, n)
@@ -304,7 +456,7 @@ function make_best_plot(best_ell, ctx_ell, ccfg_ell, best_circ, ctx_circ, ccfg_c
         ox, oy = ax_ctx.origin; ax, ay = ax_ctx.axis
         t_all = (ctx.x .- ox) .* ax .+ (ctx.y .- oy) .* ay
         # ROI contour (white)
-        contour!(p, ctx.xs, ctx.ys, Float64.(ctx.mask); levels=[0.5], color=:white, linewidth=1.2)
+        _add_roi_contour!(p, ctx; color=:white, linewidth=1.8)
         # Axis line (yellow)
         plot!(p, [ox+minimum(t_all)*ax, ox+maximum(t_all)*ax],
               [oy+minimum(t_all)*ay, oy+maximum(t_all)*ay];
@@ -373,34 +525,38 @@ function make_best_plot(best_ell, ctx_ell, ccfg_ell, best_circ, ctx_circ, ccfg_c
     _add_2d_overlays!(p_circ, best_circ, ctx_circ, ccfg_circ, n_circ)
 
     # ── Panel (1,3): 1D data + fit + components ──
-    y1d_pred = GaussianFit1D.predict_fit(x_1d, best_1d, cfg_1d)
-    y1d_resid = y_1d .- y1d_pred
-
     p_1d = plot(x_1d, y_1d; color=:gray, alpha=0.7, label="data", linewidth=1)
-    plot!(p_1d, x_1d, y1d_pred; color=:red, linewidth=2, label="fit N=$n1d")
+    y1d_resid = y_1d .- mean(y_1d)
+    if best_1d !== nothing
+        y1d_pred = GaussianFit1D.predict_fit(x_1d, best_1d, cfg_1d)
+        y1d_resid = y_1d .- y1d_pred
+        plot!(p_1d, x_1d, y1d_pred; color=:red, linewidth=2, label="fit N=$n1d")
 
-    centers = GaussianFit1D._params_to_centers(best_1d.popt, n1d)
-    comp_colors = [:red, :blue, :green, :orange, :purple, :cyan, :magenta, :brown, :pink, :lime, :teal, :gold]
-    asymmetric = cfg_1d.asymmetric_edges && n1d >= 2
-    y0 = best_1d.popt[1]
-    for (i, c) in enumerate(centers)
-        idx = i - 1
-        A = GaussianFit1D._get_amplitude(best_1d.popt, idx)
-        σ_in = GaussianFit1D._get_sigma(best_1d.popt, idx)
-        if asymmetric && (idx == 0 || idx == n1d - 1)
-            σ_out = idx == 0 ? best_1d.popt[end-1] : best_1d.popt[end]
-            z = x_1d .- c
-            s = idx == 0 ? (z .< 0) .* σ_out .+ (z .>= 0) .* σ_in :
-                           (z .< 0) .* σ_in .+ (z .>= 0) .* σ_out
-            y_comp = y0 .+ A .* exp.(-0.5 .* (z ./ s).^2)
-        else
-            y_comp = y0 .+ A .* exp.(-0.5 .* ((x_1d .- c) ./ max(σ_in, 1e-9)).^2)
+        centers = GaussianFit1D._params_to_centers(best_1d.popt, n1d)
+        comp_colors = [:red, :blue, :green, :orange, :purple, :cyan, :magenta, :brown, :pink, :lime, :teal, :gold]
+        asymmetric = cfg_1d.asymmetric_edges && n1d >= 2
+        y0 = best_1d.popt[1]
+        for (i, c) in enumerate(centers)
+            idx = i - 1
+            A = GaussianFit1D._get_amplitude(best_1d.popt, idx)
+            σ_in = GaussianFit1D._get_sigma(best_1d.popt, idx)
+            if asymmetric && (idx == 0 || idx == n1d - 1)
+                σ_out = idx == 0 ? best_1d.popt[end-1] : best_1d.popt[end]
+                z = x_1d .- c
+                s = idx == 0 ? (z .< 0) .* σ_out .+ (z .>= 0) .* σ_in :
+                               (z .< 0) .* σ_in .+ (z .>= 0) .* σ_out
+                y_comp = y0 .+ A .* exp.(-0.5 .* (z ./ s).^2)
+            else
+                y_comp = y0 .+ A .* exp.(-0.5 .* ((x_1d .- c) ./ max(σ_in, 1e-9)).^2)
+            end
+            col = comp_colors[mod1(i, length(comp_colors))]
+            plot!(p_1d, x_1d, y_comp; color=col, alpha=0.55, linestyle=:dash, linewidth=1.5, label="")
         end
-        col = comp_colors[mod1(i, length(comp_colors))]
-        plot!(p_1d, x_1d, y_comp; color=col, alpha=0.55, linestyle=:dash, linewidth=1.5, label="")
+        title!(p_1d, "1D N=$n1d ΔsBIC=0 (sBIC=$(round(best_1d.student_bic, digits=0)))")
+    else
+        title!(p_1d, "1D fit failed")
     end
     xlabel!(p_1d, "position (nm)"); ylabel!(p_1d, "intensity")
-    title!(p_1d, "1D N=$n1d ΔsBIC=0 (sBIC=$(round(best_1d.student_bic, digits=0)))")
 
     # ═══════════════════════════════════════════════════════
     # Row 2 (bottom): residuals
@@ -418,6 +574,7 @@ function make_best_plot(best_ell, ctx_ell, ccfg_ell, best_circ, ctx_circ, ccfg_c
                         colormap=COLORMAP_RESID, clims=(-3, 3),
                         title="2D ell residuals", xlabel="x (nm)", ylabel="y (nm)", colorbar=false)
     xlims!(p_res_ell, (xmin, xmax)); ylims!(p_res_ell, (ymin, ymax))
+    _add_roi_contour!(p_res_ell, ctx_ell; color=:black, linewidth=1.4)
 
     # ── Panel (2,2): 2D circular residuals ──
     pred_img_circ = zeros(size(zimg_circ))
@@ -431,6 +588,7 @@ function make_best_plot(best_ell, ctx_ell, ccfg_ell, best_circ, ctx_circ, ccfg_c
                          colormap=COLORMAP_RESID, clims=(-3, 3),
                          title="2D circ residuals", xlabel="x (nm)", ylabel="y (nm)", colorbar=false)
     xlims!(p_res_circ, (xmin, xmax)); ylims!(p_res_circ, (ymin, ymax))
+    _add_roi_contour!(p_res_circ, ctx_circ; color=:black, linewidth=1.4)
 
     # ── Panel (2,3): 1D residuals ──
     p_res_1d = plot(x_1d, y1d_resid; color=:red, label="", linewidth=1)
@@ -439,7 +597,11 @@ function make_best_plot(best_ell, ctx_ell, ccfg_ell, best_circ, ctx_circ, ccfg_c
     title!(p_res_1d, "1D residuals  σ=$(round(std(y1d_resid), digits=5))")
 
     # ── Global title ──
-    title_str = "elliptical β=$(round(best_ell.bic, digits=0)) vs circular β=$(round(best_circ.bic, digits=0)) vs 1D β=$(round(best_1d.student_bic, digits=0)) | slide: $slide_mode"
+    bic_1d_str = best_1d === nothing ? "NA" : string(round(best_1d.student_bic, digits=0))
+    title_str = "elliptical β=$(round(best_ell.bic, digits=0)) vs circular β=$(round(best_circ.bic, digits=0)) vs 1D β=$bic_1d_str | slide: $slide_mode"
+    if !isempty(warnings)
+        title_str *= " | ⚠ " * join(warnings, "; ")
+    end
 
     l = @layout grid(2, 3, heights=[0.65, 0.35])
     fig = plot(p_ell, p_circ, p_1d, p_res_ell, p_res_circ, p_res_1d;
@@ -501,7 +663,6 @@ cfg_toml = TOML.parsefile(CONFIG_FILE)
 model = cfg_toml["model"]
 preproc = cfg_toml["preprocessing"]
 
-const FWHM_SIGMA = 2.355
 const SIGMA_MIN_HARMONIZED_NM = model["sigma_parallel_min_nm"]
 const SIGMA_MAX_HARMONIZED_NM = model["sigma_parallel_max_nm"]
 
@@ -510,7 +671,7 @@ pcfg = GaussianFit2D.PatternConfig(filepath="", channel="Z", direction="fwd",
     stride=get(preproc, "stride", 1),
     flatten=get(preproc, "flatten", "plane+rows"),
     smooth_radius_px=get(preproc, "smooth_radius_px", 1),
-    output_dir=OUTDIR, no_plot=false)
+    output_dir=OUTDIR, no_plot=true)
 ccfg = GaussianFit2D.ChainSweepConfig(n_min=2, n_max=14,
     spacing_min_nm=model["spacing_min_nm"], spacing_max_nm=model["spacing_max_nm"],
     fit_width_nm=model["fit_width_nm"],
@@ -529,9 +690,10 @@ ccfg = GaussianFit2D.ChainSweepConfig(n_min=2, n_max=14,
     sigma_parallel_max_nm=SIGMA_MAX_HARMONIZED_NM,
     sigma_perp_min_nm=model["sigma_parallel_min_nm"],
     sigma_perp_max_nm=model["sigma_parallel_max_nm"],
-    kappa_max=get(model, "kappa_max", 8.0),
+    kappa_max=get(model, "kappa_max", 10.0),
     kappa_weight=get(model, "kappa_weight", 1.0),
     min_amplitude_fraction=get(model, "min_amplitude_fraction", 0.3),
+    shared_sigma_types=get(model, "shared_sigma_types", 0),
     chain_tilted_baseline=get(model, "chain_tilted_baseline", true),
     intelligent_sweep=true, fuse_z_bwd=true)
 # Circular 2D config (same settings, circular sigmas)
@@ -546,7 +708,7 @@ scfg = STMMolecularFit.SlideConfig(
     output_dir=OUTDIR, no_plot=true)
 fcfg = STMMolecularFit.FitSlideConfig(
     min_spacing=model["spacing_min_nm"], max_spacing=model["spacing_max_nm"],
-    max_overlap=model["max_overlap"], output_dir=OUTDIR)
+    max_overlap=model["max_overlap"], output_dir=OUTDIR, no_plot=true)
 
 # ── Process ──
 # Write header once if summary file is new
@@ -560,6 +722,7 @@ println("Generating best plots in $OUTDIR/ ...")
 ntot = length(to_process)
 t0 = time()
 summary_lock = ReentrantLock()
+plot_lock = ReentrantLock()
 n_parallel = min(4, Threads.nthreads(), ntot)
 println("Processing $ntot files ($n_parallel parallel workers)...")
 flush(stdout)
@@ -597,78 +760,79 @@ Threads.@threads for idx in 1:ntot
                 end
             end
         else
-        fit_1d = STMMolecularFit.fit_slide(slide, fcfg_file)
-        best1d = GaussianFit1D.best_result(fit_1d.fit_run)
-        x_1d, y_1d = fit_1d.fit_run.x, fit_1d.fit_run.y
-        cfg_1d = fit_1d.fit_run.cfg
+        fit_1d = nothing
+        best1d = nothing
+        x_1d, y_1d = slide.x, slide.y
+        cfg_1d = fcfg_file
+        try
+            fit_1d = STMMolecularFit.fit_slide(slide, fcfg_file)
+            best1d = GaussianFit1D.best_result(fit_1d.fit_run)
+            x_1d, y_1d = fit_1d.fit_run.x, fit_1d.fit_run.y
+            cfg_1d = fit_1d.fit_run.cfg
+        catch e1d
+            @warn "$fn: 1D fit failed; continuing with 2D-only result" reason=sprint(showerror, e1d)
+        end
 
         # 2D circular sweep (primary: always converges)
         img2d = GaussianFit2D.read_sxm(fp)
         pcfg_file = deepcopy(pcfg); pcfg_file.filepath = fp; pcfg_file.output_dir = file_dir
         results_circ, best_circ_raw, ctx_circ = GaussianFit2D.chain_gaussian_sweep(img2d, pcfg_file, ccfg_circ)
-        best_circ_sweep = _best_valid_or_best(results_circ, best_circ_raw)
+        criterion = get(model, "selection_criterion", "gcv")
+        scorefun = _scorefun(criterion)
+        score_label = uppercase(String(criterion))
+        best_circ_sweep = _best_valid_or_best(results_circ, best_circ_raw; criterion=criterion)
 
         # circ→ell LsqFit refinement at each N (replaces NLopt elliptical sweep)
         # NLopt is intentionally excluded — it always diverges in 33D sigma space.
         results_ell = _refine_circ_to_ell(results_circ, img2d, pcfg_file, ccfg, ctx_circ)
         ctx_ell = ctx_circ  # circ→ell refinement shares the circular context (same data/axis)
         best_ell_raw = isempty(results_ell) ? best_circ_raw : results_ell[1]
-        best_ell_sweep = isempty(results_ell) ? best_circ_sweep : _best_valid_or_best(results_ell, best_ell_raw)
+        best_ell_sweep = isempty(results_ell) ? best_circ_sweep : _best_valid_or_best(results_ell, best_ell_raw; criterion=criterion)
 
-        # Effective best: use min(ell_GCV, circ_GCV) per N for model selection (default GCV)
-        best_eff, best_n_eff = _select_effective_best(results_ell, results_circ; criterion="gcv")
+        # ── Selection: choose best valid models by configured criterion (default GCV) ──
+        # Effective best uses min(ell_score, circ_score) per N.
+        best_eff, best_n_eff, eff_source = _select_effective_best(results_ell, results_circ; criterion=criterion)
         if best_eff === nothing
-            best_eff = best_ell_sweep; best_n_eff = best_ell_sweep.n
+            best_eff = best_ell_sweep; best_n_eff = best_ell_sweep.n; eff_source = "ell"
         end
 
-        # 6-panel combined plot
-        make_best_plot(best_ell_sweep, ctx_circ, ccfg, best_circ_sweep, ctx_circ, ccfg_circ,
-                       best1d, x_1d, y_1d, cfg_1d, string(scfg.slide_mode), outpath)
+        # ── QC diagnostics only: ambiguity/support/tolerant N sets do not alter selection ──
+        amb_ell, runner_ell, dgcv_ell, dgcv_rel_ell = _ambiguity_stats(results_ell, best_ell_sweep.n; criterion=criterion)
+        amb_eff, runner_eff, dgcv_eff, dgcv_rel_eff = _effective_ambiguity_stats(results_ell, results_circ, best_n_eff)
+        ambiguity = (; amb_ell, runner_ell, dgcv_ell, dgcv_rel_ell,
+                       amb_eff, runner_eff, dgcv_eff, dgcv_rel_eff)
 
-        dn = best_eff.n - best1d.n_peaks
-        println("Neff=$(best_n_eff) Nell=$(best_ell_sweep.n) Ncirc=$(best_circ_sweep.n) N1D=$(best1d.n_peaks) Δ1D-eff=$(best1d.n_peaks - best_n_eff) ✓")
+        n1d_val = best1d === nothing ? "NA" : best1d.n_peaks
+        d1d_eff_val = best1d === nothing ? "NA" : best1d.n_peaks - best_n_eff
+        println("Neff=$(best_n_eff) Nell=$(best_ell_sweep.n) Ncirc=$(best_circ_sweep.n) N1D=$(n1d_val) Δ1D-eff=$(d1d_eff_val) ✓")
 
-        _write_scores(joinpath(file_dir, "ell_scores.tsv"), results_ell, "BIC", r -> r.bic, best_ell_sweep)
-        _write_scores(joinpath(file_dir, "circ_scores.tsv"), results_circ, "BIC", r -> r.bic, best_circ_sweep)
-        _write_scores_1d(joinpath(file_dir, "fit_1d_scores.tsv"), fit_1d.fit_run.all_results)
+        _write_scores(joinpath(file_dir, "ell_scores.tsv"), results_ell, score_label, scorefun, best_ell_sweep)
+        _write_scores(joinpath(file_dir, "circ_scores.tsv"), results_circ, score_label, scorefun, best_circ_sweep)
+        if fit_1d !== nothing
+            _write_scores_1d(joinpath(file_dir, "fit_1d_scores.tsv"), fit_1d.fit_run.all_results)
+        end
 
-        thr_ell = max(10.0, 0.01 * abs(best_ell_sweep.bic))
-        thr_circ = max(10.0, 0.01 * abs(best_circ_sweep.bic))
-        thr_1d = max(10.0, 0.01 * abs(best1d.student_bic))
-        nset_ell_10 = _nset(results_ell, best_ell_sweep.bic, 10.0, r -> r.bic)
-        nset_circ_10 = _nset(results_circ, best_circ_sweep.bic, 10.0, r -> r.bic)
-        nset_1d_10 = _nset_1d(fit_1d.fit_run.all_results, best1d.student_bic, 10.0)
-        common10 = _intersect3(nset_ell_10, nset_circ_10, nset_1d_10)
-        nset_ell_h = _nset(results_ell, best_ell_sweep.bic, thr_ell, r -> r.bic)
-        nset_circ_h = _nset(results_circ, best_circ_sweep.bic, thr_circ, r -> r.bic)
-        nset_1d_h = _nset_1d(fit_1d.fit_run.all_results, best1d.student_bic, thr_1d)
-        commonh = _intersect3(nset_ell_h, nset_circ_h, nset_1d_h)
-        classif = _classification(best_eff, best_circ_sweep, best1d, common10, commonh)
-        support_1d = slide.support_length_nm
-        support_ell = _support_length(ctx_ell)
-        support_circ = _support_length(ctx_circ)
-        mismatch_ell = _support_mismatch(support_1d, support_ell)
-        mismatch_circ = _support_mismatch(support_1d, support_circ)
+        qc = _selection_diagnostics(best_ell_sweep, best_circ_sweep, best1d, best_eff,
+                                    results_ell, results_circ, fit_1d, slide, ctx_ell, ctx_circ)
+        classif = qc.classif
+        plot_warnings = _quality_warnings(best_n_eff, best1d === nothing ? nothing : best1d.n_peaks, qc.support_1d, qc.support_ell)
+        amb_ell && push!(plot_warnings, @sprintf("ambiguous ell GCV: selected N=%d; second best N=%s (ΔGCV=%.1f%%)", best_ell_sweep.n, string(runner_ell), 100 * dgcv_rel_ell))
+        amb_eff && push!(plot_warnings, @sprintf("ambiguous eff GCV: selected N=%d; second best N=%s (ΔGCV=%.1f%%)", best_n_eff, string(runner_eff), 100 * dgcv_rel_eff))
+
+        # 6-panel combined plot. GR/Plots is not thread-safe, so serialize savefig.
+        lock(plot_lock) do
+            make_best_plot(best_ell_sweep, ctx_circ, ccfg, best_circ_sweep, ctx_circ, ccfg_circ,
+                           best1d, x_1d, y_1d, cfg_1d, string(scfg.slide_mode), outpath;
+                           warnings=plot_warnings)
+        end
 
         # Write summary (thread-safe)
-        eff_source = "refined"
+        row = _ok_summary_row(fn, classif, best_ell_sweep, best_circ_sweep, best1d,
+                              best_n_eff, eff_source, best_ell_raw, best_circ_raw,
+                              qc, ambiguity, outpath, file_dir)
         lock(summary_lock) do
             open(summary_file, "a") do io
-            println(io, join([fn, "ok", classif,
-                              best_ell_sweep.n, best_circ_sweep.n, best1d.n_peaks,
-                              best_n_eff, eff_source,
-                              best_circ_sweep.n - best_ell_sweep.n, best1d.n_peaks - best_ell_sweep.n, best1d.n_peaks - best_circ_sweep.n,
-                              round(best_ell_sweep.bic, digits=3), round(best_circ_sweep.bic, digits=3), round(best1d.student_bic, digits=3),
-                              best_ell_raw.n, round(best_ell_raw.bic, digits=3), best_ell_raw.valid,
-                              best_circ_raw.n, round(best_circ_raw.bic, digits=3), best_circ_raw.valid,
-                              best_ell_sweep.valid, best_circ_sweep.valid, best_ell_sweep.reason, best_circ_sweep.reason,
-                              best_ell_sweep.chi2_reduced, best_circ_sweep.chi2_reduced, best1d.chi2_red,
-                              support_1d, support_ell, support_circ, mismatch_ell, mismatch_circ,
-                              _setstr(nset_ell_10), _setstr(nset_circ_10), _setstr(nset_1d_10), _setstr(common10),
-                              _setstr(nset_ell_h), _setstr(nset_circ_h), _setstr(nset_1d_h), _setstr(commonh),
-                              thr_ell, thr_circ, thr_1d,
-                              best_ell_sweep.kappa_max_adj, best_circ_sweep.kappa_max_adj, best1d.kappa_max_adj,
-                              outpath, file_dir], '\t'))
+                _write_summary_row(io, row)
         end
         end  # lock
         end  # else
@@ -678,11 +842,7 @@ Threads.@threads for idx in 1:ntot
         println("FAILED: $msg_short")
         lock(summary_lock) do
             open(summary_file, "a") do io
-            row = fill("ERR", length(SUMMARY_HEADER))
-            row[1] = fn
-            row[2] = "error"
-            row[3] = "PROBLEMATIC"
-            println(io, join(row, '\t'))
+                _write_summary_row(io, _error_summary_row(fn))
         end
         end  # lock
     end

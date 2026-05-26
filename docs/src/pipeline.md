@@ -8,21 +8,18 @@ SXM File (.sxm)
   ├─→ STMMolecularFit: extract_slide()
   │     └─→ 1D profile along chain axis
   │           └─→ GaussianFit1D: fit_slide()
-  │                 └─→ Peak centers & amplitudes (bootstrap for 2D)
+  │                 └─→ Independent QC/reference count
   │
   └─→ GaussianFit2D: chain_gaussian_sweep()
         │
         ├─→ Circular sweep (σ∥ = σ⟂)
-        │     └─→ Reliable convergence, isotropic gaussians
-        │
-        ├─→ Elliptical sweep (σ∥, σ⟂ independent)
-        │     └─→ NLopt global + LsqFit local
+        │     └─→ Deterministic 2D-only initialization + NLopt + LsqFit
         │
         ├─→ circ→ell LsqFit refinement (per N)
         │     └─→ Warm-start from circular, local only
         │
         └─→ Model selection
-              └─→ min(BIC_circ, BIC_ell_refined) + CV tiebreaker
+              └─→ configured criterion (default GCV), plus QC metrics
 ```
 
 ## Component Roles
@@ -39,13 +36,15 @@ Shared mathematical utilities:
 - Sweeps N=2..max using NLopt + LsqFit
 - Ghost peak filter (rejects models with ≥2 unconstrained edge peaks)
 - `sBIC` (Student-t BIC) for model selection
-- Outputs peak centers and amplitudes as 2D bootstrap
+- Produces an independent reference count (`N_1D`) and support length for QC.
+- It is not used to initialize the standard 2D circular batch sweep.
 
 ### GaussianFit2D.jl
 2D chain model with Gaussian lobes along a PCA-derived axis:
 - `_weighted_roi_axis()` — intensity-weighted PCA via SVD
 - `_active_t_support()` — adaptive support detection from axial profile
 - `_chain_fit_data()` — extracts tube around axis, fits support bounds
+- `_deterministic_chain_seed()` — autonomous 2D circular initialization from raw binned axial signal
 - `_decode_chain()` — converts optimizer params → MolecularFeature list
 - `_chain_model_values()` — evaluates 2D Gaussian model at grid points
 - `_fit_chain_n()` — single-N optimizer (NLopt global + LsqFit local)
@@ -55,30 +54,26 @@ Shared mathematical utilities:
 Orchestration and I/O:
 - SXM file reading (Nanomics format)
 - Slide profile extraction and arc-length correction
-- 1D→2D bridge (bootstrap initialization)
+- Batch orchestration and 1D/2D QC comparison
 - Plot generation and output file management
 
 ## Optimization Strategy
 
-### Circular Model (N params, reliable)
+### Circular Model (anchor model)
 ```
-NLopt (GN_DIRECT_L, global, 10s) → LsqFit (LM, local, 300 iter)
+deterministic raw-2D seed → NLopt (GN_DIRECT_L) → LsqFit (LM)
 ```
-Converges reliably. Fewer parameters, better-conditioned landscape.
+The circular model is initialized independently from the 1D fit. Candidate
+centres are derived from the raw 2D axial profile (uniform, weighted quantile,
+raw local maxima, and edge-aware seeds); the selected seed initializes the
+single global/local optimization path for that N.
 
-### Elliptical Model (N params + N extra sigmas, unstable)
-```
-NLopt (GN_DIRECT_L, global, 10s) → LsqFit (LM, local, 300 iter)
-```
-**Known issue**: NLopt diverges from isotropic solution in 33D space.
-The global minimum exists but is unreachable by gradient-free optimization.
-
-### circ→ell Refinement (current, optimal)
+### circ→ell Refinement (elliptical model)
 ```
 LsqFit (LM, local, 50 iter) — warm-started from circular solution
 ```
 Finds the true elliptical minimum without global exploration.
-Replaces the elliptical NLopt sweep entirely (see Research Journal §7, §11).
+This replaces the elliptical NLopt sweep entirely (see Research Journal §7, §11).
 
 ## Key Parameters
 
@@ -91,5 +86,10 @@ Replaces the elliptical NLopt sweep entirely (see Research Journal §7, §11).
 | `sigma_parallel_max_nm` | 0.509 | Maximum axial sigma (FWHM 1.20) |
 | `sigma_perp_min_nm` | 0.10 | Minimum perpendicular sigma |
 | `sigma_perp_max_nm` | 0.55 | Maximum perpendicular sigma |
-| `cv_folds` | 5 | Cross-validation folds |
-| `kappa_max` | 8.0 | Condition number penalty threshold |
+| `fit_width_nm` | 0.16 | Tube half-width around the molecular axis |
+| `support_noise_k` | 2.5 | Threshold multiplier: baseline + k·noise |
+| `support_padding_nm` | 0.25 | Chitosan calibrated support edge padding |
+| `selection_criterion` | gcv | Primary criterion: gcv, bic, aicc, or cv |
+| `cv_method` | gcv | Analytical GCV by default; kfold is slower |
+| `cv_folds` | 5 | Cross-validation folds when `cv_method="kfold"` |
+| `kappa_max` | 10.0 | Chitosan calibrated condition-number penalty threshold |

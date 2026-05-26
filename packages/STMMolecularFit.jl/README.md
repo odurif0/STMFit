@@ -39,7 +39,8 @@ cfg = SlideConfig(
     channel="Z",
     direction="fwd",
     width_nm=0.30,
-    support_threshold_fraction=0.08,
+    support_noise_k=2.5,
+    support_padding_nm=0.25,
     output_dir="results/slide"
 )
 
@@ -58,7 +59,8 @@ slide_cfg = SlideConfig(
     channel="Z",
     direction="fwd",
     width_nm=0.30,
-    support_threshold_fraction=0.08,
+    support_noise_k=2.5,
+    support_padding_nm=0.25,
     output_dir="results/slide_fit/slide"
 )
 

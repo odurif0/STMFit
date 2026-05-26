@@ -1,0 +1,101 @@
+# Chitosan/Cu(100) 240817 benchmark manifest.
+#
+# This manifest is for evaluation and reporting only. It must not be used by the
+# fitting or model-selection code, and it intentionally contains no `expected_n`
+# field or selection prior.  The `target_N_for_human_validation` values document
+# the independent human/scientific interpretation used to audit calibration.
+
+[benchmark]
+name = "chitosan_240817"
+system = "chitosan on Cu(100)"
+data_dir_env = "STMFIT_DATA_DIR"
+default_config = "config/chitosan.toml"
+primary_result = "N_eff"
+selection_policy = "No expected-N prior; no prefer-N tie-break; report ambiguity explicitly."
+notes = "030/031/032 are unreliable and excluded from the primary benchmark."
+
+[quality_classes]
+clean = "Primary benchmark files without a known quality exclusion."
+clean_target = "Primary benchmark files where current calibration should be improved by generic methods."
+poor_quality = "Kept for traceability/stress testing, excluded from primary benchmark metrics."
+excluded = "Excluded from batch input or historical non-chain/exclusion list."
+
+[files."240817_015.sxm"]
+quality = "excluded"
+reason = "batch exclusion"
+
+[files."240817_027.sxm"]
+quality = "excluded"
+reason = "batch exclusion"
+
+[files."240817_063.sxm"]
+quality = "excluded"
+reason = "batch exclusion"
+
+[files."240817_029.sxm"]
+quality = "poor_quality"
+exclude_primary = true
+reason = "poor quality / support mismatch; do not optimize calibration against this file"
+
+[files."240817_030.sxm"]
+quality = "poor_quality"
+exclude_primary = true
+reason = "unreliable; do not optimize calibration against this file"
+
+[files."240817_031.sxm"]
+quality = "poor_quality"
+exclude_primary = true
+reason = "unreliable; do not optimize calibration against this file"
+
+[files."240817_032.sxm"]
+quality = "poor_quality"
+exclude_primary = true
+reason = "unreliable; do not optimize calibration against this file"
+
+[files."240817_034.sxm"]
+quality = "poor_quality"
+exclude_primary = true
+reason = "poor quality / model-limit stress case; do not optimize calibration against this file"
+
+[files."240817_035.sxm"]
+quality = "poor_quality"
+exclude_primary = true
+reason = "poor quality / ambiguous stress case; do not optimize calibration against this file"
+
+[files."240817_051.sxm"]
+quality = "poor_quality"
+exclude_primary = true
+reason = "poor quality or long-support case; do not optimize calibration against this file"
+
+[files."240817_017.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+current_issue = "current calibration selects N_eff=7; robust support audit keeps N=7, so likely scoring/model identifiability rather than support"
+
+[files."240817_019.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+current_issue = "current calibration selects N_eff=7; robust support audit keeps N=7, so likely scoring/model identifiability rather than support"
+
+[files."240817_043.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+current_issue = "current calibration selects N_eff=5; support marginalization selects N=6 but flags support ambiguity"
+
+[files."240817_058.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+current_issue = "current calibration selects N_eff=7; support marginalization keeps median N=7 but N=6 is more stable by upper-regret diagnostics"
+
+[evaluation]
+primary_exclude_quality = ["poor_quality", "excluded"]
+stress_quality = ["poor_quality"]
+report_columns = [
+  "N_eff",
+  "eff_source",
+  "ambiguous_eff",
+  "runnerup_N_eff",
+  "delta_GCV_rel_eff",
+  "support_marginalized_N",
+  "support_ambiguous",
+]

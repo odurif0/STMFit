@@ -97,7 +97,7 @@ Base.@kwdef mutable struct FitSlideConfig
     fwhm_min::Float64 = 0.45
     fwhm_max::Float64 = 1.2
     max_overlap::Float64 = 0.6
-    kappa_max::Float64 = 8.0
+    kappa_max::Float64 = 10.0
     kappa_weight::Float64 = 1.0
     amplitude_min_fraction::Float64 = 0.3
     global_maxtime::Float64 = 8.0
@@ -452,15 +452,52 @@ end
 
 _mad_std(v) = 1.4826 * median(abs.(v .- median(v)))
 
+function _otsu_threshold_1d(signal::AbstractVector{Float64})
+    v = signal[isfinite.(signal) .& (signal .> 0)]
+    isempty(v) && return 0.0
+    nbins = 128
+    lo, hi = minimum(v), maximum(v)
+    hi <= lo && return 0.0
+    bin_edges = range(lo, hi, length=nbins+1)
+    counts = zeros(Int, nbins)
+    for x in v
+        idx = min(nbins, max(1, Int(floor((x-lo)/(hi-lo)*(nbins-1)))+1))
+        counts[idx] += 1
+    end
+    total = sum(counts)
+    total == 0 && return 0.0
+    sumB, wB, max_var, best = 0.0, 0.0, 0.0, 0
+    bin_centers = (bin_edges[1:end-1] .+ bin_edges[2:end]) ./ 2
+    sumT = sum(bin_centers .* counts)
+    for i in 1:nbins
+        wB += counts[i]
+        wB == 0 && continue
+        wF = total - wB
+        wF <= 0 && break
+        sumB += bin_centers[i] * counts[i]
+        mB = sumB / wB
+        mF = (sumT - sumB) / wF
+        var_between = wB * wF * (mB - mF)^2 / (total^2)
+        if var_between > max_var
+            max_var = var_between
+            best = i
+        end
+    end
+    return best > 0 ? bin_centers[best] : 0.0
+end
+
 function _support_from_baseline(dist, y, cfg::SlideConfig)
     ys = _smooth1d(y, cfg.support_smooth_radius)
     baseline = quantile(ys, cfg.baseline_quantile)
     peak = maximum(ys)
     low = ys[ys .<= baseline]
     noise = isempty(low) ? _mad_std(ys) : _mad_std(low)
-    threshold_contrast = baseline + 0.0  # unused, kept for compatibility
+    signal_above_baseline = ys .- baseline
+    threshold_otsu = baseline + _otsu_threshold_1d(signal_above_baseline[signal_above_baseline .> 0])
     threshold_noise = baseline + cfg.support_noise_k * max(noise, EPS)
-    threshold = threshold_noise
+    # Use the LESS aggressive threshold (min) to avoid over-truncating support.
+    # Otsu can be too aggressive on 1D profiles; noise alone can be too permissive.
+    threshold = min(threshold_otsu, threshold_noise)
     active = findall(>(threshold), ys)
     isempty(active) && error("No active support found")
     runs = UnitRange{Int}[]

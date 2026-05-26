@@ -1,5 +1,32 @@
 # Configuration Reference
 
+## User-facing TOML calibration
+
+Batch runs are configured from TOML files. The default calibration is
+`config/chitosan.toml` and `test/batch_full.jl` accepts an override:
+
+```bash
+julia --project=. test/batch_full.jl --config config/my_system.toml
+```
+
+The chitosan calibration currently uses a noise-only support rule:
+
+```toml
+[model]
+fit_width_nm = 0.16
+support_noise_k = 2.5
+support_padding_nm = 0.25
+kappa_max = 10.0
+selection_criterion = "gcv"
+cv_method = "gcv"
+```
+
+The former contrast-fraction support threshold has been removed from the
+program. Support is defined from the axial profile as
+`baseline + support_noise_k * noise`, then expanded by `support_padding_nm`.
+This avoids coupling support detection to the brightest lobe or to occasional
+artefacts.
+
 ## ChainSweepConfig (GaussianFit2D)
 
 Full configuration for the 2D chain model sweep.
@@ -17,7 +44,7 @@ GaussianFit2D.ChainSweepConfig(
     spacing_min_nm     = 0.35,    # Minimum inter-lobe spacing (nm)
     spacing_max_nm     = 0.75,    # Maximum inter-lobe spacing (nm)
     max_overlap        = 0.60,    # Maximum lobe overlap fraction
-    fit_width_nm       = 0.15,    # Tube half-width around axis (nm)
+    fit_width_nm       = 0.45,    # Struct default; chitosan.toml overrides to 0.16
 
     # ── Sigma bounds ──
     sigma_parallel_min_nm = 0.191, # Min axial sigma (FWHM 0.45 nm)
@@ -38,12 +65,12 @@ GaussianFit2D.ChainSweepConfig(
 
     # ── Support detection ──
     support_noise_k    = 2.5,
-    support_padding_nm = 0.20,
+    support_padding_nm = 0.20,    # Struct default; chitosan.toml uses 0.25
     support_min_length_nm = 1.0,
     support_baseline_quantile = 0.10,
 
     # ── Penalties ──
-    kappa_max          = 8.0,     # Condition number penalty threshold
+    kappa_max          = 10.0,    # Condition number penalty threshold
     kappa_weight       = 1.0,     # Condition number penalty strength
     peak_profile       = :gaussian, # :gaussian (2D: only :gaussian supported)
     min_amplitude_fraction = 0.3, # Min lobe amplitude (fraction of max data)
@@ -55,7 +82,7 @@ GaussianFit2D.ChainSweepConfig(
     residual_peak_snr_threshold = 3.5,
 
     # ── Selection ──
-    selection_criterion = "bic",  # "bic" | "aicc" | "cv"
+    selection_criterion = "gcv",  # "gcv" | "bic" | "aicc" | "cv"
 )
 ```
 
@@ -68,7 +95,7 @@ GaussianFit2D.PatternConfig(
     filepath   = "",          # SXM file path
     channel    = "Z",         # Channel name
     direction  = "fwd",       # Scan direction
-    stride     = 1,           # Subsampling stride
+    stride     = 2,           # Struct default; chitosan.toml uses 1
     flatten    = "plane+rows",# Background flattening
     smooth_radius_px = 1,     # Preprocessing smoothing
     threshold_sigma = 2.5,    # Blob detection threshold
@@ -89,7 +116,7 @@ STMMolecularFit.FitSlideConfig(
     fwhm_min       = 0.45,    # Minimum FWHM (nm)
     fwhm_max       = 1.20,    # Maximum FWHM (nm)
     max_overlap    = 0.60,    # Maximum peak overlap
-    kappa_max      = 8.0,     # Condition number threshold
+    kappa_max      = 10.0,    # Condition number threshold
     peak_profile   = :gaussian,  # :gaussian | :lorentzian | :pseudo_voigt
     amplitude_min_fraction = 0.3,
     global_maxtime = 8.0,     # NLopt timeout (s)

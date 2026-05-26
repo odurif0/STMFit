@@ -15,8 +15,8 @@ for filepath in FILES
     println("  $fname")
     println("="^90)
 
-    slide_cfg = STMMolecularFit.SlideConfig(width_nm=0.30, support_threshold_fraction=0.20,
-        support_noise_k=2.5, support_padding_nm=0.20, output_dir=RESULTS_DIR, no_plot=true)
+    slide_cfg = STMMolecularFit.SlideConfig(width_nm=0.30,
+        support_noise_k=2.5, support_padding_nm=0.25, output_dir=RESULTS_DIR, no_plot=true)
     slide = nothing
     try
         img = STMMolecularFit.read_sxm(filepath)
@@ -34,7 +34,7 @@ for filepath in FILES
     fr_g = GaussianFit1D.run_fit(x, y, GaussianFit1D.build_config(Dict{String,Any}(
         "filepath" => filepath, "min_spacing" => 0.35, "max_spacing" => 0.75,
         "fwhm_min" => 0.45, "fwhm_max" => 1.20, "max_overlap" => 0.60,
-        "kappa_max" => 8.0, "kappa_weight" => 1.0,
+        "kappa_max" => 10.0, "kappa_weight" => 1.0,
         "global_maxtime" => 8.0, "global_maxiter" => 5000,
         "use_student_bic" => true, "no_show" => true,
         "peak_profile" => :gaussian, "output_dir" => RESULTS_DIR,
@@ -47,7 +47,7 @@ for filepath in FILES
     fr_pv = GaussianFit1D.run_fit(x, y, GaussianFit1D.build_config(Dict{String,Any}(
         "filepath" => filepath, "min_spacing" => 0.35, "max_spacing" => 0.75,
         "fwhm_min" => 0.45, "fwhm_max" => 1.20, "max_overlap" => 0.60,
-        "kappa_max" => 8.0, "kappa_weight" => 1.0,
+        "kappa_max" => 10.0, "kappa_weight" => 1.0,
         "global_maxtime" => 8.0, "global_maxiter" => 5000,
         "use_student_bic" => true, "no_show" => true,
         "peak_profile" => :pseudo_voigt, "output_dir" => RESULTS_DIR,
@@ -59,7 +59,7 @@ for filepath in FILES
     fr_lor = GaussianFit1D.run_fit(x, y, GaussianFit1D.build_config(Dict{String,Any}(
         "filepath" => filepath, "min_spacing" => 0.35, "max_spacing" => 0.75,
         "fwhm_min" => 0.45, "fwhm_max" => 1.20, "max_overlap" => 0.60,
-        "kappa_max" => 8.0, "kappa_weight" => 1.0,
+        "kappa_max" => 10.0, "kappa_weight" => 1.0,
         "global_maxtime" => 8.0, "global_maxiter" => 5000,
         "use_student_bic" => true, "no_show" => true,
         "peak_profile" => :lorentzian, "output_dir" => RESULTS_DIR,

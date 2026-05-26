@@ -8,7 +8,7 @@ outdir = length(ARGS) >= 2 ? ARGS[2] : "results/example_slide_fit"
 
 img = read_sxm(filepath)
 slide_cfg = SlideConfig(channel="Z", direction="fwd", width_nm=0.30,
-                        support_threshold_fraction=0.08,
+                        support_noise_k=2.5, support_padding_nm=0.25,
                         output_dir=joinpath(outdir, "slide"))
 slide = extract_slide(img, slide_cfg)
 slide_files = write_slide_outputs(slide, slide_cfg)

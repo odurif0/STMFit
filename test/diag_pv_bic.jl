@@ -2,8 +2,8 @@
 using GaussianFit1D, STMMolecularFit, Statistics, Printf
 
 filepath = "/home/durif/Rebecca/data/data/20240817_LHe_Cu100/240817_002.sxm"
-slide_cfg = STMMolecularFit.SlideConfig(width_nm=0.30, support_threshold_fraction=0.20,
-    support_noise_k=2.5, support_padding_nm=0.20, output_dir="/tmp/stmfit_test", no_plot=true)
+slide_cfg = STMMolecularFit.SlideConfig(width_nm=0.30,
+    support_noise_k=2.5, support_padding_nm=0.25, output_dir="/tmp/stmfit_test", no_plot=true)
 img = STMMolecularFit.read_sxm(filepath)
 slide = STMMolecularFit.extract_slide(img, slide_cfg)
 x, y = slide.x, slide.y
@@ -11,7 +11,7 @@ x, y = slide.x, slide.y
 common = Dict{String,Any}(
     "filepath" => filepath, "min_spacing" => 0.35, "max_spacing" => 0.75,
     "fwhm_min" => 0.45, "fwhm_max" => 1.20, "max_overlap" => 0.60,
-    "kappa_max" => 8.0, "global_maxtime" => 10.0, "global_maxiter" => 5000,
+    "kappa_max" => 10.0, "global_maxtime" => 10.0, "global_maxiter" => 5000,
     "use_student_bic" => true, "no_show" => true, "output_dir" => "/tmp/stmfit_test",
 )
 

@@ -814,10 +814,19 @@ end
 
 function _chain_nparams(n::Int, ccfg::Union{ChainSweepConfig,Nothing}=nothing)
     n == 0 && return 1
-    n_sigmas = (ccfg !== nothing && ccfg.chain_circular_sigmas) ? n : 2n
+    n_sigma_types = ccfg === nothing ? n : _chain_sigma_param_count(n, ccfg)
+    n_sigmas = (ccfg !== nothing && ccfg.chain_circular_sigmas) ? n_sigma_types : 2n_sigma_types
     n_tilt = (ccfg !== nothing && ccfg.chain_tilted_baseline) ? 2 : 0
     return 1 + n + 1 + (n-1) + n + n_sigmas + n_tilt
 end
+
+function _chain_sigma_param_count(n::Int, ccfg::ChainSweepConfig)
+    n <= 0 && return 0
+    k = ccfg.shared_sigma_types
+    return k <= 0 ? n : clamp(k, 1, n)
+end
+
+_chain_lobe_type(i::Int, k::Int) = mod(i - 1, k) + 1
 
 function _residual_peak_snr(x, y, z, pred, noise)
     return maximum(abs.(z .- pred)) / max(noise, EPS)
@@ -969,14 +978,18 @@ function _decode_chain(p::AbstractVector, n::Int, axisctx, ccfg::ChainSweepConfi
         push!(us, ccfg.lateral_max_nm * tanh(p[j]))
         j += 1
     end
+    n_sigma_types = _chain_sigma_param_count(n, ccfg)
     if ccfg.chain_circular_sigmas
-        sigmas = [ccfg.sigma_parallel_min_nm + (ccfg.sigma_parallel_max_nm - ccfg.sigma_parallel_min_nm) * _rsigmoid(p[j+k-1]) for k in 1:n]
+        sigma_types = [ccfg.sigma_parallel_min_nm + (ccfg.sigma_parallel_max_nm - ccfg.sigma_parallel_min_nm) * _rsigmoid(p[j+k-1]) for k in 1:n_sigma_types]
+        sigmas = [sigma_types[_chain_lobe_type(k, n_sigma_types)] for k in 1:n]
         spars = sigmas
         sperps = sigmas
     else
-        spars = [ccfg.sigma_parallel_min_nm + (ccfg.sigma_parallel_max_nm - ccfg.sigma_parallel_min_nm) * _rsigmoid(p[j+k-1]) for k in 1:n]
-        j += n
-        sperps = [ccfg.sigma_perp_min_nm + (ccfg.sigma_perp_max_nm - ccfg.sigma_perp_min_nm) * _rsigmoid(p[j+k-1]) for k in 1:n]
+        spar_types = [ccfg.sigma_parallel_min_nm + (ccfg.sigma_parallel_max_nm - ccfg.sigma_parallel_min_nm) * _rsigmoid(p[j+k-1]) for k in 1:n_sigma_types]
+        j += n_sigma_types
+        sperp_types = [ccfg.sigma_perp_min_nm + (ccfg.sigma_perp_max_nm - ccfg.sigma_perp_min_nm) * _rsigmoid(p[j+k-1]) for k in 1:n_sigma_types]
+        spars = [spar_types[_chain_lobe_type(k, n_sigma_types)] for k in 1:n]
+        sperps = [sperp_types[_chain_lobe_type(k, n_sigma_types)] for k in 1:n]
     end
     ts = Float64[t0]
     for d in deltas
@@ -1022,7 +1035,141 @@ function _nearest_values_on_grid(xs, ys, zimg, feats::Vector{MolecularFeature})
     return vals
 end
 
-function _pack_chain_initial(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConfig)
+function _axis_profile_from_grid(xs, ys, zimg, axisctx, ccfg::ChainSweepConfig)
+    nb = max(20, min(200, Int(ceil(_chain_support_length(axisctx) / max(0.02, ccfg.spacing_min_nm / 8)))))
+    prof = zeros(nb); counts = zeros(Int, nb)
+    tlo, thi = axisctx.tmin, axisctx.tmax
+    ox, oy = axisctx.origin; ax, ay = axisctx.axis; px, py = axisctx.perp
+    for iy in eachindex(ys), ix in eachindex(xs)
+        val = zimg[iy, ix]
+        isfinite(val) || continue
+        dx = xs[ix] - ox; dy = ys[iy] - oy
+        t = dx * ax + dy * ay
+        u = dx * px + dy * py
+        (tlo <= t <= thi && abs(u) <= ccfg.fit_width_nm) || continue
+        b = clamp(Int(floor((t - tlo) / max(thi - tlo, EPS) * (nb - 1))) + 1, 1, nb)
+        prof[b] += val
+        counts[b] += 1
+    end
+    prof ./= max.(counts, 1)
+    valid = prof[counts .> 0]
+    baseline = isempty(valid) ? quantile(vec(zimg), ccfg.support_baseline_quantile) : quantile(valid, ccfg.support_baseline_quantile)
+    return prof, counts, baseline, tlo, thi
+end
+
+function _weighted_quantile_ts(prof, counts, baseline, tlo, thi, n::Int)
+    nb = length(prof)
+    weights = [counts[i] > 0 ? max(prof[i] - baseline, 0.0) * counts[i] : 0.0 for i in 1:nb]
+    total = sum(weights)
+    if total <= EPS
+        return Float64[]
+    end
+    cs = cumsum(weights)
+    ts = Float64[]
+    for k in 1:n
+        target = total * k / (n + 1)
+        b = clamp(searchsortedfirst(cs, target), 1, nb)
+        push!(ts, tlo + (b - 0.5) / nb * (thi - tlo))
+    end
+    return sort(ts)
+end
+
+function _raw_peak_ts(prof, counts, baseline, tlo, thi, n::Int, ccfg::ChainSweepConfig)
+    nb = length(prof)
+    low = prof[prof .<= baseline]
+    noise = isempty(low) ? _mad_std(prof) : _mad_std(low)
+    thr = baseline + ccfg.support_noise_k * max(noise, EPS)
+    peaks = Tuple{Float64,Int}[]
+    for i in 2:(nb-1)
+        if counts[i] > 0 && prof[i] >= thr && prof[i] >= prof[i-1] && prof[i] >= prof[i+1]
+            push!(peaks, (prof[i] - baseline, i))
+        end
+    end
+    sort!(peaks; by=x -> (-x[1], x[2]))
+    chosen = Int[]
+    min_bins = max(1, Int(floor(ccfg.spacing_min_nm / max((thi - tlo) / nb, EPS))))
+    for (_, b) in peaks
+        all(abs(b - c) >= min_bins for c in chosen) || continue
+        push!(chosen, b)
+        length(chosen) == n && break
+    end
+    isempty(chosen) && return Float64[]
+    sort!(chosen)
+    return [tlo + (b - 0.5) / nb * (thi - tlo) for b in chosen]
+end
+
+function _complete_seed_ts(ts::Vector{Float64}, uniform_ts::Vector{Float64}, n::Int, spacing_min_eff::Float64)
+    merged = sort(copy(ts))
+    for t in uniform_ts
+        length(merged) >= n && break
+        if all(abs(t - s) >= 0.5 * spacing_min_eff for s in merged)
+            push!(merged, t)
+            sort!(merged)
+        end
+    end
+    while length(merged) < n
+        push!(merged, uniform_ts[min(length(merged) + 1, length(uniform_ts))])
+        sort!(merged)
+    end
+    return merged[1:n]
+end
+
+function _edge_aware_ts(prof, counts, baseline, tlo, thi, uniform_ts::Vector{Float64}, ccfg::ChainSweepConfig)
+    ts = copy(uniform_ts)
+    length(ts) <= 1 && return ts
+    nb = length(prof)
+    low = prof[prof .<= baseline]
+    noise = isempty(low) ? _mad_std(prof) : _mad_std(low)
+    thr = baseline + ccfg.support_noise_k * max(noise, EPS)
+    bins = findall(i -> counts[i] > 0 && prof[i] >= thr, eachindex(prof))
+    isempty(bins) && return ts
+    left = first(bins); right = last(bins)
+    ts[1] = tlo + (left - 0.5) / nb * (thi - tlo)
+    ts[end] = tlo + (right - 0.5) / nb * (thi - tlo)
+    return sort(ts)
+end
+
+function _score_seed_ts(xs, ys, zimg, ts::Vector{Float64}, axisctx, ccfg::ChainSweepConfig)
+    ox, oy = axisctx.origin; ax, ay = axisctx.axis
+    feats = [MolecularFeature(1.0, ox + t*ax, oy + t*ay, 0.2, 0.2, 1.0) for t in ts]
+    vals = _nearest_values_on_grid(xs, ys, zimg, feats)
+    spacing_penalty = length(ts) <= 2 ? 0.0 : std(diff(ts))
+    return sum(vals) - 0.05 * spacing_penalty * max(maximum(zimg), EPS)
+end
+
+function _deterministic_chain_seed_candidates(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConfig, spacing0::Float64)
+    support_len = _chain_support_length(axisctx)
+    total = spacing0 * max(n - 1, 0)
+    t0 = axisctx.tmin + 0.5 * max(support_len - total, 0.0)
+    uniform_ts = [t0 + (k-1) * spacing0 for k in 1:n]
+    # The circular fit is the autonomous 2D initializer.  It uses only raw binned
+    # 2D signal along the fitted axis; no 1D bootstrap and no smoothing.
+    ccfg.chain_circular_sigmas || return [uniform_ts]
+    prof, counts, baseline, tlo, thi = _axis_profile_from_grid(xs, ys, zimg, axisctx, ccfg)
+    spacing_min_eff = _effective_spacing_min_nm(ccfg)
+    candidates = Vector{Vector{Float64}}()
+    push!(candidates, uniform_ts)
+    qts = _weighted_quantile_ts(prof, counts, baseline, tlo, thi, n)
+    !isempty(qts) && push!(candidates, _complete_seed_ts(qts, uniform_ts, n, spacing_min_eff))
+    pts = _raw_peak_ts(prof, counts, baseline, tlo, thi, n, ccfg)
+    !isempty(pts) && push!(candidates, _complete_seed_ts(pts, uniform_ts, n, spacing_min_eff))
+    push!(candidates, _edge_aware_ts(prof, counts, baseline, tlo, thi, uniform_ts, ccfg))
+    unique_candidates = Vector{Vector{Float64}}()
+    for ts in candidates
+        st = sort(ts)
+        if !any(other -> length(other) == length(st) && maximum(abs.(other .- st)) < 1e-6, unique_candidates)
+            push!(unique_candidates, st)
+        end
+    end
+    return unique_candidates
+end
+
+function _deterministic_chain_seed(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConfig, spacing0::Float64)
+    candidates = _deterministic_chain_seed_candidates(xs, ys, zimg, n, axisctx, ccfg, spacing0)
+    return sort(argmax(ts -> _score_seed_ts(xs, ys, zimg, ts, axisctx, ccfg), candidates))
+end
+
+function _pack_chain_initial(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConfig; seed_ts::Union{Nothing,Vector{Float64}}=nothing)
     have_1d_init = length(ccfg.init_centers_t) >= n && length(ccfg.init_amplitudes) >= n
     spacing_min_eff = _effective_spacing_min_nm(ccfg)
     support_len = _chain_support_length(axisctx)
@@ -1044,14 +1191,13 @@ function _pack_chain_initial(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConf
         raw_deltas0 = n > 1 ? diff(centers_t) : Float64[]
     else
         spacing0 = n > 1 ? clamp(support_len / max(n - 1, 1), spacing_min_eff, ccfg.spacing_max_nm) : spacing_min_eff
-        total = spacing0 * max(n - 1, 0)
-        t0 = axisctx.tmin + 0.5 * max(support_len - total, 0.0)
-        ts0 = [t0 + (k-1) * spacing0 for k in 1:n]
+        ts0 = seed_ts === nothing ? _deterministic_chain_seed(xs, ys, zimg, n, axisctx, ccfg, spacing0) : seed_ts
+        t0 = first(ts0)
         ox, oy = axisctx.origin; ax, ay = axisctx.axis
         feats0 = [MolecularFeature(1.0, ox + t*ax, oy + t*ay, 0.2, 0.2, 1.0) for t in ts0]
         amps = _nearest_values_on_grid(xs, ys, zimg, feats0)
         medamp = max(median(amps), EPS)
-        raw_deltas0 = fill(spacing0, max(n - 1, 0))
+        raw_deltas0 = n > 1 ? diff(ts0) : Float64[]
     end
 
     deltas0 = Float64[]
@@ -1116,18 +1262,19 @@ function _pack_chain_initial(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConf
     else
         clamp(0.35 * spacing0, ccfg.sigma_perp_min_nm, ccfg.sigma_perp_max_nm)
     end
+    n_sigma_types = _chain_sigma_param_count(n, ccfg)
     if ccfg.chain_circular_sigmas
         sigma_trans = _rlogit((spar0 - ccfg.sigma_parallel_min_nm) / max(ccfg.sigma_parallel_max_nm - ccfg.sigma_parallel_min_nm, EPS))
-        for _ in 1:n
+        for _ in 1:n_sigma_types
             push!(p, sigma_trans)
         end
     else
         spar_trans = _rlogit((spar0 - ccfg.sigma_parallel_min_nm) / max(ccfg.sigma_parallel_max_nm - ccfg.sigma_parallel_min_nm, EPS))
         sperp_trans = _rlogit((sperp0 - ccfg.sigma_perp_min_nm) / max(ccfg.sigma_perp_max_nm - ccfg.sigma_perp_min_nm, EPS))
-        for _ in 1:n
+        for _ in 1:n_sigma_types
             push!(p, spar_trans)
         end
-        for _ in 1:n
+        for _ in 1:n_sigma_types
             push!(p, sperp_trans)
         end
     end
@@ -1156,10 +1303,11 @@ function _fit_chain_n(xs, ys, zimg, x, y, z, noise, n::Int, axisctx, ccfg::Chain
     lower[j] = -4.0; upper[j] = 4.0; j += 1
     for _ in 1:n-1; lower[j] = -5.0; upper[j] = 5.0; j += 1 end
     for _ in 1:n; lower[j] = -3.0; upper[j] = 3.0; j += 1 end
+    n_sigma_types = _chain_sigma_param_count(n, ccfg)
     if ccfg.chain_circular_sigmas
-        for _ in 1:n; lower[j] = -5.0; upper[j] = 5.0; j += 1 end
+        for _ in 1:n_sigma_types; lower[j] = -5.0; upper[j] = 5.0; j += 1 end
     else
-        for _ in 1:(2n); lower[j] = -5.0; upper[j] = 5.0; j += 1 end
+        for _ in 1:(2n_sigma_types); lower[j] = -5.0; upper[j] = 5.0; j += 1 end
     end
 
     function _run_one_start(p_start, amp_min, amp_range)
@@ -1238,7 +1386,7 @@ function _fit_chain_n(xs, ys, zimg, x, y, z, noise, n::Int, axisctx, ccfg::Chain
             end
             # Perturb sigma parameters
             sigma_start = delta_start + (n - 1) + n  # after deltas and us
-            n_sigma = ccfg.chain_circular_sigmas ? n : 2n
+            n_sigma = ccfg.chain_circular_sigmas ? n_sigma_types : 2n_sigma_types
             for i in sigma_start:(sigma_start + n_sigma - 1)
                 p_start[i] += 0.5 * randn()
             end
@@ -1768,4 +1916,3 @@ function fit_molecular_pattern(img::SXMImage, cfg::PatternConfig)
     result.bic = n_eff * log(max(result.rss, EPS) / length(zflat)) + k * log(n_eff)
     return result
 end
-

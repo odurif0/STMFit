@@ -17,7 +17,7 @@ GaussianFit2D.chain_gaussian_sweep(img0, pcfg0, GaussianFit2D.ChainSweepConfig(
     spacing_min_nm=0.35, spacing_max_nm=0.75, fit_width_nm=0.15,
     sigma_parallel_min_nm=SIGMA_MIN, sigma_parallel_max_nm=SIGMA_MAX,
     sigma_perp_min_nm=SIGMA_MIN, sigma_perp_max_nm=SIGMA_MAX,
-    support_threshold_fraction=0.25, support_noise_k=2.5, support_padding_nm=0.05,
+    support_noise_k=2.5, support_padding_nm=0.25,
     max_overlap=0.6, global_maxtime=10.0))
 
 for fn in ["240817_003.sxm", "240817_034.sxm", "240817_035.sxm"]
@@ -33,7 +33,7 @@ for fn in ["240817_003.sxm", "240817_034.sxm", "240817_035.sxm"]
     # Full sweep
     ccfg = GaussianFit2D.ChainSweepConfig(n_min=2, n_max=14, multistart=1, cv_method="gcv",
         spacing_min_nm=0.35, spacing_max_nm=0.75, fit_width_nm=0.15,
-        support_threshold_fraction=0.25, support_noise_k=2.5, support_padding_nm=0.05,
+        support_noise_k=2.5, support_padding_nm=0.25,
         max_overlap=0.6, global_maxtime=10.0,
         sigma_parallel_min_nm=SIGMA_MIN, sigma_parallel_max_nm=SIGMA_MAX,
         sigma_perp_min_nm=SIGMA_MIN, sigma_perp_max_nm=SIGMA_MAX,

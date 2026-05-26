@@ -1,6 +1,6 @@
 # STMFit calibration — Chitosan on Cu(100)
 # STM: Nanomics, LHe temperature, ~0.02 nm/px
-# Molecule: chitosan oligomers, expected N=6 ± 1
+# Molecule: chitosan oligomers on Cu(100)
 #
 # To create a new calibration: copy this file, adjust parameters,
 # and pass it to batch_full.jl via `--config path/to/calibration.toml`
@@ -12,11 +12,11 @@ spacing_max_nm = 0.75          # maximum inter-lobe spacing
 max_overlap = 0.60             # maximum lobe overlap fraction
 sigma_parallel_min_nm = 0.191  # FWHM 0.45 nm / 2.355
 sigma_parallel_max_nm = 0.509  # FWHM 1.20 nm / 2.355
-fit_width_nm = 0.15            # tube half-width around axis
+fit_width_nm = 0.16            # tube half-width around axis
 
 # ── Support detection ──
 support_noise_k = 2.5               # noise multiplier for support threshold
-support_padding_nm = 0.20           # edge padding (harmonized with 1D)
+support_padding_nm = 0.25           # edge padding (quick sweep improved N_ell=6: 31/42 → 33/42)
 support_min_length_nm = 1.0         # minimum support length
 support_baseline_quantile = 0.10    # baseline quantile for profile
 
@@ -34,7 +34,7 @@ bic_cv_margin = 100             # ΔBIC threshold for CV tiebreaker
 cv_ratio_threshold = 2.0        # CV ratio threshold for override
 
 # ── Penalties ──
-kappa_max = 8.0                # condition number threshold (0 = disabled)
+kappa_max = 10.0               # condition number threshold (0 = disabled)
 kappa_weight = 1.0             # penalty strength
 min_amplitude_fraction = 0.3   # minimum lobe amplitude (fraction of max data)
 
@@ -48,10 +48,12 @@ flatten = "plane+rows"         # background flattening method
 smooth_radius_px = 1           # preprocessing smoothing radius
 
 # ── Notes ──
-# Calibrated on: 240817 dataset (27 files, chitosan on Cu(100))
-# Date: 2025-05-15
+# Calibrated on: 240817 dataset (chitosan on Cu(100))
+# Updated: 2026-05-18
 # Key changes from defaults:
-#   - support_threshold_fraction removed; noise-only threshold (support_noise_k=2.5)
-#   - support_padding_nm: 0.05 → 0.20 (harmonized with 1D)
+#   - fit_width_nm: 0.15 → 0.16 (best net N_ell=6 gain in no-maxtime validation)
+#   - noise-only support threshold (support_noise_k=2.5)
+#   - support_padding_nm: 0.20 → 0.25 (improved N_ell=6 on quick sweep)
 #   - cv_folds: 3 → 5 (better CV discrimination)
 #   - selection_criterion: bic → gcv (analytical, no refit)
+#   - kappa_max: 8.0 → 10.0 (best harmless simple calibration in focus/core sweeps)

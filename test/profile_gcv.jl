@@ -16,7 +16,7 @@ pcfg = GaussianFit2D.PatternConfig(filepath=FILE, channel="Z", direction="fwd",
 function make_ccfg(; cv_method="gcv", circular=true)
     GaussianFit2D.ChainSweepConfig(n_min=2, n_max=14,
         spacing_min_nm=0.35, spacing_max_nm=0.75, fit_width_nm=0.15,
-        support_threshold_fraction=0.25, support_noise_k=2.5, support_padding_nm=0.05,
+        support_noise_k=2.5, support_padding_nm=0.25,
         max_overlap=0.6, global_maxtime=10.0, global_maxiter=10000, cv_folds=5,
         cv_method=cv_method,
         sigma_parallel_min_nm=SIGMA_MIN, sigma_parallel_max_nm=SIGMA_MAX,

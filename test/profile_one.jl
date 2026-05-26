@@ -16,7 +16,7 @@ pcfg = GaussianFit2D.PatternConfig(filepath=FILE, channel="Z", direction="fwd",
 
 ccfg_circ = GaussianFit2D.ChainSweepConfig(n_min=2, n_max=14,
     spacing_min_nm=0.35, spacing_max_nm=0.75, fit_width_nm=0.15,
-    support_threshold_fraction=0.25, support_noise_k=2.5, support_padding_nm=0.05,
+    support_noise_k=2.5, support_padding_nm=0.25,
     max_overlap=0.6, global_maxtime=10.0, global_maxiter=10000, cv_folds=5,
     sigma_parallel_min_nm=SIGMA_MIN, sigma_parallel_max_nm=SIGMA_MAX,
     sigma_perp_min_nm=SIGMA_MIN, sigma_perp_max_nm=SIGMA_MAX,
@@ -37,8 +37,8 @@ println("\n=== TIMED RUNS ===")
 
 # 1D
 t_1d = @elapsed begin
-    scfg = STMMolecularFit.SlideConfig(width_nm=0.30, support_threshold_fraction=0.20,
-        support_noise_k=2.5, support_padding_nm=0.20, output_dir=OUT, no_plot=true)
+    scfg = STMMolecularFit.SlideConfig(width_nm=0.30,
+        support_noise_k=2.5, support_padding_nm=0.25, output_dir=OUT, no_plot=true)
     fcfg = STMMolecularFit.FitSlideConfig(min_spacing=0.35, max_spacing=0.75, max_overlap=0.6, output_dir=OUT)
     img1d = STMMolecularFit.read_sxm(FILE)
     slide = STMMolecularFit.extract_slide(img1d, scfg)

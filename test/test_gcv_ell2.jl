@@ -42,8 +42,8 @@ pcfg = GaussianFit2D.PatternConfig(filepath=fp, channel="Z", direction="fwd",
 # CIRCULAR sweep
 ccfg_circ = GaussianFit2D.ChainSweepConfig(
     n_min=2, n_max=14, spacing_min_nm=0.35, spacing_max_nm=0.75,
-    fit_width_nm=0.15, support_threshold_fraction=0.25, support_noise_k=2.5,
-    support_padding_nm=0.05, max_overlap=0.6,
+    fit_width_nm=0.15, support_noise_k=2.5,
+    support_padding_nm=0.25, max_overlap=0.6,
     global_maxtime=10.0, global_maxiter=10000,
     sigma_parallel_min_nm=0.191, sigma_parallel_max_nm=0.509,
     sigma_perp_min_nm=0.10, sigma_perp_max_nm=0.55,
