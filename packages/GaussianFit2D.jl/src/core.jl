@@ -816,8 +816,9 @@ function _chain_nparams(n::Int, ccfg::Union{ChainSweepConfig,Nothing}=nothing)
     n == 0 && return 1
     n_sigma_types = ccfg === nothing ? n : _chain_sigma_param_count(n, ccfg)
     n_sigmas = (ccfg !== nothing && ccfg.chain_circular_sigmas) ? n_sigma_types : 2n_sigma_types
+    n_spacing = ccfg === nothing ? n : _chain_spacing_param_count(n, ccfg)
     n_tilt = (ccfg !== nothing && ccfg.chain_tilted_baseline) ? 2 : 0
-    return 1 + n + 1 + (n-1) + n + n_sigmas + n_tilt
+    return 1 + n + n_spacing + n + n_sigmas + n_tilt
 end
 
 function _chain_sigma_param_count(n::Int, ccfg::ChainSweepConfig)
@@ -827,6 +828,14 @@ function _chain_sigma_param_count(n::Int, ccfg::ChainSweepConfig)
 end
 
 _chain_lobe_type(i::Int, k::Int) = mod(i - 1, k) + 1
+
+function _chain_spacing_param_count(n::Int, ccfg::ChainSweepConfig)
+    n <= 1 && return 1 # t0 only
+    model = lowercase(String(ccfg.chain_spacing_model))
+    model == "uniform" && return 2      # t0, d
+    model == "alternating" && return 3  # t0, dA, dB
+    return n                            # t0 + N-1 free deltas
+end
 
 function _residual_peak_snr(x, y, z, pred, noise)
     return maximum(abs.(z .- pred)) / max(noise, EPS)
@@ -961,14 +970,34 @@ function _decode_chain(p::AbstractVector, n::Int, axisctx, ccfg::ChainSweepConfi
     t0_raw = p[j]; j += 1
     deltas = Float64[]
     used_span = 0.0
-    for i in 1:(n-1)
-        remaining_after = (n - 1 - i) * spacing_min_eff
-        upper_i = min(ccfg.spacing_max_nm, support_len - used_span - remaining_after)
-        upper_i = max(upper_i, spacing_min_eff)
-        d = spacing_min_eff + (upper_i - spacing_min_eff) * _rsigmoid(p[j])
-        push!(deltas, d)
-        used_span += d
-        j += 1
+    spacing_model = lowercase(String(ccfg.chain_spacing_model))
+    if n > 1 && spacing_model == "uniform"
+        upper_d = min(ccfg.spacing_max_nm, support_len / max(n - 1, 1))
+        upper_d = max(upper_d, spacing_min_eff)
+        d = spacing_min_eff + (upper_d - spacing_min_eff) * _rsigmoid(p[j]); j += 1
+        deltas = fill(d, n - 1)
+        used_span = sum(deltas)
+    elseif n > 1 && spacing_model == "alternating"
+        nA = count(isodd, 1:(n-1))
+        nB = (n - 1) - nA
+        upperA = nA > 0 ? min(ccfg.spacing_max_nm, (support_len - nB * spacing_min_eff) / nA) : spacing_min_eff
+        upperA = max(upperA, spacing_min_eff)
+        dA = spacing_min_eff + (upperA - spacing_min_eff) * _rsigmoid(p[j]); j += 1
+        upperB = nB > 0 ? min(ccfg.spacing_max_nm, (support_len - nA * dA) / nB) : dA
+        upperB = max(upperB, spacing_min_eff)
+        dB = nB > 0 ? spacing_min_eff + (upperB - spacing_min_eff) * _rsigmoid(p[j]) : dA; j += 1
+        deltas = [isodd(i) ? dA : dB for i in 1:(n-1)]
+        used_span = sum(deltas)
+    else
+        for i in 1:(n-1)
+            remaining_after = (n - 1 - i) * spacing_min_eff
+            upper_i = min(ccfg.spacing_max_nm, support_len - used_span - remaining_after)
+            upper_i = max(upper_i, spacing_min_eff)
+            d = spacing_min_eff + (upper_i - spacing_min_eff) * _rsigmoid(p[j])
+            push!(deltas, d)
+            used_span += d
+            j += 1
+        end
     end
     t0_hi = axisctx.tmax - used_span
     t0_span = max(t0_hi - axisctx.tmin, EPS)
@@ -1229,13 +1258,34 @@ function _pack_chain_initial(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConf
     end
     t0u = clamp((t0 - axisctx.tmin) / max(t0_hi - axisctx.tmin, EPS), 1e-5, 1-1e-5)
     push!(p, _rlogit(t0u))
-    used_span = 0.0
-    for i in 1:(n-1)
-        remaining_after = (n - 1 - i) * spacing_min_eff
-        upper_i = min(ccfg.spacing_max_nm, support_len - used_span - remaining_after)
-        upper_i = max(upper_i, spacing_min_eff)
-        push!(p, _rlogit((deltas0[i] - spacing_min_eff) / max(upper_i - spacing_min_eff, EPS)))
-        used_span += deltas0[i]
+    spacing_model = lowercase(String(ccfg.chain_spacing_model))
+    if n > 1 && spacing_model == "uniform"
+        d0 = clamp(mean(deltas0), spacing_min_eff, min(ccfg.spacing_max_nm, support_len / max(n - 1, 1)))
+        upper_d = max(min(ccfg.spacing_max_nm, support_len / max(n - 1, 1)), spacing_min_eff)
+        push!(p, _rlogit((d0 - spacing_min_eff) / max(upper_d - spacing_min_eff, EPS)))
+    elseif n > 1 && spacing_model == "alternating"
+        odd_d = [deltas0[i] for i in 1:length(deltas0) if isodd(i)]
+        even_d = [deltas0[i] for i in 1:length(deltas0) if iseven(i)]
+        nA, nB = length(odd_d), length(even_d)
+        dA0 = isempty(odd_d) ? spacing_min_eff : mean(odd_d)
+        upperA = nA > 0 ? min(ccfg.spacing_max_nm, (support_len - nB * spacing_min_eff) / nA) : spacing_min_eff
+        upperA = max(upperA, spacing_min_eff)
+        dA0 = clamp(dA0, spacing_min_eff, upperA)
+        push!(p, _rlogit((dA0 - spacing_min_eff) / max(upperA - spacing_min_eff, EPS)))
+        dB0 = isempty(even_d) ? dA0 : mean(even_d)
+        upperB = nB > 0 ? min(ccfg.spacing_max_nm, (support_len - nA * dA0) / nB) : dA0
+        upperB = max(upperB, spacing_min_eff)
+        dB0 = clamp(dB0, spacing_min_eff, upperB)
+        push!(p, _rlogit((dB0 - spacing_min_eff) / max(upperB - spacing_min_eff, EPS)))
+    else
+        used_span = 0.0
+        for i in 1:(n-1)
+            remaining_after = (n - 1 - i) * spacing_min_eff
+            upper_i = min(ccfg.spacing_max_nm, support_len - used_span - remaining_after)
+            upper_i = max(upper_i, spacing_min_eff)
+            push!(p, _rlogit((deltas0[i] - spacing_min_eff) / max(upper_i - spacing_min_eff, EPS)))
+            used_span += deltas0[i]
+        end
     end
     # lateral offsets
     if have_1d_init && length(ccfg.init_laterals) >= n
@@ -1300,8 +1350,9 @@ function _fit_chain_n(xs, ys, zimg, x, y, z, noise, n::Int, axisctx, ccfg::Chain
         lower[j] = -1.0; upper[j] = 1.0; j += 1
     end
     for _ in 1:n; lower[j] = -5.0; upper[j] = 5.0; j += 1 end
+    n_spacing = _chain_spacing_param_count(n, ccfg)
     lower[j] = -4.0; upper[j] = 4.0; j += 1
-    for _ in 1:n-1; lower[j] = -5.0; upper[j] = 5.0; j += 1 end
+    for _ in 1:(n_spacing - 1); lower[j] = -5.0; upper[j] = 5.0; j += 1 end
     for _ in 1:n; lower[j] = -3.0; upper[j] = 3.0; j += 1 end
     n_sigma_types = _chain_sigma_param_count(n, ccfg)
     if ccfg.chain_circular_sigmas
@@ -1380,12 +1431,12 @@ function _fit_chain_n(xs, ys, zimg, x, y, z, noise, n::Int, axisctx, ccfg::Chain
             p_start, amp_min, amp_range = _pack_chain_initial(xs, ys, zimg, n, axisctx, ccfg)
             # Add noise to deltas (spacing variation) and sigmas
             # Param order: b0, [bx,by if tilted], amps(n), t0, deltas(n-1), us(n), [spars(n)], [sperps(n)]
-            delta_start = n + 3 + (ccfg.chain_tilted_baseline ? 2 : 0)  # 1-based index of first delta
-            for i in delta_start:(delta_start + n - 2)
+            delta_start = n + 3 + (ccfg.chain_tilted_baseline ? 2 : 0)  # 1-based index of first spacing param after t0
+            for i in delta_start:(delta_start + n_spacing - 2)
                 p_start[i] += 0.5 * randn()
             end
             # Perturb sigma parameters
-            sigma_start = delta_start + (n - 1) + n  # after deltas and us
+            sigma_start = delta_start + (n_spacing - 1) + n  # after spacing params and us
             n_sigma = ccfg.chain_circular_sigmas ? n_sigma_types : 2n_sigma_types
             for i in sigma_start:(sigma_start + n_sigma - 1)
                 p_start[i] += 0.5 * randn()

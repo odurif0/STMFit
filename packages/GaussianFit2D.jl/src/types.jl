@@ -79,6 +79,7 @@ Base.@kwdef mutable struct ChainSweepConfig
     global_tol::Float64 = 1e-5
     chain_circular_sigmas::Bool = false  # circular gaussians (spar=sperp per peak, fewer params)
     shared_sigma_types::Int = 0           # 0: per-lobe sigmas; 1/2: shared widths by alternating lobe type
+    chain_spacing_model::String = "free"  # "free" | "uniform" | "alternating" axial gap model
     chain_tilted_baseline::Bool = false   # add linear tilt bx·x + by·y to baseline (+2 params)
     selection_criterion::String = "gcv"  # model selection: "bic" | "aicc" | "cv" | "gcv"
 end

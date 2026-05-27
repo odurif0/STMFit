@@ -299,7 +299,7 @@ function _refine_circ_to_ell(results_circ, img, pcfg, ccfg_ell, ctx_circ)
             # per-lobe sigmas and shared K-type sigmas because the sigma block is
             # always the final block in the parameter vector.
             n_prefix = 1 + (ccfg_refine.chain_tilted_baseline ? 2 : 0)
-            split_idx = n_prefix + n + 1 + (n - 1) + n
+            split_idx = n_prefix + n + GaussianFit2D._chain_spacing_param_count(n, ccfg_refine) + n
             p_init = vcat(r_c.params[1:split_idx],
                           r_c.params[(split_idx+1):end],
                           r_c.params[(split_idx+1):end])
@@ -694,6 +694,7 @@ ccfg = GaussianFit2D.ChainSweepConfig(n_min=2, n_max=14,
     kappa_weight=get(model, "kappa_weight", 1.0),
     min_amplitude_fraction=get(model, "min_amplitude_fraction", 0.3),
     shared_sigma_types=get(model, "shared_sigma_types", 0),
+    chain_spacing_model=get(model, "chain_spacing_model", "free"),
     chain_tilted_baseline=get(model, "chain_tilted_baseline", true),
     intelligent_sweep=true, fuse_z_bwd=true)
 # Circular 2D config (same settings, circular sigmas)
