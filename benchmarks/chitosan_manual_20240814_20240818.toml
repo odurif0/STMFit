@@ -166,6 +166,47 @@ quality = "clean_target"
 target_N_for_human_validation = 6
 current_issue = "default robust guard selects N=5"
 
+# 20240816_LHe_Cu100: manual visual inspection.
+[files."240816_001.sxm"]
+quality = "excluded"
+reason = "non-chitosan by manual visual inspection"
+
+[files."240816_002.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+
+[files."240816_003.sxm"]
+quality = "excluded"
+reason = "double chitosan / two objects; not a single-chain benchmark"
+
+[files."240816_004.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+
+[files."240816_005.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+
+[files."240816_006.sxm"]
+quality = "excluded"
+reason = "litigious/ambiguous; keep out of strict benchmark"
+
+[files."240816_007.sxm"]
+quality = "excluded"
+reason = "non-chitosan by manual visual inspection"
+
+[files."240816_008.sxm"]
+quality = "excluded"
+reason = "non-chitosan by manual visual inspection"
+
+[files."240816_009.sxm"]
+quality = "excluded"
+reason = "non-chitosan by manual visual inspection"
+
+[files."240816_010.sxm"]
+quality = "excluded"
+reason = "non-chitosan by manual visual inspection"
+
 [evaluation]
 grade_only_manifest_files = true
 primary_exclude_quality = ["excluded"]
