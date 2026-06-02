@@ -11,6 +11,8 @@ notes = "Manual visual labels from /home/durif/Rebecca/data/data/chitosan_manual
 
 [quality_classes]
 clean_target = "Visually accepted chitosan image with expected final N."
+clean_unscored = "Visually accepted chitosan image without expected final N yet."
+ambiguous = "Ambiguous or poor-quality image kept out of strict benchmark scoring."
 excluded = "Excluded from manual benchmark scoring."
 
 # 20240814_LHe_Cu100: user excluded 001-010. Files 011-025 look good and
@@ -116,7 +118,7 @@ target_N_for_human_validation = 6
 quality = "clean_target"
 target_N_for_human_validation = 6
 
-# 20240818_LHe_Cu100: only manually expected files are benchmark targets here.
+# 20240818_LHe_Cu100: manually classified; only expected-N files are strict targets.
 [files."240818_001.sxm"]
 quality = "excluded"
 reason = "non-chitosan by manual visual inspection"
@@ -129,21 +131,78 @@ reason = "non-chitosan by manual visual inspection"
 quality = "excluded"
 reason = "non-chitosan by manual visual inspection"
 
+[files."240818_004.sxm"]
+quality = "ambiguous"
+exclude_primary = true
+reason = "bad image quality / ambiguous by manual visual inspection"
+
+[files."240818_005.sxm"]
+quality = "ambiguous"
+exclude_primary = true
+reason = "bad image quality / ambiguous by manual visual inspection"
+
+[files."240818_006.sxm"]
+quality = "ambiguous"
+exclude_primary = true
+reason = "ambiguous by manual visual inspection"
+
+[files."240818_007.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+
 [files."240818_008.sxm"]
 quality = "excluded"
 reason = "non-chitosan by manual visual inspection"
+
+[files."240818_009.sxm"]
+quality = "ambiguous"
+exclude_primary = true
+reason = "ambiguous by manual visual inspection"
 
 [files."240818_010.sxm"]
 quality = "excluded"
 reason = "non-chitosan by manual visual inspection"
 
+[files."240818_011.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+
+[files."240818_012.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+
+[files."240818_013.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+
 [files."240818_014.sxm"]
 quality = "excluded"
 reason = "non-chitosan by manual visual inspection"
 
+[files."240818_015.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+
+[files."240818_016.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+
+[files."240818_017.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+
+[files."240818_018.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+
 [files."240818_019.sxm"]
-quality = "excluded"
-reason = "pipeline failed; no active component longer than min_support_nm"
+quality = "clean_target"
+target_N_for_human_validation = 6
+current_issue = "current pipeline failed: no active component longer than min_support_nm"
+
+[files."240818_020.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
 
 [files."240818_021.sxm"]
 quality = "clean_target"
@@ -158,13 +217,26 @@ quality = "excluded"
 reason = "non-chitosan by manual visual inspection"
 
 [files."240818_024.sxm"]
-quality = "excluded"
-reason = "bizarre; do not use in benchmark"
+quality = "ambiguous"
+exclude_primary = true
+reason = "ambiguous by manual visual inspection"
 
 [files."240818_025.sxm"]
 quality = "clean_target"
 target_N_for_human_validation = 6
 current_issue = "default robust guard selects N=5"
+
+[files."240818_026.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+
+[files."240818_027.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+
+[files."240818_028.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
 
 # 20240816_LHe_Cu100: manual visual inspection.
 [files."240816_001.sxm"]
