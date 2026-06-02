@@ -9,11 +9,102 @@ to STM images of molecular chains (chitosan on Cu(100)).
 # Single file diagnostic
 julia --project=. test/inspect_one_file.jl data/molecule.sxm
 
-# Batch processing (uses config/chitosan.toml by default)
+# Batch processing (uses config/chitosan.toml by default;
+# chitosan default policy is gcv_with_robust_aicc_guard)
 julia --project=. test/batch_full.jl
 
 # Batch with custom calibration (different molecule/instrument)
 julia --project=. test/batch_full.jl --config config/my_system.toml
+
+# Explicit raw GCV/N_eff baseline override
+julia -t 4 --project=. test/batch_full.jl 48 \
+  --config config/chitosan.toml \
+  --selection-policy gcv
+
+# Diagnostic spatial blocked CV selector (not default)
+julia --project=. test/batch_full.jl 48 \
+  --config config/chitosan.toml \
+  --selection-policy spatial_blocked_cv \
+  --cv-folds 3
+
+# Diagnostic support-marginalized GCV selector (not default)
+julia --project=. test/batch_full.jl 48 \
+  --config config/chitosan.toml \
+  --selection-policy support_marginalized_gcv
+
+# Conservative support-marginalized one-lobe guard (not default)
+julia --project=. test/batch_full.jl 48 \
+  --config config/chitosan.toml \
+  --selection-policy support_marginalized_gcv_guard
+
+# File-adaptive slope-heuristic MDL selector (diagnostic)
+julia --project=. test/batch_full.jl 48 \
+  --config config/chitosan.toml \
+  --selection-policy slope_heuristic_mdl
+
+# Support-perturbation stability selector (diagnostic)
+julia --project=. test/batch_full.jl 48 \
+  --config config/chitosan.toml \
+  --selection-policy stability_selection
+
+# Local lobe-resolvability guard (diagnostic/inconclusive)
+julia --project=. test/batch_full.jl 48 \
+  --config config/chitosan.toml \
+  --selection-policy local_lobe_evidence
+
+# Approximate Laplace-evidence guard (diagnostic)
+julia --project=. test/batch_full.jl 48 \
+  --config config/chitosan.toml \
+  --selection-policy laplace_evidence_guard
+
+# Fwd/bwd direction-consensus selector (diagnostic)
+julia --project=. test/batch_full.jl 48 \
+  --config config/chitosan.toml \
+  --selection-policy fwd_bwd_consensus
+
+# Synthetic known-N selector validation
+julia --project=. test/synthetic_known_n_validation.jl \
+  --cases 50 \
+  --seed 1234 \
+  --noise-scale 1.0 \
+  --mode circ_ell \
+  --out results/synthetic_known_n/summary_50_circ_ell.tsv
+
+# Aggregate phase-2 synthetic selector validation
+julia --project=. test/aggregate_synthetic_known_n.jl \
+  results/synthetic_known_n/summary_50_circ_ell.tsv \
+  --out results/synthetic_known_n/aggregate_50_circ_ell.tsv
+
+# Fast circular-only synthetic validation
+julia --project=. test/synthetic_known_n_validation.jl \
+  --cases 50 \
+  --seed 1234 \
+  --noise-scale 1.0 \
+  --mode circular \
+  --out results/synthetic_known_n/summary_50.tsv
+
+# Aggregate synthetic selector validation
+julia --project=. test/aggregate_synthetic_known_n.jl \
+  results/synthetic_known_n/summary_50.tsv \
+  --out results/synthetic_known_n/aggregate_50.tsv
+
+# Aggregate several synthetic seeds/noise levels
+julia --project=. test/aggregate_synthetic_known_n.jl \
+  results/synthetic_known_n/summary_50.tsv \
+  results/synthetic_known_n/summary_50_seed2026.tsv \
+  results/synthetic_known_n/summary_50_seed4321.tsv \
+  results/synthetic_known_n/summary_50_seed1234_noise05.tsv \
+  results/synthetic_known_n/summary_50_seed1234_noise15.tsv \
+  --out results/synthetic_known_n/aggregate_multiseed_noise.tsv
+
+# Aggregate several phase-2 circ→ell synthetic seeds/noise levels
+julia --project=. test/aggregate_synthetic_known_n.jl \
+  results/synthetic_known_n/summary_50_circ_ell.tsv \
+  results/synthetic_known_n/summary_50_circ_ell_seed2026.tsv \
+  results/synthetic_known_n/summary_50_circ_ell_seed4321.tsv \
+  results/synthetic_known_n/summary_50_circ_ell_seed1234_noise05.tsv \
+  results/synthetic_known_n/summary_50_circ_ell_seed1234_noise15.tsv \
+  --out results/synthetic_known_n/aggregate_circ_ell_multiseed_noise.tsv
 
 # Summarize results
 julia --project=. test/summarize.jl results/best_plots/
@@ -67,6 +158,22 @@ SXM image ─┬→ slide profile (1D) → peak fitting → QC comparison
          circ→ell LsqFit refinement (∀N, warm-started from circ)
               │
          best N by configured criterion (default GCV)
-              │
-         outputs: N_ell, N_circ, N_eff, support/residual QC
+               │
+          outputs: N_ell, N_circ, N_eff, support/residual QC
+               │
+          optional experimental robust-AICc guard → N_selected
+               │
+          optional diagnostic spatial blocked CV → N_selected
+               │
+          optional support-marginalized GCV diagnostic → N_selected
+               │
+          optional slope-heuristic MDL diagnostic → N_selected
+               │
+          optional stability-selection diagnostic → N_selected
+               │
+          optional local-lobe-evidence diagnostic → N_selected
+                │
+          optional Laplace-evidence diagnostic → N_selected
+                │
+          synthetic known-N validation compares selectors externally
 ```

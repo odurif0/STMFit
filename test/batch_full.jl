@@ -6,14 +6,32 @@
 #   julia --project=. test/batch_full.jl [N_files]
 #   julia --project=. test/batch_full.jl [N_files] --config config/my_system.toml
 #   julia --project=. test/batch_full.jl [N_files] --chunk i/n
+#   julia --project=. test/batch_full.jl [N_files] --refined-advisory results/robust_rescore_audit/full_aicc_nu8.tsv
+#   julia --project=. test/batch_full.jl [N_files] --selection-policy gcv_with_robust_aicc_guard
+#   julia --project=. test/batch_full.jl [N_files] --selection-policy spatial_blocked_cv --cv-folds 5
+#   julia --project=. test/batch_full.jl [N_files] --selection-policy support_marginalized_gcv
+#   julia --project=. test/batch_full.jl [N_files] --selection-policy support_marginalized_gcv_guard
+#   julia --project=. test/batch_full.jl [N_files] --selection-policy slope_heuristic_mdl
+#   julia --project=. test/batch_full.jl [N_files] --selection-policy stability_selection
+#   julia --project=. test/batch_full.jl [N_files] --selection-policy local_lobe_evidence
+#   julia --project=. test/batch_full.jl [N_files] --selection-policy laplace_evidence
+#   julia --project=. test/batch_full.jl [N_files] --selection-policy laplace_evidence_guard
+#   julia --project=. test/batch_full.jl [N_files] --selection-policy fwd_bwd_consensus
 
 using STMMolecularFit, GaussianFit2D, GaussianFit1D
+using LinearAlgebra
 using DelimitedFiles, Plots, Printf, Statistics, TOML
 
-const DATA_DIR = get(ENV, "STMFIT_DATA_DIR", "/home/durif/Rebecca/data/data/20240817_LHe_Cu100")
+# ── Import experimental selectors from STMMolecularFit core (un-exported) ──
+import STMMolecularFit: _select_primary,
+    _integrated_robust_aicc_n, _spatial_blocked_cv_selection,
+    _support_marginalized_gcv_selection, _stability_selection,
+    _slope_heuristic_mdl_selection,
+    _local_lobe_evidence_selection, _laplace_evidence_selection,
+    _fwd_bwd_consensus_selection,
+    SUPPORT_MARG_REGRET_MARGIN
+
 list_sxm_files(dir) = sort([f for f in readdir(dir) if endswith(lowercase(f), ".sxm")])
-const TSV = "results/batch_triage_20240817_relaxed.tsv"
-const OUTDIR = "results/best_plots"
 const EXCLUDE = Set(["240817_001.sxm", "240817_008.sxm", "240817_009.sxm",
                       "240817_010.sxm", "240817_011.sxm", "240817_012.sxm",
                       "240817_013.sxm", "240817_014.sxm", "240817_016.sxm",
@@ -27,6 +45,14 @@ function _parse_cli(args)
     chunk_idx = 1
     chunk_total = 1
     config_file = "config/chitosan.toml"
+    refined_advisory = ""
+    selection_policy_cli = nothing
+    robust_guard_nu = 8.0
+    cv_folds = 5
+    data_dir = get(ENV, "STMFIT_DATA_DIR", "/home/durif/Rebecca/data/data/20240817_LHe_Cu100")
+    outdir = "results/best_plots"
+    tsv = "results/batch_triage_20240817_relaxed.tsv"
+    skip_1d = false
     i = 1
     while i <= length(args)
         arg = args[i]
@@ -46,6 +72,73 @@ function _parse_cli(args)
             config_file = split(arg, "=", limit=2)[2]
             i += 1
             continue
+        elseif arg == "--refined-advisory"
+            i < length(args) || error("--refined-advisory requires a TSV path")
+            refined_advisory = args[i + 1]
+            i += 2
+            continue
+        elseif startswith(arg, "--refined-advisory=")
+            refined_advisory = split(arg, "=", limit=2)[2]
+            i += 1
+            continue
+        elseif arg == "--selection-policy"
+            i < length(args) || error("--selection-policy requires a value")
+            selection_policy_cli = split(lowercase(args[i + 1]), "-"; keepempty=false) |> x -> join(x, "_")
+            i += 2
+            continue
+        elseif startswith(arg, "--selection-policy=")
+            selection_policy_cli = split(lowercase(split(arg, "=", limit=2)[2]), "-"; keepempty=false) |> x -> join(x, "_")
+            i += 1
+            continue
+        elseif arg == "--robust-guard-nu"
+            i < length(args) || error("--robust-guard-nu requires a numeric value")
+            robust_guard_nu = parse(Float64, args[i + 1])
+            i += 2
+            continue
+        elseif startswith(arg, "--robust-guard-nu=")
+            robust_guard_nu = parse(Float64, split(arg, "=", limit=2)[2])
+            i += 1
+            continue
+        elseif arg == "--data-dir"
+            i < length(args) || error("--data-dir requires a directory path")
+            data_dir = args[i + 1]
+            i += 2
+            continue
+        elseif startswith(arg, "--data-dir=")
+            data_dir = split(arg, "=", limit=2)[2]
+            i += 1
+            continue
+        elseif arg == "--outdir"
+            i < length(args) || error("--outdir requires a directory path")
+            outdir = args[i + 1]
+            i += 2
+            continue
+        elseif startswith(arg, "--outdir=")
+            outdir = split(arg, "=", limit=2)[2]
+            i += 1
+            continue
+        elseif arg == "--tsv"
+            i < length(args) || error("--tsv requires a file path")
+            tsv = args[i + 1]
+            i += 2
+            continue
+        elseif startswith(arg, "--tsv=")
+            tsv = split(arg, "=", limit=2)[2]
+            i += 1
+            continue
+        elseif arg == "--skip-1d"
+            skip_1d = true
+            i += 1
+            continue
+        elseif arg == "--cv-folds"
+            i < length(args) || error("--cv-folds requires an integer value")
+            cv_folds = parse(Int, args[i + 1])
+            i += 2
+            continue
+        elseif startswith(arg, "--cv-folds=")
+            cv_folds = parse(Int, split(arg, "=", limit=2)[2])
+            i += 1
+            continue
         elseif startswith(arg, "--")
             error("Unknown option: $arg")
         else
@@ -62,10 +155,20 @@ function _parse_cli(args)
     chunk_total >= 1 || error("chunk total must be >= 1")
     1 <= chunk_idx <= chunk_total || error("chunk index must satisfy 1 <= i <= n")
     n_files >= 0 || error("N_files must be >= 0")
-    return n_files, chunk_idx, chunk_total, config_file
+    cfg_model = isfile(config_file) ? get(TOML.parsefile(config_file), "model", Dict{String,Any}()) : Dict{String,Any}()
+    selection_policy_cfg = split(lowercase(String(get(cfg_model, "selection_policy", "gcv"))), "-"; keepempty=false) |> x -> join(x, "_")
+    selection_policy = selection_policy_cli === nothing ? selection_policy_cfg : selection_policy_cli
+    selection_policy in ("gcv", "gcv_with_robust_aicc_guard", "spatial_blocked_cv", "support_marginalized_gcv", "support_marginalized_gcv_guard", "slope_heuristic_mdl", "stability_selection", "local_lobe_evidence", "laplace_evidence", "laplace_evidence_guard", "fwd_bwd_consensus") ||
+        error("Unknown --selection-policy '$selection_policy'; use gcv, gcv_with_robust_aicc_guard, spatial_blocked_cv, support_marginalized_gcv, support_marginalized_gcv_guard, slope_heuristic_mdl, stability_selection, local_lobe_evidence, laplace_evidence, laplace_evidence_guard, or fwd_bwd_consensus")
+    isfinite(robust_guard_nu) && robust_guard_nu > 0 || error("--robust-guard-nu must be positive")
+    cv_folds >= 2 || error("--cv-folds must be >= 2")
+    return n_files, chunk_idx, chunk_total, config_file, refined_advisory, selection_policy, robust_guard_nu, cv_folds, data_dir, outdir, tsv, skip_1d
 end
 
-const N_FILES, CHUNK_IDX, CHUNK_TOTAL, CONFIG_FILE = _parse_cli(ARGS)
+const N_FILES, CHUNK_IDX, CHUNK_TOTAL, CONFIG_FILE, REFINED_ADVISORY_FILE, SELECTION_POLICY, ROBUST_GUARD_NU, CV_FOLDS, _data_dir_parsed, _outdir_parsed, _tsv_parsed, SKIP_1D = _parse_cli(ARGS)
+const DATA_DIR = _data_dir_parsed
+const OUTDIR = _outdir_parsed
+const TSV = _tsv_parsed
 mkpath(OUTDIR)
 
 const FWHM_SIGMA = 2.355
@@ -73,6 +176,8 @@ const COLORMAP_RESID = cgrad([:blue, :lightgray, :red])
 const SUMMARY_HEADER = [
     "filepath", "status", "classification",
     "N_ell", "N_circ", "N_1D", "N_eff", "eff_source",
+    "N_selected", "selection_policy", "selection_source",
+    "N_refined", "refined_policy", "refined_source", "robust_aicc_N",
     "dN_circ_ell", "dN_1D_ell", "dN_1D_circ",
     "BIC_ell", "BIC_circ", "sBIC_1D",
     "N_raw_ell", "BIC_raw_ell", "raw_valid_ell", "N_raw_circ", "BIC_raw_circ", "raw_valid_circ",
@@ -85,10 +190,28 @@ const SUMMARY_HEADER = [
     "ambiguous_ell", "runnerup_N_ell", "delta_GCV_ell", "delta_GCV_rel_ell",
     "ambiguous_eff", "runnerup_N_eff", "delta_GCV_eff", "delta_GCV_rel_eff",
     "kappa_ell", "kappa_circ", "kappa_1D",
+    "artifact_fwd_bwd_corr", "artifact_fwd_bwd_nrmse", "artifact_line_discontinuity", "artifact_stripe_periodicity",
     "best_plot", "file_dir"
 ]
 
 const GCV_AMBIGUITY_REL_THRESHOLD = 0.05
+
+function _ensure_summary_schema!(summary_file::AbstractString)
+    isfile(summary_file) || return false
+    expected = join(SUMMARY_HEADER, '\t')
+    observed = open(summary_file, "r") do io
+        eof(io) ? "" : readline(io)
+    end
+    observed == expected && return true
+
+    backup = summary_file * ".legacy"
+    if isfile(backup)
+        backup = summary_file * ".legacy." * string(floor(Int, time()))
+    end
+    mv(summary_file, backup)
+    @warn "Summary schema changed; archived old summary so batch output is regenerated" summary=summary_file backup=backup
+    return false
+end
 
 _bilinear_interp(xs, ys, z, x0, y0) = begin
     ix = clamp(searchsortedlast(xs, x0), 1, length(xs)-1)
@@ -114,6 +237,47 @@ function _write_summary_row(io, row)
     println(io, join(row, '\t'))
 end
 
+function _basename_sxm(s::AbstractString)
+    b = basename(strip(s))
+    m = match(r"(240817_\d+\.sxm)", b)
+    return m === nothing ? b : m.captures[1]
+end
+
+_tsv_bool(s::AbstractString) = lowercase(strip(s)) in ("true", "t", "1", "yes", "y")
+
+function _load_refined_advisory(path::AbstractString)
+    isempty(strip(path)) && return Dict{String,Int}()
+    if !isfile(path)
+        @warn "refined advisory TSV not found; N_refined will equal N_eff" path
+        return Dict{String,Int}()
+    end
+    lines = readlines(path)
+    isempty(lines) && return Dict{String,Int}()
+    header = split(lines[1], '\t'; keepempty=true)
+    idx = Dict(name => i for (i, name) in enumerate(header))
+    haskey(idx, "file") || error("refined advisory TSV must contain a 'file' column")
+    haskey(idx, "N") || error("refined advisory TSV must contain an 'N' column")
+    selected_col = get(idx, "is_selected", 0)
+    advisory = Dict{String,Int}()
+    for line in lines[2:end]
+        isempty(strip(line)) && continue
+        vals = split(line, '\t'; keepempty=true)
+        selected_col == 0 || (selected_col <= length(vals) && _tsv_bool(vals[selected_col])) || continue
+        file = _basename_sxm(vals[idx["file"]])
+        advisory[file] = parse(Int, vals[idx["N"]])
+    end
+    return advisory
+end
+
+function _refined_selection(fn::AbstractString, n_eff::Int, advisory::Dict{String,Int})
+    robust_n = get(advisory, _basename_sxm(fn), nothing)
+    robust_n === nothing && return (n_eff, "none", "N_eff", "NA")
+    if robust_n < n_eff
+        return (robust_n, "overfit_guard_down_only", "robust_aicc", robust_n)
+    end
+    return (n_eff, "overfit_guard_down_only", "N_eff", robust_n)
+end
+
 function _error_summary_row(fn::AbstractString)
     row = fill("ERR", length(SUMMARY_HEADER))
     row[1] = fn
@@ -123,8 +287,8 @@ function _error_summary_row(fn::AbstractString)
 end
 
 function _ok_summary_row(fn, classif, best_ell_sweep, best_circ_sweep, best1d,
-                         best_n_eff, eff_source, best_ell_raw, best_circ_raw,
-                         qc, ambiguity, outpath, file_dir)
+                         best_n_eff, eff_source, selected, refined, best_ell_raw, best_circ_raw,
+                         qc, ambiguity, artifact_diag, outpath, file_dir)
     n1d = best1d === nothing ? "NA" : best1d.n_peaks
     sBIC_1d = best1d === nothing ? "NA" : round(best1d.student_bic, digits=3)
     chi2_1d = best1d === nothing ? "NA" : best1d.chi2_red
@@ -135,6 +299,8 @@ function _ok_summary_row(fn, classif, best_ell_sweep, best_circ_sweep, best1d,
     return [fn, "ok", classif,
             best_ell_sweep.n, best_circ_sweep.n, n1d,
             best_n_eff, eff_source,
+            selected.n_selected, selected.policy, selected.source,
+            refined.n_refined, refined.policy, refined.source, refined.robust_n,
             best_circ_sweep.n - best_ell_sweep.n,
             dN_1d_ell,
             dN_1d_circ,
@@ -150,6 +316,8 @@ function _ok_summary_row(fn, classif, best_ell_sweep, best_circ_sweep, best1d,
             ambiguity.amb_ell, ambiguity.runner_ell, ambiguity.dgcv_ell, ambiguity.dgcv_rel_ell,
             ambiguity.amb_eff, ambiguity.runner_eff, ambiguity.dgcv_eff, ambiguity.dgcv_rel_eff,
             best_ell_sweep.kappa_max_adj, best_circ_sweep.kappa_max_adj, kappa_1d,
+            artifact_diag.fwd_bwd_corr, artifact_diag.fwd_bwd_nrmse,
+            artifact_diag.line_discontinuity, artifact_diag.stripe_periodicity,
             outpath, file_dir]
 end
 
@@ -638,7 +806,8 @@ end
 already_done = Set{String}()
 summary_name = CHUNK_TOTAL == 1 ? "summary_overlap060_hard.tsv" : @sprintf("summary_overlap060_hard_chunk%02dof%02d.tsv", CHUNK_IDX, CHUNK_TOTAL)
 summary_file = joinpath(OUTDIR, summary_name)
-if isfile(summary_file)
+summary_schema_ok = _ensure_summary_schema!(summary_file)
+if summary_schema_ok
     for (i, line) in enumerate(eachline(summary_file))
         i == 1 && continue
         isempty(strip(line)) && continue
@@ -662,6 +831,11 @@ end
 cfg_toml = TOML.parsefile(CONFIG_FILE)
 model = cfg_toml["model"]
 preproc = cfg_toml["preprocessing"]
+const REFINED_ADVISORY = _load_refined_advisory(REFINED_ADVISORY_FILE)
+if !isempty(REFINED_ADVISORY)
+    @info "Loaded refined-selection advisory" file=REFINED_ADVISORY_FILE n=length(REFINED_ADVISORY)
+end
+@info "Selection policy" policy=SELECTION_POLICY robust_guard_nu=ROBUST_GUARD_NU cv_folds=CV_FOLDS
 
 const SIGMA_MIN_HARMONIZED_NM = model["sigma_parallel_min_nm"]
 const SIGMA_MAX_HARMONIZED_NM = model["sigma_parallel_max_nm"]
@@ -765,6 +939,7 @@ Threads.@threads for idx in 1:ntot
         best1d = nothing
         x_1d, y_1d = slide.x, slide.y
         cfg_1d = fcfg_file
+        if !SKIP_1D
         try
             fit_1d = STMMolecularFit.fit_slide(slide, fcfg_file)
             best1d = GaussianFit1D.best_result(fit_1d.fit_run)
@@ -773,10 +948,12 @@ Threads.@threads for idx in 1:ntot
         catch e1d
             @warn "$fn: 1D fit failed; continuing with 2D-only result" reason=sprint(showerror, e1d)
         end
+        end
 
         # 2D circular sweep (primary: always converges)
         img2d = GaussianFit2D.read_sxm(fp)
         pcfg_file = deepcopy(pcfg); pcfg_file.filepath = fp; pcfg_file.output_dir = file_dir
+        artifact_diag = GaussianFit2D.compute_image_artifact_diagnostics(img2d, pcfg_file)
         results_circ, best_circ_raw, ctx_circ = GaussianFit2D.chain_gaussian_sweep(img2d, pcfg_file, ccfg_circ)
         criterion = get(model, "selection_criterion", "gcv")
         scorefun = _scorefun(criterion)
@@ -796,6 +973,134 @@ Threads.@threads for idx in 1:ntot
         if best_eff === nothing
             best_eff = best_ell_sweep; best_n_eff = best_ell_sweep.n; eff_source = "ell"
         end
+        if SELECTION_POLICY == "gcv_with_robust_aicc_guard"
+            robust_n = nothing
+            robust_source = "robust_aicc_guard_failed"
+            try
+                robust_n, robust_source, _ = _integrated_robust_aicc_n(
+                    img2d, pcfg_file, ccfg;
+                    nu=ROBUST_GUARD_NU)
+            catch e_guard
+                @warn "$fn: robust-AICc guard failed; keeping N_eff" reason=sprint(showerror, e_guard)
+            end
+            if robust_n === nothing
+                n_refined, refined_policy, refined_source, robust_aicc_n = (best_n_eff, "overfit_guard_failed", "N_eff", "NA")
+            else
+                advisory = Dict{String,Int}(_basename_sxm(fn) => robust_n)
+                n_refined, refined_policy, refined_source, robust_aicc_n = _refined_selection(fn, best_n_eff, advisory)
+                refined_source == "robust_aicc" && (refined_source = robust_source)
+            end
+        elseif SELECTION_POLICY == "spatial_blocked_cv"
+            cv_n, cv_score, cv_ok, cv_se = _spatial_blocked_cv_selection(
+                img2d, pcfg_file, ccfg, ctx_circ, results_ell; folds=CV_FOLDS)
+            if cv_n === nothing
+                n_refined, refined_policy, refined_source, robust_aicc_n = (best_n_eff, "spatial_blocked_cv_failed", "N_eff", "NA")
+            else
+                n_refined, refined_policy, refined_source, robust_aicc_n = (cv_n, "spatial_blocked_cv", "spatial_blocked_cv", cv_n)
+            end
+        elseif SELECTION_POLICY in ("support_marginalized_gcv", "support_marginalized_gcv_guard")
+            sm_n, sm_regret, sm_supports, sm_candidates, sm_runner_delta, sm_med, sm_q75 = _support_marginalized_gcv_selection(
+                img2d, pcfg_file, ccfg, results_ell, results_circ)
+            if sm_n === nothing
+                n_refined, refined_policy, refined_source, robust_aicc_n = (best_n_eff, "support_marginalized_gcv_failed", "N_eff", "NA")
+            else
+                selected_sm = sm_n
+                policy_sm = "support_marginalized_gcv"
+                if SELECTION_POLICY == "support_marginalized_gcv_guard"
+                    sm_r = get(sm_med, sm_n, NaN)
+                    eff_r = get(sm_med, best_n_eff, NaN)
+                    clear_downshift = sm_n < best_n_eff && isfinite(sm_r) && isfinite(eff_r) &&
+                                      sm_r + SUPPORT_MARG_REGRET_MARGIN < eff_r
+                    selected_sm = clear_downshift ? max(sm_n, best_n_eff - 1) : best_n_eff
+                    policy_sm = clear_downshift ? "support_marginalized_gcv_guard" : "support_marginalized_gcv_guard_keep"
+                    if !clear_downshift
+                        n_simple = best_n_eff - 1
+                        simple_med = get(sm_med, n_simple, NaN)
+                        simple_q75 = get(sm_q75, n_simple, NaN)
+                        eff_q75 = get(sm_q75, best_n_eff, NaN)
+                        ambiguous_simpler = n_simple >= 1 && sm_n == best_n_eff &&
+                            isfinite(simple_med) && isfinite(eff_r) &&
+                            simple_med - eff_r <= GCV_AMBIGUITY_REL_THRESHOLD &&
+                            isfinite(simple_q75) && isfinite(eff_q75) &&
+                            simple_q75 - eff_q75 <= GCV_AMBIGUITY_REL_THRESHOLD
+                        if ambiguous_simpler
+                            selected_sm = n_simple
+                            policy_sm = "support_marginalized_gcv_guard_parsimony"
+                        end
+                    end
+                end
+                n_refined, refined_policy, refined_source, robust_aicc_n = (selected_sm, policy_sm, "support_marginalized_gcv", sm_n)
+                @printf("  support-marg: N=%d guarded=%s median_regret=%.4g supports=%d candidates=%d runner_delta=%.4g\n",
+                        sm_n, string(selected_sm), sm_regret, sm_supports, sm_candidates, sm_runner_delta)
+            end
+        elseif SELECTION_POLICY == "slope_heuristic_mdl"
+            mdl_n, mdl_score, mdl_candidates, mdl_alpha = _slope_heuristic_mdl_selection(
+                results_ell, ccfg, results_circ, ccfg_circ, length(ctx_circ.z))
+            if mdl_n === nothing
+                n_refined, refined_policy, refined_source, robust_aicc_n = (best_n_eff, "slope_heuristic_mdl_failed", "N_eff", "NA")
+            else
+                n_refined, refined_policy, refined_source, robust_aicc_n = (mdl_n, "slope_heuristic_mdl", "slope_heuristic_mdl", mdl_n)
+                @printf("  slope-MDL: N=%d alpha=%.4g score=%.4g candidates=%d\n",
+                        mdl_n, mdl_alpha, mdl_score, mdl_candidates)
+            end
+        elseif SELECTION_POLICY == "stability_selection"
+            stab = _stability_selection(img2d, pcfg_file, ccfg, results_ell, results_circ)
+            if stab === nothing
+                n_refined, refined_policy, refined_source, robust_aicc_n = (best_n_eff, "stability_selection_failed", "N_eff", "NA")
+            else
+                stab_n, stab_pct, stab_supports, stab_competitive, stab_feasible = stab
+                n_refined, refined_policy, refined_source, robust_aicc_n = (stab_n, "stability_selection", "stability_selection", stab_n)
+                @printf("  stability: N=%d competitive=%.0f%% (%d/%d) feasible=%d\n",
+                        stab_n, stab_pct, stab_competitive, stab_supports, stab_feasible)
+            end
+        elseif SELECTION_POLICY == "local_lobe_evidence"
+            lobe = _local_lobe_evidence_selection(
+                best_n_eff, results_ell, results_circ, ctx_circ.axisctx, ccfg, ctx_circ.noise)
+            if lobe === nothing
+                n_refined, refined_policy, refined_source, robust_aicc_n = (best_n_eff, "local_lobe_evidence_failed", "N_eff", "NA")
+            else
+                lobe_n, lobe_resolved, lobe_unresolved, lobe_accepted = lobe
+                lobe_source = lobe_accepted ?
+                    (lobe_n < best_n_eff ? "local_lobe_evidence_guard" : "local_lobe_evidence_ok") :
+                    "local_lobe_evidence_inconclusive"
+                n_refined, refined_policy, refined_source, robust_aicc_n = (lobe_n, "local_lobe_evidence", lobe_source, lobe_n)
+                @printf("  lobe-evidence: Neff=%d -> N=%d resolved=%d unresolved_pairs=%d source=%s\n",
+                        best_n_eff, lobe_n, lobe_resolved, lobe_unresolved, lobe_source)
+            end
+        elseif SELECTION_POLICY in ("laplace_evidence", "laplace_evidence_guard")
+            lap_n, lap_score, lap_candidates, lap_source, lap_deff, lap_occam, lap_sloppy = _laplace_evidence_selection(
+                img2d, pcfg_file, ccfg, ccfg_circ, results_ell, results_circ)
+            if lap_n === nothing
+                n_refined, refined_policy, refined_source, robust_aicc_n = (best_n_eff, SELECTION_POLICY * "_failed", "N_eff", "NA")
+            else
+                selected_lap = lap_n
+                lap_policy = "laplace_evidence"
+                lap_select_source = lap_source
+                if SELECTION_POLICY == "laplace_evidence_guard"
+                    selected_lap = lap_n < best_n_eff ? max(lap_n, best_n_eff - 1) : best_n_eff
+                    lap_policy = lap_n < best_n_eff ? "laplace_evidence_guard" : "laplace_evidence_guard_keep"
+                    lap_select_source = lap_n < best_n_eff ? "laplace_evidence_guard" : eff_source
+                end
+                n_refined, refined_policy, refined_source, robust_aicc_n = (selected_lap, lap_policy, lap_select_source, lap_n)
+                @printf("  laplace-evidence: raw_N=%d selected=%d source=%s score=%.4g d_eff=%.2f occam=%.4g sloppy=%.4g candidates=%d\n",
+                        lap_n, selected_lap, lap_source, lap_score, lap_deff, lap_occam, lap_sloppy, lap_candidates)
+            end
+        elseif SELECTION_POLICY == "fwd_bwd_consensus"
+            fb_n, fb_score, fb_candidates = _fwd_bwd_consensus_selection(
+                img2d, pcfg_file, ccfg, results_ell, results_circ)
+            if fb_n === nothing
+                n_refined, refined_policy, refined_source, robust_aicc_n = (best_n_eff, "fwd_bwd_consensus_failed", "N_eff", "NA")
+            else
+                n_refined, refined_policy, refined_source, robust_aicc_n = (fb_n, "fwd_bwd_consensus", "fwd_bwd_consensus", fb_n)
+                @printf("  fwd-bwd-consensus: N=%d joint_gcv=%.4g candidates=%d\n",
+                        fb_n, fb_score, fb_candidates)
+            end
+        else
+            n_refined, refined_policy, refined_source, robust_aicc_n = _refined_selection(fn, best_n_eff, REFINED_ADVISORY)
+        end
+        refined = (; n_refined, policy=refined_policy, source=refined_source, robust_n=robust_aicc_n)
+        n_selected, selection_policy, selection_source = _select_primary(best_n_eff, eff_source, refined, SELECTION_POLICY)
+        selected = (; n_selected, policy=selection_policy, source=selection_source)
 
         # ── QC diagnostics only: ambiguity/support/tolerant N sets do not alter selection ──
         amb_ell, runner_ell, dgcv_ell, dgcv_rel_ell = _ambiguity_stats(results_ell, best_ell_sweep.n; criterion=criterion)
@@ -805,7 +1110,7 @@ Threads.@threads for idx in 1:ntot
 
         n1d_val = best1d === nothing ? "NA" : best1d.n_peaks
         d1d_eff_val = best1d === nothing ? "NA" : best1d.n_peaks - best_n_eff
-        println("Neff=$(best_n_eff) Nell=$(best_ell_sweep.n) Ncirc=$(best_circ_sweep.n) N1D=$(n1d_val) Δ1D-eff=$(d1d_eff_val) ✓")
+        println("Nsel=$(n_selected) Neff=$(best_n_eff) Nref=$(n_refined) Nell=$(best_ell_sweep.n) Ncirc=$(best_circ_sweep.n) N1D=$(n1d_val) Δ1D-eff=$(d1d_eff_val) ✓")
 
         _write_scores(joinpath(file_dir, "ell_scores.tsv"), results_ell, score_label, scorefun, best_ell_sweep)
         _write_scores(joinpath(file_dir, "circ_scores.tsv"), results_circ, score_label, scorefun, best_circ_sweep)
@@ -829,8 +1134,8 @@ Threads.@threads for idx in 1:ntot
 
         # Write summary (thread-safe)
         row = _ok_summary_row(fn, classif, best_ell_sweep, best_circ_sweep, best1d,
-                              best_n_eff, eff_source, best_ell_raw, best_circ_raw,
-                              qc, ambiguity, outpath, file_dir)
+                              best_n_eff, eff_source, selected, refined, best_ell_raw, best_circ_raw,
+                              qc, ambiguity, artifact_diag, outpath, file_dir)
         lock(summary_lock) do
             open(summary_file, "a") do io
                 _write_summary_row(io, row)

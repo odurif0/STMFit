@@ -62,6 +62,16 @@ quality = "poor_quality"
 exclude_primary = true
 reason = "poor quality / ambiguous stress case; do not optimize calibration against this file"
 
+[files."240817_037.sxm"]
+quality = "poor_quality"
+exclude_primary = true
+reason = "suspected acquisition artefact / unreliable for calibration; keep as stress case only"
+
+[files."240817_038.sxm"]
+quality = "poor_quality"
+exclude_primary = true
+reason = "suspected acquisition artefact / unreliable for calibration; keep as stress case only"
+
 [files."240817_051.sxm"]
 quality = "poor_quality"
 exclude_primary = true

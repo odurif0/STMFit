@@ -33,6 +33,13 @@ struct MolecularChain
     max_turn_angle_deg::Float64
 end
 
+Base.@kwdef struct ImageArtifactDiagnostics
+    fwd_bwd_corr::Float64 = NaN
+    fwd_bwd_nrmse::Float64 = NaN
+    line_discontinuity::Float64 = NaN
+    stripe_periodicity::Float64 = NaN
+end
+
 Base.@kwdef mutable struct ChainSweepConfig
     n_min::Int = 2
     n_max::Int = 14

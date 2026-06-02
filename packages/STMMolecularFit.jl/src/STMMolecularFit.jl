@@ -763,6 +763,8 @@ end
 include("Fit2D.jl")
 using .Fit2D
 
+include("selectors.jl")
+
 function extract_and_fit_slide(filepath::String; slide_config::SlideConfig=SlideConfig(), fit_config::FitSlideConfig=FitSlideConfig(), write_outputs::Bool=true)
     img = read_sxm(filepath)
     slide = extract_slide(img, slide_config)

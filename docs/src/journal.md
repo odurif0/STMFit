@@ -20,6 +20,174 @@ without introducing heuristic/arbitrary parameters.
 
 ## Investigation Timeline
 
+### 2026-05-29 — Experimental refined selection reporting
+
+Added an external, conservative overfit-guard audit and optional batch reporting
+for `N_refined`.  The rule is generic and one-sided:
+
+```text
+N_refined = robust_AICc_N if robust_AICc_N < N_eff
+            N_eff         otherwise
+```
+
+This does not use an expected `N`, and it cannot increase the selected count.
+It is intended to catch over-segmentation while preserving clean cases such as
+`240817_026.sxm`, where the robust advisory alone over-selects but the primary
+`N_eff` is correct.
+
+Current external grading with `results/robust_rescore_audit/full_aicc_nu8.tsv`:
+
+- baseline `N_eff`: `35/39` primary benchmark files;
+- refined overfit guard: `38/39`;
+- recovered targets: `017`, `019`, `058`;
+- remaining target: `043`, consistent with a support-ambiguity rather than an
+  overfit case;
+- `026` remains `6`.
+
+`test/batch_full.jl` now supports optional reporting via:
+
+```bash
+julia --project=. test/batch_full.jl 48 \
+  --config config/chitosan.toml \
+  --refined-advisory results/robust_rescore_audit/full_aicc_nu8.tsv
+```
+
+Follow-up: `test/batch_full.jl` now also supports an integrated experimental
+primary selector, without requiring an advisory TSV:
+
+```bash
+julia -t 4 --project=. test/batch_full.jl 48 \
+  --config config/chitosan.toml \
+  --selection-policy gcv_with_robust_aicc_guard
+```
+
+This computes the robust AICc guard directly from an auxiliary exhaustive
+elliptical candidate set, then applies the same down-only rule to the standard
+circ→ell `N_eff`.  The selected primary output is written as `N_selected`, while
+`N_eff` remains available for comparison.
+
+Full-batch grading for the integrated selector:
+
+- `N_selected`: `38/39` primary benchmark files;
+- target score: `4/4` (`017`, `019`, `043`, `058` all selected as `6`);
+- only remaining primary miss: `240817_036.sxm`, which is already marked
+  visually ambiguous;
+- `N_eff` on the same run remains `35/39`.
+
+Historical note: at this point the policy was still experimental/default-off.
+It was later promoted to the `config/chitosan.toml` batch default after synthetic
+known-N validation and additional manually annotated real-data audits.
+
+Follow-up: added several additional label-free experimental selectors for audit
+purposes, including support-marginalized GCV, a guarded support variant,
+slope-heuristic MDL, stability selection, and local-lobe evidence.  The
+local-lobe-evidence selector is a down-only guard that merges adjacent lobes when
+their separation is below `2σ∥` and the between-lobe valley is weak.  Initial
+smoke tests showed it is too strict for continuous chitosan chains: even clean
+`240817_026.sxm` remains at `N=6` only because the diagnostic is inconclusive
+(`resolved=1`, `unresolved_pairs=5`) and falls back to GCV.  It is therefore a
+separability audit, not a better primary selector.
+
+Added `laplace_evidence` and `laplace_evidence_guard`.  The direct selector uses
+a finite-difference Gauss–Newton/Laplace evidence approximation with Student-t
+weights and an Occam/sloppiness penalty from the weighted Jacobian singular
+values.  It is label-free and statistically cleaner than threshold heuristics,
+but smoke tests showed it is too parsimonious as a free selector (`019 → 5`,
+`058 → 5`).  The guarded variant caps downshifts to one lobe: smoke tests kept
+`026 → 6`, corrected `017 → 6`, `019 → 6`, and `058 → 6`, but still cannot
+increase the support-sensitive `043` from `5` to `6`.  This makes it a promising
+principled overfit guard candidate, still below the integrated robust-AICc guard
+until full frozen validation.
+
+Added `fwd_bwd_consensus`: evaluates the fused-fit model on separate fwd and bwd
+preprocessed channels with per-scan linear recalibration and joint GCV.  The
+idea is that true molecular signal should appear in both scans while
+direction-specific artifacts would not.  Smoke tests showed this simple joint-GCV
+does not discriminate better than fused GCV on the chitosan benchmark (`017 → 7`,
+`019 → 7`, `058 → 7`, `043 → 5`).  The recalibration absorbs most scan-to-scan
+differences.  A more discriminating approach (lobe-level fwd/bwd amplitude
+consistency or a true joint refit) would be needed.
+
+### Refactoring: selectors moved to STMMolecularFit core
+
+All experimental selector functions (~550 lines) were extracted from
+`test/batch_full.jl` into `packages/STMMolecularFit.jl/src/selectors.jl`
+(584 lines), included by the STMMolecularFit module.  `batch_full.jl` shrank
+from 1627 to 1099 lines.  The selector functions are no longer in a test file;
+they are now part of the STMMolecularFit package core.  `batch_full.jl` imports
+the needed names via `import STMMolecularFit: ...`.  No logic was changed.
+
+### Synthetic known-N selector validation
+
+Added `test/synthetic_known_n_validation.jl` as a phase-1 frozen validation
+harness for comparing selector policies without using benchmark labels as a
+selection prior.  The script generates in-memory Gaussian-chain `SXMImage` cases
+with known `true_N` cycling through `4..8`, adds jitter, baseline tilt,
+independent fwd/bwd noise, and occasional artifacts, then runs a fast circular 2D
+sweep and applies the core selectors from `STMMolecularFit`.
+
+Added `test/aggregate_synthetic_known_n.jl` to summarize synthetic selector TSVs
+by policy over all cases and stratified by `true_N` and artifact class.  It
+reports exact rate, mean absolute error, over-selection, under-selection, and
+error counts.
+
+Follow-up: the generator now accepts `--noise-scale` and writes `noise_scale` in
+the synthetic summary.  The aggregator now accepts multiple positional TSVs,
+parses both legacy 10-column and newer 11-column summaries, and stratifies by
+seed and noise scale in addition to `true_N` and artifact class.
+
+Follow-up: added phase-2 `--mode circ_ell`.  The generator now has two modes:
+`circular` for the cheap original stress test and `circ_ell` for a closer analog
+of the real batch path.  `circ_ell` runs a fixed candidate circular sweep, then
+locally refines valid circular candidates with elliptical sigmas and selects
+`N_eff` from the best GCV score across circular/elliptical candidates.  The TSV
+now includes a `mode` column, and the aggregator stratifies by `mode=<mode>`.
+
+Important correction: the synthetic candidate search window is now fixed
+(`N=2..10`) rather than derived from `true_N`.  This keeps the known label out of
+fitting and selection; it is used only for external grading.
+
+The output TSV reports `case_id`, `seed`, `true_N`, `artifact`, `policy`,
+`N_eff`, `N_selected`, `abs_error`, `status`, and `score_or_source`.  The known
+count is used only for external grading and aggregate summaries, not during
+fitting or policy selection.
+
+Initial smoke/default runs:
+
+- `--cases 2 --seed 1234`: GCV exact `0/2`; robust-AICc guard and Laplace guard
+  exact `2/2`.
+- `--cases 6 --seed 1234`: GCV over-selected on the initial synthetic cases;
+  robust-AICc guard was exact `6/6`.
+- `--cases 50 --seed 1234`: robust-AICc guard was exact `46/50` with mean
+  absolute error `0.12`, compared with GCV exact `2/50` and mean absolute error
+  `1.58`.  The four robust-guard errors were under-selections, not overfits.
+- Multi-seed/noise aggregate over five 50-case summaries (`250` cases):
+  robust-AICc guard exact `231/250` (`92.4%`) with mean absolute error `0.112`;
+  GCV exact `6/250` with mean absolute error `1.54`; Laplace guard exact
+  `104/250` with mean absolute error `0.60`.  Robust-AICc errors were mostly
+  under-selections (`15`) with a small number of over-selections (`4`).
+- Noise-scale strata for the robust-AICc guard: `48/50` exact at `0.5×`,
+  `139/150` exact at `1.0×`, and `44/50` exact at `1.5×`.
+- Phase-2 `circ_ell`, fixed search window, `--cases 50 --seed 1234`: GCV exact
+  `43/50` with mean absolute error `0.20`; robust-AICc guard exact `46/50` with
+  mean absolute error `0.14` and four under-selections; stability selection exact
+  `44/50` with mean absolute error `0.18`.
+- Phase-2 `circ_ell` multi-seed/noise aggregate over five 50-case summaries
+  (`250` cases): robust-AICc guard exact `231/250` (`92.4%`) with mean absolute
+  error `0.128`, four over-selections, and fifteen under-selections.  GCV exact
+  `213/250` (`85.2%`, mean absolute error `0.20`), stability selection exact
+  `214/250` (`85.6%`, mean absolute error `0.192`), and Laplace guard exact
+  `193/250` (`77.2%`, mean absolute error `0.272`).  Robust-AICc remained best
+  across the tested noise strata: `48/50` at `0.5×`, `139/150` at `1.0×`, and
+  `44/50` at `1.5×`.
+
+Historical note: at this point this was synthetic validation, not yet a promotion
+decision.  The robust-AICc guard was later promoted to the chitosan batch default;
+support-adaptive variants remain separate experimental candidates.
+
+---
+
+
 ### 1. Initial Diagnostic (May 14)
 
 **Observed**: 27 files processed with batch v5. Elliptical model selects N=8
@@ -397,14 +565,15 @@ retained as the best harmless simple calibration rather than as a complete fix.
 **Core benchmark after excluding visually poor-quality files**:
 
 The files `240817_029.sxm`, `240817_030.sxm`, `240817_031.sxm`,
-`240817_032.sxm`, `240817_034.sxm`, `240817_035.sxm`, and
-`240817_051.sxm` are kept in the full run for traceability, but should not be
-weighted strongly when judging calibration quality. Excluding them gives:
+`240817_032.sxm`, `240817_034.sxm`, `240817_035.sxm`,
+`240817_037.sxm`, `240817_038.sxm`, and `240817_051.sxm` are kept in the
+full run for traceability, but are excluded from calibration/tuning because of
+suspected artefacts or poor image quality. Excluding them gives:
 
-- benchmark files: `41`
-- `N_ell=6`: `37/41`
-- `N_eff=6`: `37/41`
-- `N_circ=6`: `33/41`
+- benchmark files: `39`
+- `N_ell=6`: `35/39`
+- `N_eff=6`: `35/39`
+- `N_circ=6`: `31/39`
 - remaining non-6 cases: `240817_017.sxm`, `240817_019.sxm`,
   `240817_043.sxm`, and `240817_058.sxm`
 

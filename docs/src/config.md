@@ -19,7 +19,118 @@ support_padding_nm = 0.25
 kappa_max = 10.0
 selection_criterion = "gcv"
 cv_method = "gcv"
+selection_policy = "gcv_with_robust_aicc_guard"
 ```
+
+The chitosan default batch selection policy is the integrated robust overfit
+guard, configured in the TOML calibration.  It writes `N_selected` as the
+guarded primary result while preserving `N_eff` for comparison.  The raw
+GCV/effective baseline remains available as an explicit command-line override:
+
+```bash
+julia -t 4 --project=. test/batch_full.jl 48 \
+  --config config/chitosan.toml \
+  --selection-policy gcv
+```
+
+A more diagnostic spatial blocked-CV selector is also available:
+
+```bash
+julia --project=. test/batch_full.jl 48 \
+  --config config/chitosan.toml \
+  --selection-policy spatial_blocked_cv \
+  --cv-folds 3
+```
+
+It is more directly objectivable as a predictive-risk estimate, but current
+smoke tests show it is not stable enough for default use; see
+[Model Selection](selection.md#experimental-spatial-blocked-cv-selector).
+
+A cheap support-sensitivity diagnostic can be enabled with:
+
+```bash
+julia --project=. test/batch_full.jl 48 \
+  --config config/chitosan.toml \
+  --selection-policy support_marginalized_gcv
+```
+
+or with a one-lobe capped overfit guard:
+
+```bash
+julia --project=. test/batch_full.jl 48 \
+  --config config/chitosan.toml \
+  --selection-policy support_marginalized_gcv_guard
+```
+
+It rescores fitted candidates across a fixed support-padding grid and selects by
+median relative GCV regret.  It is useful for support ambiguity audits, but is
+not recommended as the default selector; see
+[Model Selection](selection.md#experimental-support-marginalized-gcv-selector).
+
+A file-adaptive slope-heuristic MDL selector can also be enabled:
+
+```bash
+julia --project=. test/batch_full.jl 48 \
+  --config config/chitosan.toml \
+  --selection-policy slope_heuristic_mdl
+```
+
+It estimates the model-complexity penalty from the file's own
+contrast–dimension curve.  This is statistically principled, but current smoke
+tests make it diagnostic rather than default; see
+[Model Selection](selection.md#experimental-slope-heuristic-mdl-selector).
+
+A support-perturbation stability selector can be enabled with:
+
+```bash
+julia --project=. test/batch_full.jl 48 \
+  --config config/chitosan.toml \
+  --selection-policy stability_selection
+```
+
+It chooses the `N` that is most often within 1% of the best GCV across the fixed
+support-padding grid.  This is useful for stability audits, but current smoke
+tests make it diagnostic rather than default; see
+[Model Selection](selection.md#experimental-stability-selection-selector).
+
+A local lobe-resolvability guard can be enabled with:
+
+```bash
+julia --project=. test/batch_full.jl 48 \
+  --config config/chitosan.toml \
+  --selection-policy local_lobe_evidence
+```
+
+It checks whether adjacent fitted lobes are locally separated by a valley and is
+strictly down-only.  Current smoke tests make it a separability diagnostic rather
+than a recommended primary selector; see
+[Model Selection](selection.md#experimental-local-lobe-evidence-guard).
+
+An approximate Laplace-evidence selector and safer guard can be enabled with:
+
+```bash
+julia --project=. test/batch_full.jl 48 \
+  --config config/chitosan.toml \
+  --selection-policy laplace_evidence_guard
+```
+
+It scores fitted candidates with a local Gauss–Newton/Laplace evidence
+approximation.  The direct selector is currently too parsimonious on some files;
+the guard only permits one-lobe downshifts from `N_eff`.  See
+[Model Selection](selection.md#experimental-laplace-evidence-selector).
+
+A fwd/bwd direction-consensus selector can be enabled with:
+
+```bash
+julia --project=. test/batch_full.jl 48 \
+  --config config/chitosan.toml \
+  --selection-policy fwd_bwd_consensus
+```
+
+It exploits forward/backward scan replication by evaluating the fused model on
+separate fwd and bwd channels.  Current smoke tests make it a replication
+diagnostic rather than a recommended primary selector; see
+[Model Selection](selection.md#experimental-fwdbwd-direction-consensus-selector).
 
 The former contrast-fraction support threshold has been removed from the
 program. Support is defined from the axial profile as
@@ -85,6 +196,11 @@ GaussianFit2D.ChainSweepConfig(
     selection_criterion = "gcv",  # "gcv" | "bic" | "aicc" | "cv"
 )
 ```
+
+`selection_criterion` controls the score used inside each model sweep.  The
+batch-level `selection_policy` / `--selection-policy` is separate: it controls
+whether the final reported primary result is the standard `N_eff` or a guarded
+`N_selected` such as the chitosan default robust-AICc guard.
 
 ## PatternConfig (GaussianFit2D)
 

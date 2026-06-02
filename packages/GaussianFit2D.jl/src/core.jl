@@ -214,6 +214,55 @@ function preprocess_channel(img::SXMImage, ch::SXMChannel, cfg::PatternConfig)
     return xs, ys, raw, z, z_smooth, scaled_unit, noise
 end
 
+_artifact_mad(v) = 1.4826 * median(abs.(v .- median(v)))
+
+function _line_discontinuity_score(z::AbstractMatrix{<:Real})
+    row_mean = vec(mean(z; dims=2))
+    row_std = vec(std(z; dims=2))
+    d1 = abs.(diff(row_mean)); d2 = abs.(diff(row_std))
+    s1 = isempty(d1) ? NaN : maximum(d1) / max(_artifact_mad(d1), EPS)
+    s2 = isempty(d2) ? NaN : maximum(d2) / max(_artifact_mad(d2), EPS)
+    return max(s1, s2)
+end
+
+function _row_periodicity_score(z::AbstractMatrix{<:Real})
+    row_mean = vec(mean(z; dims=2))
+    row_mean .-= mean(row_mean)
+    n = length(row_mean)
+    n < 16 && return NaN
+    spec = Float64[]
+    for k in 2:div(n, 2)
+        re = 0.0; im = 0.0
+        for (j, v) in enumerate(row_mean)
+            θ = -2π * (k - 1) * (j - 1) / n
+            re += v * cos(θ); im += v * sin(θ)
+        end
+        push!(spec, hypot(re, im))
+    end
+    isempty(spec) && return NaN
+    return maximum(spec) / max(median(spec), EPS)
+end
+
+function compute_image_artifact_diagnostics(img::SXMImage, cfg::PatternConfig)
+    ch_fwd = get_channel(img, cfg.roi_channel; direction="fwd")
+    _, _, _, z_fwd, zs_fwd, _, _ = preprocess_channel(img, ch_fwd, cfg)
+    line_disc = _line_discontinuity_score(zs_fwd)
+    stripe = _row_periodicity_score(zs_fwd)
+    has_bwd = any(c -> lowercase(c.name) == lowercase(cfg.roi_channel) && lowercase(c.direction) == "bwd", img.channels)
+    if !has_bwd
+        return ImageArtifactDiagnostics(line_discontinuity=line_disc, stripe_periodicity=stripe)
+    end
+    ch_bwd = get_channel(img, cfg.roi_channel; direction="bwd")
+    _, _, _, z_bwd, zs_bwd, _, _ = preprocess_channel(img, ch_bwd, cfg)
+    af = vec(zs_fwd .- median(vec(zs_fwd)))
+    bf = vec(zs_bwd .- median(vec(zs_bwd)))
+    den = norm(af) * norm(bf)
+    corr = den <= EPS ? NaN : dot(af, bf) / den
+    nrmse = sqrt(mean(abs2, z_fwd .- z_bwd)) / max(std(vec(z_fwd)), EPS)
+    return ImageArtifactDiagnostics(fwd_bwd_corr=corr, fwd_bwd_nrmse=nrmse,
+        line_discontinuity=line_disc, stripe_periodicity=stripe)
+end
+
 function _otsu_threshold(signal::AbstractMatrix{Float64})
     v = vec(signal)
     v = v[isfinite.(v) .& (v .> 0)]

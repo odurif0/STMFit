@@ -8,9 +8,10 @@ const OUTDIR = "results/param_tuning"
 
 function _parse_cli(args)
     config_file = "config/chitosan.toml"
-    files = ["240817_003.sxm", "240817_017.sxm", "240817_034.sxm", "240817_035.sxm",
-             "240817_058.sxm", "240817_060.sxm", "240817_061.sxm",
-             "240817_029.sxm", "240817_032.sxm"]
+    # Calibration/tuning defaults intentionally exclude suspected artefact or
+    # poor-quality files: 029,030,031,032,034,035,037,038,051.
+    files = ["240817_003.sxm", "240817_017.sxm", "240817_019.sxm", "240817_043.sxm",
+             "240817_058.sxm", "240817_060.sxm", "240817_061.sxm"]
     out_tsv = joinpath(OUTDIR, "tuning_summary.tsv")
     variants_filter = String[]
     global_maxtime = NaN

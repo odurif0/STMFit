@@ -29,6 +29,7 @@ multistart = 1                 # number of random starts (1 = bootstrap only)
 # ── Model selection ──
 selection_criterion = "gcv"     # "bic" | "aicc" | "cv" | "gcv" (default: gcv)
 cv_method = "gcv"               # "gcv" (analytical, free) | "kfold" (refit, slow)
+selection_policy = "gcv_with_robust_aicc_guard"  # batch default; use --selection-policy gcv for raw N_eff/GCV
 cv_folds = 5                    # cross-validation folds (only for cv_method="kfold")
 bic_cv_margin = 100             # ΔBIC threshold for CV tiebreaker
 cv_ratio_threshold = 2.0        # CV ratio threshold for override
@@ -56,4 +57,5 @@ smooth_radius_px = 1           # preprocessing smoothing radius
 #   - support_padding_nm: 0.20 → 0.25 (improved N_ell=6 on quick sweep)
 #   - cv_folds: 3 → 5 (better CV discrimination)
 #   - selection_criterion: bic → gcv (analytical, no refit)
+#   - selection_policy: gcv_with_robust_aicc_guard (validated vs raw GCV on 240817 and synthetic known-N)
 #   - kappa_max: 8.0 → 10.0 (best harmless simple calibration in focus/core sweeps)
