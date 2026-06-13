@@ -322,7 +322,7 @@ function _otsu_threshold(signal::Matrix{Float64})
     bin_edges = range(lo, hi, length=nbins+1)
     counts = zeros(Int, nbins)
     for x in v
-        idx = min(nbins, max(1, Int(floor((x-lo)/(hi-lo)*(nbins-1)))+1))
+        idx = min(nbins, max(1, Int(floor((x-lo)/(hi-lo)*nbins))+1))
         counts[idx] += 1
     end
     total = sum(counts)
@@ -461,7 +461,7 @@ function _otsu_threshold_1d(signal::AbstractVector{Float64})
     bin_edges = range(lo, hi, length=nbins+1)
     counts = zeros(Int, nbins)
     for x in v
-        idx = min(nbins, max(1, Int(floor((x-lo)/(hi-lo)*(nbins-1)))+1))
+        idx = min(nbins, max(1, Int(floor((x-lo)/(hi-lo)*nbins))+1))
         counts[idx] += 1
     end
     total = sum(counts)

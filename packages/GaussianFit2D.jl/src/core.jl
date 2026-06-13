@@ -273,7 +273,7 @@ function _otsu_threshold(signal::AbstractMatrix{Float64})
     bin_edges = range(lo, hi, length=nbins+1)
     counts = zeros(Int, nbins)
     for x in v
-        idx = min(nbins, max(1, Int(floor((x-lo)/(hi-lo)*(nbins-1)))+1))
+        idx = min(nbins, max(1, Int(floor((x-lo)/(hi-lo)*nbins))+1))
         counts[idx] += 1
     end
     total = sum(counts)
@@ -687,7 +687,11 @@ function _finalize_chain_result!(r::ChainModelResult, zfit::AbstractVector{Float
     r.residual_peak_snr = _residual_peak_snr(xfit, yfit, zfit, pred, noise)
     full_nll = r.train_nll * length(z)
     r.bic = 2full_nll + pcount * log(n_eff)
-    r.aicc = 2full_nll + 2pcount + (2pcount*(pcount+1)) / max(n_eff-pcount-1, 1)
+    # AICc correction is undefined (→ +∞) when the model is saturated relative
+    # to the effective sample size; return Inf so over-parameterized models are
+    # rejected rather than rewarded with a finite, modest penalty.
+    aicc_dof = n_eff - pcount - 1
+    r.aicc = aicc_dof > 0 ? 2full_nll + 2pcount + (2pcount*(pcount+1)) / aicc_dof : Inf
     resid = zfit .- pred
     r.rss = sum(abs2, resid)
     # GCV = (n / (n - p)²) × RSS — analytical, no refit needed
@@ -1727,12 +1731,6 @@ function chain_gaussian_sweep(img::SXMImage, cfg::PatternConfig, ccfg::ChainSwee
                                            amp_min=r.amp_min, amp_range=r.amp_range)
                 _finalize_chain_result!(r, zfit, pred, noise, n, n_eff, z, xs, ys, zimg, xfit, yfit, axisctx, ccfg)
                 # Left sweep (removing lobes): no overflow risk
-                if r.bic > best_bic + ccfg.early_stop_dbic
-                    streak += 1
-                else
-                    streak = 0
-                    best_bic = min(best_bic, r.bic)
-                end
                 if r.bic > best_bic + ccfg.early_stop_dbic
                     streak += 1
                 else

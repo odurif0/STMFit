@@ -115,13 +115,13 @@ end
 
 function _center_center_corr(pcov_inner::Matrix{Float64}, n_peaks::Int)
     # Correlation matrix of absolute center positions from inner covariance.
-    # Inner layout: [A_0, mu_0, σ_0, A_1, Δ_1, σ_1, ...]
-    # mu_0 at inner index 2, delta_j at inner index 3+3*j
+    # Inner layout (no y0): [A_0, mu_0, σ_0, A_1, Δ_1, σ_1, ...]
+    # mu_0 at inner index 2, delta_j at inner index 2+3*j
     J = zeros(n_peaks, size(pcov_inner, 1))
     for i in 0:(n_peaks-1)
         J[i+1, 2] = 1.0  # mu_0
         for j in 1:i
-            J[i+1, 3 + 3*j] = 1.0  # delta_j
+            J[i+1, 2 + 3*j] = 1.0  # delta_j
         end
     end
     cov_cc = J * pcov_inner * J'
@@ -584,8 +584,11 @@ function compute_metrics(y::Vector{Float64}, y_fit::Vector{Float64}, n_params::I
     rss = sum((y - y_fit).^2)
     tss = sum((y .- mean(y)).^2)
     dof = max(1, n - n_params)
+    # Floor RSS to avoid log(0) -> -Inf, which would let a perfect/overfit model
+    # (rss == 0) dominate model selection with a -Infinite BIC/AIC.
+    rss_safe = max(rss, 1e-12)
     # Gaussian BIC (legacy)
-    bic_g = n * log(rss / n) + n_params * log(n)
+    bic_g = n * log(rss_safe / n) + n_params * log(n)
     # Student-t BIC (consistent with 2D)
     resid = y .- y_fit
     if isfinite(noise_estimate)
@@ -596,14 +599,17 @@ function compute_metrics(y::Vector{Float64}, y_fit::Vector{Float64}, n_params::I
     nu = student_nu
     student_nll = sum(0.5 * (nu + 1) .* log1p.((resid ./ noise_est).^2 ./ nu))
     bic_s = 2 * student_nll + n_params * log(n)
-    # AICc using Student-t NLL (consistent with 2D)
-    aicc_s = 2 * student_nll + 2 * n_params + (2 * n_params * (n_params + 1)) / max(n - n_params - 1, 1)
+    # AICc using Student-t NLL (consistent with 2D); the correction is undefined
+    # (→ +∞) when the model is saturated relative to n, so over-parameterized
+    # models are rejected rather than rewarded with a finite penalty.
+    aicc_dof = n - n_params - 1
+    aicc_s = aicc_dof > 0 ? 2 * student_nll + 2 * n_params + (2 * n_params * (n_params + 1)) / aicc_dof : Inf
     return FitMetrics(
         bic_g,                                      # bic (Gaussian)
         bic_s,                                      # student_bic
-        n * log(rss / n) + 2 * n_params,             # aic
+        n * log(rss_safe / n) + 2 * n_params,        # aic
         aicc_s,                                      # aicc (Student-t NLL)
-        1.0 - rss / tss,                             # r_squared
+        tss > 0 ? 1.0 - rss / tss : NaN,             # r_squared (NaN if data is flat)
         rss / dof / max(noise_est^2, 1e-12),            # chi2_red (normalized by noise)
         dof,
         rss,
@@ -874,7 +880,8 @@ function run_model_comparison(x::Vector{Float64}, y::Vector{Float64}, cfg::FitCo
                 resid = y .- r.y_fit
                 student_nll = sum(0.5 * (nu + 1) .* log1p.((resid ./ noise_fixed) .^ 2 ./ nu))
                 r.student_bic = 2 * student_nll + r.n_params * log(n_eff)
-                r.aicc = 2 * student_nll + 2 * r.n_params + (2 * r.n_params * (r.n_params + 1)) / max(n_eff - r.n_params - 1, 1)
+                aicc_dof = n_eff - r.n_params - 1
+                r.aicc = aicc_dof > 0 ? 2 * student_nll + 2 * r.n_params + (2 * r.n_params * (r.n_params + 1)) / aicc_dof : Inf
                 r.chi2_red = r.rss / max(1, n_eff - r.n_params) / max(noise_fixed^2, 1e-12)
             end
         end
