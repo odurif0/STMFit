@@ -2,6 +2,7 @@ module GaussianFit2D
 
 using ArgParse
 using LinearAlgebra
+using Random
 using LsqFit
 using Optimization
 using OptimizationNLopt

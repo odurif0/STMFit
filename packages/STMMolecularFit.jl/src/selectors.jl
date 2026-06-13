@@ -172,17 +172,25 @@ end
 # ══════════════════════════════════════════════════════════════════════════════
 
 function _result_by_n_prefer_ell(results_ell, results_circ)
+    # Track provenance explicitly (whether the current entry for each N came
+    # from the elliptical set) instead of inferring it via value-equality `in`,
+    # which silently misfires when a circ result and an ell result are
+    # field-equal (e.g. two degenerate fits with gcv == Inf): the circ entry
+    # would then look "in results_ell" and wrongly survive the ell preference.
     by_n = Dict{Int,Any}()
+    from_ell = Dict{Int,Bool}()
     for r in results_circ
         r.success && r.valid || continue
         if !haskey(by_n, r.n) || r.gcv < by_n[r.n].gcv
             by_n[r.n] = r
+            from_ell[r.n] = false
         end
     end
     for r in results_ell
         r.success && r.valid || continue
-        if !haskey(by_n, r.n) || r.gcv < by_n[r.n].gcv || !(by_n[r.n] in results_ell)
+        if !haskey(by_n, r.n) || r.gcv < by_n[r.n].gcv || !get(from_ell, r.n, false)
             by_n[r.n] = r
+            from_ell[r.n] = true
         end
     end
     return by_n

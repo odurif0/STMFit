@@ -499,7 +499,10 @@ function _support_from_baseline(dist, y, cfg::SlideConfig)
     # Otsu can be too aggressive on 1D profiles; noise alone can be too permissive.
     threshold = min(threshold_otsu, threshold_noise)
     active = findall(>(threshold), ys)
-    isempty(active) && error("No active support found")
+    if isempty(active)
+        @warn "No active support found above threshold; using full profile as support" threshold=threshold
+        return collect(eachindex(dist)), baseline, threshold, dist[1], dist[end]
+    end
     runs = UnitRange{Int}[]
     s = active[1]; prev = active[1]
     for idx in active[2:end]
@@ -512,7 +515,10 @@ function _support_from_baseline(dist, y, cfg::SlideConfig)
     push!(runs, s:prev)
     # Filter by min length
     long_runs = filter(r -> dist[last(r)] - dist[first(r)] >= cfg.min_support_nm, runs)
-    isempty(long_runs) && error("No active component longer than min_support_nm")
+    if isempty(long_runs)
+        @warn "No active support component longer than min_support_nm; using full profile as support" min_support_nm=cfg.min_support_nm
+        return collect(eachindex(dist)), baseline, threshold, dist[1], dist[end]
+    end
     # Select component containing global peak, else longest
     peak_idx = argmax(ys)
     containing = filter(r -> first(r) <= peak_idx <= last(r), long_runs)

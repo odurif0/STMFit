@@ -355,8 +355,11 @@ function detect_blobs(z::Matrix{Float64}, xs, ys, cfg::PatternConfig, noise::Flo
         score < threshold && continue
         ylo, yhi = max(1, iy-min_dist), min(ny, iy+min_dist)
         xlo, xhi = max(1, ix-min_dist), min(nx, ix+min_dist)
-        local_scores = [_candidate_score(z[yy, xx], contrast) for yy in ylo:yhi, xx in xlo:xhi]
-        score < maximum(local_scores) && continue
+        # Local-maximum test without materializing the score matrix: avoids a
+        # (2*min_dist+1)^2 allocation per interior pixel, the dominant cost of
+        # blob detection on large images.
+        local_max = maximum(_candidate_score(z[yy, xx], contrast) for yy in ylo:yhi, xx in xlo:xhi)
+        score < local_max && continue
         amp = contrast == "dark" ? -abs(val) : abs(val)
         push!(candidates, MolecularFeature(amp, xs[ix], ys[iy], NaN, NaN, score / noise))
         taken[ylo:yhi, xlo:xhi] .= true
@@ -988,7 +991,13 @@ function _chain_fit_data(x, y, z, axisctx, ccfg::ChainSweepConfig)
     tlo, thi, support_meta = _active_t_support(t[tube], z[tube], ccfg)
     isfinite(ccfg.t_min_nm) && (tlo = max(tlo, ccfg.t_min_nm))
     isfinite(ccfg.t_max_nm) && (thi = min(thi, ccfg.t_max_nm))
-    tlo < thi || error("Invalid chain t window: t_min_nm=$(ccfg.t_min_nm), t_max_nm=$(ccfg.t_max_nm), active support=$(tlo)-$(thi)")
+    if tlo >= thi
+        # t_min_nm/t_max_nm (or the auto-support) produced an empty/inverted
+        # window. Warn and fall back to the full active tube instead of
+        # aborting the whole batch on a single degenerate target.
+        @warn "Invalid chain t window after clamping; falling back to full tube" t_min_nm=ccfg.t_min_nm t_max_nm=ccfg.t_max_nm active_lo=tlo active_hi=thi
+        return x, y, z, axisctx, trues(length(x)), merge(support_meta, (support_method="invalid_t_window_fallback_full_tube",))
+    end
     keep = tube .& (t .>= tlo) .& (t .<= thi)
     sum(keep) >= 20 || (keep = tube)
     xf, yf, zf = x[keep], y[keep], z[keep]
@@ -1470,6 +1479,10 @@ function _fit_chain_n(xs, ys, zimg, x, y, z, noise, n::Int, axisctx, ccfg::Chain
     best_perr = Float64[]
     best_amp_min = NaN; best_amp_range = NaN
 
+    # Seed the multistart RNG from the configured value so the multistart
+    # perturbations are reproducible run-to-run (previously the global randn()
+    # stream was used, ignoring ccfg.rng_seed).
+    rng = MersenneTwister(ccfg.rng_seed)
     effective_starts = max(1, warm_start !== nothing ? 1 : starts)
     for s in 1:effective_starts
         if warm_start !== nothing
@@ -1486,13 +1499,13 @@ function _fit_chain_n(xs, ys, zimg, x, y, z, noise, n::Int, axisctx, ccfg::Chain
             # Param order: b0, [bx,by if tilted], amps(n), t0, deltas(n-1), us(n), [spars(n)], [sperps(n)]
             delta_start = n + 3 + (ccfg.chain_tilted_baseline ? 2 : 0)  # 1-based index of first spacing param after t0
             for i in delta_start:(delta_start + n_spacing - 2)
-                p_start[i] += 0.5 * randn()
+                p_start[i] += 0.5 * randn(rng)
             end
             # Perturb sigma parameters
             sigma_start = delta_start + (n_spacing - 1) + n  # after spacing params and us
             n_sigma = ccfg.chain_circular_sigmas ? n_sigma_types : 2n_sigma_types
             for i in sigma_start:(sigma_start + n_sigma - 1)
-                p_start[i] += 0.5 * randn()
+                p_start[i] += 0.5 * randn(rng)
             end
         end
 
