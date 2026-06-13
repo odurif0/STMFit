@@ -36,10 +36,17 @@ function load_data(filepath::String)
         @warn "Dropped $n_bad rows with NaN/Inf values."
     end
 
-    # Deduplicate x, keeping first-occurrence y values
-    ux = unique(x)
-    idx = Int[findfirst(==(xi), x) for xi in ux]
-    x = ux
+    # Deduplicate x keeping first occurrence, O(n) via a Set (was O(n^2):
+    # findfirst over the full vector for each unique value).
+    seen = Set{eltype(x)}()
+    idx = Int[]
+    for i in eachindex(x)
+        xi = x[i]
+        xi in seen && continue
+        push!(seen, xi)
+        push!(idx, i)
+    end
+    x = x[idx]
     y = y[idx]
 
     # Sort
@@ -581,6 +588,8 @@ end
 
 function compute_metrics(y::Vector{Float64}, y_fit::Vector{Float64}, n_params::Int; student_nu::Float64=4.0, noise_estimate::Float64=NaN)
     n = length(y)
+    n > 0 || error("compute_metrics: empty input (y has length 0)")
+    n == length(y_fit) || error("compute_metrics: y and y_fit must have equal length")
     rss = sum((y - y_fit).^2)
     tss = sum((y .- mean(y)).^2)
     dof = max(1, n - n_params)

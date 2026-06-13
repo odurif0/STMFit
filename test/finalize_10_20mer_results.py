@@ -91,9 +91,14 @@ def _metrics(row: dict[str, str]) -> dict[str, Any]:
 
 def _score(metrics: dict[str, Any]) -> float:
     ratio = float(metrics["support_ratio"])
-    ratio_score = min(ratio, 1.2) if math.isfinite(ratio) else 0.0
     disagreement = int(metrics["ell_circ_delta"])
     ambiguity = 0.3 if bool(metrics["ambiguous"]) else 0.0
+    if not math.isfinite(ratio):
+        return -10.0
+    # Reward support completeness up to parity with the 1D reference (ratio 1.0),
+    # then penalize over-expansion above parity, so the diagnostic "aggressive"
+    # pass cannot win purely by inflating support beyond the 1D extent.
+    ratio_score = ratio if ratio <= 1.0 else 1.0 - 3.0 * (ratio - 1.0)
     return 3.0 * ratio_score - 0.8 * disagreement - ambiguity
 
 

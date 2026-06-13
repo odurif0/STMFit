@@ -178,12 +178,21 @@ function _largest_component(mask::BitMatrix)
 end
 
 function _dilate_mask(mask::BitMatrix, radius::Int)
+    # Separable dilation by a square structuring element (dilate along rows
+    # then columns): equivalent to the (2r+1)^2 square but O(n*r) instead of
+    # O(n*r^2) writes.
     radius <= 0 && return copy(mask)
     ny, nx = size(mask)
-    out = falses(ny, nx)
-    for iy in 1:ny, ix in 1:nx
+    row = falses(ny, nx)
+    @inbounds for iy in 1:ny, ix in 1:nx
         if mask[iy, ix]
-            out[max(1, iy-radius):min(ny, iy+radius), max(1, ix-radius):min(nx, ix+radius)] .= true
+            row[iy, max(1, ix-radius):min(nx, ix+radius)] .= true
+        end
+    end
+    out = falses(ny, nx)
+    @inbounds for iy in 1:ny, ix in 1:nx
+        if row[iy, ix]
+            out[max(1, iy-radius):min(ny, iy+radius), ix] .= true
         end
     end
     return out
@@ -688,7 +697,11 @@ function _finalize_chain_result!(r::ChainModelResult, zfit::AbstractVector{Float
         r.cv_nll_mean, r.cv_nll_std = _chain_gcv_score(zfit, pred, noise, pcount, ccfg.student_nu)
     end
     r.residual_peak_snr = _residual_peak_snr(xfit, yfit, zfit, pred, noise)
-    full_nll = r.train_nll * length(z)
+    # Use the effective sample size for both the likelihood scale and the
+    # log(n) penalty so BIC and AICc share one N. Previously the likelihood was
+    # scaled by length(z) (full ROI) while the penalty used n_eff (fit mask),
+    # mixing two sample sizes and biasing selection toward over-fitting.
+    full_nll = r.train_nll * n_eff
     r.bic = 2full_nll + pcount * log(n_eff)
     # AICc correction is undefined (→ +∞) when the model is saturated relative
     # to the effective sample size; return Inf so over-parameterized models are
@@ -1568,6 +1581,10 @@ function _chain_metrics!(r::ChainModelResult, axisctx, ccfg::ChainSweepConfig)
 end
 
 function _chain_gcv_score(zfit, pred, noise, n_params, student_nu)
+    # NOTE: returns a Student-t NLL of the n/(n-p)-inflated residuals, used only
+    # for the cv_nll_mean diagnostic. This is NOT the standard GCV criterion
+    # (RSS*n/(n-p)^2); model selection under criterion="gcv" uses r.gcv
+    # (computed in _finalize_chain_result!), not this value.
     ndata = length(zfit)
     ndata <= n_params && return Inf, 0.0
     resid = zfit .- pred
@@ -1600,24 +1617,23 @@ function _chain_kfold_score(xs, ys, zimg, x, y, z, noise, n, axisctx, ccfg::Chai
     return mean(scores), length(scores) > 1 ? std(scores)/sqrt(length(scores)) : 0.0
 end
 
-function _chain_cv_score(xs, ys, zimg, x, y, z, noise, n, axisctx, ccfg::ChainSweepConfig)
-    ccfg.cv_method == "kfold" && return _chain_kfold_score(xs, ys, zimg, x, y, z, noise, n, axisctx, ccfg)
-    error("_chain_cv_score: use _chain_gcv_score or _chain_kfold_score directly")
-end
-
 function _select_chain_model(results::Vector{ChainModelResult}, ccfg::ChainSweepConfig)
-    # Select by the configured criterion among all successful fits
+    # Select by the configured criterion. Prefer fits that passed quality
+    # checks (valid); fall back to all successful fits only if none are valid,
+    # so an invalid fit can no longer win model selection purely on criterion.
     succ = filter(r -> r.success, results)
     isempty(succ) && error("No chain model fit succeeded")
+    pool = filter(r -> r.valid, succ)
+    pool = isempty(pool) ? succ : pool
     criterion = lowercase(ccfg.selection_criterion)
     if criterion == "aicc"
-        best = argmin(r -> r.aicc, succ)
+        best = argmin(r -> r.aicc, pool)
     elseif criterion == "cv"
-        best = argmin(r -> r.cv_nll_mean, succ)
+        best = argmin(r -> r.cv_nll_mean, pool)
     elseif criterion == "gcv"
-        best = argmin(r -> r.gcv, succ)
+        best = argmin(r -> r.gcv, pool)
     else
-        best = argmin(r -> r.bic, succ)
+        best = argmin(r -> r.bic, pool)
     end
     # Warn if the selected model has quality flags
     if !best.valid

@@ -167,6 +167,11 @@ function read_sxm(filepath::String)
     pos = findfirst(marker, bytes)
     pos === nothing && error("Could not find :SCANIT_END: in $filepath")
     header = _parse_header(String(bytes[1:(first(pos)-1)]))
+    # Guard the mandatory Nanonis header keys: a truncated/malformed header used
+    # to throw a cryptic KeyError instead of a readable message.
+    for key in ("SCAN_PIXELS", "SCAN_RANGE", "DATA_INFO")
+        haskey(header, key) || error("Malformed SXM header in $filepath: missing key '$key'")
+    end
     nx, ny = _parse_pair(header["SCAN_PIXELS"], Int)
     rx_m, ry_m = _parse_pair(header["SCAN_RANGE"], Float64)
     ox_m, oy_m = haskey(header, "SCAN_OFFSET") ? _parse_pair(header["SCAN_OFFSET"], Float64) : (0.0, 0.0)
@@ -822,7 +827,7 @@ function fit_chain_1d_bootstrapped(filepath::String;
     # Step 4: Run narrow 2D chain sweep
     img_2d = GaussianFit2D.read_sxm(filepath)
     pcfg = GaussianFit2D.PatternConfig(
-        filepath=filepath, channel="Z", direction="fwd",
+        filepath=filepath, channel=slide_config.channel, direction=slide_config.direction,
         stride=1, flatten="plane+rows", smooth_radius_px=1,
         output_dir=slide_config.output_dir)
     results, best_chain, ctx = GaussianFit2D.chain_gaussian_sweep(img_2d, pcfg, ccfg)
@@ -858,7 +863,7 @@ function compare_1d_2d(filepath::String;
     ccfg_sweep.n_min = 2
     ccfg_sweep.n_max = 14
     pcfg = GaussianFit2D.PatternConfig(
-        filepath=filepath, channel="Z", direction="fwd",
+        filepath=filepath, channel=slide_config.channel, direction=slide_config.direction,
         stride=1, flatten="plane+rows", smooth_radius_px=1,
         output_dir=slide_config.output_dir)
     img_2d = GaussianFit2D.read_sxm(filepath)
@@ -887,7 +892,8 @@ function compare_2d_1d_by_N(filepath::String;
         global_maxtime::Float64 = 20.0,
         skip_plots::Bool = false,
         min_spacing_1d::Float64 = 0.35, max_spacing_1d::Float64 = 0.75,
-        max_overlap::Float64 = 0.6)
+        max_overlap::Float64 = 0.6,
+        channel::String = "Z", direction::String = "fwd")
     """
     compare_2d_1d_by_N(filepath; ...)
 
@@ -919,6 +925,7 @@ function compare_2d_1d_by_N(filepath::String;
     slide_cfg = SlideConfig(
         width_nm=slide_width_nm,
         support_noise_k=support_noise_k, support_padding_nm=support_padding_nm,
+        channel=channel, direction=direction,
         output_dir=output_dir, no_plot=true)
     img_own = read_sxm(filepath)
     slide = extract_slide(img_own, slide_cfg)
@@ -936,7 +943,7 @@ function compare_2d_1d_by_N(filepath::String;
     println("Running 2D chain sweep...")
     img = GaussianFit2D.read_sxm(filepath)
     pcfg = GaussianFit2D.PatternConfig(
-        filepath=filepath, channel="Z", direction="fwd",
+        filepath=filepath, channel=channel, direction=direction,
         stride=1, flatten="plane+rows", smooth_radius_px=1,
         output_dir=output_dir, no_plot=false)
     ccfg = GaussianFit2D.ChainSweepConfig(
