@@ -1,0 +1,44 @@
+# STMFit calibration — Chitosan 10–20mer aggressive support-rescue diagnostic
+#
+# Diagnostic pass only: very permissive support to probe whether low-N cases are
+# caused by support truncation. Final selection should compare this pass against
+# the standard production pass and prefer coherent, complete support.
+
+[model]
+n_min = 2
+n_max = 24
+spacing_min_nm = 0.35
+spacing_max_nm = 0.75
+max_overlap = 0.60
+sigma_parallel_min_nm = 0.191
+sigma_parallel_max_nm = 0.509
+fit_width_nm = 0.16
+
+support_noise_k = 0.8
+support_padding_nm = 1.50
+support_min_length_nm = 1.0
+support_baseline_quantile = 0.10
+
+global_maxtime = 10.0
+global_maxiter = 10000
+max_iter = 300
+multistart = 1
+
+selection_criterion = "gcv"
+cv_method = "gcv"
+selection_policy = "gcv"
+cv_folds = 5
+bic_cv_margin = 100
+cv_ratio_threshold = 2.0
+
+kappa_max = 10.0
+kappa_weight = 1.0
+min_amplitude_fraction = 0.3
+
+chain_tilted_baseline = true
+chain_circular_sigmas = false
+
+[preprocessing]
+stride = 1
+flatten = "plane+rows"
+smooth_radius_px = 1

@@ -17,6 +17,7 @@
 #   julia --project=. test/batch_full.jl [N_files] --selection-policy laplace_evidence
 #   julia --project=. test/batch_full.jl [N_files] --selection-policy laplace_evidence_guard
 #   julia --project=. test/batch_full.jl [N_files] --selection-policy fwd_bwd_consensus
+#   julia --project=. test/batch_full.jl [N_files] --plot-manifest benchmarks/chitosan_manual_20240814_20240818.toml
 
 using STMMolecularFit, GaussianFit2D, GaussianFit1D
 using LinearAlgebra
@@ -53,6 +54,8 @@ function _parse_cli(args)
     outdir = "results/best_plots"
     tsv = "results/batch_triage_20240817_relaxed.tsv"
     skip_1d = false
+    plot_manifest = ""
+    skip_plot_quality = Set(["excluded"])
     i = 1
     while i <= length(args)
         arg = args[i]
@@ -130,6 +133,24 @@ function _parse_cli(args)
             skip_1d = true
             i += 1
             continue
+        elseif arg == "--plot-manifest"
+            i < length(args) || error("--plot-manifest requires a benchmark manifest path")
+            plot_manifest = args[i + 1]
+            i += 2
+            continue
+        elseif startswith(arg, "--plot-manifest=")
+            plot_manifest = split(arg, "=", limit=2)[2]
+            i += 1
+            continue
+        elseif arg == "--skip-plot-quality"
+            i < length(args) || error("--skip-plot-quality requires a comma-separated quality list")
+            skip_plot_quality = Set(String.(strip.(String.(split(args[i + 1], ","; keepempty=false)))))
+            i += 2
+            continue
+        elseif startswith(arg, "--skip-plot-quality=")
+            skip_plot_quality = Set(String.(strip.(String.(split(split(arg, "=", limit=2)[2], ","; keepempty=false)))))
+            i += 1
+            continue
         elseif arg == "--cv-folds"
             i < length(args) || error("--cv-folds requires an integer value")
             cv_folds = parse(Int, args[i + 1])
@@ -162,14 +183,8 @@ function _parse_cli(args)
         error("Unknown --selection-policy '$selection_policy'; use gcv, gcv_with_robust_aicc_guard, spatial_blocked_cv, support_marginalized_gcv, support_marginalized_gcv_guard, slope_heuristic_mdl, stability_selection, local_lobe_evidence, laplace_evidence, laplace_evidence_guard, or fwd_bwd_consensus")
     isfinite(robust_guard_nu) && robust_guard_nu > 0 || error("--robust-guard-nu must be positive")
     cv_folds >= 2 || error("--cv-folds must be >= 2")
-    return n_files, chunk_idx, chunk_total, config_file, refined_advisory, selection_policy, robust_guard_nu, cv_folds, data_dir, outdir, tsv, skip_1d
+    return n_files, chunk_idx, chunk_total, config_file, refined_advisory, selection_policy, robust_guard_nu, cv_folds, data_dir, outdir, tsv, skip_1d, plot_manifest, skip_plot_quality
 end
-
-const N_FILES, CHUNK_IDX, CHUNK_TOTAL, CONFIG_FILE, REFINED_ADVISORY_FILE, SELECTION_POLICY, ROBUST_GUARD_NU, CV_FOLDS, _data_dir_parsed, _outdir_parsed, _tsv_parsed, SKIP_1D = _parse_cli(ARGS)
-const DATA_DIR = _data_dir_parsed
-const OUTDIR = _outdir_parsed
-const TSV = _tsv_parsed
-mkpath(OUTDIR)
 
 const FWHM_SIGMA = 2.355
 const COLORMAP_RESID = cgrad([:blue, :lightgray, :red])
@@ -239,8 +254,34 @@ end
 
 function _basename_sxm(s::AbstractString)
     b = basename(strip(s))
-    m = match(r"(240817_\d+\.sxm)", b)
+    m = match(r"(\d{6}[^/\\]*\.sxm)", b)
     return m === nothing ? b : m.captures[1]
+end
+
+function _load_skip_plot_files(path::AbstractString, skip_quality)
+    isempty(strip(path)) && return Set{String}()
+    isfile(path) || error("--plot-manifest file not found: $path")
+
+    manifest = TOML.parsefile(path)
+    files = get(manifest, "files", Dict{String,Any}())
+    skip_files = Set{String}()
+    for (file, info_any) in files
+        info_any isa Dict || continue
+        quality = String(get(info_any, "quality", ""))
+        quality in skip_quality || continue
+        push!(skip_files, _basename_sxm(file))
+    end
+    return skip_files
+end
+
+const N_FILES, CHUNK_IDX, CHUNK_TOTAL, CONFIG_FILE, REFINED_ADVISORY_FILE, SELECTION_POLICY, ROBUST_GUARD_NU, CV_FOLDS, _data_dir_parsed, _outdir_parsed, _tsv_parsed, SKIP_1D, PLOT_MANIFEST_FILE, SKIP_PLOT_QUALITY = _parse_cli(ARGS)
+const DATA_DIR = _data_dir_parsed
+const OUTDIR = _outdir_parsed
+const TSV = _tsv_parsed
+mkpath(OUTDIR)
+const SKIP_PLOT_FILES = _load_skip_plot_files(PLOT_MANIFEST_FILE, SKIP_PLOT_QUALITY)
+if !isempty(SKIP_PLOT_FILES)
+    @info "Plot suppression loaded from manifest" manifest=PLOT_MANIFEST_FILE qualities=collect(SKIP_PLOT_QUALITY) n_files=length(SKIP_PLOT_FILES)
 end
 
 _tsv_bool(s::AbstractString) = lowercase(strip(s)) in ("true", "t", "1", "yes", "y")
@@ -509,9 +550,10 @@ function _support_mismatch(l1d::Real, l2d::Real)
     return isfinite(l1d) && isfinite(l2d) && abs(l2d) > 1e-12 ? abs(l1d - l2d) / abs(l2d) : NaN
 end
 
-function _classification(best_ell, best_circ, best1d, common10, commonhybrid)
+function _classification(best_ell, best_circ, best1d, common10, commonhybrid; skip_1d::Bool=false)
     !best_ell.valid && return "PROBLEMATIC"
     !best_circ.valid && return "PROBLEMATIC"
+    skip_1d && return best_ell.n == best_circ.n ? "SKIP_1D_2D_AGREE" : "SKIP_1D_2D_DISAGREE"
     best1d === nothing && return best_ell.n == best_circ.n ? "ROBUST_2D_ONLY" : "PROBLEMATIC_1D_FAIL"
     ns = [best_ell.n, best_circ.n, best1d.n_peaks]
     length(unique(ns)) == 1 && return "ROBUST"
@@ -577,7 +619,7 @@ function _quality_warnings(n_eff::Integer, n_1d, support_1d::Real, support_2d::R
 end
 
 function _selection_diagnostics(best_ell_sweep, best_circ_sweep, best1d, best_eff,
-                                results_ell, results_circ, fit_1d, slide, ctx_ell, ctx_circ)
+                                results_ell, results_circ, fit_1d, slide, ctx_ell, ctx_circ; skip_1d::Bool=false)
     thr_ell = max(10.0, 0.01 * abs(best_ell_sweep.bic))
     thr_circ = max(10.0, 0.01 * abs(best_circ_sweep.bic))
     thr_1d = best1d === nothing ? NaN : max(10.0, 0.01 * abs(best1d.student_bic))
@@ -603,12 +645,12 @@ function _selection_diagnostics(best_ell_sweep, best_circ_sweep, best1d, best_ef
         support_1d, support_ell, support_circ,
         mismatch_ell=_support_mismatch(support_1d, support_ell),
         mismatch_circ=_support_mismatch(support_1d, support_circ),
-        classif=_classification(best_eff, best_circ_sweep, best1d, common10, commonh),
+        classif=_classification(best_eff, best_circ_sweep, best1d, common10, commonh; skip_1d=skip_1d),
     )
 end
 
-function make_best_plot(best_ell, ctx_ell, ccfg_ell, best_circ, ctx_circ, ccfg_circ, best_1d, x_1d, y_1d, cfg_1d, slide_mode, outpath; warnings=String[])
-    """6-panel (2×3) comparison: ell 2D | circ 2D | 1D  |  ell residuals | circ residuals | 1D residuals."""
+function make_best_plot(best_ell, ctx_ell, ccfg_ell, best_circ, ctx_circ, ccfg_circ, best_1d, x_1d, y_1d, cfg_1d, slide_mode, outpath; warnings=String[], show_1d::Bool=true)
+    """Comparison plot. With show_1d=true: 6-panel 2×3 including 1D. With show_1d=false: 4-panel 2×2 2D-only."""
     n_ell, n_circ = best_ell.n, best_circ.n
     n1d = best_1d === nothing ? 0 : best_1d.n_peaks
 
@@ -692,39 +734,44 @@ function make_best_plot(best_ell, ctx_ell, ccfg_ell, best_circ, ctx_circ, ccfg_c
     xlims!(p_circ, (xmin, xmax)); ylims!(p_circ, (ymin, ymax))
     _add_2d_overlays!(p_circ, best_circ, ctx_circ, ccfg_circ, n_circ)
 
-    # ── Panel (1,3): 1D data + fit + components ──
-    p_1d = plot(x_1d, y_1d; color=:gray, alpha=0.7, label="data", linewidth=1)
-    y1d_resid = y_1d .- mean(y_1d)
-    if best_1d !== nothing
-        y1d_pred = GaussianFit1D.predict_fit(x_1d, best_1d, cfg_1d)
-        y1d_resid = y_1d .- y1d_pred
-        plot!(p_1d, x_1d, y1d_pred; color=:red, linewidth=2, label="fit N=$n1d")
+    p_1d = nothing
+    p_res_1d = nothing
+    y1d_resid = Float64[]
+    if show_1d
+        # ── Panel (1,3): 1D data + fit + components ──
+        p_1d = plot(x_1d, y_1d; color=:gray, alpha=0.7, label="data", linewidth=1)
+        y1d_resid = y_1d .- mean(y_1d)
+        if best_1d !== nothing
+            y1d_pred = GaussianFit1D.predict_fit(x_1d, best_1d, cfg_1d)
+            y1d_resid = y_1d .- y1d_pred
+            plot!(p_1d, x_1d, y1d_pred; color=:red, linewidth=2, label="fit N=$n1d")
 
-        centers = GaussianFit1D._params_to_centers(best_1d.popt, n1d)
-        comp_colors = [:red, :blue, :green, :orange, :purple, :cyan, :magenta, :brown, :pink, :lime, :teal, :gold]
-        asymmetric = cfg_1d.asymmetric_edges && n1d >= 2
-        y0 = best_1d.popt[1]
-        for (i, c) in enumerate(centers)
-            idx = i - 1
-            A = GaussianFit1D._get_amplitude(best_1d.popt, idx)
-            σ_in = GaussianFit1D._get_sigma(best_1d.popt, idx)
-            if asymmetric && (idx == 0 || idx == n1d - 1)
-                σ_out = idx == 0 ? best_1d.popt[end-1] : best_1d.popt[end]
-                z = x_1d .- c
-                s = idx == 0 ? (z .< 0) .* σ_out .+ (z .>= 0) .* σ_in :
-                               (z .< 0) .* σ_in .+ (z .>= 0) .* σ_out
-                y_comp = y0 .+ A .* exp.(-0.5 .* (z ./ s).^2)
-            else
-                y_comp = y0 .+ A .* exp.(-0.5 .* ((x_1d .- c) ./ max(σ_in, 1e-9)).^2)
+            centers = GaussianFit1D._params_to_centers(best_1d.popt, n1d)
+            comp_colors = [:red, :blue, :green, :orange, :purple, :cyan, :magenta, :brown, :pink, :lime, :teal, :gold]
+            asymmetric = cfg_1d.asymmetric_edges && n1d >= 2
+            y0 = best_1d.popt[1]
+            for (i, c) in enumerate(centers)
+                idx = i - 1
+                A = GaussianFit1D._get_amplitude(best_1d.popt, idx)
+                σ_in = GaussianFit1D._get_sigma(best_1d.popt, idx)
+                if asymmetric && (idx == 0 || idx == n1d - 1)
+                    σ_out = idx == 0 ? best_1d.popt[end-1] : best_1d.popt[end]
+                    z = x_1d .- c
+                    s = idx == 0 ? (z .< 0) .* σ_out .+ (z .>= 0) .* σ_in :
+                                   (z .< 0) .* σ_in .+ (z .>= 0) .* σ_out
+                    y_comp = y0 .+ A .* exp.(-0.5 .* (z ./ s).^2)
+                else
+                    y_comp = y0 .+ A .* exp.(-0.5 .* ((x_1d .- c) ./ max(σ_in, 1e-9)).^2)
+                end
+                col = comp_colors[mod1(i, length(comp_colors))]
+                plot!(p_1d, x_1d, y_comp; color=col, alpha=0.55, linestyle=:dash, linewidth=1.5, label="")
             end
-            col = comp_colors[mod1(i, length(comp_colors))]
-            plot!(p_1d, x_1d, y_comp; color=col, alpha=0.55, linestyle=:dash, linewidth=1.5, label="")
+            title!(p_1d, "1D N=$n1d ΔsBIC=0 (sBIC=$(round(best_1d.student_bic, digits=0)))")
+        else
+            title!(p_1d, "1D fit failed")
         end
-        title!(p_1d, "1D N=$n1d ΔsBIC=0 (sBIC=$(round(best_1d.student_bic, digits=0)))")
-    else
-        title!(p_1d, "1D fit failed")
+        xlabel!(p_1d, "position (nm)"); ylabel!(p_1d, "intensity")
     end
-    xlabel!(p_1d, "position (nm)"); ylabel!(p_1d, "intensity")
 
     # ═══════════════════════════════════════════════════════
     # Row 2 (bottom): residuals
@@ -758,26 +805,40 @@ function make_best_plot(best_ell, ctx_ell, ccfg_ell, best_circ, ctx_circ, ccfg_c
     xlims!(p_res_circ, (xmin, xmax)); ylims!(p_res_circ, (ymin, ymax))
     _add_roi_contour!(p_res_circ, ctx_circ; color=:black, linewidth=1.4)
 
-    # ── Panel (2,3): 1D residuals ──
-    p_res_1d = plot(x_1d, y1d_resid; color=:red, label="", linewidth=1)
-    hline!(p_res_1d, [0]; color=:gray, linestyle=:dash, label="")
-    xlabel!(p_res_1d, "position (nm)"); ylabel!(p_res_1d, "residual")
-    title!(p_res_1d, "1D residuals  σ=$(round(std(y1d_resid), digits=5))")
+    if show_1d
+        # ── Panel (2,3): 1D residuals ──
+        p_res_1d = plot(x_1d, y1d_resid; color=:red, label="", linewidth=1)
+        hline!(p_res_1d, [0]; color=:gray, linestyle=:dash, label="")
+        xlabel!(p_res_1d, "position (nm)"); ylabel!(p_res_1d, "residual")
+        title!(p_res_1d, "1D residuals  σ=$(round(std(y1d_resid), digits=5))")
+    end
 
     # ── Global title ──
     bic_1d_str = best_1d === nothing ? "NA" : string(round(best_1d.student_bic, digits=0))
-    title_str = "elliptical β=$(round(best_ell.bic, digits=0)) vs circular β=$(round(best_circ.bic, digits=0)) vs 1D β=$bic_1d_str | slide: $slide_mode"
+    title_str = show_1d ?
+        "elliptical β=$(round(best_ell.bic, digits=0)) vs circular β=$(round(best_circ.bic, digits=0)) vs 1D β=$bic_1d_str | slide: $slide_mode" :
+        "elliptical β=$(round(best_ell.bic, digits=0)) vs circular β=$(round(best_circ.bic, digits=0)) | 2D-only (--skip-1d)"
     if !isempty(warnings)
         title_str *= " | ⚠ " * join(warnings, "; ")
     end
 
-    l = @layout grid(2, 3, heights=[0.65, 0.35])
-    fig = plot(p_ell, p_circ, p_1d, p_res_ell, p_res_circ, p_res_1d;
-               layout=l, size=(2400, 800),
-               plot_title=title_str, plot_titlefontsize=8,
-               left_margin=0Plots.mm, right_margin=0Plots.mm,
-               top_margin=1Plots.mm, bottom_margin=0Plots.mm,
-               margin=0.5Plots.mm)
+    if show_1d
+        l = @layout grid(2, 3, heights=[0.65, 0.35])
+        fig = plot(p_ell, p_circ, p_1d, p_res_ell, p_res_circ, p_res_1d;
+                   layout=l, size=(2400, 800),
+                   plot_title=title_str, plot_titlefontsize=8,
+                   left_margin=0Plots.mm, right_margin=0Plots.mm,
+                   top_margin=1Plots.mm, bottom_margin=0Plots.mm,
+                   margin=0.5Plots.mm)
+    else
+        l = @layout grid(2, 2, heights=[0.65, 0.35])
+        fig = plot(p_ell, p_circ, p_res_ell, p_res_circ;
+                   layout=l, size=(1600, 800),
+                   plot_title=title_str, plot_titlefontsize=8,
+                   left_margin=0Plots.mm, right_margin=0Plots.mm,
+                   top_margin=1Plots.mm, bottom_margin=0Plots.mm,
+                   margin=0.5Plots.mm)
+    end
     savefig(fig, outpath)
 end
 
@@ -816,7 +877,9 @@ if summary_schema_ok
         fn = parts[1]
         status = parts[2]
         png = joinpath(OUTDIR, replace(fn, r"\.sxm$"i => "_best.png"))
-        if status == "ok" && isfile(png)
+        plot_suppressed = _basename_sxm(fn) in SKIP_PLOT_FILES
+        status == "ok" && plot_suppressed && isfile(png) && rm(png)
+        if status == "ok" && (isfile(png) || plot_suppressed)
             push!(already_done, fn)
         end
     end
@@ -846,7 +909,7 @@ pcfg = GaussianFit2D.PatternConfig(filepath="", channel="Z", direction="fwd",
     flatten=get(preproc, "flatten", "plane+rows"),
     smooth_radius_px=get(preproc, "smooth_radius_px", 1),
     output_dir=OUTDIR, no_plot=true)
-ccfg = GaussianFit2D.ChainSweepConfig(n_min=2, n_max=14,
+ccfg = GaussianFit2D.ChainSweepConfig(n_min=get(model, "n_min", 2), n_max=get(model, "n_max", 14),
     spacing_min_nm=model["spacing_min_nm"], spacing_max_nm=model["spacing_max_nm"],
     fit_width_nm=model["fit_width_nm"],
     support_noise_k=model["support_noise_k"],
@@ -911,6 +974,7 @@ Threads.@threads for idx in 1:ntot
     local file_dir = joinpath(OUTDIR, file_base)
     mkpath(file_dir)
     local outpath = joinpath(OUTDIR, replace(fn, r"\.sxm$"i => "_best.png"))
+    local plot_suppressed = _basename_sxm(fn) in SKIP_PLOT_FILES
     
     Threads.atomic_add!(processed, 1)
     local done = processed[]
@@ -1119,23 +1183,30 @@ Threads.@threads for idx in 1:ntot
         end
 
         qc = _selection_diagnostics(best_ell_sweep, best_circ_sweep, best1d, best_eff,
-                                    results_ell, results_circ, fit_1d, slide, ctx_ell, ctx_circ)
+                                    results_ell, results_circ, fit_1d, slide, ctx_ell, ctx_circ; skip_1d=SKIP_1D)
         classif = qc.classif
         plot_warnings = _quality_warnings(best_n_eff, best1d === nothing ? nothing : best1d.n_peaks, qc.support_1d, qc.support_ell)
         amb_ell && push!(plot_warnings, @sprintf("ambiguous ell GCV: selected N=%d; second best N=%s (ΔGCV=%.1f%%)", best_ell_sweep.n, string(runner_ell), 100 * dgcv_rel_ell))
         amb_eff && push!(plot_warnings, @sprintf("ambiguous eff GCV: selected N=%d; second best N=%s (ΔGCV=%.1f%%)", best_n_eff, string(runner_eff), 100 * dgcv_rel_eff))
 
-        # 6-panel combined plot. GR/Plots is not thread-safe, so serialize savefig.
-        lock(plot_lock) do
-            make_best_plot(best_ell_sweep, ctx_circ, ccfg, best_circ_sweep, ctx_circ, ccfg_circ,
-                           best1d, x_1d, y_1d, cfg_1d, string(scfg.slide_mode), outpath;
-                           warnings=plot_warnings)
+        plot_path_for_summary = outpath
+        if plot_suppressed
+            isfile(outpath) && rm(outpath)
+            plot_path_for_summary = ""
+            @printf("  plot skipped by manifest quality: %s\n", fn)
+        else
+            # 6-panel combined plot. GR/Plots is not thread-safe, so serialize savefig.
+            lock(plot_lock) do
+                make_best_plot(best_ell_sweep, ctx_circ, ccfg, best_circ_sweep, ctx_circ, ccfg_circ,
+                               best1d, x_1d, y_1d, cfg_1d, string(scfg.slide_mode), outpath;
+                               warnings=plot_warnings, show_1d=!SKIP_1D)
+            end
         end
 
         # Write summary (thread-safe)
         row = _ok_summary_row(fn, classif, best_ell_sweep, best_circ_sweep, best1d,
                               best_n_eff, eff_source, selected, refined, best_ell_raw, best_circ_raw,
-                              qc, ambiguity, artifact_diag, outpath, file_dir)
+                              qc, ambiguity, artifact_diag, plot_path_for_summary, file_dir)
         lock(summary_lock) do
             open(summary_file, "a") do io
                 _write_summary_row(io, row)

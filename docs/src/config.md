@@ -33,6 +33,90 @@ julia -t 4 --project=. test/batch_full.jl 48 \
   --selection-policy gcv
 ```
 
+For manually labelled folders, pass the benchmark manifest to suppress best-plot
+generation for non-chitosan/excluded files without using labels in model
+selection:
+
+```bash
+julia --project=. test/batch_full.jl 28 \
+  --data-dir /home/durif/Rebecca/data/data/20240818_LHe_Cu100 \
+  --outdir results/best_plots_20240818 \
+  --config config/chitosan.toml \
+  --plot-manifest benchmarks/chitosan_manual_20240814_20240818.toml
+```
+
+By default this skips plots for `quality = "excluded"`; override with
+`--skip-plot-quality excluded,ambiguous` if ambiguous files should be hidden too.
+
+## Production 10–20mer workflow
+
+For curated long-chain 10–20mer analyses, use the dedicated configs rather than
+the short-chain chitosan default.  The final selector is raw GCV/`N_eff` with
+`n_max = 24`; the robust guard is kept as an audit-only diagnostic because it is
+down-only and can suppress true long-chain lobes.
+
+Standard pass:
+
+```bash
+JULIA_NUM_THREADS=4 julia --project=. test/batch_full.jl 25 \
+  --data-dir /home/durif/Rebecca/data/10_20mer_analysis \
+  --outdir results/10_20mer_analysis_nmax24_gcv \
+  --tsv results/10_20mer_analysis_nmax24_gcv/triage_unused.tsv \
+  --config config/chitosan_10_20mer.toml \
+  --skip-1d
+```
+
+Support-rescue passes probe whether the standard support has truncated the
+molecule.  They do not encode an expected `N`; the final report chooses a rescue
+pass only when support is objectively improved and ell/circ fits remain coherent.
+
+```bash
+JULIA_NUM_THREADS=4 julia --project=. test/batch_full.jl 25 \
+  --data-dir /home/durif/Rebecca/data/10_20mer_analysis \
+  --outdir results/10_20mer_analysis_rescue \
+  --tsv results/10_20mer_analysis_rescue/triage_unused.tsv \
+  --config config/chitosan_10_20mer_rescue.toml \
+  --skip-1d
+
+JULIA_NUM_THREADS=4 julia --project=. test/batch_full.jl 25 \
+  --data-dir /home/durif/Rebecca/data/10_20mer_analysis \
+  --outdir results/10_20mer_analysis_rescue_aggressive \
+  --tsv results/10_20mer_analysis_rescue_aggressive/triage_unused.tsv \
+  --config config/chitosan_10_20mer_rescue_aggressive.toml \
+  --skip-1d
+```
+
+Run the guard once for visualization/audit only:
+
+```bash
+JULIA_NUM_THREADS=4 julia --project=. test/batch_full.jl 25 \
+  --data-dir /home/durif/Rebecca/data/10_20mer_analysis \
+  --outdir results/10_20mer_analysis_guard_audit \
+  --tsv results/10_20mer_analysis_guard_audit/triage_unused.tsv \
+  --config config/chitosan_10_20mer.toml \
+  --selection-policy gcv_with_robust_aicc_guard \
+  --skip-1d
+```
+
+Finally, build the consolidated table and annotated plots:
+
+```bash
+python3 test/finalize_10_20mer_results.py \
+  --output-dir results/10_20mer_analysis_final
+```
+
+Outputs:
+
+- `results/10_20mer_analysis_final/final_results.tsv`
+- `results/10_20mer_analysis_final/final_results.md`
+- `results/10_20mer_analysis_final/plots/*.png`
+
+Each final plot keeps the original fit panels intact and adds a footer showing
+`N final`, selected pass, confidence, standard/rescue/aggressive GCV results,
+and whether the robust guard would change the final result.  `review` is a QC
+confidence label for support sensitivity or diagnostic disagreement; it is not an
+exclusion flag and does not change `N_final`.
+
 A more diagnostic spatial blocked-CV selector is also available:
 
 ```bash
