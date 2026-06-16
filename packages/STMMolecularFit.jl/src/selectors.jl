@@ -671,6 +671,8 @@ function _select_primary(n_eff::Int, eff_source::AbstractString, refined, policy
         return refined.n_refined, policy, refined.source
     elseif policy == "fwd_bwd_consensus" && refined.robust_n != "NA"
         return refined.n_refined, policy, refined.source
+    elseif policy == "adaptive_support_rescue" && refined.robust_n != "NA"
+        return refined.n_refined, policy, refined.source
     end
     return n_eff, "gcv", eff_source
 end

@@ -11,6 +11,7 @@ makedocs(
     pages = [
         "Home" => "index.md",
         "Pipeline" => "pipeline.md",
+        "Chitosan Runbook" => "chitosan_runbook.md",
         "Model Selection" => "selection.md",
         "Mathematical Background" => "math.md",
         "Research Journal" => "journal.md",

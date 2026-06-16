@@ -48,27 +48,40 @@ julia --project=. test/batch_full.jl 28 \
 By default this skips plots for `quality = "excluded"`; override with
 `--skip-plot-quality excluded,ambiguous` if ambiguous files should be hidden too.
 
-## Production 10–20mer workflow
+## Generic adaptive-support workflow
 
-For curated long-chain 10–20mer analyses, use the dedicated configs rather than
-the short-chain chitosan default.  The final selector is raw GCV/`N_eff` with
-`n_max = 24`; the robust guard is kept as an audit-only diagnostic because it is
-down-only and can suppress true long-chain lobes.
+The benchmark-validated generic workflow is `adaptive_support_rescue`: standard
+support first, objective support-rescue only if the support appears truncated,
+then the same robust-AICc down-only guard on the active support.  Benchmark
+labels are used only for external grading, never inside fitting or selection.
 
-Standard pass:
+Short-chain benchmark-style pass:
+
+```bash
+JULIA_NUM_THREADS=4 julia --project=. test/batch_full.jl 39 \
+  --data-dir /home/durif/Rebecca/data/data/20240817_LHe_Cu100 \
+  --outdir results/best_plots_240817_adaptive_support_rescue \
+  --tsv results/best_plots_240817_adaptive_support_rescue/primary_files.tsv \
+  --config config/chitosan_adaptive_support_rescue.toml
+```
+
+For curated long-chain 10–20mer analyses, use the same workflow with only the
+allowed N range extended to `n_max = 24`.
+
+10–20mer adaptive pass:
 
 ```bash
 JULIA_NUM_THREADS=4 julia --project=. test/batch_full.jl 25 \
   --data-dir /home/durif/Rebecca/data/10_20mer_analysis \
-  --outdir results/10_20mer_analysis_nmax24_gcv \
-  --tsv results/10_20mer_analysis_nmax24_gcv/triage_unused.tsv \
-  --config config/chitosan_10_20mer.toml \
+  --outdir results/10_20mer_analysis_adaptive_support_rescue \
+  --tsv results/10_20mer_analysis_adaptive_support_rescue/triage_unused.tsv \
+  --config config/chitosan_10_20mer_adaptive_support_rescue.toml \
   --skip-1d
 ```
 
-Support-rescue passes probe whether the standard support has truncated the
-molecule.  They do not encode an expected `N`; the final report chooses a rescue
-pass only when support is objectively improved and ell/circ fits remain coherent.
+The older standard/rescue/aggressive passes remain useful for comparison and
+audit, but should not be treated as ground truth when they disagree with the
+generic adaptive workflow.
 
 ```bash
 JULIA_NUM_THREADS=4 julia --project=. test/batch_full.jl 25 \
@@ -86,7 +99,7 @@ JULIA_NUM_THREADS=4 julia --project=. test/batch_full.jl 25 \
   --skip-1d
 ```
 
-Run the guard once for visualization/audit only:
+Optional legacy guard-audit pass for comparison:
 
 ```bash
 JULIA_NUM_THREADS=4 julia --project=. test/batch_full.jl 25 \
@@ -98,7 +111,7 @@ JULIA_NUM_THREADS=4 julia --project=. test/batch_full.jl 25 \
   --skip-1d
 ```
 
-Finally, build the consolidated table and annotated plots:
+For legacy comparisons, build the consolidated table and annotated plots:
 
 ```bash
 python3 test/finalize_10_20mer_results.py \
@@ -111,11 +124,11 @@ Outputs:
 - `results/10_20mer_analysis_final/final_results.md`
 - `results/10_20mer_analysis_final/plots/*.png`
 
-Each final plot keeps the original fit panels intact and adds a footer showing
-`N final`, selected pass, confidence, standard/rescue/aggressive GCV results,
-and whether the robust guard would change the final result.  `review` is a QC
-confidence label for support sensitivity or diagnostic disagreement; it is not an
-exclusion flag and does not change `N_final`.
+Each legacy final plot keeps the original fit panels intact and adds a footer
+showing `N final`, selected pass, confidence, standard/rescue/aggressive GCV
+results, and whether the robust guard would change the final result.  `review`
+is a QC confidence label for support sensitivity or diagnostic disagreement; it
+is not an exclusion flag and does not change `N_final`.
 
 A more diagnostic spatial blocked-CV selector is also available:
 
@@ -285,6 +298,17 @@ GaussianFit2D.ChainSweepConfig(
 batch-level `selection_policy` / `--selection-policy` is separate: it controls
 whether the final reported primary result is the standard `N_eff` or a guarded
 `N_selected` such as the chitosan default robust-AICc guard.
+
+Experimental support rescue is available via
+`config/chitosan_adaptive_support_rescue.toml` or
+`--selection-policy adaptive_support_rescue`.  It runs the standard support
+first and only tries a permissive support pass when the selected `N_eff` sits at
+the objective support-feasibility ceiling.  Rescue acceptance is label-free and
+requires a larger support, higher selected `N`, and circ/ell coherence.  The
+robust-AICc guard is then applied down-only on the active support.
+`adaptive_robust_guard_max_drop` is available only as a non-default diagnostic
+cap on automatic robust-AICc downshifts; it is not used by the common
+benchmark-aligned workflow.
 
 ## PatternConfig (GaussianFit2D)
 

@@ -17,6 +17,7 @@
 #   julia --project=. test/batch_full.jl [N_files] --selection-policy laplace_evidence
 #   julia --project=. test/batch_full.jl [N_files] --selection-policy laplace_evidence_guard
 #   julia --project=. test/batch_full.jl [N_files] --selection-policy fwd_bwd_consensus
+#   julia --project=. test/batch_full.jl [N_files] --selection-policy adaptive_support_rescue
 #   julia --project=. test/batch_full.jl [N_files] --plot-manifest benchmarks/chitosan_manual_20240814_20240818.toml
 
 using STMMolecularFit, GaussianFit2D, GaussianFit1D
@@ -179,8 +180,8 @@ function _parse_cli(args)
     cfg_model = isfile(config_file) ? get(TOML.parsefile(config_file), "model", Dict{String,Any}()) : Dict{String,Any}()
     selection_policy_cfg = split(lowercase(String(get(cfg_model, "selection_policy", "gcv"))), "-"; keepempty=false) |> x -> join(x, "_")
     selection_policy = selection_policy_cli === nothing ? selection_policy_cfg : selection_policy_cli
-    selection_policy in ("gcv", "gcv_with_robust_aicc_guard", "spatial_blocked_cv", "support_marginalized_gcv", "support_marginalized_gcv_guard", "slope_heuristic_mdl", "stability_selection", "local_lobe_evidence", "laplace_evidence", "laplace_evidence_guard", "fwd_bwd_consensus") ||
-        error("Unknown --selection-policy '$selection_policy'; use gcv, gcv_with_robust_aicc_guard, spatial_blocked_cv, support_marginalized_gcv, support_marginalized_gcv_guard, slope_heuristic_mdl, stability_selection, local_lobe_evidence, laplace_evidence, laplace_evidence_guard, or fwd_bwd_consensus")
+    selection_policy in ("gcv", "gcv_with_robust_aicc_guard", "spatial_blocked_cv", "support_marginalized_gcv", "support_marginalized_gcv_guard", "slope_heuristic_mdl", "stability_selection", "local_lobe_evidence", "laplace_evidence", "laplace_evidence_guard", "fwd_bwd_consensus", "adaptive_support_rescue") ||
+        error("Unknown --selection-policy '$selection_policy'; use gcv, gcv_with_robust_aicc_guard, spatial_blocked_cv, support_marginalized_gcv, support_marginalized_gcv_guard, slope_heuristic_mdl, stability_selection, local_lobe_evidence, laplace_evidence, laplace_evidence_guard, fwd_bwd_consensus, or adaptive_support_rescue")
     isfinite(robust_guard_nu) && robust_guard_nu > 0 || error("--robust-guard-nu must be positive")
     cv_folds >= 2 || error("--cv-folds must be >= 2")
     return n_files, chunk_idx, chunk_total, config_file, refined_advisory, selection_policy, robust_guard_nu, cv_folds, data_dir, outdir, tsv, skip_1d, plot_manifest, skip_plot_quality
@@ -548,6 +549,37 @@ end
 
 function _support_mismatch(l1d::Real, l2d::Real)
     return isfinite(l1d) && isfinite(l2d) && abs(l2d) > 1e-12 ? abs(l1d - l2d) / abs(l2d) : NaN
+end
+
+function _adaptive_support_min_spacing(ccfg)
+    # The 2D sweep's effective lower spacing is bounded both by the configured
+    # spacing and by the fitted axial width scale; using the larger value avoids
+    # declaring ordinary 6-mers near the rescue boundary.
+    return max(Float64(ccfg.spacing_min_nm), Float64(ccfg.sigma_parallel_max_nm))
+end
+
+function _support_feasible_n(support_nm::Real, ccfg)
+    isfinite(support_nm) && support_nm > 0 || return 0
+    return max(1, floor(Int, support_nm / _adaptive_support_min_spacing(ccfg)) + 1)
+end
+
+function _adaptive_support_rescue_trigger(n_eff::Int, support_2d::Real, ccfg, model)
+    feasible_n = _support_feasible_n(support_2d, ccfg)
+    margin = Int(get(model, "adaptive_rescue_feasible_margin", 0))
+    near_ceiling = feasible_n > 0 && n_eff >= feasible_n - margin
+    return near_ceiling, feasible_n
+end
+
+function _adaptive_rescue_configs(ccfg, ccfg_circ, model)
+    rescue_noise_k = Float64(get(model, "adaptive_rescue_support_noise_k", 1.5))
+    rescue_padding = Float64(get(model, "adaptive_rescue_support_padding_nm", 0.75))
+    ccfg_rescue = deepcopy(ccfg)
+    ccfg_rescue.support_noise_k = rescue_noise_k
+    ccfg_rescue.support_padding_nm = rescue_padding
+    ccfg_circ_rescue = deepcopy(ccfg_circ)
+    ccfg_circ_rescue.support_noise_k = rescue_noise_k
+    ccfg_circ_rescue.support_padding_nm = rescue_padding
+    return ccfg_rescue, ccfg_circ_rescue
 end
 
 function _classification(best_ell, best_circ, best1d, common10, commonhybrid; skip_1d::Bool=false)
@@ -1030,6 +1062,8 @@ Threads.@threads for idx in 1:ntot
         ctx_ell = ctx_circ  # circ→ell refinement shares the circular context (same data/axis)
         best_ell_raw = isempty(results_ell) ? best_circ_raw : results_ell[1]
         best_ell_sweep = isempty(results_ell) ? best_circ_sweep : _best_valid_or_best(results_ell, best_ell_raw; criterion=criterion)
+        ccfg_plot_ell = ccfg
+        ccfg_plot_circ = ccfg_circ
 
         # ── Selection: choose best valid models by configured criterion (default GCV) ──
         # Effective best uses min(ell_score, circ_score) per N.
@@ -1159,6 +1193,83 @@ Threads.@threads for idx in 1:ntot
                 @printf("  fwd-bwd-consensus: N=%d joint_gcv=%.4g candidates=%d\n",
                         fb_n, fb_score, fb_candidates)
             end
+        elseif SELECTION_POLICY == "adaptive_support_rescue"
+            support_std = _support_length(ctx_circ)
+            do_rescue, feasible_std = _adaptive_support_rescue_trigger(best_n_eff, support_std, ccfg, model)
+            n_refined, refined_policy, refined_source, robust_aicc_n = (best_n_eff, "adaptive_support_rescue_keep", eff_source, best_n_eff)
+            if do_rescue
+                try
+                    ccfg_rescue, ccfg_circ_rescue = _adaptive_rescue_configs(ccfg, ccfg_circ, model)
+                    results_circ_rescue, best_circ_raw_rescue, ctx_circ_rescue = GaussianFit2D.chain_gaussian_sweep(img2d, pcfg_file, ccfg_circ_rescue)
+                    best_circ_sweep_rescue = _best_valid_or_best(results_circ_rescue, best_circ_raw_rescue; criterion=criterion)
+                    results_ell_rescue = _refine_circ_to_ell(results_circ_rescue, img2d, pcfg_file, ccfg_rescue, ctx_circ_rescue)
+                    best_ell_raw_rescue = isempty(results_ell_rescue) ? best_circ_raw_rescue : results_ell_rescue[1]
+                    best_ell_sweep_rescue = isempty(results_ell_rescue) ? best_circ_sweep_rescue : _best_valid_or_best(results_ell_rescue, best_ell_raw_rescue; criterion=criterion)
+                    best_eff_rescue, best_n_rescue, eff_source_rescue = _select_effective_best(results_ell_rescue, results_circ_rescue; criterion=criterion)
+                    if best_eff_rescue === nothing
+                        best_eff_rescue = best_ell_sweep_rescue; best_n_rescue = best_ell_sweep_rescue.n; eff_source_rescue = "ell"
+                    end
+
+                    support_rescue = _support_length(ctx_circ_rescue)
+                    min_gain = Float64(get(model, "adaptive_rescue_min_support_gain_nm", 0.75))
+                    max_delta = Int(get(model, "adaptive_rescue_max_circ_ell_delta", 1))
+                    feasible_rescue = _support_feasible_n(support_rescue, ccfg_rescue)
+                    coherent = abs(best_ell_sweep_rescue.n - best_circ_sweep_rescue.n) <= max_delta
+                    improved = best_n_rescue > best_n_eff && support_rescue >= support_std + min_gain
+                    feasible = feasible_rescue == 0 || best_n_rescue <= feasible_rescue + max_delta
+                    if improved && coherent && feasible
+                        results_circ = results_circ_rescue
+                        best_circ_raw = best_circ_raw_rescue
+                        ctx_circ = ctx_circ_rescue
+                        best_circ_sweep = best_circ_sweep_rescue
+                        results_ell = results_ell_rescue
+                        ctx_ell = ctx_circ_rescue
+                        best_ell_raw = best_ell_raw_rescue
+                        best_ell_sweep = best_ell_sweep_rescue
+                        best_eff = best_eff_rescue
+                        best_n_eff = best_n_rescue
+                        eff_source = eff_source_rescue
+                        ccfg_plot_ell = ccfg_rescue
+                        ccfg_plot_circ = ccfg_circ_rescue
+                        n_refined, refined_policy, refined_source, robust_aicc_n = (best_n_eff, "adaptive_support_rescue", "adaptive_support_rescue", best_n_eff)
+                        @printf("  adaptive-support-rescue: accepted N=%d support %.2f→%.2f nm feasible %d→%d\n",
+                                best_n_eff, support_std, support_rescue, feasible_std, feasible_rescue)
+                    else
+                        reason = !improved ? "no_improvement" : (!coherent ? "circ_ell_incoherent" : "infeasible")
+                        n_refined, refined_policy, refined_source, robust_aicc_n = (best_n_eff, "adaptive_support_rescue_reject_" * reason, eff_source, best_n_rescue)
+                        @printf("  adaptive-support-rescue: rejected (%s) std_N=%d rescue_N=%d support %.2f→%.2f nm feasible %d→%d\n",
+                                reason, best_n_eff, best_n_rescue, support_std, support_rescue, feasible_std, feasible_rescue)
+                    end
+                catch e_rescue
+                    @warn "$fn: adaptive support rescue failed; keeping N_eff" reason=sprint(showerror, e_rescue)
+                    n_refined, refined_policy, refined_source, robust_aicc_n = (best_n_eff, "adaptive_support_rescue_failed", eff_source, "NA")
+                end
+            end
+
+            # Preserve the validated chitosan default behavior: adaptive support
+            # may add missing support, but robust-AICc remains a down-only guard
+            # against over-segmentation on the active support.
+            robust_n = nothing
+            robust_source = "robust_aicc_guard_failed"
+            try
+                robust_n, robust_source, _ = _integrated_robust_aicc_n(
+                    img2d, pcfg_file, ccfg_plot_ell;
+                    nu=ROBUST_GUARD_NU)
+            catch e_guard
+                @warn "$fn: adaptive robust-AICc guard failed; keeping adaptive N_eff" reason=sprint(showerror, e_guard)
+            end
+            if robust_n !== nothing
+                robust_aicc_n = robust_n
+                max_drop = Int(get(model, "adaptive_robust_guard_max_drop", typemax(Int)))
+                drop = best_n_eff - robust_n
+                if robust_n < best_n_eff && drop <= max_drop
+                    n_refined = robust_n
+                    refined_policy *= "_robust_guard"
+                    refined_source = robust_source
+                elseif robust_n < best_n_eff
+                    refined_policy *= "_robust_guard_audit_only"
+                end
+            end
         else
             n_refined, refined_policy, refined_source, robust_aicc_n = _refined_selection(fn, best_n_eff, REFINED_ADVISORY)
         end
@@ -1197,7 +1308,7 @@ Threads.@threads for idx in 1:ntot
         else
             # 6-panel combined plot. GR/Plots is not thread-safe, so serialize savefig.
             lock(plot_lock) do
-                make_best_plot(best_ell_sweep, ctx_circ, ccfg, best_circ_sweep, ctx_circ, ccfg_circ,
+                make_best_plot(best_ell_sweep, ctx_circ, ccfg_plot_ell, best_circ_sweep, ctx_circ, ccfg_plot_circ,
                                best1d, x_1d, y_1d, cfg_1d, string(scfg.slide_mode), outpath;
                                warnings=plot_warnings, show_1d=!SKIP_1D)
             end

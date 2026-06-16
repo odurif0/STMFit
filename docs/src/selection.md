@@ -92,6 +92,25 @@ validation also favored the guard over raw GCV in the tested `N≈4–8` regime.
 Support-adaptive variants remain experimental and should be evaluated as
 separate policies rather than folded into the default prematurely.
 
+## Experimental adaptive support rescue
+
+`--selection-policy adaptive_support_rescue` keeps the first-pass support and
+GCV selector unless the selected count is at the support-feasibility ceiling.
+That trigger is label-free: it compares the detected support length to the
+minimum physically usable spacing implied by the calibration.  If triggered, a
+second pass uses permissive support parameters and is accepted only when it
+increases support length, selects a larger `N`, and keeps circular/elliptical
+counts coherent.  Otherwise the standard result is retained.  After any rescue
+decision, the validated robust-AICc guard is applied down-only on the active
+support. The benchmark and 10–20mer adaptive configs use this same rule; the
+10–20mer config differs only by extending `n_max` to allow long chains.
+`adaptive_robust_guard_max_drop` exists as a non-default diagnostic option to
+cap automatic downshifts, but it is not part of the common benchmark-aligned
+workflow.
+
+The reference config is `config/chitosan_adaptive_support_rescue.toml`.  It is
+experimental and not the production default.
+
 Operationally, the guard is safe-by-fallback: if the auxiliary robust-AICc sweep
 fails, batch processing keeps the standard `N_eff` result and records the guard
 failure instead of failing the file.

@@ -129,6 +129,9 @@ For the chitosan reference set, `benchmarks/chitosan_240817.toml` records
 evaluation-only quality classes (`clean_target`, `poor_quality`, `excluded`).
 It is not used by the fitting code and must not become a selection prior.
 
+For a reproducible hand-off of the current benchmark-aligned chitosan and
+10–20mer workflow, see the [Chitosan Runbook](chitosan_runbook.md).
+
 ## Research Journal
 
 All experimental paths — successful and failed — are documented in the
