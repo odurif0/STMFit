@@ -93,3 +93,19 @@ This replaces the elliptical NLopt sweep entirely (see Research Journal §7, §1
 | `cv_method` | gcv | Analytical GCV by default; kfold is slower |
 | `cv_folds` | 5 | Cross-validation folds when `cv_method="kfold"` |
 | `kappa_max` | 10.0 | Chitosan calibrated condition-number penalty threshold |
+
+## Running on the MPCDF HPC cluster
+
+The batch is embarrassingly parallel and maps onto a Slurm **job array** (one
+task per `--chunk i/n` slice). A self-contained launcher + scripts live in
+[`hpc/`](../../hpc/) (Raven & Viper). See [`hpc/README.md`](../../hpc/README.md)
+for setup and `hpc/launch_remote.sh` for the push-button workflow:
+
+```bash
+cp hpc/remote.env.example hpc/remote.env   # configure once
+./hpc/launch_remote.sh --watch             # sync → submit → merge → fetch
+```
+
+After the array finishes, `hpc/merge_chunks.jl` concatenates the per-chunk
+`summary_*_chunkNNofMM.tsv` shards back into a single
+`summary_overlap060_hard.tsv`, and the launcher fetches all results locally.

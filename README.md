@@ -22,3 +22,18 @@ julia --project=. test/summarize.jl results/best_plots/summary_overlap060_hard.t
 ```
 
 Runtime outputs → `results/`.
+
+## HPC (MPCDF — Raven / Viper)
+
+Large batches run as a Slurm **job array** on the MPCDF cluster: each array task
+runs one `--chunk i/n` slice of the file list, so the batch is N× faster with N
+parallel tasks. A push-button launcher handles sync + submit + merge + fetch.
+
+```bash
+cp hpc/remote.env.example hpc/remote.env && $EDITOR hpc/remote.env
+./hpc/launch_remote.sh --dry-run     # preview
+./hpc/launch_remote.sh --watch       # sync → submit → wait → merge → fetch
+```
+
+See [`hpc/README.md`](hpc/README.md) for setup (SSH/2FA, partitions, Julia
+module, where to put code vs data) and tuning.

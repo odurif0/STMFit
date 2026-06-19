@@ -5,3 +5,5 @@ results/
 !.julia/Manifest.toml
 .DS_Store
 .theme
+# Personal HPC config (MPCDF username + paths) — keep the .example tracked
+hpc/remote.env
