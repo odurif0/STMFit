@@ -2,6 +2,10 @@
 
 Installable Julia package for STM image manipulation.
 
+> SXM I/O (`read_sxm`, `SXMImage`, `channel_names`, `get_channel`) and the
+> shared preprocessing helpers are provided by the `STMSXMIO` package and
+> re-exported here, so the public API is unchanged.
+
 Current features:
 
 - read Nanonis `.sxm` files;

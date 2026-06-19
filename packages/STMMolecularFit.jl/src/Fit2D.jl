@@ -23,7 +23,7 @@ function fit_2d_chain(filepath::AbstractString;
     return Fit2DResult(best.n, best.valid, best.bic)
 end
 
-fit_2d_chain(img::STMMolecularFit.SXMImage; ccfg=GaussianFit2D.ChainSweepConfig()) =
+fit_2d_chain(img::SXMImage; ccfg=GaussianFit2D.ChainSweepConfig()) =
     fit_2d_chain(img.filepath; ccfg=ccfg)
 
 # Deprecated alias

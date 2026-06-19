@@ -10,6 +10,13 @@ using Plots
 using Printf
 using Statistics
 using STMFitCore: effective_spacing_min, endpoint_overrun, overlap_condition_number, kappa_penalty, adjacent_kappa_max, ResidualDiagnostics, compute_residual_diagnostics
+using STMSXMIO
+import STMSXMIO: SXMImage, SXMChannel, read_sxm, channel_names, get_channel,
+    _coordinate_vectors, _value_scale, _plane_fit, _box_smooth,
+    _otsu_threshold, _largest_component, _dilate_mask
+
+# GaussianFit2D uses the global-level row-flattening convention.
+_row_median_flatten(z::Matrix{Float64}) = STMSXMIO._row_median_flatten_global(z)
 
 export SXMImage, SXMChannel, PatternConfig, PatternFitResult, MolecularFeature,
        MolecularChain, ImageArtifactDiagnostics

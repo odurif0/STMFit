@@ -1,20 +1,4 @@
-struct SXMChannel
-    name::String
-    unit::String
-    direction::String
-    data::Matrix{Float64} # [y, x], in physical unit stored by Nanonis
-end
-
-struct SXMImage
-    filepath::String
-    header::Dict{String,String}
-    width::Int
-    height::Int
-    range_nm::Tuple{Float64,Float64}
-    offset_nm::Tuple{Float64,Float64}
-    channels::Vector{SXMChannel}
-end
-
+# SXMImage / SXMChannel are owned by STMSXMIO (imported in GaussianFit2D.jl).
 struct MolecularFeature
     amplitude::Float64
     x_nm::Float64

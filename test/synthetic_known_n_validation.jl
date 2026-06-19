@@ -17,7 +17,7 @@
 #   julia --project=. test/synthetic_known_n_validation.jl --noise-scale 0.5 --cases 8
 # ──────────────────────────────────────────────────────────────────────────────
 
-using STMMolecularFit, GaussianFit2D, GaussianFit1D
+using STMMolecularFit, GaussianFit2D, GaussianFit1D, STMSXMIO
 using LinearAlgebra
 using DelimitedFiles, Printf, Statistics, Random
 
@@ -228,10 +228,9 @@ function _generate_synthetic_case(case_idx, true_N, rng, noise_scale=1.0;
         artifact = "none"
     end
 
-    # Build SXMChannel objects
-    # Qualify with GaussianFit2D to avoid ambiguity (same struct in STMMolecularFit)
-    ch_fwd = GaussianFit2D.SXMChannel("Z", "arb", "fwd", z_fwd)
-    ch_bwd = GaussianFit2D.SXMChannel("Z", "arb", "bwd", z_bwd)
+    # Build SXMChannel objects (SXM types now owned by STMSXMIO)
+    ch_fwd = STMSXMIO.SXMChannel("Z", "arb", "fwd", z_fwd)
+    ch_bwd = STMSXMIO.SXMChannel("Z", "arb", "bwd", z_bwd)
 
     # Build SXMImage
     case_id = @sprintf("synthetic_case_%03d", case_idx)
@@ -241,7 +240,7 @@ function _generate_synthetic_case(case_idx, true_N, rng, noise_scale=1.0;
         "SCAN_OFFSET" => "0 0",
         "DATA_INFO" => "Channel Z arb fwd\r\nChannel Z arb bwd",
     )
-    img = GaussianFit2D.SXMImage(case_id, header, width, height, range_nm, (0.0, 0.0),
+    img = STMSXMIO.SXMImage(case_id, header, width, height, range_nm, (0.0, 0.0),
                                   [ch_fwd, ch_bwd])
     return img, artifact
 end

@@ -5,6 +5,10 @@ using LinearAlgebra
 using GaussianFit1D
 using GaussianFit2D
 using STMFitCore: FWHM_TO_SIGMA, sigma_from_fwhm
+using STMSXMIO
+import STMSXMIO: SXMImage, SXMChannel, read_sxm, channel_names, get_channel,
+    _coordinate_vectors, _value_scale, _plane_fit, _box_smooth,
+    _otsu_threshold, _largest_component, _dilate_mask
 using Plots
 using Printf
 using Statistics
@@ -19,22 +23,7 @@ export fit_chain_1d_bootstrapped, compare_1d_2d, compare_2d_1d_by_N
 
 const EPS = 1e-12
 
-struct SXMChannel
-    name::String
-    unit::String
-    direction::String
-    data::Matrix{Float64}
-end
-
-struct SXMImage
-    filepath::String
-    header::Dict{String,String}
-    width::Int
-    height::Int
-    range_nm::Tuple{Float64,Float64}
-    offset_nm::Tuple{Float64,Float64}
-    channels::Vector{SXMChannel}
-end
+# SXMImage / SXMChannel are owned by STMSXMIO (imported above).
 
 Base.@kwdef mutable struct PreprocessConfig
     channel::String = "Z"
@@ -115,151 +104,12 @@ Base.@kwdef struct SlideFitResult
     plot_files::Vector{String}
 end
 
-function _parse_header(header_text::String)
-    header = Dict{String,String}()
-    current = nothing
-    buf = IOBuffer()
-    for line in split(header_text, '\n')
-        if startswith(line, ":") && endswith(strip(line), ":")
-            current !== nothing && (header[current] = strip(String(take!(buf))))
-            current = strip(line, [':', ' ', '\r', '\n', '\t'])
-        elseif current !== nothing
-            println(buf, line)
-        end
-    end
-    current !== nothing && (header[current] = strip(String(take!(buf))))
-    return header
-end
-
-function _parse_pair(value::String, T=Float64)
-    vals = split(strip(value))
-    length(vals) >= 2 || error("Expected two values, got: $value")
-    return parse(T, vals[1]), parse(T, vals[2])
-end
-
-function _parse_data_info(value::String)
-    infos = NamedTuple[]
-    for row in split(value, '\n')
-        s = strip(row)
-        isempty(s) && continue
-        startswith(s, "Channel") && continue
-        parts = split(s)
-        length(parts) >= 6 || continue
-        push!(infos, (name=parts[2], unit=parts[3], direction=parts[4]))
-    end
-    return infos
-end
-
-function _read_be_float32(bytes::Vector{UInt8}, offset::Int, n::Int)
-    io = IOBuffer(bytes[offset:(offset + 4n - 1)])
-    vals = Vector{Float64}(undef, n)
-    for i in 1:n
-        u = read(io, UInt32)
-        ENDIAN_BOM == 0x04030201 && (u = bswap(u))
-        vals[i] = Float64(reinterpret(Float32, u))
-    end
-    return vals
-end
-
-function read_sxm(filepath::String)
-    bytes = read(filepath)
-    marker = b":SCANIT_END:"
-    pos = findfirst(marker, bytes)
-    pos === nothing && error("Could not find :SCANIT_END: in $filepath")
-    header = _parse_header(String(bytes[1:(first(pos)-1)]))
-    # Guard the mandatory Nanonis header keys: a truncated/malformed header used
-    # to throw a cryptic KeyError instead of a readable message.
-    for key in ("SCAN_PIXELS", "SCAN_RANGE", "DATA_INFO")
-        haskey(header, key) || error("Malformed SXM header in $filepath: missing key '$key'")
-    end
-    nx, ny = _parse_pair(header["SCAN_PIXELS"], Int)
-    rx_m, ry_m = _parse_pair(header["SCAN_RANGE"], Float64)
-    ox_m, oy_m = haskey(header, "SCAN_OFFSET") ? _parse_pair(header["SCAN_OFFSET"], Float64) : (0.0, 0.0)
-
-    expanded = Tuple{String,String,String}[]
-    for info in _parse_data_info(header["DATA_INFO"])
-        dirs = lowercase(info.direction) == "both" ? ["fwd", "bwd"] : [lowercase(info.direction)]
-        for dir in dirs
-            push!(expanded, (info.name, info.unit, dir))
-        end
-    end
-
-    nvals_per_image = nx * ny
-    nvals = nvals_per_image * length(expanded)
-    data_offset = length(bytes) - 4nvals + 1
-    data_offset > 0 || error("Invalid SXM data size")
-    vals = _read_be_float32(bytes, data_offset, nvals)
-
-    channels = SXMChannel[]
-    k = 1
-    for (name, unit, dir) in expanded
-        raw = vals[k:(k+nvals_per_image-1)]
-        k += nvals_per_image
-        data = permutedims(reshape(raw, nx, ny))
-        # Nanonis backward scan is stored in acquisition order; flip x so fwd/bwd share coordinates.
-        lowercase(dir) == "bwd" && (data = reverse(data; dims=2))
-        push!(channels, SXMChannel(name, unit, dir, data))
-    end
-    return SXMImage(filepath, header, nx, ny, (rx_m*1e9, ry_m*1e9), (ox_m*1e9, oy_m*1e9), channels)
-end
-
-channel_names(img::SXMImage) = unique(c.name for c in img.channels)
-
-function get_channel(img::SXMImage, name::String; direction::String="fwd")
-    lname, ldir = lowercase(name), lowercase(direction)
-    for c in img.channels
-        lowercase(c.name) == lname && lowercase(c.direction) == ldir && return c
-    end
-    for c in img.channels
-        lowercase(c.name) == lname && return c
-    end
-    error("Channel '$name' direction '$direction' not found. Available: " * string([(c.name,c.direction) for c in img.channels]))
-end
-
-function _coordinate_vectors(img::SXMImage; stride::Int=1)
-    xs = collect(range(0, img.range_nm[1]; length=img.width))[1:stride:end]
-    ys = collect(range(0, img.range_nm[2]; length=img.height))[1:stride:end]
-    return xs, ys
-end
-
-function _value_scale(unit::String)
-    u = lowercase(strip(unit))
-    u == "m" && return 1e9, "nm"
-    u == "a" && return 1e12, "pA"
-    return 1.0, unit
-end
-
-function _plane_fit(xs, ys, z)
-    xflat = repeat(xs', length(ys), 1)[:]
-    yflat = repeat(ys, 1, length(xs))[:]
-    zflat = vec(z)
-    coeff = hcat(ones(length(xflat)), xflat, yflat) \ zflat
-    plane = similar(z)
-    for iy in eachindex(ys), ix in eachindex(xs)
-        plane[iy, ix] = coeff[1] + coeff[2]*xs[ix] + coeff[3]*ys[iy]
-    end
-    return plane
-end
-
-function _row_median_flatten(z)
-    out = copy(z)
-    for iy in axes(out, 1)
-        out[iy, :] .-= median(out[iy, :])
-    end
-    return out
-end
-
-function _box_smooth(z::Matrix{Float64}, radius::Int)
-    radius <= 0 && return copy(z)
-    out = similar(z)
-    ny, nx = size(z)
-    for iy in 1:ny, ix in 1:nx
-        out[iy, ix] = mean(@view z[max(1,iy-radius):min(ny,iy+radius), max(1,ix-radius):min(nx,ix+radius)])
-    end
-    return out
-end
-
 function preprocess_channel(img::SXMImage, ch::SXMChannel, cfg::PreprocessConfig=PreprocessConfig())
+    # SXM reading, coordinate/value scaling, plane fit, box smooth, Otsu,
+    # largest-component and dilation are shared with GaussianFit2D via STMSXMIO.
+    # STMMolecularFit uses the per-row zero-median flatten convention
+    # (_row_median_flatten_zero), which differs from GaussianFit2D's
+    # global-level convention; this preserves the historical 1D-QC behaviour.
     scale, scaled_unit = _value_scale(ch.unit)
     stride = max(1, cfg.stride)
     xs, ys = _coordinate_vectors(img; stride=stride)
@@ -269,87 +119,11 @@ function preprocess_channel(img::SXMImage, ch::SXMChannel, cfg::PreprocessConfig
     z[.!isfinite.(z)] .= fill_value
     raw = copy(z)
     occursin("plane", lowercase(cfg.flatten)) && (z .-= _plane_fit(xs, ys, z))
-    occursin("rows", lowercase(cfg.flatten)) && (z = _row_median_flatten(z))
+    occursin("rows", lowercase(cfg.flatten)) && (z = STMSXMIO._row_median_flatten_zero(z))
     z_smooth = _box_smooth(z, cfg.smooth_radius_px)
     noise = 1.4826 * median(abs.(vec(z_smooth) .- median(vec(z_smooth))))
     noise = max(noise, std(vec(z_smooth))*0.1, EPS)
     return xs, ys, raw, z, z_smooth, scaled_unit, noise
-end
-
-function _largest_component(mask::BitMatrix)
-    ny, nx = size(mask)
-    seen = falses(ny, nx)
-    best = Tuple{Int,Int}[]
-    for iy in 1:ny, ix in 1:nx
-        (!mask[iy, ix] || seen[iy, ix]) && continue
-        comp = Tuple{Int,Int}[]
-        stack = [(iy, ix)]
-        seen[iy, ix] = true
-        while !isempty(stack)
-            y, x = pop!(stack)
-            push!(comp, (y, x))
-            for yy in max(1,y-1):min(ny,y+1), xx in max(1,x-1):min(nx,x+1)
-                if mask[yy, xx] && !seen[yy, xx]
-                    seen[yy, xx] = true
-                    push!(stack, (yy, xx))
-                end
-            end
-        end
-        length(comp) > length(best) && (best = comp)
-    end
-    out = falses(ny, nx)
-    for idx in best
-        out[idx...] = true
-    end
-    return out
-end
-
-function _dilate_mask(mask::BitMatrix, radius::Int)
-    radius <= 0 && return copy(mask)
-    ny, nx = size(mask)
-    out = falses(ny, nx)
-    for iy in 1:ny, ix in 1:nx
-        if mask[iy, ix]
-            out[max(1,iy-radius):min(ny,iy+radius), max(1,ix-radius):min(nx,ix+radius)] .= true
-        end
-    end
-    return out
-end
-
-function _otsu_threshold(signal::Matrix{Float64})
-    """Otsu's automatic threshold: maximizes inter-class variance."""
-    v = vec(signal)
-    v = v[isfinite.(v) .& (v .> 0)]
-    isempty(v) && return 0.0
-    nbins = 128
-    lo, hi = minimum(v), maximum(v)
-    hi <= lo && return 0.0
-    bin_edges = range(lo, hi, length=nbins+1)
-    counts = zeros(Int, nbins)
-    for x in v
-        idx = min(nbins, max(1, Int(floor((x-lo)/(hi-lo)*nbins))+1))
-        counts[idx] += 1
-    end
-    total = sum(counts)
-    total == 0 && return 0.0
-    sumB, wB, max_var, best = 0.0, 0.0, 0.0, 0
-    bin_centers = (bin_edges[1:end-1] .+ bin_edges[2:end]) ./ 2
-    sumT = sum(bin_centers .* counts)
-    for i in 1:nbins
-        wB += counts[i]
-        wB == 0 && continue
-        wF = total - wB
-        wF <= 0 && break
-        sumB += bin_centers[i] * counts[i]
-        mB = sumB / wB
-        mF = (sumT - sumB) / wF
-        var_between = wB * wF * (mB - mF)^2 / (total^2)
-        if var_between > max_var
-            max_var = var_between
-            best = i
-        end
-    end
-    return best > 0 ? bin_centers[best] : 0.0
 end
 
 function molecule_roi_mask(img::SXMImage, cfg::PreprocessConfig=PreprocessConfig())
@@ -371,23 +145,6 @@ function molecule_roi_mask(img::SXMImage, cfg::PreprocessConfig=PreprocessConfig
     mask = _largest_component(mask)
     mask = _dilate_mask(mask, max(0, cfg.roi_dilate_px ÷ max(1, cfg.stride)))
     return xs, ys, mask
-end
-
-function _weighted_axis(x, y, z)
-    keep = isfinite.(x) .& isfinite.(y) .& isfinite.(z)
-    x, y, z = x[keep], y[keep], z[keep]
-    isempty(z) && error("Cannot estimate weighted axis: no finite points")
-    w = z .- minimum(z) .+ EPS  # all pixels contribute, not just the brightest
-    sw = sum(w)
-    ox = sum(x .* w) / sw
-    oy = sum(y .* w) / sw
-    X = hcat(x .- ox, y .- oy)
-    W = Diagonal(w ./ maximum(w))
-    _, _, V = svd(W * X; full=false)
-    axis = collect(V[:, 1])
-    axis ./= max(norm(axis), EPS)
-    (axis[2] < 0 || (abs(axis[2]) < EPS && axis[1] < 0)) && (axis .*= -1)
-    return (origin=(ox, oy), axis=axis)
 end
 
 function _bilinear(xs, ys, z, x0, y0)
@@ -568,9 +325,11 @@ function extract_slide(img::SXMImage, cfg::SlideConfig=SlideConfig())
         θ = deg2rad(cfg.axis_angle_deg)
         axis = [cos(θ), sin(θ)]
     else
-        # Use 2D model's ROI logic (fused Z, same mask as chain sweep) for axis
-        img2d = GaussianFit2D.read_sxm(img.filepath)
-        _, _, _, _, xr2, yr2, zr2, _ = GaussianFit2D._fused_roi_data(img2d,
+        # Use 2D model's ROI logic (fused Z, same mask as chain sweep) for axis.
+        # `img` is now a STMSXMIO.SXMImage, the same type GaussianFit2D uses, so
+        # we pass it directly instead of re-reading the file (the previous code
+        # re-parsed the .sxm solely to cross the type boundary).
+        _, _, _, _, xr2, yr2, zr2, _ = GaussianFit2D._fused_roi_data(img,
             GaussianFit2D.PatternConfig(filepath=img.filepath, channel=cfg.channel, direction="fwd",
                 stride=cfg.stride, flatten=cfg.flatten, smooth_radius_px=cfg.smooth_radius_px))
         axis2d = GaussianFit2D._weighted_roi_axis(xr2, yr2, zr2)
@@ -800,9 +559,11 @@ function fit_chain_1d_bootstrapped(filepath::String;
     
     Compares N values N₁ - halfwidth … N₁ + halfwidth with 1D bootstrap init.
     This is comparable to a full sweep but ~3-5× faster."""
-    # Step 1: Extract and fit 1D slide (using STMMolecularFit's own pipeline)
-    img_own = read_sxm(filepath)
-    slide = extract_slide(img_own, slide_config)
+    # Step 1: Extract and fit 1D slide (using STMMolecularFit's own pipeline).
+    # A single read_sxm now feeds both the 1D and 2D pipelines: read_sxm returns
+    # a STMSXMIO.SXMImage, the same type GaussianFit2D.chain_gaussian_sweep takes.
+    img = read_sxm(filepath)
+    slide = extract_slide(img, slide_config)
     slide_files = write_slide_outputs(slide, slide_config)
     fit = fit_slide(slide_files.profile, fit_config)
     fit_files = write_fit_outputs(fit, fit_config)
@@ -824,13 +585,12 @@ function fit_chain_1d_bootstrapped(filepath::String;
     ccfg.init_sigma_parallel = isfinite(ccfg.init_sigma_parallel) ? ccfg.init_sigma_parallel : sigma_parallel_1d
     ccfg.boot_sweep_halfwidth = boot_halfwidth
 
-    # Step 4: Run narrow 2D chain sweep
-    img_2d = GaussianFit2D.read_sxm(filepath)
+    # Step 4: Run narrow 2D chain sweep (reuse the single image read above)
     pcfg = GaussianFit2D.PatternConfig(
         filepath=filepath, channel=slide_config.channel, direction=slide_config.direction,
         stride=1, flatten="plane+rows", smooth_radius_px=1,
         output_dir=slide_config.output_dir)
-    results, best_chain, ctx = GaussianFit2D.chain_gaussian_sweep(img_2d, pcfg, ccfg)
+    results, best_chain, ctx = GaussianFit2D.chain_gaussian_sweep(img, pcfg, ccfg)
 
     # Write outputs
     mkpath(slide_config.output_dir)
@@ -920,6 +680,9 @@ function compare_2d_1d_by_N(filepath::String;
     COLORMAP_RESID = cgrad([:blue, :lightgray, :red])
     mkpath(output_dir)
 
+    # ━━━ read once, feed both pipelines ━━━
+    img = read_sxm(filepath)
+
     # ━━━ 1D extraction + fit ━━━
     println("Extracting 1D slide...")
     slide_cfg = SlideConfig(
@@ -927,8 +690,7 @@ function compare_2d_1d_by_N(filepath::String;
         support_noise_k=support_noise_k, support_padding_nm=support_padding_nm,
         channel=channel, direction=direction,
         output_dir=output_dir, no_plot=true)
-    img_own = read_sxm(filepath)
-    slide = extract_slide(img_own, slide_cfg)
+    slide = extract_slide(img, slide_cfg)
     write_slide_outputs(slide, slide_cfg)
 
     println("Fitting 1D profile...")
@@ -941,7 +703,6 @@ function compare_2d_1d_by_N(filepath::String;
 
     # ━━━ 2D chain sweep ━━━
     println("Running 2D chain sweep...")
-    img = GaussianFit2D.read_sxm(filepath)
     pcfg = GaussianFit2D.PatternConfig(
         filepath=filepath, channel=channel, direction=direction,
         stride=1, flatten="plane+rows", smooth_radius_px=1,
