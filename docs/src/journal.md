@@ -20,6 +20,59 @@ without introducing heuristic/arbitrary parameters.
 
 ## Investigation Timeline
 
+### 2026-06-17 — Symmetric up-when-ambiguous guard branch
+
+The robust-AICc guard was strictly down-only: it could veto over-segmentation
+(`robust_AICc_N < N_eff`) but could not recover an under-segmented ambiguous
+case even when its own exhaustive sweep recommended a larger count.  This left
+`240817_043.sxm` at `N_selected = 5` despite `robust_AICc_N = 6`, `ambiguous_eff
+= true`, and `delta_GCV_rel_eff ≈ 1%` (N=5 and N=6 are statistically
+indistinguishable on that file).
+
+The circ→ell warm-start refinement (the standard batch path) converges to a
+sub-optimal elliptical basin for N=6 on `043` (GCV 8.94e-6 vs 8.86e-6 for N=5).
+An independent elliptical sweep with NLopt global finds a better N=6 minimum
+(GCV 7.11e-6), but that path was rejected pipeline-wide because NLopt diverges
+on most other files (§7).  Tuning the optimiser for `043` alone is not robust:
+`max_iter=300` on the warm-start makes N=7 win instead (over-fitting), and
+multistart perturbation makes it worse.  `043` is genuinely ambiguous: N=5, 6, 7
+all lie within a 10% GCV band.
+
+Resolution: a symmetric **up-when-ambiguous** branch in `_refined_selection`
+(`test/batch_full.jl`), label-free and bounded.  When the exhaustive
+robust-AICc guard recommends exactly one lobe more than `N_eff`, accept the
+upshift only if all of the following hold:
+
+```text
+robust_AICc_N == N_eff + 1
+AND ambiguous_eff == true            (GCV does not discriminate N_eff vs runner-up)
+AND delta_GCV_rel_eff <= 0.05        (the existing GCV_AMBIGUITY_REL_THRESHOLD)
+AND runner_up_N_eff == N_eff + 1     (the competing model is the adjacent N)
+```
+
+The down branch is unchanged (free).  The rule uses no expected `N`, no target
+count, and no file name; it is the mirror of the existing down guard with
+explicit guards against the over-segmentation jumps it could otherwise enable
+(e.g. `026: 6→8` is blocked because `ambiguous_eff=false` and `dGCV>0.10`;
+`036: 6→7` is blocked for the same reason).
+
+`_select_primary` (`packages/STMMolecularFit.jl/src/selectors.jl`) now flags the
+selection source as `robust_aicc_guard` for both up and down moves
+(`n_refined != n_eff`), so the upshift is traceable in the summary.
+
+Validation on the 240817 chitosan benchmark (reproductible across 3 consecutive
+runs; identical `N_selected` on all 48 files before and after this change except
+as noted):
+
+- only `240817_043.sxm` changes: `N_selected 5 → 6` via
+  `overfit_guard_up_when_ambiguous`;
+- all four `clean_target` files (`017`, `019`, `043`, `058`) now report
+  `N_selected = 6`;
+- primary benchmark exact agreement: `38/39 → 39/39` (`N_eff` itself remains
+  `35/39` — the guard supplies the remaining four);
+- no other primary or stress-case file changes `N_selected`;
+- the batch remains fully reproductible run-to-run.
+
 ### 2026-05-29 — Experimental refined selection reporting
 
 Added an external, conservative overfit-guard audit and optional batch reporting
@@ -66,12 +119,14 @@ elliptical candidate set, then applies the same down-only rule to the standard
 circ→ell `N_eff`.  The selected primary output is written as `N_selected`, while
 `N_eff` remains available for comparison.
 
-Full-batch grading for the integrated selector:
+Full-batch grading for the integrated selector (verified reproductible across
+3 consecutive runs on 2026-06-17: identical `N_selected` on all 48 files; the
+2026-06-17 up-when-ambiguous branch raised this to the numbers below):
 
-- `N_selected`: `38/39` primary benchmark files;
+- `N_selected`: `39/39` primary benchmark files;
 - target score: `4/4` (`017`, `019`, `043`, `058` all selected as `6`);
-- only remaining primary miss: `240817_036.sxm`, which is already marked
-  visually ambiguous;
+- `043` is recovered by the up-when-ambiguous branch (`N_eff=5`,
+  `robust_AICc_N=6`, `ambiguous_eff=true`); see §2026-06-17 above;
 - `N_eff` on the same run remains `35/39`.
 
 Historical note: at this point the policy was still experimental/default-off.

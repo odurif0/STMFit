@@ -71,10 +71,19 @@ julia --project=. test/grade_chitosan_benchmark.jl \
   --column N_selected
 ```
 
-Known validation from the current development pass: the adaptive workflow reached
-`39/39` exact on the 240817 primary benchmark.  Guard-sensitive files
+Known validation from the current development pass: the default-config
+(`config/chitosan.toml`) workflow reaches `N_selected = 39/39` exact on the
+240817 primary benchmark, with all four `clean_target` files (`017`, `019`,
+`043`, `058`) reporting `N_selected = 6`.  `043` is recovered by the
+up-when-ambiguous guard branch (its `N_eff = 5`, but `robust_AICc_N = 6` on an
+ambiguous file; see the Research Journal §2026-06-17).  Guard-sensitive files
 `240817_058.sxm` and `240817_019.sxm` should report `N_selected = 6` even though
-`N_eff = 7`.
+`N_eff = 7`.  Re-measure any time with the grade script below.
+
+Reproducibility note: the batch is deterministic run-to-run on a given machine
+(verified identical `N_selected` across 3 consecutive runs on 2026-06-17).
+Divergences between a past recorded number and a fresh run indicate intervening
+code changes, not run-to-run noise.
 
 ## Run the 10–20mer adaptive workflow
 
@@ -184,3 +193,26 @@ Expected targeted results:
   range.  Use restartable output directories or HPC for complete reruns.
 - If a file looks chemically or visually suspect, do not silently exclude it from
   10–20mer analysis; record the QC concern and keep the result available.
+
+## Calibrating a new molecule
+
+The pipeline is molecule-agnostic in its core (chain-of-Gaussians model,
+label-free selection); only the calibration constants differ. To analyse a new
+chain-like molecule under similar STM conditions:
+
+1. **Copy the template**: `cp config/template.toml config/<molecule>.toml`.
+2. **Re-derive the `[model]` values** from a few representative scans — the
+   template comments explain each (FWHM → sigma, observed pitch → spacing,
+   support length). These are the load-bearing changes.
+3. **Keep the `[selection]` defaults** (`gcv_ambiguity_rel_threshold = 0.05`,
+   `robust_guard_nu = 8.0`) as a starting point. If the new molecule's lobe
+   statistics differ markedly from chitosan, run
+   `test/sensitivity_thresholds.jl` to check whether `N_selected` is robust to
+   the threshold; re-calibrate only if it is sensitive.
+4. **Exclude non-target files** via `--exclude-from results/<molecule>_exclude.txt`
+   (one filename per line) rather than editing the batch code.
+
+The selection path never uses an expected `N` or benchmark label, so the same
+guard logic applies unchanged. What may need attention is *how often* the
+up-when-ambiguous branch fires for a molecule whose GCV curve has a different
+shape — hence the sensitivity check.

@@ -147,6 +147,7 @@ will thank present you.
 | Component | Role |
 |-----------|------|
 | `STMFitCore.jl` | Shared utilities: κ penalty, spacing constraints |
+| `STMSXMIO.jl` | Shared SXM (Nanonis) I/O: `SXMImage`/`read_sxm` + preprocessing helpers |
 | `GaussianFit1D.jl` | 1D slide profile fitting and QC comparison |
 | `GaussianFit2D.jl` | 2D chain model: circular + elliptical Gaussian lobes |
 | `STMMolecularFit.jl` | Orchestration: SXM I/O, slide extraction, batch summaries |

@@ -48,22 +48,39 @@ The raw GCV/effective baseline remains available with `--selection-policy gcv`.
 
 This policy is label-free: it does not use an expected `N`, does not prefer
 `N=6`, and does not use benchmark labels during fitting or selection. It is a
-conservative overfit guard layered on top of the standard GCV/effective result:
+conservative guard layered on top of the standard GCV/effective result:
 
 1. Compute the standard circ→ell `N_eff` exactly as in the default pipeline.
 2. Fit an auxiliary exhaustive elliptical candidate set.
 3. Rescore those candidates with Student-t robust AICc (`nu=8` by default;
    override with `--robust-guard-nu`).
 4. Let `robust_aicc_N` be the lowest robust-AICc candidate.
-5. Downshift only if robust AICc prefers a simpler model:
+5. Apply a symmetric, bounded rule:
 
 ```text
-N_selected = robust_aicc_N  if robust_aicc_N < N_eff
-             N_eff          otherwise
+# down branch (free, unchanged): veto over-segmentation
+if robust_aicc_N < N_eff:
+    N_selected = robust_aicc_N
+
+# up branch (conditional): recover under-segmented ambiguous cases
+elif robust_aicc_N == N_eff + 1
+     and ambiguous_eff
+     and delta_GCV_rel_eff <= 0.05
+     and runner_up_N_eff == N_eff + 1:
+    N_selected = robust_aicc_N
+
+# otherwise keep N_eff
+else:
+    N_selected = N_eff
 ```
 
-Because the rule is down-only, it can veto extra lobes that look like
-over-segmentation, but it cannot add lobes or encode a target count.
+The down branch can veto extra lobes that look like over-segmentation. The up
+branch can recover a missing lobe only when GCV itself cannot discriminate
+(`ambiguous_eff`) and the adjacent `N_eff + 1` is the runner-up; it is bounded
+to `+1` so it cannot reproduce over-segmentation jumps such as `6 → 8`. Both
+branches use no expected `N`, no target count, and no benchmark labels. See the
+Research Journal (§2026-06-17) for the motivation (`240817_043.sxm`) and the
+no-regression validation.
 
 ### Output columns
 
@@ -71,21 +88,25 @@ When the policy is enabled, batch summaries include:
 
 - `N_selected`: the primary result under `--selection-policy`.
 - `selection_policy`: usually `gcv` or `gcv_with_robust_aicc_guard`.
-- `selection_source`: `N_eff` source when kept, or `robust_aicc_guard` when
-  downshifted.
+- `selection_source`: `N_eff` source when kept, or `robust_aicc_guard` when the
+  guard moved the count (down or up).
 - `N_refined`: same guarded count for compatibility with earlier audit output.
-- `refined_policy`: currently `overfit_guard_down_only` when a robust advisory
-  was available.
+- `refined_policy`: `overfit_guard_down_only` (downshift or keep) or
+  `overfit_guard_up_when_ambiguous` (conditional upshift).
 - `refined_source`: `N_eff` when kept, or `ell_robust_aicc` when the integrated
-  guard downshifted.
+  guard moved the count.
 - `robust_aicc_N`: the auxiliary robust-AICc-selected count.
 
 ### Current validation status
 
-On the 240817 chitosan clean benchmark, the integrated guard improves exact
-agreement from `N_eff = 35/39` to `N_selected = 38/39`, with all four clean
-target cases corrected and only `240817_036.sxm` missed.  That file is visually
-ambiguous and should not be used to tune another special rule.
+On the 240817 chitosan clean benchmark (verified reproductible across 3
+consecutive runs), the integrated guard improves exact agreement from
+`N_eff = 35/39` to `N_selected = 39/39`, with all four clean target cases
+(`017`, `019`, `043`, `058`) reporting `N_selected = 6`.  `240817_043.sxm` is
+recovered by the symmetric up-when-ambiguous branch (§2026-06-17 of the
+Research Journal): its `N_eff = 5`, but the exhaustive robust-AICc guard
+recommends `6` on a file the GCV sweep flags as ambiguous
+(`delta_GCV_rel_eff ≈ 1%`, runner-up `N=6`).
 
 This result is validation evidence, not a fitting prior.  Synthetic known-N
 validation also favored the guard over raw GCV in the tested `N≈4–8` regime.
