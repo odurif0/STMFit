@@ -43,6 +43,13 @@ min_amplitude_fraction = 0.3   # minimum lobe amplitude (fraction of max data)
 chain_tilted_baseline = true   # linear tilt in 2D background
 chain_circular_sigmas = false  # σ∥=σ⟂ (circular model)
 
+[selection]
+# Model-selection thresholds. These tune the label-free selection rule
+# (robust-AICc guard + up-when-ambiguous branch), not the physics.
+# Re-validate on a new molecule's GCV curve if its lobe statistics differ.
+gcv_ambiguity_rel_threshold = 0.05  # relative GCV gap below which two N are "indistinguishable"
+robust_guard_nu = 8.0                # Student-t degrees of freedom for the robust-AICc guard
+
 [preprocessing]
 stride = 1                     # subsampling stride
 flatten = "plane+rows"         # background flattening method

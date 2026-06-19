@@ -45,6 +45,10 @@ min_amplitude_fraction = 0.3
 chain_tilted_baseline = true
 chain_circular_sigmas = false
 
+[selection]
+gcv_ambiguity_rel_threshold = 0.05
+robust_guard_nu = 8.0
+
 [preprocessing]
 stride = 1
 flatten = "plane+rows"

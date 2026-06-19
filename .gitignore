@@ -7,3 +7,5 @@ results/
 .theme
 # Personal HPC config (MPCDF username + paths) — keep the .example tracked
 hpc/remote.env
+chitosan_sensitivity_*.toml
+results/sensitivity/

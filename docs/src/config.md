@@ -48,6 +48,50 @@ julia --project=. test/batch_full.jl 28 \
 By default this skips plots for `quality = "excluded"`; override with
 `--skip-plot-quality excluded,ambiguous` if ambiguous files should be hidden too.
 
+### Sections
+
+A calibration TOML has three sections; only `[model]` is mandatory (the others
+have built-in defaults):
+
+- **`[model]`** — physical calibration: lobe width (`sigma_parallel_*`), repeat
+  spacing, ROI/support geometry, optimizer budget, overlap floor. These are the
+  values to re-derive for a new molecule.
+- **`[selection]`** — model-selection thresholds (label-free). Keep the defaults
+  unless a sensitivity check (see `test/sensitivity_thresholds.jl`) shows your
+  molecule's GCV curve needs a different ambiguity band:
+  - `gcv_ambiguity_rel_threshold` (default `0.05`): relative GCV gap below which
+    two N are considered indistinguishable. Feeds the up-when-ambiguous branch
+    and the `ambiguous_eff` summary column. Overridable per-run with
+    `--gcv-ambiguity-rel-threshold`.
+  - `robust_guard_nu` (default `8.0`): Student-t degrees of freedom for the
+    robust-AICc guard. Overridable per-run with `--robust-guard-nu`.
+- **`[preprocessing]`** — SXM channel name/direction, stride, flatten, smoothing.
+
+### Calibrating a new molecule
+
+Start from the annotated template:
+
+```bash
+cp config/template.toml config/my_molecule.toml
+```
+
+The template comments explain how to derive each value from a few representative
+scans (FWHM -> sigma, observed pitch -> spacing, etc.). Only `[model]` values
+must change for a molecule on the same STM; the `[selection]` defaults are a
+reasonable starting point but should be re-validated if the lobe statistics
+differ markedly from chitosan.
+
+To exclude non-target files (noise, test images, other molecules), pass an
+exclusion list instead of relying on hard-coded defaults:
+
+```bash
+julia --project=. test/batch_full.jl 48 \
+  --config config/my_molecule.toml \
+  --exclude-from results/my_molecule_exclude.txt
+```
+
+The exclusion file is one `.sxm` filename per line (`#` comments allowed).
+
 ## Generic adaptive-support workflow
 
 The benchmark-validated generic workflow is `adaptive_support_rescue`: standard

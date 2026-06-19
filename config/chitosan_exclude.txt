@@ -1,0 +1,22 @@
+# Chitosan 240817 exclusions: non-chitosan / ambiguous / test images.
+# One filename per line. Lines starting with '#' are ignored.
+# Pass to batch_full.jl via:  --exclude-from results/chitosan_exclude.txt
+240817_001.sxm
+240817_008.sxm
+240817_009.sxm
+240817_010.sxm
+240817_011.sxm
+240817_012.sxm
+240817_013.sxm
+240817_014.sxm
+240817_016.sxm
+240817_020.sxm
+240817_022.sxm
+240817_023.sxm
+240817_025.sxm
+240817_028.sxm
+240817_056.sxm
+240817_057.sxm
+240817_063.sxm
+240817_015.sxm
+240817_027.sxm

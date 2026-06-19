@@ -34,13 +34,19 @@ import STMMolecularFit: _select_primary,
     SUPPORT_MARG_REGRET_MARGIN
 
 list_sxm_files(dir) = sort([f for f in readdir(dir) if endswith(lowercase(f), ".sxm")])
-const EXCLUDE = Set(["240817_001.sxm", "240817_008.sxm", "240817_009.sxm",
-                      "240817_010.sxm", "240817_011.sxm", "240817_012.sxm",
-                      "240817_013.sxm", "240817_014.sxm", "240817_016.sxm",
-                      "240817_020.sxm", "240817_022.sxm", "240817_023.sxm",
-                      "240817_025.sxm", "240817_028.sxm", "240817_056.sxm",
-                      "240817_057.sxm", "240817_063.sxm",
-                      "240817_015.sxm", "240817_027.sxm"])
+
+# Reads an exclusion list (one filename per line, '#' comments allowed) from a file.
+# Returns an empty Set if path is empty or absent.
+function _read_exclude_set(path::AbstractString)
+    out = Set{String}()
+    (isempty(path) || !isfile(path)) && return out
+    for line in eachline(path)
+        s = strip(line)
+        (isempty(s) || startswith(s, "#")) && continue
+        push!(out, basename(s))
+    end
+    return out
+end
 
 function _parse_cli(args)
     n_files = 48
@@ -49,13 +55,15 @@ function _parse_cli(args)
     config_file = "config/chitosan.toml"
     refined_advisory = ""
     selection_policy_cli = nothing
-    robust_guard_nu = 8.0
+    robust_guard_nu_cli = nothing
+    gcv_ambiguity_rel_threshold_cli = nothing
     cv_folds = 5
-    data_dir = get(ENV, "STMFIT_DATA_DIR", "/home/durif/Rebecca/data/data/20240817_LHe_Cu100")
+    data_dir = get(ENV, "STMFIT_DATA_DIR", "")
     outdir = "results/best_plots"
     tsv = "results/batch_triage_20240817_relaxed.tsv"
     skip_1d = false
     plot_manifest = ""
+    exclude_from = ""
     skip_plot_quality = Set(["excluded"])
     i = 1
     while i <= length(args)
@@ -96,11 +104,20 @@ function _parse_cli(args)
             continue
         elseif arg == "--robust-guard-nu"
             i < length(args) || error("--robust-guard-nu requires a numeric value")
-            robust_guard_nu = parse(Float64, args[i + 1])
+            robust_guard_nu_cli = parse(Float64, args[i + 1])
             i += 2
             continue
         elseif startswith(arg, "--robust-guard-nu=")
-            robust_guard_nu = parse(Float64, split(arg, "=", limit=2)[2])
+            robust_guard_nu_cli = parse(Float64, split(arg, "=", limit=2)[2])
+            i += 1
+            continue
+        elseif arg == "--gcv-ambiguity-rel-threshold"
+            i < length(args) || error("--gcv-ambiguity-rel-threshold requires a numeric value")
+            gcv_ambiguity_rel_threshold_cli = parse(Float64, args[i + 1])
+            i += 2
+            continue
+        elseif startswith(arg, "--gcv-ambiguity-rel-threshold=")
+            gcv_ambiguity_rel_threshold_cli = parse(Float64, split(arg, "=", limit=2)[2])
             i += 1
             continue
         elseif arg == "--data-dir"
@@ -110,6 +127,15 @@ function _parse_cli(args)
             continue
         elseif startswith(arg, "--data-dir=")
             data_dir = split(arg, "=", limit=2)[2]
+            i += 1
+            continue
+        elseif arg == "--exclude-from"
+            i < length(args) || error("--exclude-from requires a file path")
+            exclude_from = args[i + 1]
+            i += 2
+            continue
+        elseif startswith(arg, "--exclude-from=")
+            exclude_from = split(arg, "=", limit=2)[2]
             i += 1
             continue
         elseif arg == "--outdir"
@@ -178,13 +204,18 @@ function _parse_cli(args)
     1 <= chunk_idx <= chunk_total || error("chunk index must satisfy 1 <= i <= n")
     n_files >= 0 || error("N_files must be >= 0")
     cfg_model = isfile(config_file) ? get(TOML.parsefile(config_file), "model", Dict{String,Any}()) : Dict{String,Any}()
+    cfg_selection = isfile(config_file) ? get(TOML.parsefile(config_file), "selection", Dict{String,Any}()) : Dict{String,Any}()
     selection_policy_cfg = split(lowercase(String(get(cfg_model, "selection_policy", "gcv"))), "-"; keepempty=false) |> x -> join(x, "_")
     selection_policy = selection_policy_cli === nothing ? selection_policy_cfg : selection_policy_cli
     selection_policy in ("gcv", "gcv_with_robust_aicc_guard", "spatial_blocked_cv", "support_marginalized_gcv", "support_marginalized_gcv_guard", "slope_heuristic_mdl", "stability_selection", "local_lobe_evidence", "laplace_evidence", "laplace_evidence_guard", "fwd_bwd_consensus", "adaptive_support_rescue") ||
         error("Unknown --selection-policy '$selection_policy'; use gcv, gcv_with_robust_aicc_guard, spatial_blocked_cv, support_marginalized_gcv, support_marginalized_gcv_guard, slope_heuristic_mdl, stability_selection, local_lobe_evidence, laplace_evidence, laplace_evidence_guard, fwd_bwd_consensus, or adaptive_support_rescue")
+    # Selection thresholds: CLI flag overrides TOML [selection], which overrides the built-in default.
+    robust_guard_nu = robust_guard_nu_cli === nothing ? Float64(get(cfg_selection, "robust_guard_nu", 8.0)) : robust_guard_nu_cli
+    gcv_ambiguity_rel_threshold = gcv_ambiguity_rel_threshold_cli === nothing ? Float64(get(cfg_selection, "gcv_ambiguity_rel_threshold", 0.05)) : gcv_ambiguity_rel_threshold_cli
     isfinite(robust_guard_nu) && robust_guard_nu > 0 || error("--robust-guard-nu must be positive")
+    isfinite(gcv_ambiguity_rel_threshold) && gcv_ambiguity_rel_threshold > 0 || error("--gcv-ambiguity-rel-threshold must be positive")
     cv_folds >= 2 || error("--cv-folds must be >= 2")
-    return n_files, chunk_idx, chunk_total, config_file, refined_advisory, selection_policy, robust_guard_nu, cv_folds, data_dir, outdir, tsv, skip_1d, plot_manifest, skip_plot_quality
+    return n_files, chunk_idx, chunk_total, config_file, refined_advisory, selection_policy, robust_guard_nu, gcv_ambiguity_rel_threshold, cv_folds, data_dir, exclude_from, outdir, tsv, skip_1d, plot_manifest, skip_plot_quality
 end
 
 const FWHM_SIGMA = 2.355
@@ -210,7 +241,8 @@ const SUMMARY_HEADER = [
     "best_plot", "file_dir"
 ]
 
-const GCV_AMBIGUITY_REL_THRESHOLD = 0.05
+# GCV_AMBIGUITY_REL_THRESHOLD is now resolved in _parse_cli (CLI > TOML [selection] > 0.05)
+# and bound as a const at line ~293. See _ambiguity_stats / _effective_ambiguity_stats for usage.
 
 function _ensure_summary_schema!(summary_file::AbstractString)
     isfile(summary_file) || return false
@@ -275,8 +307,11 @@ function _load_skip_plot_files(path::AbstractString, skip_quality)
     return skip_files
 end
 
-const N_FILES, CHUNK_IDX, CHUNK_TOTAL, CONFIG_FILE, REFINED_ADVISORY_FILE, SELECTION_POLICY, ROBUST_GUARD_NU, CV_FOLDS, _data_dir_parsed, _outdir_parsed, _tsv_parsed, SKIP_1D, PLOT_MANIFEST_FILE, SKIP_PLOT_QUALITY = _parse_cli(ARGS)
+const N_FILES, CHUNK_IDX, CHUNK_TOTAL, CONFIG_FILE, REFINED_ADVISORY_FILE, SELECTION_POLICY, ROBUST_GUARD_NU, GCV_AMBIGUITY_REL_THRESHOLD, CV_FOLDS, _data_dir_parsed, _exclude_from_parsed, _outdir_parsed, _tsv_parsed, SKIP_1D, PLOT_MANIFEST_FILE, SKIP_PLOT_QUALITY = _parse_cli(ARGS)
 const DATA_DIR = _data_dir_parsed
+isempty(DATA_DIR) && error("No data directory: set STMFIT_DATA_DIR or pass --data-dir <path>")
+isdir(DATA_DIR) || error("Data directory not found: $DATA_DIR")
+const EXCLUDE_SET = _read_exclude_set(_exclude_from_parsed)
 const OUTDIR = _outdir_parsed
 const TSV = _tsv_parsed
 mkpath(OUTDIR)
@@ -311,11 +346,21 @@ function _load_refined_advisory(path::AbstractString)
     return advisory
 end
 
-function _refined_selection(fn::AbstractString, n_eff::Int, advisory::Dict{String,Int})
+function _refined_selection(fn::AbstractString, n_eff::Int, advisory::Dict{String,Int};
+        amb_eff::Bool=false, dgcv_rel_eff::Real=NaN, runner_eff=0)
     robust_n = get(advisory, _basename_sxm(fn), nothing)
     robust_n === nothing && return (n_eff, "none", "N_eff", "NA")
     if robust_n < n_eff
         return (robust_n, "overfit_guard_down_only", "robust_aicc", robust_n)
+    elseif robust_n == n_eff + 1 && amb_eff && isfinite(dgcv_rel_eff) &&
+           dgcv_rel_eff <= GCV_AMBIGUITY_REL_THRESHOLD && runner_eff == n_eff + 1
+        # Symmetric up-branch: when the file is GCV-ambiguous and the
+        # exhaustive robust-AICc guard recommends exactly one more lobe,
+        # accept the upshift.  Generic and label-free; bounded to +1 so it
+        # cannot reproduce over-segmentation jumps such as 6->8.
+        # (runner_eff may be "NA" from _effective_ambiguity_stats; the == check
+        # then simply fails, which is the correct conservative behaviour.)
+        return (robust_n, "overfit_guard_up_when_ambiguous", "robust_aicc", robust_n)
     end
     return (n_eff, "overfit_guard_down_only", "N_eff", robust_n)
 end
@@ -887,8 +932,8 @@ else
     @warn "Triage TSV not found: $TSV; discovering SXM files directly from $DATA_DIR"
     cands = [(fn, 0, Inf) for fn in list_sxm_files(DATA_DIR)]
 end
-# Exclude files that are not chitosan chains
-cands = [(fn, n, bic) for (fn, n, bic) in cands if !(fn in EXCLUDE)]
+# Apply optional exclusion list (e.g. --exclude-from results/chitosan_exclude.txt)
+cands = [(fn, n, bic) for (fn, n, bic) in cands if !(fn in EXCLUDE_SET)]
 to_process_base = cands[1:min(N_FILES, length(cands))]
 to_process_all = CHUNK_TOTAL == 1 ? to_process_base : [f for (i, f) in enumerate(to_process_base) if mod1(i, CHUNK_TOTAL) == CHUNK_IDX]
 if CHUNK_TOTAL > 1
@@ -896,8 +941,15 @@ if CHUNK_TOTAL > 1
 end
 
 # ── Skip already-processed files (plot exists + enriched summary has ok row) ──
+# Derive the summary filename from the configured max_overlap (not hard-coded to
+# chitosan's 0.60).  0.60 -> "060", 0.65 -> "065", preserving the legacy name
+# for the default chitosan config.
+_ovl_tag = let
+    m = TOML.parsefile(CONFIG_FILE)
+    haskey(m, "model") ? @sprintf("%03d", round(Int, Float64(get(m["model"], "max_overlap", 0.60)) * 100)) : "060"
+end
 already_done = Set{String}()
-summary_name = CHUNK_TOTAL == 1 ? "summary_overlap060_hard.tsv" : @sprintf("summary_overlap060_hard_chunk%02dof%02d.tsv", CHUNK_IDX, CHUNK_TOTAL)
+summary_name = CHUNK_TOTAL == 1 ? "summary_overlap$(_ovl_tag)_hard.tsv" : @sprintf("summary_overlap%s_hard_chunk%02dof%02d.tsv", _ovl_tag, CHUNK_IDX, CHUNK_TOTAL)
 summary_file = joinpath(OUTDIR, summary_name)
 summary_schema_ok = _ensure_summary_schema!(summary_file)
 if summary_schema_ok
@@ -922,18 +974,22 @@ if length(already_done) > 0
 end
 
 # ── Load calibration ──
+isfile(CONFIG_FILE) || error("Config file not found: $CONFIG_FILE")
 @info "Loading calibration from $CONFIG_FILE"
 cfg_toml = TOML.parsefile(CONFIG_FILE)
+haskey(cfg_toml, "model") || error("Config $CONFIG_FILE is missing a [model] section")
 model = cfg_toml["model"]
-preproc = cfg_toml["preprocessing"]
+preproc = get(cfg_toml, "preprocessing", Dict{String,Any}())
 const REFINED_ADVISORY = _load_refined_advisory(REFINED_ADVISORY_FILE)
 if !isempty(REFINED_ADVISORY)
     @info "Loaded refined-selection advisory" file=REFINED_ADVISORY_FILE n=length(REFINED_ADVISORY)
 end
-@info "Selection policy" policy=SELECTION_POLICY robust_guard_nu=ROBUST_GUARD_NU cv_folds=CV_FOLDS
+@info "Selection policy" policy=SELECTION_POLICY robust_guard_nu=ROBUST_GUARD_NU gcv_ambiguity_rel_threshold=GCV_AMBIGUITY_REL_THRESHOLD cv_folds=CV_FOLDS
 
-const SIGMA_MIN_HARMONIZED_NM = model["sigma_parallel_min_nm"]
-const SIGMA_MAX_HARMONIZED_NM = model["sigma_parallel_max_nm"]
+# Calibration keys with molecule-agnostic defaults (chitosan values). A partial
+# config TOML is tolerated; only [model] itself is mandatory.
+const SIGMA_MIN_HARMONIZED_NM = Float64(get(model, "sigma_parallel_min_nm", 0.191))
+const SIGMA_MAX_HARMONIZED_NM = Float64(get(model, "sigma_parallel_max_nm", 0.509))
 
 # ── 2D config (from calibration) ──
 pcfg = GaussianFit2D.PatternConfig(filepath="", channel="Z", direction="fwd",
@@ -942,14 +998,16 @@ pcfg = GaussianFit2D.PatternConfig(filepath="", channel="Z", direction="fwd",
     smooth_radius_px=get(preproc, "smooth_radius_px", 1),
     output_dir=OUTDIR, no_plot=true)
 ccfg = GaussianFit2D.ChainSweepConfig(n_min=get(model, "n_min", 2), n_max=get(model, "n_max", 14),
-    spacing_min_nm=model["spacing_min_nm"], spacing_max_nm=model["spacing_max_nm"],
-    fit_width_nm=model["fit_width_nm"],
-    support_noise_k=model["support_noise_k"],
-    support_padding_nm=model["support_padding_nm"],
+    spacing_min_nm=Float64(get(model, "spacing_min_nm", 0.35)),
+    spacing_max_nm=Float64(get(model, "spacing_max_nm", 0.75)),
+    fit_width_nm=Float64(get(model, "fit_width_nm", 0.16)),
+    support_noise_k=Float64(get(model, "support_noise_k", 2.5)),
+    support_padding_nm=Float64(get(model, "support_padding_nm", 0.25)),
     support_min_length_nm=get(model, "support_min_length_nm", 1.0),
     support_baseline_quantile=get(model, "support_baseline_quantile", 0.10),
-    max_overlap=model["max_overlap"],
-    global_maxtime=model["global_maxtime"], global_maxiter=model["global_maxiter"],
+    max_overlap=Float64(get(model, "max_overlap", 0.60)),
+    global_maxtime=Float64(get(model, "global_maxtime", 10.0)),
+    global_maxiter=get(model, "global_maxiter", 10000),
     max_iter=get(model, "max_iter", 300),
     multistart=get(model, "multistart", 1),
     cv_folds=get(model, "cv_folds", 5),
@@ -957,8 +1015,8 @@ ccfg = GaussianFit2D.ChainSweepConfig(n_min=get(model, "n_min", 2), n_max=get(mo
     selection_criterion=get(model, "selection_criterion", "gcv"),
     sigma_parallel_min_nm=SIGMA_MIN_HARMONIZED_NM,
     sigma_parallel_max_nm=SIGMA_MAX_HARMONIZED_NM,
-    sigma_perp_min_nm=model["sigma_parallel_min_nm"],
-    sigma_perp_max_nm=model["sigma_parallel_max_nm"],
+    sigma_perp_min_nm=SIGMA_MIN_HARMONIZED_NM,
+    sigma_perp_max_nm=SIGMA_MAX_HARMONIZED_NM,
     kappa_max=get(model, "kappa_max", 10.0),
     kappa_weight=get(model, "kappa_weight", 1.0),
     min_amplitude_fraction=get(model, "min_amplitude_fraction", 0.3),
@@ -972,13 +1030,14 @@ ccfg_circ.chain_circular_sigmas = true
 
 # ── 1D config (from calibration) ──
 scfg = STMMolecularFit.SlideConfig(
-    width_nm=get(model, "fit_width_nm", 0.70),
-    support_noise_k=model["support_noise_k"],
-    support_padding_nm=model["support_padding_nm"],
+    width_nm=Float64(get(model, "fit_width_nm", 0.70)),
+    support_noise_k=Float64(get(model, "support_noise_k", 2.5)),
+    support_padding_nm=Float64(get(model, "support_padding_nm", 0.25)),
     output_dir=OUTDIR, no_plot=true)
 fcfg = STMMolecularFit.FitSlideConfig(
-    min_spacing=model["spacing_min_nm"], max_spacing=model["spacing_max_nm"],
-    max_overlap=model["max_overlap"], output_dir=OUTDIR, no_plot=true)
+    min_spacing=Float64(get(model, "spacing_min_nm", 0.35)),
+    max_spacing=Float64(get(model, "spacing_max_nm", 0.75)),
+    max_overlap=Float64(get(model, "max_overlap", 0.60)), output_dir=OUTDIR, no_plot=true)
 
 # ── Process ──
 # Write header once if summary file is new
@@ -1071,6 +1130,10 @@ Threads.@threads for idx in 1:ntot
         if best_eff === nothing
             best_eff = best_ell_sweep; best_n_eff = best_ell_sweep.n; eff_source = "ell"
         end
+        # Effective-GCV ambiguity for the robust guard's up-when-ambiguous rule.
+        # Computed here (before selection) so the up-branch can use it; the QC
+        # block below recomputes the same values for the summary columns.
+        amb_eff_sel, runner_eff_sel, _, dgcv_rel_eff_sel = _effective_ambiguity_stats(results_ell, results_circ, best_n_eff)
         if SELECTION_POLICY == "gcv_with_robust_aicc_guard"
             robust_n = nothing
             robust_source = "robust_aicc_guard_failed"
@@ -1085,7 +1148,8 @@ Threads.@threads for idx in 1:ntot
                 n_refined, refined_policy, refined_source, robust_aicc_n = (best_n_eff, "overfit_guard_failed", "N_eff", "NA")
             else
                 advisory = Dict{String,Int}(_basename_sxm(fn) => robust_n)
-                n_refined, refined_policy, refined_source, robust_aicc_n = _refined_selection(fn, best_n_eff, advisory)
+                n_refined, refined_policy, refined_source, robust_aicc_n = _refined_selection(fn, best_n_eff, advisory;
+                    amb_eff=amb_eff_sel, dgcv_rel_eff=dgcv_rel_eff_sel, runner_eff=runner_eff_sel)
                 refined_source == "robust_aicc" && (refined_source = robust_source)
             end
         elseif SELECTION_POLICY == "spatial_blocked_cv"
