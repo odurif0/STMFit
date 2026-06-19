@@ -195,13 +195,19 @@ else
     # NOTE: STMFIT_MAIL_USER is passed via --mail-user below (the only place
     # Slurm reads it), so it's not added to --export.
 
+    # Total job memory = MEM_PER_CPU × CPUS_PER_TASK, expressed in MB. Raven's
+    # shared-job submit filter REQUIRES a total `--mem` (with explicit MB unit);
+    # `--mem-per-cpu` is rejected ("memory limit must be provided for shared
+    # jobs"). Viper accepts either, so --mem is the portable choice.
+    MEM_TOTAL_MB=$(( MEM_PER_CPU * CPUS_PER_TASK ))
+
     sbatch_cmd=(
         sbatch
         --export="$export_vars"
         --array="1-$N_CHUNKS"
         --cpus-per-task="$CPUS_PER_TASK"
         --time="$WALLTIME"
-        --mem-per-cpu="$MEM_PER_CPU"
+        --mem="${MEM_TOTAL_MB}MB"
     )
     [[ -n "$STMFIT_MAIL_USER" ]] && sbatch_cmd+=(--mail-user="$STMFIT_MAIL_USER")
     sbatch_cmd+=("$STMFIT_REMOTE_PROJECT/hpc/batch_array.sbatch")

@@ -16,11 +16,15 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --time=04:00:00
-#SBATCH --mem-per-cpu=4000
+#SBATCH --mem=16000MB
 #
 # ── Partition (optional) ─────────────────────────────────────────────────────
 # On Viper the submit filter picks the partition automatically from the
-# resources above — do NOT set --partition there. On Raven you may uncomment:
+# resources above — do NOT set --partition there. On Raven, leave it unset too:
+# the submit filter auto-routes jobs smaller than half a node to the shared
+# pool. NOTE: Raven's shared-job filter REQUIRES a total `--mem` (with the MB
+# suffix) — `--mem-per-cpu` is NOT accepted and triggers
+#   "memory limit must be provided for shared jobs".
 ##SBATCH --partition=general
 #
 # ── Notifications ────────────────────────────────────────────────────────────
