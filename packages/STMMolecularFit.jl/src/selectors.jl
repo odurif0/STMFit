@@ -656,7 +656,9 @@ end
 
 function _select_primary(n_eff::Int, eff_source::AbstractString, refined, policy::AbstractString)
     if policy == "gcv_with_robust_aicc_guard" && refined.robust_n != "NA"
-        return refined.n_refined, policy, refined.n_refined < n_eff ? "robust_aicc_guard" : eff_source
+        # Flag the selection as guard-driven for both down-only and
+        # up-when-ambiguous moves (n_refined != n_eff).
+        return refined.n_refined, policy, refined.n_refined != n_eff ? "robust_aicc_guard" : eff_source
     elseif policy == "spatial_blocked_cv" && refined.robust_n != "NA"
         return refined.n_refined, policy, "spatial_blocked_cv"
     elseif policy in ("support_marginalized_gcv", "support_marginalized_gcv_guard") && refined.robust_n != "NA"
