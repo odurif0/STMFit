@@ -29,7 +29,9 @@ STMFIT_DATA_DIR=/path/to/data julia -t 4 --project=. test/batch_full.jl 48 \
 julia --project=. test/summarize.jl results/best_plots/summary_overlap060_hard.tsv
 ```
 
-Runtime outputs → `results/`.
+Runtime outputs → `results/`. Raw SXM data goes in `data/` (see
+[`data/README.md`](data/README.md) for where to get the benchmark datasets and
+how to organize them).
 
 ## Workflows (`test/`, each standalone)
 

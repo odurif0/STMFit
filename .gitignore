@@ -9,3 +9,8 @@ results/
 hpc/remote.env
 chitosan_sensitivity_*.toml
 results/sensitivity/
+# Raw SXM data lives outside the repo (lab storage / MPCDF ptmp).
+# Keep data/README.md and data/.gitkeep tracked, ignore everything else.
+data/*
+!data/README.md
+!data/.gitkeep
