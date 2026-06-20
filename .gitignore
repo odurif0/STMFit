@@ -14,3 +14,4 @@ results/sensitivity/
 data/*
 !data/README.md
 !data/.gitkeep
+docs/build/

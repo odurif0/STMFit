@@ -116,7 +116,7 @@ This replaces the elliptical NLopt sweep entirely (see Research Journal §7, §1
 
 The batch is embarrassingly parallel and maps onto a Slurm **job array** (one
 task per `--chunk i/n` slice). A self-contained launcher + scripts live in
-[`hpc/`](../../hpc/) (Raven & Viper). See [`hpc/README.md`](../../hpc/README.md)
+`hpc/` (Raven & Viper) — see `hpc/README.md`
 for setup and `hpc/launch_remote.sh` for the push-button workflow:
 
 ```bash
