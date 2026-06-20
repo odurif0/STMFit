@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Configuration · STMFit</title><meta name="title" content="Configuration · STMFit"/><meta property="og:title" content="Configuration · STMFit"/><meta property="twitter:title" content="Configuration · STMFit"/><meta name="description" content="Documentation for STMFit."/><meta property="og:description" content="Documentation for STMFit."/><meta property="twitter:description" content="Documentation for STMFit."/><script data-outdated-warner src="assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="search_index.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="index.html">STMFit</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="index.html">Home</a></li><li><a class="tocitem" href="pipeline.html">Pipeline</a></li><li><a class="tocitem" href="calibration.html">Calibration</a></li><li><a class="tocitem" href="chitosan_runbook.html">Chitosan Runbook</a></li><li><a class="tocitem" href="selection.html">Model Selection</a></li><li><a class="tocitem" href="math.html">Mathematical Background</a></li><li><a class="tocitem" href="journal.html">Research Journal</a></li><li class="is-active"><a class="tocitem" href="config.html">Configuration</a><ul class="internal"><li><a class="tocitem" href="#User-facing-TOML-calibration"><span>User-facing TOML calibration</span></a></li><li><a class="tocitem" href="#Generic-adaptive-support-workflow"><span>Generic adaptive-support workflow</span></a></li><li><a class="tocitem" href="#ChainSweepConfig-(GaussianFit2D)"><span>ChainSweepConfig (GaussianFit2D)</span></a></li><li><a class="tocitem" href="#PatternConfig-(GaussianFit2D)"><span>PatternConfig (GaussianFit2D)</span></a></li><li><a class="tocitem" href="#FitSlideConfig-(STMMolecularFit)"><span>FitSlideConfig (STMMolecularFit)</span></a></li></ul></li><li><a class="tocitem" href="api.html">API Reference</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href="config.html">Configuration</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href="config.html">Configuration</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/odurif0/STMFit" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/odurif0/STMFit/blob/main/docs/src/config.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Configuration-Reference"><a class="docs-heading-anchor" href="#Configuration-Reference">Configuration Reference</a><a id="Configuration-Reference-1"></a><a class="docs-heading-anchor-permalink" href="#Configuration-Reference" title="Permalink"></a></h1><h2 id="User-facing-TOML-calibration"><a class="docs-heading-anchor" href="#User-facing-TOML-calibration">User-facing TOML calibration</a><a id="User-facing-TOML-calibration-1"></a><a class="docs-heading-anchor-permalink" href="#User-facing-TOML-calibration" title="Permalink"></a></h2><p>Batch runs are configured from TOML files. The default calibration is <code>config/chitosan.toml</code> and <code>test/batch_full.jl</code> accepts an override:</p><pre><code class="language-bash hljs">julia --project=. test/batch_full.jl --config config/my_system.toml</code></pre><p>The chitosan calibration currently uses a noise-only support rule:</p><pre><code class="language-toml hljs">[model]
+fit_width_nm = 0.16
+support_noise_k = 2.5
+support_padding_nm = 0.25
+kappa_max = 10.0
+selection_criterion = &quot;gcv&quot;
+cv_method = &quot;gcv&quot;
+selection_policy = &quot;gcv_with_robust_aicc_guard&quot;</code></pre><p>The chitosan default batch selection policy is the integrated robust overfit guard, configured in the TOML calibration.  It writes <code>N_selected</code> as the guarded primary result while preserving <code>N_eff</code> for comparison.  The raw GCV/effective baseline remains available as an explicit command-line override:</p><pre><code class="language-bash hljs">julia -t 4 --project=. test/batch_full.jl 48 \
+  --config config/chitosan.toml \
+  --selection-policy gcv</code></pre><p>For manually labelled folders, pass the benchmark manifest to suppress best-plot generation for non-chitosan/excluded files without using labels in model selection:</p><pre><code class="language-bash hljs">julia --project=. test/batch_full.jl 28 \
+  --data-dir /home/durif/Rebecca/data/data/20240818_LHe_Cu100 \
+  --outdir results/best_plots_20240818 \
+  --config config/chitosan.toml \
+  --plot-manifest benchmarks/chitosan_manual_20240814_20240818.toml</code></pre><p>By default this skips plots for <code>quality = &quot;excluded&quot;</code>; override with <code>--skip-plot-quality excluded,ambiguous</code> if ambiguous files should be hidden too.</p><h3 id="Sections"><a class="docs-heading-anchor" href="#Sections">Sections</a><a id="Sections-1"></a><a class="docs-heading-anchor-permalink" href="#Sections" title="Permalink"></a></h3><p>A calibration TOML has three sections; only <code>[model]</code> is mandatory (the others have built-in defaults):</p><ul><li><strong><code>[model]</code></strong> — physical calibration: lobe width (<code>sigma_parallel_*</code>), repeat spacing, ROI/support geometry, optimizer budget, overlap floor. These are the values to re-derive for a new molecule.</li><li><strong><code>[selection]</code></strong> — model-selection thresholds (label-free). Keep the defaults unless a sensitivity check (see <code>test/sensitivity_thresholds.jl</code>) shows your molecule&#39;s GCV curve needs a different ambiguity band:<ul><li><code>gcv_ambiguity_rel_threshold</code> (default <code>0.05</code>): relative GCV gap below which two N are considered indistinguishable. Feeds the up-when-ambiguous branch and the <code>ambiguous_eff</code> summary column. Overridable per-run with <code>--gcv-ambiguity-rel-threshold</code>.</li><li><code>robust_guard_nu</code> (default <code>8.0</code>): Student-t degrees of freedom for the robust-AICc guard. Overridable per-run with <code>--robust-guard-nu</code>.</li></ul></li><li><strong><code>[preprocessing]</code></strong> — SXM channel name/direction, stride, flatten, smoothing.</li></ul><h3 id="Calibrating-a-new-molecule"><a class="docs-heading-anchor" href="#Calibrating-a-new-molecule">Calibrating a new molecule</a><a id="Calibrating-a-new-molecule-1"></a><a class="docs-heading-anchor-permalink" href="#Calibrating-a-new-molecule" title="Permalink"></a></h3><p>Start from the annotated template:</p><pre><code class="language-bash hljs">cp config/template.toml config/my_molecule.toml</code></pre><p>The template comments explain how to derive each value from a few representative scans (FWHM -&gt; sigma, observed pitch -&gt; spacing, etc.). Only <code>[model]</code> values must change for a molecule on the same STM; the <code>[selection]</code> defaults are a reasonable starting point but should be re-validated if the lobe statistics differ markedly from chitosan.</p><p>To exclude non-target files (noise, test images, other molecules), pass an exclusion list instead of relying on hard-coded defaults:</p><pre><code class="language-bash hljs">julia --project=. test/batch_full.jl 48 \
+  --config config/my_molecule.toml \
+  --exclude-from results/my_molecule_exclude.txt</code></pre><p>The exclusion file is one <code>.sxm</code> filename per line (<code>#</code> comments allowed).</p><h2 id="Generic-adaptive-support-workflow"><a class="docs-heading-anchor" href="#Generic-adaptive-support-workflow">Generic adaptive-support workflow</a><a id="Generic-adaptive-support-workflow-1"></a><a class="docs-heading-anchor-permalink" href="#Generic-adaptive-support-workflow" title="Permalink"></a></h2><p>The benchmark-validated generic workflow is <code>adaptive_support_rescue</code>: standard support first, objective support-rescue only if the support appears truncated, then the same robust-AICc down-only guard on the active support.  Benchmark labels are used only for external grading, never inside fitting or selection.</p><p>Short-chain benchmark-style pass:</p><pre><code class="language-bash hljs">JULIA_NUM_THREADS=4 julia --project=. test/batch_full.jl 39 \
+  --data-dir /home/durif/Rebecca/data/data/20240817_LHe_Cu100 \
+  --outdir results/best_plots_240817_adaptive_support_rescue \
+  --tsv results/best_plots_240817_adaptive_support_rescue/primary_files.tsv \
+  --config config/chitosan_adaptive_support_rescue.toml</code></pre><p>For curated long-chain 10–20mer analyses, use the same workflow with only the allowed N range extended to <code>n_max = 24</code>.</p><p>10–20mer adaptive pass:</p><pre><code class="language-bash hljs">JULIA_NUM_THREADS=4 julia --project=. test/batch_full.jl 25 \
+  --data-dir /home/durif/Rebecca/data/10_20mer_analysis \
+  --outdir results/10_20mer_analysis_adaptive_support_rescue \
+  --tsv results/10_20mer_analysis_adaptive_support_rescue/triage_unused.tsv \
+  --config config/chitosan_10_20mer_adaptive_support_rescue.toml</code></pre><blockquote><p><code>--skip-1d</code> is now the default (the 1D fit is diagnostic-only and never affects <code>N_selected</code>). Add <code>--no-skip-1d</code> to compute the <code>N_1D</code> columns.</p></blockquote><p>The older standard/rescue/aggressive passes remain useful for comparison and audit, but should not be treated as ground truth when they disagree with the generic adaptive workflow.</p><pre><code class="language-bash hljs">JULIA_NUM_THREADS=4 julia --project=. test/batch_full.jl 25 \
+  --data-dir /home/durif/Rebecca/data/10_20mer_analysis \
+  --outdir results/10_20mer_analysis_rescue \
+  --tsv results/10_20mer_analysis_rescue/triage_unused.tsv \
+  --config config/chitosan_10_20mer_rescue.toml \
+
+JULIA_NUM_THREADS=4 julia --project=. test/batch_full.jl 25 \
+  --data-dir /home/durif/Rebecca/data/10_20mer_analysis \
+  --outdir results/10_20mer_analysis_rescue_aggressive \
+  --tsv results/10_20mer_analysis_rescue_aggressive/triage_unused.tsv \
+  --config config/chitosan_10_20mer_rescue_aggressive.toml \</code></pre><p>Optional legacy guard-audit pass for comparison:</p><pre><code class="language-bash hljs">JULIA_NUM_THREADS=4 julia --project=. test/batch_full.jl 25 \
+  --data-dir /home/durif/Rebecca/data/10_20mer_analysis \
+  --outdir results/10_20mer_analysis_guard_audit \
+  --tsv results/10_20mer_analysis_guard_audit/triage_unused.tsv \
+  --config config/chitosan_10_20mer.toml \
+  --selection-policy gcv_with_robust_aicc_guard \</code></pre><p>For legacy comparisons, build the consolidated table and annotated plots:</p><pre><code class="language-bash hljs">python3 test/finalize_10_20mer_results.py \
+  --output-dir results/10_20mer_analysis_final</code></pre><p>Outputs:</p><ul><li><code>results/10_20mer_analysis_final/final_results.tsv</code></li><li><code>results/10_20mer_analysis_final/final_results.md</code></li><li><code>results/10_20mer_analysis_final/plots/*.png</code></li></ul><p>Each legacy final plot keeps the original fit panels intact and adds a footer showing <code>N final</code>, selected pass, confidence, standard/rescue/aggressive GCV results, and whether the robust guard would change the final result.  <code>review</code> is a QC confidence label for support sensitivity or diagnostic disagreement; it is not an exclusion flag and does not change <code>N_final</code>.</p><p>A more diagnostic spatial blocked-CV selector is also available:</p><pre><code class="language-bash hljs">julia --project=. test/batch_full.jl 48 \
+  --config config/chitosan.toml \
+  --selection-policy spatial_blocked_cv \
+  --cv-folds 3</code></pre><p>It is more directly objectivable as a predictive-risk estimate, but current smoke tests show it is not stable enough for default use; see <a href="selection.html#experimental-spatial-blocked-cv-selector">Model Selection</a>.</p><p>A cheap support-sensitivity diagnostic can be enabled with:</p><pre><code class="language-bash hljs">julia --project=. test/batch_full.jl 48 \
+  --config config/chitosan.toml \
+  --selection-policy support_marginalized_gcv</code></pre><p>or with a one-lobe capped overfit guard:</p><pre><code class="language-bash hljs">julia --project=. test/batch_full.jl 48 \
+  --config config/chitosan.toml \
+  --selection-policy support_marginalized_gcv_guard</code></pre><p>It rescores fitted candidates across a fixed support-padding grid and selects by median relative GCV regret.  It is useful for support ambiguity audits, but is not recommended as the default selector; see <a href="selection.html#experimental-support-marginalized-gcv-selector">Model Selection</a>.</p><p>A file-adaptive slope-heuristic MDL selector can also be enabled:</p><pre><code class="language-bash hljs">julia --project=. test/batch_full.jl 48 \
+  --config config/chitosan.toml \
+  --selection-policy slope_heuristic_mdl</code></pre><p>It estimates the model-complexity penalty from the file&#39;s own contrast–dimension curve.  This is statistically principled, but current smoke tests make it diagnostic rather than default; see <a href="selection.html#experimental-slope-heuristic-mdl-selector">Model Selection</a>.</p><p>A support-perturbation stability selector can be enabled with:</p><pre><code class="language-bash hljs">julia --project=. test/batch_full.jl 48 \
+  --config config/chitosan.toml \
+  --selection-policy stability_selection</code></pre><p>It chooses the <code>N</code> that is most often within 1% of the best GCV across the fixed support-padding grid.  This is useful for stability audits, but current smoke tests make it diagnostic rather than default; see <a href="selection.html#experimental-stability-selection-selector">Model Selection</a>.</p><p>A local lobe-resolvability guard can be enabled with:</p><pre><code class="language-bash hljs">julia --project=. test/batch_full.jl 48 \
+  --config config/chitosan.toml \
+  --selection-policy local_lobe_evidence</code></pre><p>It checks whether adjacent fitted lobes are locally separated by a valley and is strictly down-only.  Current smoke tests make it a separability diagnostic rather than a recommended primary selector; see <a href="selection.html#experimental-local-lobe-evidence-guard">Model Selection</a>.</p><p>An approximate Laplace-evidence selector and safer guard can be enabled with:</p><pre><code class="language-bash hljs">julia --project=. test/batch_full.jl 48 \
+  --config config/chitosan.toml \
+  --selection-policy laplace_evidence_guard</code></pre><p>It scores fitted candidates with a local Gauss–Newton/Laplace evidence approximation.  The direct selector is currently too parsimonious on some files; the guard only permits one-lobe downshifts from <code>N_eff</code>.  See <a href="selection.html#experimental-laplace-evidence-selector">Model Selection</a>.</p><p>A fwd/bwd direction-consensus selector can be enabled with:</p><pre><code class="language-bash hljs">julia --project=. test/batch_full.jl 48 \
+  --config config/chitosan.toml \
+  --selection-policy fwd_bwd_consensus</code></pre><p>It exploits forward/backward scan replication by evaluating the fused model on separate fwd and bwd channels.  Current smoke tests make it a replication diagnostic rather than a recommended primary selector; see <a href="selection.html#experimental-fwdbwd-direction-consensus-selector">Model Selection</a>.</p><p>The former contrast-fraction support threshold has been removed from the program. Support is defined from the axial profile as <code>baseline + support_noise_k * noise</code>, then expanded by <code>support_padding_nm</code>. This avoids coupling support detection to the brightest lobe or to occasional artefacts.</p><h2 id="ChainSweepConfig-(GaussianFit2D)"><a class="docs-heading-anchor" href="#ChainSweepConfig-(GaussianFit2D)">ChainSweepConfig (GaussianFit2D)</a><a id="ChainSweepConfig-(GaussianFit2D)-1"></a><a class="docs-heading-anchor-permalink" href="#ChainSweepConfig-(GaussianFit2D)" title="Permalink"></a></h2><p>Full configuration for the 2D chain model sweep.</p><pre><code class="language-julia hljs">GaussianFit2D.ChainSweepConfig(
+    # ── Sweep range ──
+    n_min              = 2,       # Minimum N (safety bound)
+    n_max              = 14,      # Maximum N (safety bound)
+    intelligent_sweep  = true,    # Adaptive range from support length
+    early_stop_patience = 3,      # Consecutive BIC increases before stop
+    early_stop_dbic    = 100.0,   # BIC increase threshold for early stop
+
+    # ── Physical constraints ──
+    spacing_min_nm     = 0.35,    # Minimum inter-lobe spacing (nm)
+    spacing_max_nm     = 0.75,    # Maximum inter-lobe spacing (nm)
+    max_overlap        = 0.60,    # Maximum lobe overlap fraction
+    fit_width_nm       = 0.45,    # Struct default; chitosan.toml overrides to 0.16
+
+    # ── Sigma bounds ──
+    sigma_parallel_min_nm = 0.191, # Min axial sigma (FWHM 0.45 nm)
+    sigma_parallel_max_nm = 0.509, # Max axial sigma (FWHM 1.20 nm)
+    sigma_perp_min_nm   = 0.10,   # Min perpendicular sigma
+    sigma_perp_max_nm   = 0.55,   # Max perpendicular sigma
+
+    # ── Model variants ──
+    chain_circular_sigmas = false, # σ∥=σ⟂ per lobe (simpler, more robust)
+    chain_tilted_baseline = true,  # Linear tilt in 2D background
+
+    # ── Optimization ──
+    global_maxtime     = 10.0,    # NLopt timeout per N
+    global_maxiter     = 10000,   # NLopt max iterations per N
+    global_tol         = 1e-5,    # NLopt tolerance
+    max_iter           = 300,     # LsqFit max iterations
+    multistart         = 1,       # Number of random starts
+
+    # ── Support detection ──
+    support_noise_k    = 2.5,
+    support_padding_nm = 0.20,    # Struct default; chitosan.toml uses 0.25
+    support_min_length_nm = 1.0,
+    support_baseline_quantile = 0.10,
+
+    # ── Penalties ──
+    kappa_max          = 10.0,    # Condition number penalty threshold
+    kappa_weight       = 1.0,     # Condition number penalty strength
+    peak_profile       = :gaussian, # :gaussian (2D: only :gaussian supported)
+    min_amplitude_fraction = 0.3, # Min lobe amplitude (fraction of max data)
+
+    # ── Cross-validation ──
+    cv_folds           = 5,       # Number of CV folds (kfold only)
+    cv_method          = &quot;gcv&quot;,   # &quot;gcv&quot; (analytical, free) | &quot;kfold&quot; (refit per fold)
+    student_nu         = 4.0,     # Student-t degrees of freedom
+    residual_peak_snr_threshold = 3.5,
+
+    # ── Selection ──
+    selection_criterion = &quot;gcv&quot;,  # &quot;gcv&quot; | &quot;bic&quot; | &quot;aicc&quot; | &quot;cv&quot;
+)</code></pre><p><code>selection_criterion</code> controls the score used inside each model sweep.  The batch-level <code>selection_policy</code> / <code>--selection-policy</code> is separate: it controls whether the final reported primary result is the standard <code>N_eff</code> or a guarded <code>N_selected</code> such as the chitosan default robust-AICc guard.</p><p>Experimental support rescue is available via <code>config/chitosan_adaptive_support_rescue.toml</code> or <code>--selection-policy adaptive_support_rescue</code>.  It runs the standard support first and only tries a permissive support pass when the selected <code>N_eff</code> sits at the objective support-feasibility ceiling.  Rescue acceptance is label-free and requires a larger support, higher selected <code>N</code>, and circ/ell coherence.  The robust-AICc guard is then applied down-only on the active support. <code>adaptive_robust_guard_max_drop</code> is available only as a non-default diagnostic cap on automatic robust-AICc downshifts; it is not used by the common benchmark-aligned workflow.</p><h2 id="PatternConfig-(GaussianFit2D)"><a class="docs-heading-anchor" href="#PatternConfig-(GaussianFit2D)">PatternConfig (GaussianFit2D)</a><a id="PatternConfig-(GaussianFit2D)-1"></a><a class="docs-heading-anchor-permalink" href="#PatternConfig-(GaussianFit2D)" title="Permalink"></a></h2><p>Image preprocessing and blob detection configuration.</p><pre><code class="language-julia hljs">GaussianFit2D.PatternConfig(
+    filepath   = &quot;&quot;,          # SXM file path
+    channel    = &quot;Z&quot;,         # Channel name
+    direction  = &quot;fwd&quot;,       # Scan direction
+    stride     = 2,           # Struct default; chitosan.toml uses 1
+    flatten    = &quot;plane+rows&quot;,# Background flattening
+    smooth_radius_px = 1,     # Preprocessing smoothing
+    threshold_sigma = 2.5,    # Blob detection threshold
+    min_distance_px = 10,     # Minimum blob separation
+    fusion     = true,        # Fuse Z fwd+bwd channels
+    fuse_z_bwd = true,        # Fuse Z forward+backward scans
+)</code></pre><h2 id="FitSlideConfig-(STMMolecularFit)"><a class="docs-heading-anchor" href="#FitSlideConfig-(STMMolecularFit)">FitSlideConfig (STMMolecularFit)</a><a id="FitSlideConfig-(STMMolecularFit)-1"></a><a class="docs-heading-anchor-permalink" href="#FitSlideConfig-(STMMolecularFit)" title="Permalink"></a></h2><p>1D slide profile fitting configuration.</p><pre><code class="language-julia hljs">STMMolecularFit.FitSlideConfig(
+    min_spacing    = 0.35,    # Minimum peak spacing (nm)
+    max_spacing    = 0.75,    # Maximum peak spacing (nm)
+    fwhm_min       = 0.45,    # Minimum FWHM (nm)
+    fwhm_max       = 1.20,    # Maximum FWHM (nm)
+    max_overlap    = 0.60,    # Maximum peak overlap
+    kappa_max      = 10.0,    # Condition number threshold
+    peak_profile   = :gaussian,  # :gaussian | :lorentzian | :pseudo_voigt
+    amplitude_min_fraction = 0.3,
+    global_maxtime = 8.0,     # NLopt timeout (s)
+    global_maxiter = 5000,    # NLopt max iterations
+)</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="journal.html">« Research Journal</a><a class="docs-footer-nextpage" href="api.html">API Reference »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Saturday 20 June 2026 20:10">Saturday 20 June 2026</span>. Using Julia version 1.11.9.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
