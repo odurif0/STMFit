@@ -6,7 +6,8 @@ Main public entry points:
 
 | Object | Purpose |
 |--------|---------|
-| `GaussianFit2D.read_sxm(path)` | Read Nanomics/Nanonis-style STM `.sxm` files. |
+| `STMSXMIO.read_sxm(path)` | Read Nanonis STM `.sxm` files. Owned by `STMSXMIO`; re-exported by `GaussianFit2D` and `STMMolecularFit`. |
+| `STMSXMIO.SXMImage` | Parsed SXM image (header, channels, geometry). |
 | `GaussianFit2D.PatternConfig` | Image preprocessing, ROI, channel and output configuration. |
 | `GaussianFit2D.ChainSweepConfig` | 2D chain sweep, support, physical constraints, optimization and selection configuration. |
 | `GaussianFit2D.chain_gaussian_sweep(img, pcfg, ccfg)` | Adaptive 2D chain sweep over N. Circular runs use deterministic 2D-only initialization. |

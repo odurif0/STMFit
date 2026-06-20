@@ -5,10 +5,12 @@
 ```
 SXM File (.sxm)
   │
-  ├─→ STMMolecularFit: extract_slide()
+  ├─→ STMSXMIO: read_sxm() ─→ SXMImage (shared type, read once)
+  │
+  ├─→ STMMolecularFit: extract_slide()          [diagnostic only, --no-skip-1d]
   │     └─→ 1D profile along chain axis
   │           └─→ GaussianFit1D: fit_slide()
-  │                 └─→ Independent QC/reference count
+  │                 └─→ Independent QC reference count (over-counts; not in N_selected)
   │
   └─→ GaussianFit2D: chain_gaussian_sweep()
         │
@@ -19,7 +21,8 @@ SXM File (.sxm)
         │     └─→ Warm-start from circular, local only
         │
         └─→ Model selection
-              └─→ configured criterion (default GCV), plus QC metrics
+              └─→ GCV (canonical; valid under spatial correlation)
+                    + robust-AICc guard (down + up-when-ambiguous)
 ```
 
 ## Component Roles
@@ -31,13 +34,28 @@ Shared mathematical utilities:
 - `adjacent_kappa_max(deltas, sigmas)` — max adjacent condition number
 - `endpoint_overrun(ts, tmin, tmax)` — support boundary check
 
+### STMSXMIO.jl
+Shared SXM (Nanonis) I/O layer, owned here to avoid duplication between the two
+fit engines (both `using STMSXMIO`):
+- `SXMImage`, `SXMChannel` types and `read_sxm` (big-endian float32 parser,
+  fwd/bwd channel expansion, backward-scan x-flip, mandatory-header guard).
+- Channel access (`get_channel` with direction fallback), coordinate/value scaling.
+- Low-level preprocessing helpers shared with both engines: `_plane_fit`,
+  `_box_smooth`, `_otsu_threshold`, `_largest_component`, `_dilate_mask`.
+- Two intentionally distinct row-flattening conventions, because the engines
+  had silently diverged: `_row_median_flatten_global` (preserves global level,
+  used by GaussianFit2D) and `_row_median_flatten_zero` (zeros each row,
+  used by STMMolecularFit).
+
 ### GaussianFit1D.jl
 1D multi-Gaussian fitting on the axial slide profile:
 - Sweeps N=2..max using NLopt + LsqFit
 - Ghost peak filter (rejects models with ≥2 unconstrained edge peaks)
 - `sBIC` (Student-t BIC) for model selection
 - Produces an independent reference count (`N_1D`) and support length for QC.
-- It is not used to initialize the standard 2D circular batch sweep.
+- **Diagnostic only** (off by default via `--skip-1d`): never enters `N_selected`.
+  Re-enable with `--no-skip-1d` for cross-checking. The 1D fit tends to over-count
+  (lateral averaging creates spurious axial peaks).
 
 ### GaussianFit2D.jl
 2D chain model with Gaussian lobes along a PCA-derived axis:
@@ -52,7 +70,7 @@ Shared mathematical utilities:
 
 ### STMMolecularFit.jl
 Orchestration and I/O:
-- SXM file reading (Nanomics format)
+- SXM file reading (Nanonis format)
 - Slide profile extraction and arc-length correction
 - Batch orchestration and 1D/2D QC comparison
 - Plot generation and output file management

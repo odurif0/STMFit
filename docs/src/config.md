@@ -119,9 +119,11 @@ JULIA_NUM_THREADS=4 julia --project=. test/batch_full.jl 25 \
   --data-dir /home/durif/Rebecca/data/10_20mer_analysis \
   --outdir results/10_20mer_analysis_adaptive_support_rescue \
   --tsv results/10_20mer_analysis_adaptive_support_rescue/triage_unused.tsv \
-  --config config/chitosan_10_20mer_adaptive_support_rescue.toml \
-  --skip-1d
+  --config config/chitosan_10_20mer_adaptive_support_rescue.toml
 ```
+
+> `--skip-1d` is now the default (the 1D fit is diagnostic-only and never
+> affects `N_selected`). Add `--no-skip-1d` to compute the `N_1D` columns.
 
 The older standard/rescue/aggressive passes remain useful for comparison and
 audit, but should not be treated as ground truth when they disagree with the
@@ -133,14 +135,12 @@ JULIA_NUM_THREADS=4 julia --project=. test/batch_full.jl 25 \
   --outdir results/10_20mer_analysis_rescue \
   --tsv results/10_20mer_analysis_rescue/triage_unused.tsv \
   --config config/chitosan_10_20mer_rescue.toml \
-  --skip-1d
 
 JULIA_NUM_THREADS=4 julia --project=. test/batch_full.jl 25 \
   --data-dir /home/durif/Rebecca/data/10_20mer_analysis \
   --outdir results/10_20mer_analysis_rescue_aggressive \
   --tsv results/10_20mer_analysis_rescue_aggressive/triage_unused.tsv \
   --config config/chitosan_10_20mer_rescue_aggressive.toml \
-  --skip-1d
 ```
 
 Optional legacy guard-audit pass for comparison:
@@ -152,7 +152,6 @@ JULIA_NUM_THREADS=4 julia --project=. test/batch_full.jl 25 \
   --tsv results/10_20mer_analysis_guard_audit/triage_unused.tsv \
   --config config/chitosan_10_20mer.toml \
   --selection-policy gcv_with_robust_aicc_guard \
-  --skip-1d
 ```
 
 For legacy comparisons, build the consolidated table and annotated plots:
