@@ -1,23 +1,25 @@
 # STMFit — STM Molecular Chain Fitting
 
 Automated pipeline for detecting and fitting 2D Gaussian chain models
-to STM images of molecular chains (chitosan on Cu(100)).
+to STM images of molecular chains. Validated on chitosan 6mer and 10–20mer on
+Cu(100); generalizable to other chain-like molecules on the same STM via
+auto-calibration (see [Calibration](calibration.md)).
 
 ## Quick Start
 
 ```bash
 # Single file diagnostic
-julia --project=. test/inspect_one_file.jl data/molecule.sxm
+STMFIT_DATA_DIR=/path/to/data julia --project=. test/inspect_one_file.jl 240817_004.sxm
 
-# Batch processing (uses config/chitosan.toml by default;
-# chitosan default policy is gcv_with_robust_aicc_guard)
-julia --project=. test/batch_full.jl
+# Batch processing (default config: chitosan.toml, policy: gcv_with_robust_aicc_guard)
+STMFIT_DATA_DIR=/path/to/data julia -t 4 --project=. test/batch_full.jl 48 \
+  --config config/chitosan.toml
 
-# Batch with custom calibration (different molecule/instrument)
-julia --project=. test/batch_full.jl --config config/my_system.toml
+# Auto-calibrate for a new molecule from one clean scan
+julia --project=. test/measure_calibration.jl path/to/clean_scan.sxm
 
 # Explicit raw GCV/N_eff baseline override
-julia -t 4 --project=. test/batch_full.jl 48 \
+STMFIT_DATA_DIR=/path/to/data julia -t 4 --project=. test/batch_full.jl 48 \
   --config config/chitosan.toml \
   --selection-policy gcv
 
