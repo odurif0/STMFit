@@ -32,13 +32,19 @@ jobs:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v2
         with:
-          version: '1.10'
+          version: '1.11'
       - uses: julia-actions/cache@v2
       - name: Install dependencies
+        # Local packages are declared in [sources] (requires Julia ≥ 1.11).
+        # develop() registers them explicitly so Pkg doesn't look for them in General.
         run: |
-          # The [sources] section in Project.toml points to local packages;
-          # resolve() builds the Manifest from those local paths, then instantiate() precompiles.
-          julia --project=. -e 'using Pkg; Pkg.resolve(); Pkg.instantiate(); Pkg.precompile()'
+          julia --project=. -e '
+            using Pkg
+            for pkg in ["STMFitCore","STMSXMIO","GaussianFit1D","GaussianFit2D","STMMolecularFit"]
+              Pkg.develop(PackageSpec(path="packages/$pkg.jl"))
+            end
+            Pkg.instantiate(); Pkg.precompile()
+          '
       - name: Build docs
         run: julia --project=. docs/make.jl
         env:
