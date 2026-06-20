@@ -99,7 +99,9 @@ function measure_fwhm_range(img, ch)
         fwhm > 2px && fwhm < 5.0 && push!(fwhms, fwhm)
     end
     isempty(fwhms) && return (0.3, 1.0)
-    return (quantile(fwhms, 0.05), quantile(fwhms, 0.95))
+    # Lower bound at 25th pct (well-resolved lobes), not 5th (partially-resolved
+    # outliers that under-estimate the true lobe width and starve the fit).
+    return (quantile(fwhms, 0.25), quantile(fwhms, 0.95))
 end
 
 # ───────────────────────────────────────────────────────────────────
@@ -170,9 +172,12 @@ sigma_lo = fwhm_lo / 2.355
 sigma_hi = fwhm_hi / 2.355
 spacing_min = 0.7 * spacing
 spacing_max = 1.3 * spacing
-fit_width = sigma_lo  # tube half-width ≈ min lobe half-width
+# fit_width = 1.25 × σ_min: tube half-width needs a margin above the narrowest
+# lobe half-width to capture the full lateral signal (pure σ_min truncates it).
+fit_width = round(1.25 * sigma_lo, digits=3)
 support_min = 3 * spacing  # at least 3 repeats to call it a chain
-n_max = round(Int, img.range_nm[1] / spacing_min + 2)  # generous, from chain axis length
+# n_max from the LONGEST chain axis (the chain may orient along either image axis).
+n_max = round(Int, max(img.range_nm[1], img.range_nm[2]) / spacing_min + 2)
 
 println("│")
 println("│ ── measured ──")
@@ -204,7 +209,7 @@ calib = Dict(
         "n_max" => n_max,
         "max_overlap" => 0.60,                 # [principled: Gaussian pair-overlap]
         "support_noise_k" => 2.5,              # [principled: SNR threshold k·σ]
-        "support_padding_nm" => round(fit_width, digits=3),  # [derived: ≈ tube half-width]
+        "support_padding_nm" => round(2.0 * fit_width, digits=3),  # [derived: 2× tube half-width, avoids chain-end truncation]
         "global_maxtime" => 10.0,              # [free: optimizer budget]
         "global_maxiter" => 10000,
         "chain_tilted_baseline" => true,       # [free: model form]

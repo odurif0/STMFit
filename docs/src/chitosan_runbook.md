@@ -147,8 +147,10 @@ Important columns:
   accepted rescue.
 - `best_plot`, `file_dir`: locations of visual outputs and per-file artifacts.
 
-With `--skip-1d`, `N_1D` and 1D comparison columns are expected to be `NA`, and
-1D panels are intentionally not drawn.
+The 1D slide fit is **off by default** (it never enters `N_selected`; it is a
+diagnostic only). `N_1D` and 1D comparison columns are therefore expected to be
+`NA`, and 1D panels are not drawn. To re-enable the 1D diagnostic (e.g. to cross-
+check a suspected 2D under-detection), pass `--no-skip-1d`.
 
 ## Minimal validation checklist after code/config changes
 

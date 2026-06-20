@@ -61,7 +61,9 @@ function _parse_cli(args)
     data_dir = get(ENV, "STMFIT_DATA_DIR", "")
     outdir = "results/best_plots"
     tsv = "results/batch_triage_20240817_relaxed.tsv"
-    skip_1d = false
+    # The 1D slide fit is a diagnostic only (it never enters N_selected). Default
+    # to skipping it for speed; pass --no-skip-1d to compute N_1D / sBIC_1d columns.
+    skip_1d = true
     plot_manifest = ""
     exclude_from = ""
     skip_plot_quality = Set(["excluded"])
@@ -158,6 +160,10 @@ function _parse_cli(args)
             continue
         elseif arg == "--skip-1d"
             skip_1d = true
+            i += 1
+            continue
+        elseif arg == "--no-skip-1d"
+            skip_1d = false
             i += 1
             continue
         elseif arg == "--plot-manifest"

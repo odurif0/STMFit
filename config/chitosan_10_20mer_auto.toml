@@ -1,0 +1,57 @@
+# STMFit calibration — Chitosan 10–20mer generic adaptive support rescue
+#
+# Uses the same label-free adaptive support policy as the benchmark experiment,
+# but with n_max = 25 for long chains. Robust-AICc is computed on the active
+# support after any rescue decision and acts as the same down-only guard used by
+# the benchmark workflow. There is no expected-N prior or dataset-specific target.
+
+[model]
+n_min = 2
+n_max = 25
+spacing_min_nm = 0.35
+spacing_max_nm = 0.75
+max_overlap = 0.60
+sigma_parallel_min_nm = 0.191
+sigma_parallel_max_nm = 0.509
+fit_width_nm = 0.159
+
+# First-pass support detection
+support_noise_k = 2.5
+support_padding_nm = 0.318
+support_min_length_nm = 1.0
+support_baseline_quantile = 0.10
+
+# Adaptive support rescue pass
+adaptive_rescue_support_noise_k = 1.5
+adaptive_rescue_support_padding_nm = 0.318
+adaptive_rescue_min_support_gain_nm = 0.75
+adaptive_rescue_feasible_margin = 0
+adaptive_rescue_max_circ_ell_delta = 1
+
+global_maxtime = 10.0
+global_maxiter = 10000
+max_iter = 300
+multistart = 1
+
+selection_criterion = "gcv"
+cv_method = "gcv"
+selection_policy = "adaptive_support_rescue"
+cv_folds = 5
+bic_cv_margin = 100
+cv_ratio_threshold = 2.0
+
+kappa_max = 10.0
+kappa_weight = 1.0
+min_amplitude_fraction = 0.3
+
+chain_tilted_baseline = true
+chain_circular_sigmas = false
+
+[selection]
+gcv_ambiguity_rel_threshold = 0.05
+robust_guard_nu = 8.0
+
+[preprocessing]
+stride = 1
+flatten = "plane+rows"
+smooth_radius_px = 1
