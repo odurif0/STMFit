@@ -20,6 +20,44 @@ without introducing heuristic/arbitrary parameters.
 
 ## Investigation Timeline
 
+### 2026-06-20 — Objective calibration and effective-sample-size analysis
+
+**Goal:** make every calibration parameter either measured from the data or
+derived from a physical principle, so the pipeline generalises to a new molecule
+on the same STM without hand-tuning.
+
+**Effective sample size investigation.** The `n_eff = n÷9` heuristic (block-3×3
+correlation) enters BIC, AICc, robust-AICc, MDL and Laplace scores. A diagnostic
+on three chitosan files (002, 043, 058) compared three estimators:
+
+| estimator | n_eff (043) | finding |
+|---|---|---|
+| heuristic `n÷9` | 966 | ignores correlation |
+| Durbin-Watson AR(1) `n·(1−ρ)/(1+ρ)` | 440 | ρ≈0.90 (raster 1D) |
+| 2D variogram in fit window | 22 | underdetermined (range > window) |
+
+A full-image 2D autocorrelation (512×512, subsampled 4×) reveals the correlation
+**range** is 17–100 px, far larger than the ~10-px fit window. The number of
+independent points in the fit window is therefore `window_area / (π·range²) ≈ 0.06`
+— effectively zero. **Conclusion: n_eff is not objectively definable in the fit
+window; BIC/AICc (which assume iid observations) are not well-defined here.**
+GCV, which does not assume independence (smooth-spline leave-one-out theory), is
+the canonical selection criterion; BIC/AICc are retained only as qualitative
+diagnostics. This is documented in `docs/src/calibration.md`.
+
+**Auto-calibration tool** (`test/measure_calibration.jl`). Measures from a single
+clean scan: noise σ, pixel resolution, FWHM range [5%, 95%], repeat spacing, and
+correlation range; derives σ_parallel (FWHM/2.355), spacing (±30%), fit_width
+(=σ_min), support_min (3×spacing), n_max (axis/spacing), and emits a ready-to-use
+TOML. Validated: the auto-calibrated TOML (measured on 043) gives `N_selected = 6`
+on 002 — identical to the hand-tuned `chitosan.toml`. Of ~25 parameters, 5 are
+measured, 9 are principled-derived, and ~11 remain genuinely free (optimizer
+budget, model-form switches, acquisition-dependent defaults).
+
+**Sensitivity check** (`test/sensitivity_thresholds.jl`, HPC, 4 thresholds
+0.03/0.04/0.05/0.06 on 43 common files): 0 pivot files — `N_selected` is
+insensitive to the ambiguity threshold across the tested range.
+
 ### 2026-06-17 — Symmetric up-when-ambiguous guard branch
 
 The robust-AICc guard was strictly down-only: it could veto over-segmentation

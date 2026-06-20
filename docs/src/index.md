@@ -113,17 +113,24 @@ julia --project=. test/summarize.jl results/best_plots/
 ## Calibration
 
 System-specific parameters are stored in `config/*.toml` files.
-The default is `config/chitosan.toml` (chitosan on Cu(100), Nanomics STM).
+The default is `config/chitosan.toml` (chitosan on Cu(100), Nanonis STM).
 
-To calibrate for a new system:
-1. Copy `config/chitosan.toml` → `config/my_system.toml`
-2. Adjust the noise-based support parameters (`support_noise_k`,
-   `support_padding_nm`), `spacing_min_nm`, `spacing_max_nm`, sigma bounds,
-   and the model-selection fields.
-3. Run batch with `--config config/my_system.toml`
+To calibrate for a new system, the recommended path is **auto-calibration**:
+point `test/measure_calibration.jl` at one clean scan and it derives σ, spacing,
+fit width, support length and n_max objectively, emitting a ready-to-use TOML.
 
-Track the selected `N_ell`, score curves, residuals, support length, and
-absolute score values (not just the winning N) to validate calibration.
+```bash
+julia --project=. test/measure_calibration.jl path/to/clean_scan.sxm
+# → emits <scan>_calibration.toml
+```
+
+For the full parameter classification (measured / principled / free), the
+effective-sample-size analysis that justifies GCV as the canonical criterion,
+and the manual fallback, see **[Calibration](calibration.md)**.
+
+The default `config/chitosan.toml` remains the hand-tuned reference; an
+auto-derived equivalent (`config/chitosan_auto.toml`) validates that the
+objective method reproduces the benchmark results.
 
 For the chitosan reference set, `benchmarks/chitosan_240817.toml` records
 evaluation-only quality classes (`clean_target`, `poor_quality`, `excluded`).
