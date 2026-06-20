@@ -551,23 +551,45 @@ Step 5: Output best models (N_ell, N_circ, N_eff, params, plots, scores, QC)
 
 ## Open Questions
 
-1. **039 (N=7)** → **RESOLVED (May 15)**: Support detection was too generous
-   in early experiments. The current calibration removes the former contrast
-   fraction threshold and uses noise-based support (`support_noise_k=2.5`) plus
-   calibrated padding (`support_padding_nm=0.25`). See section 12.
+> Updated 2026-06-20. Questions from earlier sessions are archived in their
+> dated entries above.
 
-2. **n_eff ÷9 factor** → **DEFERRED**: Documented in code as conservative estimate.
-   Principled computation from pixel size would give ~÷25 but requires image metadata.
-   Low priority — does not affect selection ranking.
+1. **n_eff and information criteria** → **RESOLVED (Jun 20)**: The n÷9 heuristic
+   is not objectively definable in the fit window — the STM spatial correlation
+   range (17–100 px) far exceeds the ~10-px window, so the number of independent
+   points is effectively zero. BIC/AICc (which assume iid) are therefore not
+   well-defined; GCV (valid under spatial correlation) is the canonical criterion.
+   See `docs/src/calibration.md`.
 
-3. **1D CV tiebreaker** → **WON'T FIX**: 1D is an independent QC/reference path.
-   The final N selection is done by the 2D pipeline. Adding CV to 1D would add
-   complexity without affecting final output.
+2. **Is N=9 correct for 260115_016 (10–20mer)?** → **OPEN**: The 2D fit's GCV
+   optimum is N=9 (confirmed even with `max_overlap` relaxed to 0.80, which
+   allows N up to 14). The former 1D fit saw N=13, but investigation showed the
+   1D over-counts (lateral averaging creates spurious axial peaks). Without a
+   visual ground-truth label for this file, N=9 stands as the objective answer,
+   but it has not been visually confirmed. Action: visual inspection of the
+   260115_016 best-fit overlay plot.
 
-4. **Remove elliptical NLopt sweep** → **RESOLVED (May 15)**: Replaced by circ→ell LsqFit
-   refinement in the batch pipeline. `_refine_circ_to_ell()` runs LsqFit-only elliptical
-   warm-started from circular for each N. NLopt is intentionally excluded — proven
-   harmful in tests (diverges in 2s even from circular start). See section 7.
+3. **Auto-calibration under-detects on ~4% of files** → **OPEN (low priority)**:
+   `measure_calibration.jl` reproduces manual calibration on 17/25 10–20mer
+   files, ±1 on 7, and fails badly on 1 (251206_013: N=4 vs 11). Root cause:
+   coupled parameters (`fit_width × support_padding × σ`) interact
+   non-monotonically. The tool is a bootstrap (good starting point), not a
+   replacement for visual validation. No fix planned unless it fails on a new
+   molecule's clean scan.
+
+4. **Guard robust-AICc descends by 2 on 3/25 10–20mer files** → **OPEN (monitor)**:
+   On short chains in the 10–20mer set (260115_016, 260116_017, 260222_043), the
+   guard drops N_eff by 2 (e.g. 8→6). This is within the guard's design (down-only
+   veto), but on a non-benchmarked dataset we cannot confirm it's correct without
+   visual labels. Monitor: if a pattern emerges on more data, consider bounding
+   the guard descent to 1 (symmetric with the up-branch).
+
+5. **`max_overlap` generalization** → **RESOLVED (Jun 20)**: Investigated on
+   260115_016 — relaxing from 0.60 to 0.80 does allow high-N fits (N up to 14),
+   but the GCV optimum stays at N=9. The constraint is a physical prior (Gaussian
+   pair-overlap floor), not an arbitrary blocker. Kept at 0.60 for the chitosan
+   calibration; verify it isn't rejecting good fits on a new molecule with denser
+   lobes.
 
 ---
 

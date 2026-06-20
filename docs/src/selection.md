@@ -26,8 +26,12 @@ GCV is the default per-candidate sweep score because it is analytical, fast, and
 refitting folds. BIC is still computed and remains useful for diagnostics and
 legacy comparisons, but it is not the default batch selection criterion.
 
-- `n_eff` (effective sample size) is estimated as `length(zfit) ÷ 9`,
-  which may not perfectly capture spatial correlation in STM images.
+- `n_eff` (effective sample size): the `length(zfit) ÷ 9` heuristic is a
+  placeholder. The STM residual field is so strongly spatially correlated
+  (range 17–100 px, larger than the ~10-px fit window) that n_eff is effectively
+  undefined in the window. BIC/AICc (which assume iid) are therefore not
+  well-defined; GCV (valid under spatial correlation) is the canonical criterion.
+  See `docs/src/calibration.md` for the full analysis.
 - BIC assumes all parameters contribute equally, but extra sigma parameters
   can absorb noise without improving predictive accuracy.
 - On ambiguous STM images, BIC can marginally prefer over-fit models.
