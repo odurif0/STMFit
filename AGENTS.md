@@ -6,15 +6,20 @@ efficiently. Read it first, then the docs it points to.
 ## What this project does
 
 STMFit analyzes STM (Scanning Tunneling Microscopy) images of molecular chains
-— primarily chitosan on Cu(100), validated on 6mer and 10–20mer chains — by
-fitting a chain-of-Gaussians model to count the number of monomer units (lobes)
-per chain. The selection of N (the lobe count) is **label-free**: it does not
-use an expected N or benchmark labels.
+— primarily chitosan on Cu(100) — by fitting a chain-of-Gaussians model to count
+the number of monomer units (lobes) per chain. The selection of N (the lobe
+count) is **label-free**: it does not use an expected N or benchmark labels.
 
-**Current status (chitosan 6mer benchmark):** 39/39 primary files give the
-correct N=6 (100%), reproducible across runs. 10–20mer: 25/25 files processed
-(N_selected 5–16), no ground-truth labels yet — visual validation is the arbiter
-on non-benchmarked data.
+**Two distinct regimes:**
+- **Benchmark (6mer chitosan, 240817):** 39/39 primary files give the correct
+  N=6 (100%), reproducible across runs. This is the *validation* set — labels
+  exist and the pipeline is graded against them (labels stay outside
+  fitting/selection).
+- **Application (10–20mer chitosan):** 25/25 files processed (N_selected 5–16).
+  **No ground-truth labels** — this is a *real application*, not a benchmark.
+  Visual validation is the arbiter here. The pipeline ran successfully and
+  produces internally consistent results, but the counts are not "validated" in
+  the benchmark sense.
 
 ## Where to look first (read order)
 
@@ -111,13 +116,17 @@ test/batch_full.jl (driver, not a package) orchestrates the batch.
   251206_013) because parameters are coupled. Always spot-check N_selected
   against the visible structure on a new molecule.
 
-## Benchmark validation status (chitosan 6mer)
+## Benchmark vs application status
 
-- `N_selected`: **39/39** primary benchmark exact (N=6).
-- 4/4 clean_target files correct.
-- Reproducible across 3 consecutive runs (0 files change N_selected).
-- Selection threshold robust on [0.03, 0.06] (0 pivot files).
-- 10–20mer: 25/25 files processed, N_selected 5–16, control point 260220_083→9.
+- **Benchmark (6mer chitosan, 240817):**
+  - `N_selected`: **39/39** primary benchmark exact (N=6).
+  - 4/4 clean_target files correct.
+  - Reproducible across 3 consecutive runs (0 files change N_selected).
+  - Selection threshold robust on [0.03, 0.06] (0 pivot files).
+- **Application (10–20mer chitosan):**
+  - 25/25 files processed (N_selected 5–16).
+  - **No ground-truth labels** — this is a real application, not a benchmark.
+  - Control point: 260220_083 → N=9 (manual cross-check, not a benchmark label).
 
 ## What NOT to do
 

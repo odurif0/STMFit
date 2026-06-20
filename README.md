@@ -4,6 +4,10 @@ Analysis pipeline for STM images of molecular chains (chitosan on Cu(100) and
 similar systems). Detects and fits a chain-of-Gaussians model to count the
 number of monomer units (lobes) per chain, label-free.
 
+**Benchmark (6mer):** 39/39 primary files exact (N=6), reproducible.
+**Application (10–20mer):** 25/25 files processed; no ground-truth labels —
+visual validation is the arbiter.
+
 ## Packages
 
 | Package | Role |

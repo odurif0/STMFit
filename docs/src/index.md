@@ -1,9 +1,11 @@
 # STMFit — STM Molecular Chain Fitting
 
 Automated pipeline for detecting and fitting 2D Gaussian chain models
-to STM images of molecular chains. Validated on chitosan 6mer and 10–20mer on
-Cu(100); generalizable to other chain-like molecules on the same STM via
-auto-calibration (see [Calibration](calibration.md)).
+to STM images of molecular chains. **Validated** on the 6mer chitosan/Cu(100)
+benchmark (39/39 exact); **applied** to the 10–20mer production system (no
+ground-truth labels — visual validation is the arbiter). Generalizable to other
+chain-like molecules on the same STM via auto-calibration
+(see [Calibration](calibration.md)).
 
 ## Quick Start
 
