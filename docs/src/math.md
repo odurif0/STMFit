@@ -73,6 +73,12 @@ noise estimate (MAD-based), and `n_eff` is the effective sample size.
 For 2D images, `n_eff = max(10, length(zfit) ÷ 9)` — each 3×3 pixel block
 counts as one independent observation, accounting for spatial correlation.
 
+> **Caveat:** this `n_eff` is a placeholder heuristic. Because the STM
+> correlation range exceeds the fit window, `n_eff` is not objectively
+> definable there; the `÷9` factor only affects BIC/AICc *diagnostics*, never
+> `N_selected` (which is driven by GCV). See
+> [Calibration](calibration.md#effective-sample-size-why-gcv-is-the-canonical-criterion).
+
 ## Residual Diagnostics
 
 ### Durbin-Watson Statistic

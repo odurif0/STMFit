@@ -11,11 +11,13 @@ objective, which are principled choices, and which remain free.
 julia --project=. test/measure_calibration.jl path/to/clean_scan.sxm
 ```
 
-This measures the objectivable quantities and emits a ready-to-use TOML. Validate
-it on the benchmark before adopting it:
+This measures the objectivable quantities and emits a ready-to-use TOML.
+Evaluate it externally on the benchmark *after* generating the TOML — do not
+adjust measured parameters to recover benchmark labels:
 
 ```bash
-julia --project=. test/batch_full.jl 48 --config chitosan_auto.toml ...
+STMFIT_DATA_DIR=/path/to/data julia -t 4 --project=. test/batch_full.jl 48 \
+    --config chitosan_auto.toml
 ```
 
 ## Parameter classification
@@ -26,7 +28,7 @@ julia --project=. test/batch_full.jl 48 --config chitosan_auto.toml ...
 |---|---|
 | `noise σ` | 1.4826·MAD of (raw − smoothed) high-frequency band, via the standard preprocessing pipeline |
 | `pixel resolution` | `range_nm / width` (from the SXM header) |
-| `FWHM range [lo, hi]` | Detect peaks in the chain-axis profile (weighted PCA → bright-pixel strip), fit half-max width per peak, take [5%, 95%] quantiles |
+| `FWHM range [lo, hi]` | Detect peaks in the chain-axis profile (weighted PCA → bright-pixel strip), fit half-max width per peak, take [25%, 95%] quantiles (25% excludes under-resolved outliers that would starve the fit) |
 | `repeat spacing` | Median peak-to-peak distance along the chain axis |
 | `spatial correlation range` | 2D isotropic autocorrelation on the full preprocessed image; range = first lag where ρ(h) drops to 1/e |
 
@@ -36,9 +38,9 @@ julia --project=. test/batch_full.jl 48 --config chitosan_auto.toml ...
 |---|---|
 | `sigma_parallel_*` | `FWHM / 2.355` (Gaussian width relation) |
 | `spacing_min/max` | `±30%` around the measured repeat spacing |
-| `fit_width_nm` | `= σ_min` (tube half-width ≈ narrowest lobe half-width) |
+| `fit_width_nm` | `= 1.25 × σ_min` (tube half-width; the margin avoids lateral truncation of the narrowest lobe) |
 | `support_min_length_nm` | `3 × spacing` (at least 3 repeats to call it a chain) |
-| `n_max` | `axis_length / spacing_min + 2` (generous cap from chain geometry) |
+| `n_max` | `longest_image_axis / spacing_min + 2` (generous cap; the chain may orient along either image axis) |
 | `max_overlap` | 0.60 (Gaussian pair-overlap floor; sets the spacing lower bound) |
 | `support_noise_k` | 2.5 (SNR threshold k·σ on the support envelope) |
 | `support_padding_nm` | `= fit_width_nm` (pad by one tube half-width to avoid edge truncation) |
@@ -56,24 +58,24 @@ julia --project=. test/batch_full.jl 48 --config chitosan_auto.toml ...
 
 ## Effective sample size — why GCV is the canonical criterion
 
-The STM produces residuals with strong spatial correlation (ρ ≈ 0.9–0.95 at
+The STM residual field is strongly spatially correlated (ρ ≈ 0.9–0.95 at
 lag 1; autocorrelation range 17–100 px). The fit window (~10 px) is **smaller**
-than the correlation range, so the number of statistically independent points
-in the window is effectively zero:
+than this correlation range, so the number of independent observations inside
+the window is not meaningfully estimable: any `n_eff` (the `n÷9` heuristic, a
+Durbin–Watson AR(1) estimate, or a variogram estimate) is an arbitrary choice
+that changes the absolute scale of BIC/AICc by orders of magnitude.
 
-> n_eff(window) = window_area / (π · range²) ≈ 100 / (π · 23²) ≈ 0.06
+BIC and AICc assume `n` independent observations. Because `n_eff` is undefined
+here, **their absolute values are not interpretable** as model-selection scores;
+they are retained only as shape diagnostics (how their *ranking* changes across
+N, not their magnitudes).
 
-This means **BIC and AICc — which assume n independent observations — are not
-well-defined** in this configuration. Their `n_eff` is an arbitrary constant
-(the current `n÷9` heuristic or any DW/variogram estimate), and the absolute
-values of BIC/AICc are therefore unreliable diagnostics.
-
-**GCV** (`RSS·n/(n−p)²`) does not assume independence: it is the analytical
-leave-one-out cross-validation error of a linear smoother, valid under spatial
-correlation (smooth-spline theory). This is why the selection by GCV is robust
-to the threshold and reproducible across runs. **GCV is the canonical selection
-criterion**; BIC/AICc are retained only as secondary diagnostics whose absolute
-scale is not interpretable.
+**GCV** (`RSS·n/(n−p)²`) sidesteps the issue entirely: it is the analytical
+leave-one-out cross-validation error of a linear smoother and does not require
+choosing an `n_eff`. It is therefore the canonical practical criterion for
+`N_selected`, and the selection by GCV is robust to the threshold and
+reproducible across runs. BIC/AICc remain secondary diagnostics whose absolute
+scale must not be trusted.
 
 ## Calibrating a new molecule
 
