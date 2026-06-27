@@ -6,7 +6,12 @@ struct MolecularFeature
     sigma_x_nm::Float64
     sigma_y_nm::Float64
     score::Float64
+    skew_ratio::Float64
 end
+
+MolecularFeature(amplitude::Float64, x_nm::Float64, y_nm::Float64,
+                 sigma_x_nm::Float64, sigma_y_nm::Float64, score::Float64) =
+    MolecularFeature(amplitude, x_nm, y_nm, sigma_x_nm, sigma_y_nm, score, 1.0)
 
 struct MolecularChain
     id::Int
@@ -62,7 +67,8 @@ Base.@kwdef mutable struct ChainSweepConfig
     max_overlap::Float64 = 0.60
     kappa_max::Float64 = 10.0     # condition-number penalty threshold (0 = disabled)
     kappa_weight::Float64 = 1.0   # penalty strength
-    peak_profile::Symbol = :gaussian  # :gaussian only for 2D currently
+    peak_profile::Symbol = :gaussian  # :gaussian | :split for 2D chain fits
+    skew_ratio_max::Float64 = 2.0      # split profile σright/σleft bound: [1/max, max]
     min_amplitude_fraction::Float64 = 0.3  # reject models with any peak amplitude < 30% of max (matches 1D)
     max_iter::Int = 300
     global_maxtime::Float64 = 15.0

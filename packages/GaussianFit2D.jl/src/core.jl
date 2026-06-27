@@ -658,10 +658,15 @@ function _chain_nparams(n::Int, ccfg::Union{ChainSweepConfig,Nothing}=nothing)
     n == 0 && return 1
     n_sigma_types = ccfg === nothing ? n : _chain_sigma_param_count(n, ccfg)
     n_sigmas = (ccfg !== nothing && ccfg.chain_circular_sigmas) ? n_sigma_types : 2n_sigma_types
+    n_skew = ccfg === nothing ? 0 : _chain_skew_param_count(n, ccfg)
     n_spacing = ccfg === nothing ? n : _chain_spacing_param_count(n, ccfg)
     n_tilt = (ccfg !== nothing && ccfg.chain_tilted_baseline) ? 2 : 0
-    return 1 + n + n_spacing + n + n_sigmas + n_tilt
+    return 1 + n + n_spacing + n + n_sigmas + n_skew + n_tilt
 end
+
+_chain_peak_profile(ccfg::ChainSweepConfig) = Symbol(lowercase(String(ccfg.peak_profile)))
+_chain_uses_split_profile(ccfg::ChainSweepConfig) = _chain_peak_profile(ccfg) == :split
+_chain_skew_param_count(n::Int, ccfg::ChainSweepConfig) = _chain_uses_split_profile(ccfg) ? n : 0
 
 function _chain_sigma_param_count(n::Int, ccfg::ChainSweepConfig)
     n <= 0 && return 0
@@ -858,6 +863,7 @@ function _decode_chain(p::AbstractVector, n::Int, axisctx, ccfg::ChainSweepConfi
     n_sigma_types = _chain_sigma_param_count(n, ccfg)
     if ccfg.chain_circular_sigmas
         sigma_types = [ccfg.sigma_parallel_min_nm + (ccfg.sigma_parallel_max_nm - ccfg.sigma_parallel_min_nm) * _rsigmoid(p[j+k-1]) for k in 1:n_sigma_types]
+        j += n_sigma_types
         sigmas = [sigma_types[_chain_lobe_type(k, n_sigma_types)] for k in 1:n]
         spars = sigmas
         sperps = sigmas
@@ -867,6 +873,13 @@ function _decode_chain(p::AbstractVector, n::Int, axisctx, ccfg::ChainSweepConfi
         sperp_types = [ccfg.sigma_perp_min_nm + (ccfg.sigma_perp_max_nm - ccfg.sigma_perp_min_nm) * _rsigmoid(p[j+k-1]) for k in 1:n_sigma_types]
         spars = [spar_types[_chain_lobe_type(k, n_sigma_types)] for k in 1:n]
         sperps = [sperp_types[_chain_lobe_type(k, n_sigma_types)] for k in 1:n]
+        j += n_sigma_types
+    end
+    skew_ratios = fill(1.0, n)
+    if _chain_uses_split_profile(ccfg)
+        rmax = max(ccfg.skew_ratio_max, 1.0 + EPS)
+        skew_ratios = [exp(log(rmax) * tanh(p[j+k-1])) for k in 1:n]
+        j += n
     end
     ts = Float64[t0]
     for d in deltas
@@ -879,9 +892,15 @@ function _decode_chain(p::AbstractVector, n::Int, axisctx, ccfg::ChainSweepConfi
     for k in 1:n
         xk = ox + ts[k] * ax + us[k] * px
         yk = oy + ts[k] * ay + us[k] * py
-        push!(feats, MolecularFeature(amps[k], xk, yk, spars[k], sperps[k], amps[k]))
+        push!(feats, MolecularFeature(amps[k], xk, yk, spars[k], sperps[k], amps[k], skew_ratios[k]))
     end
     return b0, feats, ts, us, spars, sperps
+end
+
+function _chain_split_peak_value(dt, du, spar, sperp, skew_ratio, rmax)
+    r = clamp(skew_ratio, 1.0 / rmax, rmax)
+    sigma_t = dt < 0 ? spar / sqrt(r) : spar * sqrt(r)
+    return exp(-0.5 * ((dt / sigma_t)^2 + (du / sperp)^2))
 end
 
 function _chain_model_values(x, y, p, n::Int, axisctx, ccfg::ChainSweepConfig;
@@ -896,8 +915,18 @@ function _chain_model_values(x, y, p, n::Int, axisctx, ccfg::ChainSweepConfig;
         pred = fill(b0, length(x))
     end
     ax, ay = axisctx.axis
+    split_profile = _chain_uses_split_profile(ccfg)
+    skew_rmax = max(ccfg.skew_ratio_max, 1.0 + EPS)
     for f in feats
-        @. pred += f.amplitude * exp(-0.5 * ((((x - f.x_nm)*ax + (y - f.y_nm)*ay)/f.sigma_x_nm)^2 + (((x - f.x_nm)*(-ay) + (y - f.y_nm)*ax)/f.sigma_y_nm)^2))
+        if split_profile
+            for i in eachindex(pred)
+                dt = (x[i] - f.x_nm) * ax + (y[i] - f.y_nm) * ay
+                du = (x[i] - f.x_nm) * (-ay) + (y[i] - f.y_nm) * ax
+                pred[i] += f.amplitude * _chain_split_peak_value(dt, du, f.sigma_x_nm, f.sigma_y_nm, f.skew_ratio, skew_rmax)
+            end
+        else
+            @. pred += f.amplitude * exp(-0.5 * ((((x - f.x_nm)*ax + (y - f.y_nm)*ay)/f.sigma_x_nm)^2 + (((x - f.x_nm)*(-ay) + (y - f.y_nm)*ax)/f.sigma_y_nm)^2))
+        end
     end
     return pred
 end
@@ -1176,6 +1205,9 @@ function _pack_chain_initial(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConf
             push!(p, sperp_trans)
         end
     end
+    if _chain_uses_split_profile(ccfg)
+        append!(p, zeros(n)) # tanh(0)=0 gives skew_ratio=1.0
+    end
     return p, amp_min_val, amp_range_val
 end
 
@@ -1208,6 +1240,7 @@ function _fit_chain_n(xs, ys, zimg, x, y, z, noise, n::Int, axisctx, ccfg::Chain
     else
         for _ in 1:(2n_sigma_types); lower[j] = -5.0; upper[j] = 5.0; j += 1 end
     end
+    for _ in 1:_chain_skew_param_count(n, ccfg); lower[j] = -5.0; upper[j] = 5.0; j += 1 end
 
     function _run_one_start(p_start, amp_min, amp_range)
         model_f = (xydata, p) -> _chain_model_values(view(xydata,1,:), view(xydata,2,:), p, n, axisctx, ccfg;
