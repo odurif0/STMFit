@@ -1029,6 +1029,8 @@ ccfg = GaussianFit2D.ChainSweepConfig(n_min=get(model, "n_min", 2), n_max=get(mo
     shared_sigma_types=get(model, "shared_sigma_types", 0),
     chain_spacing_model=get(model, "chain_spacing_model", "free"),
     chain_tilted_baseline=get(model, "chain_tilted_baseline", true),
+    peak_profile=Symbol(String(get(model, "peak_profile", "gaussian"))),
+    skew_ratio_max=Float64(get(model, "skew_ratio_max", 2.0)),
     intelligent_sweep=true, fuse_z_bwd=true)
 # Circular 2D config (same settings, circular sigmas)
 ccfg_circ = deepcopy(ccfg)
