@@ -13,6 +13,8 @@ makedocs(
         "Pipeline" => "pipeline.md",
         "Calibration" => "calibration.md",
         "Chitosan Runbook" => "chitosan_runbook.md",
+        "Unit Assignment" => "unit_assignment.md",
+        "QE STM Molds" => "qe_stm_molds.md",
         "Model Selection" => "selection.md",
         "Mathematical Background" => "math.md",
         "Research Journal" => "journal.md",
