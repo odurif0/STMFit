@@ -1,0 +1,71 @@
+# Chitosan/Cu(100) 240817 — unit-sequence ground truth (GlcNAc/GlcN per lobe)
+#
+# This file is for EXTERNAL EVALUATION ONLY (grading post-hoc). It must never
+# be read by the fitting or model-selection code. Same label-free rule as the
+# benchmark manifest: the sequence is used to grade predictions, not to guide
+# the fit.
+#
+# Format (tab-separated, header row required):
+#   file        SXM basename (e.g. 240817_002.sxm)
+#   sequence    ordered string of 0/1 along the chain (t_nm increasing, the
+#               code's PCA convention: "increasing y, then x").
+#               0 = GlcN (glucosamine), 1 = GlcNAc (N-acetyl-glucosamine).
+#               Length = N_selected (should match the fitted lobe count).
+#               Leave empty if the sequence is not yet available.
+#   quality     benchmark quality class (clean / clean_target / poor_quality)
+#   target_N    expected lobe count for human validation (6 for primary)
+#   notes       free-form annotation
+#
+# The sequence orientation follows the code's deterministic PCA axis
+# (axis = [-ay, ax], oriented "increasing y, then x" — see core.jl:700-701).
+# If your ground truth is encoded in a molecule-relative convention
+# (e.g. reducing-end -> non-reducing-end), the grading script tests all 4
+# alignments (identity, reverse, flip, reverse+flip) to find the best match.
+#
+# Fill in the `sequence` column for each file. Add or remove rows as needed
+# to match your data.
+file	sequence	quality	target_N	notes
+240817_002.sxm		clean	6
+240817_003.sxm		clean	6
+240817_004.sxm		clean	6
+240817_005.sxm		clean	6
+240817_006.sxm		clean	6
+240817_007.sxm		clean	6
+240817_017.sxm		clean_target	6	current calibration selects N_eff=7
+240817_018.sxm		clean	6
+240817_019.sxm		clean_target	6	current calibration selects N_eff=7
+240817_021.sxm		clean	6
+240817_024.sxm		clean	6
+240817_026.sxm		clean	6
+240817_029.sxm		poor_quality	6	stress case
+240817_030.sxm		poor_quality	6	stress case
+240817_031.sxm		poor_quality	6	stress case
+240817_032.sxm		poor_quality	6	stress case
+240817_033.sxm		clean	6
+240817_034.sxm		poor_quality	6	stress case
+240817_035.sxm		poor_quality	6	stress case
+240817_036.sxm		clean	6
+240817_037.sxm		poor_quality	6	stress case
+240817_038.sxm		poor_quality	6	stress case
+240817_039.sxm		clean	6
+240817_040.sxm		clean	6
+240817_041.sxm		clean	6
+240817_042.sxm		clean	6
+240817_043.sxm		clean_target	6	current calibration selects N_eff=5
+240817_044.sxm		clean	6
+240817_045.sxm		clean	6
+240817_046.sxm		clean	6
+240817_047.sxm		clean	6
+240817_048.sxm		clean	6
+240817_049.sxm		clean	6
+240817_050.sxm		clean	6
+240817_051.sxm		poor_quality	6	stress case
+240817_052.sxm		clean	6
+240817_053.sxm		clean	6
+240817_054.sxm		clean	6
+240817_055.sxm		clean	6
+240817_058.sxm		clean_target	6	current calibration selects N_eff=7
+240817_059.sxm		clean	6
+240817_060.sxm		clean	6
+240817_061.sxm		clean	6
+240817_062.sxm		clean	6
