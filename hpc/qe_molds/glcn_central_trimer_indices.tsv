@@ -1,0 +1,17 @@
+key	value
+xyz	glcn_central_trimer.xyz
+central_type	0
+neighbors	GlcN,GlcN
+n_atoms	69
+origin_labels	C_C1,C_C2,C_C3,C_C4,C_C5,C_O5
+origin_indices_bare	12,13,14,15,16,17
+axis_from_label	C_C4
+axis_from_index_bare	15
+axis_to_label	C_C1
+axis_to_index_bare	12
+plane_index_label	C_N2
+plane_index_bare	21
+frame_command_bare	--origin-indices 12,13,14,15,16,17 --axis-from 15 --axis-to 12 --plane-index 21
+default_slab_offset_8x8x4	256
+frame_command_after_default_slab	--origin-indices 268,269,270,271,272,273 --axis-from 271 --axis-to 268 --plane-index 277
+note	Initial unoptimized geometry; relax before extracting production STM/LDOS maps.

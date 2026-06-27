@@ -1,0 +1,12 @@
+NATOMS
+Cu(100) slab + beta-(1->4) chitosan trimer with central GlcNAc. Coordinates in angstrom.
+# Replace this template with a real XYZ file before running prepare_qe_mold_inputs.jl.
+# Required content:
+# - Cu slab, preferably >=4 layers.
+# - Adsorbed beta-(1->4)-linked trimer X-GlcNAc-X.
+# - Central GlcNAc unit should be identifiable for later origin/t-axis/u-axis choice.
+# - Keep the neighbor choice X identical to glcn_central_trimer_slab.xyz for the first comparison.
+#
+# Example atom lines:
+# Cu  0.000000  0.000000  0.000000
+# C   0.000000  0.000000  0.000000

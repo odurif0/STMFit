@@ -1,0 +1,11 @@
+key	value
+cell_a	20.449528111914955,0.0,0.0
+cell_b	0.0,20.449528111914955,0.0
+cell_c	0.0,0.0,29.619270432900002
+cell_a_arg	--cell-a 20.449528111914955,0.0,0.0
+cell_b_arg	--cell-b 0.0,20.449528111914955,0.0
+cell_c_arg	--cell-c 0.0,0.0,29.619270432900002
+fix_below_z_suggestion	1.807501
+top_cu_z	5.4225
+n_atoms	330
+center_indices	12,13,14,15,16,17

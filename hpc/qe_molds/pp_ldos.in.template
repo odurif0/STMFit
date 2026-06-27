@@ -1,0 +1,13 @@
+&INPUTPP
+  prefix = 'CHITOSAN_MOLD_PREFIX'
+  outdir = './qe_tmp'
+  plot_num = 5
+  emin = EMIN_EV
+  emax = EMAX_EV
+  degauss_ldos = 0.02
+/
+&PLOT
+  iflag = 3
+  output_format = 6
+  fileout = 'CHITOSAN_MOLD_PREFIX_ldos.cube'
+/

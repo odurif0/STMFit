@@ -1,0 +1,42 @@
+&CONTROL
+  calculation = 'relax'
+  prefix = 'CHITOSAN_MOLD_PREFIX'
+  outdir = './qe_tmp'
+  pseudo_dir = './pseudo'
+  tprnfor = .true.
+  tstress = .true.
+/
+&SYSTEM
+  ibrav = 0
+  nat = NATOMS
+  ntyp = 5
+  ecutwfc = 60.0
+  ecutrho = 480.0
+  occupations = 'smearing'
+  smearing = 'mv'
+  degauss = 0.02
+  input_dft = 'PBE'
+  vdw_corr = 'grimme-d3'
+/
+&ELECTRONS
+  conv_thr = 1.0d-6
+  mixing_beta = 0.3
+/
+&IONS
+  ion_dynamics = 'bfgs'
+/
+ATOMIC_SPECIES
+  Cu  63.546  Cu.pbe-spn-kjpaw_psl.1.0.0.UPF
+  C   12.011  C.pbe-n-kjpaw_psl.1.0.0.UPF
+  O   15.999  O.pbe-n-kjpaw_psl.1.0.0.UPF
+  H    1.008  H.pbe-kjpaw_psl.1.0.0.UPF
+  N   14.007  N.pbe-n-kjpaw_psl.1.0.0.UPF
+CELL_PARAMETERS angstrom
+  CELL_A_X  CELL_A_Y  CELL_A_Z
+  CELL_B_X  CELL_B_Y  CELL_B_Z
+  CELL_C_X  CELL_C_Y  CELL_C_Z
+ATOMIC_POSITIONS angstrom
+  # Fill Cu slab + chitosan trimer coordinates here.
+  # Use constraints if desired to freeze lower Cu layers.
+K_POINTS automatic
+  2 2 1  0 0 0
