@@ -117,6 +117,8 @@ Key knobs:
 | `STMFIT_BATCH_ARGS` | Extra flags forwarded to `batch_full.jl` | — |
 | `N_FILES` | Limit to first N files; empty = all | — |
 | `STMFIT_MAIL_USER` | Email for Slurm notifications | — |
+| `SSH_CONNECT_TIMEOUT` | SSH connect/banner timeout, useful for slow gateway/password+OTP flows | `180` |
+| `SSH_SERVER_ALIVE_INTERVAL` | SSH keepalive interval while commands run | `60` |
 
 `remote.env` is gitignored — it holds your username and paths.
 
@@ -223,7 +225,42 @@ chunks never collide — only the summary TSV needs merging.
 
 ---
 
-## 8. Limits & rules to respect
+## 8. QE Mold Jobs
+
+The DFT-STM mold workflow uses separate QE launchers, not the STM image batch
+array launcher above.
+
+After preparing `qe/glcn` and `qe/glcnac` locally, run:
+
+```bash
+bash hpc/launch_qe_molds_remote.sh --dry-run
+bash hpc/launch_qe_molds_remote.sh --watch
+```
+
+If the MPCDF gateway is slow or you need more time around password/OTP prompts,
+raise the SSH timeout in `hpc/remote.env`:
+
+```bash
+SSH_CONNECT_TIMEOUT=300
+SSH_SERVER_ALIVE_INTERVAL=60
+```
+
+On the cluster itself, from the synced repository root, use:
+
+```bash
+bash hpc/submit_qe_molds.sh --watch --sequential
+```
+
+Both paths run `test/preflight_qe_mold_inputs.jl` first. `--sequential` submits
+the two run directories (`qe/glcn`, `qe/glcnac`) as an `afterok` chain and
+enforces the task budget as the maximum simultaneous count (8), so two 8-task
+jobs fit within a single-node QOS group limit. QE run directories are
+gitignored because they can
+contain large scratch and cube files.
+
+---
+
+## 9. Limits & rules to respect
 
 - **No compute on login nodes** — they're shared and resource-limited. Only run
   `Pkg.instantiate()` and `merge_chunks.jl` (both light) there; never the batch.

@@ -43,6 +43,8 @@ source "$ENV_FILE"
 : "${STMFIT_MAIL_USER:=}"
 : "${WATCH_POLL:=30}"
 : "${RSYNC_EXTRA:=}"
+: "${SSH_CONNECT_TIMEOUT:=180}"
+: "${SSH_SERVER_ALIVE_INTERVAL:=60}"
 
 # ── Remote username + paths (MPCDF convention) ───────────────────────────────
 # STMFIT_REMOTE_USER is the short MPCDF account name used in filesystem paths
@@ -119,7 +121,10 @@ runssh() { # runssh <cmd>  — runs on the cluster; echoes under --dry-run
     local cmd="$1"
     if (( DRY_RUN )); then echo "  [dry-run] ssh $STMFIT_SSH_HOST \"$cmd\""; return; fi
     # shellcheck disable=SC2086
-    ssh -o BatchMode=no "$STMFIT_SSH_HOST" "$cmd"
+    ssh -o BatchMode=no \
+        -o ConnectTimeout="$SSH_CONNECT_TIMEOUT" \
+        -o ServerAliveInterval="$SSH_SERVER_ALIVE_INTERVAL" \
+        "$STMFIT_SSH_HOST" "$cmd"
 }
 
 # ── 0. Pre-flight ───────────────────────────────────────────────────────────
@@ -129,11 +134,15 @@ say "STMFit remote launch — target: $STMFIT_SSH_HOST"
 echo "    project: $STMFIT_REMOTE_PROJECT"
 echo "    data:    $STMFIT_LOCAL_DATA  →  $STMFIT_REMOTE_DATA"
 echo "    config:  $STMFIT_CONFIG   outdir: $STMFIT_OUTDIR"
+echo "    ssh:     ConnectTimeout=$SSH_CONNECT_TIMEOUT ServerAliveInterval=$SSH_SERVER_ALIVE_INTERVAL"
 (( DRY_RUN )) && warn "DRY RUN — no changes will be made."
 
 # A quick connectivity probe (skipped in dry-run to avoid prompting).
 if (( ! DRY_RUN )); then
-    ssh -o BatchMode=no -o ConnectTimeout=20 "$STMFIT_SSH_HOST" 'echo ok' >/dev/null 2>&1 \
+    ssh -o BatchMode=no \
+        -o ConnectTimeout="$SSH_CONNECT_TIMEOUT" \
+        -o ServerAliveInterval="$SSH_SERVER_ALIVE_INTERVAL" \
+        "$STMFIT_SSH_HOST" 'echo ok' >/dev/null 2>&1 \
         || die "SSH to '$STMFIT_SSH_HOST' failed. Check ~/.ssh/config (ProxyJump + 2FA)."
     ok "SSH reachable."
 fi
@@ -145,7 +154,8 @@ if (( SYNC_CODE )); then
         --exclude='results/' --exclude='*.log' --exclude='.git/' \
         --exclude='hpc/remote.env' --exclude='Manifest.toml' \
         ${RSYNC_EXTRA} \
-        -e ssh "$REPO_ROOT/" "$STMFIT_SSH_HOST:$STMFIT_REMOTE_PROJECT/"
+        -e "ssh -o ConnectTimeout=$SSH_CONNECT_TIMEOUT -o ServerAliveInterval=$SSH_SERVER_ALIVE_INTERVAL" \
+        "$REPO_ROOT/" "$STMFIT_SSH_HOST:$STMFIT_REMOTE_PROJECT/"
     ok "Code synced."
 fi
 
@@ -161,7 +171,8 @@ if (( SYNC_DATA )); then
         runssh "mkdir -p '$STMFIT_REMOTE_DATA'"
         runc rsync -avz --update --include='*/' --include='*.sxm' --exclude='*' \
             ${RSYNC_EXTRA} \
-            -e ssh "$STMFIT_LOCAL_DATA/" "$STMFIT_SSH_HOST:$STMFIT_REMOTE_DATA/"
+            -e "ssh -o ConnectTimeout=$SSH_CONNECT_TIMEOUT -o ServerAliveInterval=$SSH_SERVER_ALIVE_INTERVAL" \
+            "$STMFIT_LOCAL_DATA/" "$STMFIT_SSH_HOST:$STMFIT_REMOTE_DATA/"
         ok "Data synced."
     fi
 fi
@@ -217,7 +228,10 @@ else
         JOBID="<dry-run>"
     else
         # shellcheck disable=SC2086
-        submit_out=$(ssh -o BatchMode=no "$STMFIT_SSH_HOST" \
+        submit_out=$(ssh -o BatchMode=no \
+            -o ConnectTimeout="$SSH_CONNECT_TIMEOUT" \
+            -o ServerAliveInterval="$SSH_SERVER_ALIVE_INTERVAL" \
+            "$STMFIT_SSH_HOST" \
             "cd '$STMFIT_REMOTE_PROJECT' && ${sbatch_cmd[*]}") \
             || die "sbatch submission failed: $submit_out"
         JOBID=$(echo "$submit_out" | grep -oE '[0-9]+' | head -1)
@@ -242,7 +256,10 @@ if (( WATCH )); then
     say "Watching array $JOBID (poll every ${WATCH_POLL}s)..."
     # Poll until no task of this job is queued/running.
     while :; do
-        n=$(ssh -o BatchMode=no "$STMFIT_SSH_HOST" \
+        n=$(ssh -o BatchMode=no \
+            -o ConnectTimeout="$SSH_CONNECT_TIMEOUT" \
+            -o ServerAliveInterval="$SSH_SERVER_ALIVE_INTERVAL" \
+            "$STMFIT_SSH_HOST" \
             "squeue -h -j '$JOBID' -t R,PD,CF,CA,S,ST 2>/dev/null | wc -l" || echo 0)
         if [[ "$n" =~ ^[0-9]+$ ]] && (( n == 0 )); then break; fi
         printf "  [%s] %s tasks still queued/running...\r" "$(date +%H:%M:%S)" "$n"
@@ -250,7 +267,10 @@ if (( WATCH )); then
     done
     echo
     ok "Array $JOBID finished."
-    ssh -o BatchMode=no "$STMFIT_SSH_HOST" "sacct -j '$JOBID' --format=JobID,ArrayTaskID,State,Elapsed,ExitCode,MaxRSS -n" || true
+    ssh -o BatchMode=no \
+        -o ConnectTimeout="$SSH_CONNECT_TIMEOUT" \
+        -o ServerAliveInterval="$SSH_SERVER_ALIVE_INTERVAL" \
+        "$STMFIT_SSH_HOST" "sacct -j '$JOBID' --format=JobID,ArrayTaskID,State,Elapsed,ExitCode,MaxRSS -n" || true
 
     # ── 6. Merge chunk summaries on the login node ─────────────────────────
     if (( MERGE_REMOTE )); then
@@ -269,13 +289,15 @@ LOCAL_OUT="$REPO_ROOT/$STMFIT_OUTDIR"
 runc rsync -avz --update \
     --include='*/' --include='*.png' --include='*.tsv' --include='*.txt' --exclude='*' \
     ${RSYNC_EXTRA} \
-    -e ssh "$STMFIT_SSH_HOST:$STMFIT_REMOTE_PROJECT/$STMFIT_OUTDIR/" "$LOCAL_OUT/"
+    -e "ssh -o ConnectTimeout=$SSH_CONNECT_TIMEOUT -o ServerAliveInterval=$SSH_SERVER_ALIVE_INTERVAL" \
+    "$STMFIT_SSH_HOST:$STMFIT_REMOTE_PROJECT/$STMFIT_OUTDIR/" "$LOCAL_OUT/"
 ok "Results fetched to $LOCAL_OUT"
 
 # Also pull the per-chunk Slurm logs for inspection.
 runc rsync -avz --update \
     ${RSYNC_EXTRA} \
-    -e ssh "$STMFIT_SSH_HOST:$STMFIT_REMOTE_PROJECT/results/hpc_logs/" "$REPO_ROOT/results/hpc_logs/" \
+    -e "ssh -o ConnectTimeout=$SSH_CONNECT_TIMEOUT -o ServerAliveInterval=$SSH_SERVER_ALIVE_INTERVAL" \
+    "$STMFIT_SSH_HOST:$STMFIT_REMOTE_PROJECT/results/hpc_logs/" "$REPO_ROOT/results/hpc_logs/" \
     || warn "No hpc_logs to fetch (ok if logs dir was empty)."
 
 (( DRY_RUN )) && warn "DRY RUN complete — nothing was actually run." \
