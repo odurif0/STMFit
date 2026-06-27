@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Unit Assignment · STMFit</title><meta name="title" content="Unit Assignment · STMFit"/><meta property="og:title" content="Unit Assignment · STMFit"/><meta property="twitter:title" content="Unit Assignment · STMFit"/><meta name="description" content="Documentation for STMFit."/><meta property="og:description" content="Documentation for STMFit."/><meta property="twitter:description" content="Documentation for STMFit."/><script data-outdated-warner src="assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="search_index.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="index.html">STMFit</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="index.html">Home</a></li><li><a class="tocitem" href="pipeline.html">Pipeline</a></li><li><a class="tocitem" href="calibration.html">Calibration</a></li><li><a class="tocitem" href="chitosan_runbook.html">Chitosan Runbook</a></li><li class="is-active"><a class="tocitem" href="unit_assignment.html">Unit Assignment</a><ul class="internal"><li><a class="tocitem" href="#Motivation"><span>Motivation</span></a></li><li><a class="tocitem" href="#Label-free-constraint-(extended)"><span>Label-free constraint (extended)</span></a></li><li><a class="tocitem" href="#Pipeline-overview"><span>Pipeline overview</span></a></li><li><a class="tocitem" href="#Split-width-asymmetry-test-(Phase-1e)"><span>Split-width asymmetry test (Phase 1e)</span></a></li><li><a class="tocitem" href="#Key-design-decisions"><span>Key design decisions</span></a></li><li><a class="tocitem" href="#Scripts"><span>Scripts</span></a></li><li><a class="tocitem" href="#Ground-truth-file"><span>Ground truth file</span></a></li><li><a class="tocitem" href="#Commands"><span>Commands</span></a></li><li><a class="tocitem" href="#HPC-parallelism"><span>HPC parallelism</span></a></li><li><a class="tocitem" href="#Current-status"><span>Current status</span></a></li></ul></li><li><a class="tocitem" href="qe_stm_molds.html">QE STM Molds</a></li><li><a class="tocitem" href="selection.html">Model Selection</a></li><li><a class="tocitem" href="math.html">Mathematical Background</a></li><li><a class="tocitem" href="journal.html">Research Journal</a></li><li><a class="tocitem" href="config.html">Configuration</a></li><li><a class="tocitem" href="api.html">API Reference</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href="unit_assignment.html">Unit Assignment</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href="unit_assignment.html">Unit Assignment</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/odurif0/STMFit" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/odurif0/STMFit/blob/main/docs/src/unit_assignment.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Unit-Assignment-(GlcNAc/GlcN-per-lobe)"><a class="docs-heading-anchor" href="#Unit-Assignment-(GlcNAc/GlcN-per-lobe)">Unit Assignment (GlcNAc/GlcN per lobe)</a><a id="Unit-Assignment-(GlcNAc/GlcN-per-lobe)-1"></a><a class="docs-heading-anchor-permalink" href="#Unit-Assignment-(GlcNAc/GlcN-per-lobe)" title="Permalink"></a></h1><h2 id="Motivation"><a class="docs-heading-anchor" href="#Motivation">Motivation</a><a id="Motivation-1"></a><a class="docs-heading-anchor-permalink" href="#Motivation" title="Permalink"></a></h2><p>Chitosan is a (1,4)-β-linked polysaccharide composed of two monomer units: <strong>GlcNAc</strong> (N-acetyl-glucosamine) and <strong>GlcN</strong> (glucosamine). The fitted Gaussian lobes correspond to individual monomer units, but the current pipeline only counts them (N_selected) — it does not identify which lobe is which unit.</p><p>The goal is to assign each fitted lobe a type (0 = GlcN, 1 = GlcNAc) to produce a <strong>deacetylation map</strong> per chain: the ordered sequence of GlcNAc/GlcN along the molecular backbone.</p><h2 id="Label-free-constraint-(extended)"><a class="docs-heading-anchor" href="#Label-free-constraint-(extended)">Label-free constraint (extended)</a><a id="Label-free-constraint-(extended)-1"></a><a class="docs-heading-anchor-permalink" href="#Label-free-constraint-(extended)" title="Permalink"></a></h2><p>The same label-free rule that applies to N also applies to unit assignment:</p><ul><li>The <strong>ground-truth sequence</strong> (ordered GlcNAc/GlcN per chain) is available for the benchmark (240817 dataset) but must <strong>never enter the fitting or selection path</strong>. It is used only by grading scripts (<code>grade_unit_assignment.jl</code>) and by the <code>--with-truth</code> cross-evaluation mode of <code>analyze_unit_separability.jl</code>.</li><li>Using the truth to choose the 0↔1 flip (the &quot;oracle&quot; convention) is <strong>supervised</strong> and must be clearly labeled as such. The <strong>physical convention</strong> (GlcNAc = highest-amplitude cluster, based on the larger acetyl group) is label-free.</li><li>The assignment rule must not assume the number of GlcNAc/GlcN units in a chain. Rules such as &quot;top-2 lobes are GlcNAc&quot; are composition priors and are diagnostic only, not valid label-free assignment.</li></ul><h2 id="Pipeline-overview"><a class="docs-heading-anchor" href="#Pipeline-overview">Pipeline overview</a><a id="Pipeline-overview-1"></a><a class="docs-heading-anchor-permalink" href="#Pipeline-overview" title="Permalink"></a></h2><p>The unit-assignment investigation proceeds in phases. <strong>Phases 0–2a are implemented as diagnostics; Phases 2–5 remain research directions</strong> pending a robust label-free unit-identity signal.</p><pre><code class="nohighlight hljs">Phase 0: Grading framework (grade_unit_assignment.jl)
+   │     Truth TSV + predictions → accuracy, confusion, edit distance
+   │     4 alignments (identity/reverse/flip/reverse+flip)
+   │     2 conventions (physical label-free + oracle supervised)
+   │
+Phase 1: Gaussian feature separability (analyze_unit_separability.jl)
+   │     extract_lobe_features.jl → per-lobe (A, σ∥, σ⟂, integrated)
+   │     Unimodal vs bimodal test (kmeans k=1 vs k=2, BIC)
+   │     With --with-truth: AUC per feature, clustering accuracy
+   │
+Phase 1b: Non-Gaussian residual features (extract_blob_residual_features.jl)
+   │     Residual = data - Gaussian model
+   │     Skewness, shoulder at ±δ, kurtosis, L/R asymmetry
+   │     δ guided by pyranose ring geometry (C2 substituent offset)
+   │
+Phase 1c: Local/envelope-corrected features (augment_lobe_local_features.jl)
+   │     Per-chain z-scores, local prominence, envelope residuals
+   │     No truth and no composition constraint
+   │
+Phase 1d: Aligned patch diagnostics (extract_lobe_patches.jl)
+   │     Raw and residual patches aligned to chain axis
+   │     PCA/kmeans + optional supervised train/test diagnostic
+   │
+Phase 1e: Split-width Gaussian forward model (GaussianFit2D peak_profile=:split)
+   │     σ∥ is split left/right around each lobe center
+   │     skew_ratio = σright / σleft, fitted per lobe
+   │     Tests whether STM resolves any lobe asymmetry before SMILES/DFT molds
+   │
+Phase 2a: Connected mold-template decoding (score_connected_mold_templates.jl)
+    │     Apply GlcN/GlcNAc patch molds with global direction/phase/mirror states
+    │     Enforces glycosidic connectivity/orientation, not composition
+    │     refine_geometric_mold.jl searches local acetyl-site transforms label-free
+    │
+Phase 2: 1-type vs 2-type model selection [planned]
+   │     shared_sigma_types ∈ {0,1,2} × spacing_model ∈ {free, alternating}
+   │     GCV comparison → does a 2-type structure exist?
+   │
+Phase 3: Per-blob clustering assignment [planned]
+   │     GMM 2-component on Phase 1+1b features → sequence 0/1 per chain
+   │     Physical mapping {A,B} → {GlcN,GlcNAc}
+   │
+Phase 4: Template supervised validation [planned]
+   │     Train/test split → nearest-centroid → generalization measure
+   │
+Phase 5: DFT-STM simulation [optional, planned]
+         LDOS on Cu(100) → physical template</code></pre><h2 id="Split-width-asymmetry-test-(Phase-1e)"><a class="docs-heading-anchor" href="#Split-width-asymmetry-test-(Phase-1e)">Split-width asymmetry test (Phase 1e)</a><a id="Split-width-asymmetry-test-(Phase-1e)-1"></a><a class="docs-heading-anchor-permalink" href="#Split-width-asymmetry-test-(Phase-1e)" title="Permalink"></a></h2><p>The current production model uses symmetric 2D Gaussians. This can erase the GlcNAc acetyl shoulder by absorbing it into a symmetric width and leaving only a noisy residual. Phase 1e adds an opt-in split-width profile:</p><pre><code class="language-text hljs">σleft  = σ∥ / sqrt(skew_ratio)
+σright = σ∥ * sqrt(skew_ratio)
+skew_ratio ∈ [1/skew_ratio_max, skew_ratio_max]</code></pre><p><code>skew_ratio = 1</code> is exactly the symmetric Gaussian. The split model is therefore a nested test of whether the STM data justify a fitted left/right lobe asymmetry. It remains label-free: the skew parameter is fitted independently per lobe, with no truth sequence and no composition constraint.</p><p>Recommended experimental use:</p><ol><li>Keep the production batch and N selection on <code>config/chitosan.toml</code>.</li><li>Refit features at the already selected N using <code>config/chitosan_split.toml</code>.</li><li>Compare GCV at fixed N between Gaussian and split profiles.</li><li>Only if split improves GCV and <code>skew_ratio</code> is stable/bimodal should we move to SMILES-derived or DFT-STM molecule molds.</li></ol><p><code>extract_lobe_features.jl</code> automatically fixes <code>n_min=n_max=N_selected</code> per file when <code>--selected-summary</code> is provided. This avoids an unnecessary N sweep and is important for split-width diagnostics, which add one fitted parameter per lobe.</p><p>Decision rule:</p><ul><li>If split does not improve GCV and <code>skew_ratio≈1</code>, the STM/tip conditions do not resolve the asymmetry; geometry/DFT molds are unlikely to help.</li><li>If split improves GCV and <code>skew_ratio</code> separates lobes, asymmetry is a real STM signal and a physical mold is justified.</li></ul><h2 id="Key-design-decisions"><a class="docs-heading-anchor" href="#Key-design-decisions">Key design decisions</a><a id="Key-design-decisions-1"></a><a class="docs-heading-anchor-permalink" href="#Key-design-decisions" title="Permalink"></a></h2><h3 id="Why-connected-molds-rather-than-free-asymmetric-lobes?"><a class="docs-heading-anchor" href="#Why-connected-molds-rather-than-free-asymmetric-lobes?">Why connected molds rather than free asymmetric lobes?</a><a id="Why-connected-molds-rather-than-free-asymmetric-lobes?-1"></a><a class="docs-heading-anchor-permalink" href="#Why-connected-molds-rather-than-free-asymmetric-lobes?" title="Permalink"></a></h3><p>The split-width test showed that the STM data contain real lobe asymmetry, but that generic left/right width is dominated by overlap/envelope/tip effects rather than GlcNAc/GlcN identity. A molecule mold must therefore encode a <strong>specific chemical geometry</strong>, not just arbitrary skew. For chitosan, the β-(1→4) connectivity restricts how pyranose rings and C2 substituents can be oriented relative to the backbone. The connected-mold decoder tests only a small set of global states:</p><pre><code class="language-text hljs">chain direction × pyranose parity phase × surface/mirror state</code></pre><p>Within a global state, each lobe is scored against GlcN and GlcNAc templates at the orientation allowed by connectivity. The sequence is chosen by template cost, with no assumption about how many GlcNAc/GlcN units are present.</p><p>Pairwise context is represented by <strong>sliding bonds</strong>, not by disjoint dimers:</p><pre><code class="language-text hljs">(1,2), (2,3), ..., (N-1,N)</code></pre><p>This supports both even and odd chains. The total decoded cost is:</p><pre><code class="language-text hljs">Σ unary_i(type_i, parity_i, mirror)
++ Σ bond_i(type_i, type_{i+1}, parity_i, mirror)</code></pre><p>The transition motifs <code>00</code>, <code>01</code>, <code>10</code>, and <code>11</code> are adjacent-pair costs used by Viterbi; they never impose a composition or tile the chain into fixed dimers.</p><p>The first implementation is deliberately patch-level (<code>score_connected_mold_templates.jl</code>): it consumes already aligned lobe patches and externally generated templates. A full forward-model fit with templates should only be added if patch-level mold scoring carries a useful signal.</p><h3 id="Connected-mold-template-format"><a class="docs-heading-anchor" href="#Connected-mold-template-format">Connected mold template format</a><a id="Connected-mold-template-format-1"></a><a class="docs-heading-anchor-permalink" href="#Connected-mold-template-format" title="Permalink"></a></h3><p>The connected mold workflow has three layers:</p><pre><code class="language-text hljs">3D coordinates/DFT/RDKit export
+  → smiles_to_mold_coords.py (optional RDKit helper)
+  → project_mold_atoms.jl
+  → chitosan_mold_atoms.tsv
+  → generate_connected_mold_templates.jl
+  → unary + sliding-bond template TSVs
+  → score_connected_mold_templates.jl</code></pre><p>The current recommended source is simpler and more explicit:</p><pre><code class="language-text hljs">manual geometric proxy sites
+  → templates/chitosan_geometric_sites.tsv
+  → generate_connected_mold_templates.jl
+  → unary + sliding-bond template TSVs
+  → score_connected_mold_templates.jl --template-mode contrast</code></pre><p>The preferred future source, if available, is DFT-STM / Tersoff-Hamann map data:</p><pre><code class="language-text hljs">DFT-STM/LDOS maps for GlcN and GlcNAc in beta-(1-&gt;4) chain context
+  → templates/chitosan_stm_maps.tsv
+  → import_stm_mold_maps.jl
+  → unary + sliding-bond template TSVs
+  → score_connected_mold_templates.jl --template-mode contrast</code></pre><p>The 3D coordinate TSV consumed by <code>project_mold_atoms.jl</code> is:</p><pre><code class="language-text hljs">type    atom    element x_nm    y_nm    z_nm    weight  sigma_t_nm  sigma_u_nm
+0       C1      C       ...
+0       C2      C       ...
+0       C4      C       ...
+1       C1      C       ...
+...</code></pre><p><code>type=0</code> is GlcN and <code>type=1</code> is GlcNAc. Atom names must contain the anchors used to define the local frame, by default <code>C1</code>, <code>C4</code>, and <code>C2</code>: the backbone axis is <code>C1→C4</code>, the mold origin is the mean of <code>C1,C4</code>, and positive <code>u</code> is the side of <code>C2</code> after removing the backbone-axis projection. The output <code>chitosan_mold_atoms.tsv</code> contains aligned <code>(t,u)</code> atom/proxy coordinates.</p><p>If RDKit is available, <code>test/smiles_to_mold_coords.py</code> can generate the 3D TSV from mapped SMILES. The SMILES must carry atom-map numbers for the frame anchors; by default the helper maps atom-map numbers <code>1,2,4</code> to anchor names <code>C1,C2,C4</code>:</p><pre><code class="language-bash hljs">python3 test/smiles_to_mold_coords.py \
+    --smiles-tsv templates/chitosan_smiles.tsv \
+    --anchor-map C1:1,C2:2,C4:4 \
+    --out templates/chitosan_mold_coords.tsv</code></pre><p><code>templates/chitosan_smiles.tsv</code> has columns:</p><pre><code class="language-text hljs">type    smiles
+0       &lt;mapped GlcN SMILES&gt;
+1       &lt;mapped GlcNAc SMILES&gt;</code></pre><p>RDKit is optional and intentionally not a Julia project dependency. DFT or other coordinate sources can write <code>chitosan_mold_coords.tsv</code> directly using the same columns.</p><p>For the manual geometric path, <code>templates/chitosan_geometric_sites.tsv</code> skips the 3D projection step and directly defines proxy sites in the aligned <code>(t,u)</code> patch frame:</p><pre><code class="language-text hljs">type    atom              t_nm    u_nm    weight  sigma_t_nm  sigma_u_nm
+0       ring_center       0.000   0.000   ...
+0       glcn_nh2          ...
+1       ring_center       0.000   0.000   ...
+1       acetyl_carbonyl   ...</code></pre><p>These are not atoms and not benchmark-fitted parameters. They encode a physical first guess: a shared pyranose backbone plus a short GlcN substituent or a longer GlcNAc acetyl-side proxy. Identity scoring should use <code>--template-mode contrast</code> so the shared backbone does not dominate the weak substituent signal.</p><p>Templates are wide TSV files with one row per <code>(type, parity, mirror)</code>:</p><pre><code class="language-text hljs">name    type    parity  mirror  p001    p002    ...
+GlcN_p0_m0      0       0       0       ...
+GlcNAc_p0_m0    1       0       0       ...
+...</code></pre><p>Required rows are all eight combinations:</p><pre><code class="language-text hljs">type ∈ {0,1}, parity ∈ {0,1}, mirror ∈ {0,1}</code></pre><p><code>type=0</code> means GlcN and <code>type=1</code> means GlcNAc. The <code>pNNN</code> columns must match the patch grid size from <code>extract_lobe_patches.jl</code>, after stripping the patch prefix (<code>raw_p001</code>/<code>res_p001</code> in the patch TSV corresponds to <code>p001</code> in the template TSV). Template pixels should be generated from geometric sites, SMILES/DFT, or DFT-STM maps in the same aligned coordinate convention as the patches and then normalized; the scorer standardizes both patches and templates before comparing them.</p><p><code>score_connected_mold_templates.jl</code> supports two template modes:</p><table><tr><th style="text-align: right">Mode</th><th style="text-align: right">Meaning</th><th style="text-align: right">Use</th></tr><tr><td style="text-align: right"><code>full</code></td><td style="text-align: right">Score the full GlcN/GlcNAc mold.</td><td style="text-align: right">Default; useful when the whole STM patch is type-specific.</td></tr><tr><td style="text-align: right"><code>contrast</code></td><td style="text-align: right">Subtract the parity/mirror common mold before scoring.</td><td style="text-align: right">Diagnostic for weak type-specific substituent signal, avoids common-backbone dominance.</td></tr></table><h3 id="DFT-STM-/-LDOS-Map-Format"><a class="docs-heading-anchor" href="#DFT-STM-/-LDOS-Map-Format">DFT-STM / LDOS Map Format</a><a id="DFT-STM-/-LDOS-Map-Format-1"></a><a class="docs-heading-anchor-permalink" href="#DFT-STM-/-LDOS-Map-Format" title="Permalink"></a></h3><p>The ideal mold source is not a molecular contour. For STM it should be a simulated STM/LDOS image at the experimental bias, after adsorption geometry and tip/filter effects are represented as well as possible. <code>test/import_stm_mold_maps.jl</code> imports such maps once they are exported in the aligned lobe frame:</p><pre><code class="language-text hljs">type    t_nm    u_nm    value    parity  mirror
+0       -0.48   -0.48   ...      0       0
+0       -0.40   -0.48   ...      0       0
+1       -0.48   -0.48   ...      0       0</code></pre><p>Required columns are <code>type</code>, <code>t_nm</code>, <code>u_nm</code>, and <code>value</code>. <code>type=0</code> is GlcN and <code>type=1</code> is GlcNAc. <code>parity</code> and <code>mirror</code> are optional; if they are absent, the importer generates the beta-(1-&gt;4) orientation variants by flipping the base maps. The maps must already use the same coordinate convention as extracted patches: <code>t</code> along the fitted backbone, <code>u</code> transverse, and origin at the central lobe.</p><p>The recommended scientific input is not isolated monomers, but a central unit in a short linked oligomer, for example:</p><pre><code class="language-text hljs">GlcN central unit in a beta-(1-&gt;4) trimer
+GlcNAc central unit in a beta-(1-&gt;4) trimer</code></pre><p>This keeps the glycosidic linkage, ring parity, and nearest-neighbor electronic context while leaving the sequence free during decoding. If explicit dimer/pair maps are available, the importer can also consume optional bond maps with columns:</p><pre><code class="language-text hljs">left_type  right_type  side  t_nm  u_nm  value  parity  mirror</code></pre><p>where <code>side</code> is <code>left</code>/<code>right</code> or <code>l</code>/<code>r</code>. If bond maps are not provided, bond templates are generated by concatenating the corresponding unary maps, matching the current geometric-template behavior.</p><h3 id="Residual-refinement-rule"><a class="docs-heading-anchor" href="#Residual-refinement-rule">Residual refinement rule</a><a id="Residual-refinement-rule-1"></a><a class="docs-heading-anchor-permalink" href="#Residual-refinement-rule" title="Permalink"></a></h3><p>The manual geometric mold is allowed to be refined against STM patches/residuals only if the objective is label-free. <code>test/refine_geometric_mold.jl</code> implements the first version: it searches small global transforms of the GlcNAc acetyl proxy sites (<code>t/u</code> shifts, transverse scale, weight scale, sigma scale), scores each candidate against contrast templates, and ranks candidates by k=1 vs k=2 BIC of the resulting per-lobe template-evidence margins. It never reads truth labels and never imposes a GlcNAc/GlcN composition.</p><p>Valid future objectives include reconstruction error, mean residual-template correlation, cross-validated stability across files, or a shared low-dimensional correction to the proxy-site positions/weights. Invalid objectives include maximizing the known <code>010010</code> benchmark accuracy, forcing two GlcNAc units per chain, or choosing among candidate molds by exact-sequence score. The mold must be frozen before running <code>grade_unit_assignment.jl</code>.</p><p>Optional sliding bond templates use one row per <code>(left_type, right_type, parity, mirror)</code>:</p><pre><code class="language-text hljs">name    left_type   right_type  parity  mirror  l_p001  ...  r_p001  ...
+00_p0_m0        0   0           0       0       ...
+01_p0_m0        0   1           0       0       ...
+10_p0_m0        1   0           0       0       ...
+11_p0_m0        1   1           0       0       ...</code></pre><p>Required rows are all 16 combinations:</p><pre><code class="language-text hljs">left_type,right_type ∈ {00,01,10,11}, parity ∈ {0,1}, mirror ∈ {0,1}</code></pre><p>The <code>l_pNNN</code> and <code>r_pNNN</code> columns are scored against the left and right observed lobe patches for each sliding edge. In reversed chain direction, the decoder automatically reverses the chemical left/right order of the transition.</p><h3 id="Why-not-fit-&quot;cross-sections&quot;-directly?"><a class="docs-heading-anchor" href="#Why-not-fit-&quot;cross-sections&quot;-directly?">Why not fit &quot;cross sections&quot; directly?</a><a id="Why-not-fit-&quot;cross-sections&quot;-directly?-1"></a><a class="docs-heading-anchor-permalink" href="#Why-not-fit-&quot;cross-sections&quot;-directly?" title="Permalink"></a></h3><p>The STM image at constant height measures the LDOS convolved with the tip, not a geometric van der Waals cross section. A direct fit of molecular templates to the STM data would require DFT-simulated STM images (LDOS on Cu(100)), which is molécule-specific and not generalist. The graduated approach (geometry → empirical template → DFT) avoids this until necessary.</p><h3 id="Why-per-blob-clustering-(Phase-3)-rather-than-alternating-model-(Phase-2)?"><a class="docs-heading-anchor" href="#Why-per-blob-clustering-(Phase-3)-rather-than-alternating-model-(Phase-2)?">Why per-blob clustering (Phase 3) rather than alternating model (Phase 2)?</a><a id="Why-per-blob-clustering-(Phase-3)-rather-than-alternating-model-(Phase-2)?-1"></a><a class="docs-heading-anchor-permalink" href="#Why-per-blob-clustering-(Phase-3)-rather-than-alternating-model-(Phase-2)?" title="Permalink"></a></h3><p>Chitosan is a <strong>random copolymer</strong> (degree of deacetylation, DD). The sequence GlcNAc/GlcN along a chain is not strictly alternating. The <code>alternating</code> spacing model (<code>shared_sigma_types=2, chain_spacing_model=&quot;alternating&quot;</code>) tests whether a 2-type structure exists, but cannot assign types in a random sequence. The per-blob clustering (Phase 3) handles arbitrary sequences.</p><h3 id="Orientation-ambiguity"><a class="docs-heading-anchor" href="#Orientation-ambiguity">Orientation ambiguity</a><a id="Orientation-ambiguity-1"></a><a class="docs-heading-anchor-permalink" href="#Orientation-ambiguity" title="Permalink"></a></h3><p>The PCA axis (see <code>core.jl:700-701</code>) has a deterministic orientation (&quot;increasing y, then x&quot;), but the ground truth may be encoded in a molecule-relative convention (reducing → non-reducing end). The grading script tests <strong>4 alignments</strong> (identity, reverse, flip, reverse+flip) to handle this.</p><h3 id="Two-conventions-for-the-01-flip"><a class="docs-heading-anchor" href="#Two-conventions-for-the-01-flip">Two conventions for the 0↔1 flip</a><a id="Two-conventions-for-the-01-flip-1"></a><a class="docs-heading-anchor-permalink" href="#Two-conventions-for-the-01-flip" title="Permalink"></a></h3><table><tr><th style="text-align: right">Convention</th><th style="text-align: right">Flip resolution</th><th style="text-align: right">Label-free?</th><th style="text-align: right">Usage</th></tr><tr><td style="text-align: right"><strong>Physical</strong></td><td style="text-align: right">GlcNAc = highest-amplitude cluster (acetyl is larger)</td><td style="text-align: right">Yes</td><td style="text-align: right">Phase 3 (main), Phase 0 grading</td></tr><tr><td style="text-align: right"><strong>Oracle</strong></td><td style="text-align: right">Best of 4 alignments (uses truth to choose flip)</td><td style="text-align: right">No (supervised)</td><td style="text-align: right">Phase 0 (upper bound), Phase 4</td></tr></table><p>The gap between physical and oracle accuracy is itself a diagnostic: a small gap validates the physical convention; a large gap indicates the amplitude mapping is imperfect.</p><h2 id="Scripts"><a class="docs-heading-anchor" href="#Scripts">Scripts</a><a id="Scripts-1"></a><a class="docs-heading-anchor-permalink" href="#Scripts" title="Permalink"></a></h2><table><tr><th style="text-align: right">Script</th><th style="text-align: right">Phase</th><th style="text-align: right">Role</th><th style="text-align: right">Needs SXM?</th></tr><tr><td style="text-align: right"><code>test/extract_lobe_features.jl</code></td><td style="text-align: right">1</td><td style="text-align: right">Re-run fit, extract per-lobe Gaussian features + axis</td><td style="text-align: right">Yes (<code>STMFIT_DATA_DIR</code>)</td></tr><tr><td style="text-align: right"><code>test/analyze_unit_separability.jl</code></td><td style="text-align: right">1</td><td style="text-align: right">Unimodal vs bimodal test, AUC, clustering accuracy</td><td style="text-align: right">No (reads TSV)</td></tr><tr><td style="text-align: right"><code>test/extract_blob_residual_features.jl</code></td><td style="text-align: right">1b</td><td style="text-align: right">Residual skewness, shoulder, kurtosis, asymmetry</td><td style="text-align: right">Yes (<code>STMFIT_DATA_DIR</code>)</td></tr><tr><td style="text-align: right"><code>test/augment_lobe_local_features.jl</code></td><td style="text-align: right">1c</td><td style="text-align: right">Add local prominence and envelope-corrected features</td><td style="text-align: right">No (reads TSV)</td></tr><tr><td style="text-align: right"><code>test/extract_lobe_patches.jl</code></td><td style="text-align: right">1d</td><td style="text-align: right">Extract chain-axis-aligned raw/residual patches</td><td style="text-align: right">Yes (<code>STMFIT_DATA_DIR</code>)</td></tr><tr><td style="text-align: right"><code>test/analyze_lobe_patches.jl</code></td><td style="text-align: right">1d</td><td style="text-align: right">PCA/kmeans patch separability + optional supervised diagnostic</td><td style="text-align: right">No (reads TSV)</td></tr><tr><td style="text-align: right"><code>config/chitosan_split.toml</code></td><td style="text-align: right">1e</td><td style="text-align: right">Experimental split-width Gaussian profile config</td><td style="text-align: right">No</td></tr><tr><td style="text-align: right"><code>test/score_connected_mold_templates.jl</code></td><td style="text-align: right">2a</td><td style="text-align: right">Score connected GlcN/GlcNAc molds over global direction/phase/mirror states</td><td style="text-align: right">No (reads TSVs)</td></tr><tr><td style="text-align: right"><code>test/generate_connected_mold_templates.jl</code></td><td style="text-align: right">2a</td><td style="text-align: right">Generate unary and optional sliding-bond mold TSVs from aligned geometric/proxy sites</td><td style="text-align: right">No (reads TSV)</td></tr><tr><td style="text-align: right"><code>test/refine_geometric_mold.jl</code></td><td style="text-align: right">2a</td><td style="text-align: right">Label-free grid refinement of acetyl proxy-site geometry using template-evidence bimodality</td><td style="text-align: right">No (reads TSVs)</td></tr><tr><td style="text-align: right"><code>test/import_stm_mold_maps.jl</code></td><td style="text-align: right">2a</td><td style="text-align: right">Import DFT-STM/LDOS map TSVs into connected unary/bond mold templates</td><td style="text-align: right">No (reads TSVs)</td></tr><tr><td style="text-align: right"><code>test/cube_to_stm_maps.jl</code></td><td style="text-align: right">2a</td><td style="text-align: right">Sample QE/DFT cube files into aligned STM map TSVs</td><td style="text-align: right">No (reads cubes)</td></tr><tr><td style="text-align: right"><code>test/smoke_qe_mold_workflow.jl</code></td><td style="text-align: right">2a</td><td style="text-align: right">Synthetic no-QE smoke test for slab/QE-input/frame/cube/import handoffs</td><td style="text-align: right">No SXM; writes temp files</td></tr><tr><td style="text-align: right"><code>test/build_initial_chitosan_trimer_xyz.jl</code></td><td style="text-align: right">2a</td><td style="text-align: right">Generate deterministic initial X-GlcN-X and X-GlcNAc-X trimer XYZs plus frame-index TSVs</td><td style="text-align: right">No SXM; writes XYZ/TSV</td></tr><tr><td style="text-align: right"><code>test/validate_chitosan_trimer_structures.jl</code></td><td style="text-align: right">2a</td><td style="text-align: right">Validate generated trimer/slab atom counts, acetyl counts, distances, labels, and frame indices</td><td style="text-align: right">No SXM; reads XYZ/TSV</td></tr><tr><td style="text-align: right"><code>test/preflight_qe_mold_inputs.jl</code></td><td style="text-align: right">2a</td><td style="text-align: right">Validate prepared QE run directories before Slurm submission</td><td style="text-align: right">No SXM; reads QE inputs</td></tr><tr><td style="text-align: right"><code>test/finalize_qe_mold_workflow.jl</code></td><td style="text-align: right">2a</td><td style="text-align: right">Convert completed QE relaxed XYZ/cubes into STMFit connected mold templates</td><td style="text-align: right">No SXM; reads QE outputs</td></tr><tr><td style="text-align: right"><code>test/prepare_qe_mold_inputs.jl</code></td><td style="text-align: right">2a</td><td style="text-align: right">Generate QE relax/SCF/LDOS inputs from vetted slab+trimer XYZ files</td><td style="text-align: right">No (reads XYZ)</td></tr><tr><td style="text-align: right"><code>test/build_qe_slab_trimer_xyz.jl</code></td><td style="text-align: right">2a</td><td style="text-align: right">Assemble a reproducible Cu(100) slab below a supplied oriented trimer XYZ</td><td style="text-align: right">No (reads XYZ)</td></tr><tr><td style="text-align: right"><code>test/extract_qe_relaxed_xyz.jl</code></td><td style="text-align: right">2a</td><td style="text-align: right">Extract final relaxed coordinates and cell from QE <code>pw.x</code> output</td><td style="text-align: right">No (reads QE output)</td></tr><tr><td style="text-align: right"><code>test/update_qe_positions_from_xyz.jl</code></td><td style="text-align: right">2a</td><td style="text-align: right">Replace QE SCF <code>ATOMIC_POSITIONS</code> using relaxed XYZ coordinates</td><td style="text-align: right">No (reads QE input + XYZ)</td></tr><tr><td style="text-align: right"><code>test/extract_qe_mold_frame.jl</code></td><td style="text-align: right">2a</td><td style="text-align: right">Extract central-unit origin/t-axis/u-axis from a relaxed slab+trimer XYZ</td><td style="text-align: right">No (reads XYZ)</td></tr><tr><td style="text-align: right"><code>test/project_mold_atoms.jl</code></td><td style="text-align: right">2a</td><td style="text-align: right">Project 3D atom/proxy coordinates into the aligned <code>(t,u)</code> mold frame</td><td style="text-align: right">No (reads TSV)</td></tr><tr><td style="text-align: right"><code>test/smiles_to_mold_coords.py</code></td><td style="text-align: right">2a</td><td style="text-align: right">Optional RDKit helper: mapped SMILES → 3D coordinate TSV</td><td style="text-align: right">No SXM; needs RDKit</td></tr><tr><td style="text-align: right"><code>test/validate_connected_molds.jl</code></td><td style="text-align: right">2a</td><td style="text-align: right">Validate connected mold files, required combinations, and patch/template dimensions</td><td style="text-align: right">No (reads TSVs)</td></tr><tr><td style="text-align: right"><code>test/grade_unit_assignment.jl</code></td><td style="text-align: right">0</td><td style="text-align: right">Grade predictions vs truth (4 alignments, 2 conventions)</td><td style="text-align: right">No (reads TSVs)</td></tr></table><h2 id="Ground-truth-file"><a class="docs-heading-anchor" href="#Ground-truth-file">Ground truth file</a><a id="Ground-truth-file-1"></a><a class="docs-heading-anchor-permalink" href="#Ground-truth-file" title="Permalink"></a></h2><p><code>benchmarks/chitosan_240817_unit_sequences.tsv</code> — one row per file, columns: <code>file</code>, <code>sequence</code> (ordered 0/1 along t<em>nm increasing), <code>quality</code>, `target</em>N<code>,</code>notes`. <strong>Evaluation-only</strong>: never read by the fitter.</p><h2 id="Commands"><a class="docs-heading-anchor" href="#Commands">Commands</a><a id="Commands-1"></a><a class="docs-heading-anchor-permalink" href="#Commands" title="Permalink"></a></h2><pre><code class="language-bash hljs"># Phase 1: extract per-lobe features (re-runs the fit, ~10-15 min/file)
+STMFIT_DATA_DIR=/path/to/data julia -t 4 --project=. \
+    test/extract_lobe_features.jl \
+    --config config/chitosan.toml \
+    --out results/unit_separability/lobe_features.tsv
+
+# Phase 1: separability analysis (label-free)
+julia --project=. test/analyze_unit_separability.jl \
+    --features results/unit_separability/lobe_features.tsv \
+    --out results/unit_separability
+
+# Phase 1: separability analysis (with truth cross-evaluation)
+julia --project=. test/analyze_unit_separability.jl \
+    --features results/unit_separability/lobe_features.tsv \
+    --truth benchmarks/chitosan_240817_unit_sequences.tsv \
+    --out results/unit_separability
+
+# Phase 1b: residual features
+STMFIT_DATA_DIR=/path/to/data julia --project=. \
+    test/extract_blob_residual_features.jl \
+    --features results/unit_separability/lobe_features.tsv \
+    --out results/unit_separability/residual_features.tsv
+
+# Phase 1c: local/envelope-corrected features, no composition prior
+julia --project=. test/augment_lobe_local_features.jl \
+    --features results/unit_separability/lobe_features.tsv \
+    --out results/unit_separability/lobe_features_local.tsv
+
+# Phase 1d: aligned raw/residual patches
+STMFIT_DATA_DIR=/path/to/data julia --project=. \
+    test/extract_lobe_patches.jl \
+    --features results/unit_separability/lobe_features.tsv \
+    --out results/unit_separability/lobe_patches.tsv
+
+# Phase 1d: patch PCA/kmeans, label-free unless --truth is supplied
+julia --project=. test/analyze_lobe_patches.jl \
+    --patches results/unit_separability/lobe_patches.tsv \
+    --prefix res_p \
+    --out results/unit_separability/patch_analysis_residual
+
+# Phase 1e: split-width Gaussian features at fixed batch-selected N
+STMFIT_DATA_DIR=/path/to/data julia -t 4 --project=. \
+    test/extract_lobe_features.jl \
+    --config config/chitosan_split.toml \
+    --selected-summary results/best_plots/summary_overlap060_hard.tsv \
+    --manifest benchmarks/chitosan_240817.toml \
+    --primary-only \
+    --out results/unit_separability/lobe_features_selectedN_primary_split.tsv
+
+julia --project=. test/analyze_unit_separability.jl \
+    --features results/unit_separability/lobe_features_selectedN_primary_split.tsv \
+    --features-list skew_ratio \
+    --out results/unit_separability/selectedN_primary_split_skew
+
+# Phase 2a: connected geometric mold-template decoding, no composition prior
+STMFIT_DATA_DIR=/path/to/data julia --project=. \
+    test/extract_lobe_patches.jl \
+    --features results/unit_separability/lobe_features_selectedN_primary.tsv \
+    --out results/unit_separability/lobe_patches_selectedN_primary_half048.tsv \
+    --half-nm 0.48 \
+    --step-nm 0.08
+
+julia --project=. test/generate_connected_mold_templates.jl \
+    --atoms templates/chitosan_geometric_sites.tsv \
+    --out templates/chitosan_connected_molds.tsv \
+    --bond-out templates/chitosan_connected_bond_molds.tsv \
+    --half-nm 0.48 \
+    --step-nm 0.08
+
+julia --project=. test/validate_connected_molds.jl \
+    --atoms templates/chitosan_geometric_sites.tsv \
+    --templates templates/chitosan_connected_molds.tsv \
+    --bond-templates templates/chitosan_connected_bond_molds.tsv \
+    --patches results/unit_separability/lobe_patches_selectedN_primary_half048.tsv \
+    --prefix raw_p \
+    --report results/unit_assignment/connected_mold_validation.txt
+
+julia --project=. test/score_connected_mold_templates.jl \
+    --patches results/unit_separability/lobe_patches_selectedN_primary_half048.tsv \
+    --templates templates/chitosan_connected_molds.tsv \
+    --prefix raw_p \
+    --template-mode contrast \
+    --out results/unit_assignment/connected_mold_predictions.tsv
+
+# Optional Phase 2a refinement: label-free search around the geometric acetyl sites.
+julia --project=. test/refine_geometric_mold.jl \
+    --patches results/unit_separability/lobe_patches_selectedN_primary_half048.tsv \
+    --sites templates/chitosan_geometric_sites.tsv \
+    --out-sites templates/chitosan_geometric_sites_refined_raw.tsv \
+    --report results/unit_assignment/geometric_mold_refinement_raw.tsv \
+    --prefix raw_p
+
+julia --project=. test/generate_connected_mold_templates.jl \
+    --atoms templates/chitosan_geometric_sites_refined_raw.tsv \
+    --out templates/chitosan_connected_molds_refined_raw.tsv \
+    --bond-out templates/chitosan_connected_bond_molds_refined_raw.tsv \
+    --half-nm 0.48 \
+    --step-nm 0.08
+
+julia --project=. test/score_connected_mold_templates.jl \
+    --patches results/unit_separability/lobe_patches_selectedN_primary_half048.tsv \
+    --templates templates/chitosan_connected_molds_refined_raw.tsv \
+    --prefix raw_p \
+    --template-mode contrast \
+    --out results/unit_assignment/geometric_mold_predictions_refined_raw.tsv
+
+# Future ideal path: import DFT-STM/LDOS maps instead of geometric proxy sites.
+julia --project=. test/build_initial_chitosan_trimer_xyz.jl \
+    --out-dir hpc/qe_molds
+
+julia --project=. test/validate_chitosan_trimer_structures.jl \
+    --dir hpc/qe_molds \
+    --out hpc/qe_molds/structure_validation.tsv
+
+julia --project=. test/build_qe_slab_trimer_xyz.jl \
+    --molecule hpc/qe_molds/glcn_central_trimer.xyz \
+    --out hpc/qe_molds/glcn_central_trimer_slab.xyz \
+    --metadata hpc/qe_molds/glcn_central_trimer_slab_meta.tsv \
+    --nx 8 --ny 8 --layers 4 \
+    --center-indices 12,13,14,15,16,17 \
+    --height-above-top 2.6 --vacuum 18.0
+
+julia --project=. test/prepare_qe_mold_inputs.jl \
+    --xyz hpc/qe_molds/glcn_central_trimer_slab.xyz \
+    --cell-metadata hpc/qe_molds/glcn_central_trimer_slab_meta.tsv \
+    --out-dir qe/glcn \
+    --prefix glcn_central \
+    --fix-below-z ZCUT \
+    --emin-ev EMIN \
+    --emax-ev EMAX
+
+# Repeat for the GlcNAc-central trimer (required before preflighting both dirs):
+julia --project=. test/build_qe_slab_trimer_xyz.jl \
+    --molecule hpc/qe_molds/glcnac_central_trimer.xyz \
+    --out hpc/qe_molds/glcnac_central_trimer_slab.xyz \
+    --metadata hpc/qe_molds/glcnac_central_trimer_slab_meta.tsv \
+    --nx 8 --ny 8 --layers 4 \
+    --center-indices 12,13,14,15,16,17 \
+    --height-above-top 2.6 --vacuum 18.0
+
+julia --project=. test/prepare_qe_mold_inputs.jl \
+    --xyz hpc/qe_molds/glcnac_central_trimer_slab.xyz \
+    --cell-metadata hpc/qe_molds/glcnac_central_trimer_slab_meta.tsv \
+    --out-dir qe/glcnac \
+    --prefix glcnac_central \
+    --fix-below-z ZCUT \
+    --emin-ev EMIN \
+    --emax-ev EMAX
+
+julia --project=. test/preflight_qe_mold_inputs.jl \
+    --dir qe/glcn \
+    --dir qe/glcnac \
+    --out hpc/qe_molds/qe_input_preflight.tsv \
+    --max-total-tasks 8 \
+    --sequential
+
+bash hpc/submit_qe_molds.sh --watch --sequential
+
+julia --project=. test/finalize_qe_mold_workflow.jl \
+    --height-nm HEIGHT \
+    --glcn-dir qe/glcn \
+    --glcnac-dir qe/glcnac
+
+# The generated run_qe_mold.sbatch performs these two handoff steps automatically.
+julia --project=. test/extract_qe_relaxed_xyz.jl \
+    --qe-out qe/glcn/glcn_central_relax.out \
+    --out qe/glcn/glcn_central_relaxed.xyz \
+    --metadata qe/glcn/glcn_central_relaxed_meta.tsv
+
+julia --project=. test/update_qe_positions_from_xyz.jl \
+    --input qe/glcn/pw_scf.in \
+    --xyz qe/glcn/glcn_central_relaxed.xyz \
+    --out qe/glcn/pw_scf_relaxed.in
+
+julia --project=. test/extract_qe_mold_frame.jl \
+    --xyz qe/glcn/glcn_central_relaxed.xyz \
+    --origin-indices I,J \
+    --axis-from I --axis-to J --plane-index K \
+    --height-nm HEIGHT \
+    --out qe/glcn/frame.tsv
+
+julia --project=. test/cube_to_stm_maps.jl \
+    --cube 0:qe/glcn/glcn_central_ldos.cube \
+    --frame 0:qe/glcn/frame.tsv \
+    --cube 1:qe/glcnac/glcnac_central_ldos.cube \
+    --frame 1:qe/glcnac/frame.tsv \
+    --cube-units bohr \
+    --out templates/chitosan_stm_maps.tsv
+
+julia --project=. test/import_stm_mold_maps.jl \
+    --maps templates/chitosan_stm_maps.tsv \
+    --out templates/chitosan_connected_molds_stm.tsv \
+    --bond-out templates/chitosan_connected_bond_molds_stm.tsv \
+    --half-nm 0.48 \
+    --step-nm 0.08
+
+julia --project=. test/score_connected_mold_templates.jl \
+    --patches results/unit_separability/lobe_patches_selectedN_primary_half048.tsv \
+    --templates templates/chitosan_connected_molds_stm.tsv \
+    --bond-templates templates/chitosan_connected_bond_molds_stm.tsv \
+    --prefix raw_p \
+    --template-mode contrast \
+    --out results/unit_assignment/stm_mold_predictions.tsv
+
+# Phase 1 + 1b combined separability
+julia --project=. test/analyze_unit_separability.jl \
+    --features results/unit_separability/lobe_features.tsv \
+    --extra results/unit_separability/residual_features.tsv \
+    --truth benchmarks/chitosan_240817_unit_sequences.tsv \
+    --out results/unit_separability
+
+# Phase 0: grading (once predictions exist)
+julia --project=. test/grade_unit_assignment.jl \
+    --predictions results/unit_assignment/assigned_sequences.tsv \
+    --truth benchmarks/chitosan_240817_unit_sequences.tsv \
+    --out results/benchmark_grades/unit_assignment.tsv</code></pre><h2 id="HPC-parallelism"><a class="docs-heading-anchor" href="#HPC-parallelism">HPC parallelism</a><a id="HPC-parallelism-1"></a><a class="docs-heading-anchor-permalink" href="#HPC-parallelism" title="Permalink"></a></h2><p><code>extract_lobe_features.jl</code> supports <code>--chunk I/N</code> for job-array parallelism:</p><pre><code class="language-bash hljs"># On Raven (≤ 8 CPUs total, e.g. 4 chunks × 2 CPUs)
+STMFIT_DATA_DIR=/data julia -t 2 --project=. \
+    test/extract_lobe_features.jl \
+    --config config/chitosan.toml \
+    --chunk 1/4 \
+    --out results/unit_separability/lobe_features_chunk01.tsv
+# Then concatenate chunks manually (cat *_chunk*.tsv &gt; lobe_features.tsv)</code></pre><h2 id="Current-status"><a class="docs-heading-anchor" href="#Current-status">Current status</a><a id="Current-status-1"></a><a class="docs-heading-anchor-permalink" href="#Current-status" title="Permalink"></a></h2><ul><li><strong>Phase 0</strong>: <code>grade_unit_assignment.jl</code> implemented. Awaiting predictions.</li><li><strong>Phase 1</strong>: <code>extract_lobe_features.jl</code> + <code>analyze_unit_separability.jl</code> implemented and run on the corrected primary benchmark set using batch <code>N_selected</code> (39 files, 234 lobes). Gaussian features are <strong>strongly bimodal</strong>: <code>ΔBIC(k=1-k=2) = +184.1</code>.</li><li><strong>Phase 1b</strong>: <code>extract_blob_residual_features.jl</code> implemented and run with full baseline/tilt subtraction. Adding residual features weakens the evidence to <code>ΔBIC(k=1-k=2) = +4.3</code> (weakly bimodal). Current residual features add more noise than signal.</li><li><strong>Phase 1c</strong>: <code>augment_lobe_local_features.jl</code> implemented and run. Local prominence/envelope features remain bimodal (<code>ΔBIC = +144.0</code>) but do not solve the chemistry: label-free assignment gives 69.2% physical accuracy and 1/39 exact sequences against the withheld <code>NKNNKN</code> diagnostic truth.</li><li><strong>Phase 1d</strong>: aligned patch extraction and PCA/kmeans diagnostics implemented and run on the same 39 primary files (234 patches, 9×9 grid). Raw patches are bimodal (<code>ΔBIC = +66.2</code>) but supervised train/test accuracy is only 51.4%. Residual patches are weakly bimodal (<code>ΔBIC = +20.3</code>) with 61.1% supervised train/test accuracy. Current patches therefore do not yet carry enough generalizable unit-identity signal.</li><li><strong>Phase 1e</strong>: split-width Gaussian forward model implemented as <code>peak_profile = &quot;split&quot;</code> in <code>config/chitosan_split.toml</code> and run on the 39 primary benchmark files at fixed batch-selected N. All files refit at N=6. Split improved fixed-N GCV on 36/39 files (median relative ΔGCV = -10.7%, mean = -12.6%) and <code>skew_ratio</code> is strongly bimodal (<code>ΔBIC = +294.8</code>). However, external diagnostic grading shows this asymmetry is not GlcNAc/GlcN identity: <code>skew_ratio</code> AUC is 0.477 (inverse 0.523), skew-only assignment is 48.3% physical / 63.7% oracle with 0/39 exact sequences, and Gaussian+skew degrades to 60.7% physical / 70.1% oracle. Conclusion: split captures real local shape asymmetry useful to the fit, but not the chemical unit label.</li><li><strong>Phase 2a</strong>: connected mold-template decoder implemented and switched to a manual geometric proxy-site source (<code>templates/chitosan_geometric_sites.tsv</code>). It tests global direction/phase/mirror states and applies oriented GlcN/GlcNAc patch templates plus optional sliding bond templates for transitions <code>00/01/10/11</code>, without truth labels or composition constraints. The first geometric diagnostic uses 13×13 raw patches (<code>±0.48 nm</code>) and contrast scoring. It validates technically but does not solve unit identity: raw contrast gives 60.3% physical / 63.7% oracle with 0/39 exact sequences; adding bond templates does not improve the result. Full-template scoring reaches 67.9% oracle with 4/39 exact sequences, but the physical 0↔1 mapping fails, so it is not a valid label-free assignment.</li><li><strong>Phase 2a refinement</strong>: <code>refine_geometric_mold.jl</code> implemented. Raw-patch refinement selected a shifted/narrower acetyl geometry by a fully label-free ΔBIC objective (<code>ΔBIC=417.3</code>, clusters 74/160). After amplitude-based physical remapping, the refined raw mold gives 67.9% physical / 72.2% oracle and 0/39 physical exact sequences (1/39 oracle exact). Adding sliding bonds slightly worsens to 67.1% physical. Residual-patch refinement gives a stronger label-free ΔBIC (<code>625.8</code>) but poor physical grading (44.0%), so that residual mode is non-chemical. Conclusion: label-free refinement improves the raw mold but still does not reach a robust deacetylation map; DFT-STM or a better observable is still needed before forward-model integration.</li><li><strong>DFT-STM mold path</strong>: <code>import_stm_mold_maps.jl</code> implemented and validated on synthetic GlcN/GlcNAc maps. It converts long-form simulated STM/LDOS maps into the same connected template format as the geometric molds, with beta-(1-&gt;4) parity/mirror variants and optional bond-map support. Real DFT-STM maps are still needed before this path can be scientifically graded.</li><li><strong>Validation</strong>: <code>test/validate_connected_molds.jl</code> checks the connected-mold file chain before decoding: anchor atoms, required unary/bond combinations, and patch/template pixel-count compatibility. It does not read truth labels.</li><li><strong>Current best label-free output</strong>: <code>results/unit_assignment/assigned_sequences_selectedN_primary_gaussian.tsv</code> (Gaussian features only, primary files only, <code>N_selected</code> from the batch).</li><li><strong>Supervised validation</strong>: <code>test/assign_units_template.jl</code> implemented for train/test empirical-template validation once the truth sequences are filled.</li><li><strong>Phase 2–5</strong>: planned. Decision point after Phase 1+1b separability report.</li><li><strong>Ground truth</strong>: skeleton in <code>benchmarks/chitosan_240817_unit_sequences.tsv</code> (sequences to be filled in by the user).</li></ul></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="chitosan_runbook.html">« Chitosan Runbook</a><a class="docs-footer-nextpage" href="qe_stm_molds.html">QE STM Molds »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Saturday 27 June 2026 16:23">Saturday 27 June 2026</span>. Using Julia version 1.11.9.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
