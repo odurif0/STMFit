@@ -1,8 +1,8 @@
 #!/usr/bin/env julia
 
 # Validate connected mold inputs before running scientific decoding.
-# Checks optional upstream geometry files, the aligned site/proxy TSV, unary
-# template TSV, bond template TSV, and patch/template pixel compatibility.
+# Checks the aligned site/proxy TSV, unary template TSV, bond template TSV,
+# and patch/template pixel compatibility.
 
 using Printf
 using LinearAlgebra
@@ -10,8 +10,6 @@ using LinearAlgebra
 include(joinpath(@__DIR__, "lib", "script_utils.jl"))
 using .ScriptUtils: _read_tsv
 
-const DEFAULT_SMILES = "templates/chitosan_smiles.tsv"
-const DEFAULT_COORDS = ""
 const DEFAULT_ATOMS = "templates/chitosan_geometric_sites.tsv"
 const DEFAULT_TEMPLATES = "templates/chitosan_connected_molds.tsv"
 const DEFAULT_BONDS = "templates/chitosan_connected_bond_molds.tsv"
@@ -19,8 +17,6 @@ const DEFAULT_PATCHES = "results/unit_separability/lobe_patches_selectedN_primar
 const DEFAULT_REPORT = "results/unit_assignment/connected_mold_validation.txt"
 
 struct Options
-    smiles::String
-    coords::String
     atoms::String
     templates::String
     bonds::String
@@ -31,8 +27,6 @@ struct Options
 end
 
 function _parse_cli(args)
-    smiles = DEFAULT_SMILES
-    coords = DEFAULT_COORDS
     atoms = DEFAULT_ATOMS
     templates = DEFAULT_TEMPLATES
     bonds = DEFAULT_BONDS
@@ -43,11 +37,7 @@ function _parse_cli(args)
     i = 1
     while i <= length(args)
         arg = args[i]
-        if arg == "--smiles"; smiles = args[i+1]; i += 2
-        elseif startswith(arg, "--smiles="); smiles = split(arg, "=", limit=2)[2]; i += 1
-        elseif arg == "--coords"; coords = args[i+1]; i += 2
-        elseif startswith(arg, "--coords="); coords = split(arg, "=", limit=2)[2]; i += 1
-        elseif arg == "--atoms"; atoms = args[i+1]; i += 2
+        if arg == "--atoms"; atoms = args[i+1]; i += 2
         elseif startswith(arg, "--atoms="); atoms = split(arg, "=", limit=2)[2]; i += 1
         elseif arg == "--templates"; templates = args[i+1]; i += 2
         elseif startswith(arg, "--templates="); templates = split(arg, "=", limit=2)[2]; i += 1
@@ -65,8 +55,6 @@ function _parse_cli(args)
             Usage: julia --project=. test/validate_connected_molds.jl [options]
 
             Options:
-              --smiles PATH          Mapped SMILES TSV [$(DEFAULT_SMILES)]
-              --coords PATH          Optional 3D coordinate TSV [none]
               --atoms PATH           Geometric/proxy site TSV [$(DEFAULT_ATOMS)]
               --templates PATH       Unary connected mold TSV [$(DEFAULT_TEMPLATES)]
               --bond-templates PATH  Sliding bond mold TSV [$(DEFAULT_BONDS)]
@@ -77,15 +65,14 @@ function _parse_cli(args)
 
             The validator never reads truth labels and never checks composition.
             It only checks file format, required type/parity/mirror combinations,
-            optional anchors when 3D coordinates are supplied, and template/patch
-            dimensions.
+            and template/patch dimensions.
             """)
             exit(0)
         else
             error("Unknown argument: $arg")
         end
     end
-    return Options(smiles, coords, atoms, templates, bonds, patches, prefix, report, require_all)
+    return Options(atoms, templates, bonds, patches, prefix, report, require_all)
 end
 
 function _has_columns(header, required)
@@ -115,49 +102,6 @@ function _push_file_check!(lines, errors, label, path; required::Bool=true)
     push!(lines, msg)
     required && push!(errors, msg)
     return false
-end
-
-function _validate_smiles!(lines, errors, opt)
-    isfile(opt.smiles) || return
-    header, rows = _read_tsv(opt.smiles)
-    ok, missing = _has_columns(header, ["type", "smiles"])
-    ok || (push!(errors, "SMILES TSV missing columns: $(join(missing, ", "))"); return)
-    if isempty(rows)
-        push!(lines, "  SMILES rows: 0 usable rows; skipped")
-        opt.require_all && push!(errors, "SMILES TSV has no usable type/smiles rows")
-        return
-    end
-    types = Set{Int}()
-    for row in rows
-        typ = tryparse(Int, get(row, "type", ""))
-        typ in (0, 1) || continue
-        !isempty(strip(get(row, "smiles", ""))) && push!(types, typ)
-    end
-    for typ in (0, 1)
-        if !(typ in types) && opt.require_all
-            push!(errors, "SMILES TSV missing non-empty type=$typ row")
-        end
-    end
-    push!(lines, "  SMILES rows: $(length(rows)); usable types: $(sort(collect(types)))")
-end
-
-function _validate_coords!(lines, errors, opt)
-    isfile(opt.coords) || return
-    header, rows = _read_tsv(opt.coords)
-    required = ["type", "atom", "element", "x_nm", "y_nm", "z_nm"]
-    ok, missing = _has_columns(header, required)
-    ok || (push!(errors, "Coord TSV missing columns: $(join(missing, ", "))"); return)
-    by_type = Dict(0 => Set{String}(), 1 => Set{String}())
-    for row in rows
-        typ = tryparse(Int, row["type"])
-        typ in (0, 1) || continue
-        push!(by_type[typ], strip(row["atom"]))
-    end
-    for typ in (0, 1), anchor in ("C1", "C2", "C4")
-        anchor in by_type[typ] || push!(errors, "Coord TSV missing anchor $anchor for type=$typ")
-    end
-    vals = _numeric_values(rows, ["x_nm", "y_nm", "z_nm"])
-    isempty(vals) || push!(lines, @sprintf("  coord numeric range: %.4g .. %.4g nm", minimum(vals), maximum(vals)))
 end
 
 function _validate_atoms!(lines, errors, opt)
@@ -246,16 +190,12 @@ function main()
     push!(lines, "=========================")
     push!(lines, "")
 
-    _push_file_check!(lines, errors, "SMILES TSV", opt.smiles; required=opt.require_all)
-    _push_file_check!(lines, errors, "3D coordinate TSV", opt.coords; required=opt.require_all)
     _push_file_check!(lines, errors, "geometric/proxy site TSV", opt.atoms; required=opt.require_all)
     _push_file_check!(lines, errors, "unary template TSV", opt.templates; required=true)
     _push_file_check!(lines, errors, "bond template TSV", opt.bonds; required=false)
     _push_file_check!(lines, errors, "patch TSV", opt.patches; required=false)
     push!(lines, "")
 
-    _validate_smiles!(lines, errors, opt)
-    _validate_coords!(lines, errors, opt)
     _validate_atoms!(lines, errors, opt)
     unary_pix = _validate_unary_templates!(lines, errors, opt)
     bond_pix = _validate_bond_templates!(lines, errors, opt)
