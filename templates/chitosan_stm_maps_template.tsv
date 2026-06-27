@@ -1,0 +1,16 @@
+# Template input for test/import_stm_mold_maps.jl.
+#
+# Fill this file from DFT-STM/Tersoff-Hamann simulations of the central unit in
+# a beta-(1->4)-linked chain context. Coordinates must be in the aligned patch
+# frame: t along the chain backbone, u transverse, origin at the fitted lobe.
+#
+# Minimal columns are:
+# type  t_nm  u_nm  value
+#
+# Optional parity/mirror columns may be supplied if DFT maps are generated for
+# each orientation explicitly. Otherwise the importer generates parity/mirror
+# variants by flips.
+type	t_nm	u_nm	value	parity	mirror
+# 0	-0.48	-0.48	0.0	0	0
+# 0	-0.40	-0.48	0.0	0	0
+# 1	-0.48	-0.48	0.0	0	0

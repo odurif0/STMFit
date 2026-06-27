@@ -1,0 +1,20 @@
+# Manual geometric proxy sites for chitosan unit-assignment molds.
+# Coordinates are in the aligned lobe patch frame: t is along the chain axis,
+# u is transverse, and the lobe center is the origin. type=0 is GlcN and
+# type=1 is GlcNAc. These are hand-defined proxy sites, not atom coordinates.
+type	atom	t_nm	u_nm	weight	sigma_t_nm	sigma_u_nm
+0	ring_center	0.000	0.000	1.00	0.150	0.115
+0	ring_left	-0.115	-0.020	0.42	0.090	0.090
+0	ring_right	0.115	0.020	0.42	0.090	0.090
+0	ring_c2_side	-0.060	0.120	0.35	0.080	0.080
+0	ring_c6_side	0.075	-0.155	0.28	0.090	0.090
+0	glcn_nh2	-0.090	0.230	0.28	0.075	0.080
+1	ring_center	0.000	0.000	1.00	0.150	0.115
+1	ring_left	-0.115	-0.020	0.42	0.090	0.090
+1	ring_right	0.115	0.020	0.42	0.090	0.090
+1	ring_c2_side	-0.060	0.120	0.35	0.080	0.080
+1	ring_c6_side	0.075	-0.155	0.28	0.090	0.090
+1	glcnac_nh	-0.090	0.220	0.22	0.075	0.080
+1	acetyl_carbonyl	-0.090	0.335	0.48	0.080	0.075
+1	acetyl_oxygen	-0.010	0.385	0.42	0.075	0.075
+1	acetyl_methyl	-0.170	0.440	0.36	0.095	0.085
