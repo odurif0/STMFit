@@ -44,10 +44,7 @@ Phase 1: Gaussian feature separability (analyze_unit_separability.jl)
    │     Unimodal vs bimodal test (kmeans k=1 vs k=2, BIC)
    │     With --with-truth: AUC per feature, clustering accuracy
    │
-Phase 1b: Non-Gaussian residual features (extract_blob_residual_features.jl)
-   │     Residual = data - Gaussian model
-   │     Skewness, shoulder at ±δ, kurtosis, L/R asymmetry
-   │     δ guided by pyranose ring geometry (C2 substituent offset)
+Phase 1b: Non-Gaussian residual features — REMOVED (added noise: ΔBIC +184→+4.3)
    │
 Phase 1c: Local/envelope-corrected features (augment_lobe_local_features.jl)
    │     Per-chain z-scores, local prominence, envelope residuals
@@ -60,7 +57,7 @@ Phase 1d: Aligned patch diagnostics (extract_lobe_patches.jl)
 Phase 1e: Split-width Gaussian forward model (GaussianFit2D peak_profile=:split)
    │     σ∥ is split left/right around each lobe center
    │     skew_ratio = σright / σleft, fitted per lobe
-   │     Tests whether STM resolves any lobe asymmetry before SMILES/DFT molds
+   │     Tests whether STM resolves any lobe asymmetry before DFT-STM molds
    │
 Phase 2a: Connected mold-template decoding (score_connected_mold_templates.jl)
     │     Apply GlcN/GlcNAc patch molds with global direction/phase/mirror states
@@ -105,7 +102,7 @@ Recommended experimental use:
 2. Refit features at the already selected N using `config/chitosan_split.toml`.
 3. Compare GCV at fixed N between Gaussian and split profiles.
 4. Only if split improves GCV and `skew_ratio` is stable/bimodal should we move
-   to SMILES-derived or DFT-STM molecule molds.
+   to DFT-STM molecule molds.
 
 `extract_lobe_features.jl` automatically fixes `n_min=n_max=N_selected` per file
 when `--selected-summary` is provided. This avoids an unnecessary N sweep and is
@@ -161,81 +158,25 @@ scoring carries a useful signal.
 
 ### Connected mold template format
 
-The connected mold workflow has three layers:
+The connected mold workflow has two input routes. The current source is a manual
+geometric proxy-site TSV; the preferred future source is DFT-STM maps:
 
 ```text
-3D coordinates/DFT/RDKit export
-  → smiles_to_mold_coords.py (optional RDKit helper)
-  → project_mold_atoms.jl
-  → chitosan_mold_atoms.tsv
-  → generate_connected_mold_templates.jl
-  → unary + sliding-bond template TSVs
-  → score_connected_mold_templates.jl
-```
-
-The current recommended source is simpler and more explicit:
-
-```text
-manual geometric proxy sites
+manual geometric proxy sites (current)
   → templates/chitosan_geometric_sites.tsv
   → generate_connected_mold_templates.jl
   → unary + sliding-bond template TSVs
   → score_connected_mold_templates.jl --template-mode contrast
-```
 
-The preferred future source, if available, is DFT-STM / Tersoff-Hamann map data:
-
-```text
-DFT-STM/LDOS maps for GlcN and GlcNAc in beta-(1->4) chain context
+DFT-STM/LDOS maps for GlcN and GlcNAc in beta-(1->4) chain context (preferred)
   → templates/chitosan_stm_maps.tsv
   → import_stm_mold_maps.jl
   → unary + sliding-bond template TSVs
   → score_connected_mold_templates.jl --template-mode contrast
 ```
 
-The 3D coordinate TSV consumed by `project_mold_atoms.jl` is:
-
-```text
-type    atom    element x_nm    y_nm    z_nm    weight  sigma_t_nm  sigma_u_nm
-0       C1      C       ...
-0       C2      C       ...
-0       C4      C       ...
-1       C1      C       ...
-...
-```
-
-`type=0` is GlcN and `type=1` is GlcNAc. Atom names must contain the anchors used
-to define the local frame, by default `C1`, `C4`, and `C2`: the backbone axis is
-`C1→C4`, the mold origin is the mean of `C1,C4`, and positive `u` is the side of
-`C2` after removing the backbone-axis projection. The output
-`chitosan_mold_atoms.tsv` contains aligned `(t,u)` atom/proxy coordinates.
-
-If RDKit is available, `test/smiles_to_mold_coords.py` can generate the 3D TSV
-from mapped SMILES. The SMILES must carry atom-map numbers for the frame anchors;
-by default the helper maps atom-map numbers `1,2,4` to anchor names `C1,C2,C4`:
-
-```bash
-python3 test/smiles_to_mold_coords.py \
-    --smiles-tsv templates/chitosan_smiles.tsv \
-    --anchor-map C1:1,C2:2,C4:4 \
-    --out templates/chitosan_mold_coords.tsv
-```
-
-`templates/chitosan_smiles.tsv` has columns:
-
-```text
-type    smiles
-0       <mapped GlcN SMILES>
-1       <mapped GlcNAc SMILES>
-```
-
-RDKit is optional and intentionally not a Julia project dependency. DFT or other
-coordinate sources can write `chitosan_mold_coords.tsv` directly using the same
-columns.
-
-For the manual geometric path, `templates/chitosan_geometric_sites.tsv` skips the
-3D projection step and directly defines proxy sites in the aligned `(t,u)` patch
-frame:
+For the manual geometric path, `templates/chitosan_geometric_sites.tsv` directly
+defines proxy sites in the aligned `(t,u)` patch frame:
 
 ```text
 type    atom              t_nm    u_nm    weight  sigma_t_nm  sigma_u_nm
@@ -268,10 +209,9 @@ type ∈ {0,1}, parity ∈ {0,1}, mirror ∈ {0,1}
 `type=0` means GlcN and `type=1` means GlcNAc. The `pNNN` columns must match the
 patch grid size from `extract_lobe_patches.jl`, after stripping the patch prefix
 (`raw_p001`/`res_p001` in the patch TSV corresponds to `p001` in the template
-TSV). Template pixels should be generated from geometric sites, SMILES/DFT, or
-DFT-STM maps in the same aligned coordinate convention as the patches and then
-normalized; the scorer standardizes both patches and templates before comparing
-them.
+TSV). Template pixels should be generated from geometric proxy sites or DFT-STM
+maps in the same aligned coordinate convention as the patches and then normalized;
+the scorer standardizes both patches and templates before comparing them.
 
 `score_connected_mold_templates.jl` supports two template modes:
 
@@ -398,7 +338,6 @@ mapping is imperfect.
 |---|---|---|---|
 | `test/extract_lobe_features.jl` | 1 | Re-run fit, extract per-lobe Gaussian features + axis | Yes (`STMFIT_DATA_DIR`) |
 | `test/analyze_unit_separability.jl` | 1 | Unimodal vs bimodal test, AUC, clustering accuracy | No (reads TSV) |
-| `test/extract_blob_residual_features.jl` | 1b | Residual skewness, shoulder, kurtosis, asymmetry | Yes (`STMFIT_DATA_DIR`) |
 | `test/augment_lobe_local_features.jl` | 1c | Add local prominence and envelope-corrected features | No (reads TSV) |
 | `test/extract_lobe_patches.jl` | 1d | Extract chain-axis-aligned raw/residual patches | Yes (`STMFIT_DATA_DIR`) |
 | `test/analyze_lobe_patches.jl` | 1d | PCA/kmeans patch separability + optional supervised diagnostic | No (reads TSV) |
@@ -418,8 +357,6 @@ mapping is imperfect.
 | `test/extract_qe_relaxed_xyz.jl` | 2a | Extract final relaxed coordinates and cell from QE `pw.x` output | No (reads QE output) |
 | `test/update_qe_positions_from_xyz.jl` | 2a | Replace QE SCF `ATOMIC_POSITIONS` using relaxed XYZ coordinates | No (reads QE input + XYZ) |
 | `test/extract_qe_mold_frame.jl` | 2a | Extract central-unit origin/t-axis/u-axis from a relaxed slab+trimer XYZ | No (reads XYZ) |
-| `test/project_mold_atoms.jl` | 2a | Project 3D atom/proxy coordinates into the aligned `(t,u)` mold frame | No (reads TSV) |
-| `test/smiles_to_mold_coords.py` | 2a | Optional RDKit helper: mapped SMILES → 3D coordinate TSV | No SXM; needs RDKit |
 | `test/validate_connected_molds.jl` | 2a | Validate connected mold files, required combinations, and patch/template dimensions | No (reads TSVs) |
 | `test/grade_unit_assignment.jl` | 0 | Grade predictions vs truth (4 alignments, 2 conventions) | No (reads TSVs) |
 
@@ -448,12 +385,6 @@ julia --project=. test/analyze_unit_separability.jl \
     --features results/unit_separability/lobe_features.tsv \
     --truth benchmarks/chitosan_240817_unit_sequences.tsv \
     --out results/unit_separability
-
-# Phase 1b: residual features
-STMFIT_DATA_DIR=/path/to/data julia --project=. \
-    test/extract_blob_residual_features.jl \
-    --features results/unit_separability/lobe_features.tsv \
-    --out results/unit_separability/residual_features.tsv
 
 # Phase 1c: local/envelope-corrected features, no composition prior
 julia --project=. test/augment_lobe_local_features.jl \
@@ -636,13 +567,6 @@ julia --project=. test/score_connected_mold_templates.jl \
     --template-mode contrast \
     --out results/unit_assignment/stm_mold_predictions.tsv
 
-# Phase 1 + 1b combined separability
-julia --project=. test/analyze_unit_separability.jl \
-    --features results/unit_separability/lobe_features.tsv \
-    --extra results/unit_separability/residual_features.tsv \
-    --truth benchmarks/chitosan_240817_unit_sequences.tsv \
-    --out results/unit_separability
-
 # Phase 0: grading (once predictions exist)
 julia --project=. test/grade_unit_assignment.jl \
     --predictions results/unit_assignment/assigned_sequences.tsv \
@@ -671,10 +595,10 @@ STMFIT_DATA_DIR=/data julia -t 2 --project=. \
   implemented and run on the corrected primary benchmark set using batch
   `N_selected` (39 files, 234 lobes). Gaussian features are **strongly
   bimodal**: `ΔBIC(k=1-k=2) = +184.1`.
-- **Phase 1b**: `extract_blob_residual_features.jl` implemented and run with
-  full baseline/tilt subtraction. Adding residual features weakens the evidence
-  to `ΔBIC(k=1-k=2) = +4.3` (weakly bimodal). Current residual features add more
-  noise than signal.
+- **Phase 1b**: residual-feature extraction with full baseline/tilt subtraction
+  was tried and removed after it weakened the evidence to
+  `ΔBIC(k=1-k=2) = +4.3` (weakly bimodal). Those residual features added more
+  noise than signal and are no longer part of the maintained workflow.
 - **Phase 1c**: `augment_lobe_local_features.jl` implemented and run. Local
   prominence/envelope features remain bimodal (`ΔBIC = +144.0`) but do not solve
   the chemistry: label-free assignment gives 69.2% physical accuracy and 1/39
@@ -722,13 +646,13 @@ STMFIT_DATA_DIR=/data julia -t 2 --project=. \
   parity/mirror variants and optional bond-map support. Real DFT-STM maps are
   still needed before this path can be scientifically graded.
 - **Validation**: `test/validate_connected_molds.jl` checks the connected-mold
-  file chain before decoding: anchor atoms, required unary/bond combinations,
-  and patch/template pixel-count compatibility. It does not read truth labels.
+  file chain before decoding: geometric/proxy site columns, required unary/bond
+  combinations, and patch/template pixel-count compatibility. It does not read
+  truth labels.
 - **Current best label-free output**:
   `results/unit_assignment/assigned_sequences_selectedN_primary_gaussian.tsv`
   (Gaussian features only, primary files only, `N_selected` from the batch).
-- **Supervised validation**: `test/assign_units_template.jl` implemented for
-  train/test empirical-template validation once the truth sequences are filled.
-- **Phase 2–5**: planned. Decision point after Phase 1+1b separability report.
+- **Phase 2–5**: planned. Decision point after DFT-STM molds or a stronger
+  label-free observable is available.
 - **Ground truth**: skeleton in `benchmarks/chitosan_240817_unit_sequences.tsv`
   (sequences to be filled in by the user).

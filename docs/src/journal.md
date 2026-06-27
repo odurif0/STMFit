@@ -41,10 +41,10 @@ fitting/selection path (same label-free rule as for N).
    re-runs the fit and extracts per-lobe (A, σ∥, σ⟂, integrated);
    `test/analyze_unit_separability.jl` tests unimodal vs bimodal (kmeans k=1
    vs k=2, BIC) and cross-evaluates with truth (`--with-truth`).
-3. **Phase 1b** — Non-Gaussian residual features:
-   `test/extract_blob_residual_features.jl` computes skewness, shoulder at ±δ
-   (δ=0.15 nm, C2 acetyl offset from pyranose geometry), kurtosis, L/R
-   asymmetry from the fit residual.
+3. **Phase 1b** — Non-Gaussian residual features: an experimental residual
+   feature route computed skewness, shoulder at ±δ (δ=0.15 nm, C2 acetyl offset
+   from pyranose geometry), kurtosis, and L/R asymmetry from the fit residual.
+   It was later removed after adding noise instead of unit-identity signal.
 
 Phases 2–5 (model selection 1-type vs 2-type, per-blob clustering, template
 supervised validation, DFT-STM) are planned pending the Phase 1+1b separability
@@ -70,7 +70,6 @@ verdict.
 | `test/grade_unit_assignment.jl` | Phase 0: grading (4 alignments, 2 conventions) |
 | `test/extract_lobe_features.jl` | Phase 1: re-run fit, extract per-lobe Gaussian features |
 | `test/analyze_unit_separability.jl` | Phase 1: unimodal vs bimodal + AUC + clustering accuracy |
-| `test/extract_blob_residual_features.jl` | Phase 1b: residual non-Gaussian features |
 | `docs/src/unit_assignment.md` | Documentation page for the unit-assignment pipeline |
 
 **Bug fix (pre-existing):** `Documenter` UUID in `Project.toml` was malformed
@@ -135,10 +134,10 @@ it directly. The intended experimental protocol is to keep N from the validated
 batch summary and refit only the lobe shape at that fixed N; this isolates the
 asymmetry test from N selection and preserves the no-composition-prior rule.
 
-Decision gate before SMILES/DFT molds: if split-width refits do not improve GCV
+Decision gate before DFT-STM molds: if split-width refits do not improve GCV
 and `skew_ratio` stays near 1, the STM/tip conditions likely do not resolve the
 acetyl asymmetry. If split-width improves GCV and `skew_ratio` is stable/bimodal,
-the next step is a two-template physical mold built from GlcNAc/GlcN SMILES, with
+the next step is a two-template physical mold built from GlcNAc/GlcN maps, with
 per-lobe continuous mold weights and no composition constraint.
 
 The first full split-width verification exposed a performance issue: the split
@@ -160,7 +159,7 @@ was 0.477 (inverse 0.523), skew-only assignment gave 48.3% physical accuracy and
 0/39 exact sequences, and Gaussian+skew degraded to 60.7% physical accuracy.
 Conclusion: split-width is a better forward model for topography, but the fitted
 asymmetry is dominated by local shape/overlap/envelope effects rather than the
-C2 acetyl identity. Do not proceed to a SMILES/DFT mold expecting only this skew
+C2 acetyl identity. Do not proceed to a DFT-STM mold expecting only this skew
 mode to solve unit assignment; a mold would need to encode a different, more
 specific observable than generic left/right width.
 
@@ -171,8 +170,8 @@ GlcN/GlcNAc × parity × mirror molds, it tests the global connectivity states
 `direction × parity phase × mirror` and chooses the lowest-cost per-lobe type.
 This enforces glycosidic-orientation constraints while preserving the no-prior
 rule on composition: no truth sequence and no number of GlcNAc/GlcN units are
-read. The current script accepts externally generated templates (SMILES-derived
-atomic-density molds or DFT-STM maps) and writes per-lobe 0/1 predictions that
+read. The current script accepts externally generated templates (geometric proxy
+molds or DFT-STM maps) and writes per-lobe 0/1 predictions that
 can be graded externally.
 
 Extended the connected-mold path to include sliding pairwise bond templates. The
@@ -181,21 +180,14 @@ decoder now accepts `--bond-templates`, with rows for the 16 combinations
 edge `(i,i+1)` and decoded by Viterbi. This does not tile chains into disjoint
 dimers, so both odd and even N are supported. Added
 `test/generate_connected_mold_templates.jl`, which generates unary templates and
-optional concatenated left/right bond templates from an aligned atom/proxy TSV.
-Added `test/project_mold_atoms.jl` to bridge RDKit/SMILES or DFT exports into that
-atom/proxy TSV: it reads 3D coordinates for both GlcN and GlcNAc, defines a local
-frame from anchor atoms (`C1→C4` backbone, `C2` positive side by default), and
-writes aligned `(t,u)` atom coordinates with weights and STM blur widths.
-Added optional `test/smiles_to_mold_coords.py`, a lightweight RDKit helper that
-embeds mapped GlcN/GlcNAc SMILES and writes `chitosan_mold_coords.tsv`. RDKit is
-not a project dependency; the helper fails cleanly if RDKit is unavailable. DFT
-coordinates can bypass it and provide the same TSV directly.
-Added `test/validate_connected_molds.jl` and a scaffold
-`templates/chitosan_smiles.tsv`. The validator checks connected-mold readiness
-without using truth labels: SMILES rows when available, required C1/C2/C4 anchors
-in 3D coordinates, projected atom columns, the 8 unary template combinations,
-the 16 optional sliding-bond combinations, and pixel-count compatibility against
-the patch TSV. This gives a preflight check before scientific decoding.
+optional concatenated left/right bond templates from an aligned proxy-site TSV.
+An intermediate RDKit/3D-coordinate route was prototyped, then removed once the
+maintained path switched to explicit geometric proxy sites and DFT-STM maps.
+Added `test/validate_connected_molds.jl`. The validator checks connected-mold
+readiness without using truth labels: proxy-site columns when available, the 8
+unary template combinations, the 16 optional sliding-bond combinations, and
+pixel-count compatibility against the patch TSV. This gives a preflight check
+before scientific decoding.
 
 Removed the no-RDKit heavy-atom coordinate route and replaced it with a manual
 geometric proxy-site source, `templates/chitosan_geometric_sites.tsv`. The new

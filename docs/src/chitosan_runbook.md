@@ -246,29 +246,11 @@ The workflow for the benchmark is:
    Check `results/unit_separability/separability_report.txt`:
    - ΔBIC (k=1−k=2) > 10 → bimodal (two distinct populations)
    - Physical accuracy > 75% → good separability
-   - Physical accuracy < 60% → poor; try Phase 1b
+   - Physical accuracy < 60% → poor; use patch/mold diagnostics or DFT-STM maps
 
-4. **Extract residual features** (Phase 1b, if needed):
-   ```bash
-   STMFIT_DATA_DIR=/path/to/data julia --project=. \
-       test/extract_blob_residual_features.jl \
-       --features results/unit_separability/lobe_features.tsv \
-       --out results/unit_separability/residual_features.tsv
-   ```
-
-5. **Re-run separability with combined features:**
-   ```bash
-   julia --project=. test/analyze_unit_separability.jl \
-       --features results/unit_separability/lobe_features.tsv \
-       --extra results/unit_separability/residual_features.tsv \
-       --truth benchmarks/chitosan_240817_unit_sequences.tsv \
-       --out results/unit_separability
-   ```
-
-**Decision point:** if the combined separability report shows
-physical accuracy > 60%, proceed to Phase 3 (per-blob clustering assignment,
-planned). If < 60%, consider Phase 5 (DFT-STM simulation) or a different STM
-bias/condition.
+**Decision point:** if the separability report shows physical accuracy > 60%,
+continue with label-free assignment diagnostics. If < 60%, prefer the connected
+mold / DFT-STM path or a different STM bias/condition.
 
 The ground truth is **never read by the fitter** — only by the separability
 analysis (`--with-truth`) and the grading script.
