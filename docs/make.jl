@@ -18,6 +18,7 @@ makedocs(
         "Model Selection" => "selection.md",
         "Mathematical Background" => "math.md",
         "Research Journal" => "journal.md",
+        "Journal Archive" => "journal_archive.md",
         "Configuration" => "config.md",
         "API Reference" => "api.md",
     ],
