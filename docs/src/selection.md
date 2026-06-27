@@ -117,6 +117,17 @@ validation also favored the guard over raw GCV in the tested `N≈4–8` regime.
 Support-adaptive variants remain experimental and should be evaluated as
 separate policies rather than folded into the default prematurely.
 
+---
+
+## Archive: experimental selectors (not default, not recommended)
+
+> The selectors below were investigated and documented during development.
+> They remain available as `--selection-policy` options for diagnostics but are
+> **not** used by the default workflow (`gcv_with_robust_aicc_guard`). None
+> outperformed the default on the chitosan benchmark or synthetic known-N
+> validation. This section is kept as a reference of what was tried and why it
+> wasn't adopted. Skim if investigating alternative selection criteria.
+
 ## Experimental adaptive support rescue
 
 `--selection-policy adaptive_support_rescue` keeps the first-pass support and
@@ -601,3 +612,9 @@ The divisor ÷9 approximates the spatial correlation area: a 3×3 pixel
 block ≈ 1 independent observation. Typical STM images have FWHM ~0.5 nm
 ≈ 25 pixels, giving a correlation area of ~500 px². The ÷9 factor is
 conservative (larger n_eff → larger BIC penalty → favors simpler models).
+
+> **This `n_eff` is a placeholder that only enters BIC/AICc diagnostics — never
+> `N_selected`.** The correlation range exceeds the fit window, so `n_eff` is
+> not objectively definable there; GCV (which needs no `n_eff`) drives
+> `N_selected`. See
+> [Calibration](calibration.md#effective-sample-size-why-gcv-is-the-canonical-criterion).
