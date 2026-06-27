@@ -34,13 +34,6 @@
 #       --features results/unit_separability/lobe_features.tsv \
 #       --truth benchmarks/chitosan_240817_unit_sequences.tsv \
 #       --out results/unit_separability
-#
-#   # Include residual features from Phase 1b
-#   julia --project=. test/analyze_unit_separability.jl \
-#       --features results/unit_separability/lobe_features.tsv \
-#       --extra results/unit_separability/residual_features.tsv \
-#       --truth benchmarks/chitosan_240817_unit_sequences.tsv \
-#       --out results/unit_separability
 # ──────────────────────────────────────────────────────────────────────────────
 
 using Printf
@@ -61,7 +54,6 @@ const DEFAULT_TRUTH = "benchmarks/chitosan_240817_unit_sequences.tsv"
 
 struct SepOptions
     features::String
-    extra::Union{Nothing,String}
     out_dir::String
     truth::Union{Nothing,String}
     feat_names::Vector{String}
@@ -70,7 +62,6 @@ end
 
 function _parse_cli(args)
     features = DEFAULT_FEATURES
-    extra::Union{Nothing,String} = nothing
     out_dir = DEFAULT_OUT
     truth::Union{Nothing,String} = nothing
     feat_names = ["amplitude", "sigma_parallel_nm", "sigma_perp_nm", "integrated"]
@@ -83,10 +74,6 @@ function _parse_cli(args)
             features = args[i+1]; i += 2
         elseif startswith(arg, "--features=")
             features = split(arg, "=", limit=2)[2]; i += 1
-        elseif arg == "--extra"
-            extra = args[i+1]; i += 2
-        elseif startswith(arg, "--extra=")
-            extra = split(arg, "=", limit=2)[2]; i += 1
         elseif arg == "--out"
             out_dir = args[i+1]; i += 2
         elseif startswith(arg, "--out=")
@@ -109,7 +96,6 @@ function _parse_cli(args)
 
             Options:
               --features PATH       Per-lobe features TSV from extract_lobe_features.jl [$(DEFAULT_FEATURES)]
-              --extra PATH          Additional residual features TSV from extract_blob_residual_features.jl
               --out PATH            Output directory [$(DEFAULT_OUT)]
               --truth PATH          Ground-truth TSV for cross-evaluation
               --with-truth          Use default truth path: $(DEFAULT_TRUTH)
@@ -118,7 +104,6 @@ function _parse_cli(args)
               --primary-only        Only use files with quality=clean or clean_target
 
             Reads:  <features>  (one row per lobe, from extract_lobe_features.jl)
-                    <extra>     (optional, one row per lobe, from extract_blob_residual_features.jl)
             Writes: <out>/gaussian_features.tsv   (per-lobe features + z-scored + truth)
                     <out>/separability_report.txt  (analysis summary)
             """)
@@ -128,7 +113,7 @@ function _parse_cli(args)
         end
     end
 
-    return SepOptions(features, extra, out_dir, truth, String.(strip.(feat_names)), primary_only)
+    return SepOptions(features, out_dir, truth, String.(strip.(feat_names)), primary_only)
 end
 
 _basename_file(s::AbstractString) = basename(strip(s))
@@ -206,23 +191,6 @@ function main()
     _, feat_rows = _read_tsv(opt.features)
     isempty(feat_rows) && error("No feature rows in $(opt.features)")
 
-    # Read extra features (residual) if provided
-    extra_by_file_lobe = Dict{String,Dict{Int,Dict{String,Float64}}}()
-    extra_cols = String[]
-    if opt.extra !== nothing
-        extra_header, extra_rows = _read_tsv(opt.extra)
-        extra_cols = [c for c in extra_header if !(c in ["file", "lobe", "amplitude", "t_nm", "u_nm", "sigma_parallel_nm", "sigma_perp_nm"])]
-        for row in extra_rows
-            file = _basename_file(row["file"])
-            lobe = parse(Int, row["lobe"])
-            d = Dict{String,Float64}()
-            for c in extra_cols
-                d[c] = _parse_float(get(row, c, "NA"))
-            end
-            get!(extra_by_file_lobe, file, Dict{Int,Dict{String,Float64}}())[lobe] = d
-        end
-    end
-
     # Build feature table
     records = []
     for row in feat_rows
@@ -252,10 +220,6 @@ function main()
             parsed = tryparse(Float64, strip(v))
             parsed === nothing || (feat[k] = parsed)
         end
-        # Merge extra features
-        if haskey(extra_by_file_lobe, file) && haskey(extra_by_file_lobe[file], lobe)
-            merge!(feat, extra_by_file_lobe[file][lobe])
-        end
         push!(records, (file, lobe, feat))
     end
 
@@ -264,13 +228,8 @@ function main()
     n_files = length(unique(r[1] for r in records))
     println("Collected ", n_total, " lobes from ", n_files, " files")
 
-    # Select features (including extra if present)
+    # Select features.
     feat_names = copy(opt.feat_names)
-    if !isempty(extra_cols)
-        for c in extra_cols
-            c in feat_names || push!(feat_names, c)
-        end
-    end
     nf = length(feat_names)
 
     # Per-file z-scoring
@@ -358,7 +317,6 @@ function main()
         println(io, "═")
         println(io, "Date: ", Dates.format(now(), "yyyy-mm-dd HH:MM"))
         println(io, "Features TSV: ", opt.features)
-        opt.extra !== nothing && println(io, "Extra TSV:    ", opt.extra)
         println(io, "Features: ", join(feat_names, ", "))
         println(io, "Lobes: ", n_total, " from ", n_files, " files (", n_valid, " valid)")
         println(io, "Per-file z-scoring: applied")

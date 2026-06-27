@@ -2,13 +2,12 @@
 
 # ──────────────────────────────────────────────────────────────────────────────
 # extract_lobe_features.jl — Run the 2D chain Gaussian fit and extract per-lobe
-# features for unit assignment (Phase 1 + input for Phase 1b).
+# features for unit assignment diagnostics.
 #
 # This script re-runs the same fit as batch_full.jl (circular sweep →
 # circ→ell refinement → GCV selection) for each SXM file and extracts the
 # per-lobe Gaussian parameters of the selected model. It also saves the
-# chain axis direction (needed by extract_blob_residual_features.jl to
-# reconstruct the model and compute the residual).
+# chain axis direction for downstream aligned feature and patch diagnostics.
 #
 # The output TSV has one row per lobe with columns:
 #   file, N, lobe, amplitude, x_nm, y_nm, t_nm, u_nm,
