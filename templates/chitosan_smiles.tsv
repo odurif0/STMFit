@@ -1,6 +1,0 @@
-type	smiles
-# Fill with mapped SMILES before running test/smiles_to_mold_coords.py.
-# Required atom-map anchors by default: C1:1,C2:2,C4:4
-# Example row shape only; replace the SMILES with validated GlcN/GlcNAc structures:
-#0	<mapped GlcN SMILES>
-#1	<mapped GlcNAc SMILES>
