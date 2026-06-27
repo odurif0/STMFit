@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["OD"]
 
 [deps]
+Clustering = "aaaa29a8-35af-508c-8bc3-b662a17a0fe5"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
@@ -15,6 +16,7 @@ STMFitCore = "4d8f3c22-9b76-4f91-a75b-40a4f4a6a001"
 STMMolecularFit = "8b7d0e4f-8ff6-4eb1-980b-88b12dc096fd"
 STMSXMIO = "31f3c3de-6ab7-44a0-a1f5-120dc978a475"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [sources]
 GaussianFit1D = {path = "packages/GaussianFit1D.jl"}
@@ -24,5 +26,6 @@ STMMolecularFit = {path = "packages/STMMolecularFit.jl"}
 STMSXMIO = {path = "packages/STMSXMIO.jl"}
 
 [compat]
+Clustering = "0.15.8"
 Documenter = "1.17.0"
 julia = "1.10"
