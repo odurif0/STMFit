@@ -6,15 +6,21 @@ unsuccessful approaches, with rationale.
 
 ---
 
-## Problem Statement (May 2025)
+## Problem Statement (May 2025) — RESOLVED
 
-Batch processing of 27 chitosan STM images (240817 dataset). The 2D elliptical
-chain model produces N ≠ 6 for 7/27 files despite theoretical expectation of
-6 monomers per chain. Three files systematically wrong: 019 (N=8), 026 (N=8),
-051 (N=8).
+The original problem: batch processing of chitosan STM images (240817 dataset)
+where the 2D elliptical chain model produced N ≠ 6 for 7/27 files (019, 026,
+051 systematically N=8), despite the theoretical expectation of 6 monomers.
 
-**Goal**: achieve N=6 for all files where the molecule has 6 monomers,
-without introducing heuristic/arbitrary parameters.
+**Goal**: achieve N=6 for all files where the molecule has 6 monomers, without
+introducing heuristic/arbitrary parameters.
+
+**Status (Jun 2026): SOLVED.** The label-free selection rule (GCV + robust-AICc
+guard + up-when-ambiguous) now gives **39/39 primary benchmark files exact
+(N=6)**, reproducible across runs. The original elliptical-convergence work is
+archived in `journal_archive.md`. The active line of work is now **unit
+assignment** (GlcNAc/GlcN per lobe) — see the 2026-06-22 entry below and
+`docs/src/unit_assignment.md`.
 
 ---
 
@@ -295,10 +301,13 @@ units, `glcnac` has 1 central acetyl unit, both have non-acetylated GlcN
 neighbors, minimum distances are sane, molecule labels survive slab generation,
 and central-ring centers match the Cu-cell center.
 Parsed the 240817 SXM headers and found a uniform `BIAS=-3.000E-1 V` across 94
-files; prepared local QE run directories `qe/glcn` and `qe/glcnac` with
-`emin=-0.3`, `emax=0.0`, `ntasks=4`, `ecutwfc=80`, `ecutrho=640`, and the
-validated slab freeze cutoff `fix_below_z=1.807501`. The `qe/` directory is
-gitignored to avoid committing large QE scratch/cube outputs.
+files; the LDOS window is therefore `emin=-0.3`, `emax=0.0` eV. The original QE
+run directories used the full `8×8×4` slab with `ntasks=4`, `ecutwfc=80`,
+`ecutrho=640`; those parameters were later dropped (OOM on Raven — see the
+submission lessons below) in favour of the active `8×6×3` pilot
+(`ecutwfc=50`, `ecutrho=360`, `8` tasks). The validated slab freeze cutoff
+`fix_below_z=1.807501` is unchanged. The `qe/` directory is gitignored to avoid
+committing large QE scratch/cube outputs.
 Added `test/preflight_qe_mold_inputs.jl` and `hpc/submit_qe_molds.sh`; the
 preflight report `hpc/qe_molds/qe_input_preflight.tsv` verifies `nat/ntyp`,
 species, frozen relax atoms, LDOS window, sbatch handoff commands, and the 8-task
@@ -316,89 +325,29 @@ cubes into `templates/chitosan_stm_maps.tsv`, and imports the connected unary an
 bond templates. It requires an explicit `--height-nm` so the sampling height is a
 physical input rather than a fitted benchmark parameter.
 
-Submitted the first two QE mold jobs to Raven after practical launcher fixes.
-First, `hpc/submit_qe_molds.sh` now loads the configured Julia module before
-re-running the remote preflight, because direct submission may start from a shell
-without `julia` on `PATH`. Second, `test/prepare_qe_mold_inputs.jl` now writes
-Slurm memory as `4000 MB × ntasks` instead of `--mem=0`, which Raven rejected on
-shared nodes. Third, the generated compute-job script now loads the configured
-Julia module and checks both `pw.x` and `julia`, because the QE job calls Julia for
-the relax-to-SCF handoff. The first pre-compute-Julia submissions, `28278265`
-(`qe/glcn`) and `28278266` (`qe/glcnac`), were still pending and were canceled
-before start. The regenerated `qe/glcn` and `qe/glcnac` inputs pass preflight with
-`8 / 8` total tasks and were resubmitted as `28278618` (`qe/glcn`) and `28278619`
-(`qe/glcnac`). Both were pending in the `small` partition at the last check. No QE
-outputs were available yet.
 
-Those corrected jobs then failed immediately because Raven's module is not named
-`quantum-espresso`; `find-module qe` shows the usable stack
-`intel/2024.0`, `impi/2021.11`, `qe/7.4.1`. The launcher and generated sbatch
-now expose `QE_COMPILER_MODULE`, `QE_MPI_MODULE`, and `QE_MODULE` and default to
-that stack. A second preflight gap was also fixed: QE inputs use `pseudo_dir =
-'./pseudo'`, so `test/preflight_qe_mold_inputs.jl` now verifies that every
-`ATOMIC_SPECIES` pseudopotential exists, and the remote QE sync includes
-`pseudo/*.UPF`. The five PSLibrary/KJPAW pseudos for Cu/C/H/N/O were downloaded
-from `pseudopotentials.quantum-espresso.org`; the Cu pseudo recommends
-`ecutwfc=71 Ry`, so the prepared inputs now use `ecutwfc=80`, `ecutrho=640`.
-After these fixes, preflight passed and the jobs were resubmitted as `28286900`
-(`qe/glcn`) and `28286903` (`qe/glcnac`); both were pending, not failed, at the
-last check.
+First Raven submissions exposed a series of launch-safety gaps, now fixed in the
+tooling and distilled in `hpc/qe_molds/README.md`:
 
-The `28286900`/`28286903` pair was then canceled while still pending because the
-Raven `n0001` QOS reports a one-node group limit (`GrpTRES` includes `node=1`).
-Even though each QE job correctly requests only `4` CPUs and the pair stays within
-the `8` CPU budget, two independent Slurm jobs request two separate node
-allocations. `hpc/submit_qe_molds.sh` now supports `--sequential`, and
-`hpc/launch_qe_molds_remote.sh` defaults to `QE_SEQUENTIAL=1`, submitting later
-run directories with `afterok` dependencies. The current active chain is
-`28287102` (`qe/glcn`) followed by `28287103` (`qe/glcnac`, dependency
-`afterok:28287102`). At the last check, `28287102` was pending with reason `None`
-and `28287103` was pending with reason `Dependency`; neither had failed.
+- QE module stack is `intel/2024.0 impi/2021.11 qe/7.4.1` (not `quantum-espresso`).
+- Raven shared nodes reject `--mem=0`; the generator writes explicit MB.
+- `preflight_qe_mold_inputs.jl` verifies every `ATOMIC_SPECIES` pseudo exists,
+  and the remote sync includes `pseudo/*.UPF`.
+- The `n0001` QOS enforces a one-node group limit, so two parallel QE jobs each
+  request a separate node; `submit_qe_molds.sh --sequential` chains them with
+  `afterok`.
+- The original `8×8×4` slab with Cu `spn` PAW (`z_valence=19`) and
+  `ecutwfc=80`/`ecutrho=640` estimated ~635 GB dynamic RAM and OOM'd within
+  minutes. A 2-task/48 GB probe was memory-safe but underparallel (only the
+  initial SCF in ~7 h).
+- The active pilot is therefore the lighter `8×6×3` slab, `12 Å` vacuum, Cu `dn`
+  PAW (`z_valence=11`), Γ-only, `ecutwfc=50`/`ecutrho=360`, `8` MPI tasks,
+  `96000 MB`, `24:00:00` (`srun -n "$QE_NTASKS" --cpu-bind=cores`).
 
-The `28287102` GlcN job then started but failed during the first `pw.x` relax step
-with Slurm `OUT_OF_MEMORY` after ~4 min; QE had correctly loaded the module stack
-and pseudos, but estimated `~159 GB` dynamic RAM per MPI process (`~635 GB` total)
-for the original `8×8×4` slab with 4 k-points, Cu `spn` PAW pseudo
-(`z_valence=19`), and `ecutwfc=80`/`ecutrho=640`. The dependent GlcNAc job was
-canceled by `afterok`, as intended. To fit the current Raven QOS while preserving
-a useful first DFT-STM mold path, the prepared jobs were changed to a lighter
-pilot setup: `8×6×3` Cu(100) slab, `12 Å` vacuum, Cu `dn` PAW pseudo
-(`Cu.pbe-dn-kjpaw_psl.1.0.0.UPF`, `z_valence=11`, suggested cutoff `45/236 Ry`),
-`K_POINTS gamma` via `--kpoints 1,1,1`, `ecutwfc=50`, `ecutrho=360`, and a clean
-2-task Slurm job. The generated sbatch now removes stale `qe_tmp` before
-starting, avoiding partial scratch reuse after failed runs. Preflight passes with
-the lighter inputs. Submitting both jobs at once still triggered Raven's shared
-`n0001` pressure, so GlcN is submitted alone first with an 8 h walltime.
+The full per-job submission narrative (jobs `28278265` through `28303162`, all
+superseded) is archived in `journal_archive.md`.
 
-The `28288215` GlcN pilot initially requested `4` MPI tasks and `16 GB`, was
-reduced in place to `2` MPI tasks to escape `QOSGrpCpuLimit`, then started and
-failed in the first `pw.x` relax step with Slurm `OUT_OF_MEMORY` after 4 min 22 s.
-QE ran with 2 MPI ranks and estimated `17.15 GB` dynamic RAM per process
-(`34.30 GB` total), so the failure was a real memory limit, not a module/input
-problem. A clean replacement GlcN job, `28292263`, was submitted with
-`--ntasks-per-node=2` and `--mem=48000MB` (`ReqTRES=cpu=2,mem=48000M,node=1`).
-At the last check it was pending with `QOSGrpCpuLimit`; dry-run probes for both
-1-task and 2-task 48 GB jobs reported the same next-day start estimate, so the
-2-task replacement was left in the queue rather than resubmitted. GlcNAc will be
-submitted only after GlcN succeeds, but its local run directory was regenerated
-with the same 2-task/48 GB settings and passes local preflight together with GlcN
-(`4 / 8` total tasks).
 
-Follow-up while `28292263` was running: the 2-task/48 GB job proved memory-safe
-but underparallel. At ~7 h it had completed only the initial SCF (`39` electronic
-iterations, `bfgs steps = 0`, total force `1.946765` vs threshold `1e-3`) and was
-still in the next SCF, so an 8 h walltime was not credible for a full relax + SCF
-+ PP workflow. The QE generator now writes explicit MPI launches:
-`#SBATCH --ntasks-per-node=8`, `#SBATCH --cpus-per-task=1`, `#SBATCH --mem=96000MB`,
-`QE_NTASKS=${SLURM_NTASKS:-8}`, and `srun -n "$QE_NTASKS" --cpu-bind=cores ...`.
-The preflight script accepts sequential multi-dir submissions by checking maximum
-simultaneous tasks rather than summing dependent jobs. Local `qe/glcn` and
-`qe/glcnac` were regenerated as 8-task/96 GB/24 h inputs and pass preflight with
-`--sequential` (`8 / 8` simultaneous). After launch, verify the QE header reports
-`Number of MPI processes: 8`; speedup is expected but not assumed linear.
-The timed-out logs from `28292263` were fetched locally, then GlcN alone was
-resubmitted as optimized job `28303162` (`8` CPUs, `96000M`, `24:00:00`). At
-submission it was pending; GlcNAc remains unsubmitted.
 
 
 ---
@@ -414,7 +363,8 @@ submission it was pending; GlcNAc remains unsubmitted.
 
 ```
 Step 1: 1D slide profile extraction + peak fitting
-        → independent QC count and support comparison
+        → DIAGNOSTIC ONLY (off by default; --no-skip-1d to re-enable)
+        → never enters N_selected; the 1D over-counts (lateral averaging)
 
 Step 2: Circular sweep (N = 2..14, adaptive range)
         → deterministic 2D-only initialization from raw axial profile
@@ -424,19 +374,24 @@ Step 3: circ→ell LsqFit refinement at EACH N
         → warm-start from circular solution, local optimization only
         → finds true elliptical minimum without NLopt divergence
 
-Step 4: Model selection = min(score_circ, score_ell_refined)
-        → default score is GCV; BIC/AICc/CV remain available
-        → circular model is nested fallback
-        → refined elliptical when it genuinely improves
+Step 4: Model selection = GCV + robust-AICc guard + up-when-ambiguous
+        → GCV is canonical (valid under spatial correlation; BIC/AICc are
+          diagnostics only — n_eff is undefined in the fit window)
+        → guard: robust-AICc can only descend (veto), never ascend
+        → up-when-ambiguous: if the guard is ambiguous, prefer the higher N
+        → circular model is nested fallback; refined elliptical when it improves
 
-Step 5: Output best models (N_ell, N_circ, N_eff, params, plots, scores, QC)
+Step 5: Output best models (N_selected, params, plots, scores, QC)
 ```
 
 **Selection criteria hierarchy**:
-1. `N_ell` — best valid refined elliptical 2D model by configured criterion.
-2. `N_circ` — best valid circular 2D model by configured criterion.
-3. `N_eff` — effective/hybrid best from `min(score_circ(N), score_ell(N))`.
-4. Default criterion is GCV (`selection_criterion="gcv"`, `cv_method="gcv"`).
+1. `N_selected` — the label-free answer, driven by GCV with the guard.
+2. `N_ell` / `N_circ` — best valid refined elliptical / circular 2D model
+   (diagnostic splits of the same sweep).
+3. Default criterion is GCV (`selection_criterion="gcv"`, `cv_method="gcv"`).
+
+See `docs/src/selection.md` for the full guard specification and
+`docs/src/calibration.md` for why GCV (not BIC/AICc) is canonical.
 
 ---
 
@@ -468,8 +423,8 @@ Step 5: Output best models (N_ell, N_circ, N_eff, params, plots, scores, QC)
 
 ## Open Questions
 
-> Updated 2026-06-20. Questions from earlier sessions are archived in their
-> dated entries above.
+> Updated 2026-06-27. Questions from earlier sessions are archived in
+> `journal_archive.md`.
 
 1. **n_eff and information criteria** → **RESOLVED (Jun 20)**: The n÷9 heuristic
    is not objectively definable in the fit window — the STM spatial correlation
@@ -507,6 +462,17 @@ Step 5: Output best models (N_ell, N_circ, N_eff, params, plots, scores, QC)
    pair-overlap floor), not an arbitrary blocker. Kept at 0.60 for the chitosan
    calibration; verify it isn't rejecting good fits on a new molecule with denser
    lobes.
+
+6. **Physical LDOS sampling height for QE molds** → **OPEN (blocks unit
+   assignment)**: `finalize_qe_mold_workflow.jl` requires an explicit
+   `--height-nm` to sample the LDOS cube into an STM map. The height must be
+   chosen from Tersoff-Hamann / experimental tip-setpoint physics, not tuned
+   against the benchmark sequence (label-free rule). The GlcN preliminary map
+   used a diagnostic `0.35` nm only to exercise the pipeline; the production
+   height is undecided and gates freezing the final GlcN/GlcNAc molds. Action:
+   pick the height from the experimental setpoint (~2.0 pA at −0.3 V) and the
+   Tersoff-Hamann mapping before running `finalize_qe_mold_workflow.jl` on the
+   converged cubes.
 
 ---
 

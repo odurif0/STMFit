@@ -759,3 +759,97 @@ sweep), reuse it. Gaussian sweep auto-stores its noise in
 | `config/chitosan.toml` | Calibration file with all parameters |
 
 ---
+
+---
+
+### Raven QE submission archaeology (2026-06-22 to 06-25)
+
+Verbose per-job narrative of the first Raven submission attempts. All jobs
+here are superseded by the active pilot (28363474 and its dependents);
+distilled lessons live in the active journal and hpc/qe_molds/README.md.
+Kept only to prevent re-debugging the same launch-safety gaps.
+
+
+Submitted the first two QE mold jobs to Raven after practical launcher fixes.
+First, `hpc/submit_qe_molds.sh` now loads the configured Julia module before
+re-running the remote preflight, because direct submission may start from a shell
+without `julia` on `PATH`. Second, `test/prepare_qe_mold_inputs.jl` now writes
+Slurm memory as `4000 MB × ntasks` instead of `--mem=0`, which Raven rejected on
+shared nodes. Third, the generated compute-job script now loads the configured
+Julia module and checks both `pw.x` and `julia`, because the QE job calls Julia for
+the relax-to-SCF handoff. The first pre-compute-Julia submissions, `28278265`
+(`qe/glcn`) and `28278266` (`qe/glcnac`), were still pending and were canceled
+before start. The regenerated `qe/glcn` and `qe/glcnac` inputs pass preflight with
+`8 / 8` total tasks and were resubmitted as `28278618` (`qe/glcn`) and `28278619`
+(`qe/glcnac`). Both were pending in the `small` partition at the last check. No QE
+outputs were available yet.
+
+Those corrected jobs then failed immediately because Raven's module is not named
+`quantum-espresso`; `find-module qe` shows the usable stack
+`intel/2024.0`, `impi/2021.11`, `qe/7.4.1`. The launcher and generated sbatch
+now expose `QE_COMPILER_MODULE`, `QE_MPI_MODULE`, and `QE_MODULE` and default to
+that stack. A second preflight gap was also fixed: QE inputs use `pseudo_dir =
+'./pseudo'`, so `test/preflight_qe_mold_inputs.jl` now verifies that every
+`ATOMIC_SPECIES` pseudopotential exists, and the remote QE sync includes
+`pseudo/*.UPF`. The five PSLibrary/KJPAW pseudos for Cu/C/H/N/O were downloaded
+from `pseudopotentials.quantum-espresso.org`; the Cu pseudo recommends
+`ecutwfc=71 Ry`, so the prepared inputs now use `ecutwfc=80`, `ecutrho=640`.
+After these fixes, preflight passed and the jobs were resubmitted as `28286900`
+(`qe/glcn`) and `28286903` (`qe/glcnac`); both were pending, not failed, at the
+last check.
+
+The `28286900`/`28286903` pair was then canceled while still pending because the
+Raven `n0001` QOS reports a one-node group limit (`GrpTRES` includes `node=1`).
+Even though each QE job correctly requests only `4` CPUs and the pair stays within
+the `8` CPU budget, two independent Slurm jobs request two separate node
+allocations. `hpc/submit_qe_molds.sh` now supports `--sequential`, and
+`hpc/launch_qe_molds_remote.sh` defaults to `QE_SEQUENTIAL=1`, submitting later
+run directories with `afterok` dependencies. The current active chain is
+`28287102` (`qe/glcn`) followed by `28287103` (`qe/glcnac`, dependency
+`afterok:28287102`). At the last check, `28287102` was pending with reason `None`
+and `28287103` was pending with reason `Dependency`; neither had failed.
+
+The `28287102` GlcN job then started but failed during the first `pw.x` relax step
+with Slurm `OUT_OF_MEMORY` after ~4 min; QE had correctly loaded the module stack
+and pseudos, but estimated `~159 GB` dynamic RAM per MPI process (`~635 GB` total)
+for the original `8×8×4` slab with 4 k-points, Cu `spn` PAW pseudo
+(`z_valence=19`), and `ecutwfc=80`/`ecutrho=640`. The dependent GlcNAc job was
+canceled by `afterok`, as intended. To fit the current Raven QOS while preserving
+a useful first DFT-STM mold path, the prepared jobs were changed to a lighter
+pilot setup: `8×6×3` Cu(100) slab, `12 Å` vacuum, Cu `dn` PAW pseudo
+(`Cu.pbe-dn-kjpaw_psl.1.0.0.UPF`, `z_valence=11`, suggested cutoff `45/236 Ry`),
+`K_POINTS gamma` via `--kpoints 1,1,1`, `ecutwfc=50`, `ecutrho=360`, and a clean
+2-task Slurm job. The generated sbatch now removes stale `qe_tmp` before
+starting, avoiding partial scratch reuse after failed runs. Preflight passes with
+the lighter inputs. Submitting both jobs at once still triggered Raven's shared
+`n0001` pressure, so GlcN is submitted alone first with an 8 h walltime.
+
+The `28288215` GlcN pilot initially requested `4` MPI tasks and `16 GB`, was
+reduced in place to `2` MPI tasks to escape `QOSGrpCpuLimit`, then started and
+failed in the first `pw.x` relax step with Slurm `OUT_OF_MEMORY` after 4 min 22 s.
+QE ran with 2 MPI ranks and estimated `17.15 GB` dynamic RAM per process
+(`34.30 GB` total), so the failure was a real memory limit, not a module/input
+problem. A clean replacement GlcN job, `28292263`, was submitted with
+`--ntasks-per-node=2` and `--mem=48000MB` (`ReqTRES=cpu=2,mem=48000M,node=1`).
+At the last check it was pending with `QOSGrpCpuLimit`; dry-run probes for both
+1-task and 2-task 48 GB jobs reported the same next-day start estimate, so the
+2-task replacement was left in the queue rather than resubmitted. GlcNAc will be
+submitted only after GlcN succeeds, but its local run directory was regenerated
+with the same 2-task/48 GB settings and passes local preflight together with GlcN
+(`4 / 8` total tasks).
+
+Follow-up while `28292263` was running: the 2-task/48 GB job proved memory-safe
+but underparallel. At ~7 h it had completed only the initial SCF (`39` electronic
+iterations, `bfgs steps = 0`, total force `1.946765` vs threshold `1e-3`) and was
+still in the next SCF, so an 8 h walltime was not credible for a full relax + SCF
++ PP workflow. The QE generator now writes explicit MPI launches:
+`#SBATCH --ntasks-per-node=8`, `#SBATCH --cpus-per-task=1`, `#SBATCH --mem=96000MB`,
+`QE_NTASKS=${SLURM_NTASKS:-8}`, and `srun -n "$QE_NTASKS" --cpu-bind=cores ...`.
+The preflight script accepts sequential multi-dir submissions by checking maximum
+simultaneous tasks rather than summing dependent jobs. Local `qe/glcn` and
+`qe/glcnac` were regenerated as 8-task/96 GB/24 h inputs and pass preflight with
+`--sequential` (`8 / 8` simultaneous). After launch, verify the QE header reports
+`Number of MPI processes: 8`; speedup is expected but not assumed linear.
+The timed-out logs from `28292263` were fetched locally, then GlcN alone was
+resubmitted as optimized job `28303162` (`8` CPUs, `96000M`, `24:00:00`). At
+submission it was pending; GlcNAc remains unsubmitted.
