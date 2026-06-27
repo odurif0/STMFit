@@ -21,6 +21,13 @@ count) is **label-free**: it does not use an expected N or benchmark labels.
   produces internally consistent results, but the counts are not "validated" in
   the benchmark sense.
 
+**Unit assignment (GlcNAc/GlcN per lobe):** Beyond counting N, the pipeline can
+assign each fitted lobe a type (0 = GlcN, 1 = GlcNAc) to produce a
+deacetylation map per chain. This is a **work in progress** (Phases 0–2a
+implemented as diagnostics; robust label-free assignment not solved). The same
+label-free rule applies: the ground-truth sequence is used for grading only,
+never in the fit. See `docs/src/unit_assignment.md`.
+
 ## Where to look first (read order)
 
 1. **`docs/src/journal.md`** — the dated decision log. This is the project's
@@ -32,6 +39,9 @@ count) is **label-free**: it does not use an expected N or benchmark labels.
 4. **`docs/src/calibration.md`** — parameter objectivation (which are measured,
    which are free) and why GCV is the canonical criterion (not BIC/AICc).
 5. **`docs/src/config.md`** — every parameter, its role, and how it's configured.
+6. **`docs/src/unit_assignment.md`** — the GlcNAc/GlcN per-lobe assignment
+   pipeline (Phases 0–2a implemented as diagnostics). Read this if working on
+   unit assignment.
 
 ## Key conventions
 
@@ -42,6 +52,10 @@ count) is **label-free**: it does not use an expected N or benchmark labels.
   `_select_primary` in `selectors.jl`) must stay generic. Tuning a parameter
   against a benchmark label and presenting it as objective is explicitly
   forbidden (see journal entries on 043).
+- **Unit assignment has no composition prior.** Do not assume the number of
+  GlcNAc/GlcN units in a chain, even for the 6mer benchmark. Ground-truth
+  sequences and composition counts are external grading/diagnostic information
+  only. Rules like "top-k lobes are GlcNAc" are not valid label-free assignment.
 - **GCV is canonical; BIC/AICc are diagnostics only.** The STM residual field is
   so strongly spatially correlated (range 17–100 px, larger than the ~10-px fit
   window) that `n_eff` is effectively undefined. BIC/AICc assume iid — their
@@ -73,6 +87,138 @@ julia --project=. test/measure_calibration.jl <clean_scan.sxm>
 # Unit tests for packages
 julia --project=packages/STMSXMIO.jl packages/STMSXMIO.jl/test/runtests.jl
 julia --project=packages/STMFitCore.jl packages/STMFitCore.jl/test/runtests.jl
+
+# Unit assignment: extract per-lobe features (re-runs fit)
+STMFIT_DATA_DIR=/path/to/data julia -t 4 --project=. \
+    test/extract_lobe_features.jl --config config/chitosan.toml \
+    --out results/unit_separability/lobe_features.tsv
+
+# Unit assignment: separability analysis
+julia --project=. test/analyze_unit_separability.jl \
+    --features results/unit_separability/lobe_features.tsv \
+    --truth benchmarks/chitosan_240817_unit_sequences.tsv
+
+# Unit assignment: local features and aligned patch diagnostics
+julia --project=. test/augment_lobe_local_features.jl \
+    --features results/unit_separability/lobe_features.tsv \
+    --out results/unit_separability/lobe_features_local.tsv
+STMFIT_DATA_DIR=/path/to/data julia --project=. test/extract_lobe_patches.jl \
+    --features results/unit_separability/lobe_features.tsv \
+    --out results/unit_separability/lobe_patches.tsv
+julia --project=. test/analyze_lobe_patches.jl \
+    --patches results/unit_separability/lobe_patches.tsv \
+    --prefix res_p \
+    --out results/unit_separability/patch_analysis_residual
+
+# Unit assignment: connected geometric mold-template decoding
+STMFIT_DATA_DIR=/path/to/data julia --project=. test/extract_lobe_patches.jl \
+    --features results/unit_separability/lobe_features_selectedN_primary.tsv \
+    --out results/unit_separability/lobe_patches_selectedN_primary_half048.tsv \
+    --half-nm 0.48 --step-nm 0.08
+julia --project=. test/generate_connected_mold_templates.jl \
+    --atoms templates/chitosan_geometric_sites.tsv \
+    --out templates/chitosan_connected_molds.tsv \
+    --bond-out templates/chitosan_connected_bond_molds.tsv \
+    --half-nm 0.48 --step-nm 0.08
+julia --project=. test/validate_connected_molds.jl \
+    --atoms templates/chitosan_geometric_sites.tsv \
+    --templates templates/chitosan_connected_molds.tsv \
+    --bond-templates templates/chitosan_connected_bond_molds.tsv \
+    --patches results/unit_separability/lobe_patches_selectedN_primary_half048.tsv \
+    --prefix raw_p \
+    --report results/unit_assignment/connected_mold_validation.txt
+julia --project=. test/score_connected_mold_templates.jl \
+    --patches results/unit_separability/lobe_patches_selectedN_primary_half048.tsv \
+    --templates templates/chitosan_connected_molds.tsv \
+    --prefix raw_p \
+    --template-mode contrast \
+    --out results/unit_assignment/connected_mold_predictions.tsv
+julia --project=. test/refine_geometric_mold.jl \
+    --patches results/unit_separability/lobe_patches_selectedN_primary_half048.tsv \
+    --sites templates/chitosan_geometric_sites.tsv \
+    --out-sites templates/chitosan_geometric_sites_refined_raw.tsv \
+    --report results/unit_assignment/geometric_mold_refinement_raw.tsv \
+    --prefix raw_p
+julia --project=. test/generate_connected_mold_templates.jl \
+    --atoms templates/chitosan_geometric_sites_refined_raw.tsv \
+    --out templates/chitosan_connected_molds_refined_raw.tsv \
+    --bond-out templates/chitosan_connected_bond_molds_refined_raw.tsv \
+    --half-nm 0.48 --step-nm 0.08
+julia --project=. test/score_connected_mold_templates.jl \
+    --patches results/unit_separability/lobe_patches_selectedN_primary_half048.tsv \
+    --templates templates/chitosan_connected_molds_refined_raw.tsv \
+    --prefix raw_p \
+    --template-mode contrast \
+    --out results/unit_assignment/geometric_mold_predictions_refined_raw.tsv
+# Future DFT-STM/LDOS map path, once real maps are available:
+julia --project=. test/smoke_qe_mold_workflow.jl
+julia --project=. test/build_initial_chitosan_trimer_xyz.jl \
+    --out-dir hpc/qe_molds
+julia --project=. test/validate_chitosan_trimer_structures.jl \
+    --dir hpc/qe_molds \
+    --out hpc/qe_molds/structure_validation.tsv
+julia --project=. test/build_qe_slab_trimer_xyz.jl \
+    --molecule hpc/qe_molds/glcn_central_trimer.xyz \
+    --out hpc/qe_molds/glcn_central_trimer_slab.xyz \
+    --metadata hpc/qe_molds/glcn_central_trimer_slab_meta.tsv \
+    --nx 8 --ny 8 --layers 4 \
+    --center-indices 12,13,14,15,16,17 \
+    --height-above-top 2.6 --vacuum 18.0
+julia --project=. test/prepare_qe_mold_inputs.jl \
+    --xyz hpc/qe_molds/glcn_central_trimer_slab.xyz \
+    --cell-metadata hpc/qe_molds/glcn_central_trimer_slab_meta.tsv \
+    --out-dir qe/glcn \
+    --prefix glcn_central \
+    --fix-below-z ZCUT --emin-ev EMIN --emax-ev EMAX
+julia --project=. test/preflight_qe_mold_inputs.jl \
+    --dir qe/glcn --dir qe/glcnac \
+    --out hpc/qe_molds/qe_input_preflight.tsv \
+    --max-total-tasks 8 --sequential --min-mem-mb 96000
+bash hpc/submit_qe_molds.sh --watch --sequential
+bash hpc/launch_qe_molds_remote.sh --dry-run
+bash hpc/launch_qe_molds_remote.sh --watch
+julia --project=. test/finalize_qe_mold_workflow.jl \
+    --height-nm HEIGHT \
+    --glcn-dir qe/glcn \
+    --glcnac-dir qe/glcnac
+julia --project=. test/extract_qe_relaxed_xyz.jl \
+    --qe-out qe/glcn/glcn_central_relax.out \
+    --out qe/glcn/glcn_central_relaxed.xyz \
+    --metadata qe/glcn/glcn_central_relaxed_meta.tsv
+julia --project=. test/update_qe_positions_from_xyz.jl \
+    --input qe/glcn/pw_scf.in \
+    --xyz qe/glcn/glcn_central_relaxed.xyz \
+    --out qe/glcn/pw_scf_relaxed.in
+julia --project=. test/extract_qe_mold_frame.jl \
+    --xyz qe/glcn/glcn_central_relaxed.xyz \
+    --origin-indices I,J \
+    --axis-from I --axis-to J --plane-index K \
+    --height-nm HEIGHT \
+    --out qe/glcn/frame.tsv
+julia --project=. test/cube_to_stm_maps.jl \
+    --cube 0:qe/glcn/glcn_central_ldos.cube \
+    --frame 0:qe/glcn/frame.tsv \
+    --cube 1:qe/glcnac/glcnac_central_ldos.cube \
+    --frame 1:qe/glcnac/frame.tsv \
+    --cube-units bohr \
+    --out templates/chitosan_stm_maps.tsv
+julia --project=. test/import_stm_mold_maps.jl \
+    --maps templates/chitosan_stm_maps.tsv \
+    --out templates/chitosan_connected_molds_stm.tsv \
+    --bond-out templates/chitosan_connected_bond_molds_stm.tsv \
+    --half-nm 0.48 --step-nm 0.08
+
+# Unit assignment: split-width Gaussian asymmetry test at fixed selected N
+STMFIT_DATA_DIR=/path/to/data julia -t 4 --project=. \
+    test/extract_lobe_features.jl --config config/chitosan_split.toml \
+    --selected-summary results/best_plots/summary_overlap060_hard.tsv \
+    --manifest benchmarks/chitosan_240817.toml --primary-only \
+    --out results/unit_separability/lobe_features_selectedN_primary_split.tsv
+
+# Unit assignment: grade predictions vs truth
+julia --project=. test/grade_unit_assignment.jl \
+    --predictions results/unit_assignment/assigned_sequences.tsv \
+    --truth benchmarks/chitosan_240817_unit_sequences.tsv
 ```
 
 `batch_full.jl` flags: `--config`, `--data-dir`, `--outdir`, `--chunk i/n`,
@@ -123,14 +269,47 @@ test/batch_full.jl (driver, not a package) orchestrates the batch.
   - 4/4 clean_target files correct.
   - Reproducible across 3 consecutive runs (0 files change N_selected).
   - Selection threshold robust on [0.03, 0.06] (0 pivot files).
+  - **Unit assignment (0/1)**: Phases 0–2a implemented as diagnostics.
+    Gaussian/local/patch features are bimodal, split-width Gaussians improve
+    fixed-N GCV on 36/39 primary files, and manual geometric connected molds
+    validate technically, but current label-free assignment does not recover the
+    withheld sequence robustly. The refined raw geometric mold reaches 67.9%
+    per-lobe and 0/39 exact; non-chemical shape/asymmetry remains the issue.
+    `import_stm_mold_maps.jl` is ready for real DFT-STM/LDOS maps in the aligned
+    `(t,u)` frame.
 - **Application (10–20mer chitosan):**
   - 25/25 files processed (N_selected 5–16).
   - **No ground-truth labels** — this is a real application, not a benchmark.
   - Control point: 260220_083 → N=9 (manual cross-check, not a benchmark label).
 
+## Documentation discipline
+
+**This project's long-term value is in its documentation, not just its code.**
+Keep it current as you work — an undocumented change is a change that didn't
+happen for the next agent.
+
+**Mandatory updates after any non-trivial change:**
+1. **`docs/src/journal.md`** — add a dated entry for every experiment, decision,
+   bug fix, or parameter change. Include *why* (not just *what*). Even failed
+   approaches must be recorded so they aren't retried.
+2. **Benchmark numbers** (39/39, 25/25, etc.) — if a change affects the results,
+   re-run the batch and update every doc that cites the old number (AGENTS.md,
+   README.md, chitosan_runbook.md, selection.md).
+3. **Open Questions** (journal.md §Open Questions) — resolve, defer, or add as
+   the work progresses. Do not let this section go stale.
+4. **Config docs** (`docs/src/config.md`, `calibration.md`) — if you add or
+   rename a parameter, update the reference the same commit.
+5. **AGENTS.md itself** — if the architecture, conventions, or gotchas change,
+   update this file.
+
+**Rule of thumb:** if a new agent would give a wrong answer because your change
+isn't documented, the documentation is broken. Fix it before committing.
+
 ## What NOT to do
 
 - Do not tune a parameter against a benchmark label and call it objective.
+- Do not introduce the unit sequence (GlcNAc/GlcN labels) into the fitting or
+  selection path — grading/external-evaluation only, same rule as for N.
 - Do not change `n_eff` (it's undefined in the fit window; the heuristic `n÷9`
   is a placeholder that only affects BIC/AICc diagnostics, not GCV/N_selected).
 - Do not re-enable the 1D fit in the selection path (it over-counts).
