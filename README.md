@@ -86,5 +86,9 @@ Full docs in `docs/src/` (built with Documenter):
 - [**Selection**](docs/src/selection.md) — the label-free selection rule (GCV + robust-AICc guard + up-when-ambiguous).
 - [**Calibration**](docs/src/calibration.md) — parameter objectivation, auto-calibration, GCV rationale.
 - [**Config reference**](docs/src/config.md) — every parameter and flag.
+- [**Unit assignment**](docs/src/unit_assignment.md) — GlcNAc/GlcN per-lobe assignment pipeline (label-free, work in progress).
+- [**DFT-STM molds**](docs/src/qe_stm_molds.md) — Quantum ESPRESSO LDOS mold workflow for unit assignment.
+- [**Math background**](docs/src/math.md) — model form, selection criteria, effective sample size.
+- [**API reference**](docs/src/api.md) — package/module index.
 - [**Chitosan runbook**](docs/src/chitosan_runbook.md) — reproducible benchmark workflow.
 - [**Research journal**](docs/src/journal.md) — dated decision log (the project's memory).
