@@ -524,6 +524,37 @@ templates/chitosan_stm_maps_glcnac_prelim_h035.tsv
   frozen/scored as a final connected mold without the matching production GlcN
   and GlcNAc maps.
 
+### Diagnostic two-type preliminary mold smoke test
+
+- Combined the one-sided preliminary GlcN and GlcNAc maps at diagnostic height
+  `0.35` nm into:
+
+```text
+templates/chitosan_stm_maps_prelim_h035.tsv
+```
+
+- Imported two diagnostic connected-mold template sets:
+  - `templates/chitosan_connected_molds_stm_prelim_h035.tsv` and
+    `templates/chitosan_connected_bond_molds_stm_prelim_h035.tsv` at `13×13`
+    (`half_nm=0.48`, 169 pixels), matching the future wider-patch workflow;
+  - `templates/chitosan_connected_molds_stm_prelim_h035_half032.tsv` and
+    `templates/chitosan_connected_bond_molds_stm_prelim_h035_half032.tsv` at
+    `9×9` (`half_nm=0.32`, 81 pixels), matching the local
+    `results/unit_separability/lobe_patches_selectedN_primary.tsv` patches.
+- Validation of the `9×9` diagnostic templates passed:
+  unary rows `8`, bond rows `16`, patch rows `234` over `39` files, and
+  pixel-count compatibility `81 = 81`.
+- Ran label-free connected-mold decoding against the local residual patches:
+
+```text
+results/unit_assignment/stm_prelim_h035_half032_predictions.tsv
+```
+
+- The ground-truth sequence TSV is still a skeleton with empty `sequence` values,
+  so `grade_unit_assignment.jl` grades `0` files. No benchmark sequence was
+  injected into the data to force a score. This remains a smoke test of the
+  import/validate/decode plumbing, not a scientific result.
+
 ### New GlcN restart submitted
 
 - Regenerated `qe/glcn_restart2/` from `glcn_central_best2.xyz` with the active
@@ -544,12 +575,27 @@ julia --project=. test/preflight_qe_mold_inputs.jl \
 qe/glcn_restart2 -> 28444935
 ```
 
+### GlcNAc production queued behind GlcN success
+
+- Local preflight of `qe/glcnac` production passed again at the active settings
+  (`8` MPI tasks, `96000 MB`, `24:00:00`).
+- Submitted GlcNAc production to Raven with an explicit success dependency on
+  the current GlcN restart, without `--watch`:
+
+```text
+qe/glcnac -> 28445456  (dependency: afterok:28444935)
+```
+
+- This advances queueing without violating the production gate: GlcNAc production
+  will only start if `28444935` succeeds. Do not read `28445456` outputs until a
+  completion/timeout notification is available.
+
 ### Current State / Next Gate
 
 - Wait for `28444935` completion/timeout notification before reading its outputs.
-- If `28444935` converges and produces final GlcN relaxed/cube outputs, submit
-  GlcNAc production next. GlcNAc production remains deliberately gated on GlcN
-  production success.
+- If `28444935` converges and produces final GlcN relaxed/cube outputs, the
+  dependent GlcNAc production job `28445456` should start automatically via
+  `afterok`. If it does not, submit GlcNAc production manually at that point.
 - If `28444935` times out again, either continue one more geometry-preserving
   restart or revisit relaxation strategy/walltime before spending another full
   Raven day.

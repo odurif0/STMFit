@@ -24,6 +24,7 @@ templates/chitosan_connected_molds*.tsv
 templates/chitosan_connected_bond_molds*.tsv
 templates/chitosan_geometric_sites_refined_*.tsv
 templates/chitosan_stm_maps_*_prelim_*.tsv
+templates/chitosan_stm_maps_prelim_*.tsv
 # Generated QE preflight/job reports and rendered previews.
 hpc/qe_molds/qe_input_preflight*.tsv
 hpc/qe_molds/qe_jobs.tsv
