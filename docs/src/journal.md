@@ -464,7 +464,97 @@ See `docs/src/selection.md` for the full guard specification and
    height is undecided and gates freezing the final GlcN/GlcNAc molds. Action:
    pick the height from the experimental setpoint (~2.0 pA at −0.3 V) and the
    Tersoff-Hamann mapping before running `finalize_qe_mold_workflow.jl` on the
-   converged cubes.
+   converged cubes. Both preliminary one-sided maps produced so far use
+   `0.35` nm only as a diagnostic pipeline height.
+
+---
+
+
+## 2026-06-28 — GlcN restart timed out again; GlcNAc preliminary cube completed
+
+### Completed Jobs Reconciled
+
+- GlcN restart job `28363474` ended at the 24 h walltime limit. Slurm accounting
+  reports the parent job as `TIMEOUT` (`1-00:00:05`) and the `pw.x` step as
+  `FAILED` after `23:59:27` (`ExitCode=1:0`). Memory was modest for this pilot
+  (`~4.8 GB` MaxRSS per task), so the failure mode is walltime, not memory.
+- The run did not reach the relax-to-SCF handoff: only
+  `glcn_central_relax.out` plus Slurm logs were fetched from `qe/glcn_restart/`.
+  There is no final `glcn_central_scf.out`, `glcn_central_pp.out`, or production
+  `glcn_central_ldos.cube` from this restart.
+- The latest parsed QE state reached `number of bfgs steps = 36`. The output has
+  no `JOB DONE`; it stopped mid-SCF after the last printed energy
+  `-31683.65010692 Ry`. This is still **not** a converged GlcN production mold.
+- Extracted the last `ATOMIC_POSITIONS` block to
+  `qe/glcn_restart/glcn_central_best2.xyz` (`213` atoms). QE did not print cell
+  metadata in that output, so the active pilot cell remains supplied from
+  `hpc/qe_molds/glcn_central_trimer_slab_pilot_meta.tsv`.
+
+### GlcNAc preliminary SCF+PP completed
+
+- Diagnostic GlcNAc preliminary job `28365256` completed successfully after the
+  `afterany:28363474` dependency released:
+  - parent job `COMPLETED`, elapsed `01:36:12`;
+  - `pw.x` step `COMPLETED`, elapsed `01:35:18`;
+  - `pp.x` step `COMPLETED`, elapsed `00:00:50`.
+- `qe/glcnac_prelim/glcnac_central_scf.out` converged in 52 SCF iterations and
+  ended with `JOB DONE`.
+- `qe/glcnac_prelim/glcnac_central_pp.out` wrote
+  `glcnac_central_ldos.cube` and ended with `JOB DONE`.
+- This remains a **diagnostic type-1 smoke-test cube** from the unrelaxed initial
+  GlcNAc pilot geometry. It is useful for pipeline de-risking only; do not treat
+  it as a production GlcNAc mold.
+
+### Diagnostic type-1 map conversion
+
+- Built a GlcNAc preliminary frame from the active `8×6×3` pilot slab. The slab
+  offset is `218 - 74 = 144`, so the bare central-unit frame indices from
+  `glcnac_central_trimer_indices.tsv` become:
+  `origin_indices=156,157,158,159,160,161`, `axis_from=159`, `axis_to=156`,
+  `plane_index=165`.
+- Converted the GlcNAc preliminary cube at the same diagnostic height used for
+  the GlcN preliminary map, `height_nm=0.35`, to:
+
+```text
+templates/chitosan_stm_maps_glcnac_prelim_h035.tsv
+```
+
+- Map sanity check: `169/169` pixels finite, `0` `NA`, type set `{1}`. The value
+  range is approximately `[-5.66e-7, 1.29e-4]`. This is one-sided and cannot be
+  frozen/scored as a final connected mold without the matching production GlcN
+  and GlcNAc maps.
+
+### New GlcN restart submitted
+
+- Regenerated `qe/glcn_restart2/` from `glcn_central_best2.xyz` with the active
+  pilot settings (`8` MPI tasks, `50/360 Ry`, Γ-only, `96000 MB`, `24:00:00`),
+  copied the validated pseudo set, and preflighted successfully:
+
+```bash
+julia --project=. test/preflight_qe_mold_inputs.jl \
+    --dir qe/glcn_restart2 \
+    --out hpc/qe_molds/qe_input_preflight_glcn_restart2.tsv \
+    --max-total-tasks 8 \
+    --min-mem-mb 96000
+```
+
+- Submitted `qe/glcn_restart2` to Raven without `--watch`:
+
+```text
+qe/glcn_restart2 -> 28444935
+```
+
+### Current State / Next Gate
+
+- Wait for `28444935` completion/timeout notification before reading its outputs.
+- If `28444935` converges and produces final GlcN relaxed/cube outputs, submit
+  GlcNAc production next. GlcNAc production remains deliberately gated on GlcN
+  production success.
+- If `28444935` times out again, either continue one more geometry-preserving
+  restart or revisit relaxation strategy/walltime before spending another full
+  Raven day.
+- The physical LDOS sampling height remains open; the `0.35` nm maps are
+  diagnostic only and must not be selected by benchmark unit-sequence accuracy.
 
 ---
 
