@@ -455,17 +455,17 @@ See `docs/src/selection.md` for the full guard specification and
    calibration; verify it isn't rejecting good fits on a new molecule with denser
    lobes.
 
-6. **Physical LDOS sampling height for QE molds** → **OPEN (blocks unit
-   assignment)**: `finalize_qe_mold_workflow.jl` requires an explicit
-   `--height-nm` to sample the LDOS cube into an STM map. The height must be
-   chosen from Tersoff-Hamann / experimental tip-setpoint physics, not tuned
-   against the benchmark sequence (label-free rule). The GlcN preliminary map
-   used a diagnostic `0.35` nm only to exercise the pipeline; the production
-   height is undecided and gates freezing the final GlcN/GlcNAc molds. Action:
-   pick the height from the experimental setpoint (~2.0 pA at −0.3 V) and the
-   Tersoff-Hamann mapping before running `finalize_qe_mold_workflow.jl` on the
-   converged cubes. Both preliminary one-sided maps produced so far use
-   `0.35` nm only as a diagnostic pipeline height.
+6. **Physical LDOS sampling height for QE molds** → **RESOLVED (Jun 28)**:
+   Production height fixed at **`--height-nm 0.50`** from Tersoff-Hamann
+   physics. QE `pp.x plot_num=5` is an s-wave TH LDOS map with no tip-apex or
+   work-function correction; `V,I → z` is not unique from `pp.x` alone, so
+   constant-height is the only defensible first approximation. Literature on
+   organic adsorbates on Cu(100) places constant-height planes at 3–5 Å above
+   the adsorbate (4–8 Å for larger molecules). With our frame origin at the
+   central ring centroid, `height_nm=0.50` samples approximately 5 Å above the
+   ring along the surface normal, consistent with the recommended range.
+   Sensitivity bracket: 0.40–0.60 nm. The height was chosen from physics, not
+   from benchmark unit-sequence accuracy.
 
 ---
 
@@ -599,8 +599,60 @@ qe/glcnac -> 28445456  (dependency: afterok:28444935)
 - If `28444935` times out again, either continue one more geometry-preserving
   restart or revisit relaxation strategy/walltime before spending another full
   Raven day.
-- The physical LDOS sampling height remains open; the `0.35` nm maps are
-  diagnostic only and must not be selected by benchmark unit-sequence accuracy.
+- The physical LDOS sampling height is now resolved: production
+  `--height-nm 0.50` (see Open Question 6). The preliminary sensitivity scan
+  below used 0.30–0.60 nm for diagnostic purposes only.
+
+---
+
+## 2026-06-28 — HEIGHT resolved + preliminary DFT-STM diagnostic bilan
+
+### HEIGHT resolution
+
+- A Tersoff-Hamann literature review (organic adsorbates on Cu(100), low bias)
+  confirms that QE `pp.x plot_num=5` is an s-wave LDOS map with **no tip-apex
+  or work-function correction**. The setpoint (−0.3 V, 2.0 pA) does not uniquely
+  determine an absolute height from `pp.x` alone.
+- Production height fixed at **`0.50 nm`** above the central ring centroid,
+  within the literature range of 3–5 Å above the adsorbate. Sensitivity bracket:
+  0.40–0.60 nm. This is a physics choice, not a benchmark-tuned parameter.
+
+### Preliminary DFT-STM diagnostic bilan (post-hoc, label-free decode + post-hoc grade)
+
+- Combined the preliminary GlcN (unconverged best-so-far geometry) and GlcNAc
+  (unrelaxed initial geometry) LDOS cubes into two-type diagnostic molds at
+  seven sampling heights. Graded against the filled diagnostic truth `010010`
+  (35 primary clean/clean_target files, post-hoc only).
+- All maps use contrast mode, `res_p` patches, 9×9 templates, bond templates.
+
+| Height (nm) | Physical % | Oracle % | Exact/35 | Gap |
+|---|---|---|---|---|
+| 0.30 | 51.9 | 61.4 | 0 | 9.5% |
+| 0.35 | 55.7 | 66.2 | 0 | 10.5% |
+| 0.40 | 57.1 | 62.9 | 1 | 5.7% |
+| 0.45 | 45.2 | 62.4 | 0 | 17.1% |
+| **0.50** | **58.6** | **68.1** | **2** | **9.5%** |
+| 0.55 | 45.7 | 62.9 | 1 | 17.1% |
+| 0.60 | 58.1 | 65.7 | 2 | 7.6% |
+
+### Interpretation
+
+- The signal is **present but weak and unstable** across heights: physical
+  accuracy oscillates between 45% and 59%. This is consistent with using
+  unconverged cubes from unrelaxed or partially relaxed geometries.
+- The production height `0.50` gives the best oracle (68.1%) and tied-best
+  exact count (2/35), but this was **not** the selection criterion — the height
+  was fixed from physics before reading the sensitivity table.
+- For comparison, the geometric refined raw mold (no DFT) reached 67.9%
+  physical / 72.2% oracle / 0/39 exact. The preliminary DFT-STM molds are
+  **not yet competitive** with the geometric refined mold, as expected given
+  the non-converged geometries.
+- The large physical-oracle gap (5–17%) indicates the amplitude-based 0↔1
+  physical mapping is unreliable at this stage.
+- **Next gate**: once GlcN production (`28444935`) and GlcNAc production
+  (`28445456`) converge, re-run `finalize_qe_mold_workflow.jl --height-nm 0.50`
+  on the converged cubes and re-grade. The converged DFT-STM molds should
+  improve both stability and accuracy.
 
 ---
 
