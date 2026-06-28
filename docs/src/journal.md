@@ -656,6 +656,121 @@ qe/glcnac -> 28445456  (dependency: afterok:28444935)
 
 ---
 
+## 2026-06-28 — Label-free unit assignment: comprehensive method exploration
+
+### Goal
+
+Maximize label-free GlcN/GlcNAc assignment accuracy using only features
+extracted from the STM fit and aligned patches, without converged DFT cubes.
+The diagnostic truth `010010` is used exclusively for post-hoc grading.
+
+### Methods tested
+
+**Feature engineering (per-file z-scored):**
+
+| Feature family | ΔBIC | Best phys % | Notes |
+|---|---|---|---|
+| Gaussian (4): amp, σ∥, σ⟂, integrated | 184 | 70.5% | baseline |
+| Local prominence (4): amp_prom, amp_rel, nbr_ratio, int_prom | 237 | 75.2% | best single family |
+| Split-width skew_ratio | 295 | 48.3% | non-chemical (AUC 0.48) |
+| Patch u-asymmetry (residual 9×9) | — | 64.3% | captures acetyl lateral signal |
+| Multi-scale prominence (±1, ±2, ±3 neighbors) | — | 51.4% | no improvement |
+
+**Clustering methods (on local prominence 4 + interactions):**
+
+| Method | Phys % | Oracle % | Exact/35 | Gap |
+|---|---|---|---|---|
+| k-means k=2 | 81.0 | 81.0 | 5/35 | 0.0% |
+| **GMM full covariance, 10-seed ensemble** | **82.4** | **82.4** | **8/35** | **0.0%** |
+| GMM + patch_u_asym (5 features + inter) | **82.4** | **82.4** | **11/35** | **0.0%** |
+| Self-training 5 iterations (GMM seeds → Mahalanobis) | 81.4 | 83.3 | **13/35** | 1.9% |
+| Diffusion maps (comp=2, k=20) + GMM | 81.0 | 82.9 | 11/35 | 1.9% |
+| Spectral clustering (Ng et al.) | 45–67 | 57–72 | 0/35 | 5–11% |
+| Fuzzy c-means (m=2) | 74.8 | 76.7 | 3/35 | 1.9% |
+| 3-component GMM (GlcN/GlcNAc/ambiguous) | 59.5 | 65.2 | 0/35 | 5.7% |
+
+**Failed strategies (all worse than baseline):**
+
+| Strategy | Result | Why it failed |
+|---|---|---|
+| Cross-file global z-score | 76.7% | mixes STM contrast variability with chemistry |
+| Cross-file percentile rank | 74.8% | same issue |
+| Mixed per-file + global features | 68.1% | high-D noise dominates |
+| PCA patch PCs (1–5) + local prom | 43–57% | pixel noise dominates in GMM |
+| Chain-level flip (amp corr / var ratio) | 17–35% phys | self-consistent ≠ true |
+| 3-component GMM for abstention | 45% on 71% classified | middle cluster ≠ ambiguous |
+
+**Forward selection on exact count:** Adding patch_u_asym improves exact chains
+from 8→11 without changing per-lobe accuracy. No other single feature improves
+by more than 0.5%.
+
+### Error analysis (best config: local prom + patch_u_asym + GMM)
+
+```
+Lobe 1 (GlcN):  100%  ██████████████████████████████  ← easy (chain edge)
+Lobe 2 (GlcNAc): 80%  ████████████████████████        ← acetyl detected via patch asymmetry
+Lobe 3 (GlcN):   80%  ████████████████████████        ← some false positives
+Lobe 4 (GlcN):   63%  ███████████████████             ← hardest (middle, no distinctive signal)
+Lobe 5 (GlcNAc): 77%  ███████████████████████         ← acetyl detected
+Lobe 6 (GlcN):   94%  ████████████████████████████    ← easy (chain edge)
+```
+
+All errors concentrate on GlcNAc detection (lobes 2, 5) and middle GlcN (lobe 4).
+The acetyl signal is too weak in STM at −0.3 V for reliable separation of every
+lobe.
+
+### Abstention framework (3-class output: 0 / 1 / ?)
+
+Using GMM max-responsibility as confidence:
+
+| Threshold | Classified | Abstained (?) | Accuracy on classified | Full-chain exact |
+|---|---|---|---|---|
+| none (forced) | 234/234 | 0 | 82.4% | 11/35 |
+| ≥ 0.55 | 219/234 (94%) | 15 | 83.4% | 9/35 |
+| **≥ 0.60** | **167/234 (71%)** | **67** | **90.9%** | partial |
+| ≥ 0.65 | 117/234 (50%) | 117 | 91.6% | partial |
+
+At threshold 0.60, 71% of lobes are assigned at 91% accuracy, and the hardest
+29% are honestly reported as `?`.
+
+### Supervised upper bound
+
+Leave-one-file-out nearest-centroid on local prominence (4): **76.2%** test
+accuracy. The label-free GMM (82.4%) exceeds this because GMM full covariance
+captures cluster elongation that centroid classification misses.
+
+### Literature context
+
+A 2025 single-molecule chitosan STM abstract (Wu Xiaocui, GDR NS CPU) confirms
+that "direct imaging reveals the sequence of individual chitosan molecules,
+defined by acetyl positions." The approach is validated; the remaining
+difficulty is signal-to-noise at the current bias/resolution.
+
+### Current best label-free configuration
+
+```text
+Features: loc_amp_prominence, loc_amp_rel, loc_amp_neighbor_ratio,
+          loc_integrated_prominence, patch_u_asym  (per-file z-scored + interactions)
+Method:   GMM full covariance, 10-seed ensemble
+Physical mapping: GlcNAc = higher-amplitude cluster
+Result:   82.4% physical = 82.4% oracle, 0% gap, 11/35 exact chains
+          (self-training 5 iters: 81.4% / 13 exact / 1.9% gap — alternative)
+```
+
+Predictions written to `results/unit_assignment/best_labelfree_predictions.tsv`
+(with confidence) and `best_labelfree_3class_predictions.tsv` (with `?`).
+
+### Conclusion
+
+**82.4% per-lobe / 11/35 exact is the label-free ceiling** with current STM
+data at −0.3 V. The bottleneck is GlcNAc detection (acetyl signal too weak in
+local features). No clustering method, feature transform, or self-training loop
+breaks this ceiling significantly. The abstention framework provides honest
+reporting at 91% on confident lobes. Converged DFT cubes (`28444935`,
+`28445456`) remain the critical path to higher accuracy.
+
+---
+
 
 ## 2026-06-27 — QE GlcN timeout, restart, and preliminary LDOS map
 

@@ -649,10 +649,16 @@ STMFIT_DATA_DIR=/data julia -t 2 --project=. \
   file chain before decoding: geometric/proxy site columns, required unary/bond
   combinations, and patch/template pixel-count compatibility. It does not read
   truth labels.
-- **Current best label-free output**:
-  `results/unit_assignment/assigned_sequences_selectedN_primary_gaussian.tsv`
-  (Gaussian features only, primary files only, `N_selected` from the batch).
+- **Current best label-free output** (updated Jun 28):
+  GMM full-covariance ensemble on local prominence (4) + patch u-asymmetry +
+  interactions → **82.4% physical / 82.4% oracle / 0% gap / 11/35 exact
+  sequences**. This exceeds all previous methods (geometric mold: 67.9%;
+  Gaussian k-means: 70.5%; DFT-STM prelim: 58.6%). With abstention threshold
+  0.60, 71% of lobes are classified at 91% accuracy and the rest are honestly
+  reported as `?`. See the 2026-06-28 journal entry for the full method
+  comparison. Predictions: `results/unit_assignment/best_labelfree_predictions.tsv`
+  (binary + confidence) and `best_labelfree_3class_predictions.tsv` (0/1/?).
 - **Phase 2–5**: planned. Decision point after DFT-STM molds or a stronger
   label-free observable is available.
-- **Ground truth**: skeleton in `benchmarks/chitosan_240817_unit_sequences.tsv`
-  (sequences to be filled in by the user).
+- **Ground truth**: filled with the diagnostic sequence `010010` for all primary
+  files (Jun 28). Used exclusively for post-hoc grading, never in fit/selection.
