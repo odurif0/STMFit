@@ -760,13 +760,47 @@ Result:   82.4% physical = 82.4% oracle, 0% gap, 11/35 exact chains
 Predictions written to `results/unit_assignment/best_labelfree_predictions.tsv`
 (with confidence) and `best_labelfree_3class_predictions.tsv` (with `?`).
 
-### Conclusion
+### Follow-up: high-resolution 17×17 patches and wavelet diagonal detail
 
-**82.4% per-lobe / 11/35 exact is the label-free ceiling** with current STM
-data at −0.3 V. The bottleneck is GlcNAc detection (acetyl signal too weak in
-local features). No clustering method, feature transform, or self-training loop
-breaks this ceiling significantly. The abstention framework provides honest
-reporting at 91% on confident lobes. Converged DFT cubes (`28444935`,
+Re-extracted patches at 17×17 (0.04 nm/step, ±0.32 nm) from raw SXM data.
+Computed Haar wavelet decomposition at 3 levels on both 9×9 and 17×17 residual
+patches, plus cross-lobe pair features (adjacent amplitude differences, symmetric
+prominence).
+
+**Key finding**: the level-1 diagonal detail (HH1) of the 17×17 residual patch
+captures a diagonal component of the acetyl LDOS signal that is invisible in
+pure u-axis asymmetry:
+
+```text
+NEW BEST: local prominence (4) + patch17_wav_hh1_abs + interactions [GMM]
+Features: loc_amp_prominence, loc_amp_rel, loc_amp_neighbor_ratio,
+          loc_integrated_prominence, patch17_wav_hh1_abs
+          (per-file z-scored + 10 cross-terms)
+Method:   GMM full covariance, 10-seed ensemble
+Result:   84.3% physical / 85.2% oracle / 1.0% gap / 13/35 exact chains
+```
+
+This is the first configuration to break the 82.4% ceiling. The HH1 sub-band
+captures diagonal high-frequency residual structure (edges/corners at ~0.08 nm
+scale) that corresponds to the acetyl group's off-axis LDOS perturbation.
+Combining HH1 with the 9×9 u-asymmetry does not improve further (dimensionality
+penalty in the GMM).
+
+Other features tested in this round (none improved over baseline):
+- 17×17 u-asymmetry (81.0%), t-asymmetry (81.9%), center-ring contrast (82.4%)
+- 17×17 wavelet LH1, HL1, LH2, HH2, LH3 (81–82%)
+- 9×9 Haar wavelet features (same signal as patch_u_asym, redundant)
+- Cross-lobe pair features (pair_amp_diff, pair_sym_prom — 75–82%)
+- Raw (non-residual) patch wavelets (78–81%)
+
+### Updated conclusion
+
+**84.3% per-lobe / 13/35 exact is the new label-free ceiling** with current
+STM data at −0.3 V. The breakthrough came from a wavelet diagonal detail (HH1)
+at 17×17 resolution, not from more complex clustering or deeper features. The
+bottleneck remains GlcNAc detection (lobes 2, 5 at 60–69%), but middle GlcN
+positions (3, 4) improved significantly. The abstention framework provides
+honest reporting at 91% on confident lobes. Converged DFT cubes (`28444935`,
 `28445456`) remain the critical path to higher accuracy.
 
 ---
