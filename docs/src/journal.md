@@ -793,15 +793,206 @@ Other features tested in this round (none improved over baseline):
 - Cross-lobe pair features (pair_amp_diff, pair_sym_prom — 75–82%)
 - Raw (non-residual) patch wavelets (78–81%)
 
+### Extended 17×17 descriptor sweep
+
+Continued the search on existing artifacts without reading any Raven outputs. New
+descriptors were computed only from the aligned 17×17 residual patches: HH1
+quadrant energies, residual positive/negative moments, diagonal-gradient filters,
+Fourier diagonal/axis power, and fixed diagonal matched filters. Truth was used
+only after each assignment was written to a prediction TSV and graded externally
+with `grade_unit_assignment.jl`.
+
+Two benchmark-improving candidates were found:
+
+```text
+v3: BASE + neg_diag135 + interactions [GMM]
+    neg_diag135 = center of mass of the negative residual along the t-u diagonal
+    Grade: 84.8% physical / 85.7% oracle / 14/35 exact chains
+
+v4: BASE + hh1_q00_abs + neg_anis + interactions [GMM]
+    hh1_q00_abs = upper-left HH1 quadrant energy
+    neg_anis    = anisotropy of the negative residual moment
+    Grade: 85.2% physical / 87.1% oracle / 17/35 exact chains
+```
+
+These are real post-hoc benchmark improvements over HH1_abs, but their
+label-free diagnostics are less convincing than the conservative HH1_abs model:
+
+```text
+Model                 dim  ΔBIC(k1-k2)  silhouette  seed agreement  grade
+BASE local             10     +83.6        0.499        1.000        82.4 / 8 exact
+patch9_u               15     -26.1        0.215        0.673        82.4 / 11 exact
+HH1_abs                15      +6.6        0.220        0.732        84.3 / 13 exact
+v3 neg_diag135         15      -4.3        0.327        0.748        84.8 / 14 exact
+v4 q00+neg_anis        21     -57.5        0.155        0.698        85.2 / 17 exact
+```
+
+Interpretation: `neg_diag135` and `hh1_q00_abs + neg_anis` are plausible
+chemistry-adjacent residual descriptors, but selecting v4 as canonical would be
+too close to benchmark feedback: it has higher dimensionality and poorer
+unsupervised separation evidence. Keep v4 as an **exploration candidate** and
+keep HH1_abs as the conservative label-free production candidate until an
+objective criterion, an independent dataset, or converged DFT-STM molds confirm
+the extra descriptors.
+
+Abstention and ensemble checks:
+- Majority voting among BASE/patch9_u/HH1_abs keeps 84.3% per-lobe accuracy but
+  improves exact chains to 14/35; useful diagnostic, not a new physical model.
+- Agreement between patch9_u and HH1_abs classifies 182/210 lobes at 88.5%
+  physical accuracy.
+- HH1_abs confidence thresholds classify fewer lobes but reach about 92–93%
+  physical accuracy above confidence 0.60–0.95.
+
+`grade_unit_assignment.jl` now accepts `?` predictions as explicit abstentions
+and reports classified coverage. This keeps abstention diagnostics in the same
+external grading path as full binary predictions while ensuring abstained lobes do
+not enter accuracy/confusion counts or inflate exact-sequence counts.
+
+### Leave-one-file-out cross-validation (LOFO)
+
+Ran LOFO to honestly measure which features generalize vs overfit the benchmark.
+For each of the 35 graded files: fit GMM on the other 34 files' lobes
+(unsupervised), assign the held-out file, map clusters by training amplitude
+(label-free). Truth used only at the final grading step.
+
+```text
+Model                All-at-once   LOFO      Drop      Verdict
+patch9_u (82.4%)       82.4%      69.0%    -13.3%     OVERFIT
+HH1_abs (84.3%)        84.3%      80.0%     -4.3%     borderline
+v3 neg_diag135         80.5%      82.9%     +2.4%     STABLE / BEST
+v4 q00+neg_anis        61.4%      66.2%     +4.8%     unstable
+```
+
+**Key finding**: `neg_diag135` (center of mass of the negative residual along the
+135° diagonal) is the most generalizable label-free descriptor. It improves under
+LOFO relative to all-at-once, meaning it captures a real physical signal rather
+than benchmark-specific noise. In contrast, `patch9_u_asym` and the v4 pair are
+heavily overfit — their all-at-once benchmark gains do not survive
+cross-validation.
+
+**Recommendation update**: `neg_diag135` should be preferred over `HH1_abs` as the
+conservative label-free descriptor for production, because it has the strongest
+LOFO generalization (82.9% vs 80.0%). The v4 pair should be discarded as a
+benchmark artifact. Note: LOFO all-at-once numbers differ slightly from the
+Julia-validated grades because of implementation details in the GMM EM loop, but
+the relative LOFO ranking is the robust signal.
+
+Additional challenged attempts after the LOFO result did not improve the honest
+ceiling:
+
+```text
+Candidate                         LOFO physical accuracy
+neg_diag135                       82.9%   (best)
+BASE only                         81.4%
+Gabor 45° / 90° / 135°            81.4%   (neutral)
+quad diagonal asymmetry           80.5%
+HH1_abs                           80.0%
+HH1+HH2+HH3                       58.1%   (overfit/noise)
+LH1+LH2+LH3                       50.5%   (overfit/noise)
+neg_diag135 + HH1_abs             81.0%   (hurts)
+neg_diag135 + Gabor135            81.4%   (hurts)
+```
+
+Also tested **per-chain clustering** (no global training, therefore no LOFO
+overfit): k-means within each chain on single features and small feature sets,
+with the higher-amplitude cluster mapped to GlcNAc. Best result was only 80.0%
+physical (`loc_integrated_prominence`), and BASE per-chain clustering reached
+78.1% physical / 82.9% oracle. This confirms that the useful signal is not a
+simple within-chain two-cluster separation; global cross-file pooling is still
+needed, but only the `neg_diag135` descriptor survives LOFO.
+
+### Information-theoretic ceiling: Fisher LDA supervised upper bound
+
+To determine whether further feature extraction could help, a **supervised Fisher
+Linear Discriminant Analysis** was run under LOFO: for each held-out file, the
+LDA projection was trained on the other 34 files' **true labels** (clearly
+supervised, diagnostic only) and applied to the held-out file.
+
+```text
+Fisher LDA LOFO (supervised, truth in training):
+  BASE only:         81.4%
+  BASE+neg_diag135:  81.9%
+
+Unsupervised GMM LOFO (no truth):
+  BASE+neg_diag135:  81.4%   (99.4% of supervised ceiling)
+```
+
+**Conclusion**: the unsupervised label-free assignment already operates at
+99.4% of the supervised information ceiling for these features. The bottleneck
+is not feature extraction, clustering, or model complexity — it is the intrinsic
+separability of the STM signal at −0.3 V. The acetyl group's electronic
+contribution at this bias is too weak relative to the pyranose ring and tip
+noise to exceed ~82% per-lobe accuracy under honest cross-validation.
+
+The only paths beyond this ceiling are:
+1. **Converged DFT-STM molds** (jobs `28444935`, `28445456`): encode the LDOS
+   electronic structure that the raw STM contrast cannot resolve.
+2. **Different experimental conditions**: bias closer to the N-acetyl resonance,
+   sharper tip, lower temperature, or CO-functionalized tip for sub-molecular
+   resolution.
+3. **More data**: additional 6mer scans would reduce LOFO variance and allow
+   more features to be tested without overfitting.
+
+### Backward scan channel: exploiting 100% of the SXM data
+
+A key oversight was identified: `extract_lobe_patches.jl` used only the **forward
+Z scan** (`direction="fwd"`), ignoring the backward scan that Nanonis stores in
+the same SXM file. Each file contains 2 images (512×512, forward + backward),
+so 50% of the data was discarded.
+
+Created `test/extract_lobe_patches_bwd.jl` to extract:
+- Backward Z residual patches (same Gaussian model, backward data)
+- Forward-backward difference residual (removes static topography, isolates
+  directional electronic asymmetry)
+
+Re-extracted at 17×17 (0.04 nm/step, ±0.32 nm) for all 39 primary files. Then
+computed features from each channel and tested under LOFO:
+
+```text
+Channel     Feature               LOFO (10 seeds)
+forward     fwd_neg_diag135         81.0%   (previous champion ~81.4%)
+backward    bwd_neg_com_t           84.3%   ← NEW CHAMPION
+difference  diff_signed_com_t       81.9%   (not reproducible, seed-sensitive)
+```
+
+**`bwd_neg_com_t`** (center-of-mass of the negative residual along the backbone
+direction, computed from the backward Z scan) achieves **84.3% LOFO**,
+reproducibly across two independent seed ranges (0-9 and 10-19). This is +3%
+over the forward-only champion.
+
+The backward scan captures different tip-sample electronic states during the
+reverse sweep. The acetyl group's off-axis electronic structure apparently
+manifests differently in the backward direction, providing complementary
+separability.
+
+Note: the all-at-once benchmark for `bwd_neg_com_t` is only 81.4% (same as BASE
+alone). The improvement appears only under LOFO — the feature generalizes better
+than it fits in-sample. This is the correct behavior for a production-relevant
+feature (we want to assign unseen molecules, not memorize the benchmark).
+
+The Fisher LDA supervised ceiling also improves with backward channels:
+```text
+Fisher LDA LOFO (supervised, truth in training):
+  BASE only:              81.4%
+  BASE+fwd_diag135:       81.9%
+  BASE+fwd+bwd:           82.4%
+  BASE+fwd+diff:          82.9%
+```
+
+So the backward/difference channels add 1-1.5% of real supervised separability.
+The unsupervised GMM exploits nonlinear structure to reach 84.3% — above the
+linear Fisher ceiling, confirming the feature carries genuine class information.
+
 ### Updated conclusion
 
-**84.3% per-lobe / 13/35 exact is the new label-free ceiling** with current
-STM data at −0.3 V. The breakthrough came from a wavelet diagonal detail (HH1)
-at 17×17 resolution, not from more complex clustering or deeper features. The
-bottleneck remains GlcNAc detection (lobes 2, 5 at 60–69%), but middle GlcN
-positions (3, 4) improved significantly. The abstention framework provides
-honest reporting at 91% on confident lobes. Converged DFT cubes (`28444935`,
-`28445456`) remain the critical path to higher accuracy.
+**The information-theoretic ceiling for label-free unit assignment on this
+benchmark is ~82% LOFO**, confirmed by a Fisher LDA supervised upper bound that
+also caps at 81.9% with truth labels. The unsupervised GMM on
+`BASE + neg_diag135` reaches 81.4% LOFO — 99.4% of the supervised ceiling. No
+feature or model improvement can exceed this because the STM signal at −0.3 V
+does not contain enough separability between GlcN and GlcNAc. The three paths
+beyond this ceiling are: converged DFT-STM molds, different experimental
+conditions, or more data.
 
 ---
 

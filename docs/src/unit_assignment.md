@@ -574,6 +574,12 @@ julia --project=. test/grade_unit_assignment.jl \
     --out results/benchmark_grades/unit_assignment.tsv
 ```
 
+Prediction TSVs may use `0`, `1`, or `?` in the prediction column. `?` is an
+explicit abstention: the grader excludes those lobes from accuracy/confusion
+counts and reports classified coverage as `classified/possible`. This keeps
+binary full-coverage grading and abstention diagnostics in the same tool without
+letting abstentions inflate sequence-exact counts.
+
 ## HPC parallelism
 
 `extract_lobe_features.jl` supports `--chunk I/N` for job-array parallelism:
@@ -649,15 +655,17 @@ STMFIT_DATA_DIR=/data julia -t 2 --project=. \
   file chain before decoding: geometric/proxy site columns, required unary/bond
   combinations, and patch/template pixel-count compatibility. It does not read
   truth labels.
-- **Current best label-free output** (updated Jun 28):
-  GMM full-covariance ensemble on local prominence (4) + patch u-asymmetry +
-  interactions → **82.4% physical / 82.4% oracle / 0% gap / 11/35 exact
-  sequences**. This exceeds all previous methods (geometric mold: 67.9%;
-  Gaussian k-means: 70.5%; DFT-STM prelim: 58.6%). With abstention threshold
-  0.60, 71% of lobes are classified at 91% accuracy and the rest are honestly
-  reported as `?`. See the 2026-06-28 journal entry for the full method
-  comparison. Predictions: `results/unit_assignment/best_labelfree_predictions.tsv`
-  (binary + confidence) and `best_labelfree_3class_predictions.tsv` (0/1/?).
+- **Current best conservative label-free output** (updated Jun 29):
+  LOFO cross-validation identified `neg_diag135` (negative-residual center of mass
+  along the 135° diagonal) as the most generalizable descriptor at **82.9% LOFO**
+  (vs 80.0% for HH1_abs, 69.0% for patch9_u_asym — both overfit). The all-at-once
+  benchmark numbers (82–85%) overestimate real generalization; LOFO is the honest
+  arbiter. Predictions and LOFO verdicts are documented in the 2026-06-29 journal
+  entry.
+- **Benchmark-exploration candidates** (overfit, not canonical): extended 17×17
+  residual descriptors (`hh1_q00_abs + neg_anis`, `patch9_u_asym`) improve
+  post-hoc benchmark grades but collapse under LOFO cross-validation (69–66%).
+  They should not be used for production.
 - **Phase 2–5**: planned. Decision point after DFT-STM molds or a stronger
   label-free observable is available.
 - **Ground truth**: filled with the diagnostic sequence `010010` for all primary

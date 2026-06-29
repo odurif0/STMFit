@@ -1,7 +1,7 @@
 #!/usr/bin/env julia
 
 # ──────────────────────────────────────────────────────────────────────────────
-# grade_unit_assignment.jl — Grade GlcNAc/GlcN (0/1) unit assignment per lobe
+# grade_unit_assignment.jl — Grade GlcNAc/GlcN (0/1/?) unit assignment per lobe
 #
 # This script evaluates predicted unit assignments against the ground-truth
 # sequence. It is INTENTIONALLY OUTSIDE the fitting/model-selection path:
@@ -22,6 +22,9 @@
 #   reverse:      pred[N-i+1]      vs truth[i]    (chain read backwards)
 #   flip:         1 - pred[i]      vs truth[i]    (0↔1 swapped)
 #   reverse+flip: 1 - pred[N-i+1]  vs truth[i]    (both)
+#
+# The prediction label "?" is an explicit abstention. Abstained lobes are
+# excluded from accuracy/confusion counts and reported through coverage.
 #
 # Examples:
 #   julia --project=. test/grade_unit_assignment.jl \
@@ -115,13 +118,14 @@ function _parse_cli(args)
               --out PATH               Per-file grade TSV [$(DEFAULT_OUT)]
               --file-column NAME       File column in predictions [file]
               --lobe-column NAME       Lobe index column [lobe]
-              --predicted-column NAME  Raw predicted label column [predicted]
+              --predicted-column NAME  Raw predicted label column (0/1/?) [predicted]
               --physical-column NAME   Physical-mapped label column [physical_label]
               --amplitude-column NAME  Amplitude column for physical convention [amplitude]
               --primary-only           Only grade files with quality=clean or clean_target
 
             Predictions TSV: one row per lobe, with columns:
               $(file_column), $(lobe_column), $(predicted_column), [$(physical_column)], [$(amplitude_column)]
+              $(predicted_column) may be 0, 1, or ? (abstention).
 
             Truth TSV: one row per file, with columns:
               file, sequence, [quality], [target_N], [notes]
@@ -164,12 +168,30 @@ function _parse_seq(s::AbstractString)
     return [parse(Int, c) for c in t if c in "01"]
 end
 
+function _parse_prediction(s::AbstractString)
+    t = strip(s)
+    if isempty(t) || t in ("?", "NA", "NaN", "nan")
+        return missing
+    end
+    parsed = tryparse(Int, t)
+    parsed === nothing && error("Invalid predicted label: $s")
+    parsed in (0, 1) || error("Predicted label must be 0, 1, or ?: $s")
+    return parsed
+end
+
 # Compute per-position accuracy between two equal-length Int vectors.
-function _seq_accuracy(pred::Vector{Int}, truth::Vector{Int})
+function _seq_accuracy(pred, truth::Vector{Int})
     n = min(length(pred), length(truth))
-    n == 0 && return 0.0, 0
-    correct = count(pred[i] == truth[i] for i in 1:n)
-    return correct / n, correct
+    n == 0 && return 0.0, 0, 0
+    correct = 0
+    classified = 0
+    for i in 1:n
+        ismissing(pred[i]) && continue
+        classified += 1
+        correct += pred[i] == truth[i] ? 1 : 0
+    end
+    classified == 0 && return 0.0, 0, 0
+    return correct / classified, correct, classified
 end
 
 # Levenshtein edit distance between two Int vectors.
@@ -192,15 +214,17 @@ end
 
 # Apply alignment transform to a predicted sequence.
 # alignment ∈ {"identity", "reverse", "flip", "reverse+flip"}
-function _align(pred::Vector{Int}, alignment::String)
+_flip_pred(x) = ismissing(x) ? missing : 1 - x
+
+function _align(pred, alignment::String)
     if alignment == "identity"
         return copy(pred)
     elseif alignment == "reverse"
         return reverse(pred)
     elseif alignment == "flip"
-        return [1 - x for x in pred]
+        return [_flip_pred(x) for x in pred]
     elseif alignment == "reverse+flip"
-        return [1 - x for x in reverse(pred)]
+        return [_flip_pred(x) for x in reverse(pred)]
     else
         error("Unknown alignment: $alignment")
     end
@@ -210,14 +234,22 @@ const ALL_ALIGNMENTS = ["identity", "reverse", "flip", "reverse+flip"]
 const PHYSICAL_ALIGNMENTS = ["identity", "reverse"]
 
 # Compute grade for one file under a given alignment.
-function _grade_one(pred_seq::Vector{Int}, truth_seq::Vector{Int}, alignment::String)
+function _grade_one(pred_seq, truth_seq::Vector{Int}, alignment::String)
     aligned = _align(pred_seq, alignment)
-    acc, correct = _seq_accuracy(aligned, truth_seq)
-    ed = _edit_distance(aligned, truth_seq)
-    n = min(length(aligned), length(truth_seq))
+    acc, correct, n = _seq_accuracy(aligned, truth_seq)
+    pred_classified = Int[]
+    truth_classified = Int[]
+    n_possible = min(length(aligned), length(truth_seq))
+    for i in 1:n_possible
+        ismissing(aligned[i]) && continue
+        push!(pred_classified, aligned[i])
+        push!(truth_classified, truth_seq[i])
+    end
+    ed = _edit_distance(pred_classified, truth_classified)
     # Confusion matrix: [truth\pred] = [[TP(1,1), FN(1,0)], [FP(0,1), TN(0,0)]]
     tp = fn = fp = tn = 0
-    for i in 1:n
+    for i in 1:n_possible
+        ismissing(aligned[i]) && continue
         t, p = truth_seq[i], aligned[i]
         if t == 1 && p == 1; tp += 1
         elseif t == 1 && p == 0; fn += 1
@@ -225,7 +257,7 @@ function _grade_one(pred_seq::Vector{Int}, truth_seq::Vector{Int}, alignment::St
         else tn += 1
         end
     end
-    seq_match = (length(aligned) == length(truth_seq)) && all(aligned .== truth_seq)
+    seq_match = (length(aligned) == length(truth_seq)) && n == length(truth_seq) && all(aligned[i] == truth_seq[i] for i in eachindex(truth_seq))
     return (accuracy=acc, correct=correct, n=n, edit_dist=ed,
             tp=tp, fn=fn, fp=fp, tn=tn, seq_match=seq_match)
 end
@@ -242,7 +274,8 @@ function _physical_remap(pred_rows::Vector{Dict{String,String}}, opt::GradeOptio
     # Mean amplitude per predicted label
     amps_by_label = Dict{Int,Vector{Float64}}()
     for row in pred_rows
-        label = parse(Int, row[opt.predicted_column])
+        label = _parse_prediction(row[opt.predicted_column])
+        ismissing(label) && continue
         amp = tryparse(Float64, strip(row[opt.amplitude_column]))
         amp === nothing && continue
         isfinite(amp) || continue
@@ -257,7 +290,7 @@ function _physical_remap(pred_rows::Vector{Dict{String,String}}, opt::GradeOptio
     if high_label == 1
         return identity
     else
-        return x -> 1 - x
+        return _flip_pred
     end
 end
 
@@ -300,10 +333,11 @@ function main(args=ARGS)
     physical_seq_match = 0
     oracle_seq_match = 0
     n_files_graded = 0
+    n_possible = 0
 
     open(opt.out_tsv, "w") do io
         println(io, join([
-            "file", "N_pred", "N_truth", "quality",
+            "file", "N_pred", "N_classified", "N_truth", "quality",
             "phys_alignment", "phys_accuracy", "phys_correct", "phys_edit_dist", "phys_seq_match",
             "phys_tp", "phys_fn", "phys_fp", "phys_tn",
             "oracle_alignment", "oracle_accuracy", "oracle_correct", "oracle_edit_dist", "oracle_seq_match",
@@ -320,7 +354,7 @@ function main(args=ARGS)
             end
 
             rows = pred_by_file[file]
-            pred_raw = [parse(Int, r[opt.predicted_column]) for r in rows]
+            pred_raw = [_parse_prediction(r[opt.predicted_column]) for r in rows]
 
             # Physical convention: one global amplitude-based remap, then test identity/reverse.
             pred_phys = [global_remap(p) for p in pred_raw]
@@ -351,10 +385,12 @@ function main(args=ARGS)
             physical_seq_match += best_phys.seq_match ? 1 : 0
             oracle_seq_match += best_oracle.seq_match ? 1 : 0
             n_files_graded += 1
+            n_possible += min(length(pred_raw), length(truth_seq))
 
             println(io, join([
                 file,
                 string(length(pred_raw)),
+                string(best_phys.n),
                 string(length(truth_seq)),
                 quality,
                 best_phys.alignment,
@@ -381,6 +417,8 @@ function main(args=ARGS)
     println("  truth:          ", opt.truth)
     println("  output:         ", opt.out_tsv)
     println("  files graded:   ", n_files_graded)
+    println("  classified:     ", physical_total, "/", n_possible,
+            " (", n_possible > 0 ? @sprintf("%.1f%%", 100*physical_total/n_possible) : "NA", ")")
     println()
     println("  Physical convention (label-free, GlcNAc=amp max):")
     println("    per-blob accuracy: ", physical_correct, "/", physical_total,
