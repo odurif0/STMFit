@@ -1,10 +1,13 @@
 # STMFit — STM Molecular Chain Fitting
 
 Automated pipeline for detecting and fitting 2D Gaussian chain models
-to STM images of molecular chains. **Validated** on the 6mer chitosan/Cu(100)
-benchmark (39/39 exact); **applied** to the 10–20mer production system (no
-ground-truth labels — visual validation is the arbiter). Generalizable to other
-chain-like molecules on the same STM via auto-calibration
+to STM images of molecular chains. The robust-AICc guard is **validated** on the
+6mer chitosan/Cu(100) primary benchmark (39/39 exact); the current chitosan
+default is the support-midpoint hybrid promoted for the expanded 145-file
+external counting grade (129/145 exact, 143/145 within one lobe). The pipeline is
+also **applied** to the 10–20mer production system (no ground-truth labels —
+visual validation is the arbiter). Generalizable to other chain-like molecules on
+the same STM via auto-calibration
 (see [Calibration](calibration.md)).
 
 ## Quick Start
@@ -13,7 +16,7 @@ chain-like molecules on the same STM via auto-calibration
 # Single-file diagnostic
 STMFIT_DATA_DIR=/path/to/data julia --project=. test/inspect_one_file.jl 240817_004.sxm
 
-# Full batch (default: chitosan.toml, GCV + robust-AICc guard)
+# Full batch (default: chitosan.toml, support-midpoint hybrid)
 STMFIT_DATA_DIR=/path/to/data julia -t 4 --project=. test/batch_full.jl 48 \
   --config config/chitosan.toml
 
@@ -23,6 +26,10 @@ julia --project=. test/measure_calibration.jl path/to/clean_scan.sxm
 # Raw GCV baseline (no guard) for comparison
 STMFIT_DATA_DIR=/path/to/data julia -t 4 --project=. test/batch_full.jl 48 \
   --config config/chitosan.toml --selection-policy gcv
+
+# Original 240817 primary-benchmark validation policy (39/39 exact)
+STMFIT_DATA_DIR=/path/to/data julia -t 4 --project=. test/batch_full.jl 39 \
+  --config config/chitosan.toml --selection-policy gcv_with_robust_aicc_guard
 
 # Summarize results
 julia --project=. test/summarize.jl results/best_plots/
@@ -49,7 +56,10 @@ become a selection prior.
 ## Unit Assignment (GlcNAc/GlcN)
 
 The pipeline can assign each fitted lobe a monomer type to produce a
-deacetylation map per chain. This is a **work in progress**. See
+deacetylation map per chain. This is a **work in progress**. The 6mer 0/1/?
+benchmark uses the same 145 files as the counting benchmark; the control sequence
+`NKNNKN` is external grading information only and must not enter the label-free
+method. See
 [Unit Assignment](unit_assignment.md) and [QE STM Molds](qe_stm_molds.md).
 
 ## Research Journal

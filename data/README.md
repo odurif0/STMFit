@@ -34,6 +34,12 @@ julia -t 4 --project=. test/batch_full.jl 48 --config config/chitosan.toml
 The benchmark manifests in `benchmarks/` record which files are clean targets,
 poor quality, or excluded — but they contain **no** `.sxm` data, only metadata.
 
+For the broader 6mer lab-storage tree, see
+`benchmarks/chitosan_6mer_data_inventory.tsv`. It inventories every `.sxm` under
+`/home/durif/Rebecca/data/data/`, joins the documented manual classifications,
+and separates immediately usable benchmark files from ambiguous/preparation/test
+acquisitions that still need visual review.
+
 ## Adding a new molecule
 
 ```bash
