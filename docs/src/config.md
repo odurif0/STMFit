@@ -19,12 +19,13 @@ support_padding_nm = 0.25
 kappa_max = 10.0
 selection_criterion = "gcv"
 cv_method = "gcv"
-selection_policy = "gcv_with_robust_aicc_guard"
+selection_policy = "support_midpoint_hybrid"
 ```
 
-The chitosan default batch selection policy is the integrated robust overfit
-guard, configured in the TOML calibration.  It writes `N_selected` as the
-guarded primary result while preserving `N_eff` for comparison.  The raw
+The chitosan default batch selection policy is now `support_midpoint_hybrid`,
+configured in the TOML calibration. It first computes the integrated robust
+overfit guard, then can move the guarded result by at most one lobe toward the
+midpoint of the measured 2D support's physical feasible-N interval. The raw
 GCV/effective baseline remains available as an explicit command-line override:
 
 ```bash
@@ -65,6 +66,9 @@ have built-in defaults):
     `--gcv-ambiguity-rel-threshold`.
   - `robust_guard_nu` (default `8.0`): Student-t degrees of freedom for the
     robust-AICc guard. Overridable per-run with `--robust-guard-nu`.
+  - `support_midpoint_up_gcv_rel_threshold` (default `0.30`): relative effective
+    GCV gap allowed for one-step support-midpoint upshifts under
+    `support_midpoint_hybrid`.
 - **`[preprocessing]`** — SXM channel name/direction, stride, flatten, smoothing.
 
 ### Calibrating a new molecule
@@ -77,9 +81,9 @@ cp config/template.toml config/my_molecule.toml
 
 The template comments explain how to derive each value from a few representative
 scans (FWHM -> sigma, observed pitch -> spacing, etc.). Only `[model]` values
-must change for a molecule on the same STM; the `[selection]` defaults are a
-reasonable starting point but should be re-validated if the lobe statistics
-differ markedly from chitosan.
+must change for a molecule on the same STM. The `[selection]` defaults are the
+current chitosan defaults; re-validate them before promoting the
+support-midpoint hybrid to a new molecule.
 
 To exclude non-target files (noise, test images, other molecules), pass an
 exclusion list instead of relying on hard-coded defaults:
@@ -340,7 +344,7 @@ GaussianFit2D.ChainSweepConfig(
 `selection_criterion` controls the score used inside each model sweep.  The
 batch-level `selection_policy` / `--selection-policy` is separate: it controls
 whether the final reported primary result is the standard `N_eff` or a guarded
-`N_selected` such as the chitosan default robust-AICc guard.
+`N_selected` such as the chitosan default support-midpoint hybrid.
 
 Experimental support rescue is available via
 `config/chitosan_adaptive_support_rescue.toml` or

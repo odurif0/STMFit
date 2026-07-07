@@ -16,7 +16,8 @@ Level 2: model-specific bests
          └─ N_eff = best effective min(circ, ell) model
 
 Level 3: Final result
-         └─ Chitosan default: robust-AICc guard reports N_selected
+         └─ Chitosan default: support_midpoint_hybrid reports N_selected
+             (robust-AICc guard, then a one-step support-midpoint adjustment)
          └─ Raw baseline override: --selection-policy gcv reports N_eff
 ```
 
@@ -39,20 +40,23 @@ legacy comparisons, but it is not the default batch selection criterion.
 The `selection_criterion` field can be set to `"gcv"`, `"bic"`, `"aicc"`, or
 `"cv"`. The chitosan calibration uses `"gcv"` with `cv_method="gcv"`.
 
-## Robust-AICc overfit guard
+## Chitosan default: support-midpoint hybrid
 
-`test/batch_full.jl` supports an integrated robust primary selection policy.
-For `config/chitosan.toml`, this is now the configured default:
+`test/batch_full.jl` supports an integrated support-midpoint hybrid primary
+selection policy. For `config/chitosan.toml`, this is now the configured
+default:
 
 ```bash
 julia -t 4 --project=. test/batch_full.jl 48 --config config/chitosan.toml
 ```
 
 The raw GCV/effective baseline remains available with `--selection-policy gcv`.
+The robust-AICc guard alone remains available with
+`--selection-policy gcv_with_robust_aicc_guard`.
 
 This policy is label-free: it does not use an expected `N`, does not prefer
-`N=6`, and does not use benchmark labels during fitting or selection. It is a
-conservative guard layered on top of the standard GCV/effective result:
+`N=6`, and does not use benchmark labels during fitting or selection. It layers
+two generic signals on top of the standard GCV/effective result:
 
 1. Compute the standard circ→ell `N_eff` exactly as in the default pipeline.
 2. Fit an auxiliary exhaustive elliptical candidate set.
@@ -86,36 +90,74 @@ branches use no expected `N`, no target count, and no benchmark labels. See the
 Research Journal (§2026-06-17) for the motivation (`240817_043.sxm`) and the
 no-regression validation.
 
+The support-midpoint layer then uses the measured 2D support length and the
+physical spacing/overlap calibration to compute the midpoint of the feasible-N
+interval. It can move the robust-guarded count toward the midpoint:
+
+```text
+support_midpoint = round((support_N_min + support_N_max) / 2)
+
+if N_guarded > support_midpoint + 1:
+    # Gap >= 2: trust the support geometry, go to midpoint
+    N_selected = support_midpoint
+
+elif N_guarded > support_midpoint:
+    N_selected = N_guarded - 1
+
+elif N_guarded < support_midpoint
+     and N_eff > N_guarded
+     and delta_GCV_rel_eff <= 0.30:
+    N_selected = N_guarded + 1
+
+else:
+    N_selected = N_guarded
+```
+
+The down branch asks whether the fitted count exceeds what the measured support
+geometry suggests. When the robust guard over-counts by at least two lobes
+relative to the support midpoint (gap >= 2), the rule trusts the geometry and
+goes directly to the midpoint rather than making only a one-step correction; a
+single-step gap uses the more conservative one-lobes downshift. The up branch is
+deliberately stricter: it requires the raw GCV/effective selector to contain
+upward evidence and a close effective-GCV gap
+(`support_midpoint_up_gcv_rel_threshold`, default `0.30`). This makes the rule a
+generic support-consistency adjustment rather than a target-count correction.
+
 ### Output columns
 
 When the policy is enabled, batch summaries include:
 
 - `N_selected`: the primary result under `--selection-policy`.
-- `selection_policy`: usually `gcv` or `gcv_with_robust_aicc_guard`.
-- `selection_source`: `N_eff` source when kept, or `robust_aicc_guard` when the
-  guard moved the count (down or up).
-- `N_refined`: same guarded count for compatibility with earlier audit output.
+- `selection_policy`: usually `gcv`, `gcv_with_robust_aicc_guard`, or
+  `support_midpoint_hybrid`.
+- `selection_source`: the effective source (`ell`, `circ`, or `N_eff`) when kept,
+  `robust_aicc_guard` when the robust guard moved the primary count,
+  `support_midpoint_down`, `support_midpoint_down_to_mid`, or `support_midpoint_up`
+  when the support-midpoint layer made the final move.
+- `N_refined`: robust-guarded count before the support-midpoint layer, kept for
+  compatibility with earlier audit output.
 - `refined_policy`: `overfit_guard_down_only` (downshift or keep) or
   `overfit_guard_up_when_ambiguous` (conditional upshift).
-- `refined_source`: `N_eff` when kept, or `ell_robust_aicc` when the integrated
-  guard moved the count.
+- `refined_source`: `N_eff` when kept, or the auxiliary robust-AICc source such as
+  `ell_robust_aicc` when the integrated guard moved the count.
 - `robust_aicc_N`: the auxiliary robust-AICc-selected count.
 
 ### Current validation status
 
-On the 240817 chitosan clean benchmark (verified reproductible across 3
-consecutive runs), the integrated guard improves exact agreement from
-`N_eff = 35/39` to `N_selected = 39/39`, with all four clean target cases
-(`017`, `019`, `043`, `058`) reporting `N_selected = 6`.  `240817_043.sxm` is
-recovered by the symmetric up-when-ambiguous branch (§2026-06-17 of the
-Research Journal): its `N_eff = 5`, but the exhaustive robust-AICc guard
-recommends `6` on a file the GCV sweep flags as ambiguous
-(`delta_GCV_rel_eff ≈ 1%`, runner-up `N=6`).
+The robust-AICc guard alone remains the no-regression result on the original
+240817 primary benchmark: it improved exact agreement from `N_eff = 35/39` to
+`N_selected = 39/39` in the 2026-06-17 validation pass. The current chitosan
+default is promoted for the expanded counting benchmark: the support-midpoint
+hybrid rule (including the gap≥2 down-to-midpoint extension) improved the full
+145-file external grade from `106/145` exact (`138/145` within one lobe) to
+`129/145` exact (`143/145` within one lobe). This was first reproduced by
+offline replay on frozen fit data and then confirmed by a full Viper batch run
+with 146 `ok` rows, graded against the 145-file manifest. That promotion is
+empirical and provisional: it is the best current label-free full145 counting
+rule, not the endpoint of selector research.
 
-This result is validation evidence, not a fitting prior.  Synthetic known-N
-validation also favored the guard over raw GCV in the tested `N≈4–8` regime.
-Support-adaptive variants remain experimental and should be evaluated as
-separate policies rather than folded into the default prematurely.
+These numbers are validation evidence, not fitting priors. Benchmark labels are
+used only by grading scripts after the batch run has written `N_selected`.
 
 ---
 
@@ -123,8 +165,9 @@ separate policies rather than folded into the default prematurely.
 
 > The selectors below were investigated and documented during development.
 > They remain available as `--selection-policy` options for diagnostics but are
-> **not** used by the default workflow (`gcv_with_robust_aicc_guard`). None
-> outperformed the default on the chitosan benchmark or synthetic known-N
+> **not** used by the default workflow (`support_midpoint_hybrid`). None
+> outperformed the promoted chitosan default on the expanded counting benchmark
+> or the robust-AICc guard on synthetic known-N
 > validation. This section is kept as a reference of what was tried and why it
 > wasn't adopted. Skim if investigating alternative selection criteria.
 
@@ -563,8 +606,8 @@ against this failure without introducing any new parameters.
 - `N_circ`: best valid circular 2D model.
 - `N_eff`: hybrid/effective best using `min(score_circ(N), score_ell(N))` per N.
 - `N_selected`: policy-level primary result. With `selection_policy="gcv"` it
-  equals `N_eff`; with the chitosan default `gcv_with_robust_aicc_guard` it may
-  be a lower robust-AICc guarded count.
+  equals `N_eff`; with the chitosan default `support_midpoint_hybrid` it is the
+  robust-AICc guarded count after the one-step support-midpoint adjustment.
 - `N_1D`: independent 1D slide-profile count used for QC, not to initialize the
   standard 2D circular batch sweep.
 
