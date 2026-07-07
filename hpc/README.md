@@ -114,6 +114,8 @@ Key knobs:
 | `JULIA_MODULE_VERSION` | Pin e.g. `1.11.4`; empty = default | — |
 | `STMFIT_CONFIG` | TOML config relative to repo | `config/chitosan.toml` |
 | `STMFIT_OUTDIR` | Output dir relative to repo | `results/best_plots` |
+| `STMFIT_TSV` | Optional triage/input TSV relative to repo | — |
+| `STMFIT_SKIP_1D` | `1` to pass `--skip-1d` to `batch_full.jl` | — |
 | `STMFIT_BATCH_ARGS` | Extra flags forwarded to `batch_full.jl` | — |
 | `N_FILES` | Limit to first N files; empty = all | — |
 | `STMFIT_MAIL_USER` | Email for Slurm notifications | — |
@@ -152,6 +154,12 @@ The launcher (`--watch`) does, in order:
 
 Re-running is **safe and resumable**: `batch_full.jl` skips files already marked
 `ok` with an existing plot, so a re-submitted array only finishes the remainder.
+
+The remote batch automatically receives `STMFIT_DATA_DIR=/ptmp/<user>/stmfit/data`
+after data sync, so local paths never need to be embedded in Slurm jobs. Prefer
+the dedicated `STMFIT_TSV`, `STMFIT_SKIP_1D`, `STMFIT_SELECTION_POLICY`,
+`STMFIT_REFINED_ADVISORY`, and `STMFIT_PLOT_MANIFEST` variables over multi-word
+`STMFIT_BATCH_ARGS` when possible.
 
 ---
 

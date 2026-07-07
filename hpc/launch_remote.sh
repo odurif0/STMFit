@@ -39,6 +39,11 @@ source "$ENV_FILE"
 : "${STMFIT_CONFIG:=config/chitosan.toml}"
 : "${STMFIT_OUTDIR:=results/best_plots}"
 : "${STMFIT_BATCH_ARGS:=}"
+: "${STMFIT_TSV:=}"
+: "${STMFIT_SKIP_1D:=}"
+: "${STMFIT_SELECTION_POLICY:=}"
+: "${STMFIT_REFINED_ADVISORY:=}"
+: "${STMFIT_PLOT_MANIFEST:=}"
 : "${N_FILES:=}"
 : "${STMFIT_MAIL_USER:=}"
 : "${WATCH_POLL:=30}"
@@ -150,6 +155,7 @@ fi
 # ── 1. Sync code ────────────────────────────────────────────────────────────
 if (( SYNC_CODE )); then
     say "Syncing code → $STMFIT_REMOTE_PROJECT"
+    runssh "mkdir -p '$STMFIT_REMOTE_PROJECT'"
     runc rsync -avz --delete \
         --exclude='results/' --exclude='*.log' --exclude='.git/' \
         --exclude='hpc/remote.env' --exclude='Manifest.toml' \
@@ -200,6 +206,12 @@ else
     export_vars="ALL,N_CHUNKS=$N_CHUNKS"
     [[ -n "$STMFIT_CONFIG" ]]        && export_vars+=",STMFIT_CONFIG=$STMFIT_CONFIG"
     [[ -n "$STMFIT_OUTDIR" ]]        && export_vars+=",STMFIT_OUTDIR=$STMFIT_OUTDIR"
+    export_vars+=",STMFIT_DATA_DIR=$STMFIT_REMOTE_DATA"
+    [[ -n "$STMFIT_TSV" ]]           && export_vars+=",STMFIT_TSV=$STMFIT_TSV"
+    [[ -n "$STMFIT_SKIP_1D" ]]       && export_vars+=",STMFIT_SKIP_1D=$STMFIT_SKIP_1D"
+    [[ -n "$STMFIT_SELECTION_POLICY" ]] && export_vars+=",STMFIT_SELECTION_POLICY=$STMFIT_SELECTION_POLICY"
+    [[ -n "$STMFIT_REFINED_ADVISORY" ]] && export_vars+=",STMFIT_REFINED_ADVISORY=$STMFIT_REFINED_ADVISORY"
+    [[ -n "$STMFIT_PLOT_MANIFEST" ]] && export_vars+=",STMFIT_PLOT_MANIFEST=$STMFIT_PLOT_MANIFEST"
     [[ -n "$STMFIT_BATCH_ARGS" ]]    && export_vars+=",STMFIT_BATCH_ARGS=$STMFIT_BATCH_ARGS"
     [[ -n "$N_FILES" ]]              && export_vars+=",N_FILES=$N_FILES"
     [[ -n "$JULIA_MODULE_VERSION" ]] && export_vars+=",JULIA_MODULE_VERSION=$JULIA_MODULE_VERSION"
@@ -281,6 +293,12 @@ if (( WATCH )); then
             || warn "Remote merge reported issues (missing chunks?). See output above."
         ok "Merge step done."
     fi
+fi
+
+if (( ! WATCH )); then
+    (( DRY_RUN )) && warn "DRY RUN complete — nothing was actually run." \
+                  || ok "Submission complete. Re-run with --watch or --fetch-only after completion to merge/fetch results."
+    exit 0
 fi
 
 # ── 7. Fetch results ────────────────────────────────────────────────────────

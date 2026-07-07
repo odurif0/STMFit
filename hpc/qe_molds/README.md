@@ -247,6 +247,44 @@ The preliminary cube lives in `qe/glcn_prelim/glcn_central_ldos.cube`. Use it on
 to exercise `cube_to_stm_maps.jl` → `import_stm_mold_maps.jl` → scoring; do not
 treat its GlcN mold as final. The first such preliminary run is job `28354566`.
 
+### Current Raven relaunch status
+
+After the second GlcN restart input set was prepared locally, a no-watch remote
+launch was dry-run and then submitted for the explicit directories
+`qe/glcn_restart2` and `qe/glcnac` with `--sequential --max-total-tasks 8
+--min-mem-mb 96000`:
+
+```text
+qe/glcn_restart2 -> 28525353
+qe/glcnac        -> 28525354
+```
+
+Status checked on 2026-07-01: `28525353` reached the 24 h walltime limit
+(`TIMEOUT`); the `pw.x` step was cancelled at the limit, not by memory pressure
+(reported node memory about 40 GB). The dependent `qe/glcnac` job `28525354` was
+cancelled before start because the `afterok` dependency was not satisfied. The
+`qe/glcn_restart2/glcn_central_relax.out` file was fetched, and the last
+`ATOMIC_POSITIONS` block was extracted to:
+
+```text
+qe/glcn_restart2/glcn_central_best3.xyz
+qe/glcn_restart2/glcn_central_best3_meta.tsv
+```
+
+`qe/glcn_restart3` was prepared from that geometry with the same active Raven
+settings (`8` tasks, `96000 MB`, `24:00:00`, `ecutwfc=50`, `ecutrho=360`,
+Gamma-only), passed local and remote preflight, and was submitted without
+`--watch`:
+
+```text
+qe/glcn_restart3 -> 28601744
+```
+
+Do not fetch or inspect `qe/glcn_restart3` outputs until a completion or timeout
+notification is available. Resubmit the production `qe/glcnac` run only after a
+production GlcN restart completes successfully, or explicitly choose a different
+dependency policy.
+
 From the local workstation, after configuring `hpc/remote.env`, you can sync and
 submit in one step:
 
