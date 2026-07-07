@@ -22,7 +22,7 @@ reused unchanged for curated 10–20mer images, except for the allowed `N` range
 
 | Purpose | Config | Notes |
 |---|---|---|
-| Production/default short-chain chitosan | `config/chitosan.toml` | Default remains `gcv_with_robust_aicc_guard`. |
+| Production/default short-chain chitosan | `config/chitosan.toml` | Current default is `support_midpoint_hybrid`, promoted as the best label-free full145 counting rule so far. |
 | Benchmark-aligned adaptive workflow | `config/chitosan_adaptive_support_rescue.toml` | Experimental generic support-rescue policy. |
 | 10–20mer adaptive workflow | `config/chitosan_10_20mer_adaptive_support_rescue.toml` | Same policy as benchmark adaptive workflow, with `n_max = 24`. |
 | Legacy 10–20mer baseline | `config/chitosan_10_20mer.toml` | Raw GCV baseline/comparison. |
@@ -50,14 +50,18 @@ experiments.  It is not used by the benchmark-aligned workflow.
 
 ## Reproduce the short-chain benchmark workflow
 
-Use the benchmark data folder and the adaptive config:
+Use the benchmark data folder and the robust-AICc guard override when the goal is
+to reproduce the original 240817 primary-benchmark validation (`39/39`). The
+plain `config/chitosan.toml` default is now optimized for the expanded full145
+external counting grade instead.
 
 ```bash
 JULIA_NUM_THREADS=4 julia --project=. test/batch_full.jl 39 \
   --data-dir /home/durif/Rebecca/data/data/20240817_LHe_Cu100 \
-  --outdir results/best_plots_240817_adaptive_support_rescue \
+  --outdir results/best_plots_240817_robust_guard \
   --tsv /tmp/opencode/chitosan_240817_primary_files.tsv \
-  --config config/chitosan_adaptive_support_rescue.toml
+  --config config/chitosan.toml \
+  --selection-policy gcv_with_robust_aicc_guard
 ```
 
 Then grade externally against the benchmark manifest.  Labels stay outside the
@@ -65,25 +69,47 @@ fit/selection run:
 
 ```bash
 julia --project=. test/grade_chitosan_benchmark.jl \
-  benchmarks/chitosan_240817.toml \
-  results/best_plots_240817_adaptive_support_rescue/summary_overlap060_hard.tsv \
-  --out results/benchmark_grades/chitosan_240817_adaptive_support_rescue_N_selected.tsv \
+  --manifest benchmarks/chitosan_240817.toml \
+  --results results/best_plots_240817_robust_guard/summary_overlap060_hard.tsv \
+  --out results/benchmark_grades/chitosan_240817_robust_guard_N_selected.tsv \
   --column N_selected
 ```
 
-Known validation from the current development pass: the default-config
-(`config/chitosan.toml`) workflow reaches `N_selected = 39/39` exact on the
-240817 primary benchmark, with all four `clean_target` files (`017`, `019`,
-`043`, `058`) reporting `N_selected = 6`.  `043` is recovered by the
-up-when-ambiguous guard branch (its `N_eff = 5`, but `robust_AICc_N = 6` on an
-ambiguous file; see the Research Journal §2026-06-17).  Guard-sensitive files
-`240817_058.sxm` and `240817_019.sxm` should report `N_selected = 6` even though
-`N_eff = 7`.  Re-measure any time with the grade script below.
+Known validation from the current development pass: the robust-AICc guard alone
+reaches `N_selected = 39/39` exact on the 240817 primary benchmark, with all four
+`clean_target` files (`017`, `019`, `043`, `058`) reporting `N_selected = 6`.
+`043` is recovered by the up-when-ambiguous guard branch (its `N_eff = 5`, but
+`robust_AICc_N = 6` on an ambiguous file; see the Research Journal §2026-06-17).
+The promoted `config/chitosan.toml` default is now `support_midpoint_hybrid`
+because it improves the expanded 145-file external counting grade from `106/145`
+exact to `129/145` exact (`143/145` within one lobe), confirmed by a full Viper
+batch run with 146 `ok` rows and grading against the 145-file manifest.
+Re-measure any time with the grade script below.
 
 Reproducibility note: the batch is deterministic run-to-run on a given machine
 (verified identical `N_selected` across 3 consecutive runs on 2026-06-17).
 Divergences between a past recorded number and a fresh run indicate intervening
 code changes, not run-to-run noise.
+
+### Expanded counting benchmark
+
+The canonical 240817 benchmark above remains the reproducible validation set.
+For broader external counting grades, use:
+
+```text
+benchmarks/chitosan_6mer_counting_confirmed.toml
+```
+
+This manifest contains 145 visually/manually confirmed `expected_N=6` files
+derived from `benchmarks/chitosan_6mer_preassignment_review.tsv`. It is still an
+external grading manifest only and must not be read by fitting or selection code.
+For unit assignment, the same 145 files are the benchmark scope and the external
+control sequence is `NKNNKN` (`010010` or `101101`, depending on the 0/1 identity
+convention). That sequence is grading/control information only: it must not enter
+the assignment method, threshold choice, abstention rule, composition prior, or
+any calibration intended to extrapolate to unknown systems. Older pending lists
+track provenance/curation state and should not be read as a license to shrink the
+0/1/? benchmark to the 240817 subset.
 
 ## Run the 10–20mer adaptive workflow
 
@@ -139,9 +165,10 @@ Important columns:
 - `N_selected`: primary reported count after the configured batch policy.
 - `selection_policy`: policy requested by config/CLI.
 - `selection_source`: source of the primary selection, e.g. `ell` or
-  `ell_robust_aicc`.
-- `refined_policy`: audit trail for whether adaptive support was kept, accepted,
-  rejected, or guarded.
+  `ell_robust_aicc`, plus `support_midpoint_down` or `support_midpoint_up` when
+  the default support-midpoint layer makes the final one-step adjustment.
+- `refined_policy`: audit trail for whether the robust-AICc/adaptive support
+  stage was kept, accepted, rejected, or guarded before the final selection.
 - `robust_aicc_N`: robust-AICc diagnostic/guard count.
 - `support_2D_ell_nm`, `support_2D_circ_nm`: active support length after any
   accepted rescue.
@@ -187,8 +214,11 @@ Expected targeted results:
 
 ## Known caveats
 
-- The adaptive configs are currently experimental and are not the default
-  production config until explicitly promoted.
+- The support-midpoint hybrid default is the best current label-free full145
+  counting rule, not a universal solution; re-validate before using it as a new
+  molecule's default.
+- The adaptive configs are still experimental and are not the default production
+  config until explicitly promoted.
 - The legacy 10–20mer finalizer output is a comparison artifact, not ground
   truth.
 - Full 10–20mer runs can be slow locally because the robust guard refits a broad
@@ -206,23 +236,64 @@ chain-like molecule under similar STM conditions:
 2. **Re-derive the `[model]` values** from a few representative scans — the
    template comments explain each (FWHM → sigma, observed pitch → spacing,
    support length). These are the load-bearing changes.
-3. **Keep the `[selection]` defaults** (`gcv_ambiguity_rel_threshold = 0.05`,
-   `robust_guard_nu = 8.0`) as a starting point. If the new molecule's lobe
-   statistics differ markedly from chitosan, run
+3. **Treat the `[selection]` defaults** (`gcv_ambiguity_rel_threshold = 0.05`,
+   `robust_guard_nu = 8.0`, `support_midpoint_up_gcv_rel_threshold = 0.30`) as
+   chitosan-calibrated starting points. If the new molecule's lobe statistics
+   differ markedly from chitosan, run
    `test/sensitivity_thresholds.jl` to check whether `N_selected` is robust to
    the threshold; re-calibrate only if it is sensitive.
 4. **Exclude non-target files** via `--exclude-from results/<molecule>_exclude.txt`
    (one filename per line) rather than editing the batch code.
 
 The selection path never uses an expected `N` or benchmark label, so the same
-guard logic applies unchanged. What may need attention is *how often* the
-up-when-ambiguous branch fires for a molecule whose GCV curve has a different
-shape — hence the sensitivity check.
+logic is label-free. What may need attention is *how often* the
+up-when-ambiguous and support-midpoint branches fire for a molecule whose support
+geometry or GCV curve has a different shape — hence the sensitivity check.
 
 ## Unit assignment workflow (GlcNAc/GlcN)
 
 See [Unit Assignment](unit_assignment.md) for the full pipeline description.
-The workflow for the benchmark is:
+
+### Unknown chitosan sequence production
+
+<!-- UNKNOWN-CHITOSAN-WORKFLOW:START -->
+
+For a chain with no unit-identity labels, start from the selected-N feature TSVs
+produced by the label-free counting pipeline and write production artifacts only:
+
+```bash
+julia --project=. test/run_unknown_unit_assignment.jl \
+    --features results/unit_assignment/<sample>_features_local.tsv \
+    --split-features results/unit_assignment/<sample>_features_split.tsv \
+    --patches results/unit_assignment/<sample>_patches_bwd.tsv \
+    --profile default \
+    --outdir results/unit_assignment/<sample>_unknown
+
+julia --project=. test/validate_unit_predictions.jl \
+    --predictions results/unit_assignment/<sample>_unknown/predictions_base_split_log_skew.tsv \
+    --features results/unit_assignment/<sample>_features_local.tsv
+
+python3 test/plot_unit_assignment.py \
+    --features results/unit_assignment/<sample>_features_local.tsv \
+    --predictions results/unit_assignment/<sample>_unknown/predictions_base_split_log_skew.tsv \
+    --out-dir results/unit_assignment/<sample>_unknown/plots \
+    --mode all
+
+julia --project=. test/summarize_unknown_unit_qc.jl \
+    --predictions results/unit_assignment/<sample>_unknown/predictions_base_split_log_skew.tsv \
+    --plots-dir results/unit_assignment/<sample>_unknown/plots \
+    --out results/unit_assignment/<sample>_unknown/review_queue.tsv
+```
+
+The production directory contains fixed-profile prediction TSVs, `summary.tsv`,
+`manifest.tsv`, validation logs, plots, and `review_queue.tsv`. Treat `?` as an
+explicit abstention requiring review, not as a dropped lobe.
+
+<!-- UNKNOWN-CHITOSAN-WORKFLOW:END -->
+
+### Benchmark and post-hoc grading
+
+The workflow for benchmark diagnostics is:
 
 1. **Fill the ground truth** in
    `benchmarks/chitosan_240817_unit_sequences.tsv` (column `sequence`:

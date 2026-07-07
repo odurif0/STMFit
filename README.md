@@ -4,7 +4,12 @@ Analysis pipeline for STM images of molecular chains (chitosan on Cu(100) and
 similar systems). Detects and fits a chain-of-Gaussians model to count the
 number of monomer units (lobes) per chain, label-free.
 
-**Benchmark (6mer):** 39/39 primary files exact (N=6), reproducible.
+**Benchmark (6mer):** the robust-AICc guard validates at 39/39 primary 240817
+files exact (N=6), reproducible. The current chitosan default is promoted for
+the expanded 145-file external counting grade: 129/145 exact, 143/145 within one
+lobe. The 0/1/? unit-assignment benchmark uses the same 145 files; its external
+control sequence is NKNNKN (010010/101101 by convention) for grading only, never
+for fitting, selection, thresholding, abstention, or method calibration.
 **Application (10–20mer):** 25/25 files processed; no ground-truth labels —
 visual validation is the arbiter.
 
@@ -47,6 +52,8 @@ how to organize them).
 | `sensitivity_thresholds.jl {generate\|submit\|local\|compare}` | Measure robustness of N_selected to the selection threshold. |
 | `diagnose_neff.jl`, `diagnose_fullimg_autocorr.jl` | Effective-sample-size and spatial-correlation diagnostics. |
 | `summarize.jl [summary.tsv]` | Print stats from a summary TSV. |
+| `run_unknown_unit_assignment.jl` | Label-free unknown-sequence 0/1/? runner: predictions, summary, manifest, validation logs. |
+| `validate_unit_predictions.jl`, `summarize_unknown_unit_qc.jl`, `plot_unit_assignment.py` | Validate, QC, and plot unknown unit-assignment outputs without grading labels. |
 
 ## Configs (`config/`)
 
@@ -83,7 +90,7 @@ module, where to put code vs data) and tuning.
 Full docs in `docs/src/` (built with Documenter):
 
 - [**Pipeline & architecture**](docs/src/pipeline.md) — data flow, component roles.
-- [**Selection**](docs/src/selection.md) — the label-free selection rule (GCV + robust-AICc guard + up-when-ambiguous).
+- [**Selection**](docs/src/selection.md) — the label-free selection rule (GCV + robust-AICc guard + support-midpoint hybrid).
 - [**Calibration**](docs/src/calibration.md) — parameter objectivation, auto-calibration, GCV rationale.
 - [**Config reference**](docs/src/config.md) — every parameter and flag.
 - [**Unit assignment**](docs/src/unit_assignment.md) — GlcNAc/GlcN per-lobe assignment pipeline (label-free, work in progress).

@@ -11,10 +11,19 @@ the number of monomer units (lobes) per chain. The selection of N (the lobe
 count) is **label-free**: it does not use an expected N or benchmark labels.
 
 **Two distinct regimes:**
-- **Benchmark (6mer chitosan, 240817):** 39/39 primary files give the correct
-  N=6 (100%), reproducible across runs. This is the *validation* set — labels
-  exist and the pipeline is graded against them (labels stay outside
-  fitting/selection).
+- **Benchmark (6mer chitosan, 240817):** the robust-AICc guard gives the correct
+  N=6 on 39/39 primary files (100%), reproducible across runs. This remains the
+  *validation* set for the guard — labels exist and the pipeline is graded
+  against them (labels stay outside fitting/selection). The current chitosan
+  default is instead promoted for the expanded 145-file external counting grade.
+- **Expanded counting benchmark (6mer chitosan):**
+  `benchmarks/chitosan_6mer_counting_confirmed.toml` contains 145 confirmed
+  `expected_N=6` files assembled from visual/manual review for external counting
+  grades only. The same 145 files define the full 0/1/? unit-assignment benchmark:
+  the external grading/control sequence is `NKNNKN` (`010010` or `101101`,
+  depending on which identity is encoded as 0). That sequence is never available
+  to fitting, selection, assignment, threshold choice, abstention rules, or method
+  calibration.
 - **Application (10–20mer chitosan):** 25/25 files processed (N_selected 5–16).
   **No ground-truth labels** — this is a *real application*, not a benchmark.
   Visual validation is the arbiter here. The pipeline ran successfully and
@@ -35,7 +44,7 @@ never in the fit. See `docs/src/unit_assignment.md`.
    understand the current state and avoid re-treading dead ends.
 2. **`docs/src/pipeline.md`** — the data flow and component roles (5 min read).
 3. **`docs/src/selection.md`** — the selection rule (GCV + robust-AICc guard +
-   up-when-ambiguous). This is the scientific heart.
+   support-midpoint hybrid). This is the scientific heart.
 4. **`docs/src/calibration.md`** — parameter objectivation (which are measured,
    which are free) and why GCV is the canonical criterion (not BIC/AICc).
 5. **`docs/src/config.md`** — every parameter, its role, and how it's configured.
@@ -53,14 +62,16 @@ never in the fit. See `docs/src/unit_assignment.md`.
   against a benchmark label and presenting it as objective is explicitly
   forbidden (see journal entries on 043).
 - **Unit assignment has no composition prior.** Do not assume the number of
-  GlcNAc/GlcN units in a chain, even for the 6mer benchmark. Ground-truth
-  sequences and composition counts are external grading/diagnostic information
-  only. Rules like "top-k lobes are GlcNAc" are not valid label-free assignment.
-- **GCV is canonical; BIC/AICc are diagnostics only.** The STM residual field is
-  so strongly spatially correlated (range 17–100 px, larger than the ~10-px fit
-  window) that `n_eff` is effectively undefined. BIC/AICc assume iid — their
-  absolute values are not reliable. GCV (valid under correlation) drives
-  `N_selected`. See `docs/src/calibration.md`.
+  GlcNAc/GlcN units in a chain, even for the 6mer benchmark whose external
+  control sequence is `NKNNKN`. Ground-truth sequences and composition counts are
+  external grading/diagnostic information only. Rules like "top-k lobes are
+  GlcNAc" are not valid label-free assignment.
+- **GCV is canonical; BIC/AICc are diagnostics/guards only.** The STM residual
+  field is so strongly spatially correlated (range 17–100 px, larger than the
+  ~10-px fit window) that `n_eff` is effectively undefined. BIC/AICc assume iid —
+  their absolute values are not reliable. GCV drives the base `N_eff`; robust-AICc
+  and support-midpoint rules can guard the reported `N_selected`. See
+  `docs/src/calibration.md`.
 - **The 1D fit is off by default.** It never enters `N_selected` (diagnostic
   only). Use `--no-skip-1d` to re-enable it for cross-checking.
 - **`config/*.toml` drives everything.** System-specific parameters (σ, spacing,
@@ -90,6 +101,16 @@ julia --project=packages/STMFitCore.jl packages/STMFitCore.jl/test/runtests.jl
 
 # Unit assignment (GlcNAc/GlcN per lobe) — see docs/src/unit_assignment.md
 # and docs/src/qe_stm_molds.md for the full command reference.
+julia --project=. test/run_unknown_unit_assignment.jl --help
+julia --project=. test/validate_unit_predictions.jl --help
+julia --project=. test/summarize_unknown_unit_qc.jl --help
+
+# Merge resumable feature-extraction shards after split/full145 refits
+julia --project=. test/merge_lobe_feature_shards.jl \
+    --reference /tmp/opencode/full145_selectedN_features.tsv \
+    --shards <comma-separated-shard-tsvs> \
+    --out /tmp/opencode/full145_selectedN_features_split.tsv \
+    --ignore-extra
 ```
 
 `batch_full.jl` flags: `--config`, `--data-dir`, `--outdir`, `--chunk i/n`,
@@ -136,18 +157,47 @@ test/batch_full.jl (driver, not a package) orchestrates the batch.
 ## Benchmark vs application status
 
 - **Benchmark (6mer chitosan, 240817):**
-  - `N_selected`: **39/39** primary benchmark exact (N=6).
-  - 4/4 clean_target files correct.
-  - Reproducible across 3 consecutive runs (0 files change N_selected).
-  - Selection threshold robust on [0.03, 0.06] (0 pivot files).
-  - **Unit assignment (0/1)**: Phases 0–2a implemented as diagnostics.
-    Gaussian/local/patch features are bimodal, split-width Gaussians improve
-    fixed-N GCV on 36/39 primary files, and manual geometric connected molds
-    validate technically, but current label-free assignment does not recover the
-    withheld sequence robustly. The refined raw geometric mold reaches 67.9%
-    per-lobe and 0/39 exact; non-chemical shape/asymmetry remains the issue.
-    `import_stm_mold_maps.jl` is ready for real DFT-STM/LDOS maps in the aligned
-    `(t,u)` frame.
+  - Robust-AICc guard: **39/39** primary benchmark exact (N=6).
+  - Current chitosan default (`support_midpoint_hybrid`): optimized for the
+    expanded external counting grade; it is not a no-regression primary-benchmark
+    selector.
+  - Expanded counting manifest:
+    `benchmarks/chitosan_6mer_counting_confirmed.toml` has **145** confirmed
+    `expected_N=6` files for external counting grades. Pending validation list:
+    `benchmarks/chitosan_6mer_validation_pending.tsv` (111 missing unit
+    sequences; no remaining counting second-check). Current chitosan default
+    `support_midpoint_hybrid` gives **129/145** exact and **143/145** within one
+    lobe on this expanded external grade (confirmed by a full Viper batch run,
+    including the gap≥2 down-to-midpoint extension); this is the best label-free
+    full145 result so far, not a universal selector guarantee.
+  - Robust-AICc guard validation details: 4/4 clean_target files correct,
+    reproducible across 3 consecutive runs (0 files change N_selected), and
+    robust on threshold range [0.03, 0.06] (0 pivot files).
+  - **Unit assignment (0/1/?)**: the benchmark scope is the same 145 confirmed
+    6mer files as the counting benchmark. The external control sequence is
+    `NKNNKN` (`010010`/`101101` by identity convention), but the assignment method
+    must be fully label-free and control-agnostic. `test/report_unit_assignment_benchmark.jl`
+    defaults to the historical frozen subset report (35 clean/clean_target chains,
+    210 lobes) and offers `--full145` to generate the full external-control truth
+    from the manifest and require a 145-file / 870-lobe denominator. Current frozen
+    prediction profiles still cover only the subset and must not be presented as
+    the full145 headline. A newer selected-`N` full145 own-N portable predictor
+    covers all 145 files with 863 prediction rows: 13 missing control positions
+    from short-N files are counted uncertain, and 6 extra N=7 lobes are audited
+    but not aligned to the six-position control. Current selected-`N` full145
+    lobe-correct headline: three-view label-free ensemble over `BASE`,
+    `BASE+bwd_neg_com_t`, and `BASE+bwd_neg_diag45` gives **676/857 = 78.9%**
+    classified physical, honest **676/870 = 77.7% correct + 194/870 uncertain**,
+    **7/145** exact. The completed selected-`N` split-width full145 profile
+    (`BASE+split_log_skew`) ties the same honest **676/870** lobe-correct count
+    but improves exact chains to **17/145**; split does not improve the lobe
+    headline.
+    Historical subset metrics remain: three-view ensemble **178/210 = 84.8%**,
+    **14/35** exact; balanced abstention `agreebase65`: **154/171 = 90.1%**
+    emitted labels, honest view **154/210 correct + 56/210 uncertain**; strict
+    emitted-error `err05`: **101/106 = 95.3%** emitted labels, honest view
+    **101/210 correct + 109/210 uncertain**. DFT-STM molds remain the next
+    physical path once real GlcN/GlcNAc LDOS maps are available.
 - **Application (10–20mer chitosan):**
   - 25/25 files processed (N_selected 5–16).
   - **No ground-truth labels** — this is a real application, not a benchmark.

@@ -15,17 +15,20 @@ the molecular backbone.
 
 The same label-free rule that applies to N also applies to unit assignment:
 
-- The **ground-truth sequence** (ordered GlcNAc/GlcN per chain) is available
-  for the benchmark (240817 dataset) but must **never enter the fitting or
-  selection path**. It is used only by grading scripts (`grade_unit_assignment.jl`)
-  and by the `--with-truth` cross-evaluation mode of `analyze_unit_separability.jl`.
+- The **ground-truth/control sequence** for the 6mer benchmark is `NKNNKN`, encoded
+  as `010010` or `101101` depending on the 0/1 identity convention, across the
+  same 145 files used by the counting benchmark. It must **never enter the
+  fitting, selection, assignment, thresholding, abstention, or calibration path**.
+  It is used only by grading scripts (`grade_unit_assignment.jl`) and explicitly
+  supervised diagnostics such as `--with-truth` cross-evaluation.
 - Using the truth to choose the 0↔1 flip (the "oracle" convention) is
   **supervised** and must be clearly labeled as such. The **physical convention**
   (GlcNAc = highest-amplitude cluster, based on the larger acetyl group) is
   label-free.
 - The assignment rule must not assume the number of GlcNAc/GlcN units in a
-  chain. Rules such as "top-2 lobes are GlcNAc" are composition priors and are
-  diagnostic only, not valid label-free assignment.
+  chain. Even though the external control has two `K` units and four `N` units,
+  rules such as "top-2 lobes are GlcNAc" are composition priors and are diagnostic
+  only, not valid label-free assignment.
 
 ## Pipeline overview
 
@@ -342,6 +345,7 @@ mapping is imperfect.
 | `test/extract_lobe_patches.jl` | 1d | Extract chain-axis-aligned raw/residual patches | Yes (`STMFIT_DATA_DIR`) |
 | `test/analyze_lobe_patches.jl` | 1d | PCA/kmeans patch separability + optional supervised diagnostic | No (reads TSV) |
 | `config/chitosan_split.toml` | 1e | Experimental split-width Gaussian profile config | No |
+| `test/build_labelfree_unit_predictions.jl` | 1f | Build a reproducible label-free 0/1/? prediction TSV from feature/patch TSVs | No (reads TSVs) |
 | `test/score_connected_mold_templates.jl` | 2a | Score connected GlcN/GlcNAc molds over global direction/phase/mirror states | No (reads TSVs) |
 | `test/generate_connected_mold_templates.jl` | 2a | Generate unary and optional sliding-bond mold TSVs from aligned geometric/proxy sites | No (reads TSV) |
 | `test/refine_geometric_mold.jl` | 2a | Label-free grid refinement of acetyl proxy-site geometry using template-evidence bimodality | No (reads TSVs) |
@@ -416,6 +420,65 @@ julia --project=. test/analyze_unit_separability.jl \
     --features results/unit_separability/lobe_features_selectedN_primary_split.tsv \
     --features-list skew_ratio \
     --out results/unit_separability/selectedN_primary_split_skew
+
+# Phase 1f: portable label-free predictor from frozen feature/patch TSVs.
+# This does not read truth/control sequences; grade only after the TSV is written.
+julia --project=. test/build_labelfree_unit_predictions.jl \
+    --features results/unit_separability/lobe_features_selectedN_primary_local.tsv \
+    --split-features results/unit_separability/lobe_features_selectedN_primary_split.tsv \
+    --patches results/unit_separability/lobe_patches_selectedN_primary_17x17_bwd.tsv \
+    --out results/unit_assignment/labelfree_unit_predictions.tsv \
+    --seeds 20 \
+    --interactions
+```
+
+## Unknown chitosan sequence production
+
+<!-- UNKNOWN-CHITOSAN-WORKFLOW:START -->
+
+For an unlabeled chain, do not call the report/grading scripts while generating
+assignments. Use the production wrapper to write both fixed label-free profiles,
+then validate, plot, and queue chains for visual review:
+
+```bash
+julia --project=. test/run_unknown_unit_assignment.jl \
+    --features results/unit_assignment/<sample>_features_local.tsv \
+    --split-features results/unit_assignment/<sample>_features_split.tsv \
+    --patches results/unit_assignment/<sample>_patches_bwd.tsv \
+    --profile default \
+    --outdir results/unit_assignment/<sample>_unknown
+
+julia --project=. test/validate_unit_predictions.jl \
+    --predictions results/unit_assignment/<sample>_unknown/predictions_base_split_log_skew.tsv \
+    --features results/unit_assignment/<sample>_features_local.tsv
+
+python3 test/plot_unit_assignment.py \
+    --features results/unit_assignment/<sample>_features_local.tsv \
+    --predictions results/unit_assignment/<sample>_unknown/predictions_base_split_log_skew.tsv \
+    --out-dir results/unit_assignment/<sample>_unknown/plots \
+    --mode all
+
+julia --project=. test/summarize_unknown_unit_qc.jl \
+    --predictions results/unit_assignment/<sample>_unknown/predictions_base_split_log_skew.tsv \
+    --plots-dir results/unit_assignment/<sample>_unknown/plots \
+    --out results/unit_assignment/<sample>_unknown/review_queue.tsv
+```
+
+Production artifacts are `predictions_*.tsv`, `summary.tsv`, `manifest.tsv`,
+per-profile validation logs, plots, and `review_queue.tsv`. The review queue is
+based only on prediction fields, confidence, lobe contiguity, optional view
+coverage, N outliers within the run, and missing plot files.
+
+<!-- UNKNOWN-CHITOSAN-WORKFLOW:END -->
+
+```bash
+# Merge resumable feature-extraction shards against a reference selected-N TSV.
+# Use --ignore-extra only for known stale shard rows outside the current manifest.
+julia --project=. test/merge_lobe_feature_shards.jl \
+    --reference /tmp/opencode/full145_selectedN_features.tsv \
+    --shards <comma-separated-shard-tsvs> \
+    --out /tmp/opencode/full145_selectedN_features_split.tsv \
+    --ignore-extra
 
 # Phase 2a: connected geometric mold-template decoding, no composition prior
 STMFIT_DATA_DIR=/path/to/data julia --project=. \
@@ -572,13 +635,63 @@ julia --project=. test/grade_unit_assignment.jl \
     --predictions results/unit_assignment/assigned_sequences.tsv \
     --truth benchmarks/chitosan_240817_unit_sequences.tsv \
     --out results/benchmark_grades/unit_assignment.tsv
+
+# Frozen-profile subset report (historical 35-file / 210-lobe subset)
+julia --project=. test/report_unit_assignment_benchmark.jl
+
+# Full145 denominator check/report mode once full145 predictions exist
+julia --project=. test/report_unit_assignment_benchmark.jl --full145
+
+# Full145 own-N report for predictions generated at each file's label-free N_selected
+julia --project=. test/report_unit_assignment_benchmark.jl --full145-own-n \
+    --profile selectedN_local=/tmp/opencode/full145_selectedN_labelfree_local_predictions.tsv=selectedN_local \
+    --outdir /tmp/opencode/unit_report_full145_own_n_local
 ```
 
 Prediction TSVs may use `0`, `1`, or `?` in the prediction column. `?` is an
-explicit abstention: the grader excludes those lobes from accuracy/confusion
-counts and reports classified coverage as `classified/possible`. This keeps
-binary full-coverage grading and abstention diagnostics in the same tool without
-letting abstentions inflate sequence-exact counts.
+explicit abstention. The grader reports two views:
+
+- **Diagnostic classified accuracy** excludes `?` from accuracy/confusion counts
+  and reports classified coverage as `classified/possible`.
+- **Honest abstention view** reports only `correctly assigned` and `uncertain`,
+  where `uncertain` includes explicit `?` plus any benchmark-detected wrong
+  assignment. These two numbers sum to 100% over the graded positions.
+
+The second view is post-hoc benchmark reporting only. It does not use truth to
+choose thresholds or alter predictions; it prevents residual benchmark errors from
+being presented as honest assignments.
+
+The full 0/1/? benchmark scope is the same 145 confirmed 6mer files as
+`benchmarks/chitosan_6mer_counting_confirmed.toml`. For external grading only,
+the control sequence is `NKNNKN`: `010010` if `0=N` and `1=K`, or `101101` under
+the flipped identity convention. This information must never enter fitting,
+selection, assignment, threshold choice, abstention rules, composition priors, or
+method calibration. The objective is a method robust enough to extrapolate to
+unknown systems without a benchmark-specific control.
+
+The current `test/report_unit_assignment_benchmark.jl` harness defaults to a
+frozen-profile **subset** report, not the final full145 benchmark headline. It
+runs the grader on the historical 240817 forced, balanced-abstention, and
+strict-emitted-error profiles, writes per-profile grade TSVs under
+`results/unit_assignment/benchmark_report/grades/`, and consolidates:
+
+- `summary.tsv`: coverage, classified accuracy, honest correct/uncertain, emitted
+  errors, and exact-chain counts for each frozen profile.
+- `lobe_position_errors.tsv`: per-lobe-position concentration of errors and `?`
+  calls, useful for diagnostics but not for choosing new thresholds.
+- `report.md`: human-readable summary with the subset denominator (`35` primary
+  files, `210` lobes) explicitly stated.
+
+The script is deliberately report-only. It does not sweep thresholds, create a new
+profile, or use truth to alter predictions. Its strict `--full145` mode generates
+the grader-only `NKNNKN` control TSV from the 145-file manifest and enforces the
+145-file / 870-lobe prediction denominator, so passing current 35-file frozen
+profiles to that mode fails at a coverage preflight instead of producing a
+misleading full-benchmark number. The explicit `--full145-own-n` mode is for
+prediction profiles produced at each file's label-free `N_selected`: all 145 files
+must be present, lobe rows must be contiguous per file, missing 6mer control
+positions count uncertain in the honest view, and extra predicted lobes are
+reported but not aligned to the 6-position external control.
 
 ## HPC parallelism
 
@@ -596,7 +709,17 @@ STMFIT_DATA_DIR=/data julia -t 2 --project=. \
 
 ## Current status
 
-- **Phase 0**: `grade_unit_assignment.jl` implemented. Awaiting predictions.
+- **Phase 0**: `grade_unit_assignment.jl` implemented, plus
+  `report_unit_assignment_benchmark.jl` for the frozen-profile 0/1/? subset
+  report. The full benchmark to process/score is the 145-file confirmed 6mer set;
+  `NKNNKN` is the external control sequence for all benchmark chains. Existing
+  `178/210`, `154/171`, and `101/106` metrics are historical 35-file subset
+  grades and should not be presented as the full benchmark result. Use
+  `report_unit_assignment_benchmark.jl --full145` only with strict six-lobe
+  prediction profiles that actually contain all 145 benchmark chains. Use
+  `--full145-own-n` for profiles generated at each file's label-free `N_selected`;
+  current frozen subset profiles still fail the full145 preflight because they
+  contain only 35 chains / 210 lobe rows.
 - **Phase 1**: `extract_lobe_features.jl` + `analyze_unit_separability.jl`
   implemented and run on the corrected primary benchmark set using batch
   `N_selected` (39 files, 234 lobes). Gaussian features are **strongly
@@ -625,6 +748,41 @@ STMFIT_DATA_DIR=/data julia -t 2 --project=. \
   physical / 63.7% oracle with 0/39 exact sequences, and Gaussian+skew degrades
   to 60.7% physical / 70.1% oracle. Conclusion: split captures real local shape
   asymmetry useful to the fit, but not the chemical unit label.
+- **Phase 1f**: `build_labelfree_unit_predictions.jl` now provides a portable
+  label-free baseline from existing feature/patch TSVs. It clusters per-file
+  standardized feature views over multiple k-means seeds and maps the
+  higher-amplitude cluster to GlcNAc (1). On the current 39-file feature
+  artifacts, the three default views (`BASE+bwd_neg_com_t`,
+  `BASE+bwd_neg_diag45`, `BASE+split_log_skew`) produce 234 prediction rows and
+  grade at 170/210 = 81.0% on the historical 35-file subset. This is a
+  sanity-checkable generator, not a replacement for the frozen best ensemble
+  artifacts. Full145 selected-`N` profiles have now been generated from the
+  current label-free counting summary without using the `NKNNKN` control: 145
+  files / 863 prediction rows, with 13 missing control positions from 10 short-N
+  files and 6 extra predicted lobes from 6 N=7 files. The base/local-feature
+  baseline grades at 671/857 = 78.3% classified physical accuracy; the honest
+  view is 671/870 = 77.1% correct plus 199/870 uncertain, with 16/145 exact
+  chains. Adding all default backward descriptors directly does not improve the
+  honest headline (671/870 correct, 5/145 exact), but a simple selected-`N`
+  three-view ensemble over `BASE`, `BASE+bwd_neg_com_t`, and
+  `BASE+bwd_neg_diag45` reaches 676/857 = 78.9% classified physical accuracy,
+  honest 676/870 = 77.7% correct + 194/870 uncertain, and 7/145 exact chains.
+  The selected-`N` split-width refit has since been completed for all 145 files
+  (863 rows; 8 old rows from excluded `240310_Cu100009.sxm` ignored during the
+  merge). Adding `split_log_skew` does not raise the lobe-correct headline:
+  the default split+bwd views tie the same 676/870 honest correct result, and a
+  four-view `BASE+bwd+split` variant falls slightly to 675/870. However,
+  `BASE+split_log_skew` preserves 676/870 honest correct while increasing exact
+  chains to 17/145, so it is the current best exact-chain selected-`N` full145
+  profile. Confidence/agreement abstention variants raise classified accuracy
+  only marginally (to about 79.5-79.6%) while reducing honest correct lobes, and
+  backward-only views collapse to about 50% physical accuracy.
+- **Workflow hardening**: `merge_lobe_feature_shards.jl` replaces the ad hoc
+  Julia one-liners previously used to combine timeout-limited split-width shards.
+  It orders rows by a reference selected-`N` TSV, rejects missing and duplicate
+  `(file,lobe)` keys, reports extra stale rows, and writes the merged TSV only
+  after coverage validation. This is the supported path for resumable split/full145
+  feature extraction merges.
 - **Phase 2a**: connected mold-template decoder implemented and switched to a
   manual geometric proxy-site source (`templates/chitosan_geometric_sites.tsv`).
   It tests global direction/phase/mirror states and applies oriented GlcN/GlcNAc
@@ -655,18 +813,48 @@ STMFIT_DATA_DIR=/data julia -t 2 --project=. \
   file chain before decoding: geometric/proxy site columns, required unary/bond
   combinations, and patch/template pixel-count compatibility. It does not read
   truth labels.
-- **Current best conservative label-free output** (updated Jun 29):
-  LOFO cross-validation identified `neg_diag135` (negative-residual center of mass
-  along the 135° diagonal) as the most generalizable descriptor at **82.9% LOFO**
-  (vs 80.0% for HH1_abs, 69.0% for patch9_u_asym — both overfit). The all-at-once
-  benchmark numbers (82–85%) overestimate real generalization; LOFO is the honest
-  arbiter. Predictions and LOFO verdicts are documented in the 2026-06-29 journal
-  entry.
-- **Benchmark-exploration candidates** (overfit, not canonical): extended 17×17
-  residual descriptors (`hh1_q00_abs + neg_anis`, `patch9_u_asym`) improve
-  post-hoc benchmark grades but collapse under LOFO cross-validation (69–66%).
-  They should not be used for production.
+- **Current best conservative label-free output** (updated Jun 29): after the
+  forward-only LOFO audit, the backward Z scan was added via
+  `extract_lobe_patches_bwd.jl`. The best single descriptor is now
+  `bwd_neg_com_t` at **84.3% LOFO / 11 exact chains**. A confirmed 20-seed
+  three-view label-free ensemble (`BASE+bwd_neg_com_t`, `BASE+bwd_neg_diag45`,
+  `BASE+split_log_skew`) gives the best historical 35-file subset result:
+  **178/210 = 84.8% physical / 84.8% oracle / 14/35 exact**. Graded artifacts:
+  `results/unit_assignment/best_labelfree_ensemble3_forced_predictions.tsv` and
+  `results/unit_assignment/benchmark_report/grades/forced_ensemble3.tsv`.
+- **Current honest high-confidence output**: the same three-view ensemble can emit
+  `?` for ambiguous lobes without using truth or a composition prior. The current
+  best abstention rule keeps the `forced` ensemble label only when (i) its
+  confidence is at least 0.65 and (ii) an independent conservative label-free
+  model (`best_labelfree_predictions.tsv`) agrees; otherwise it emits `?`. This
+  `agreebase65` variant classifies 171/210 lobes at **154/171 = 90.1%**. In the
+  honest two-score benchmark view it gives **154/210 = 73.3% correctly assigned**
+  plus **56/210 = 26.7% uncertain**, improving on the old `0.20/0.80` confidence
+  band (**151/210 correct + 59/210 uncertain**). More conservative variants are
+  available: `agreebase70` gives **153/210 correct + 57/210 uncertain** at 90.5%
+  classified accuracy, and `agreebase80` gives **144/210 correct + 66/210
+  uncertain** at 91.7% classified accuracy. This is still not a solved binary map,
+  but it is the most honest current mode when uncertain lobes are acceptable.
+  A separate **strict <5% emitted-error profile** is also available: keep the
+  forced label only when confidence is at least 0.875 and both
+  `best_labelfree_v3_neg_diag135_predictions.tsv` and
+  `best_labelfree_predictions.tsv` agree. This `err05` profile emits only 106/210
+  labels, but grades at **101/106 = 95.3%** physical accuracy, i.e. **5/106 =
+  4.7%** wrong assignments among emitted labels. In honest two-score form it is
+  **101/210 = 48.1% correctly assigned** plus **109/210 = 51.9% uncertain**.
+  The canonical consolidated report is
+  `results/unit_assignment/benchmark_report/report.md`; generated summary tables
+  are intentionally under `results/` and should be regenerated rather than
+  committed.
+- **Benchmark-exploration candidates** (not canonical): extended 17×17 residual
+  descriptors (`hh1_q00_abs + neg_anis`, `patch9_u_asym`) improve post-hoc
+  benchmark grades but collapse under LOFO cross-validation (69–66%). Absolute
+  backward-height features, parity-canonicalized signed features, backward
+  residual recalibration, equal-prior GMM prediction, and 3–6 component GMMs were
+  also audited after the 84.3% result and did not beat the confirmed ensemble.
 - **Phase 2–5**: planned. Decision point after DFT-STM molds or a stronger
   label-free observable is available.
-- **Ground truth**: filled with the diagnostic sequence `010010` for all primary
-  files (Jun 28). Used exclusively for post-hoc grading, never in fit/selection.
+- **Ground truth/control**: the benchmark control sequence is `NKNNKN`, encoded as
+  `010010` or `101101` depending on the 0/1 identity convention. It is used
+  exclusively for post-hoc grading, never in fit/selection/assignment-method
+  calibration.
