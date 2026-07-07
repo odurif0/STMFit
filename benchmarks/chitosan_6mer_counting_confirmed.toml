@@ -1,0 +1,2636 @@
+# Expanded chitosan 6mer counting benchmark manifest.
+#
+# External grading only: never read this from fitting or model-selection code.
+# Every row was manually/visually confirmed as expected_N=6 for counting.
+# Unit-assignment control is NKNNKN for external grading only; per-row
+# unit_sequence_available records explicit TSV provenance, not whether the method may
+# use the control. Fitting/selection/assignment must never read these labels.
+
+[benchmark]
+name = "chitosan_6mer_counting_confirmed"
+system = "chitosan on Cu(100)"
+data_dir_env = "STMFIT_DATA_DIR"
+default_config = "config/chitosan.toml"
+primary_result = "N_eff"
+selection_policy = "No expected-N prior; labels are external grading only."
+source_review = "benchmarks/chitosan_6mer_preassignment_review.tsv"
+notes = "Unified 6mer benchmark list from confirmed expected_N=6 review rows; the same 145-file set is used for counting and 0/1/? unit assignment. Unit control is NKNNKN for external grading only and must not enter fitting, selection, assignment, threshold choice, abstention, or calibration."
+
+[quality_classes]
+clean_target = "Confirmed chitosan 6mer target with expected N=6."
+excluded = "Excluded from strict benchmark scoring."
+
+[evaluation]
+grade_only_manifest_files = true
+primary_exclude_quality = ["excluded"]
+stress_quality = []
+report_columns = ["N_selected", "N_eff", "N_ell", "N_circ", "ambiguous_eff", "artifact_fwd_bwd_corr"]
+
+[files."240307_015.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240307_LHe_Cu100/240307_015.sxm"
+folder = "20240307_LHe_Cu100"
+source_status = "manual_ok_chitosan_needs_N_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 7
+N_eff = 7
+N_ell = 7
+N_circ = 7
+ambiguous_eff = false
+best_plot = "results/best_plots_20240307/240307_015_best.png"
+summary_path = "results/best_plots_20240307/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan; user visual review confirmed true N=6 on 2026-06-30; unit sequence still unconfirmed; support_ell_nm=3.66"
+
+[files."240307_016.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240307_LHe_Cu100/240307_016.sxm"
+folder = "20240307_LHe_Cu100"
+source_status = "manual_ok_chitosan_needs_N_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 5
+ambiguous_eff = false
+best_plot = "results/best_plots_20240307/240307_016_best.png"
+summary_path = "results/best_plots_20240307/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan; user visual review confirmed true N=6 on 2026-06-30; unit sequence still unconfirmed; support_ell_nm=3.40"
+
+[files."240307_017.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240307_LHe_Cu100/240307_017.sxm"
+folder = "20240307_LHe_Cu100"
+source_status = "manual_ok_chitosan_needs_N_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 5
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = true
+best_plot = "results/best_plots_20240307/240307_017_best.png"
+summary_path = "results/best_plots_20240307/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan; user visual review confirmed true N=6 on 2026-06-30; unit sequence still unconfirmed; ambiguous_eff=true; support_ell_nm=3.51"
+
+[files."240307_019.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240307_LHe_Cu100/240307_019.sxm"
+folder = "20240307_LHe_Cu100"
+source_status = "manual_ok_chitosan_second_check"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 4
+N_eff = 5
+N_ell = 5
+N_circ = 5
+ambiguous_eff = false
+best_plot = "results/best_plots_20240307/240307_019_best.png"
+summary_path = "results/best_plots_20240307/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan; user second-check confirmed true N=6 on 2026-07-01; unit sequence still unconfirmed; support_ell_nm=3.74; fit N_selected=4; N_eff=5; ell/circ=5/5; ambiguous_eff=false"
+
+[files."240310_Cu100006.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240310_LHe_Cu100/240310_Cu100006.sxm"
+folder = "20240310_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = true
+best_plot = "results/triage_potential_benchmark_fit_top10/240310_Cu100006_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=stratified_top32; fit N_selected=6; N_eff=6; ell/circ=6/6; ambiguous_eff=true; support_ell_nm=3.943"
+
+[files."240310_Cu100007.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240310_LHe_Cu100/240310_Cu100007.sxm"
+folder = "20240310_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/240310_Cu100007_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=stratified_top32; fit N_selected=6; N_eff=6; ell/circ=6/6; ambiguous_eff=false; support_ell_nm=3.966"
+
+# 240310_Cu100009.sxm removed 2026-07-03: image technically degraded
+# (23.6% NaN pixels), visually "très complexe" per user review — not a reliable
+# benchmark member. Was expected_N=6, hybrid gave N=8.
+
+[files."240310_Cu100032.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240310_LHe_Cu100/240310_Cu100032.sxm"
+folder = "20240310_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 5
+N_eff = 5
+N_ell = 5
+N_circ = 5
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/240310_Cu100032_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=stratified_top32; fit N_selected=5; N_eff=5; ell/circ=5/5; ambiguous_eff=false; support_ell_nm=3.472"
+
+[files."240311_Cu100060.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240311_LHe_Cu100/240311_Cu100060.sxm"
+folder = "20240311_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 8
+N_eff = 8
+N_ell = 8
+N_circ = 7
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/240311_Cu100060_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=stratified_top32; fit N_selected=8; N_eff=8; ell/circ=8/7; ambiguous_eff=false; support_ell_nm=4.034"
+
+[files."240311_Cu100061.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240311_LHe_Cu100/240311_Cu100061.sxm"
+folder = "20240311_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 5
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/240311_Cu100061_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=stratified_top32; fit N_selected=6; N_eff=6; ell/circ=6/5; ambiguous_eff=false; support_ell_nm=4.046"
+
+[files."240311_Cu100062.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240311_LHe_Cu100/240311_Cu100062.sxm"
+folder = "20240311_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 7
+N_eff = 7
+N_ell = 7
+N_circ = 7
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/240311_Cu100062_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=stratified_top32; fit N_selected=7; N_eff=7; ell/circ=7/7; ambiguous_eff=false; support_ell_nm=4.065"
+
+[files."240311_Cu100063.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240311_LHe_Cu100/240311_Cu100063.sxm"
+folder = "20240311_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 5
+N_eff = 6
+N_ell = 6
+N_circ = 5
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/240311_Cu100063_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=stratified_top32; fit N_selected=5; N_eff=6; ell/circ=6/5; ambiguous_eff=false; support_ell_nm=3.721"
+
+[files."240312_Cu100070.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240312_LHe_Cu100/240312_Cu100070.sxm"
+folder = "20240312_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 5
+N_eff = 7
+N_ell = 7
+N_circ = 7
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/240312_Cu100070_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=global_top31;stratified_top32; fit N_selected=5; N_eff=7; ell/circ=7/7; ambiguous_eff=false; support_ell_nm=4.795"
+
+[files."240312_Cu100071.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240312_LHe_Cu100/240312_Cu100071.sxm"
+folder = "20240312_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 5
+N_eff = 7
+N_ell = 7
+N_circ = 7
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/240312_Cu100071_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=global_top31;stratified_top32; fit N_selected=5; N_eff=7; ell/circ=7/7; ambiguous_eff=false; support_ell_nm=4.795"
+
+[files."240312_Cu100081.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240312_LHe_Cu100/240312_Cu100081.sxm"
+folder = "20240312_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 5
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/240312_Cu100081_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=global_top31;stratified_top32; fit N_selected=5; N_eff=6; ell/circ=6/6; ambiguous_eff=false; support_ell_nm=3.788"
+
+[files."240312_Cu100090.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240312_LHe_Cu100/240312_Cu100090.sxm"
+folder = "20240312_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = true
+best_plot = "results/triage_potential_benchmark_fit_top10/240312_Cu100090_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=stratified_top32; fit N_selected=6; N_eff=6; ell/circ=6/6; ambiguous_eff=true; support_ell_nm=3.861"
+
+[files."240313_Cu100058.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240313_LHe_Cu100/240313_Cu100058.sxm"
+folder = "20240313_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = true
+best_plot = "results/triage_potential_benchmark_fit_top10/240313_Cu100058_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=stratified_top32; fit N_selected=6; N_eff=6; ell/circ=6/6; ambiguous_eff=true; support_ell_nm=4.067"
+
+[files."240313_Cu100059.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240313_LHe_Cu100/240313_Cu100059.sxm"
+folder = "20240313_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 7
+N_eff = 7
+N_ell = 7
+N_circ = 7
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/240313_Cu100059_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=stratified_top32; fit N_selected=7; N_eff=7; ell/circ=7/7; ambiguous_eff=false; support_ell_nm=3.941"
+
+[files."240313_Cu100060.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240313_LHe_Cu100/240313_Cu100060.sxm"
+folder = "20240313_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 7
+N_eff = 7
+N_ell = 7
+N_circ = 7
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/240313_Cu100060_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=stratified_top32; fit N_selected=7; N_eff=7; ell/circ=7/7; ambiguous_eff=false; support_ell_nm=3.911"
+
+[files."240313_Cu100062.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240313_LHe_Cu100/240313_Cu100062.sxm"
+folder = "20240313_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 7
+N_eff = 7
+N_ell = 7
+N_circ = 6
+ambiguous_eff = true
+best_plot = "results/triage_potential_benchmark_fit_top10/240313_Cu100062_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=stratified_top32; fit N_selected=7; N_eff=7; ell/circ=7/6; ambiguous_eff=true; support_ell_nm=3.75"
+
+[files."240314_Cu100_024.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240314_LHe_Cu100/240314_Cu100_024.sxm"
+folder = "20240314_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 5
+N_eff = 5
+N_ell = 5
+N_circ = 5
+ambiguous_eff = true
+best_plot = "results/triage_potential_benchmark_fit_top10/240314_Cu100_024_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=global_top31;stratified_top32; fit N_selected=5; N_eff=5; ell/circ=5/5; ambiguous_eff=true; support_ell_nm=3.669"
+
+[files."240314_Cu100_025.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240314_LHe_Cu100/240314_Cu100_025.sxm"
+folder = "20240314_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 5
+ambiguous_eff = true
+best_plot = "results/triage_potential_benchmark_fit_top10/240314_Cu100_025_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=global_top31;stratified_top32; fit N_selected=6; N_eff=6; ell/circ=6/5; ambiguous_eff=true; support_ell_nm=3.643"
+
+[files."240314_Cu100_026.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240314_LHe_Cu100/240314_Cu100_026.sxm"
+folder = "20240314_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 5
+N_eff = 5
+N_ell = 5
+N_circ = 5
+ambiguous_eff = true
+best_plot = "results/triage_potential_benchmark_fit_top10/240314_Cu100_026_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=global_top31;stratified_top32; fit N_selected=5; N_eff=5; ell/circ=5/5; ambiguous_eff=true; support_ell_nm=3.707"
+
+[files."240314_Cu100_042.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240314_LHe_Cu100/240314_Cu100_042.sxm"
+folder = "20240314_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 7
+N_eff = 7
+N_ell = 7
+N_circ = 7
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/240314_Cu100_042_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=global_top31;stratified_top32; fit N_selected=7; N_eff=7; ell/circ=7/7; ambiguous_eff=false; support_ell_nm=4.026"
+
+[files."240814_011.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240814_LHe_Cu100/240814_011.sxm"
+folder = "20240814_LHe_Cu100"
+source_status = "manual_N6_clean_target"
+pre_assignment = "accept_counting_needs_unit_sequence_confirmation"
+recommended_action = "user_confirm_sequence_then_use_for_unit_assignment"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = true
+best_plot = "results/best_plots_20240814/240814_011_best.png"
+summary_path = "results/best_plots_20240814/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan expected N=6; ambiguous_eff=true; support_ell_nm=3.80"
+
+[files."240814_012.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240814_LHe_Cu100/240814_012.sxm"
+folder = "20240814_LHe_Cu100"
+source_status = "manual_N6_clean_target"
+pre_assignment = "accept_counting_needs_unit_sequence_confirmation"
+recommended_action = "user_confirm_sequence_then_use_for_unit_assignment"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_20240814/240814_012_best.png"
+summary_path = "results/best_plots_20240814/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan expected N=6; support_ell_nm=3.76"
+
+[files."240814_013.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240814_LHe_Cu100/240814_013.sxm"
+folder = "20240814_LHe_Cu100"
+source_status = "manual_N6_clean_target"
+pre_assignment = "accept_counting_needs_unit_sequence_confirmation"
+recommended_action = "user_confirm_sequence_then_use_for_unit_assignment"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = true
+best_plot = "results/best_plots_20240814/240814_013_best.png"
+summary_path = "results/best_plots_20240814/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan expected N=6; ambiguous_eff=true; support_ell_nm=3.60"
+
+[files."240814_014.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240814_LHe_Cu100/240814_014.sxm"
+folder = "20240814_LHe_Cu100"
+source_status = "manual_N6_clean_target"
+pre_assignment = "accept_counting_needs_unit_sequence_confirmation"
+recommended_action = "user_confirm_sequence_then_use_for_unit_assignment"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = true
+best_plot = "results/best_plots_20240814/240814_014_best.png"
+summary_path = "results/best_plots_20240814/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan expected N=6; ambiguous_eff=true; support_ell_nm=3.58"
+
+[files."240814_015.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240814_LHe_Cu100/240814_015.sxm"
+folder = "20240814_LHe_Cu100"
+source_status = "manual_N6_clean_target"
+pre_assignment = "accept_counting_needs_unit_sequence_confirmation"
+recommended_action = "user_confirm_sequence_then_use_for_unit_assignment"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = true
+best_plot = "results/best_plots_20240814/240814_015_best.png"
+summary_path = "results/best_plots_20240814/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan expected N=6; ambiguous_eff=true; support_ell_nm=3.58"
+
+[files."240814_017.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240814_LHe_Cu100/240814_017.sxm"
+folder = "20240814_LHe_Cu100"
+source_status = "manual_N6_clean_target"
+pre_assignment = "accept_counting_needs_unit_sequence_confirmation"
+recommended_action = "user_confirm_sequence_then_use_for_unit_assignment"
+unit_sequence_available = false
+N_selected = 5
+N_eff = 5
+N_ell = 5
+N_circ = 5
+ambiguous_eff = false
+best_plot = "results/best_plots_20240814/240814_017_best.png"
+summary_path = "results/best_plots_20240814/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan expected N=6; support_ell_nm=3.64"
+
+[files."240814_018.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240814_LHe_Cu100/240814_018.sxm"
+folder = "20240814_LHe_Cu100"
+source_status = "manual_N6_clean_target"
+pre_assignment = "accept_counting_needs_unit_sequence_confirmation"
+recommended_action = "user_confirm_sequence_then_use_for_unit_assignment"
+unit_sequence_available = false
+N_selected = 5
+N_eff = 5
+N_ell = 5
+N_circ = 5
+ambiguous_eff = true
+best_plot = "results/best_plots_20240814/240814_018_best.png"
+summary_path = "results/best_plots_20240814/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan expected N=6; ambiguous_eff=true; support_ell_nm=3.64"
+
+[files."240814_019.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240814_LHe_Cu100/240814_019.sxm"
+folder = "20240814_LHe_Cu100"
+source_status = "manual_N6_clean_target"
+pre_assignment = "accept_counting_needs_unit_sequence_confirmation"
+recommended_action = "user_confirm_sequence_then_use_for_unit_assignment"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 5
+ambiguous_eff = true
+best_plot = "results/best_plots_20240814/240814_019_best.png"
+summary_path = "results/best_plots_20240814/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan expected N=6; ambiguous_eff=true; support_ell_nm=3.78"
+
+[files."240814_020.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240814_LHe_Cu100/240814_020.sxm"
+folder = "20240814_LHe_Cu100"
+source_status = "manual_N6_clean_target"
+pre_assignment = "accept_counting_needs_unit_sequence_confirmation"
+recommended_action = "user_confirm_sequence_then_use_for_unit_assignment"
+unit_sequence_available = false
+N_selected = 4
+N_eff = 4
+N_ell = 4
+N_circ = 4
+ambiguous_eff = false
+best_plot = "results/best_plots_20240814/240814_020_best.png"
+summary_path = "results/best_plots_20240814/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan expected N=6; support_ell_nm=2.28"
+
+[files."240814_021.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240814_LHe_Cu100/240814_021.sxm"
+folder = "20240814_LHe_Cu100"
+source_status = "manual_N6_clean_target"
+pre_assignment = "accept_counting_needs_unit_sequence_confirmation"
+recommended_action = "user_confirm_sequence_then_use_for_unit_assignment"
+unit_sequence_available = false
+N_selected = 5
+N_eff = 5
+N_ell = 5
+N_circ = 5
+ambiguous_eff = false
+best_plot = "results/best_plots_20240814/240814_021_best.png"
+summary_path = "results/best_plots_20240814/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan expected N=6; support_ell_nm=3.58"
+
+[files."240814_022.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240814_LHe_Cu100/240814_022.sxm"
+folder = "20240814_LHe_Cu100"
+source_status = "manual_N6_clean_target"
+pre_assignment = "accept_counting_needs_unit_sequence_confirmation"
+recommended_action = "user_confirm_sequence_then_use_for_unit_assignment"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_20240814/240814_022_best.png"
+summary_path = "results/best_plots_20240814/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan expected N=6; support_ell_nm=3.49"
+
+[files."240814_023.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240814_LHe_Cu100/240814_023.sxm"
+folder = "20240814_LHe_Cu100"
+source_status = "manual_N6_clean_target"
+pre_assignment = "accept_counting_needs_unit_sequence_confirmation"
+recommended_action = "user_confirm_sequence_then_use_for_unit_assignment"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_20240814/240814_023_best.png"
+summary_path = "results/best_plots_20240814/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan expected N=6; support_ell_nm=3.50"
+
+[files."240814_024.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240814_LHe_Cu100/240814_024.sxm"
+folder = "20240814_LHe_Cu100"
+source_status = "manual_N6_clean_target"
+pre_assignment = "accept_counting_needs_unit_sequence_confirmation"
+recommended_action = "user_confirm_sequence_then_use_for_unit_assignment"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = true
+best_plot = "results/best_plots_20240814/240814_024_best.png"
+summary_path = "results/best_plots_20240814/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan expected N=6; ambiguous_eff=true; support_ell_nm=3.51"
+
+[files."240814_025.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240814_LHe_Cu100/240814_025.sxm"
+folder = "20240814_LHe_Cu100"
+source_status = "manual_N6_clean_target"
+pre_assignment = "accept_counting_needs_unit_sequence_confirmation"
+recommended_action = "user_confirm_sequence_then_use_for_unit_assignment"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_20240814/240814_025_best.png"
+summary_path = "results/best_plots_20240814/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan expected N=6; support_ell_nm=3.72"
+
+[files."240815_047.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240815_LHe_Cu100/240815_047.sxm"
+folder = "20240815_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/240815_047_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=global_top31;stratified_top32; fit N_selected=6; N_eff=6; ell/circ=6/6; ambiguous_eff=false; support_ell_nm=4.07"
+
+[files."240815_048.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240815_LHe_Cu100/240815_048.sxm"
+folder = "20240815_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/240815_048_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=global_top31;stratified_top32; fit N_selected=6; N_eff=6; ell/circ=6/6; ambiguous_eff=false; support_ell_nm=4.087"
+
+[files."240815_072.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240815_LHe_Cu100/240815_072.sxm"
+folder = "20240815_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/240815_072_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=stratified_top32; fit N_selected=6; N_eff=6; ell/circ=6/6; ambiguous_eff=false; support_ell_nm=3.469"
+
+[files."240815_098.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240815_LHe_Cu100/240815_098.sxm"
+folder = "20240815_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 7
+N_eff = 8
+N_ell = 8
+N_circ = 8
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/240815_098_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=global_top31;stratified_top32; fit N_selected=7; N_eff=8; ell/circ=8/8; ambiguous_eff=false; support_ell_nm=3.704"
+
+[files."240816_002.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240816_LHe_Cu100/240816_002.sxm"
+folder = "20240816_LHe_Cu100"
+source_status = "manual_N6_clean_target"
+pre_assignment = "accept_counting_needs_unit_sequence_confirmation"
+recommended_action = "user_confirm_sequence_then_use_for_unit_assignment"
+unit_sequence_available = false
+N_selected = 5
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_20240816/240816_002_best.png"
+summary_path = "results/best_plots_20240816/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan expected N=6; support_ell_nm=4.12"
+
+[files."240816_004.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240816_LHe_Cu100/240816_004.sxm"
+folder = "20240816_LHe_Cu100"
+source_status = "manual_N6_clean_target"
+pre_assignment = "accept_counting_needs_unit_sequence_confirmation"
+recommended_action = "user_confirm_sequence_then_use_for_unit_assignment"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_20240816/240816_004_best.png"
+summary_path = "results/best_plots_20240816/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan expected N=6; low_fwd_bwd_corr=0.58; support_ell_nm=4.20"
+
+[files."240816_005.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240816_LHe_Cu100/240816_005.sxm"
+folder = "20240816_LHe_Cu100"
+source_status = "manual_N6_clean_target"
+pre_assignment = "accept_counting_needs_unit_sequence_confirmation"
+recommended_action = "user_confirm_sequence_then_use_for_unit_assignment"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = true
+best_plot = "results/best_plots_20240816/240816_005_best.png"
+summary_path = "results/best_plots_20240816/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan expected N=6; ambiguous_eff=true; low_fwd_bwd_corr=0.45; support_ell_nm=4.16"
+
+[files."240817_002.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_002.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_primary_rerun/240817_002_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; support_ell_nm=3.89; user visual review marked ambiguous; do not use in strict classification on 2026-06-30; user double-check on 2026-06-30: keep in benchmark; classify OK"
+
+[files."240817_003.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_003.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_primary_rerun/240817_003_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; support_ell_nm=3.76"
+
+[files."240817_004.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_004.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_primary_rerun/240817_004_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; support_ell_nm=4.07"
+
+[files."240817_005.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_005.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_primary_rerun/240817_005_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; support_ell_nm=3.91"
+
+[files."240817_006.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_006.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_primary_rerun/240817_006_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; support_ell_nm=3.81"
+
+[files."240817_007.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_007.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_primary_rerun/240817_007_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; support_ell_nm=3.84"
+
+[files."240817_017.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_017.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 7
+N_ell = 7
+N_circ = 7
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_primary_rerun/240817_017_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; support_ell_nm=5.12; user visual review marked ambiguous; do not use in strict classification on 2026-06-30; user double-check on 2026-06-30: keep in benchmark; classify OK"
+
+[files."240817_018.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_018.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 7
+ambiguous_eff = true
+best_plot = "results/best_plots_240817_primary_rerun/240817_018_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; ambiguous_eff=true; support_ell_nm=4.76"
+
+[files."240817_019.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_019.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 7
+N_ell = 7
+N_circ = 7
+ambiguous_eff = true
+best_plot = "results/best_plots_240817_primary_rerun/240817_019_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; ambiguous_eff=true; support_ell_nm=4.38"
+
+[files."240817_021.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_021.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_primary_rerun/240817_021_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; support_ell_nm=4.17; user visual review marked ambiguous; do not use in strict classification on 2026-06-30; user double-check on 2026-06-30: keep in benchmark; classify OK"
+
+[files."240817_024.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_024.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 9
+ambiguous_eff = true
+best_plot = "results/best_plots_240817_primary_rerun/240817_024_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; ambiguous_eff=true; support_ell_nm=4.24"
+
+[files."240817_026.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_026.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_primary_rerun/240817_026_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; support_ell_nm=4.56"
+
+[files."240817_033.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_033.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 5
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_primary_rerun/240817_033_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; support_ell_nm=4.00"
+
+[files."240817_036.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_036.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_primary_rerun/240817_036_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; support_ell_nm=4.11"
+
+[files."240817_039.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_039.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = true
+best_plot = "results/best_plots_240817_primary_rerun/240817_039_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; ambiguous_eff=true; support_ell_nm=4.11"
+
+[files."240817_040.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_040.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_primary_rerun/240817_040_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; support_ell_nm=4.20"
+
+[files."240817_041.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_041.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = true
+best_plot = "results/best_plots_240817_primary_rerun/240817_041_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; ambiguous_eff=true; support_ell_nm=3.88"
+
+[files."240817_042.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_042.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_primary_rerun/240817_042_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; support_ell_nm=3.89"
+
+[files."240817_043.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_043.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 5
+ambiguous_eff = true
+best_plot = "results/best_plots_240817_primary_rerun/240817_043_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; ambiguous_eff=true; support_ell_nm=3.75"
+
+[files."240817_044.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_044.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 5
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_primary_rerun/240817_044_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; support_ell_nm=3.76"
+
+[files."240817_045.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_045.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_primary_rerun/240817_045_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; support_ell_nm=3.90"
+
+[files."240817_046.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_046.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_primary_rerun/240817_046_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; support_ell_nm=3.88"
+
+[files."240817_047.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_047.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_primary_rerun/240817_047_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; support_ell_nm=3.84"
+
+[files."240817_048.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_048.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 5
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_primary_rerun/240817_048_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; support_ell_nm=3.77"
+
+[files."240817_049.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_049.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_primary_rerun/240817_049_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; support_ell_nm=3.67"
+
+[files."240817_050.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_050.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_primary_rerun/240817_050_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; support_ell_nm=3.85"
+
+[files."240817_052.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_052.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_primary_rerun/240817_052_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; support_ell_nm=3.80"
+
+[files."240817_053.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_053.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_primary_rerun/240817_053_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; support_ell_nm=3.91"
+
+[files."240817_054.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_054.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_primary_rerun/240817_054_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; support_ell_nm=3.98"
+
+[files."240817_055.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_055.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_primary_rerun/240817_055_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; support_ell_nm=3.97"
+
+[files."240817_058.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_058.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 7
+N_ell = 7
+N_circ = 6
+ambiguous_eff = true
+best_plot = "results/best_plots_240817_primary_rerun/240817_058_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; ambiguous_eff=true; support_ell_nm=4.04"
+
+[files."240817_059.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_059.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_primary_rerun/240817_059_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; support_ell_nm=3.85"
+
+[files."240817_060.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_060.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = true
+best_plot = "results/best_plots_240817_primary_rerun/240817_060_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; ambiguous_eff=true; support_ell_nm=3.90"
+
+[files."240817_061.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_061.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_primary_rerun/240817_061_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; support_ell_nm=3.81"
+
+[files."240817_062.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_062.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unit_sequence_labeled_primary"
+pre_assignment = "accept_unit_training_known_010010"
+recommended_action = "use_for_unit_assignment"
+unit_sequence_available = true
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_primary_rerun/240817_062_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "canonical primary unit sequence already labeled; support_ell_nm=3.90"
+
+[files."240817_064.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_064.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unclassified_needs_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_primary_rerun/240817_064_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "unclassified but N_selected=N_ell=N_circ=6 and not ambiguous; support_ell_nm=3.82; user visual review confirmed ok_chitosan true N=6 on 2026-06-30"
+
+[files."240817_065.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_065.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unclassified_needs_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_primary_rerun/240817_065_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "unclassified but N_selected=N_ell=N_circ=6 and not ambiguous; support_ell_nm=3.85; user visual review confirmed ok_chitosan true N=6 on 2026-06-30"
+
+[files."240817_066.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_066.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unclassified_needs_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_primary_rerun/240817_066_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "unclassified but N_selected=N_ell=N_circ=6 and not ambiguous; support_ell_nm=3.77; user visual review confirmed ok_chitosan true N=6 on 2026-06-30"
+
+[files."240817_067.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_067.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unclassified_needs_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_primary_rerun/240817_067_best.png"
+summary_path = "results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv"
+reason = "unclassified but N_selected=N_ell=N_circ=6 and not ambiguous; support_ell_nm=3.77; user visual review confirmed ok_chitosan true N=6 on 2026-06-30"
+
+[files."240817_068.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_068.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unclassified_needs_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_20240817_pad040/240817_068_best.png"
+summary_path = "results/best_plots_20240817_pad040/summary_overlap060_hard.tsv"
+reason = "unclassified but N_selected=N_ell=N_circ=6 and not ambiguous; support_ell_nm=4.15; user visual review confirmed ok_chitosan true N=6 on 2026-06-30"
+
+[files."240817_069.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_069.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unclassified_needs_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_20240817_pad040/240817_069_best.png"
+summary_path = "results/best_plots_20240817_pad040/summary_overlap060_hard.tsv"
+reason = "unclassified but N_selected=N_ell=N_circ=6 and not ambiguous; support_ell_nm=4.16; user visual review confirmed ok_chitosan true N=6 on 2026-06-30"
+
+[files."240817_070.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_070.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unclassified_needs_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_20240817_pad040/240817_070_best.png"
+summary_path = "results/best_plots_20240817_pad040/summary_overlap060_hard.tsv"
+reason = "unclassified but N_selected=N_ell=N_circ=6 and not ambiguous; support_ell_nm=4.17; user visual review confirmed ok_chitosan true N=6 on 2026-06-30"
+
+[files."240817_071.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_071.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unclassified_needs_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_20240817_pad040/240817_071_best.png"
+summary_path = "results/best_plots_20240817_pad040/summary_overlap060_hard.tsv"
+reason = "unclassified but N_selected=N_ell=N_circ=6 and not ambiguous; support_ell_nm=4.09; user visual review confirmed ok_chitosan true N=6 on 2026-06-30"
+
+[files."240817_072.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_072.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unclassified_needs_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_20240817_pad040/240817_072_best.png"
+summary_path = "results/best_plots_20240817_pad040/summary_overlap060_hard.tsv"
+reason = "unclassified but N_selected=N_ell=N_circ=6 and not ambiguous; support_ell_nm=4.13; user visual review confirmed ok_chitosan true N=6 on 2026-06-30"
+
+[files."240817_073.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_073.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unclassified_needs_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_20240817_pad040/240817_073_best.png"
+summary_path = "results/best_plots_20240817_pad040/summary_overlap060_hard.tsv"
+reason = "unclassified but N_selected=N_ell=N_circ=6 and not ambiguous; support_ell_nm=4.03; user visual review confirmed ok_chitosan true N=6 on 2026-06-30"
+
+[files."240817_074.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_074.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unclassified_needs_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_20240817_pad040/240817_074_best.png"
+summary_path = "results/best_plots_20240817_pad040/summary_overlap060_hard.tsv"
+reason = "unclassified but N_selected=N_ell=N_circ=6 and not ambiguous; support_ell_nm=4.16; user visual review confirmed ok_chitosan true N=6 on 2026-06-30"
+
+[files."240817_075.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_075.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unclassified_needs_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_20240817_pad040/240817_075_best.png"
+summary_path = "results/best_plots_20240817_pad040/summary_overlap060_hard.tsv"
+reason = "unclassified but N_selected=N_ell=N_circ=6 and not ambiguous; support_ell_nm=4.13; user visual review confirmed ok_chitosan true N=6 on 2026-06-30"
+
+[files."240817_076.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_076.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unclassified_needs_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_20240817_pad040/240817_076_best.png"
+summary_path = "results/best_plots_20240817_pad040/summary_overlap060_hard.tsv"
+reason = "unclassified but N_selected=N_ell=N_circ=6 and not ambiguous; support_ell_nm=4.02; user visual review confirmed ok_chitosan true N=6 on 2026-06-30"
+
+[files."240817_077.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_077.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unclassified_needs_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 5
+N_eff = 5
+N_ell = 5
+N_circ = 6
+ambiguous_eff = true
+best_plot = "results/best_plots_240817_rerun_full/240817_077_best.png"
+summary_path = "results/best_plots_240817_rerun_full/summary_overlap060_hard.tsv"
+reason = "unclassified selected N=5, near 6; ambiguous_eff=true; support_ell_nm=3.47; user visual review confirmed ok_chitosan true N=6 on 2026-06-30"
+
+[files."240817_078.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_078.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unclassified_needs_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 5
+N_eff = 5
+N_ell = 5
+N_circ = 5
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_rerun_full/240817_078_best.png"
+summary_path = "results/best_plots_240817_rerun_full/summary_overlap060_hard.tsv"
+reason = "unclassified selected N=5, near 6; support_ell_nm=3.66; user visual review confirmed ok_chitosan true N=6 on 2026-06-30"
+
+[files."240817_079.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_079.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unclassified_needs_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_rerun_full/240817_079_best.png"
+summary_path = "results/best_plots_240817_rerun_full/summary_overlap060_hard.tsv"
+reason = "unclassified but N_selected=N_ell=N_circ=6 and not ambiguous; support_ell_nm=3.50; user visual review confirmed ok_chitosan true N=6 on 2026-06-30"
+
+[files."240817_080.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_080.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unclassified_needs_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_rerun_full/240817_080_best.png"
+summary_path = "results/best_plots_240817_rerun_full/summary_overlap060_hard.tsv"
+reason = "unclassified but N_selected=N_ell=N_circ=6 and not ambiguous; support_ell_nm=3.60; user visual review confirmed ok_chitosan true N=6 on 2026-06-30"
+
+[files."240817_081.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_081.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unclassified_needs_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_rerun_full/240817_081_best.png"
+summary_path = "results/best_plots_240817_rerun_full/summary_overlap060_hard.tsv"
+reason = "unclassified but N_selected=N_ell=N_circ=6 and not ambiguous; support_ell_nm=3.66; user visual review confirmed ok_chitosan true N=6 on 2026-06-30"
+
+[files."240817_082.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_082.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unclassified_needs_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_240817_rerun_full/240817_082_best.png"
+summary_path = "results/best_plots_240817_rerun_full/summary_overlap060_hard.tsv"
+reason = "unclassified but N_selected=N_ell=N_circ=6 and not ambiguous; support_ell_nm=3.64; user visual review confirmed ok_chitosan true N=6 on 2026-06-30"
+
+[files."240817_083.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_083.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unclassified_needs_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_20240817_pad040/240817_083_best.png"
+summary_path = "results/best_plots_20240817_pad040/summary_overlap060_hard.tsv"
+reason = "unclassified but N_selected=N_ell=N_circ=6 and not ambiguous; support_ell_nm=3.89; user visual review confirmed ok_chitosan true N=6 on 2026-06-30"
+
+[files."240817_085.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_085.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unclassified_needs_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_20240817_pad040/240817_085_best.png"
+summary_path = "results/best_plots_20240817_pad040/summary_overlap060_hard.tsv"
+reason = "unclassified but N_selected=N_ell=N_circ=6 and not ambiguous; support_ell_nm=4.00; user visual review confirmed ok_chitosan true N=6 on 2026-06-30"
+
+[files."240817_086.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_086.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unclassified_needs_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_20240817_pad040/240817_086_best.png"
+summary_path = "results/best_plots_20240817_pad040/summary_overlap060_hard.tsv"
+reason = "unclassified but N_selected=N_ell=N_circ=6 and not ambiguous; support_ell_nm=4.09; user visual review confirmed ok_chitosan true N=6 on 2026-06-30"
+
+[files."240817_087.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_087.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unclassified_needs_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_20240817_pad040/240817_087_best.png"
+summary_path = "results/best_plots_20240817_pad040/summary_overlap060_hard.tsv"
+reason = "unclassified but N_selected=N_ell=N_circ=6 and not ambiguous; support_ell_nm=4.05; user visual review confirmed ok_chitosan true N=6 on 2026-06-30"
+
+[files."240817_088.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_088.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unclassified_needs_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_20240817_pad040/240817_088_best.png"
+summary_path = "results/best_plots_20240817_pad040/summary_overlap060_hard.tsv"
+reason = "unclassified but N_selected=N_ell=N_circ=6 and not ambiguous; support_ell_nm=3.92; user visual review confirmed ok_chitosan true N=6 on 2026-06-30"
+
+[files."240817_089.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_089.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unclassified_needs_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_20240817_pad040/240817_089_best.png"
+summary_path = "results/best_plots_20240817_pad040/summary_overlap060_hard.tsv"
+reason = "unclassified but N_selected=N_ell=N_circ=6 and not ambiguous; support_ell_nm=3.94; user visual review confirmed ok_chitosan true N=6 on 2026-06-30"
+
+[files."240817_090.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_090.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unclassified_needs_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_20240817_pad040/240817_090_best.png"
+summary_path = "results/best_plots_20240817_pad040/summary_overlap060_hard.tsv"
+reason = "unclassified but N_selected=N_ell=N_circ=6 and not ambiguous; support_ell_nm=3.93; user visual review confirmed ok_chitosan true N=6 on 2026-06-30"
+
+[files."240817_091.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_091.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unclassified_needs_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 5
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_20240817_pad040/240817_091_best.png"
+summary_path = "results/best_plots_20240817_pad040/summary_overlap060_hard.tsv"
+reason = "unclassified selected N=5, near 6; support_ell_nm=4.06; user visual review confirmed ok_chitosan true N=6 on 2026-06-30"
+
+[files."240817_092.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_092.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unclassified_needs_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_20240817_pad040/240817_092_best.png"
+summary_path = "results/best_plots_20240817_pad040/summary_overlap060_hard.tsv"
+reason = "unclassified but N_selected=N_ell=N_circ=6 and not ambiguous; support_ell_nm=4.06; user visual review confirmed ok_chitosan true N=6 on 2026-06-30"
+
+[files."240817_093.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_093.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unclassified_needs_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_20240817_pad040/240817_093_best.png"
+summary_path = "results/best_plots_20240817_pad040/summary_overlap060_hard.tsv"
+reason = "unclassified but N_selected=N_ell=N_circ=6 and not ambiguous; support_ell_nm=3.96; user visual review confirmed ok_chitosan true N=6 on 2026-06-30"
+
+[files."240817_094.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_094.sxm"
+folder = "20240817_LHe_Cu100"
+source_status = "unclassified_needs_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 5
+ambiguous_eff = true
+best_plot = "results/best_plots_20240817_pad040/240817_094_best.png"
+summary_path = "results/best_plots_20240817_pad040/summary_overlap060_hard.tsv"
+reason = "unclassified but selected N=6; ambiguous_eff=true; support_ell_nm=4.11; user visual review confirmed ok_chitosan true N=6 on 2026-06-30"
+
+[files."240818_007.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240818_LHe_Cu100/240818_007.sxm"
+folder = "20240818_LHe_Cu100"
+source_status = "manual_N6_clean_target"
+pre_assignment = "accept_counting_needs_unit_sequence_confirmation"
+recommended_action = "user_confirm_sequence_then_use_for_unit_assignment"
+unit_sequence_available = false
+N_selected = 5
+N_eff = 5
+N_ell = 5
+N_circ = 5
+ambiguous_eff = false
+best_plot = "results/best_plots_20240818/240818_007_best.png"
+summary_path = "results/best_plots_20240818/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan expected N=6; support_ell_nm=3.35"
+
+[files."240818_011.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240818_LHe_Cu100/240818_011.sxm"
+folder = "20240818_LHe_Cu100"
+source_status = "manual_N6_clean_target"
+pre_assignment = "accept_counting_needs_unit_sequence_confirmation"
+recommended_action = "user_confirm_sequence_then_use_for_unit_assignment"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 7
+N_ell = 7
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_20240818/240818_011_best.png"
+summary_path = "results/best_plots_20240818/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan expected N=6; support_ell_nm=3.85"
+
+[files."240818_012.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240818_LHe_Cu100/240818_012.sxm"
+folder = "20240818_LHe_Cu100"
+source_status = "manual_N6_clean_target"
+pre_assignment = "accept_counting_needs_unit_sequence_confirmation"
+recommended_action = "user_confirm_sequence_then_use_for_unit_assignment"
+unit_sequence_available = false
+N_selected = 7
+N_eff = 7
+N_ell = 7
+N_circ = 6
+ambiguous_eff = true
+best_plot = "results/best_plots_20240818/240818_012_best.png"
+summary_path = "results/best_plots_20240818/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan expected N=6; ambiguous_eff=true; support_ell_nm=3.79"
+
+[files."240818_013.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240818_LHe_Cu100/240818_013.sxm"
+folder = "20240818_LHe_Cu100"
+source_status = "manual_N6_clean_target"
+pre_assignment = "accept_counting_needs_unit_sequence_confirmation"
+recommended_action = "user_confirm_sequence_then_use_for_unit_assignment"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_20240818/240818_013_best.png"
+summary_path = "results/best_plots_20240818/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan expected N=6; support_ell_nm=3.84"
+
+[files."240818_015.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240818_LHe_Cu100/240818_015.sxm"
+folder = "20240818_LHe_Cu100"
+source_status = "manual_N6_clean_target"
+pre_assignment = "accept_counting_needs_unit_sequence_confirmation"
+recommended_action = "user_confirm_sequence_then_use_for_unit_assignment"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 7
+N_ell = 7
+N_circ = 7
+ambiguous_eff = false
+best_plot = "results/best_plots_20240818/240818_015_best.png"
+summary_path = "results/best_plots_20240818/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan expected N=6; support_ell_nm=4.13"
+
+[files."240818_016.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240818_LHe_Cu100/240818_016.sxm"
+folder = "20240818_LHe_Cu100"
+source_status = "manual_N6_clean_target"
+pre_assignment = "accept_counting_needs_unit_sequence_confirmation"
+recommended_action = "user_confirm_sequence_then_use_for_unit_assignment"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_20240818/240818_016_best.png"
+summary_path = "results/best_plots_20240818/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan expected N=6; support_ell_nm=3.56"
+
+[files."240818_017.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240818_LHe_Cu100/240818_017.sxm"
+folder = "20240818_LHe_Cu100"
+source_status = "manual_N6_clean_target"
+pre_assignment = "accept_counting_needs_unit_sequence_confirmation"
+recommended_action = "user_confirm_sequence_then_use_for_unit_assignment"
+unit_sequence_available = false
+N_selected = 8
+N_eff = 8
+N_ell = 8
+N_circ = 8
+ambiguous_eff = false
+best_plot = "results/best_plots_20240818/240818_017_best.png"
+summary_path = "results/best_plots_20240818/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan expected N=6; support_ell_nm=3.62"
+
+[files."240818_018.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240818_LHe_Cu100/240818_018.sxm"
+folder = "20240818_LHe_Cu100"
+source_status = "manual_N6_clean_target"
+pre_assignment = "accept_counting_needs_unit_sequence_confirmation"
+recommended_action = "user_confirm_sequence_then_use_for_unit_assignment"
+unit_sequence_available = false
+N_selected = 5
+N_eff = 5
+N_ell = 5
+N_circ = 5
+ambiguous_eff = false
+best_plot = "results/best_plots_20240818/240818_018_best.png"
+summary_path = "results/best_plots_20240818/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan expected N=6; support_ell_nm=3.59"
+
+[files."240818_019.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240818_LHe_Cu100/240818_019.sxm"
+folder = "20240818_LHe_Cu100"
+source_status = "manual_N6_clean_target"
+pre_assignment = "accept_counting_needs_unit_sequence_confirmation"
+recommended_action = "user_confirm_sequence_then_use_for_unit_assignment"
+unit_sequence_available = false
+ambiguous_eff = false
+summary_path = "results/best_plots_20240818/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan expected N=6"
+
+[files."240818_020.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240818_LHe_Cu100/240818_020.sxm"
+folder = "20240818_LHe_Cu100"
+source_status = "manual_N6_clean_target"
+pre_assignment = "accept_counting_needs_unit_sequence_confirmation"
+recommended_action = "user_confirm_sequence_then_use_for_unit_assignment"
+unit_sequence_available = false
+N_selected = 5
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_20240818/240818_020_best.png"
+summary_path = "results/best_plots_20240818/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan expected N=6; support_ell_nm=3.77"
+
+[files."240818_021.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240818_LHe_Cu100/240818_021.sxm"
+folder = "20240818_LHe_Cu100"
+source_status = "manual_N6_clean_target"
+pre_assignment = "accept_counting_needs_unit_sequence_confirmation"
+recommended_action = "user_confirm_sequence_then_use_for_unit_assignment"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 8
+N_ell = 8
+N_circ = 5
+ambiguous_eff = false
+best_plot = "results/best_plots_20240818/240818_021_best.png"
+summary_path = "results/best_plots_20240818/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan expected N=6; support_ell_nm=3.71"
+
+[files."240818_025.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240818_LHe_Cu100/240818_025.sxm"
+folder = "20240818_LHe_Cu100"
+source_status = "manual_N6_clean_target"
+pre_assignment = "accept_counting_needs_unit_sequence_confirmation"
+recommended_action = "user_confirm_sequence_then_use_for_unit_assignment"
+unit_sequence_available = false
+N_selected = 5
+N_eff = 7
+N_ell = 7
+N_circ = 7
+ambiguous_eff = false
+best_plot = "results/best_plots_20240818/240818_025_best.png"
+summary_path = "results/best_plots_20240818/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan expected N=6; support_ell_nm=4.27"
+
+[files."240818_026.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240818_LHe_Cu100/240818_026.sxm"
+folder = "20240818_LHe_Cu100"
+source_status = "manual_N6_clean_target"
+pre_assignment = "accept_counting_needs_unit_sequence_confirmation"
+recommended_action = "user_confirm_sequence_then_use_for_unit_assignment"
+unit_sequence_available = false
+N_selected = 5
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_20240818/240818_026_best.png"
+summary_path = "results/best_plots_20240818/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan expected N=6; support_ell_nm=3.99"
+
+[files."240818_027.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240818_LHe_Cu100/240818_027.sxm"
+folder = "20240818_LHe_Cu100"
+source_status = "manual_N6_clean_target"
+pre_assignment = "accept_counting_needs_unit_sequence_confirmation"
+recommended_action = "user_confirm_sequence_then_use_for_unit_assignment"
+unit_sequence_available = false
+N_selected = 5
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = true
+best_plot = "results/best_plots_20240818/240818_027_best.png"
+summary_path = "results/best_plots_20240818/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan expected N=6; ambiguous_eff=true; support_ell_nm=3.83"
+
+[files."240818_028.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240818_LHe_Cu100/240818_028.sxm"
+folder = "20240818_LHe_Cu100"
+source_status = "manual_N6_clean_target"
+pre_assignment = "accept_counting_needs_unit_sequence_confirmation"
+recommended_action = "user_confirm_sequence_then_use_for_unit_assignment"
+unit_sequence_available = false
+N_selected = 5
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/best_plots_20240818/240818_028_best.png"
+summary_path = "results/best_plots_20240818/summary_overlap060_hard.tsv"
+reason = "manual ok_chitosan expected N=6; support_ell_nm=3.59"
+
+[files."241113_085.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_085.sxm"
+folder = "20241113_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 7
+N_ell = 7
+N_circ = 7
+ambiguous_eff = true
+best_plot = "results/triage_potential_benchmark_fit_top10/241113_085_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=global_top31; fit N_selected=6; N_eff=7; ell/circ=7/7; ambiguous_eff=true; support_ell_nm=3.883"
+
+[files."241113_086.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_086.sxm"
+folder = "20241113_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/241113_086_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=global_top31;stratified_top32; fit N_selected=6; N_eff=6; ell/circ=6/6; ambiguous_eff=false; support_ell_nm=3.587"
+
+[files."241113_087.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_087.sxm"
+folder = "20241113_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/241113_087_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=global_top31; fit N_selected=6; N_eff=6; ell/circ=6/6; ambiguous_eff=false; support_ell_nm=3.8"
+
+[files."241113_088.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_088.sxm"
+folder = "20241113_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/241113_088_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=global_top31; fit N_selected=6; N_eff=6; ell/circ=6/6; ambiguous_eff=false; support_ell_nm=3.846"
+
+[files."241113_089.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_089.sxm"
+folder = "20241113_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 5
+N_ell = 5
+N_circ = 5
+ambiguous_eff = true
+best_plot = "results/triage_potential_benchmark_fit_top10/241113_089_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=global_top31;stratified_top32; fit N_selected=6; N_eff=5; ell/circ=5/5; ambiguous_eff=true; support_ell_nm=3.88"
+
+[files."241113_094.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_094.sxm"
+folder = "20241113_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/241113_094_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=global_top31;stratified_top32; fit N_selected=6; N_eff=6; ell/circ=6/6; ambiguous_eff=false; support_ell_nm=4.023"
+
+[files."241113_157.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_157.sxm"
+folder = "20241113_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/241113_157_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=global_top31;stratified_top32; fit N_selected=6; N_eff=6; ell/circ=6/6; ambiguous_eff=false; support_ell_nm=3.713"
+
+[files."241113_160.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_160.sxm"
+folder = "20241113_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 5
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/241113_160_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=global_top31; fit N_selected=5; N_eff=6; ell/circ=6/6; ambiguous_eff=false; support_ell_nm=4.359"
+
+[files."241114_004.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_004.sxm"
+folder = "20241114_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/241114_004_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=global_top31; fit N_selected=6; N_eff=6; ell/circ=6/6; ambiguous_eff=false; support_ell_nm=4.435"
+
+[files."241114_010.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_010.sxm"
+folder = "20241114_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 5
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/241114_010_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=global_top31; fit N_selected=5; N_eff=6; ell/circ=6/6; ambiguous_eff=false; support_ell_nm=3.908"
+
+[files."241114_011.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_011.sxm"
+folder = "20241114_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/241114_011_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=global_top31;stratified_top32; fit N_selected=6; N_eff=6; ell/circ=6/6; ambiguous_eff=false; support_ell_nm=3.882"
+
+[files."241114_012.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_012.sxm"
+folder = "20241114_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/241114_012_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=global_top31;stratified_top32; fit N_selected=6; N_eff=6; ell/circ=6/6; ambiguous_eff=false; support_ell_nm=3.971"
+
+[files."241114_022.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_022.sxm"
+folder = "20241114_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/241114_022_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=global_top31;stratified_top32; fit N_selected=6; N_eff=6; ell/circ=6/6; ambiguous_eff=false; support_ell_nm=4.106"
+
+[files."241114_023.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_023.sxm"
+folder = "20241114_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/241114_023_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=global_top31;stratified_top32; fit N_selected=6; N_eff=6; ell/circ=6/6; ambiguous_eff=false; support_ell_nm=4.103"
+
+[files."241114_027.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_027.sxm"
+folder = "20241114_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/241114_027_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=global_top31; fit N_selected=6; N_eff=6; ell/circ=6/6; ambiguous_eff=false; support_ell_nm=3.941"
+
+[files."241114_028.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_028.sxm"
+folder = "20241114_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 6
+N_eff = 6
+N_ell = 6
+N_circ = 6
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/241114_028_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=global_top31; fit N_selected=6; N_eff=6; ell/circ=6/6; ambiguous_eff=false; support_ell_nm=3.893"
+
+[files."241114_040.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_040.sxm"
+folder = "20241114_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 7
+N_eff = 7
+N_ell = 7
+N_circ = 7
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/241114_040_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=global_top31; fit N_selected=7; N_eff=7; ell/circ=7/7; ambiguous_eff=false; support_ell_nm=4.265"
+
+[files."241114_043.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_043.sxm"
+folder = "20241114_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 7
+N_eff = 8
+N_ell = 8
+N_circ = 8
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/241114_043_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=global_top31; fit N_selected=7; N_eff=8; ell/circ=8/8; ambiguous_eff=false; support_ell_nm=4.11"
+
+[files."241114_044.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_044.sxm"
+folder = "20241114_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 8
+N_eff = 8
+N_ell = 8
+N_circ = 8
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/241114_044_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=global_top31; fit N_selected=8; N_eff=8; ell/circ=8/8; ambiguous_eff=false; support_ell_nm=4.126"
+
+[files."241114_045.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_045.sxm"
+folder = "20241114_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 8
+N_eff = 8
+N_ell = 8
+N_circ = 8
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/241114_045_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=global_top31; fit N_selected=8; N_eff=8; ell/circ=8/8; ambiguous_eff=false; support_ell_nm=4.095"
+
+[files."241114_046.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_046.sxm"
+folder = "20241114_LHe_Cu100"
+source_status = "manual_ok_chitosan_top10_fit_review"
+pre_assignment = "accept_counting_visual_N6_confirmed"
+recommended_action = "use_for_counting_keep_unit_sequence_unconfirmed"
+unit_sequence_available = false
+N_selected = 8
+N_eff = 8
+N_ell = 8
+N_circ = 8
+ambiguous_eff = false
+best_plot = "results/triage_potential_benchmark_fit_top10/241114_046_best.png"
+summary_path = "results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv"
+reason = "user visual review of triage_potential_benchmark_fit_top10 confirmed all 45 fit images are good chitosan with true N=6 on 2026-07-01; unit sequence still unconfirmed; top10 triage source=global_top31; fit N_selected=8; N_eff=8; ell/circ=8/8; ambiguous_eff=false; support_ell_nm=4.121"
