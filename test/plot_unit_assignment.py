@@ -23,8 +23,8 @@ import matplotlib.image as mpimg
 import matplotlib.patches as mpatches
 import numpy as np
 
-COLORS = {0: "#2166ac", 1: "#b2182b"}  # blue=GlcN, red=GlcNAc
-LABELS = {0: "GlcN (0)", 1: "GlcNAc (1)"}
+COLORS = {0: "#2166ac", 1: "#b2182b", "?": "#8c8c8c"}
+LABELS = {0: "GlcN (0)", 1: "GlcNAc (1)", "?": "uncertain (?)"}
 
 
 def read_tsv(path):
@@ -54,14 +54,53 @@ def load_features(path):
 
 
 def load_predictions(path):
-    """file -> {lobe -> predicted}"""
     preds = {}
     for row in read_tsv(path):
         f = row["file"]
         if f not in preds:
             preds[f] = {}
-        preds[f][int(row["lobe"])] = int(row["predicted"])
+        pred = row["predicted"].strip()
+        if pred == "?":
+            parsed = "?"
+        elif pred in ("0", "1"):
+            parsed = int(pred)
+        else:
+            raise ValueError(f"Invalid prediction {pred!r} in {path}: {f} lobe {row['lobe']}")
+        conf_raw = row.get("confidence", "").strip()
+        confidence = float(conf_raw) if conf_raw and conf_raw not in ("NA", "NaN", "nan") else None
+        preds[f][int(row["lobe"])] = {"predicted": parsed, "confidence": confidence}
     return preds
+
+
+def prediction_value(preds, f_name, lobe):
+    entry = preds[f_name].get(lobe)
+    return "?" if entry is None else entry["predicted"]
+
+
+def label_color(pred):
+    return "black" if pred == "?" else "white"
+
+
+def legend_handles():
+    return [mpatches.Patch(color=COLORS[k], label=LABELS[k]) for k in (0, 1, "?")]
+
+
+def write_summary(preds, files, out_path):
+    counts = {0: 0, 1: 0, "?": 0}
+    confidences = []
+    for f_name in files:
+        for entry in preds[f_name].values():
+            counts[entry["predicted"]] += 1
+            if entry["confidence"] is not None:
+                confidences.append(entry["confidence"])
+    lobes = counts[0] + counts[1] + counts["?"]
+    mean_conf = sum(confidences) / len(confidences) if confidences else "NA"
+    review_flags = "has_uncertain" if counts["?"] else "ok"
+    if out_path.is_symlink():
+        raise RuntimeError(f"Refusing to overwrite symlink: {out_path}")
+    with open(out_path, "w") as f:
+        f.write("files\tlobes\tpredicted_0\tpredicted_1\tuncertain\tmean_confidence\treview_flags\n")
+        f.write(f"{len(files)}\t{lobes}\t{counts[0]}\t{counts[1]}\t{counts['?']}\t{mean_conf}\t{review_flags}\n")
 
 
 def plot_chain_standalone(feats, preds, f_name, out_path):
@@ -76,13 +115,13 @@ def plot_chain_standalone(feats, preds, f_name, out_path):
     ax.plot(xs, ys, "k-", alpha=0.3, linewidth=1)
 
     for l in lobes:
-        p = preds[f_name].get(l["lobe"], -1)
+        p = prediction_value(preds, f_name, l["lobe"])
         c = COLORS.get(p, "#999999")
         size = 50 + 500 * l["amp"] / max(x["amp"] for x in lobes)
         ax.scatter(l["x"], l["y"], c=c, s=size, zorder=5, edgecolors="white",
                    linewidths=1.5)
         ax.annotate(str(p), (l["x"], l["y"]), fontsize=9, fontweight="bold",
-                    color="white", ha="center", va="center", zorder=6)
+                    color=label_color(p), ha="center", va="center", zorder=6)
 
     ax.set_xlabel("x (nm)")
     ax.set_ylabel("y (nm)")
@@ -107,13 +146,13 @@ def plot_overlay(feats, preds, f_name, png_path, out_path, scan_nm=10.0):
     panel_w = h  # square panel
 
     fig, ax = plt.subplots(1, 1, figsize=(12, 4))
-    ax.imshow(img, extent=[0, w, h, 0])  # y flipped for image
+    ax.imshow(img, extent=(0.0, float(w), float(h), 0.0))  # y flipped for image
     ax.axis("off")
 
     # Map (x_nm, y_nm) to pixel coords in left panel
     # Assume scan_nm maps to panel_w pixels, origin at top-left of left panel
     for l in lobes:
-        p = preds[f_name].get(l["lobe"], -1)
+        p = prediction_value(preds, f_name, l["lobe"])
         c = COLORS.get(p, "#999999")
         px = (l["x"] / scan_nm) * panel_w
         py = (l["y"] / scan_nm) * panel_w
@@ -121,12 +160,10 @@ def plot_overlay(feats, preds, f_name, png_path, out_path, scan_nm=10.0):
         ax.scatter(px, py, c=c, s=size, zorder=5, edgecolors="yellow",
                    linewidths=2)
         ax.annotate(str(p), (px, py), fontsize=10, fontweight="bold",
-                    color="white", ha="center", va="center", zorder=6)
+                    color=label_color(p), ha="center", va="center", zorder=6)
 
     # Legend
-    handles = [mpatches.Patch(color=COLORS[0], label="GlcN (0)"),
-               mpatches.Patch(color=COLORS[1], label="GlcNAc (1)")]
-    ax.legend(handles=handles, loc="upper right", fontsize=9, framealpha=0.9)
+    ax.legend(handles=legend_handles(), loc="upper right", fontsize=9, framealpha=0.9)
     ax.set_title(f"{f_name}", fontsize=10, loc="left")
     plt.tight_layout()
     fig.savefig(out_path, dpi=150, bbox_inches="tight")
@@ -152,7 +189,7 @@ def plot_summary_grid(feats, preds, out_path, n_cols=5):
         ax.plot(xs, ys, "k-", alpha=0.2, linewidth=0.5)
         max_amp = max(l["amp"] for l in lobes)
         for l in lobes:
-            p = preds[f_name].get(l["lobe"], -1)
+            p = prediction_value(preds, f_name, l["lobe"])
             c = COLORS.get(p, "#999")
             size = 15 + 80 * l["amp"] / max_amp
             ax.scatter(l["x"], l["y"], c=c, s=size, zorder=5, edgecolors="white",
@@ -168,11 +205,9 @@ def plot_summary_grid(feats, preds, out_path, n_cols=5):
     for idx in range(n, len(axes)):
         axes[idx].axis("off")
 
-    handles = [mpatches.Patch(color=COLORS[0], label="GlcN (0)"),
-               mpatches.Patch(color=COLORS[1], label="GlcNAc (1)")]
-    fig.legend(handles=handles, loc="lower center", ncol=2, fontsize=9)
+    fig.legend(handles=legend_handles(), loc="lower center", ncol=3, fontsize=9)
     fig.suptitle("Unit assignment — preliminary DFT-STM molds h=0.50 nm", fontsize=11)
-    plt.tight_layout(rect=[0, 0.03, 1, 0.97])
+    plt.tight_layout(rect=(0.0, 0.03, 1.0, 0.97))
     fig.savefig(out_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
 
@@ -196,6 +231,9 @@ def main():
     files = sorted(set(feats.keys()) & set(preds.keys()))
     print(f"Features: {len(feats)} files, Predictions: {len(preds)} files")
     print(f"Common: {len(files)} files")
+    summary_path = out / "summary.tsv"
+    write_summary(preds, files, summary_path)
+    print(f"Summary: {summary_path}")
 
     if args.mode in ("all", "grid"):
         grid_path = out / "summary_grid.png"
