@@ -24,7 +24,10 @@
 #   reverse+flip: 1 - pred[N-i+1]  vs truth[i]    (both)
 #
 # The prediction label "?" is an explicit abstention. Abstained lobes are
-# excluded from accuracy/confusion counts and reported through coverage.
+# excluded from accuracy/confusion counts and reported through coverage. The
+# summary also prints a conservative honest-abstention view for the physical
+# convention: correctly assigned positions versus uncertainty, where uncertainty
+# includes both explicit abstentions and any benchmark-detected wrong assignment.
 #
 # Examples:
 #   julia --project=. test/grade_unit_assignment.jl \
@@ -178,6 +181,8 @@ function _parse_prediction(s::AbstractString)
     parsed in (0, 1) || error("Predicted label must be 0, 1, or ?: $s")
     return parsed
 end
+
+_pct(num::Integer, den::Integer) = den > 0 ? @sprintf("%.1f%%", 100 * num / den) : "NA"
 
 # Compute per-position accuracy between two equal-length Int vectors.
 function _seq_accuracy(pred, truth::Vector{Int})
@@ -340,6 +345,8 @@ function main(args=ARGS)
             "file", "N_pred", "N_classified", "N_truth", "quality",
             "phys_alignment", "phys_accuracy", "phys_correct", "phys_edit_dist", "phys_seq_match",
             "phys_tp", "phys_fn", "phys_fp", "phys_tn",
+            "phys_honest_correct", "phys_honest_uncertain",
+            "phys_honest_correct_frac", "phys_honest_uncertain_frac",
             "oracle_alignment", "oracle_accuracy", "oracle_correct", "oracle_edit_dist", "oracle_seq_match",
             "oracle_tp", "oracle_fn", "oracle_fp", "oracle_tn",
         ], '\t'))
@@ -376,8 +383,10 @@ function main(args=ARGS)
                 end
             end
 
+            n_file_possible = min(length(pred_raw), length(truth_seq))
             n_phys = best_phys.n
             n_ora = best_oracle.n
+            phys_honest_uncertain = n_file_possible - best_phys.correct
             physical_total += n_phys
             physical_correct += best_phys.correct
             oracle_total += n_ora
@@ -385,7 +394,7 @@ function main(args=ARGS)
             physical_seq_match += best_phys.seq_match ? 1 : 0
             oracle_seq_match += best_oracle.seq_match ? 1 : 0
             n_files_graded += 1
-            n_possible += min(length(pred_raw), length(truth_seq))
+            n_possible += n_file_possible
 
             println(io, join([
                 file,
@@ -400,6 +409,10 @@ function main(args=ARGS)
                 string(best_phys.seq_match),
                 string(best_phys.tp), string(best_phys.fn),
                 string(best_phys.fp), string(best_phys.tn),
+                string(best_phys.correct),
+                string(phys_honest_uncertain),
+                @sprintf("%.4f", n_file_possible > 0 ? best_phys.correct / n_file_possible : 0.0),
+                @sprintf("%.4f", n_file_possible > 0 ? phys_honest_uncertain / n_file_possible : 0.0),
                 best_oracle.alignment,
                 @sprintf("%.4f", best_oracle.accuracy),
                 string(best_oracle.correct),
@@ -418,16 +431,22 @@ function main(args=ARGS)
     println("  output:         ", opt.out_tsv)
     println("  files graded:   ", n_files_graded)
     println("  classified:     ", physical_total, "/", n_possible,
-            " (", n_possible > 0 ? @sprintf("%.1f%%", 100*physical_total/n_possible) : "NA", ")")
+            " (", _pct(physical_total, n_possible), ")")
     println()
     println("  Physical convention (label-free, GlcNAc=amp max):")
     println("    per-blob accuracy: ", physical_correct, "/", physical_total,
-            " (", physical_total > 0 ? @sprintf("%.1f%%", 100*physical_correct/physical_total) : "NA", ")")
+            " (", _pct(physical_correct, physical_total), ")")
     println("    sequence match:    ", physical_seq_match, "/", n_files_graded)
+    honest_uncertain = n_possible - physical_correct
+    println("    honest abstention view (post-hoc benchmark):")
+    println("      correctly assigned: ", physical_correct, "/", n_possible,
+            " (", _pct(physical_correct, n_possible), ")")
+    println("      uncertain:          ", honest_uncertain, "/", n_possible,
+            " (", _pct(honest_uncertain, n_possible), ")")
     println()
     println("  Oracle convention (supervised upper bound, best of 4 alignments):")
     println("    per-blob accuracy: ", oracle_correct, "/", oracle_total,
-            " (", oracle_total > 0 ? @sprintf("%.1f%%", 100*oracle_correct/oracle_total) : "NA", ")")
+            " (", _pct(oracle_correct, oracle_total), ")")
     println("    sequence match:    ", oracle_seq_match, "/", n_files_graded)
     println()
     phys_acc = physical_total > 0 ? 100*physical_correct/physical_total : NaN
