@@ -296,6 +296,10 @@ function main()
         all_files = sort([f for f in readdir(data_dir) if endswith(lowercase(f), ".sxm")])
     end
     all_files = [f for f in all_files if !(basename(f) in exclude_set)]
+    if !isempty(manifest_file)
+        manifest_files = Set(keys(manifest_quality))
+        all_files = [f for f in all_files if basename(f) in manifest_files]
+    end
     if primary_only
         all_files = [f for f in all_files if _is_primary_quality(get(manifest_quality, basename(f), "clean"))]
     end

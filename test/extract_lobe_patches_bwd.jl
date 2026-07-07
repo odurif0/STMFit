@@ -58,7 +58,7 @@ function _parse_cli(args)
             Options:
               --features PATH   Lobe feature TSV [$(DEFAULT_FEATURES)]
               --out PATH        Output patch TSV [$(DEFAULT_OUT)]
-              --data-dir PATH   SXM data directory [$STMFIT_DATA_DIR]
+              --data-dir PATH   SXM data directory [\$STMFIT_DATA_DIR]
               --half-nm FLOAT   Patch half-size [0.32]
               --step-nm FLOAT   Patch grid spacing [0.08]
             """)

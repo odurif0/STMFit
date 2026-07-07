@@ -18,9 +18,11 @@
 #   julia --project=. test/batch_full.jl [N_files] --selection-policy laplace_evidence_guard
 #   julia --project=. test/batch_full.jl [N_files] --selection-policy fwd_bwd_consensus
 #   julia --project=. test/batch_full.jl [N_files] --selection-policy adaptive_support_rescue
+#   julia --project=. test/batch_full.jl [N_files] --selection-policy support_midpoint_hybrid
 #   julia --project=. test/batch_full.jl [N_files] --plot-manifest benchmarks/chitosan_manual_20240814_20240818.toml
 
 using STMMolecularFit, GaussianFit2D, GaussianFit1D
+using STMFitCore: effective_spacing_min, support_n_bounds
 using LinearAlgebra
 using DelimitedFiles, Plots, Printf, Statistics, TOML
 
@@ -213,15 +215,17 @@ function _parse_cli(args)
     cfg_selection = isfile(config_file) ? get(TOML.parsefile(config_file), "selection", Dict{String,Any}()) : Dict{String,Any}()
     selection_policy_cfg = split(lowercase(String(get(cfg_model, "selection_policy", "gcv"))), "-"; keepempty=false) |> x -> join(x, "_")
     selection_policy = selection_policy_cli === nothing ? selection_policy_cfg : selection_policy_cli
-    selection_policy in ("gcv", "gcv_with_robust_aicc_guard", "spatial_blocked_cv", "support_marginalized_gcv", "support_marginalized_gcv_guard", "slope_heuristic_mdl", "stability_selection", "local_lobe_evidence", "laplace_evidence", "laplace_evidence_guard", "fwd_bwd_consensus", "adaptive_support_rescue") ||
-        error("Unknown --selection-policy '$selection_policy'; use gcv, gcv_with_robust_aicc_guard, spatial_blocked_cv, support_marginalized_gcv, support_marginalized_gcv_guard, slope_heuristic_mdl, stability_selection, local_lobe_evidence, laplace_evidence, laplace_evidence_guard, fwd_bwd_consensus, or adaptive_support_rescue")
+    selection_policy in ("gcv", "gcv_with_robust_aicc_guard", "spatial_blocked_cv", "support_marginalized_gcv", "support_marginalized_gcv_guard", "slope_heuristic_mdl", "stability_selection", "local_lobe_evidence", "laplace_evidence", "laplace_evidence_guard", "fwd_bwd_consensus", "adaptive_support_rescue", "support_midpoint_hybrid") ||
+        error("Unknown --selection-policy '$selection_policy'; use gcv, gcv_with_robust_aicc_guard, spatial_blocked_cv, support_marginalized_gcv, support_marginalized_gcv_guard, slope_heuristic_mdl, stability_selection, local_lobe_evidence, laplace_evidence, laplace_evidence_guard, fwd_bwd_consensus, adaptive_support_rescue, or support_midpoint_hybrid")
     # Selection thresholds: CLI flag overrides TOML [selection], which overrides the built-in default.
     robust_guard_nu = robust_guard_nu_cli === nothing ? Float64(get(cfg_selection, "robust_guard_nu", 8.0)) : robust_guard_nu_cli
     gcv_ambiguity_rel_threshold = gcv_ambiguity_rel_threshold_cli === nothing ? Float64(get(cfg_selection, "gcv_ambiguity_rel_threshold", 0.05)) : gcv_ambiguity_rel_threshold_cli
+    support_midpoint_up_gcv_rel_threshold = Float64(get(cfg_selection, "support_midpoint_up_gcv_rel_threshold", 0.30))
     isfinite(robust_guard_nu) && robust_guard_nu > 0 || error("--robust-guard-nu must be positive")
     isfinite(gcv_ambiguity_rel_threshold) && gcv_ambiguity_rel_threshold > 0 || error("--gcv-ambiguity-rel-threshold must be positive")
+    isfinite(support_midpoint_up_gcv_rel_threshold) && support_midpoint_up_gcv_rel_threshold >= 0 || error("support_midpoint_up_gcv_rel_threshold must be non-negative")
     cv_folds >= 2 || error("--cv-folds must be >= 2")
-    return n_files, chunk_idx, chunk_total, config_file, refined_advisory, selection_policy, robust_guard_nu, gcv_ambiguity_rel_threshold, cv_folds, data_dir, exclude_from, outdir, tsv, skip_1d, plot_manifest, skip_plot_quality
+    return n_files, chunk_idx, chunk_total, config_file, refined_advisory, selection_policy, robust_guard_nu, gcv_ambiguity_rel_threshold, support_midpoint_up_gcv_rel_threshold, cv_folds, data_dir, exclude_from, outdir, tsv, skip_1d, plot_manifest, skip_plot_quality
 end
 
 const FWHM_SIGMA = 2.355
@@ -313,7 +317,7 @@ function _load_skip_plot_files(path::AbstractString, skip_quality)
     return skip_files
 end
 
-const N_FILES, CHUNK_IDX, CHUNK_TOTAL, CONFIG_FILE, REFINED_ADVISORY_FILE, SELECTION_POLICY, ROBUST_GUARD_NU, GCV_AMBIGUITY_REL_THRESHOLD, CV_FOLDS, _data_dir_parsed, _exclude_from_parsed, _outdir_parsed, _tsv_parsed, SKIP_1D, PLOT_MANIFEST_FILE, SKIP_PLOT_QUALITY = _parse_cli(ARGS)
+const N_FILES, CHUNK_IDX, CHUNK_TOTAL, CONFIG_FILE, REFINED_ADVISORY_FILE, SELECTION_POLICY, ROBUST_GUARD_NU, GCV_AMBIGUITY_REL_THRESHOLD, SUPPORT_MIDPOINT_UP_GCV_REL_THRESHOLD, CV_FOLDS, _data_dir_parsed, _exclude_from_parsed, _outdir_parsed, _tsv_parsed, SKIP_1D, PLOT_MANIFEST_FILE, SKIP_PLOT_QUALITY = _parse_cli(ARGS)
 const DATA_DIR = _data_dir_parsed
 isempty(DATA_DIR) && error("No data directory: set STMFIT_DATA_DIR or pass --data-dir <path>")
 isdir(DATA_DIR) || error("Data directory not found: $DATA_DIR")
@@ -612,6 +616,33 @@ end
 function _support_feasible_n(support_nm::Real, ccfg)
     isfinite(support_nm) && support_nm > 0 || return 0
     return max(1, floor(Int, support_nm / _adaptive_support_min_spacing(ccfg)) + 1)
+end
+
+function _support_midpoint_n(support_nm::Real, ccfg)
+    isfinite(support_nm) && support_nm > 0 || return nothing
+    spacing_min_eff = effective_spacing_min(ccfg.spacing_min_nm, ccfg.spacing_max_nm,
+                                            ccfg.sigma_parallel_max_nm, ccfg.max_overlap)
+    lo, hi = support_n_bounds(support_nm, spacing_min_eff, ccfg.spacing_max_nm;
+                              n_min_config=ccfg.n_min, n_max_config=ccfg.n_max)
+    return round(Int, (lo + hi) / 2)
+end
+
+function _support_midpoint_hybrid_selection(selected, best_n_eff::Int, ambiguity, qc, ccfg)
+    current = selected.n_selected
+    midpoint = _support_midpoint_n(qc.support_ell, ccfg)
+    if midpoint === nothing
+        return (; n_selected=current, policy="support_midpoint_hybrid", source=selected.source)
+    elseif current > midpoint + 1
+        # Gap >= 2: the robust guard over-counted by at least 2 relative to the
+        # measured support geometry. Trust the geometry and go to the midpoint.
+        return (; n_selected=midpoint, policy="support_midpoint_hybrid", source="support_midpoint_down_to_mid")
+    elseif current > midpoint
+        return (; n_selected=current - 1, policy="support_midpoint_hybrid", source="support_midpoint_down")
+    elseif current < midpoint && best_n_eff > current && isfinite(ambiguity.dgcv_rel_eff) &&
+           ambiguity.dgcv_rel_eff <= SUPPORT_MIDPOINT_UP_GCV_REL_THRESHOLD
+        return (; n_selected=current + 1, policy="support_midpoint_hybrid", source="support_midpoint_up")
+    end
+    return (; n_selected=current, policy="support_midpoint_hybrid", source=selected.source)
 end
 
 function _adaptive_support_rescue_trigger(n_eff::Int, support_2d::Real, ccfg, model)
@@ -990,7 +1021,7 @@ const REFINED_ADVISORY = _load_refined_advisory(REFINED_ADVISORY_FILE)
 if !isempty(REFINED_ADVISORY)
     @info "Loaded refined-selection advisory" file=REFINED_ADVISORY_FILE n=length(REFINED_ADVISORY)
 end
-@info "Selection policy" policy=SELECTION_POLICY robust_guard_nu=ROBUST_GUARD_NU gcv_ambiguity_rel_threshold=GCV_AMBIGUITY_REL_THRESHOLD cv_folds=CV_FOLDS
+@info "Selection policy" policy=SELECTION_POLICY robust_guard_nu=ROBUST_GUARD_NU gcv_ambiguity_rel_threshold=GCV_AMBIGUITY_REL_THRESHOLD support_midpoint_up_gcv_rel_threshold=SUPPORT_MIDPOINT_UP_GCV_REL_THRESHOLD cv_folds=CV_FOLDS
 
 # Calibration keys with molecule-agnostic defaults (chitosan values). A partial
 # config TOML is tolerated; only [model] itself is mandatory.
@@ -1142,7 +1173,7 @@ Threads.@threads for idx in 1:ntot
         # Computed here (before selection) so the up-branch can use it; the QC
         # block below recomputes the same values for the summary columns.
         amb_eff_sel, runner_eff_sel, _, dgcv_rel_eff_sel = _effective_ambiguity_stats(results_ell, results_circ, best_n_eff)
-        if SELECTION_POLICY == "gcv_with_robust_aicc_guard"
+        if SELECTION_POLICY in ("gcv_with_robust_aicc_guard", "support_midpoint_hybrid")
             robust_n = nothing
             robust_source = "robust_aicc_guard_failed"
             try
@@ -1346,18 +1377,27 @@ Threads.@threads for idx in 1:ntot
             n_refined, refined_policy, refined_source, robust_aicc_n = _refined_selection(fn, best_n_eff, REFINED_ADVISORY)
         end
         refined = (; n_refined, policy=refined_policy, source=refined_source, robust_n=robust_aicc_n)
-        n_selected, selection_policy, selection_source = _select_primary(best_n_eff, eff_source, refined, SELECTION_POLICY)
-        selected = (; n_selected, policy=selection_policy, source=selection_source)
 
-        # ── QC diagnostics only: ambiguity/support/tolerant N sets do not alter selection ──
+        # ── Ambiguity/support/tolerant N-set diagnostics ──
         amb_ell, runner_ell, dgcv_ell, dgcv_rel_ell = _ambiguity_stats(results_ell, best_ell_sweep.n; criterion=criterion)
         amb_eff, runner_eff, dgcv_eff, dgcv_rel_eff = _effective_ambiguity_stats(results_ell, results_circ, best_n_eff)
         ambiguity = (; amb_ell, runner_ell, dgcv_ell, dgcv_rel_ell,
                        amb_eff, runner_eff, dgcv_eff, dgcv_rel_eff)
 
+        qc = _selection_diagnostics(best_ell_sweep, best_circ_sweep, best1d, best_eff,
+                                    results_ell, results_circ, fit_1d, slide, ctx_ell, ctx_circ; skip_1d=SKIP_1D)
+        classif = qc.classif
+
+        base_policy = SELECTION_POLICY == "support_midpoint_hybrid" ? "gcv_with_robust_aicc_guard" : SELECTION_POLICY
+        n_selected, selection_policy, selection_source = _select_primary(best_n_eff, eff_source, refined, base_policy)
+        selected = (; n_selected, policy=selection_policy, source=selection_source)
+        if SELECTION_POLICY == "support_midpoint_hybrid"
+            selected = _support_midpoint_hybrid_selection(selected, best_n_eff, ambiguity, qc, ccfg_plot_ell)
+        end
+
         n1d_val = best1d === nothing ? "NA" : best1d.n_peaks
         d1d_eff_val = best1d === nothing ? "NA" : best1d.n_peaks - best_n_eff
-        println("Nsel=$(n_selected) Neff=$(best_n_eff) Nref=$(n_refined) Nell=$(best_ell_sweep.n) Ncirc=$(best_circ_sweep.n) N1D=$(n1d_val) Δ1D-eff=$(d1d_eff_val) ✓")
+        println("Nsel=$(selected.n_selected) Neff=$(best_n_eff) Nref=$(n_refined) Nell=$(best_ell_sweep.n) Ncirc=$(best_circ_sweep.n) N1D=$(n1d_val) Δ1D-eff=$(d1d_eff_val) ✓")
 
         _write_scores(joinpath(file_dir, "ell_scores.tsv"), results_ell, score_label, scorefun, best_ell_sweep)
         _write_scores(joinpath(file_dir, "circ_scores.tsv"), results_circ, score_label, scorefun, best_circ_sweep)
@@ -1365,9 +1405,6 @@ Threads.@threads for idx in 1:ntot
             _write_scores_1d(joinpath(file_dir, "fit_1d_scores.tsv"), fit_1d.fit_run.all_results)
         end
 
-        qc = _selection_diagnostics(best_ell_sweep, best_circ_sweep, best1d, best_eff,
-                                    results_ell, results_circ, fit_1d, slide, ctx_ell, ctx_circ; skip_1d=SKIP_1D)
-        classif = qc.classif
         plot_warnings = _quality_warnings(best_n_eff, best1d === nothing ? nothing : best1d.n_peaks, qc.support_1d, qc.support_ell)
         amb_ell && push!(plot_warnings, @sprintf("ambiguous ell GCV: selected N=%d; second best N=%s (ΔGCV=%.1f%%)", best_ell_sweep.n, string(runner_ell), 100 * dgcv_rel_ell))
         amb_eff && push!(plot_warnings, @sprintf("ambiguous eff GCV: selected N=%d; second best N=%s (ΔGCV=%.1f%%)", best_n_eff, string(runner_eff), 100 * dgcv_rel_eff))
