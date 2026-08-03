@@ -8,6 +8,11 @@ include(joinpath(@__DIR__, "lib", "script_utils.jl"))
 using .ScriptUtils: _read_tsv
 
 const FORBIDDEN_FLAGS = Set(["--truth", "--manifest", "--full145", "--control-sequence", "--expected-N", "--expected-n", "--control"])
+const ALLOWED_PREDICTION_COLUMNS = Set([
+    "file", "lobe", "predicted", "confidence", "amplitude", "probability_1",
+    "views_used", "invalid_reason", "model", "model_version", "provenance_sha256",
+])
+const FORBIDDEN_PATH_TOKENS = ("benchmark", "truth", "manifest", "report", "grade", "grading")
 
 struct Options
     predictions::String
@@ -54,7 +59,9 @@ function _parse_cli(args)
 
             Checks required columns, duplicate (file,lobe) keys, positive and
             contiguous per-file lobe indices, prediction values in 0/1/?,
-            confidence/probability ranges, and optional feature-key coverage.
+            confidence/probability ranges, the explicit base/hierarchical
+            prediction-column allowlist, forbidden path-valued cells, and
+            optional feature-key coverage.
 
             Label-free constraint: validates artifact structure only; no external
             labels, benchmark metadata, control motifs, or expected counts.
@@ -73,6 +80,56 @@ end
 function _require_columns(header::Vector{String}, required, source::AbstractString)
     for col in required
         col in header || error("$source missing required column: $col")
+    end
+    return nothing
+end
+
+function _column_key(column::AbstractString)
+    return replace(lowercase(strip(String(column))), r"[^a-z0-9]+" => "_")
+end
+
+function _forbidden_column(column::AbstractString)
+    key = strip(_column_key(column), '_')
+    compact = replace(key, "_" => "")
+    compact in ("sequence", "controlsequence", "expectedn", "targetn",
+                "benchmarklabel", "benchmarktruth", "truth", "truthlabel",
+                "grade", "gradepath", "gradingreport", "report", "reportpath",
+                "manifest", "benchmarkmanifest", "denominatormanifest") && return true
+    return occursin("control_sequence", key) || occursin("expected_n", key) ||
+           occursin("target_n", key) || occursin("benchmark", key) ||
+           occursin("truth", key) || startswith(key, "grade_") ||
+           endswith(key, "_grade") || startswith(key, "report_") ||
+           endswith(key, "_report") || endswith(key, "_sequence")
+end
+
+function _reject_forbidden_columns(header::Vector{String}, source::AbstractString)
+    hits = sort(filter(_forbidden_column, header))
+    isempty(hits) || error("$source has forbidden benchmark/truth/control/grade/report columns: $(join(hits, ", "))")
+    return nothing
+end
+
+function _reject_unlisted_prediction_columns(header::Vector{String})
+    extras = sort(collect(setdiff(Set(header), ALLOWED_PREDICTION_COLUMNS)))
+    isempty(extras) || error("Prediction TSV has columns outside the explicit allowlist: $(join(extras, ", "))")
+    return nothing
+end
+
+
+function _forbidden_path_value(value::AbstractString)
+    text = lowercase(strip(String(value)))
+    isempty(text) && return false
+    uri_like = occursin(r"^[a-z][a-z0-9+.-]*:", text)
+    uri_like && return true
+    endswith(text, ".sxm") && !occursin('/', text) && !occursin('\\', text) && return false
+    path_like = occursin('/', text) || occursin('\\', text) ||
+                occursin(r"\.(tsv|csv|toml|json|jl|md)$", text)
+    return path_like && any(token -> occursin(token, text), FORBIDDEN_PATH_TOKENS)
+end
+
+function _scan_forbidden_paths(rows, source::AbstractString)
+    for (row_index, row) in enumerate(rows), (column, value) in row
+        _forbidden_path_value(value) &&
+            error("$source row $row_index column $column contains a forbidden benchmark truth/manifest/report/grade path")
     end
     return nothing
 end
@@ -108,7 +165,10 @@ end
 function _load_feature_keys(path::String)
     isempty(path) && return Set{Tuple{String,Int}}()
     header, rows = _read_tsv(path)
-    _require_columns(String.(header), ("file", "lobe"), "Feature TSV")
+    columns = String.(header)
+    _require_columns(columns, ("file", "lobe"), "Feature TSV")
+    _reject_forbidden_columns(columns, "Feature TSV")
+    _scan_forbidden_paths(rows, "Feature TSV")
     return Set(_key(row, "Feature TSV") for row in rows)
 end
 
@@ -129,6 +189,9 @@ function _validate_predictions(opt::Options)
     header_raw, rows = _read_tsv(opt.predictions)
     header = String.(header_raw)
     _require_columns(header, ("file", "lobe", "predicted"), "Prediction TSV")
+    _reject_forbidden_columns(header, "Prediction TSV")
+    _reject_unlisted_prediction_columns(header)
+    _scan_forbidden_paths(rows, "Prediction TSV")
     isempty(rows) && error("Prediction TSV has no rows: $(opt.predictions)")
 
     seen = Set{Tuple{String,Int}}()

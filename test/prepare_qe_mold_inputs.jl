@@ -12,6 +12,7 @@ include(joinpath(@__DIR__, "lib", "script_utils.jl"))
 using .ScriptUtils: _parse_vec3, _read_key_tsv
 
 const DEFAULT_OUTDIR = "qe"
+const RY_TO_EV = 13.605693122994
 
 const MASSES = Dict(
     "H" => 1.008,
@@ -46,8 +47,7 @@ struct Options
     ecutwfc::Float64
     ecutrho::Float64
     kpoints::NTuple{3,Int}
-    emin_ev::Float64
-    emax_ev::Float64
+    sample_bias_ev::Float64
     fix_below_z::Union{Nothing,Float64}
     ntasks::Int
     mem_per_task_mb::Int
@@ -92,8 +92,7 @@ function _parse_cli(args)
     ecutwfc = 50.0
     ecutrho = 360.0
     kpoints = (1, 1, 1)
-    emin_ev = -1.0
-    emax_ev = 0.0
+    sample_bias_ev = -0.3
     fix_below_z::Union{Nothing,Float64} = nothing
     ntasks = 8
     mem_per_task_mb = 12000
@@ -126,10 +125,8 @@ function _parse_cli(args)
         elseif startswith(arg, "--ecutrho="); ecutrho = parse(Float64, split(arg, "=", limit=2)[2]); i += 1
         elseif arg == "--kpoints"; kpoints = _parse_kpoints(args[i+1]); i += 2
         elseif startswith(arg, "--kpoints="); kpoints = _parse_kpoints(split(arg, "=", limit=2)[2]); i += 1
-        elseif arg == "--emin-ev"; emin_ev = parse(Float64, args[i+1]); i += 2
-        elseif startswith(arg, "--emin-ev="); emin_ev = parse(Float64, split(arg, "=", limit=2)[2]); i += 1
-        elseif arg == "--emax-ev"; emax_ev = parse(Float64, args[i+1]); i += 2
-        elseif startswith(arg, "--emax-ev="); emax_ev = parse(Float64, split(arg, "=", limit=2)[2]); i += 1
+        elseif arg == "--sample-bias-ev"; sample_bias_ev = parse(Float64, args[i+1]); i += 2
+        elseif startswith(arg, "--sample-bias-ev="); sample_bias_ev = parse(Float64, split(arg, "=", limit=2)[2]); i += 1
         elseif arg == "--fix-below-z"; fix_below_z = parse(Float64, args[i+1]); i += 2
         elseif startswith(arg, "--fix-below-z="); fix_below_z = parse(Float64, split(arg, "=", limit=2)[2]); i += 1
         elseif arg == "--ntasks"; ntasks = parse(Int, args[i+1]); i += 2
@@ -159,8 +156,7 @@ function _parse_cli(args)
               --ecutwfc FLOAT        Wavefunction cutoff Ry [50]
               --ecutrho FLOAT        Charge-density cutoff Ry [360]
               --kpoints KX,KY,KZ     K-point grid; 1,1,1 writes K_POINTS gamma [1,1,1]
-              --emin-ev FLOAT        LDOS lower bound for pp.x [-1]
-              --emax-ev FLOAT        LDOS upper bound for pp.x [0]
+              --sample-bias-ev FLOAT STM sample bias for pp.x plot_num=5 [-0.3]
               --fix-below-z FLOAT    Freeze atoms with z <= cutoff angstrom
               --ntasks INT           Slurm MPI tasks [8]
               --mem-per-task-mb INT  Slurm memory per MPI task MB [12000]
@@ -195,7 +191,7 @@ function _parse_cli(args)
     ntasks > 0 || error("--ntasks must be positive")
     mem_per_task_mb > 0 || error("--mem-per-task-mb must be positive")
     return Options(xyz, out_dir, prefix, cell_a, cell_b, cell_c, pseudo_dir,
-                   pseudo_map, ecutwfc, ecutrho, kpoints, emin_ev, emax_ev,
+                   pseudo_map, ecutwfc, ecutrho, kpoints, sample_bias_ev,
                    fix_below_z, ntasks, mem_per_task_mb, walltime)
 end
 
@@ -304,14 +300,13 @@ function _write_pw(path, opt::Options, atoms, species; calculation::String, conv
 end
 
 function _write_pp(path, opt::Options)
+    sample_bias_ry = opt.sample_bias_ev / RY_TO_EV
     open(path, "w") do io
         println(io, "&INPUTPP")
         println(io, "  prefix = '$(opt.prefix)'")
         println(io, "  outdir = './qe_tmp'")
         println(io, "  plot_num = 5")
-        println(io, @sprintf("  emin = %.8g", opt.emin_ev))
-        println(io, @sprintf("  emax = %.8g", opt.emax_ev))
-        println(io, "  degauss_ldos = 0.02")
+        println(io, @sprintf("  sample_bias = %.10g", sample_bias_ry))
         println(io, "/")
         println(io, "&PLOT")
         println(io, "  iflag = 3")

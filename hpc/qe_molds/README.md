@@ -96,8 +96,10 @@ avogadro2 hpc/qe_molds/glcnac_central_trimer_slab.xyz
 ## MPCDF module sketch
 
 For the 240817 benchmark scans, the SXM headers report a uniform bias of
-`-0.300 V` and setpoint `2.0 pA`. The prepared local run directories use
-`emin=-0.3 eV`, `emax=0.0 eV` for the first occupied-state LDOS export:
+`-0.300 V` and setpoint `2.0 pA`. For `pp.x` `plot_num=5`, QE ignores
+`emin`, `emax`, and `degauss_ldos` and uses `sample_bias` in Ry. Production
+inputs use `sample_bias=-0.0220495933 Ry`; each PP output must print
+`Sample bias = -0.3000 eV`:
 
 ```text
 qe/glcn
@@ -176,7 +178,7 @@ julia --project=. test/prepare_qe_mold_inputs.jl \
   --xyz hpc/qe_molds/glcn_central_trimer_slab_pilot.xyz \
   --cell-metadata hpc/qe_molds/glcn_central_trimer_slab_pilot_meta.tsv \
   --out-dir qe/glcn --prefix glcn_central \
-  --fix-below-z 1.807501 --emin-ev -0.3 --emax-ev 0.0 \
+  --fix-below-z 1.807501 --sample-bias-ev -0.3 \
   --ecutwfc 50 --ecutrho 360 --kpoints 1,1,1 \
   --ntasks 8 --mem-per-task-mb 12000 --walltime 24:00:00
 ```
@@ -213,7 +215,7 @@ julia --project=. test/prepare_qe_mold_inputs.jl \
     --xyz qe/glcn/glcn_central_best.xyz \
     --cell-metadata hpc/qe_molds/glcn_central_trimer_slab_pilot_meta.tsv \
     --out-dir qe/glcn_restart --prefix glcn_central \
-    --fix-below-z 1.807501 --emin-ev -0.3 --emax-ev 0.0 \
+    --fix-below-z 1.807501 --sample-bias-ev -0.3 \
     --ecutwfc 50 --ecutrho 360 --kpoints 1,1,1 \
     --ntasks 8 --mem-per-task-mb 12000 --walltime 24:00:00
 cp qe/glcn/pseudo/*.UPF qe/glcn_restart/pseudo/
@@ -271,19 +273,88 @@ qe/glcn_restart2/glcn_central_best3.xyz
 qe/glcn_restart2/glcn_central_best3_meta.tsv
 ```
 
-`qe/glcn_restart3` was prepared from that geometry with the same active Raven
-settings (`8` tasks, `96000 MB`, `24:00:00`, `ecutwfc=50`, `ecutrho=360`,
-Gamma-only), passed local and remote preflight, and was submitted without
-`--watch`:
+`qe/glcn_restart3` and `qe/glcn_restart4` were later prepared from the latest
+extracted geometries with the same active Raven settings (`8` tasks, `96000 MB`,
+`24:00:00`, `ecutwfc=50`, `ecutrho=360`, Gamma-only). Both preserved real BFGS
+progress but still reached the 24 h walltime limit rather than failing from
+memory pressure. Restart4 (`28658135`) reached at least BFGS step 34, with
+residual gradients around the `4e-3` to `6e-3 Ry/Bohr` range.
+
+For this resource-constrained DFT-STM mold application, GlcN restart5 uses a
+documented **relaxed-enough** geometry criterion: the relax input sets
+`forc_conv_thr = 6.0d-3` and `etot_conv_thr = 1.0d-3`, while the final SCF input
+keeps `conv_thr = 1.0d-7`. This relax shortcut is a physical/resource decision
+for generating a local STM/LDOS mold; it must not be selected from unit-sequence
+benchmark performance. If GlcNAc needs the same shortcut, use the same policy for
+symmetry.
+
+`qe/glcn_restart5` was prepared from the last restart4 geometry with the active
+Raven pilot settings, passed local and remote preflight, and was submitted
+without `--watch`:
 
 ```text
-qe/glcn_restart3 -> 28601744
+qe/glcn_restart5 -> 28762985
 ```
 
-Do not fetch or inspect `qe/glcn_restart3` outputs until a completion or timeout
-notification is available. Resubmit the production `qe/glcnac` run only after a
-production GlcN restart completes successfully, or explicitly choose a different
-dependency policy.
+Job `28762985` failed after 67 seconds before `pw.x` started because `srun`
+could not confirm the Slurm allocation (`Socket timed out on send/recv
+operation`). The relax output was empty, so this was an infrastructure launch
+failure rather than a scientific or resource failure. The unchanged inputs were
+resubmitted as replacement job `28784933`; initial status was `PENDING` with
+time limit `1-00:00:00`. It completed successfully (`0:0`) in `02:11:57` on
+2026-07-12. The restart geometry met the relaxed-enough criterion without an
+additional ionic step; the relax SCF converged in 34 iterations, the final SCF
+in 37 iterations, and `pp.x` produced a 136 MB
+`glcn_central_ldos.cube`. Production GlcN is therefore available for fetch and
+finalization. Those outputs were fetched locally into `qe/glcn_restart5`.
+GlcNAc was then updated with the same `forc_conv_thr = 6.0d-3` and
+`etot_conv_thr = 1.0d-3` policy (final SCF remains `conv_thr = 1.0d-7`), passed
+the 8-task / 96 GB preflight, and was submitted as job `28790944`. Initial state:
+`PENDING`, time limit `1-00:00:00`.
+
+Job `28790944` completed relaxation but its final SCF hit the 100-iteration
+electronic limit. Because unconverged QE runs do not write collected final
+wavefunctions, `pp.x` could not read `wfc1` and no cube was produced. The
+relaxed geometry and charge-density restart remain valid. A SCF+PP-only retry
+was therefore submitted as job `28811340`, using `electron_maxstep=300`,
+`mixing_mode='local-TF'`, `mixing_beta=0.1`, `mixing_ndim=16`,
+`startingpot='file'`, and fresh atomic/random wavefunctions. Its script checks
+for the explicit QE convergence message before allowing `pp.x` to run.
+
+Job `28811340` then reached the 300-iteration limit after `09:05:29`, with final
+estimated SCF accuracy `4.056e-5 Ry` versus the unchanged `1.0e-7 Ry` target.
+It used about 30.7 GB, and the guard correctly prevented `pp.x`. The original
+and retry trajectories reached nearly the same `3.5e-5--4.3e-5 Ry` floor, so a
+second numerical-only retry was prepared without changing the geometry,
+Hamiltonian, cutoffs, k-points, smearing, or target. Retry2 uses
+`mixing_mode='plain'`, `mixing_beta=0.3`, and `mixing_ndim=20`; local and Raven
+preflight passed, hashes matched, and job `28851882` was submitted initially in
+`PENDING` state. The exact retry1 input/script are archived in the ignored QE
+run directory with `retry1` suffixes.
+
+Job `28851882` later failed the convergence guard after `09:02:18` and 300 SCF
+iterations. Its minimum/final estimated accuracies were `3.239e-5` and
+`3.897e-5 Ry`; `pp.x` did not start and no cube was produced. Since both tested
+mixing paths reproduce the same floor, do not submit another mixing-only retry
+without a new diagnostic that distinguishes a cutoff/PAW augmentation issue,
+occupation/band issue, or an explicitly justified convergence-threshold policy.
+
+Raven acceptance jobs were blocked by the account-wide `QOSGrpCpuLimit` and
+cancelled before start. The exact retry2 checkpoint (density, distributed
+wavefunctions, and mixing files) was transferred to Viper, where the same QE
+7.4.1/compiler/MPI stack was available. Jobs `10640236` (plain) and `10640237`
+(TF) each converged in one iteration at `4.027e-5 Ry`, then produced successful
+LDOS cubes; comparison job `10640238` completed `0:0`. Both branches had energy
+`-31763.44437132 Ry` and Fermi energy `0.3038 eV`. Their first complete cubes
+were byte-identical, but used QE's implicit default bias because `emin`/`emax`
+do not control `plot_num=5`; they are archived and must not be used. PP-only
+Viper job `10640445` and comparison job `10640446` regenerated all cubes with
+`sample_bias=-0.0220495933 Ry`. Every PP output reports `-0.3000 eV`; corrected
+GlcNAc plain/TF cubes are byte-identical (SHA-256
+`40649ccd9eb6768444b8ff61bf4a639b3940cf926fe3eb42254eb024faf9b5bf`),
+and the same-frame 0.50 nm maps have zero normalized pointwise difference,
+correlation 1, and zero energy difference. This passes the `5e-5 Ry`, 1% map,
+and `1e-4 Ry` energy gates. The plain cube is canonical; TF is validation.
 
 From the local workstation, after configuring `hpc/remote.env`, you can sync and
 submit in one step:
@@ -351,8 +422,7 @@ julia --project=. test/prepare_qe_mold_inputs.jl \
     --out-dir qe/glcn \
     --prefix glcn_central \
     --fix-below-z ZCUT \
-    --emin-ev EMIN \
-    --emax-ev EMAX
+    --sample-bias-ev BIAS
 ```
 
 Repeat for `glcnac_central_trimer_slab.xyz`. Adapt the generated
@@ -379,7 +449,7 @@ julia --project=. test/extract_qe_mold_frame.jl \
 
 ## Important constraints
 
-- Do not choose the DFT height, bias window, or geometry because it improves the
+- Do not choose the DFT height, sample bias, or geometry because it improves the
   benchmark sequence. Choose them from the experimental bias/setpoint and DFT
   convergence/physics.
 - The beta-(1->4) linkage constrains orientation and parity only. It must not

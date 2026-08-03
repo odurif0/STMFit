@@ -1,0 +1,97 @@
+# Joint proxy mold registry — diagnostic manifest for label-free unit assignment.
+#
+# This is NOT a production selection config. It configures the standalone
+# diagnostic posterior path (joint-proxy-mold-inference-v1) only. It never
+# enters N_selected, never reads benchmark manifests/truth, and never edits the
+# production selector. See docs/src/unit_assignment.md and
+# .omo/plans/joint-proxy-mold-inference-v1.md.
+#
+# Three source families:
+#   1. geometric  — REQUIRED tracked source (templates/chitosan_geometric_sites.tsv),
+#                   rendered in-memory using the same algorithm as
+#                   test/generate_connected_mold_templates.jl (Gaussian sum +
+#                   zscore normalize). This is the reproducible fallback: the
+#                   registry succeeds from this source alone.
+#   2. stm_dft_v1 — REQUIRED tracked production DFT-STM unary templates from
+#                   corrected -0.300 V cubes at 0.50 nm. Artifact, map, sidecar,
+#                   and cube hashes are pinned and checked by the loader.
+#   3. stm_prelim — RETAINED but disabled local preliminary (unconverged) DFT-STM unary
+#                   templates at heights 0.40-0.60 nm. These are gitignored
+#                   generated artifacts; missing files are audited then omitted
+#                   and priors renormalized. They are diagnostic only, NOT
+#                   validated production identity maps.
+#
+# Production family weights are geometric=0.5 and stm_dft_v1=0.5. Preliminary
+# sources remain listed below for diagnostic reproducibility but are excluded
+# from the active ensemble after production promotion.
+#
+# No bond/pair templates are loaded: generated concatenation bond molds
+# duplicate unary evidence and are excluded from v1 (draft decision).
+
+[grid]
+# Patch grid — must match extract_lobe_patches.jl. 9x9 = 81 pixels.
+half_nm = 0.32
+step_nm = 0.08
+
+[geometric]
+# Required tracked source. Rendered in-memory, not read from a generated TSV.
+# Algorithm reused from test/generate_connected_mold_templates.jl:
+#   coords = collect(-half_nm:step_nm:half_nm)   # 9 values
+#   for u in coords, t in coords:                 # u outer, t inner
+#       v = sum(weight * gauss(t,u; sigt,sigu))   # Gaussian sum
+#   normalize: zscore = (v .- mean) ./ std
+sites_tsv = "templates/chitosan_geometric_sites.tsv"
+parity_flip = "t"      # parity=1 flips t (chain-axis flip)
+mirror_flip = "u"      # mirror=1 flips u (transverse flip)
+normalize = "zscore"   # match the generator default
+
+[stm_dft_v1]
+family_weight = 0.5
+path = "templates/chitosan_connected_molds_stm_dft_m030_h050_v1_half032.tsv"
+sha256 = "dd20e6470efc21f8c4a6a68b8f73ba8f88ee92ded7c233d96acf07f5a37b143d"
+maps_path = "templates/chitosan_stm_maps_dft_m030_h050_v1.tsv"
+maps_sha256 = "58236e7d1e0d478c03316384e92d351ffeda8a7f66b2408893337a35ff1570ed"
+provenance_path = "templates/chitosan_stm_maps_dft_m030_h050_v1.provenance.toml"
+provenance_sha256 = "b00250422dbf81bf6d08f9198932733b0d4ecbcb9115de54d93c9fe5fe074a5d"
+height_nm = 0.50
+sample_bias_ev = -0.300
+cube_units = "bohr"
+glcn_cube_sha256 = "80cd1d1fde94cf084cc7ea464d2bf065b36b2c015ea0bfaef8cebfee8ff88863"
+glcnac_cube_sha256 = "40649ccd9eb6768444b8ff61bf4a639b3940cf926fe3eb42254eb024faf9b5bf"
+
+[stm_prelim]
+# Optional preliminary DFT-STM unary template TSVs (connected-mold format:
+# name, type, parity, mirror, p001..p081). Physics-fixed height weights
+# centered at 0.50 nm. Missing files are audited then omitted.
+family_weight = 0.5    # equal mass with geometric when any STM source present
+enabled = false        # retained for diagnostics; production stm_dft_v1 is active
+
+[[stm_prelim.sources]]
+height_nm = 0.40
+path = "templates/chitosan_connected_molds_stm_prelim_h040_half032.tsv"
+weight = 1.0           # triangular kernel (1,2,3,2,1) over 0.40-0.60
+
+[[stm_prelim.sources]]
+height_nm = 0.45
+path = "templates/chitosan_connected_molds_stm_prelim_h045_half032.tsv"
+weight = 2.0
+
+[[stm_prelim.sources]]
+height_nm = 0.50
+path = "templates/chitosan_connected_molds_stm_prelim_h050_half032.tsv"
+weight = 3.0           # peak at physics-fixed production height
+
+[[stm_prelim.sources]]
+height_nm = 0.55
+path = "templates/chitosan_connected_molds_stm_prelim_h055_half032.tsv"
+weight = 2.0
+
+[[stm_prelim.sources]]
+height_nm = 0.60
+path = "templates/chitosan_connected_molds_stm_prelim_h060_half032.tsv"
+weight = 1.0
+
+[provenance]
+# SHA-256 is computed at load time for every consumed source file and for the
+# normalized registry payload (canonical serialization). No bond/pair templates.
+include_bond_templates = false

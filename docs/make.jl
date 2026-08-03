@@ -6,7 +6,11 @@ using Documenter, GaussianFit2D, GaussianFit1D, STMMolecularFit, STMFitCore, STM
 makedocs(
     sitename = "STMFit",
     modules = [GaussianFit2D, GaussianFit1D, STMMolecularFit, STMFitCore, STMSXMIO],
-    format = Documenter.HTML(prettyurls = false, edit_link = "main"),
+    format = Documenter.HTML(
+        prettyurls = false,
+        edit_link = "main",
+        size_threshold_ignore = ["journal.md"],
+    ),
     checkdocs = :none,
     pages = [
         "Home" => "index.md",
@@ -15,6 +19,7 @@ makedocs(
         "Chitosan Runbook" => "chitosan_runbook.md",
         "Unit Assignment" => "unit_assignment.md",
         "QE STM Molds" => "qe_stm_molds.md",
+        "DFT Calculation Note" => "dft_calculation_note.md",
         "Model Selection" => "selection.md",
         "Mathematical Background" => "math.md",
         "Research Journal" => "journal.md",

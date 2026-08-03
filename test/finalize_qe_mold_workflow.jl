@@ -7,6 +7,8 @@ using Printf
 
 include(joinpath(@__DIR__, "lib", "script_utils.jl"))
 using .ScriptUtils: _parse_ints, _read_key_tsv
+include(joinpath(@__DIR__, "lib", "qe_mold_provenance.jl"))
+using .QEMoldProvenance: write_qe_mold_provenance
 
 const ROOT = normpath(joinpath(@__DIR__, ".."))
 
@@ -27,6 +29,8 @@ struct Options
     maps_out::String
     templates_out::String
     bond_out::String
+    provenance_out::String
+    provider::String
     dry_run::Bool
     check_only::Bool
 end
@@ -48,6 +52,8 @@ function _parse_cli(args)
     maps_out = "templates/chitosan_stm_maps.tsv"
     templates_out = "templates/chitosan_connected_molds_stm.tsv"
     bond_out = "templates/chitosan_connected_bond_molds_stm.tsv"
+    provenance_out = ""
+    provider = "stm_dft_v1"
     dry_run = false
     check_only = false
     i = 1
@@ -85,6 +91,10 @@ function _parse_cli(args)
         elseif startswith(arg, "--templates-out="); templates_out = split(arg, "=", limit=2)[2]; i += 1
         elseif arg == "--bond-out"; bond_out = args[i+1]; i += 2
         elseif startswith(arg, "--bond-out="); bond_out = split(arg, "=", limit=2)[2]; i += 1
+        elseif arg == "--provenance-out"; provenance_out = args[i+1]; i += 2
+        elseif startswith(arg, "--provenance-out="); provenance_out = split(arg, "=", limit=2)[2]; i += 1
+        elseif arg == "--provider"; provider = args[i+1]; i += 2
+        elseif startswith(arg, "--provider="); provider = split(arg, "=", limit=2)[2]; i += 1
         elseif arg == "--dry-run"; dry_run = true; i += 1
         elseif arg == "--check-only"; check_only = true; i += 1
         elseif arg in ("-h", "--help")
@@ -110,6 +120,8 @@ function _parse_cli(args)
               --maps-out PATH         Output STM map TSV [templates/chitosan_stm_maps.tsv]
               --templates-out PATH    Output connected unary mold TSV
               --bond-out PATH         Output connected bond mold TSV
+              --provenance-out PATH   Optional TOML binding cubes, maps, and templates
+              --provider NAME         Provenance provider name [stm_dft_v1]
               --check-only            Only check required QE outputs exist
               --dry-run               Print commands without running them
 
@@ -132,7 +144,15 @@ function _parse_cli(args)
     return Options(glcn_dir, glcnac_dir, height_nm, origin_indices, axis_from,
                    axis_to, plane_index, index_dir, glcn_index_tsv, glcnac_index_tsv,
                    cube_units, half_nm, step_nm, maps_out, templates_out, bond_out,
+                   provenance_out, provider,
                    dry_run, check_only)
+end
+
+function _sample_bias_ev(dir::String)
+    text = read(joinpath(dir, "pp_ldos.in"), String)
+    m = match(r"(?m)^\s*sample_bias\s*=\s*([-+0-9.eEdD]+)", text)
+    m === nothing && error("Could not parse sample_bias from $(joinpath(dir, "pp_ldos.in"))")
+    return parse(Float64, replace(String(m.captures[1]), 'D' => 'e', 'd' => 'e')) * 13.605693122994
 end
 
 function _prefix(dir::String)
@@ -141,7 +161,7 @@ function _prefix(dir::String)
     text = read(pp, String)
     m = match(r"(?m)^\s*prefix\s*=\s*'([^']+)'", text)
     m === nothing && error("Could not parse prefix from $pp")
-    return m.captures[1]
+    return String(m.captures[1])
 end
 
 function _paths(dir::String)
@@ -230,11 +250,22 @@ function main()
 
     _run(`$(Base.julia_cmd()) --project=$(ROOT) $(_script("test/cube_to_stm_maps.jl")) --cube 0:$(glcn.cube) --frame 0:$(glcn.frame) --cube 1:$(glcnac.cube) --frame 1:$(glcnac.frame) --cube-units $(opt.cube_units) --half-nm $(opt.half_nm) --step-nm $(opt.step_nm) --out $(opt.maps_out)`, opt.dry_run)
     _run(`$(Base.julia_cmd()) --project=$(ROOT) $(_script("test/import_stm_mold_maps.jl")) --maps $(opt.maps_out) --out $(opt.templates_out) --bond-out $(opt.bond_out) --half-nm $(opt.half_nm) --step-nm $(opt.step_nm)`, opt.dry_run)
+    if !isempty(opt.provenance_out) && !opt.dry_run
+        glcn_bias = _sample_bias_ev(opt.glcn_dir)
+        glcnac_bias = _sample_bias_ev(opt.glcnac_dir)
+        isapprox(glcn_bias, glcnac_bias; atol=1e-10) || error("GlcN/GlcNAc sample biases differ")
+        write_qe_mold_provenance(opt.provenance_out; provider=opt.provider,
+            glcn_cube=glcn.cube, glcnac_cube=glcnac.cube, maps=opt.maps_out,
+            templates=opt.templates_out, sample_bias_ev=glcn_bias,
+            height_nm=height, half_nm=opt.half_nm, step_nm=opt.step_nm,
+            cube_units=opt.cube_units)
+    end
 
     println("Finalized QE STM molds")
     println("  maps:      ", opt.maps_out)
     println("  templates: ", opt.templates_out)
     println("  bonds:     ", opt.bond_out)
+    !isempty(opt.provenance_out) && println("  provenance:", opt.provenance_out)
 end
 
 main()

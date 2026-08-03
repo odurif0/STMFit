@@ -268,7 +268,31 @@ contain large scratch and cube files.
 
 ---
 
-## 9. Limits & rules to respect
+## 9. Joint-proxy inference array
+
+For label-free joint-proxy inference over a large SXM folder, create a text file
+containing one bare `.sxm` basename per line, then submit the eight-way array:
+
+```bash
+sbatch --array=1-8 --export=ALL,N_CHUNKS=8,STMFIT_FILES_FROM=hpc/joint_proxy_files_all.txt \
+  hpc/joint_proxy_inference_array.sbatch
+```
+
+Each task writes and validates a separate shard. After every array task has
+finished, submit the merge separately so a pending dependency does not consume
+the Raven/Viper group quota:
+
+```bash
+sbatch --export=ALL,N_CHUNKS=8 hpc/joint_proxy_inference_merge.sbatch
+```
+
+The array copies the configured calibration into each shard under the stable
+name `joint_proxy_calibration.toml`; this name is part of the manifest/merge
+contract. Scans with no finite count candidate are retained as summary-only
+abstentions, and non-finite type evidence becomes `0.5/0.5` with `?` rather than
+terminating a shard. This workflow does not read benchmark labels.
+
+## 10. Limits & rules to respect
 
 - **No compute on login nodes** — they're shared and resource-limited. Only run
   `Pkg.instantiate()` and `merge_chunks.jl` (both light) there; never the batch.

@@ -15,6 +15,8 @@
 
 using Printf
 using Statistics
+using SHA
+using TOML
 
 include(joinpath(@__DIR__, "lib", "script_utils.jl"))
 using .ScriptUtils: _ensure_parent, _parse_f, _read_tsv
@@ -32,6 +34,8 @@ struct Options
     parity_flip::String
     mirror_flip::String
     normalize::String
+    source_provenance::Union{Nothing,String}
+    mold_provenance_out::String
 end
 
 struct GridMap
@@ -50,6 +54,8 @@ function _parse_cli(args)
     parity_flip = "t"
     mirror_flip = "u"
     normalize = "zscore"
+    source_provenance::Union{Nothing,String} = nothing
+    mold_provenance_out = ""
     i = 1
     while i <= length(args)
         arg = args[i]
@@ -71,6 +77,10 @@ function _parse_cli(args)
         elseif startswith(arg, "--mirror-flip="); mirror_flip = split(arg, "=", limit=2)[2]; i += 1
         elseif arg == "--normalize"; normalize = args[i+1]; i += 2
         elseif startswith(arg, "--normalize="); normalize = split(arg, "=", limit=2)[2]; i += 1
+        elseif arg == "--source-provenance"; source_provenance = args[i+1]; i += 2
+        elseif startswith(arg, "--source-provenance="); source_provenance = split(arg, "=", limit=2)[2]; i += 1
+        elseif arg == "--mold-provenance-out"; mold_provenance_out = args[i+1]; i += 2
+        elseif startswith(arg, "--mold-provenance-out="); mold_provenance_out = split(arg, "=", limit=2)[2]; i += 1
         elseif arg in ("-h", "--help")
             println("""
             Usage: julia --project=. test/import_stm_mold_maps.jl [options]
@@ -85,6 +95,12 @@ function _parse_cli(args)
               --parity-flip STR    none | t | u | both [t]
               --mirror-flip STR    none | t | u | both [u]
               --normalize STR      none | sum | max | zscore [zscore]
+              --source-provenance PATH
+                                    Optional constant-current map sidecar to bind
+                                    this connected mold TSV to its source map
+              --mold-provenance-out PATH
+                                    Output binding sidecar [<out>.provenance.toml
+                                    when --source-provenance is supplied]
 
             Unary map TSV columns:
               type, t_nm, u_nm, value, optional parity, optional mirror
@@ -105,13 +121,20 @@ function _parse_cli(args)
     end
     isfile(maps) || error("Map TSV not found: $maps")
     bond_maps !== nothing && !isfile(bond_maps) && error("Bond map TSV not found: $bond_maps")
+    source_provenance !== nothing && !isfile(source_provenance) &&
+        error("Source provenance not found: $source_provenance")
+    source_provenance === nothing && !isempty(mold_provenance_out) &&
+        error("--mold-provenance-out requires --source-provenance")
+    source_provenance !== nothing && isempty(mold_provenance_out) &&
+        (mold_provenance_out = string(out_tsv, ".provenance.toml"))
     parity_flip in ("none", "t", "u", "both") || error("Invalid --parity-flip")
     mirror_flip in ("none", "t", "u", "both") || error("Invalid --mirror-flip")
     normalize in ("none", "sum", "max", "zscore") || error("Invalid --normalize")
     half_nm > 0 || error("--half-nm must be positive")
     step_nm > 0 || error("--step-nm must be positive")
     return Options(maps, out_tsv, bond_maps, bond_out_tsv, half_nm, step_nm,
-                   parity_flip, mirror_flip, normalize)
+                   parity_flip, mirror_flip, normalize, source_provenance,
+                   mold_provenance_out)
 end
 
 _parse_i(s) = round(Int, _parse_f(s))
@@ -271,6 +294,62 @@ end
 
 _fmt(v) = isfinite(v) ? @sprintf("%.8g", v) : "NA"
 
+_sha256_file(path::AbstractString) = open(path, "r") do io
+    bytes2hex(sha256(io))
+end
+
+function _atomic_write(writer, path::AbstractString)
+    _ensure_parent(path)
+    parent = dirname(abspath(path))
+    isdir(parent) || error("output directory does not exist: $parent")
+    tmp, io = mktemp(parent)
+    committed = false
+    try
+        writer(io)
+        flush(io)
+        close(io)
+        Base.Filesystem.rename(tmp, path)
+        committed = true
+    finally
+        isopen(io) && close(io)
+        !committed && ispath(tmp) && rm(tmp; force=true)
+    end
+    return path
+end
+
+function _write_mold_binding(opt::Options)
+    opt.source_provenance === nothing && return nothing
+    source = TOML.parsefile(opt.source_provenance)
+    get(source, "schema", "") == "stmfit-qe-mold-provenance-v1" ||
+        error("source provenance schema mismatch: $(opt.source_provenance)")
+    get(source, "observable", "") == "constant-current" ||
+        error("source provenance must describe constant-current maps: $(opt.source_provenance)")
+    source_map_sha = get(source, "maps_sha256", nothing)
+    source_map_sha isa AbstractString || error("source provenance missing maps_sha256")
+    actual_map_sha = _sha256_file(opt.maps)
+    actual_map_sha == source_map_sha ||
+        error("source provenance maps_sha256 does not match --maps")
+    _ensure_parent(opt.mold_provenance_out)
+    payload = Dict{String,Any}(
+        "schema" => "stmfit-constant-current-mold-binding-v1",
+        "source_provenance_path" => String(opt.source_provenance),
+        "source_provenance_sha256" => _sha256_file(opt.source_provenance),
+        "source_maps_path" => String(opt.maps),
+        "source_maps_sha256" => actual_map_sha,
+        "molds_path" => String(opt.out_tsv),
+        "molds_sha256" => _sha256_file(opt.out_tsv),
+        "half_nm" => Float64(opt.half_nm),
+        "step_nm" => Float64(opt.step_nm),
+        "parity_flip" => String(opt.parity_flip),
+        "mirror_flip" => String(opt.mirror_flip),
+        "normalize" => String(opt.normalize),
+    )
+    _atomic_write(opt.mold_provenance_out) do io
+        TOML.print(io, payload; sorted=true)
+    end
+    return nothing
+end
+
 function main()
     opt = _parse_cli(ARGS)
     unary_maps = _load_unary_maps(opt.maps)
@@ -282,8 +361,7 @@ function main()
         unary_templates[(typ, parity, mirror)] = _unary_template(unary_maps, typ, parity, mirror, coords, opt)
     end
 
-    _ensure_parent(opt.out_tsv)
-    open(opt.out_tsv, "w") do io
+    _atomic_write(opt.out_tsv) do io
         println(io, join(vcat(["name", "type", "parity", "mirror"], pix), '\t'))
         for typ in (0, 1), parity in (0, 1), mirror in (0, 1)
             name = @sprintf("%s_p%d_m%d", typ == 0 ? "GlcN" : "GlcNAc", parity, mirror)
@@ -293,11 +371,10 @@ function main()
     end
 
     if !isempty(opt.bond_out_tsv)
-        _ensure_parent(opt.bond_out_tsv)
         left_pix = ["l_$(p)" for p in pix]
         right_pix = ["r_$(p)" for p in pix]
         bond_maps = opt.bond_maps === nothing ? nothing : _load_bond_maps(opt.bond_maps)
-        open(opt.bond_out_tsv, "w") do io
+        _atomic_write(opt.bond_out_tsv) do io
             println(io, join(vcat(["name", "left_type", "right_type", "parity", "mirror"], left_pix, right_pix), '\t'))
             for lt in (0, 1), rt in (0, 1), parity in (0, 1), mirror in (0, 1)
                 if bond_maps === nothing
@@ -313,6 +390,7 @@ function main()
             end
         end
     end
+    _write_mold_binding(opt)
 
     println("Imported STM/LDOS mold maps")
     println("  maps:      ", opt.maps)
@@ -323,6 +401,7 @@ function main()
     println("  parity:    ", opt.parity_flip)
     println("  mirror:    ", opt.mirror_flip)
     println("  normalize: ", opt.normalize)
+    opt.source_provenance !== nothing && println("  mold provenance: ", opt.mold_provenance_out)
 end
 
 main()

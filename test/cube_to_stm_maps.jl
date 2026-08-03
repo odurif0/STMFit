@@ -11,18 +11,23 @@
 
 using Printf
 using LinearAlgebra
+using SHA
 
 include(joinpath(@__DIR__, "lib", "script_utils.jl"))
 using .ScriptUtils: _ensure_parent, _parse_vec3
 
-const DEFAULT_OUT = "templates/chitosan_stm_maps.tsv"
+include(joinpath(@__DIR__, "lib", "constant_current_cube.jl"))
+using .ConstantCurrentCube: CubeGrid, FrameRef, CrossingResult, SurfaceResult,
+                            first_vacuum_crossing, constant_current_surface,
+                            isovalue_for_mean_height,
+                            DEFAULT_ISOVALUE_SCAN_INTERVALS
 
-struct CubeGrid
-    origin::Vector{Float64}
-    axes::Matrix{Float64}
-    n::NTuple{3,Int}
-    values::Vector{Float64}
-end
+const DEFAULT_OUT = "templates/chitosan_stm_maps.tsv"
+const DEFAULT_OBSERVABLE = "constant-height"
+const SUPPORTED_OBSERVABLES = ("constant-height", "constant-current")
+const DEFAULT_MEAN_HEIGHT_NM = 0.50
+const DEFAULT_CC_HEIGHT_MIN_NM = -0.50
+const DEFAULT_CC_HEIGHT_MAX_NM = 2.00
 
 struct FrameSpec
     origin::Union{Nothing,Vector{Float64}}
@@ -43,6 +48,25 @@ struct Options
     half_nm::Float64
     step_nm::Float64
     cube_units::String
+    periodic_axes::NTuple{3,Bool}
+    observable::String
+    isovalue::Union{Nothing,Float64}
+    mean_height_nm::Float64
+    cc_height_min_nm::Float64
+    cc_height_max_nm::Float64
+    cc_height_resolution_nm::Union{Nothing,Float64}
+    isovalue_scan_intervals::Int
+end
+
+function _parse_periodic_axes(raw::AbstractString)
+    normalized = replace(lowercase(strip(raw)), "," => "")
+    normalized == "none" && return (false, false, false)
+    isempty(normalized) && throw(ArgumentError("--periodic-axes cannot be empty"))
+    all(character -> character in ('x', 'y'), normalized) ||
+        throw(ArgumentError("--periodic-axes supports diagnostic lateral axes x and y only"))
+    length(unique(normalized)) == length(normalized) ||
+        throw(ArgumentError("--periodic-axes contains a duplicate axis"))
+    return ('x' in normalized, 'y' in normalized, false)
 end
 
 function _read_frame(path::String)
@@ -129,6 +153,14 @@ function _parse_cli(args)
     half_nm = 0.48
     step_nm = 0.08
     cube_units = "bohr"
+    periodic_axes = (false, false, false)
+    observable = DEFAULT_OBSERVABLE
+    isovalue::Union{Nothing,Float64} = nothing
+    mean_height_nm = DEFAULT_MEAN_HEIGHT_NM
+    cc_height_min_nm = DEFAULT_CC_HEIGHT_MIN_NM
+    cc_height_max_nm = DEFAULT_CC_HEIGHT_MAX_NM
+    cc_height_resolution_nm::Union{Nothing,Float64} = nothing
+    isovalue_scan_intervals = DEFAULT_ISOVALUE_SCAN_INTERVALS
     i = 1
     while i <= length(args)
         arg = args[i]
@@ -218,6 +250,22 @@ function _parse_cli(args)
         elseif startswith(arg, "--step-nm="); step_nm = parse(Float64, split(arg, "=", limit=2)[2]); i += 1
         elseif arg == "--cube-units"; cube_units = lowercase(strip(args[i+1])); i += 2
         elseif startswith(arg, "--cube-units="); cube_units = lowercase(strip(split(arg, "=", limit=2)[2])); i += 1
+        elseif arg == "--periodic-axes"; periodic_axes = _parse_periodic_axes(args[i+1]); i += 2
+        elseif startswith(arg, "--periodic-axes="); periodic_axes = _parse_periodic_axes(split(arg, "=", limit=2)[2]); i += 1
+        elseif arg == "--observable"; observable = lowercase(strip(args[i+1])); i += 2
+        elseif startswith(arg, "--observable="); observable = lowercase(strip(split(arg, "=", limit=2)[2])); i += 1
+        elseif arg == "--isovalue"; isovalue = parse(Float64, args[i+1]); i += 2
+        elseif startswith(arg, "--isovalue="); isovalue = parse(Float64, split(arg, "=", limit=2)[2]); i += 1
+        elseif arg == "--mean-height-nm"; mean_height_nm = parse(Float64, args[i+1]); i += 2
+        elseif startswith(arg, "--mean-height-nm="); mean_height_nm = parse(Float64, split(arg, "=", limit=2)[2]); i += 1
+        elseif arg == "--cc-height-min-nm"; cc_height_min_nm = parse(Float64, args[i+1]); i += 2
+        elseif startswith(arg, "--cc-height-min-nm="); cc_height_min_nm = parse(Float64, split(arg, "=", limit=2)[2]); i += 1
+        elseif arg == "--cc-height-max-nm"; cc_height_max_nm = parse(Float64, args[i+1]); i += 2
+        elseif startswith(arg, "--cc-height-max-nm="); cc_height_max_nm = parse(Float64, split(arg, "=", limit=2)[2]); i += 1
+        elseif arg == "--cc-height-resolution-nm"; cc_height_resolution_nm = parse(Float64, args[i+1]); i += 2
+        elseif startswith(arg, "--cc-height-resolution-nm="); cc_height_resolution_nm = parse(Float64, split(arg, "=", limit=2)[2]); i += 1
+        elseif arg == "--isovalue-scan-intervals"; isovalue_scan_intervals = parse(Int, args[i+1]); i += 2
+        elseif startswith(arg, "--isovalue-scan-intervals="); isovalue_scan_intervals = parse(Int, split(arg, "=", limit=2)[2]); i += 1
         elseif arg in ("-h", "--help")
             println("""
             Usage: julia --project=. test/cube_to_stm_maps.jl [options]
@@ -238,6 +286,14 @@ function _parse_cli(args)
               --half-nm FLOAT            Output half-size [0.48]
               --step-nm FLOAT            Output grid spacing [0.08]
               --cube-units STR           bohr | angstrom | nm [bohr]
+              --periodic-axes STR        Diagnostic wrapping: none | x | y | xy [none]
+              --observable STR           constant-height | constant-current [$(DEFAULT_OBSERVABLE)]
+              --isovalue FLOAT           Explicit LDOS isovalue for constant-current
+              --mean-height-nm FLOAT     Target mean height for isovalue calibration [$(DEFAULT_MEAN_HEIGHT_NM)]
+              --cc-height-min-nm FLOAT   Constant-current search minimum height [$(DEFAULT_CC_HEIGHT_MIN_NM)]
+              --cc-height-max-nm FLOAT   Constant-current search maximum height [$(DEFAULT_CC_HEIGHT_MAX_NM)]
+              --cc-height-resolution-nm FLOAT  Constant-current z-step [auto from cube]
+              --isovalue-scan-intervals INT    Calibration ambiguity-scan intervals [$(DEFAULT_ISOVALUE_SCAN_INTERVALS)]
 
             Examples:
               julia --project=. test/cube_to_stm_maps.jl \
@@ -251,7 +307,19 @@ function _parse_cli(args)
 
             The cube values are sampled in an aligned local frame and written as
             type/t_nm/u_nm/value rows for import_stm_mold_maps.jl. Truth labels
-            and benchmark composition are not used.
+            and benchmark composition are not used. Periodic sampling is
+            diagnostic-only, wraps FFT-grid coordinates, and never wraps z.
+
+            --observable constant-height (default) writes the trilinearly
+            interpolated cube value at the height-nm plane above each frame
+            origin. Byte-identical to the historical behavior.
+
+            --observable constant-current writes the first vacuum-side
+            isosurface height (nm above the frame origin along the normal) at
+            each (t,u). The isovalue is calibrated from the 0.50 nm mean-height
+            policy unless --isovalue is given; a sidecar .mask.tsv records
+            per-column status. QE plot_num=5 is a discrete |psi|^2 sum, never
+            amperes; no nA-to-cube conversion is claimed.
             """)
             exit(0)
         else
@@ -279,7 +347,22 @@ function _parse_cli(args)
     cube_units in ("bohr", "angstrom", "a", "nm") || error("--cube-units must be bohr, angstrom, or nm")
     half_nm > 0 || error("--half-nm must be positive")
     step_nm > 0 || error("--step-nm must be positive")
-    return Options(cubes, out_tsv, half_nm, step_nm, cube_units)
+    isovalue_scan_intervals > 0 || error("--isovalue-scan-intervals must be a positive integer")
+    observable in SUPPORTED_OBSERVABLES ||
+        error("--observable must be one of: $(join(SUPPORTED_OBSERVABLES, ", ")); got $observable")
+    if observable == "constant-current"
+        cc_height_max_nm > cc_height_min_nm ||
+            error("--cc-height-max-nm must exceed --cc-height-min-nm")
+        cc_height_resolution_nm === nothing || cc_height_resolution_nm > 0 ||
+            error("--cc-height-resolution-nm must be positive")
+        isovalue === nothing || isfinite(isovalue) ||
+            error("--isovalue must be finite")
+        mean_height_nm > 0 || error("--mean-height-nm must be positive")
+    end
+    return Options(cubes, out_tsv, half_nm, step_nm, cube_units, periodic_axes,
+                   observable, isovalue, mean_height_nm,
+                   cc_height_min_nm, cc_height_max_nm, cc_height_resolution_nm,
+                   isovalue_scan_intervals)
 end
 
 function _unit_factor(units::String)
@@ -346,6 +429,43 @@ function _sample_cube(c::CubeGrid, r::Vector{Float64})
     return v
 end
 
+function _sample_cube_periodic(c::CubeGrid, r::Vector{Float64},
+                               periodic_axes::NTuple{3,Bool})
+    periodic_axes[3] && throw(ArgumentError("periodic z sampling is not allowed"))
+    q = c.axes \ (r .- c.origin)
+    sizes = c.n
+    for axis in 1:3
+        if periodic_axes[axis]
+            q[axis] = mod(q[axis], sizes[axis])
+        elseif q[axis] < 0 || q[axis] > sizes[axis] - 1
+            return NaN
+        end
+    end
+
+    lower = [floor(Int, q[axis]) + 1 for axis in 1:3]
+    for axis in 1:3
+        if !periodic_axes[axis] && lower[axis] == sizes[axis]
+            lower[axis] -= 1
+        end
+        if !periodic_axes[axis] && (lower[axis] < 1 || lower[axis] >= sizes[axis])
+            return NaN
+        end
+    end
+    fractions = [q[axis] - (lower[axis] - 1) for axis in 1:3]
+    value = 0.0
+    for dx in 0:1, dy in 0:1, dz in 0:1
+        offsets = (dx, dy, dz)
+        indices = ntuple(3) do axis
+            candidate = lower[axis] + offsets[axis]
+            periodic_axes[axis] ? mod1(candidate, sizes[axis]) : candidate
+        end
+        weight = prod(offsets[axis] == 1 ? fractions[axis] : 1 - fractions[axis]
+            for axis in 1:3)
+        value += weight * _cube_value(c, indices...)
+    end
+    return value
+end
+
 function _frame(t_axis::Vector{Float64}, u_axis::Vector{Float64})
     norm(t_axis) > 0 || error("--t-axis must be nonzero")
     that = t_axis ./ norm(t_axis)
@@ -360,10 +480,266 @@ end
 
 _fmt(v) = isfinite(v) ? @sprintf("%.10g", v) : "NA"
 
+function _mask_path(out_tsv::AbstractString)
+    dir, base = splitdir(String(out_tsv))
+    stem, ext = occursin('.', base) ? splitext(base) : (base, "")
+    return joinpath(dir, "$(stem).mask$(ext)")
+end
+
+struct CubeTransactionInterruption <: Exception
+    point::Symbol
+end
+
+Base.showerror(io::IO, err::CubeTransactionInterruption) =
+    print(io, "simulated transaction interruption at ", err.point)
+
+_cc_txn_present(path::AbstractString) = ispath(path) || islink(path)
+_cc_txn_marker(gate::AbstractString) = string(gate, ".stmfit-txn")
+_cc_txn_signature(destinations) = bytes2hex(sha256(join(abspath.(destinations), '\0')))
+_cc_txn_stage(path, id) = string(path, ".", id, ".stmfit-txn.new", splitext(path)[2])
+_cc_txn_backup(path, id) = string(path, ".", id, ".stmfit-txn.old")
+_cc_txn_absent(path, id) = string(path, ".", id, ".stmfit-txn.absent")
+
+function _cc_txn_rename(source::AbstractString, destination::AbstractString)
+    rc = ccall(:rename, Cint, (Cstring, Cstring), source, destination)
+    rc == 0 || Base.systemerror("rename $source to $destination", true)
+    return nothing
+end
+
+function _cc_txn_fsync_file(path::AbstractString)
+    open(path, "r") do io
+        rc = ccall(:fsync, Cint, (Cint,), fd(io))
+        rc == 0 || Base.systemerror("fsync $path", true)
+    end
+    return nothing
+end
+
+function _cc_txn_fsync_parent(path::AbstractString)
+    directory = dirname(abspath(path))
+    directory_fd = ccall(:open, Cint, (Cstring, Cint), directory, 0)
+    directory_fd >= 0 || Base.systemerror("open directory $directory", true)
+    try
+        rc = ccall(:fsync, Cint, (Cint,), directory_fd)
+        rc == 0 || Base.systemerror("fsync directory $directory", true)
+    finally
+        ccall(:close, Cint, (Cint,), directory_fd)
+    end
+    return nothing
+end
+
+
+function _cc_txn_write_marker(marker, id, phase, signature)
+    temp_path, io = mktemp(dirname(marker); cleanup=false)
+    try
+        println(io, "stmfit-output-transaction-v1")
+        println(io, "id\t", id)
+        println(io, "phase\t", phase)
+        println(io, "signature\t", signature)
+        flush(io)
+        rc = ccall(:fsync, Cint, (Cint,), fd(io))
+        rc == 0 || Base.systemerror("fsync transaction marker", true)
+        close(io)
+        _cc_txn_rename(temp_path, marker)
+        _cc_txn_fsync_parent(marker)
+    finally
+        isopen(io) && close(io)
+        rm(temp_path; force=true)
+    end
+    return nothing
+end
+
+function _cc_txn_read_marker(marker, signature)
+    islink(marker) && error("refusing symlinked transaction marker: $marker")
+    lines = readlines(marker)
+    length(lines) == 4 && lines[1] == "stmfit-output-transaction-v1" ||
+        error("malformed output transaction marker: $marker")
+    fields = Dict{String,String}()
+    for line in lines[2:end]
+        parts = split(line, '\t'; limit=2)
+        length(parts) == 2 || error("malformed output transaction marker: $marker")
+        fields[parts[1]] = parts[2]
+    end
+    get(fields, "signature", "") == signature ||
+        error("output transaction destination set does not match marker: $marker")
+    phase = get(fields, "phase", "")
+    phase in ("prepared", "committed") ||
+        error("invalid output transaction phase in $marker")
+    id = get(fields, "id", "")
+    occursin(r"^[0-9a-f]{16}$", id) || error("invalid output transaction id in $marker")
+    return id, phase
+end
+
+function _cc_txn_cleanup(destinations, gate, id)
+    for destination in destinations
+        rm(_cc_txn_stage(destination, id); force=true)
+        rm(_cc_txn_backup(destination, id); force=true)
+        rm(_cc_txn_absent(destination, id); force=true)
+    end
+    rm(_cc_txn_marker(gate); force=true)
+    _cc_txn_fsync_parent(gate)
+    return nothing
+end
+
+function _cc_txn_restore_one(destination, id)
+    backup = _cc_txn_backup(destination, id)
+    absent = _cc_txn_absent(destination, id)
+    if _cc_txn_present(backup)
+        _cc_txn_present(destination) && rm(destination; force=true)
+        _cc_txn_rename(backup, destination)
+    elseif isfile(absent)
+        _cc_txn_present(destination) && rm(destination; force=true)
+        rm(absent; force=true)
+    end
+    return nothing
+end
+
+function _cc_txn_rollback(destinations, gate, id)
+    gate_processed = _cc_txn_present(_cc_txn_backup(gate, id)) ||
+        isfile(_cc_txn_absent(gate, id))
+    gate_processed && _cc_txn_present(gate) && rm(gate; force=true)
+    for destination in destinations
+        destination == gate || _cc_txn_restore_one(destination, id)
+    end
+    _cc_txn_restore_one(gate, id)
+    _cc_txn_fsync_parent(gate)
+    _cc_txn_cleanup(destinations, gate, id)
+    return nothing
+end
+
+function _cc_txn_recover(destinations, gate)
+    marker = _cc_txn_marker(gate)
+    _cc_txn_present(marker) || return nothing
+    id, phase = _cc_txn_read_marker(marker, _cc_txn_signature(destinations))
+    phase == "committed" ? _cc_txn_cleanup(destinations, gate, id) :
+        _cc_txn_rollback(destinations, gate, id)
+    return nothing
+end
+
+function _cc_txn_inject(failpoint, interruptpoint, point)
+    interruptpoint == point && throw(CubeTransactionInterruption(point))
+    failpoint == point && error("injected transaction failure at $point")
+    return nothing
+end
+
+function _with_output_transaction(writer::Function, destinations;
+        gate=last(destinations), failpoint=nothing, interruptpoint=nothing)
+    ordered = unique(abspath.(String.(destinations)))
+    isempty(ordered) && throw(ArgumentError("output transaction requires destinations"))
+    gate = abspath(String(gate))
+    gate in ordered || throw(ArgumentError("transaction gate must be a destination"))
+    length(unique(dirname.(ordered))) == 1 ||
+        throw(ArgumentError("transaction destinations must share one directory"))
+    for destination in ordered
+        isdir(destination) && !islink(destination) &&
+            throw(ArgumentError("transaction destination is a directory: $destination"))
+    end
+    _cc_txn_recover(ordered, gate)
+
+    id = bytes2hex(sha256(string(time_ns(), ':', getpid(), ':', objectid(writer))))[1:16]
+    staged = Dict(destination => _cc_txn_stage(destination, id) for destination in ordered)
+    marker = _cc_txn_marker(gate)
+    signature = _cc_txn_signature(ordered)
+    for destination in ordered
+        for side_path in (staged[destination], _cc_txn_backup(destination, id),
+                          _cc_txn_absent(destination, id))
+            _cc_txn_present(side_path) && error("transaction side path already exists: $side_path")
+        end
+    end
+    try
+        writer(staged)
+        all(destination -> isfile(staged[destination]) && !islink(staged[destination]), ordered) ||
+            error("one or more staged constant-current outputs are missing or invalid")
+        foreach(_cc_txn_fsync_file, values(staged))
+        _cc_txn_write_marker(marker, id, "prepared", signature)
+        _cc_txn_inject(failpoint, interruptpoint, :after_marker)
+
+        backup_order = vcat([gate], filter(!=(gate), ordered))
+        for (index, destination) in enumerate(backup_order)
+            if _cc_txn_present(destination)
+                _cc_txn_rename(destination, _cc_txn_backup(destination, id))
+            else
+                write(_cc_txn_absent(destination, id), "absent\n")
+                _cc_txn_fsync_file(_cc_txn_absent(destination, id))
+            end
+            _cc_txn_fsync_parent(destination)
+            _cc_txn_inject(failpoint, interruptpoint, Symbol("after_backup_$index"))
+        end
+
+        install_order = vcat(filter(!=(gate), ordered), [gate])
+        for (index, destination) in enumerate(install_order)
+            _cc_txn_rename(staged[destination], destination)
+            _cc_txn_fsync_parent(destination)
+            point = destination == gate ? :after_gate : Symbol("after_install_$index")
+            _cc_txn_inject(failpoint, interruptpoint, point)
+        end
+        _cc_txn_write_marker(marker, id, "committed", signature)
+        _cc_txn_inject(failpoint, interruptpoint, :after_commit)
+        _cc_txn_cleanup(ordered, gate, id)
+    catch err
+        err isa CubeTransactionInterruption && rethrow()
+        if _cc_txn_present(marker)
+            try
+                marker_id, phase = _cc_txn_read_marker(marker, signature)
+                marker_id == id || error("output transaction marker changed during commit")
+                phase == "committed" ? _cc_txn_cleanup(ordered, gate, id) :
+                    _cc_txn_rollback(ordered, gate, id)
+            catch rollback_error
+                error("output transaction failed and recovery failed: $(sprint(showerror, err)); " *
+                      "recovery: $(sprint(showerror, rollback_error))")
+            end
+        else
+            foreach(path -> rm(path; force=true), values(staged))
+        end
+        rethrow()
+    end
+    return nothing
+end
+
+function _auto_cc_resolution(cube::CubeGrid)
+    # Native z-step projected onto the cube z-axis (constant-current searches
+    # along the frame normal, which for surface cubes is the z-axis).
+    return abs(cube.axes[3, 3])
+end
+
+function _sample_column_along_normal(cube::CubeGrid, origin::Vector{Float64},
+                                     that::Vector{Float64}, uhat::Vector{Float64},
+                                     nhat::Vector{Float64}, t::Float64, u::Float64,
+                                     s_values::Vector{Float64},
+                                     periodic_axes::NTuple{3,Bool})
+    # Sample the cube along the frame normal, then truncate to the contiguous
+    # finite segment.  A line intersecting a convex cube region always produces
+    # a single contiguous finite run; any internal NaN (hole) marks the column
+    # as unusable and it is rejected as nonfinite downstream.
+    v_all = Vector{Float64}(undef, length(s_values))
+    for k in eachindex(s_values)
+        s = s_values[k]
+        r = origin .+ t .* that .+ u .* uhat .+ s .* nhat
+        v_all[k] = any(periodic_axes) ?
+            _sample_cube_periodic(cube, r, periodic_axes) : _sample_cube(cube, r)
+    end
+    first_finite = findfirst(isfinite, v_all)
+    first_finite === nothing && return Float64[], Float64[]
+    last_finite = findlast(isfinite, v_all)
+    for k in first_finite:last_finite
+        isfinite(v_all[k]) || return Float64[], Float64[]
+    end
+    return s_values[first_finite:last_finite], v_all[first_finite:last_finite]
+end
+
 function main()
     opt = _parse_cli(ARGS)
     coords = collect(-opt.half_nm:opt.step_nm:opt.half_nm)
+    any(opt.periodic_axes) && println(stderr,
+        "WARNING: periodic cube sampling is diagnostic-only; do not use this output as a production mold")
     _ensure_parent(opt.out_tsv)
+    if opt.observable == "constant-height"
+        _run_constant_height(opt, coords)
+    else
+        _run_constant_current(opt, coords)
+    end
+end
+
+function _run_constant_height(opt::Options, coords::Vector{Float64})
     open(opt.out_tsv, "w") do io
         println(io, join(["type", "t_nm", "u_nm", "value"], '\t'))
         for spec in sort(opt.cubes, by=c -> c.typ)
@@ -376,7 +752,8 @@ function main()
             that, uhat, nhat = _frame(t_axis, u_axis)
             for u in coords, t in coords
                 r = origin .+ t .* that .+ u .* uhat .+ height_nm .* nhat
-                val = _sample_cube(cube, r)
+                val = any(opt.periodic_axes) ?
+                    _sample_cube_periodic(cube, r, opt.periodic_axes) : _sample_cube(cube, r)
                 println(io, join([spec.typ, @sprintf("%.8g", t), @sprintf("%.8g", u), _fmt(val)], '\t'))
             end
         end
@@ -387,6 +764,77 @@ function main()
     println("  grid:      ", length(coords), "x", length(coords))
     println("  heights:   ", join(["$(c.typ):$(c.frame.height_nm)" for c in opt.cubes], ", "), " nm")
     println("  units:     ", opt.cube_units)
+    periodic_label = join([axis for (axis, enabled) in zip(("x", "y", "z"), opt.periodic_axes) if enabled], "")
+    println("  periodic:  ", isempty(periodic_label) ? "none" : periodic_label)
+    println("  observable: ", opt.observable)
 end
 
-main()
+function _run_constant_current(opt::Options, coords::Vector{Float64})
+    out_path = abspath(opt.out_tsv)
+    mask_path = _mask_path(out_path)
+    _ensure_parent(mask_path)
+    _with_output_transaction([mask_path, out_path]; gate=out_path) do staged
+        open(staged[out_path], "w") do io
+            open(staged[mask_path], "w") do io_mask
+            println(io, join(["type", "t_nm", "u_nm", "value"], '\t'))
+            println(io_mask, join(["type", "t_nm", "u_nm", "status"], '\t'))
+            for spec in sort(opt.cubes, by=c -> c.typ)
+                cube = _read_cube(spec.path, opt.cube_units)
+                frame = spec.frame
+                origin = frame.origin === nothing ? error("missing origin for cube type=$(spec.typ)") : frame.origin
+                t_axis = frame.t_axis === nothing ? error("missing t-axis for cube type=$(spec.typ)") : frame.t_axis
+                u_axis = frame.u_axis === nothing ? error("missing u-axis for cube type=$(spec.typ)") : frame.u_axis
+                that, uhat, nhat = _frame(t_axis, u_axis)
+                s_step = opt.cc_height_resolution_nm === nothing ?
+                    _auto_cc_resolution(cube) : opt.cc_height_resolution_nm
+                s_values = collect(opt.cc_height_min_nm:s_step:opt.cc_height_max_nm)
+                length(s_values) >= 2 ||
+                    error("constant-current search range produces fewer than 2 samples; check --cc-height-* options")
+                if opt.isovalue !== nothing
+                    iso = opt.isovalue
+                    iso_source = "explicit"
+                else
+                    frame_ref = FrameRef(origin, t_axis, u_axis)
+                    iso = isovalue_for_mean_height(cube, frame_ref, opt.mean_height_nm;
+                        scan_intervals=opt.isovalue_scan_intervals)
+                    iso_source = "calibrated"
+                end
+                counts = Dict{Symbol,Int}(:found => 0, :absent => 0, :ambiguous => 0,
+                                          :nonfinite => 0, :insufficient_z => 0)
+                for u in coords, t in coords
+                    z_col, v_col = _sample_column_along_normal(cube, origin, that, uhat, nhat,
+                                                               t, u, s_values, opt.periodic_axes)
+                    result = isempty(z_col) ?
+                        CrossingResult(NaN, 0, :nonfinite, 0) :
+                        first_vacuum_crossing(z_col, v_col, iso)
+                    counts[result.status] = get(counts, result.status, 0) + 1
+                    println(io, join([spec.typ, @sprintf("%.8g", t), @sprintf("%.8g", u),
+                                      _fmt(result.z)], '\t'))
+                    println(io_mask, join([spec.typ, @sprintf("%.8g", t), @sprintf("%.8g", u),
+                                           result.status], '\t'))
+                end
+                println("  type $(spec.typ) isovalue:  $iso  ($iso_source)")
+                println("  type $(spec.typ) diagnostics:")
+                for status in (:found, :absent, :ambiguous, :nonfinite, :insufficient_z)
+                    println("    $(String(status)):  ", get(counts, status, 0))
+                end
+            end
+            end
+        end
+    end
+    println("Converted cube maps (constant-current)")
+    println("  cubes:     ", join(["$(c.typ):$(c.path)" for c in opt.cubes], ", "))
+    println("  out:       ", opt.out_tsv)
+    println("  mask:      ", mask_path)
+    println("  grid:      ", length(coords), "x", length(coords))
+    println("  mean-height policy:  ", opt.mean_height_nm, " nm")
+    println("  isovalue scan intervals:  ", opt.isovalue_scan_intervals)
+    println("  units:     ", opt.cube_units)
+    periodic_label = join([axis for (axis, enabled) in zip(("x", "y", "z"), opt.periodic_axes) if enabled], "")
+    println("  periodic:  ", isempty(periodic_label) ? "none" : periodic_label)
+    println("  observable: ", opt.observable)
+end
+
+if abspath(PROGRAM_FILE) == @__FILE__
+    main()
+end

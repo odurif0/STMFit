@@ -1,0 +1,76 @@
+# synthetic-only joint proxy calibration
+
+[provenance]
+seed = 20260721
+cases = 100
+fast = false
+config_sha256 = "dae8b8a7ecae004ce3a9c740c11308026dd94d8ef5e8edc473d52b3b785cb196"
+source_sha256 = "1945b97ce7e097b026460772a7c80fb4d29836fc09c0ef7e74b1f876173cb8d0"
+payload_sha256 = "82fadb9c2d18eae3719293181d33200842aad912dd28e6345a0c7ee8a88b3e5f"
+observation_mode = "fitted_candidate_views"
+
+[simulator]
+n_min = 2
+n_max = 12
+width = 128
+height = 64
+range_nm = [8, 4]
+spacing_nm = 0.52
+sigma_par_nm = 0.2
+sigma_perp_nm = 0.14
+amplitude_nm = 0.35
+noise_sigma = 0.03
+correlated_noise_frac = 0.3
+blur_sigma_px = 0.8
+affine_scale_jitter = 0.03
+drift_strength = 0.02
+row_offset_sigma = 0.01
+
+[splits]
+cases = 100
+count_calibration = 48
+count_heldout = 50
+type_calibration = 50
+type_heldout = 50
+
+[count]
+temperature = 0.0833333333333333
+confidence_threshold = 0.753094265076238
+calibration_nll = 1.67452218190157
+heldout_nll = 1.80828520805161
+baseline_temp1_nll = 2.18953823228869
+
+[count.diagnostics]
+temperature_grid = [0.0833333333333333, 0.0892562902560762, 0.0956002242033231, 0.102395056320453, 0.109672834412708, 0.117467884098567, 0.125816970706425, 0.134759472678155, 0.144337567297406, 0.154596429618639, 0.165584445535131, 0.177353439990902, 0.189958921412898, 0.20346034351633, 0.217921385717934, 0.233410253479755, 0.25]
+calibration_nll_grid = [1.67452218190157, 1.69452618818977, 1.71396403959641, 1.73282702156867, 1.75111256407932, 1.76882333236205, 1.78596633888356, 1.8025520920425, 1.81859379563421, 1.83410661151333, 1.8491069960156, 1.86361211848753, 1.87763936769095, 1.89120594892363, 1.90432857152468, 1.91702322317118, 1.92930502423245]
+selected_grid_index = 1
+threshold_source = "heldout_error_max"
+heldout_cases = 50
+calibration_cases = 48
+
+[type]
+temperature = 0.0833333333333333
+confidence_threshold = 0.500000000001
+calibration_nll = 3.65872281479748e-09
+heldout_nll = 0.457477138212476
+baseline_temp1_nll = 0.490659281779803
+
+[type.diagnostics]
+temperature_grid = [0.0833333333333333, 0.0892562902560762, 0.0956002242033231, 0.102395056320453, 0.109672834412708, 0.117467884098567, 0.125816970706425, 0.134759472678155, 0.144337567297406, 0.154596429618639, 0.165584445535131, 0.177353439990902, 0.189958921412898, 0.20346034351633, 0.217921385717934, 0.233410253479755, 0.25]
+calibration_nll_grid = [3.65872281479748e-09, 1.25704426086355e-08, 3.98602531152558e-08, 1.17278689843124e-07, 3.21783369515568e-07, 8.27203105404838e-07, 2.00112031393897e-06, 4.57436765782041e-06, 9.91862638126394e-06, 2.04732545321233e-05, 4.03627553040699e-05, 7.62382942303658e-05, 0.000138358233878389, 0.000241893193781647, 0.000408402265353472, 0.00066738275248531, 0.00105775239797765]
+selected_grid_index = 1
+threshold_source = "heldout_error_null_max"
+heldout_cases = 50
+calibration_cases = 50
+
+[diagnostics]
+candidate_recovered = 92
+candidate_missing_bwd = 8
+candidate_report_count = 100
+count_candidate_recovered = 98
+count_candidate_missing_true = 2
+candidate_observation_total = 972
+null_cases = 17
+family_conflict_cases = 16
+count_threshold_source = "heldout_error_max"
+type_threshold_source = "heldout_error_null_max"

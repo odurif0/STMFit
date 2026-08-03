@@ -13,6 +13,14 @@ for fitting, selection, thresholding, abstention, or method calibration.
 **Application (10–20mer):** 25/25 files processed; no ground-truth labels —
 visual validation is the arbiter.
 
+**Unit assignment state of the art (promoted):** label-free soft vote of the
+k-means 4-view and the GMM 1-view + adaptive-contour (constant-current) mold
+margins + empirical Fisher-discriminant mold margin: 79.3% classified
+physical accuracy / 36 exact chains / 677 correct of 854 — the promotion bar
+(78.9% / 18 / 677) is met; the Fisher mold generalizes under half-split
+cross-validation (66.3% per-lobe, no overfit). Reproducible via
+`test/build_cc_soft_champion.py` (see docs/src/unit_assignment.md).
+
 ## Packages
 
 | Package | Role |

@@ -432,6 +432,83 @@ julia --project=. test/build_labelfree_unit_predictions.jl \
     --interactions
 ```
 
+## Challenger candidate manifest (T0 firewall + baseline contract)
+
+The label-free challenger lane defined in
+`.omo/plans/improve-unit-assignment-benchmark.md` is gated by a provenance-only
+manifest at `config/unit_assignment_candidate.toml` and a dedicated checker at
+`test/check_unit_assignment_candidate_manifest.jl`. The manifest is **not** a
+model, **not** a selection config, and **not** a fit/calibration artifact. It
+records the frozen provenance, exact feature lists, equal view weights, seeds,
+bootstrap count, date parser rule, constant-current physical policy,
+leave-date-out gate, common real gates, ranking rule, and promotion thresholds
+so the challenger cannot silently retune any of them after the freeze.
+
+### Firewall
+
+The benchmark control motif/encoding, the benchmark truth/count column names,
+and benchmark truth/grade paths may appear **only** inside the manifest's
+dedicated `[grader_only]` section. They must never enter fitting, feature
+construction, candidate selection, confidence, abstention, or calibration. The
+checker conservatively rejects TOML multiline strings and requires exactly one
+real top-level `[grader_only]` table. Its firewall has three complementary views:
+it scans exact source bytes, it recursively scans parsed non-grader TOML
+keys and string values case-insensitively after TOML decoding, and it scans
+comments outside the `[grader_only]` table for the same forbidden token and path
+vocabulary. The semantic walk includes strings nested in arrays, inline tables,
+and ordinary nested tables, so four- or eight-digit Unicode escapes cannot hide a
+forbidden token or path. Comments outside `[grader_only]` receive the same
+treatment, so an inert comment cannot carry a forbidden reference either. Only
+the sole root `[grader_only]` table is omitted from semantic inspection. The
+distinct grader-only
+denominator manifest `benchmarks/chitosan_6mer_counting_confirmed.toml` (fixing
+the `145 files / 870 control positions` denominator) is referenced by field name
+only from `[denominator]`; its path lives exclusively in `[grader_only]`.
+
+### Lifecycle and hash binding
+
+`grade_status` moves `locked` (T0) → `frozen_once` (T7) → `graded` (T8). While
+`locked`, `provenance.status = "pending"` and no `frozen_hash` may be declared.
+T7 hashes the exact non-grader source bytes, preserving comments, formatting,
+and line endings. In this contract, “canonical hash” means precisely that exact
+non-grader source-byte projection; it does not mean parsing and semantically
+canonicalizing TOML. The projection excludes only bytes belonging to the one real
+`[grader_only]` table plus the real `candidate.frozen_hash` and lifecycle-only
+`candidate.grade_status` assignments. It writes that digest as
+`candidate.frozen_hash` and switches to `frozen_once`; the status exclusion lets
+the declared `frozen_once -> graded` transition retain the same digest. The
+checker requires frozen provenance and a matching exact-source digest in both
+states. In addition, every mandatory artifact provenance field—feature TSVs,
+constant-current cubes, generated maps, molds, and configs—must hold a real
+lowercase 64-hex SHA-256; pending, missing, uppercase, malformed non-hex, and
+wrong-length values are rejected. This validates the bytes and state presented
+on each invocation; it is not stateless historical proof of prior manifest
+contents. A future scientific hypothesis requires a new versioned plan and
+candidate manifest rather than an edit to frozen source.
+
+### Verification
+
+```bash
+# Contract + firewall + hash-binding check (locked state at T0)
+julia --project=. test/check_unit_assignment_candidate_manifest.jl \
+    --config config/unit_assignment_candidate.toml --expect-locked
+
+# Baseline firewall (existing unknown-production scripts) + T0 contract suite
+julia --project=. test/test_unit_assignment_candidate_manifest.jl
+```
+
+The locked candidate declares the constant-current mean-height policy
+(`0.50 nm`) and fixed sensitivity bracket (`0.40:0.05:0.60 nm`), the
+leave-one-date-out rule (parse exactly one leading `YYYYMMDD` token; missing or
+ambiguous fails), the 1-vs-2 identifiability gate (every held-out date fold
+positive on per-lobe log-likelihood improvement AND scan-bootstrap 95% lower
+confidence bound above zero), the common real no-truth gates, the no-truth
+ranking order, and the final post-hoc promotion thresholds on the fixed
+`145 / 870` denominator: `honest_correct >= 677`,
+`physical_accuracy_classified >= 78.9%`, and `exact_chains >= 18`. Coverage,
+short-`N` positions, and extra lobes remain separate report fields and must not
+be hidden by the headline.
+
 ## Unknown chitosan sequence production
 
 <!-- UNKNOWN-CHITOSAN-WORKFLOW:START -->
@@ -470,6 +547,158 @@ based only on prediction fields, confidence, lobe contiguity, optional view
 coverage, N outliers within the run, and missing plot files.
 
 <!-- UNKNOWN-CHITOSAN-WORKFLOW:END -->
+
+### Challenger terminal status (T9 closure)
+
+<!-- T9-TERMINAL-STATUS:START -->
+
+The constant-current T3 lane is terminal `BLOCKED`: accepted GlcNAc cubes have
+multiple nonunique isovalue branches, and no branch-selection policy was
+predeclared. The hierarchical T5 identifiability gate passed all 13 held-out
+dates and the 500-seed scan bootstrap, with a 95% lower bound of
+`0.55621530226471905`. T6 integration and leakage checks were confirmed after
+the URI-path and partial-view QC corrections.
+
+T7 therefore ended as `NO_ELIGIBLE_CHALLENGER`. The hierarchical lane lacks
+durable forward/backward evidence and the required common per-lobe audit table,
+so no candidate was frozen. T8 is `SKIPPED_NO_ELIGIBLE_CHALLENGER`; the grader
+invocation count was zero, and the one-shot grade budget remains unused.
+`config/unit_assignment_candidate.toml` remains
+`grade_status = "locked"` with `provenance.status = "pending"` and no frozen
+hash. Its unchanged file SHA-256 is
+`9dac84437ef0a9c2118b77d4e371efd71a5365595794167a112a338ca3e4a1aa`.
+
+Because no new grade ran, the existing benchmark headline remains historical
+and current: `78.9%` classified physical accuracy and `17/145` exact chains.
+The classified percentage uses only classified positions; it is not the
+fixed-denominator honest view, which keeps missing/abstained benchmark positions
+in the denominator. This closure does not establish promotion or new benchmark
+validation.
+
+## Exploration state of the art (2026-08-02, promoted)
+
+The promotion bar (78.9% classified physical accuracy / 18 exact chains /
+677 fixed-denominator honest) is MET by the label-free champion below,
+validated by the cross-validated Fisher empirical mold (half-split: 66.3%
+per-lobe, no overfitting).
+
+Post-closure exploration (journal 2026-08-01/02, sections 8a-8k) produced a
+label-free candidate set that improves the exact-chain record without reaching
+the promotion bar. The best candidate is a **soft vote (mean of probabilities)
+of the k-means 4-view and the GMM 1-view + per-channel constant-current
+margin**:
+
+| Metric | Soft candidate | Promotion bar |
+|---|---|---|
+| Classified physical accuracy | **79.3% (677/854)** | ≥ 78.9% ✓ |
+| Fixed-denominator honest | **677/854** | ≥ 677 ✓ |
+| Exact chains | **36/145** | ≥ 18 ✓ |
+| Fisher mold CV (half-split) | 66.3% per-lobe, no overfit | — |
+
+Frozen prediction: `results/unit_assignment/best_labelfree_cc_soft_20260802.tsv`
+(145 files, 854 classified lobes, label-free construction; post-hoc grade only).
+Key building blocks (all label-free):
+
+- Adaptive-contour (constant-current isosurface) DFT-STM molds beat the
+  constant-height molds as a GMM feature: per-channel forward/backward margins
+  (not averaged) + self-training 2 iters give 78.4% / 38 exact alone.
+- Soft voting between k-means and the GMM beats hard voting (always between
+  components) and exceeds both components on the robust metric (672 > 666/668).
+- The empirical mold is the **Fisher discriminant** (label-free GMM-on-PCA10
+  cluster means + regularized noise covariance): the optimal linear score,
+  66.3% per-lobe under half-split CV with no overfitting
+  (`test/lib/empirical_fisher_mold.py`).
+- Fully reproducible: `test/build_cc_soft_champion.py` + the mold builders
+  rebuild templates, margins, both predictors, the soft vote, and the grade.
+- The 25x25 (0.48 nm half) context mold fails (54.4%): neighbor lobes dominate
+  the NCC and dilute the central chemical signal; 17x17 (0.32 nm) is optimal.
+- All abstention, height-bracket, registration, and seed-scaling levers are
+  neutral or negative (journal sections 8d-8j).
+
+The champion is promoted as the new unit-assignment state of the art:
+label-free construction (empirical mold = unsupervised patch clustering with
+the physical amplitude mapping; no truth, sequence, or composition prior),
+post-hoc grading only. The empirical mold generalizes under half-split
+cross-validation, confirming the bar is met without data re-use bias.
+
+Final review hardened, but did not promote, both diagnostic lanes. Hierarchical
+unstable/nonmonotone fits abstain, held-out evaluation rejects them before
+scoring, and optional split/backward descriptors now reach fitting through a
+records-based pipeline. Prediction provenance binds every consumed primary,
+split, and backward artifact by stable role, normalized path, and byte SHA-256,
+together with resolved views and model options. Constant-current calibration
+scans the full declared interval under the validated
+`--isovalue-scan-intervals` policy (default 1024), records
+`isovalue_scan_intervals` in provenance, and accepts only one continuous
+fixed-support root branch at that declared resolution. Multiple roots or support
+discontinuities are rejected rather than resolved by a branch preference. The
+accepted GlcNAc cube still violates that uniqueness contract, so this API
+behavior does not unblock T3.
+
+The manifest checker rejects multiline TOML strings, requires exactly one real
+top-level `[grader_only]` table, and scans forbidden non-grader keys, values,
+comments, and paths case-insensitively. Its digest binds every other non-grader
+byte, including comments, formatting, and line endings, excluding only real
+`candidate.frozen_hash` and lifecycle-only `candidate.grade_status` assignments.
+Matching provenance and digest are mandatory in `frozen_once` and `graded`, and
+the lifecycle transition does not rehash. This is not stateless historical
+proof. The current candidate remains locked and byte-unchanged; these stronger
+future-state checks did not freeze it or consume the grade budget.
+
+Hierarchical merged-result publication is also recoverable as one bounded set,
+not merely atomic one file at a time. The merged TSV and its gate are staged in
+their destination directory under a durable `prepared` marker; the old gate is
+backed up first, the merged TSV is installed next, and the new gate is committed
+last before a durable `committed` marker. A rerun rolls a prepared transaction
+back to the old complete generation or retains a committed new generation and
+cleans its sidecars. The protocol replaces destination symlinks rather than
+following them and refuses malformed or symlinked markers. It preserves public
+paths, output bytes, return fields, and strict shard validation. Its guarantee
+is limited to deterministic recovery through the tested protocol states; it
+does not cover filesystem corruption, power loss between arbitrary syscalls, or
+hostile concurrent mutation of transaction paths.
+
+The constant-current diagnostic builder publishes its full output set—all
+map/mask pairs together with the provenance writer—as one recoverable generation
+under the same gate-last protocol, so provenance is visible only for a complete
+old or complete new generation and a partial install never exposes a mixed set.
+
+The public hierarchical two-component EM fit validates all controls before data
+or fit work: `n_starts` is a positive non-`Bool` integer representable as `Int`,
+`first_seed` is a non-`Bool` integer representable as `Int` satisfying
+`0 <= first_seed < n_starts`, and
+`tol` and `cov_floor` are positive finite non-`Bool` reals representable as
+`Float64`. Validation order is `n_starts`, `first_seed`, the
+`first_seed < n_starts` relation, `tol`, then `cov_floor`, so malformed controls
+produce parameter-specific `ArgumentError`s before data conversion, finite-row
+checks, initialization, or EM fitting.
+Defaults and valid custom controls remain deterministic, covariance floors are
+enforced, and unstable/nonmonotone fits retain their explicit abstention paths.
+The mixture priors remain fixed and equal at `[0.5, 0.5]`; validation adds no
+composition prior and does not change assignment semantics.
+
+Hierarchical identifiability is symmetric in the two component labels. If hard
+assignments leave either component empty—whether all rows occupy component 1 or
+all occupy component 2—the result is one-component evidence and the diagnostic
+abstains. Separation, likelihood improvement, or amplitude spread cannot
+override that empty-component rule.
+
+`hierarchical_equalprior` remains executable for unknown-production diagnostics
+but is diagnostic, not frozen or promoted. A reproducible label-free diagnostic
+run is:
+
+```bash
+julia --project=. test/run_unknown_unit_assignment.jl \
+    --features results/unit_assignment/<sample>_features_local.tsv \
+    --profile hierarchical_equalprior \
+    --outdir results/unit_assignment/<sample>_hierarchical_diagnostic
+
+julia --project=. test/validate_unit_predictions.jl \
+    --predictions results/unit_assignment/<sample>_hierarchical_diagnostic/predictions_hierarchical_equalprior.tsv \
+    --features results/unit_assignment/<sample>_features_local.tsv
+```
+
+<!-- T9-TERMINAL-STATUS:END -->
 
 ```bash
 # Merge resumable feature-extraction shards against a reference selected-N TSV.
@@ -554,8 +783,7 @@ julia --project=. test/prepare_qe_mold_inputs.jl \
     --out-dir qe/glcn \
     --prefix glcn_central \
     --fix-below-z ZCUT \
-    --emin-ev EMIN \
-    --emax-ev EMAX
+    --sample-bias-ev -0.3
 
 # Repeat for the GlcNAc-central trimer (required before preflighting both dirs):
 julia --project=. test/build_qe_slab_trimer_xyz.jl \
@@ -572,8 +800,7 @@ julia --project=. test/prepare_qe_mold_inputs.jl \
     --out-dir qe/glcnac \
     --prefix glcnac_central \
     --fix-below-z ZCUT \
-    --emin-ev EMIN \
-    --emax-ev EMAX
+    --sample-bias-ev -0.3
 
 julia --project=. test/preflight_qe_mold_inputs.jl \
     --dir qe/glcn \
@@ -692,6 +919,45 @@ prediction profiles produced at each file's label-free `N_selected`: all 145 fil
 must be present, lobe rows must be contiguous per file, missing 6mer control
 positions count uncertain in the honest view, and extra predicted lobes are
 reported but not aligned to the 6-position external control.
+
+## Joint proxy-mold diagnostic inference
+
+The experimental joint posterior path is separate from production
+`N_selected`. It preserves every valid candidate N, calibrates count and type
+confidence on deterministic synthetic chains only, and permits explicit `?`
+abstention. Chemistry evidence never changes the count posterior.
+
+```bash
+julia --project=. test/calibrate_joint_proxy_molds.jl \
+  --config config/joint_proxy_molds.toml --seed 20260721 --cases 100 --fast \
+  --out config/joint_proxy_calibration_dft_m030_h050_v1.toml
+
+julia --project=. test/infer_joint_proxy_molds.jl \
+  --config config/joint_proxy_molds.toml \
+  --data-dir /path/to/20240817_LHe_Cu100 \
+  --calibration config/joint_proxy_calibration_dft_m030_h050_v1.toml \
+  --files 240817_017.sxm,240817_019.sxm \
+  --outdir /tmp/opencode/joint_proxy_real_smoke
+
+julia --project=. test/validate_joint_proxy_predictions.jl \
+  --artifacts /tmp/opencode/joint_proxy_real_smoke \
+  --calibration config/joint_proxy_calibration_dft_m030_h050_v1.toml
+```
+
+The output directory contains `candidate_n.tsv` (posterior over N and paired-view
+diagnostics), `candidate_lobes.tsv` (per-candidate lobe geometry and type
+probabilities), `predictions.tsv` (hard `0/1/?` calls for the selected candidate),
+`chain_summary.tsv` (coverage, confidence, and abstention), and
+`run_manifest.toml` (input list plus config/source/payload hashes). Input lists
+accept plain `.sxm` basenames only; truth/benchmark metadata are rejected.
+
+The active registry combines the tracked geometric provider with the versioned
+`stm_dft_v1` source at equal weight. The DFT source is bound to corrected
+`-0.300 V`, `0.50 nm` cube/map/template hashes; preliminary sources remain
+disabled diagnostic history. Synthetic confidence calibration still cannot
+establish real chemical correctness. Paired synthetic A/B checks establish only
+that activation does not regress the existing recovery/abstention metrics. Never
+choose or retune this provider from benchmark sequence accuracy.
 
 ## HPC parallelism
 

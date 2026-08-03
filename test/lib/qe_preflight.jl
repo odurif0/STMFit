@@ -2,6 +2,8 @@ module QEPreflight
 
 export PreflightRow, check_dir!
 
+const RY_TO_EV = 13.605693122994
+
 using Printf
 
 const PreflightRow = NamedTuple
@@ -131,8 +133,8 @@ function check_dir!(rows, dir::String; min_mem_mb::Int=0)
     atoms, frozen = _parse_atomic_positions(source)
     scf_atoms, scf_frozen = _parse_atomic_positions(scf)
     species = unique(atoms)
-    emin = parse(Float64, _match1(r"(?m)^\s*emin\s*=\s*([-+0-9.eEdD]+)", pp, "emin"))
-    emax = parse(Float64, _match1(r"(?m)^\s*emax\s*=\s*([-+0-9.eEdD]+)", pp, "emax"))
+    plot_num = parse(Int, _match1(r"(?m)^\s*plot_num\s*=\s*(\d+)", pp, "plot_num"))
+    sample_bias_ry = parse(Float64, _match1(r"(?m)^\s*sample_bias\s*=\s*([-+0-9.eEdD]+)", pp, "sample_bias"))
     tasks = _parse_sbatch_tasks(sbatch)
     cpus_per_task = _parse_sbatch_cpus_per_task(sbatch)
     mem_mb = _parse_sbatch_mem_mb(sbatch)
@@ -146,7 +148,10 @@ function check_dir!(rows, dir::String; min_mem_mb::Int=0)
         isfile(path) || error("$dir: missing pseudopotential for $elem: $path")
     end
     scf_frozen == 0 || error("$dir: pw_scf.in should not contain relaxation flags")
-    emin < emax || error("$dir: expected emin < emax, got $emin >= $emax")
+    plot_num == 5 || error("$dir: expected plot_num=5 for STM output, got $plot_num")
+    iszero(sample_bias_ry) && error("$dir: sample_bias must be nonzero for plot_num=5")
+    !occursin(r"(?m)^\s*(emin|emax|degauss_ldos)\s*=", pp) ||
+        error("$dir: emin/emax/degauss_ldos do not control pp.x plot_num=5; use sample_bias")
     mem_mb >= min_mem_mb || error("$dir: #SBATCH --mem=$(mem_mb)MB is below required minimum $(min_mem_mb)MB")
     cpus_per_task == 1 || error("$dir: expected #SBATCH --cpus-per-task=1 for MPI-only QE, got $cpus_per_task")
     occursin("QE_NTASKS=", sbatch) || error("$dir: sbatch missing explicit QE_NTASKS")
@@ -173,8 +178,9 @@ function check_dir!(rows, dir::String; min_mem_mb::Int=0)
     _report!(rows, run, "pseudo_dir", pseudo_dir)
     _report!(rows, run, "pseudo_files", join(["$elem=$(pseudo_files[elem])" for elem in sort(species)], ","))
     _report!(rows, run, "frozen_relax_atoms", frozen)
-    _report!(rows, run, "emin_ev", @sprintf("%.6g", emin))
-    _report!(rows, run, "emax_ev", @sprintf("%.6g", emax))
+    _report!(rows, run, "plot_num", plot_num)
+    _report!(rows, run, "sample_bias_ry", @sprintf("%.10g", sample_bias_ry))
+    _report!(rows, run, "sample_bias_ev", @sprintf("%.6g", sample_bias_ry * RY_TO_EV))
     _report!(rows, run, "ntasks_per_node", tasks)
     _report!(rows, run, "cpus_per_task", cpus_per_task)
     _report!(rows, run, "mem_mb", mem_mb)

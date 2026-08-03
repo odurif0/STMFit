@@ -66,7 +66,7 @@ function _write_fake_qe_relax(path::String, metadata::String, atoms)
     end
 end
 
-function _write_cube(path::String; offset::Float64=0.0)
+function _write_cube(path::String; offset::Float64=0.0, constant_current::Bool=false)
     n = 12
     step = 0.1
     vals = Float64[]
@@ -74,11 +74,11 @@ function _write_cube(path::String; offset::Float64=0.0)
         x = ix * step
         y = iy * step
         z = iz * step
-        push!(vals, offset + x + 2y + 3z)
+        push!(vals, offset + (constant_current ? 3z : x + 2y + 3z))
     end
     open(path, "w") do io
         println(io, "synthetic cube")
-        println(io, "value=x+2y+3z")
+        println(io, constant_current ? "value=3z" : "value=x+2y+3z")
         println(io, "0 0.0 0.0 0.0")
         println(io, @sprintf("%d %.10f 0.0 0.0", n, step))
         println(io, @sprintf("%d 0.0 %.10f 0.0", n, step))
@@ -105,9 +105,12 @@ end
         relaxed_xyz = joinpath(qe_dir, "smoke_relaxed.xyz")
         relaxed_meta = joinpath(qe_dir, "smoke_relaxed_meta.tsv")
         scf_relaxed = joinpath(qe_dir, "pw_scf_relaxed.in")
+        preflight_report = joinpath(dir, "qe_preflight.tsv")
         frame = joinpath(qe_dir, "frame.tsv")
         cube0 = joinpath(dir, "type0.cube")
         cube1 = joinpath(dir, "type1.cube")
+        cc_cube0 = joinpath(dir, "cc_type0.cube")
+        cc_cube1 = joinpath(dir, "cc_type1.cube")
         maps = joinpath(dir, "stm_maps.tsv")
         molds = joinpath(dir, "molds.tsv")
         bonds = joinpath(dir, "bonds.tsv")
@@ -132,13 +135,26 @@ end
             "--out-dir", qe_dir,
             "--prefix", "smoke",
             "--fix-below-z", "1.0",
-            "--emin-ev", "-0.5",
-            "--emax-ev", "0.1",
+            "--sample-bias-ev", "-0.3",
             "--ntasks", "2",
             "--walltime", "00:10:00",
         ])
         @test all(isfile, joinpath.(Ref(qe_dir), ["pw_relax.in", "pw_scf.in", "pp_ldos.in", "run_qe_mold.sbatch"]))
         @test occursin("CELL_PARAMETERS angstrom", read(joinpath(qe_dir, "pw_relax.in"), String))
+        pp_input = read(joinpath(qe_dir, "pp_ldos.in"), String)
+        @test occursin(r"sample_bias\s*=\s*-0\.02204959", pp_input)
+        @test !occursin(r"(?m)^\s*(emin|emax|degauss_ldos)\s*=", pp_input)
+        pseudo_dir = joinpath(qe_dir, "pseudo")
+        mkpath(pseudo_dir)
+        for pseudo in ("Cu.pbe-dn-kjpaw_psl.1.0.0.UPF", "C.pbe-n-kjpaw_psl.1.0.0.UPF",
+                       "O.pbe-n-kjpaw_psl.1.0.0.UPF", "H.pbe-kjpaw_psl.1.0.0.UPF")
+            write(joinpath(pseudo_dir, pseudo), "smoke pseudo\n")
+        end
+        _run_script("test/preflight_qe_mold_inputs.jl", ["--dir", qe_dir, "--out", preflight_report,
+                                                          "--max-total-tasks", "2"])
+        preflight = read(preflight_report, String)
+        @test occursin("plot_num\t5", preflight)
+        @test occursin("sample_bias_ev\t-0.3", preflight)
 
         atoms = _read_qe_positions(joinpath(qe_dir, "pw_scf.in"))
         _write_fake_qe_relax(fake_relax, slab_meta, atoms)
@@ -194,5 +210,36 @@ end
         ])
         @test _n_data_rows(molds) == 8
         @test _n_data_rows(bonds) == 16
+
+        # --- constant-current opt-in smoke (CLI plumbing + mask sidecar) ---
+        cc_maps = joinpath(dir, "cc_maps.tsv")
+        cc_mask = joinpath(dir, "cc_maps.mask.tsv")
+        _write_cube(cc_cube0; offset=0.0, constant_current=true)
+        _write_cube(cc_cube1; offset=1.0, constant_current=true)
+        _run_script("test/cube_to_stm_maps.jl", [
+            "--cube", "0:$(cc_cube0)",
+            "--frame", "0:$(frame)",
+            "--cube", "1:$(cc_cube1)",
+            "--frame", "1:$(frame)",
+            "--cube-units", "nm",
+            "--half-nm", "0.16",
+            "--step-nm", "0.08",
+            "--observable", "constant-current",
+            "--mean-height-nm", "0.05",
+            "--cc-height-min-nm", "-0.10",
+            "--cc-height-max-nm", "0.50",
+            "--out", cc_maps,
+        ])
+        @test isfile(cc_maps)
+        @test isfile(cc_mask)
+        @test _n_data_rows(cc_maps) == 2 * 5 * 5
+        @test _n_data_rows(cc_mask) == 2 * 5 * 5
+        # Every mask row carries a documented status keyword.
+        statuses = Set{String}()
+        for line in readlines(cc_mask)[2:end]
+            strip(line) == "" && continue
+            push!(statuses, split(line, '\t')[end])
+        end
+        @test statuses ⊆ Set(["found", "absent", "ambiguous", "nonfinite", "insufficient_z"])
     end
 end

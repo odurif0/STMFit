@@ -1,0 +1,15 @@
+cube_units = "bohr"
+glcn_cube_path = "qe/glcn_restart5/glcn_central_ldos.cube"
+glcn_cube_sha256 = "80cd1d1fde94cf084cc7ea464d2bf065b36b2c015ea0bfaef8cebfee8ff88863"
+glcnac_cube_path = "qe/glcnac/glcnac_central_ldos.cube"
+glcnac_cube_sha256 = "40649ccd9eb6768444b8ff61bf4a639b3940cf926fe3eb42254eb024faf9b5bf"
+half_nm = 0.32
+height_nm = 0.5
+maps_path = "templates/chitosan_stm_maps_dft_m030_h050_v1.tsv"
+maps_sha256 = "58236e7d1e0d478c03316384e92d351ffeda8a7f66b2408893337a35ff1570ed"
+provider = "stm_dft_v1"
+sample_bias_ev = -0.29999999992662457
+schema = "stmfit-qe-mold-provenance-v1"
+step_nm = 0.08
+templates_path = "templates/chitosan_connected_molds_stm_dft_m030_h050_v1_half032.tsv"
+templates_sha256 = "dd20e6470efc21f8c4a6a68b8f73ba8f88ee92ded7c233d96acf07f5a37b143d"

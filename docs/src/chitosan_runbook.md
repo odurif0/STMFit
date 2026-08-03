@@ -291,6 +291,74 @@ explicit abstention requiring review, not as a dropped lobe.
 
 <!-- UNKNOWN-CHITOSAN-WORKFLOW:END -->
 
+### Challenger terminal status (T9 closure)
+
+<!-- T9-TERMINAL-STATUS:START -->
+
+The constant-current T3 lane is terminal `BLOCKED`: accepted GlcNAc cubes have
+multiple nonunique isovalue branches, and no branch-selection policy was
+predeclared. The hierarchical T5 identifiability gate passed all 13 held-out
+dates and the 500-seed scan bootstrap, with a 95% lower bound of
+`0.55621530226471905`. T6 integration and leakage checks were confirmed after
+the URI-path and partial-view QC corrections.
+
+T7 therefore ended as `NO_ELIGIBLE_CHALLENGER`. The hierarchical lane lacks
+durable forward/backward evidence and the required common per-lobe audit table,
+so no candidate was frozen. T8 is `SKIPPED_NO_ELIGIBLE_CHALLENGER`; the grader
+invocation count was zero, and the one-shot grade budget remains unused.
+`config/unit_assignment_candidate.toml` remains
+`grade_status = "locked"` with `provenance.status = "pending"` and no frozen
+hash. Its unchanged file SHA-256 is
+`9dac84437ef0a9c2118b77d4e371efd71a5365595794167a112a338ca3e4a1aa`.
+
+Because no new grade ran, the existing benchmark headline remains historical
+and current: `78.9%` classified physical accuracy and `17/145` exact chains.
+The classified percentage uses only classified positions; it is not the
+fixed-denominator honest view, which keeps missing/abstained benchmark positions
+in the denominator. This closure does not establish promotion or new benchmark
+validation.
+
+Final review hardened, but did not promote, both diagnostic lanes. Hierarchical
+unstable/nonmonotone fits abstain, held-out evaluation rejects them before
+scoring, and optional split/backward descriptors now reach fitting through a
+records-based pipeline. Prediction provenance binds every consumed primary,
+split, and backward artifact by stable role, normalized path, and byte SHA-256,
+together with resolved views and model options. Constant-current calibration
+scans the full declared interval under the validated
+`--isovalue-scan-intervals` policy (default 1024), records
+`isovalue_scan_intervals` in provenance, and accepts only one continuous
+fixed-support root branch at that declared resolution. Multiple roots or support
+discontinuities are rejected rather than resolved by a branch preference. The
+accepted GlcNAc cube still violates that uniqueness contract, so this API
+behavior does not unblock T3.
+
+The manifest checker rejects multiline TOML strings, requires exactly one real
+top-level `[grader_only]` table, and scans forbidden non-grader keys, values, and
+paths case-insensitively. Its digest binds every other non-grader byte, including
+comments, formatting, and line endings, excluding only real
+`candidate.frozen_hash` and lifecycle-only `candidate.grade_status` assignments.
+Matching provenance and digest are mandatory in `frozen_once` and `graded`, and
+the lifecycle transition does not rehash. This is not stateless historical
+proof. The current candidate remains locked and byte-unchanged; these stronger
+future-state checks did not freeze it or consume the grade budget.
+
+`hierarchical_equalprior` remains executable for unknown-production diagnostics
+but is diagnostic, not frozen or promoted. A reproducible label-free diagnostic
+run is:
+
+```bash
+julia --project=. test/run_unknown_unit_assignment.jl \
+    --features results/unit_assignment/<sample>_features_local.tsv \
+    --profile hierarchical_equalprior \
+    --outdir results/unit_assignment/<sample>_hierarchical_diagnostic
+
+julia --project=. test/validate_unit_predictions.jl \
+    --predictions results/unit_assignment/<sample>_hierarchical_diagnostic/predictions_hierarchical_equalprior.tsv \
+    --features results/unit_assignment/<sample>_features_local.tsv
+```
+
+<!-- T9-TERMINAL-STATUS:END -->
+
 ### Benchmark and post-hoc grading
 
 The workflow for benchmark diagnostics is:

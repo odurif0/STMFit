@@ -48,6 +48,10 @@ function _parse_cli(args)
               high_uncertain_fraction: uncertain_fraction >= 0.50
               low_mean_confidence: finite mean_confidence < 0.60
               missing_optional_view: views_used lower than profile view count
+              hierarchical_missing_view_abstention: no usable hierarchical view
+              hierarchical_partial_view_prediction: emitted using fewer views
+              hierarchical_unstable_or_degenerate_model_abstention: invalid model fit
+              hierarchical_one_component_abstention: one-component evidence
               noncontiguous_lobes: per-file lobe index gap
               n_outlier: >=8 files and N outside Q1 - 1.5*IQR, Q3 + 1.5*IQR
               plot_missing: expected standalone plot absent/empty when --plots-dir is supplied
@@ -60,7 +64,7 @@ function _parse_cli(args)
     isempty(predictions) && error("--predictions is required")
     isempty(out_tsv) && error("--out is required")
     isfile(predictions) || error("Prediction TSV not found: $predictions")
-    profile in ("auto", "base_bwd_consensus", "base_split_log_skew", "base") || error("Unsupported --profile: $profile")
+    profile in ("auto", "base_bwd_consensus", "base_split_log_skew", "base", "hierarchical_equalprior") || error("Unsupported --profile: $profile")
     return Options(predictions, out_tsv, profile, plots_dir)
 end
 
@@ -75,10 +79,38 @@ function _profile_view_count(opt::Options)
     opt.profile == "base_bwd_consensus" && return 3
     opt.profile == "base_split_log_skew" && return 1
     opt.profile == "base" && return 1
+    opt.profile == "hierarchical_equalprior" && return 1
     name = lowercase(basename(opt.predictions))
     occursin("base_bwd_consensus", name) && return 3
     occursin("base_split_log_skew", name) && return 1
+    occursin("hierarchical_equalprior", name) && return 1
     return 0
+end
+
+
+function _is_hierarchical(opt::Options)
+    return opt.profile == "hierarchical_equalprior" ||
+           (opt.profile == "auto" &&
+            occursin("hierarchical_equalprior", lowercase(basename(opt.predictions))))
+end
+
+
+function _hierarchical_review_reasons(rows)
+    reasons = String[]
+    for row in rows
+        reason = lowercase(strip(get(row, "invalid_reason", "")))
+        if reason == "missing_view"
+            push!(reasons, "hierarchical_missing_view_abstention")
+        elseif reason == "ok_partial_views"
+            push!(reasons, "hierarchical_partial_view_prediction")
+        elseif occursin("degenerate", reason) || occursin("unstable", reason) ||
+               occursin("nonmonotone", reason) || occursin("model_failure", reason)
+            push!(reasons, "hierarchical_unstable_or_degenerate_model_abstention")
+        elseif occursin("one_component", reason)
+            push!(reasons, "hierarchical_one_component_abstention")
+        end
+    end
+    return unique(reasons)
 end
 
 function _parse_conf(row)
@@ -154,6 +186,8 @@ function _write_queue(opt::Options)
             uncertain / n >= 0.50 && push!(reasons, "high_uncertain_fraction")
             isfinite(mean_conf) && mean_conf < 0.60 && push!(reasons, "low_mean_confidence")
             expected_views > 0 && any(row -> _parse_views(row) < expected_views, rows) && push!(reasons, "missing_optional_view")
+            _is_hierarchical(opt) && append!(reasons, _hierarchical_review_reasons(rows))
+            unique!(reasons)
             _has_noncontiguous(lobes) && push!(reasons, "noncontiguous_lobes")
             (n < low_n || n > high_n) && push!(reasons, "n_outlier")
             plot = _plot_path(opt.plots_dir, file)

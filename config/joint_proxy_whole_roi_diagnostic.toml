@@ -1,0 +1,78 @@
+# Whole-ROI common-template frozen-contrast diagnostic — registration config.
+#
+# DIAGNOSTIC ONLY. This is NOT a production selection/model/preprocessing
+# config (it has no [model]/[selection]/[preprocessing] sections) and it never
+# enters N_selected, calibration, thresholds, abstention, or the production
+# selector. It configures the chemistry-blind GLOBAL registration of the common
+# mold only; type/contrast scoring runs later against the frozen registration.
+# See .omo/plans/common-template-frozen-contrast-v2.md and
+# docs/src/unit_assignment.md.
+#
+# Invariants enforced by the parser (test/lib/joint_proxy/whole_roi_diagnostic_config.jl):
+#   * translation/rotation bounds are symmetric about zero (min == -max);
+#   * blur sigma bounds are non-negative (sigma has no sign);
+#   * every min/max/step is finite; every step is strictly positive;
+#   * every range width is an integer multiple of its step (deterministic grid);
+#   * each fine range span never exceeds its coarse span and the fine step
+#     never exceeds the coarse step (coarse-to-fine refinement);
+#   * numerical tie tolerances are finite, non-negative, and not both zero.
+#
+# Physical anchors (do not widen without a journal entry): the tracked mold
+# patch grid is +/-0.32 nm at 0.08 nm step and the chitosan chain spacing is
+# 0.35-0.80 nm, so the bounds below are narrow relative to both. No scale,
+# shear, or per-lobe transform is represented here or permitted by the scorer.
+
+[registration.coarse.shift_t_nm]
+# Global chain-axis (t) translation of the common mold, nm. Coarse stage.
+min = -0.30
+max = 0.30
+step = 0.10
+
+[registration.coarse.shift_u_nm]
+# Global transverse (u) translation of the common mold, nm. Coarse stage.
+min = -0.20
+max = 0.20
+step = 0.10
+
+[registration.coarse.rotation_deg]
+# Global in-plane rotation of the common mold, degrees. Coarse stage.
+min = -5.0
+max = 5.0
+step = 1.0
+
+[registration.coarse.blur_sigma_nm]
+# Gaussian blur sigma applied to the common mold, nm. Coarse stage. Non-negative.
+min = 0.0
+max = 0.10
+step = 0.05
+
+[registration.fine.shift_t_nm]
+# Fine refinement around the chosen coarse t shift, nm.
+min = -0.05
+max = 0.05
+step = 0.02
+
+[registration.fine.shift_u_nm]
+# Fine refinement around the chosen coarse u shift, nm.
+min = -0.04
+max = 0.04
+step = 0.02
+
+[registration.fine.rotation_deg]
+# Fine refinement around the chosen coarse rotation, degrees.
+min = -1.0
+max = 1.0
+step = 0.25
+
+[registration.fine.blur_sigma_nm]
+# Fine refinement around the chosen coarse blur sigma, nm. Non-negative.
+min = 0.0
+max = 0.03
+step = 0.01
+
+[numerical_tie]
+# Scale-aware SSE tie tolerance, applied as isapprox(a, b; rtol=rtol, atol=atol)
+# to best/runner-up, complement, and perturbation-stability comparisons.
+# Fixed BEFORE any real execution; never retuned from 007/050 margins.
+rtol = 1.0e-6
+atol = 1.0e-9

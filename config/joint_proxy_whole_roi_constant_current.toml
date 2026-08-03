@@ -1,0 +1,82 @@
+# Whole-ROI constant-current diagnostic — registration config.
+#
+# DIAGNOSTIC ONLY. This is not a production model/selection/preprocessing
+# config and is not registered as stm_dft_v1. Registration ranges and
+# numerical-tie tolerances below are copied exactly from
+# config/joint_proxy_whole_roi_diagnostic.toml. The only additional table binds
+# the constant-current observable and names the hashes required from its
+# provenance sidecar.
+
+[registration.coarse.shift_t_nm]
+# Global chain-axis (t) translation of the common mold, nm. Coarse stage.
+min = -0.30
+max = 0.30
+step = 0.10
+
+[registration.coarse.shift_u_nm]
+# Global transverse (u) translation of the common mold, nm. Coarse stage.
+min = -0.20
+max = 0.20
+step = 0.10
+
+[registration.coarse.rotation_deg]
+# Global in-plane rotation of the common mold, degrees. Coarse stage.
+min = -5.0
+max = 5.0
+step = 1.0
+
+[registration.coarse.blur_sigma_nm]
+# Gaussian blur sigma applied to the common mold, nm. Coarse stage. Non-negative.
+min = 0.0
+max = 0.10
+step = 0.05
+
+[registration.fine.shift_t_nm]
+# Fine refinement around the chosen coarse t shift, nm.
+min = -0.05
+max = 0.05
+step = 0.02
+
+[registration.fine.shift_u_nm]
+# Fine refinement around the chosen coarse u shift, nm.
+min = -0.04
+max = 0.04
+step = 0.02
+
+[registration.fine.rotation_deg]
+# Fine refinement around the chosen coarse rotation, degrees.
+min = -1.0
+max = 1.0
+step = 0.25
+
+[registration.fine.blur_sigma_nm]
+# Fine refinement around the chosen coarse blur sigma, nm. Non-negative.
+min = 0.0
+max = 0.03
+step = 0.01
+
+[numerical_tie]
+# Scale-aware SSE tie tolerance, applied as isapprox(a, b; rtol=rtol, atol=atol)
+# to best/runner-up, complement, and perturbation-stability comparisons.
+# Fixed BEFORE any real execution; never retuned from 007/050 margins.
+rtol = 1.0e-6
+atol = 1.0e-9
+
+[observable]
+mode = "constant-current"
+provider = "stm_dft_cc_diag"
+sample_bias_ev = -0.300
+nominal_height_nm = 0.50
+bracket_heights_nm = [0.40, 0.45, 0.50, 0.55, 0.60]
+bracket_policy = "diagnostics_only"
+crossing_policy = "vacuum_first_bracketed_linear"
+provenance_schema = "stmfit-qe-mold-provenance-v1"
+provenance_path_env = "STMFIT_CONSTANT_CURRENT_PROVENANCE"
+provenance_sha256_env = "STMFIT_CONSTANT_CURRENT_PROVENANCE_SHA256"
+maps_sha256_key = "maps_sha256"
+invalid_mask_sha256_key = "invalid_mask_sha256"
+bracket_artifacts_key = "bracket_artifacts"
+glcn_cube_sha256_key = "glcn_cube_sha256"
+glcnac_cube_sha256_key = "glcnac_cube_sha256"
+glcn_cube_sha256 = "80cd1d1fde94cf084cc7ea464d2bf065b36b2c015ea0bfaef8cebfee8ff88863"
+glcnac_cube_sha256 = "40649ccd9eb6768444b8ff61bf4a639b3940cf926fe3eb42254eb024faf9b5bf"

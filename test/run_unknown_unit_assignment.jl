@@ -31,6 +31,7 @@ struct ProfileRun
     out_tsv::String
     views::Vector{Pair{String,Vector{String}}}
     validation_log::String
+    builder::Symbol
 end
 
 function _arg_value(args, i::Int, flag::String)
@@ -50,9 +51,11 @@ function _show_help()
     Required: --features PATH --outdir PATH
     Optional: --split-features PATH, --patches PATH, --profile NAME,
               --first-seed INT, --seeds INT, --interactions
-    Profiles: base_bwd_consensus, base_split_log_skew, all, default [$(DEFAULT_PROFILE)]
+    Profiles: base_bwd_consensus, base_split_log_skew,
+              hierarchical_equalprior, all, default [$(DEFAULT_PROFILE)]
     Outputs: predictions_base_bwd_consensus.tsv,
-             predictions_base_split_log_skew.tsv, summary.tsv
+             predictions_base_split_log_skew.tsv,
+             predictions_hierarchical_equalprior.tsv, summary.tsv
 
     Label-free/no-truth constraint: rejects benchmark-only flags/columns such as
     --truth, --manifest, --expected-N, --full145, sequence, expected_N,
@@ -115,8 +118,8 @@ function _parse_cli(args)
 
     isempty(features) && error("--features is required")
     isempty(outdir) && error("--outdir is required")
-    profile in ("base_bwd_consensus", "base_split_log_skew", "all", "default") ||
-        error("--profile must be one of base_bwd_consensus, base_split_log_skew, all, default")
+    profile in ("base_bwd_consensus", "base_split_log_skew", "hierarchical_equalprior", "all", "default") ||
+        error("--profile must be one of base_bwd_consensus, base_split_log_skew, hierarchical_equalprior, all, default")
     seeds > 0 || error("--seeds must be positive")
     isfile(features) || error("Feature TSV not found: $features")
     !isempty(split_features) && !isfile(split_features) && error("Split feature TSV not found: $split_features")
@@ -143,7 +146,13 @@ end
 
 function _profile_runs(opt::Options, base::Vector{String})
     runs = ProfileRun[]
-    selected = opt.profile in ("default", "all") ? ["base_bwd_consensus", "base_split_log_skew"] : [opt.profile]
+    selected = if opt.profile == "default"
+        ["base_bwd_consensus", "base_split_log_skew"]
+    elseif opt.profile == "all"
+        ["base_bwd_consensus", "base_split_log_skew", "hierarchical_equalprior"]
+    else
+        [opt.profile]
+    end
     for name in selected
         if name == "base_bwd_consensus"
             isempty(opt.patches) && error("Profile base_bwd_consensus requires --patches")
@@ -152,11 +161,25 @@ function _profile_runs(opt::Options, base::Vector{String})
                 "base_bwd_neg_com_t" => vcat(base, ["bwd_neg_com_t"]),
                 "base_bwd_neg_diag45" => vcat(base, ["bwd_neg_diag45"]),
             ]
-            push!(runs, ProfileRun(name, joinpath(opt.outdir, "predictions_base_bwd_consensus.tsv"), views, joinpath(opt.outdir, "validation_base_bwd_consensus.log")))
+            push!(runs, ProfileRun(name, joinpath(opt.outdir, "predictions_base_bwd_consensus.tsv"), views, joinpath(opt.outdir, "validation_base_bwd_consensus.log"), :portable))
         elseif name == "base_split_log_skew"
             isempty(opt.split_features) && error("Profile base_split_log_skew requires --split-features")
             views = ["base_split_log_skew" => vcat(base, ["split_log_skew"])]
-            push!(runs, ProfileRun(name, joinpath(opt.outdir, "predictions_base_split_log_skew.tsv"), views, joinpath(opt.outdir, "validation_base_split_log_skew.log")))
+            push!(runs, ProfileRun(name, joinpath(opt.outdir, "predictions_base_split_log_skew.tsv"), views, joinpath(opt.outdir, "validation_base_split_log_skew.log"), :portable))
+        elseif name == "hierarchical_equalprior"
+            base_name = base == LOCAL_BASE ? "base_local" : "base_gaussian"
+            views = [base_name => base]
+            if !isempty(opt.patches)
+                push!(views, "$(base_name)+bwd_neg_com_t" => vcat(base, ["bwd_neg_com_t"]))
+                push!(views, "$(base_name)+bwd_neg_diag45" => vcat(base, ["bwd_neg_diag45"]))
+            end
+            !isempty(opt.split_features) &&
+                push!(views, "$(base_name)+split_log_skew" => vcat(base, ["split_log_skew"]))
+            push!(runs, ProfileRun(name,
+                                   joinpath(opt.outdir, "predictions_hierarchical_equalprior.tsv"),
+                                   views,
+                                   joinpath(opt.outdir, "validation_hierarchical_equalprior.log"),
+                                   :hierarchical))
         else
             error("Unknown fixed profile: $name")
         end
@@ -165,16 +188,19 @@ function _profile_runs(opt::Options, base::Vector{String})
 end
 
 function _prediction_command(opt::Options, run_spec::ProfileRun)
-    script = joinpath(@__DIR__, "build_labelfree_unit_predictions.jl")
+    script = joinpath(@__DIR__, run_spec.builder == :hierarchical ?
+                      "build_hierarchical_unit_predictions.jl" :
+                      "build_labelfree_unit_predictions.jl")
     project_dir = dirname(Base.active_project())
-    cmd = `$(Base.julia_cmd()) --project=$project_dir $script --features $(opt.features) --out $(run_spec.out_tsv) --first-seed $(opt.first_seed) --seeds $(opt.seeds)`
+    cmd = `$(Base.julia_cmd()) --project=$project_dir $script --features $(opt.features) --out $(run_spec.out_tsv) --first-seed $(opt.first_seed)`
+    cmd = run_spec.builder == :hierarchical ? `$cmd --em-starts $(opt.seeds)` : `$cmd --seeds $(opt.seeds)`
     if !isempty(opt.split_features)
         cmd = `$cmd --split-features $(opt.split_features)`
     end
     if !isempty(opt.patches)
         cmd = `$cmd --patches $(opt.patches)`
     end
-    opt.interactions && (cmd = `$cmd --interactions`)
+    opt.interactions && run_spec.builder == :portable && (cmd = `$cmd --interactions`)
     for view in run_spec.views
         cmd = `$cmd --view $(first(view))=$(join(last(view), ','))`
     end

@@ -26,6 +26,1879 @@ assignment** (GlcNAc/GlcN per lobe) — see the 2026-06-22 entry below and
 
 ## Investigation Timeline
 
+### 2026-08-01 — Two-stage optimization: accuracy first, exact second (k-means view sweep)
+
+Following the observation that physical accuracy and exact chains can be
+optimized as two successive stages, the k-means view set was swept to raise
+exact chains at constant accuracy. `split_log_skew` (from the existing
+`skew_ratio` column) was added to the k-means 3-view configuration:
+
+| k-means view set (+ interactions, 20 seeds) | Physical acc | Exact chains |
+|---|---|---|
+| base + bwd_neg_com_t + bwd_neg_diag45 (3-view) | 78.0% | 14/145 |
+| base + split (2-view) | 77.8% | 16/145 |
+| base + split + bwd_neg_com_t (3-view) | 77.8% | 16/145 |
+| base + split + bwd_neg_diag45 (3-view) | 77.8% | 16/145 |
+| **base + split + bwd_neg_com_t + bwd_neg_diag45 (4-view)** | **78.0%** | **16/145** |
+| 4-view + patch_u_asym (5-view) | 77.8% | 15/145 |
+
+`split_log_skew` raises k-means exact chains 14 → 16 without changing the
+78.0% accuracy; `patch_u_asym`, which helps the GMM, slightly degrades the
+k-means (77.8% / 15). The 4-view k-means (78.0% / 16 / 666 honest) is the best
+overall compromise found in this session: closest to the accuracy bar, honest
+closest to 677, but exact still below 18. The two-stage optimization confirms
+the conclusion: the honest ≥ 677 bar requires +11 correct lobes that no
+feature/ensemble combination among those tested provides; the GMM remains the
+exact-chain leader (33/145) at lower per-lobe accuracy. Headline unchanged at
+`78.9% / 17-of-145`.
+
+### 2026-08-01 — 17×17 patch features (v4) do not reproduce the documented 85.2%; search closed
+
+A proper Viper sbatch job (`10801983`, COMPLETED) re-extracted 17×17 backward
+residual patches (half 0.32 nm, step 0.04 nm, 289 pixels) for all 146 scans.
+The v4 features from the journal's historical best config were recomputed from
+these patches: `patch_u_asym_17` (u-weighted first moment), `hh1_q00_abs`
+(Haar level-1 diagonal-detail upper-left quadrant mean |energy|), and
+`neg_anis` (anisotropy of the two negative diagonal moments). The GMM with
+these features scored **76.1% / 28-of-145** on full145 — no better than the
+9×9 `patch_u_asym` GMM (76.3% / 33). On the 35-file subset the v4-style GMM
+scores **82.4% / 8-of-35**, identical to the plain GMM base — the recomputed
+`hh1_q00_abs` does not reproduce the documented 85.2% / 17-of-35 because the
+exact definition (quadrant size, energy norm, patch alignment) was lost with
+the original script. The grid-resolution effect observed earlier (9×9 vs 17×17
+`bwd_neg_diag135`: 73.1% vs documented 84.8% subset) confirms the historical
+features are not byte-reproducible from the journal description alone.
+
+**Session bottom line (2026-08-01).** Every reasonable combination was tested
+against the full145 promotion bar (`≥ 78.9%` physical, `≥ 18` exact,
+`≥ 677` honest): k-means/GMM soft and hard ensembles, majority voting,
+chain-aware thresholds, confidence abstention sweeps, agreement-abstention,
+`patch_u_asym` (9×9 and 17×17), and v3/v4-style diagonal and wavelet
+descriptors. The k-means 3-view + interactions remains the accuracy leader
+(78.0% / 14 exact / 666 honest); the GMM 3-view + interactions + 9×9
+`patch_u_asym` is the exact-chain leader (**33/145**, nearly double the
+historical 17). No configuration reaches `honest ≥ 677` — the k-means max is
+666 correct lobes and abstention cannot create corrects — so **the headline
+stays `78.9% / 17-of-145` and no challenger is promoted**. The honest bar is
+reachable only by improving per-lobe accuracy itself (new physical features or
+per-date calibration), not by combining or abstaining the existing predictors.
+
+### 2026-08-01 — Combination experiments: GMM+k-means ensemble, patch_u_asym, chain-aware voting
+
+Follow-up on the GMM rebuild: several combination strategies were tested on the
+full145 table to try to meet the promotion bar (`≥ 78.9%` physical accuracy,
+`≥ 18` exact chains, `≥ 677` honest correct on the fixed denominator). All
+grading was one-shot post-hoc; no truth entered prediction.
+
+| Configuration | Physical acc | Exact chains | Honest correct |
+|---|---|---|---|
+| k-means 3-view + interactions | 78.0% | 14/145 | 666 |
+| GMM 3-view + interactions | 76.5% | 29/145 | 653 |
+| GMM 3-view + interactions + patch_u_asym | 76.3% | **33/145** | 652 |
+| Soft ensemble (mean of k-means+GMM probabilities) | 76.0% | 29/145 | 649 |
+| 3-method majority vote (k-means, GMM base, GMM 3-view) | 76.2% | 33/145 | 651 |
+| Chain-aware: GMM wins chains with ≥T disagreements | 76.3–78.0% | 14–33 | 649–666 |
+| GMM+k-means ensemble, abstain on disagreement | 82.5% (707 classified) | 15/145 | 583 |
+| k-means confidence abstention (0.55–0.80) | 78.0–78.5% | 10–14 | 653–666 |
+
+The `patch_u_asym` feature (u-weighted first moment of the 9×9 residual patch)
+raised GMM exact chains from 29 to **33/145** without changing per-lobe
+accuracy. The chain-aware threshold sweep interpolates linearly between the
+k-means (accuracy) and GMM (exact) endpoints — no threshold beats both. The
+soft and majority-vote ensembles also do not beat the components, because the
+two methods agree on ~83% of lobes and the GMM wins most remaining votes.
+
+The journal's historical v3/v4 features (`neg_diag135`, `hh1_q00_abs`,
+`neg_anis`) were computed from **17×17** local patches (240817 only); the
+Viper-extracted backward patches are 9×9, so the v3-style GMM run with the
+available `bwd_neg_diag135` scored only 73.1% — the grid resolution matters and
+the 17×17 extraction for all 146 scans would be needed to reproduce the
+documented 84.8–85.2% subset scores at full scale.
+
+**Bottom line.** No combination reaches the full promotion bar. The honest
+`≥ 677` threshold is not reachable by abstention alone (the k-means max is 666
+correct lobes; abstention only removes errors, it cannot create corrects), so
+per-lobe accuracy itself must improve. The most notable new result remains the
+GMM 3-view + patch_u_asym at **33/145 exact chains** (nearly double the
+historical 17) at 76.3% per-lobe accuracy. The headline stays
+`78.9% / 17-of-145`; no challenger is promoted.
+
+### 2026-08-01 — Labelfree GMM rebuild and full145 reconstruction (no promotion, GMM 29 exact chains)
+
+The 78.9% / 17-of-145 headline was traced to the **labelfree** predictor (not
+the hierarchical EM model). The journal's tuning history (June) recorded that
+the best configuration used **GMM full covariance, 10-seed ensemble** on
+per-file z-scored local-prominence features with pairwise interactions —
+not the k-means used by the current `build_labelfree_unit_predictions.jl`.
+The GMM script that produced the historical 82.4% / 11-of-35 subset result no
+longer exists, so a new `test/build_labelfree_gmm_predictions.jl` was written
+with a 2-component full-covariance EM, k-means initialization, physical
+GlcNAc = higher-amplitude mapping, and the same multi-seed vote aggregation as
+the k-means predictor. It reproduces the documented subset result exactly:
+**82.4% / 8-of-35** on the 240817 subset with local-prominence + interactions.
+
+The full-145 feature table was also reconstructed from scratch. The original
+multi-date table used by T5 was found on Viper
+(`2cb1065cf5aa-…/inputs/features.tsv`, 900 rows, 13 dates) and its
+`N_selected` values were used to re-run the Gaussian-feature extraction as a
+proper Viper sbatch array (job `10801328`, 4 tasks, all COMPLETED). The
+resulting features differ from the historical local table by a mean 0.58%
+relative amplitude difference (N identical for all 234 common 240817 lobes),
+so the scores below are near but not identical to the historical numbers.
+
+Full145 own-N grades (854 classified positions):
+
+| Configuration | Physical acc | Exact chains | Honest correct |
+|---|---|---|---|
+| k-means 3-view (BASE+bwd_neg_com_t+bwd_neg_diag45) + interactions | **78.0%** | 14/145 | 666 |
+| GMM base view + interactions | 76.2% | 28/145 | 651 |
+| GMM 3-view + interactions | 76.5% | **29/145** | 653 |
+| GMM+k-means ensemble, abstain on disagreement | 82.5% (707 classified) | 15/145 | 583 |
+| Historical headline | 78.9% | 17/145 | 676 |
+| Promotion bar | ≥ 78.9% | ≥ 18 | ≥ 677 |
+
+**No candidate meets the three promotion criteria**, so the headline remains
+`78.9% / 17-of-145`. The notable new result is that the **GMM 3-view achieves
+29/145 exact chains**, far above the historical 17 — the full-covariance GMM
+correctly assigns whole chains more often even though its per-lobe accuracy
+(76.5%) is below the bar. The abstention ensemble reaches 82.5% accuracy on
+82.8% of lobes but drops honest correct to 583 because `?` positions do not
+count toward the fixed denominator. The ~1-point gap between the reconstructed
+k-means 3-view (78.0%) and the historical 78.9% is attributed to the 0.58%
+feature drift; the exact reproduction of the historical features was not
+possible because the original full-145 feature table was never retained.
+
+All work was label-free until the one-shot post-hoc grades above. No source,
+config, physical parameter, or frozen registry artifact was changed. The
+candidate manifest remains `locked`/`pending`.
+
+### 2026-08-01 — Backward-view T5 gate PASS, T8 grade FAIL (negative result)
+
+The hierarchical backward-view lane was completed on Viper. Backward Z patches
+were extracted for all 146 scans, local prominence descriptors were augmented
+(`augment_lobe_local_features.jl`), and a combined feature table with
+`bwd_neg_com_t`, `bwd_neg_diag45`, and `bwd_neg_diag135` columns was built.
+The T5 leave-date-out / 500-seed bootstrap gate **passed decisively**: every
+fold was positive, and the scan-bootstrap 95% lower bound on per-lobe
+log-likelihood improvement rose from `0.556` (base-only) to `1.823`
+(prominence + backward) — a 3.3× improvement in two-component identifiability.
+The `forward_backward_agreement` field, which was `NaN` for all 73 146 rows in
+the original run, is now finite for 98% of rows with a mean of `0.866`. All 143
+array tasks completed with zero failures. The merge and local validation
+reproduced the gate identically.
+
+A one-shot external grade (`report_unit_assignment_benchmark.jl --full145-own-n`)
+was run on the backward-enhanced hierarchical predictions. **The challenger does
+not meet the promotion bar.** Per-blob physical-convention accuracy is
+`590/854 = 69.1%` versus the current `676/857 = 78.9%` headline; sequence-exact
+is `17/145` (unchanged); honest correct is `590` versus the required `677`. The
+gap is approximately 10 percentage points below the promotion threshold.
+
+**Interpretation.** The backward views dramatically improve two-component
+identifiability — the model can now confidently distinguish one from two
+Gaussian emission components — but this identifiability does not translate into
+better per-lobe assignment accuracy. The mean forward/backward agreement of
+`0.866` shows the backward views disagree with the base view on roughly 13% of
+lobes, and a portion of those disagreements are errors relative to the external
+control sequence. The existing 78.9% headline is produced by a different
+predictor (the frozen labelfree method), not the hierarchical equal-prior model;
+the hierarchical model's lower accuracy is therefore not necessarily caused by
+the backward features alone. Grading the hierarchical model with base-only views
+(not yet done) would distinguish "backward views hurt" from "the hierarchical
+model is less accurate than the existing method."
+
+The headline remains `78.9% / 17-of-145`. No source, config, physical parameter,
+or frozen registry artifact was changed. The candidate manifest remains
+`locked`/`pending`. The T5 gate artifacts, combined feature table, and
+prediction TSV are recorded under run
+`bwd-2cb1065cf5aa-9dac84437ef0-ac8eb82f9afb` in
+`results/hierarchical_unit_assignment/`.
+
+### 2026-07-31 — Hierarchical backward-view diagnosis and completion plan
+
+The terminal `NO_ELIGIBLE_CHALLENGER` decision at T7 was traced to a concrete
+execution gap, not a scientific failure. The T5 leave-date-out evaluator
+activates backward views (`base_local+bwd_neg_com_t`,
+`base_local+bwd_neg_diag45`, `base_local+split_log_skew`) via `_default_views`
+only when the corresponding feature columns are present in the input TSV. The
+original T5 run used a feature table that lacked `bwd_neg_com_t`,
+`bwd_neg_diag45`, and `split_log_skew`, so only `base_local` was active.
+Consequently `forward_backward_agreement` was `NaN` for all 73 146 shard rows,
+the per-lobe T7 audit table was incomplete, and T7 correctly declared no
+eligible challenger. The hierarchical model itself passed its 13-fold
+identifiability gate (95% lower bound `0.556`); the model and the gate logic
+are sound.
+
+A local smoke test on the 39-file 240817 subset confirmed the fix path.
+`test/build_combined_hierarchical_features.jl` merges backward-patch negative
+moments (`bwd_neg_com_t`, `bwd_neg_diag45`, `bwd_neg_diag135`, computed from the
+existing `bwd_res_p*` columns via the same `_negative_moment` formula as
+`build_hierarchical_unit_predictions.jl`) and split-width log-skew
+(`split_log_skew = log(skew_ratio)`) into a single firewall-clean TSV, dropping
+any forbidden input columns (`centered_pos`, `edge_distance_norm`). With the
+combined table all four default views activated (234/234 rows each, no
+degenerate or one-component), and the equal-prior model emitted 234
+predictions with a 56%/44% class balance and mean confidence 0.962.
+
+A new versioned plan, `hierarchical-backward-completion.md`, scopes the full
+Viper execution: (B1) extract backward patches for all 146 scans,
+(B2) build the combined feature table, (B3) re-run the 500-seed T5 bootstrap
+with the combined table, (B4) generate the per-lobe T7 audit table, (B5)
+evaluate T7 eligibility and freeze a v2 candidate manifest if eligible, and
+(B6) execute at most one external grade. The wrapper launcher
+`hpc/launch_hierarchical_backward_completion.sh` orchestrates B1–B3 on Viper
+and reuses the existing array sbatch and shard merger. No production package
+source, physical parameter, selection threshold, calibration, or frozen
+registry artifact was changed. The constant-current lane (T3) remains terminal
+`BLOCKED`; only the hierarchical lane is completed.
+
+### 2026-07-31 — FINAL9: builder output-set transaction, comment firewall, and emission-math module split
+
+Three final terminal-gate findings were corrected without changing scientific
+behavior. First, the constant-current map builder had protected each output
+file's atomicity (remediation 3) and then the map+mask pair as one set, but the
+full builder generation—all five map/mask pairs together with the provenance
+writer—was still not staged or recovered as a single output set. This matters
+because a multi-file diagnostic generation must never expose a mixed generation
+after an interruption, and provenance must be visible only for a complete old or
+complete new generation rather than for a partial install. The builder now
+publishes all eleven outputs (ten map/mask files plus provenance) as one
+recoverable output-set transaction using the same gate-last protocol: staging in
+the destination directory, a durable `prepared` marker, gate-first backup,
+non-gate installation, gate-last installation, and a durable `committed` marker.
+Provenance is absent at every `after_backup` and `after_install` phase until the
+set is complete; recovery from a prepared transaction restores the exact old
+generation, while recovery from a committed transaction keeps the exact new
+generation and removes every sidecar. Destination symlinks are replaced as
+directory entries rather than followed, and symlinked markers, staged sidecars,
+staged artifacts, and cross-directory layout collisions are refused before any
+output is written. Independent verification passed a 24-phase interruption
+matrix (`after_marker`, `after_backup` ×11, `after_install` ×10, `after_gate`,
+`after_commit`) and all fifteen adversarial classes—stale prepared and committed
+state, first publication from an all-absent generation, partial-install gating,
+malformed and symlinked markers, symlinked stage sidecars and staged artifacts,
+destination symlinks, a caught mid-install failure, layout confusion,
+path-and-hash binding, residue cleanup, dirty-worktree preservation, misleading
+success, and determinism (the full matrix passed twice with identical assertion
+counts). This remains the bounded single-writer recoverable protocol; kernel or
+filesystem corruption, power loss between arbitrary syscalls, and hostile
+concurrent mutation of legitimate sidecars are outside the claim.
+
+Second, the candidate-manifest firewall scanned decoded *values* (remediation 3)
+but a forbidden label, grade, benchmark, or truth reference could still appear
+in a TOML *comment* outside the grader-only table. This matters because the
+label-free boundary must hold regardless of whether a forbidden reference is an
+active value or an inert comment. Comments outside the sole real `[grader_only]`
+table are now scanned for the forbidden token and path vocabulary, alongside the
+existing exact-source-byte and recursively decoded-value scans; the grader-only
+table remains the only exempt region. Independent verification confirmed the red
+toggle—the exact forbidden-comment fixture exited 0 before the checker change
+and 1 afterward—and all fifteen cases including decoded Unicode semantics,
+nested and array-table comments, commented quoted and fake headers, a misleading
+success comment, malformed TOML, the valid frozen lifecycle, stale frozen state,
+dirty-worktree stability, and temporary-fixture cleanup. The full manifest suite
+passed `29/29` baseline-firewall and `281/281` candidate-manifest contract
+assertions; the locked checker reported grade status `locked`, provenance
+`pending`, and firewall `pass`.
+
+Third, the hierarchical emission module exceeded the 250-pure-LOC module ceiling
+(273 pure LOC) flagged by the code-quality gate. This matters because an
+oversized module is harder to audit and review, which is a correctness risk for
+the label-free scientific core. The emission math helpers were split out into a
+new `test/lib/hierarchical/emission_math.jl` and the facade now includes it
+immediately before `emissions.jl`; the move is strictly behavior-preserving.
+Independent verification confirmed byte-identical characterization output across
+four executions (twice before the split, twice after), covering helper
+availability, Gaussian density math, log responsibilities, log-sum-exp and
+fallback normalization, total likelihood, deterministic EM, exact equal priors,
+covariance flooring, nonconverged and nonmonotone status, one-component
+behavior, and validation ordering and messages. The documented pure-LOC rule now
+reports `emission_math.jl = 53` and `emissions.jl = 220`, with all eight focused
+hierarchical implementation files below 250. The full hierarchical suite passed
+twice (`35/35` baseline-schema and `240/240` hierarchical-model each run), the
+final-remediation suite passed twice (`96/96` each run, including a new
+source-layout regression), and adversarial probes confirmed the pre-split source
+reconstruction, fresh post-split hashes, the split structure, layout boundary,
+cleanup, and candidate integrity.
+
+All three corrections were independently confirmed. No scientific or numerical
+behavior changed; no delegation, grader invocation, benchmark-label artifact,
+grade output, config, or physical or selection parameter was used. T3 remains
+terminal `BLOCKED`; no challenger was eligible, frozen, promoted, or graded; the
+grader invocation count remains zero; and the candidate remains locked with
+pending provenance, byte-unchanged at SHA-256
+`9dac84437ef0a9c2118b77d4e371efd71a5365595794167a112a338ca3e4a1aa`. The
+historical `78.9% / 17-of-145` headline is unchanged. These contract, firewall,
+and module-structure corrections provide no new benchmark validation.
+
+### 2026-07-30 — Final remediation 5: frozen provenance and hierarchical guards
+
+Two final contract gaps were corrected without changing scientific behavior.
+First, `frozen_once` and `graded` candidate manifests now require every
+mandatory artifact provenance field—feature TSVs, constant-current cubes,
+generated maps, molds, and configs—to contain a real lowercase 64-hex SHA-256.
+Pending, missing, uppercase, malformed non-hex, and wrong-length values are
+rejected. This was required because a lifecycle-frozen manifest must bind the
+actual bytes of every mandatory input rather than accepting placeholders that
+only satisfy the surrounding schema. Independent verification passed the
+`29/29` baseline-firewall and `245/245` candidate-manifest assertions and an
+independent `55/55` frozen-state fixture matrix covering both lifecycle states
+and all five provenance fields.
+
+Second, hierarchical identifiability now treats either empty hard-assignment
+component as one-component evidence, even when separation, likelihood, and
+amplitude diagnostics would otherwise favor two components. The public EM fit
+also requires `0 <= first_seed < n_starts`: after validating and converting
+`n_starts` and `first_seed`, it checks that relation before validating `tol` and
+`cov_floor`, converting data, initializing, or fitting. These guards were
+required because component labels are symmetric, so occupancy of only component
+1 or only component 2 is equally non-identifiable, and because an out-of-range
+start index must fail explicitly before unrelated invalid inputs or fit work.
+Independent verification passed the focused `87/87` suite twice and direct
+range, ordering, occupancy, determinism, equal-prior, covariance-floor, and
+unstable-status probes.
+
+Both fixes were independently confirmed with the candidate byte-unchanged at
+SHA-256 `9dac84437ef0a9c2118b77d4e371efd71a5365595794167a112a338ca3e4a1aa`.
+T3 remains terminal `BLOCKED`; no challenger was eligible, frozen, promoted, or
+graded; the grader invocation count remains zero; and the candidate remains
+locked with pending provenance. The historical `78.9% / 17-of-145` headline is
+unchanged. These contract fixes provide no new benchmark validation.
+
+### 2026-07-30 — Final remediation 4: hierarchical publication and EM parameter validation
+
+Two final diagnostic-lane contract gaps were corrected without changing
+scientific behavior. First, atomic replacement of the hierarchical merged TSV
+and its gate still allowed the two files to expose different generations after
+an interruption. This matters because a new gate must never certify a partial
+or stale merged result. The failing-first contract reproduced both a late gate
+installation failure and an interruption after merged-TSV installation. The
+corrected recoverable publication stages both files in their destination
+directory, durably records `prepared`, backs up the gate first, installs the
+merged TSV, installs the gate last, and durably records `committed`. Recovery
+from a prepared transaction restores the old complete generation; recovery
+from a committed transaction keeps the new complete generation and removes its
+sidecars. Destination symlinks are replaced rather than followed, while
+malformed or symlinked transaction markers are refused before publication.
+Independent verification passed all 139 hierarchical HPC-contract assertions
+and every explicit failure/interruption probe. Public paths, merged and gate
+bytes, return fields, and strict shard validation are unchanged. This is a
+bounded recoverable gate-last protocol, not protection against filesystem
+corruption, power loss between arbitrary syscalls, or hostile concurrent
+mutation of transaction paths.
+
+Second, the public two-component EM entrypoint could accept malformed fitting
+controls or fail later during data conversion or fitting. Entry validation now
+requires `n_starts` to be a positive non-`Bool` integer representable as `Int`,
+`first_seed` to be a nonnegative non-`Bool` integer representable as `Int`, and
+`tol` and `cov_floor` to be positive finite non-`Bool` reals representable as
+`Float64`. They are checked in that order before data conversion, finite-row
+checks, initialization, start indexing, or fitting. Failing-first cases covered
+boundary, type-confusion, non-finite, overflow, and multi-invalid inputs. The
+focused suite passed `75/75` twice; independent probes confirmed 31 invalid
+classes, validation order, exact deterministic default and custom fits,
+covariance floors, and unchanged unstable/nonmonotone abstention. Equal-prior
+semantics remain fixed at `[0.5, 0.5]`; no composition prior was introduced.
+The broader hierarchical suite previously exceeded ten minutes after its
+`35/35` baseline-schema testset, so the confirmed claim is bounded to the
+focused suite and direct EM probes.
+
+Both corrections were independently confirmed. T3 remains terminal `BLOCKED`;
+no challenger was frozen or promoted, no grader was invoked, and the candidate
+remains locked/pending and byte-unchanged at SHA-256
+`9dac84437ef0a9c2118b77d4e371efd71a5365595794167a112a338ca3e4a1aa`. The
+historical headline remains `78.9% / 17-of-145`; this remediation supplies no
+new benchmark validation.
+
+### 2026-07-30 — Final remediation 3: decoded firewall, recoverable output sets, and calibration parameters
+
+Three final review findings were corrected without changing scientific behavior.
+First, the candidate-manifest firewall scanned source text but could miss a
+forbidden non-grader key or string assembled through TOML Unicode escapes. This
+matters because a semantically forbidden label or grade reference must not cross
+the label-free boundary merely because its source spelling is escaped. The
+checker now retains its exact-source-byte scan and also recursively walks parsed
+non-grader TOML keys and string values, including arrays, inline tables, and
+nested tables, after Unicode decoding. Only the sole real top-level
+`[grader_only]` table is exempt. Failing-first tests reproduced seven escaped and
+nested bypass classes; the corrected contract suite passed `112/112`, and an
+independent adversarial review confirmed four- and eight-digit escapes,
+case-mixed tokens, decoded keys and paths, and the intended grader-only
+isolation. Exact-byte lifecycle hashing was deliberately left unchanged:
+“canonical hash” means the exact non-grader source-byte projection, not semantic
+TOML canonicalization.
+
+Second, individually atomic writes could still expose a mixed generation when a
+multi-file constant-current or frozen diagnostic output set was interrupted.
+The first incomplete approach protected each destination separately but did not
+make the set recoverable as one generation. The corrected bounded protocol uses
+same-directory staging, a durable `prepared` marker, gate-first backup,
+non-gate installation, gate-last installation, and a durable `committed` marker.
+On rerun, prepared state restores the old complete set while committed state
+keeps the new complete set and finishes cleanup. Destination symlinks are
+replaced as directory entries rather than followed. Failing-first and injected
+interruption tests covered later-install rollback, every explicit protocol
+failpoint, symlink destinations, malformed or mismatched marker refusal, and
+residue cleanup; independent probes confirmed recovery for the constant-current
+map+mask set and the frozen diagnostic TSV/PNG set. This is a recoverable
+gate-last transaction protocol, not a guarantee against filesystem corruption
+or hostile concurrent mutation of transaction sidecars.
+
+Third, the public constant-current calibration API accepted invalid iteration
+and tolerance controls or failed later with unrelated errors. `max_iter` now
+must be a positive non-`Bool` integer, and `height_tol_factor` a positive finite
+non-`Bool` real, before target conversion, frame work, scanning, or bisection.
+Ten failing-first assertions covered zero, negative, non-integer, Boolean, and
+non-finite inputs. The focused suite then passed twice, and independent analytic
+and poisoned-input probes confirmed valid custom behavior and validation order.
+No scan resolution, root-continuity rule, support rule, default, or physical
+parameter changed.
+
+All three corrections were independently confirmed. T3 remains terminal
+`BLOCKED`; no challenger was frozen or promoted, the grader invocation count is
+zero, and the candidate remains locked/pending and byte-unchanged at SHA-256
+`9dac84437ef0a9c2118b77d4e371efd71a5365595794167a112a338ca3e4a1aa`. The
+historical headline remains `78.9% / 17-of-145`; these remediations provide no
+new benchmark validation.
+
+### 2026-07-30 — Constant-current isolated exact-root continuity correction
+
+Final rerun review found one remaining gap in the fixed-support root contract.
+An exact interior sampled response was accepted when either immediate adjacent
+scan response was non-finite, because the turning-point and support checks ran
+only when both neighbours were finite. A one-column reproduction with profile
+`[0, 2, 0]`, scan samples `[1, 2, 3]`, and target height `1.0` therefore
+returned the isolated exact sample at isovalue `2.0` without establishing a
+continuous root branch.
+
+Exact interior roots now require finite responses at both immediate adjacent
+scan samples before the existing turning-point and identical-support checks run.
+If either neighbour is non-finite, calibration rejects the sample with an
+explicit deterministic isolated-response continuity ambiguity. Regressions
+cover both non-finite neighbours and a one-sided-finite response. Genuine
+interior fixed-support roots remain accepted even when distant scan endpoints
+are invalid; endpoint, multiple-root, support-changing bracket, scan-resolution,
+and bisection behavior are unchanged.
+
+The phrase “canonical hash” in `config/unit_assignment_candidate.toml` denotes
+the checker's exact non-grader source-byte projection, excluding only the
+permitted lifecycle assignments. It does not mean semantic TOML
+canonicalization. The candidate file and its SHA-256 remain unchanged at
+`9dac84437ef0a9c2118b77d4e371efd71a5365595794167a112a338ca3e4a1aa`, because
+all downstream no-truth evidence binds those bytes.
+
+This correction does not unblock the accepted-cube gate. T3 remains terminal
+`BLOCKED`, no challenger was frozen or promoted, zero grader invocations were
+made, and no benchmark headline changed.
+
+### 2026-07-30 — Constant-current endpoint-root continuity correction
+
+Final review found that an exact mean-height target at the first or last
+isovalue scan sample bypassed the interior turning-point and fixed-support
+checks. A lower-endpoint reproduction therefore accepted a root even though the
+one-sided neighbouring sample changed valid-column support; the symmetric upper
+endpoint case had the same defect.
+
+Exact roots at either declared scan-range endpoint are now rejected with an
+explicit continuity-ambiguity error. This is the conservative fixed-support
+policy: without samples on both sides, continuity and a crossing within the
+declared interval cannot be established, and accepting the endpoint would
+implicitly prefer an unverified branch. Interior fixed-support roots and the
+existing multiple-root and support-discontinuity rejection behavior are
+unchanged. Regression tests cover both endpoint orientations and their
+one-sided support changes.
+
+This correction does not unblock the accepted-cube gate. T3 remains terminal
+`BLOCKED`, no challenger was frozen or promoted, no grade was run, and no
+benchmark headline changed.
+
+### 2026-07-30 — Final atomic output-integrity reconciliation
+
+Two confirmed output-integrity gaps are closed without changing scientific
+behavior. Hierarchical prediction, evaluator-shard, merged-row, and gate
+outputs now use same-directory staged atomic replacement. Existing destination
+symlinks are replaced rather than followed, and a failure before commit leaves
+the prior destination bytes intact. The implementation and focused/HPC/T6
+verification are recorded in
+`.omo/evidence/improve-unit-assignment-benchmark/final-atomic/hierarchical/done-claim.json`.
+
+The frozen-contrast constant-current diagnostic applies the same contract to
+its summary and controls TSVs and generated PNGs: unpredictable same-directory
+staging is closed before rename, destination symlinks are replaced without
+touching their targets, and pre-commit failure preserves the prior outputs.
+The focused diagnostic, frozen-contrast, constant-current, and safe-PoC receipts
+are recorded under
+`.omo/evidence/improve-unit-assignment-benchmark/final-atomic/diagnostic/`.
+Schemas, row formatting, and final artifact paths are unchanged.
+
+These are security and output-integrity fixes only. T3 remains terminal
+`BLOCKED`, no challenger was frozen or promoted, no grade was run, and no
+benchmark headline changed.
+
+### 2026-07-30 — Final-remediation 2: manifest, provenance, and scan-policy binding
+
+The candidate-manifest boundary now rejects TOML multiline strings rather than
+trying to classify their contents with a line scanner. It requires exactly one
+real, top-level `[grader_only]` table and scans non-grader keys, values, and path
+fragments case-insensitively. Frozen-source binding covers every other
+non-grader byte, including comments, formatting, and line endings. Only the real
+`candidate.frozen_hash` assignment and the lifecycle-only
+`candidate.grade_status` assignment are excluded, so the declared
+`frozen_once -> graded` transition does not require a new digest. These checks
+prove the current manifest state and future transitions from the bytes presented
+to the checker; they do not provide stateless proof of an unobserved historical
+manifest.
+
+Hierarchical prediction provenance now records every artifact actually consumed
+by a run. Primary features, optional split features, and optional backward
+patches are each bound by stable semantic role, normalized path, and SHA-256 of
+their bytes, together with the resolved views, feature names, model identity,
+and fit options. Deterministic CLI replay was retained, while changing only a
+consumed split or backward artifact changes the provenance digest. This is an
+artifact-integrity correction, not a model, confidence, or assignment change.
+
+Constant-current root-search resolution is now an explicit validated policy:
+`--isovalue-scan-intervals`, default `1024`. The value is propagated through
+the builder, recorded as `isovalue_scan_intervals`, and checked by provenance
+and whole-ROI validation. Root uniqueness is therefore assessed at that declared
+resolution (1024 intervals, 1025 samples including endpoints), not as a
+resolution-free mathematical claim. The accepted GlcNAc response still fails
+the uniqueness policy, so T3 remains terminal `BLOCKED`. No branch preference,
+support rule, physics parameter, benchmark headline, candidate state, or grade
+was changed, and no grader was invoked.
+
+### 2026-07-30 — Final-review remediation: stability, constant current, and freeze binding
+
+Final review found two correctness gaps in the diagnostic hierarchical
+equal-prior lane. Prediction and leave-date-out evaluation could consume a
+two-component EM fit even when its explicit `converged` or `monotone` status
+was false. The prediction path now abstains with `unstable_model` or
+`nonmonotone_model`, and held-out evaluation fails before responsibilities or
+scores are computed. Convergence criteria were not relaxed.
+
+The standalone hierarchical CLI also merged opt-in split-width and backward
+patch descriptors into loaded lobe records, then called a path-based pipeline
+that reloaded the original feature TSV and discarded the merged values. A
+records-based pipeline seam now consumes those records directly while the
+existing path-based API retains its prior behavior. Synthetic CLI checks show
+both optional views contributing to all rows and a deliberately iteration-
+limited fit producing only explicit `unstable_model` abstentions. The focused
+suite, full hierarchical suite, T6 integration, and HPC contract are green;
+no labels, benchmark truth, expected composition, or grade data entered these
+checks.
+
+The constant-current mean-height calibration had also assumed that endpoint
+behavior was enough to identify a usable isovalue. It now scans 1025 equally
+spaced isovalues over the complete declared interval, including both endpoints,
+and accepts only one continuous target root branch with fixed valid-column
+support. Multiple roots and support discontinuities are explicit ambiguity
+errors; no endpoint, coverage, or branch preference is introduced. The obsolete
+smoke cube was consequently replaced by a dedicated strictly monotone synthetic
+constant-current cube (`value = 3z`) whose target has one such branch. Existing
+smoke assertions were retained rather than weakened. This API correction does
+not solve T3: the accepted GlcNAc cube remains empirically multibranch, so T3
+stays terminal `BLOCKED` pending a separately predeclared physical policy.
+
+Finally, the candidate-manifest freeze previously canonicalized parsed TOML,
+which could miss changes to comments, formatting, and line endings. Its stored
+SHA-256 now binds exact non-grader source bytes. The later remediation above
+narrows the exclusions to the real grader-only table and the two real candidate
+lifecycle assignments needed for the stored digest and `frozen_once -> graded`
+transition; it also closes multiline and case-variant firewall bypasses.
+Matching frozen provenance and hash are enforced in both lifecycle states.
+The candidate itself was not edited, frozen, promoted, or graded, and retains
+SHA-256 `9dac84437ef0a9c2118b77d4e371efd71a5365595794167a112a338ca3e4a1aa`.
+These fixes close review-discovered contract gaps without changing physics,
+branch preference, benchmark headlines, or the T7/T8/T9 terminal decisions.
+
+### 2026-07-29 — T9 terminal documentation closure
+
+T9 closes without a promoted challenger or a new external grade. T3 is terminal
+`BLOCKED` by nonunique accepted-GlcNAc isovalue branches without a predeclared
+branch policy. T5 passed its 13-date, 500-seed hierarchical identifiability gate
+(`95%` lower bound `0.55621530226471905`), and T6 integration/leakage guards were
+confirmed after URI-path and partial-view-QC corrections, but the hierarchical
+lane still lacks durable forward/backward evidence and the common per-lobe T7
+audit table. T7 is therefore `NO_ELIGIBLE_CHALLENGER`; T8 is
+`SKIPPED_NO_ELIGIBLE_CHALLENGER`, with zero grader invocations and the one-shot
+budget unused. The candidate manifest remains locked/pending with no frozen hash,
+and `hierarchical_equalprior` remains an executable diagnostic rather than a
+frozen or promoted profile. The historical `78.9%` classified physical accuracy
+and `17/145` exact-chain headline is unchanged; it must not be confused with an
+honest fixed-denominator report or read as new benchmark validation.
+
+**Documentation-build correction.** The exact Documenter build initially failed
+because this intentionally chronological journal rendered above the default
+200 KiB hard page limit. `docs/make.jl` now ignores the size threshold for
+`journal.md` only; the default warning and hard thresholds remain active for
+every other page. A focused source contract and the successful full docs build
+confirm that narrow exception. No scientific behavior, parameter, benchmark
+claim, grading state, or historical journal content changed.
+
+### 2026-07-29 — T7 terminal no-freeze decision; T8 skipped
+
+Neither approved challenger lane is eligible for a label-free T7 freeze. The
+constant-current physics lane is terminal `BLOCKED` because the accepted-cube
+response has multiple isovalue branches and this plan predeclared no physical
+branch-selection rule. The hierarchical lane passed only its fixed
+leave-date-out one-vs-two-component gate: all 13 held-out folds were positive
+and the 500-seed scan-bootstrap 95% lower bound was
+`0.55621530226471905`. That result does not establish every T7 real gate.
+
+The durable hierarchical `validated.tsv` and all 143 shards contain only `NA`
+for `forward_backward_agreement`. Fixed perturbation agreement values are
+present, but there is no durable hierarchical prediction TSV and no common
+per-lobe T7 audit table containing emission/abstention, forward/backward,
+minimum perturbation, normalized margin, invalid reason, and bound hashes.
+Synthesizing the missing audit values or inferring agreement would violate the
+predeclared freeze contract.
+
+**Decision.** T7 terminates as `NO_ELIGIBLE_CHALLENGER`: no challenger is
+frozen, `config/unit_assignment_candidate.toml` remains `grade_status =
+"locked"` with pending provenance and no frozen hash, and T8 must be skipped.
+No benchmark labels, truth, grade, grader execution, or parameter change was
+used for this decision.
+
+### 2026-07-29 — T3 constant-current real gate stopped at nonunique isovalue calibration
+
+The accepted-cube Viper generation job `10765041` stopped before writing maps:
+the global-extrema lower isovalue produced no valid crossings. A synthetic
+reproduction and accepted-cube diagnostics confirmed that this endpoint check
+is premature for GlcN because finite interior isovalues bracket every fixed
+height. Geometry and frame-domain checks did not explain the failure.
+
+A second accepted-GlcNAc Viper diagnostic (`10766684`, one task and one Julia
+thread) swept 1043 strictly positive isovalues over the observed patch range and
+a low-positive tail. All predeclared heights `0.40, 0.45, 0.50, 0.55, 0.60 nm`
+are reachable, so target unreachability is refuted. However, the main finite
+response has 197 direction reversals, and the five targets have respectively
+10, 2, 2, 4, and 6 adjacent isovalue straddles. Many patch columns are
+multi-crossing and therefore invalid under the existing vacuum-first policy.
+
+**Decision.** T3 is terminal `BLOCKED`, not repaired or retried. A more robust
+endpoint search would still have to choose among low- and high-isovalue roots.
+Choosing the lowest/highest root, maximum valid coverage, nearest endpoint, or
+another branch would introduce a new physical calibration rule after observing
+the accepted real cubes. No such rule was predeclared, and no support threshold
+may be inferred from this run. No maps, molds, SXM fits, labels, grades, or
+parameter changes were produced. Any future attempt requires a separate
+scientific change that predeclares and validates a unique branch-selection rule
+before rerunning accepted-cube generation.
+
+### 2026-07-29 — T3 final constant-current correction follow-up
+
+The post-correction review found that the provenance chain was materially
+stronger but still had local contract gaps. SXM file-list rows now use one
+documented basename allowlist in both the Viper launcher and array worker, so
+quotes, whitespace, shell metacharacters, leading dashes, command substitutions,
+and path separators are rejected before any SSH, rsync, or Julia command can be
+constructed. The connected-mold importer now writes unary molds, optional bond
+molds, and mold-binding sidecars with same-directory temporary files followed by
+rename, replacing destination symlinks instead of following them.
+
+The scoring validator now checks the mold-binding importer convention
+(`parity_flip=t`, `mirror_flip=u`, `normalize=zscore`) and verifies the nominal
+constant-current map grid extents and step against the extraction metadata before
+scoring. A local synthetic generated-map test covers the real whole-ROI support:
+the diagnostic constant-current builder and importer must both use
+`--half-nm 0.80 --step-nm 0.08`, yielding finite 21×21 (`441` pixel) molds. This
+0.80 nm support is required by the whole-ROI mold consumer; it is a grid-support
+contract, not a new physical selection rule. The nominal height remains
+`0.50 nm`, the bracket remains `0.40, 0.45, 0.50, 0.55, 0.60 nm`, provider
+`stm_dft_cc_diag` remains diagnostic-only, and no SSH, Slurm, real cube
+generation, real artifact generation, or real fit was run.
+
+### 2026-07-29 — T3 constant-current provenance correction after independent review
+
+The independent T3 frame-provenance review found that the previous fix still
+left two material gaps in the diagnostic constant-current chain. First, the
+builder calibrated the nominal isovalue separately for each cube type but the
+sidecar recorded only one scalar value. Second, whole-ROI scoring validated the
+constant-current map sidecar and then independently loaded the connected mold
+TSV, so a stale mold generated from another map could still be scored.
+
+The correction changes the diagnostic sidecar to record `type_isovalues` with
+exactly one finite non-Bool nominal isovalue for type `0` and one for type `1`.
+Legacy single explicit isovalue calls remain accepted only by normalizing that
+one value into both typed entries. The connected-mold importer can now write a
+small child sidecar tying the mold TSV hash and path to the source nominal map
+hash and source constant-current provenance hash. The real whole-ROI observable
+validator receives the actual mold TSV path and rejects missing, stale, or
+mismatched mold bindings before loading molds or scoring scans. The same
+validator now rejects TOML booleans in numeric type/frame/isovalue fields and
+checks the extraction metadata and bracket artifact paths/hashes before scoring.
+
+The Viper launcher was hardened at the local boundary: staged local paths,
+remote paths, export payloads, and remote shell commands now pass a conservative
+transport syntax check before any SSH command can be constructed, and remote
+command fragments are shell-quoted. Contract tests cover quote and
+command-substitution inputs failing locally during `--dry-run`. No physical
+policy changed: provider `stm_dft_cc_diag` remains diagnostic-only, the nominal
+height is still `0.50 nm`, the bracket remains
+`0.40, 0.45, 0.50, 0.55, 0.60 nm`, registration ranges and tie tolerances are
+unchanged, and no SSH, Slurm, real cube generation, real artifact generation, or
+real fit was run for this correction.
+
+### 2026-07-29 — T3 constant-current per-type frame provenance fixed
+
+The T3 real-input preflight found that the accepted GlcN and GlcNAc LDOS cubes
+carry distinct local frames from their separately relaxed molecular geometries.
+That is the same scientific convention used by
+`test/finalize_qe_mold_workflow.jl` and the production constant-height map
+path: each cube is sampled in the local frame extracted from its own relaxed
+structure. The T2 constant-current builder had been hardened to reject mixed
+frames because the sidecar recorded only one `reference_plane`; that made real
+T3 artifact generation impossible without copying, averaging, or selecting one
+frame for both cube types, which would change the extraction geometry and is not
+a label-free provenance fix.
+
+Constant-current provenance now records a `type_frames` table with exactly one
+complete frame for type `0` and one for type `1`. The builder passes the actual
+frame used for each cube into that table, so distinct relaxed GlcN/GlcNAc frames
+are accepted and bound explicitly. Legacy common-frame synthetic calls remain
+accepted by normalizing the shared frame into two typed entries, but a one-type,
+duplicate-type, malformed, or missing typed provenance structure is rejected.
+Whole-ROI real observable validation also requires both typed frames before any
+map, mask, or scoring path proceeds.
+
+No physical extraction parameter changed: the constant-current path remains
+diagnostic-only, still uses provider `stm_dft_cc_diag`, the fixed
+`0.40, 0.45, 0.50, 0.55, 0.60 nm` height bracket, the same crossing policy,
+the same z-spacing/periodic guards, and the same frozen registration/tie
+configuration. The production registry/config hashes and tracked production
+DFT map/template/provenance artifacts were recomputed before and after the
+change and were byte-unchanged. Local verification only was run; no SSH, Slurm,
+real artifact generation, or real fit was performed.
+
+### 2026-07-28 — T3 constant-current real no-truth gate plumbing prepared
+
+T3 of `.omo/plans/improve-unit-assignment-benchmark.md` prepares the
+constant-current whole-ROI real diagnostic for Viper without submitting a job or
+running a multi-scan fit. The real diagnostic CLI now rejects benchmark truth,
+grade, expected-`N`, control-sequence, manifest, full145, and control inputs at
+the runtime boundary. Constant-height defaults remain the historical two-scan
+gate (`240817_007.sxm`, `240817_050.sxm`), the same mold path, and the same
+diagnostic registration config when no new inputs are supplied.
+
+The constant-current path is explicit and provenance-bound: the launcher and
+array worker now carry the diagnostic config, converged molds, output directory,
+file-list artifact, observable provenance, map TSV, validity-mask TSV, and
+provenance SHA-256 into the CLI. Before scoring, the CLI validates the
+constant-current config against the sidecar schema/provider/bias/cube hashes,
+checks the provenance hash, checks map and validity-mask hashes, verifies the
+map/mask grid keys agree, and rejects any non-`found` validity-mask status.
+This preserves frozen common-registration versus contrast-scoring separation;
+the observable checks happen before any scoring output is created.
+
+The Viper launcher now uses the file-list artifact rather than hardcoded array
+branches, keeps one scan per task, caps useful Julia threads at four per task,
+and caps concurrent array tasks so `CPUS_PER_TASK * concurrency <= 8`.
+`--dry-run` performs no SSH connection or Slurm submission and records config,
+mold, output, file list, array size, concurrency, CPU, thread, memory, and
+walltime settings. The archived T3 dry-run is plumbing evidence only, not a
+scientific pass: local data and constant-current artifacts still need to be
+provided before `--watch`.
+
+### 2026-07-28 — Constant-current molds added as a provenance-bound diagnostic
+
+T2 of `.omo/plans/improve-unit-assignment-benchmark.md` adds a physically
+motivated diagnostic between the accepted QE LDOS cubes and whole-ROI unit
+assignment. `test/build_constant_current_stm_maps.jl` reuses the existing cube,
+frame, and first-vacuum-crossing implementations. It generates typed maps and
+validity masks at the five predeclared heights
+`0.40, 0.45, 0.50, 0.55, 0.60 nm`; absent, ambiguous, non-finite, and
+out-of-support crossings remain invalid rather than becoming zero-height data.
+The nominal isovalue follows the fixed `0.50 nm` mean-height-above-Cu policy.
+
+The provenance schema now binds the observable, both accepted cube hashes,
+`-0.300 eV` bias, Cu reference plane, nominal/bracket heights, isovalue, z
+spacing, crossing policy, and map/mask hashes while retaining byte-identical
+constant-height output when no observable is requested. A separate
+`config/joint_proxy_whole_roi_constant_current.toml` copies the frozen
+registration ranges and numerical-tie tolerances exactly and adds only
+diagnostic observable/provenance references. The temporary provider is named
+`stm_dft_cc_diag`; registry tests create it only in temporary state and confirm
+that the active `stm_dft_v1` source, `config/joint_proxy_molds.toml`, and the
+production registry payload hash are unchanged before and after the fixture.
+
+Synthetic builder QA produced 81 type-0 and 81 type-1 rows at each height with
+distinct typed values. For every height, four non-benchmark three-lobe binary
+fixtures passed exact, fixed-noise, drift, blur, and frame perturbations
+(`20` cases per height), and the common-only control abstained. The focused
+registry test passes `441/441`. These checks establish deterministic map
+construction, provenance binding, and common/contrast mechanics in the
+synthetic domain only.
+
+Independent T2 review found four implementation hazards that did not alter the
+synthetic scientific result but weakened its reproducibility and artifact
+contract. The builder accepted different type-0/type-1 reference frames while
+recording only one frame, constant-current provenance allowed declared bracket
+heights without binding their map/mask artifacts, direct output writes followed
+symlinks and exposed partial files, and registry tests reused a predictable
+shared temporary directory. The remediation rejects mixed frames before any
+output, requires exact non-nominal bracket-artifact coverage, atomically replaces
+map/mask/provenance files without following destination symlinks, and gives each
+registry test process an isolated `mktempdir`. Failing-first tests reproduced all
+four mechanisms; the focused provenance suite and the expanded registry
+suite pass after the fix. No physical parameter, provider registration, accepted
+cube, production registry hash, or benchmark-facing behavior changed.
+
+A follow-up code-quality review found two additional provenance ambiguities:
+the two cubes could resolve to different normal-axis sampling spacings while the
+sidecar recorded only one, and opt-in periodic wrapping changed extraction
+without being represented in the sidecar. Failing-first CLI tests now require a
+nonzero exit for either case. The builder accepts only a common z spacing and
+rejects periodic wrapping; the lower-level T1 diagnostic sampler remains the
+appropriate surface for periodic cube experiments.
+
+**Decision.** Keep the constant-current result diagnostic-only. QE
+`plot_num=5` is a discrete `|psi_n(r)|^2` sum over the bias window, not amperes;
+there is no calibrated nA-to-cube conversion. The accepted common `5e-5 Ry`
+criterion and five-height bracket remain fixed, no bracket is chosen by a
+benchmark grade, and no map enters fitting, `N_selected`, calibration,
+thresholds, or production abstention. Real GlcN/GlcNAc transfer still requires
+the separate no-truth T3 gate.
+
+### 2026-07-27 — T0 firewall + baseline contract frozen for the unit-assignment challenger
+
+The label-free challenger lane of the new plan
+`.omo/plans/improve-unit-assignment-benchmark.md` opens with a provenance-only
+candidate manifest at `config/unit_assignment_candidate.toml` and a dedicated
+checker at `test/check_unit_assignment_candidate_manifest.jl`, paired with a
+contract test at `test/test_unit_assignment_candidate_manifest.jl`. T0 freezes
+the firewall and the baseline contract **before** any new model, feature, or
+cube is written (T1–T6), so the boundary cannot drift while the lanes execute.
+
+**Firewall.** The manifest is scanned line-by-line. The benchmark control
+motif/encoding, the benchmark truth/count column names, and benchmark
+truth/grade paths may appear **only** inside a dedicated `[grader_only]`
+section. They must never enter fitting, feature construction, candidate
+selection, confidence, abstention, or calibration. The distinct grader-only
+denominator manifest `benchmarks/chitosan_6mer_counting_confirmed.toml`
+(`145 files / 870 control positions`) is referenced by field name only from
+`[denominator]`; its path lives exclusively in `[grader_only]`. This is the
+same label-free boundary the existing unknown-production
+runner/validator/docs scripts already enforce at the CLI surface; the
+baseline is now pinned by a `baseline_firewall` test set
+(`validate_unit_predictions.jl` and `run_unknown_unit_assignment.jl` reject
+`--truth`, `--control-sequence`, `--manifest`, `--full145`, `--control`,
+`--expected-N`; `check_unknown_workflow_docs.jl` passes; the denominator
+manifest is not referenced by the unknown runner/validator).
+
+**Decisions frozen by the manifest.** `grade_status = "locked"` until T7.
+Provenance is `pending` at T0 and must be `frozen` with a real 64-hex SHA-256
+for every feature TSV, cube, generated map, mold, and config before T7. Exact
+feature lists are pinned (`base_local`, `base_gaussian`, the backward
+descriptors, `split_log_skew`) under an equal-priors hierarchical emission
+policy (shared two-component diagonal Gaussian, class priors fixed at `0.5/0.5`,
+no occupancy regularizer, higher-amplitude cluster maps to the acetyl-bearing
+unit). Views have equal weight; bootstrap is `500` replicates over seeds
+`0:499` resampling whole scans within training dates. The date parser parses
+exactly one leading `YYYYMMDD` token from the folder/relative path and fails on
+missing or ambiguous input. The constant-current policy is fixed at the `0.50 nm`
+mean-height above the Cu reference with the `0.40:0.05:0.60 nm` sensitivity
+bracket as diagnostics only (no nA-to-cube conversion claimed; bracket may not
+be selected by a benchmark grade). The 1-vs-2 gate requires every held-out date
+fold positive on per-lobe log-likelihood improvement AND a scan-bootstrap 95%
+lower confidence bound above zero. The common real no-truth gates, the no-truth
+ranking order, and the final post-hoc promotion thresholds on the fixed
+`145/870` denominator are pinned: `honest_correct >= 677`,
+`physical_accuracy_classified >= 78.9%`, `exact_chains >= 18`.
+
+**Hash binding.** T7 computes a canonical SHA-256 over the parsed TOML
+re-serialized with sorted keys, excluding the `[grader_only]` section and the
+`candidate.frozen_hash` field itself, writes it as `candidate.frozen_hash`, and
+switches `grade_status` to `frozen_once`. The checker recomputes the canonical
+hash on every invocation and rejects any mutation that makes it differ from the
+stored digest. A future scientific hypothesis requires a new versioned plan and
+a new candidate manifest rather than editing a frozen one.
+
+**Verification.** A red→green TDD sequence was used. A `baseline_firewall`
+test set (17/17) was run green on unchanged code first and archived. The full
+`candidate_manifest_contract` test set (51/51, including missing keys,
+malformed SHA-256, unequal view weights, ambiguous date parser, invalid
+locked/frozen state, grader-only exception, forbidden-token and forbidden-path
+injection, and hash-binding mutation rejection) was run red against the absent
+checker/config, then green after implementation. Two consecutive green runs
+produced identical counts (`17/17`, `51/51`), so the focused manifest test is
+not flaky. Manual QA against the real CLI surface confirmed: `--expect-locked`
+exits 0 with locked-status output; a non-grader field mutated after a valid
+frozen hash is rejected solely by the hash mismatch; and every forbidden family
+(`NKNNKN`, `010010`, `sequence`, `expected_N`, `target_N`, and benchmark
+truth/grade paths) injected outside `[grader_only]` is rejected with a firewall
+diagnostic. The promotion threshold field is named `exact_chains_min` (not
+`sequence_exact`) precisely because `sequence` is a forbidden token outside
+`[grader_only]`; the checker maps it to the plan's exact-chain criterion.
+
+**Why.** Earlier unit-assignment experiments (split-width skew, residual
+patches, geometric molds) each reached post-hoc diagnostic grades but did not
+produce a transferable label-free assignment. Without a frozen firewall, a
+future challenger could silently retune features, thresholds, or bracket from
+benchmark feedback. T0 makes the label-free boundary and the one-shot grading
+discipline executable and auditable before the lanes execute.
+
+**Failed approach avoided.** An earlier draft listed the forbidden tokens
+literally inside the manifest's own `[firewall]` section as a self-documenting
+schema; the checker immediately tripped on its own declaration. The literals
+now live only in `[grader_only]` and as constants in the checker; the
+`[firewall]` section declares policy only.
+
+### 2026-07-26 — Registration commune figée: gate synthétique réussi, transfert réel limité par les bornes
+
+Le diagnostic whole-ROI a été reformulé pour empêcher la géométrie de choisir
+une identité chimique. Pour chaque état `(parity, mirror)`, les moules sont
+décomposés exactement en `common=(M0+M1)/2` et
+`contrast=(M1-M0)/2`. La registration n'ajuste que
+`fond + backbone + common` sur `context.zimg` fusionné et sur le support exact
+du fit. Elle énumère les huit états globaux et une grille TOML déterministe de
+translation, petite rotation et flou, sans scale, shear ni transformation par
+lobe. L'état, la transformée, l'image commune, le masque et le fit sont ensuite
+figés dans des structures profondément immuables. Le score chimique ne peut
+plus relancer la registration: il énumère seulement les séquences binaires sous
+la géométrie figée, publie les marges best/runner-up/complément et s'abstient sur
+égalité numérique, contraste nul, instabilité, limite de recherche ou contrôle
+négatif non battu.
+
+Le gate synthétique est distinct de l'évidence réelle. Il utilise un générateur
+forward indépendant du sampler du score, retire toute vérité des entrées avant
+registration, puis couvre données exactes, common-only, swap de métadonnées,
+égalité complémentaire, nuisance hors grille, bruit, dépassement de borne et
+sentinelle de transposition asymétrique. Les tests focalisés passent deux fois
+(`25/25`) et la suite `julia --project=. test/joint_proxy/runtests.jl` passe.
+Ce résultat établit la mécanique de décomposition, gel et scoring dans le
+domaine synthétique; il ne constitue pas une validation chimique STM.
+
+Le calcul réel exhaustif a été déplacé sur Viper, un fichier par tâche, après
+un dry-run obligatoire. Le moule `21x21`, `±0.80 nm`, `0.08 nm/pixel`,
+échantillonné périodiquement en `xy`, a été régénéré depuis les cubes production
+dont les SHA-256 correspondent à la note DFT. Le job-array `10692648` s'est
+terminé sans erreur (`007`: `6m29s`, `050`: `14m30s`). Les artefacts récupérés
+sont dans `/tmp/opencode/frozen_contrast_hpc/`: deux lignes primaires, dix
+contrôles et deux PNG à huit panneaux.
+
+Résultats fused/fit-mask, sans lecture de vérité benchmark:
+
+| scan | pixels | état | transformée `(t,u,rot,blur)` | gain common SSE | gain contraste | marge runner | contrôle décalé | décision |
+| --- | ---: | --- | --- | ---: | ---: | ---: | ---: | --- |
+| `240817_007.sxm` | 14961 | `0/0/0` | `(0.17,-0.20,5°,0.02) ` | `0.0212584` | `0.0128963` | `0.00101592` | `0.0395822` | abstention: borne `u/rotation` et contrôle non battu |
+| `240817_050.sxm` | 46894 | `0/1/1` | `(0.30,0.20,5°,0.08)` | `0.0541387` | `0.431676` | `0.0384917` | `0.292390` | abstention: bornes `t/u/rotation` |
+
+Les quatre perturbations d'un pas fin conservent le meilleur code diagnostique
+sur chaque scan, mais cette stabilité discrète ne suffit pas: pour `007`, le
+contraste spatialement décalé explique davantage de SSE que le contraste
+nominal; pour les deux scans, la registration pousse plusieurs paramètres aux
+limites fixées avant l'exécution. Les séquences finales restent donc vides dans
+le TSV et `?` dans les figures. Les bornes n'ont pas été élargies ni retunées à
+partir de `007/050`.
+
+Décision: le transfert réel n'est pas établi. La séparation common/contrast
+réfute l'idée qu'un simple degré de liberté chimique figé suffit à résoudre le
+mismatch whole-ROI actuel; elle ne réfute pas les moules DFT dans leur domaine
+synthétique. Les limites restantes sont la registration au mur et la différence
+physique entre LDOS constant-height et topographie constant-current, toujours
+confondue avec le drift, la réponse de pointe et l'erreur de modèle. Aucun
+comportement, seuil, calibration, registre ou claim benchmark de production
+n'est modifié.
+
+### 2026-07-24 — Inspection visuelle whole-ROI: mismatch de vue et dilution du masque
+
+Deux cas réels contrastés ont été rendus avec
+`test/plot_joint_proxy_whole_roi_debug.jl`: `240817_007.sxm`, qui avait le plus
+grand gain du batch propre, et `240817_050.sxm`, dont le coefficient de moule
+était nul. Pour chaque fichier, le diagnostic compare quatre conditions sans
+utiliser de label benchmark: observation forward ou fusionnée, chacune sur le
+rectangle complet ou sur le support tubulaire réellement employé par le fit de
+chaîne. Chaque PNG montre observation, backbone, contribution du moule, modèle
+combiné, résidus et amélioration SSE pixel par pixel. Le tableau reproductible
+est écrit dans `/tmp/opencode/whole_roi_debug_plots/comparison.tsv`.
+
+Un défaut méthodologique du diagnostic réel a été confirmé. Le backbone est
+ajusté par `chain_gaussian_sweep` sur la fusion forward/backward
+(`fuse_z_bwd=true`), mais le score whole-ROI antérieur le comparait à la vue
+forward seule. En utilisant exactement `context.zimg`, le domaine fusionné du
+fit, le gain rectangle complet tombe à `0%` sur les deux fichiers. Sur le masque
+du fit, les gains passent de `17.83%` à `1.63%` pour `007` et de `11.00%` à
+`1.04%` pour `050`. Les forts gains forward suivent visuellement des bandes
+latérales rouge/bleu et une texture de lignes dans le résidu; ils ne constituent
+donc pas une signature chimique propre.
+
+Le rectangle complet dilue fortement toute contribution localisée: il contient
+`65 572` pixels contre `14 961` dans le masque du fit pour `007`, et `238 044`
+contre `46 894` pour `050`. Le masque tubulaire augmente donc mécaniquement le
+gain relatif, mais ne stabilise pas l'identité. Pour `007`, la meilleure séquence
+change entre `111111`, `101001`, `000000` et `111011` selon la vue et le masque.
+Pour `050`, les variantes non nulles préfèrent `111111`, résultat uniforme qui
+n'apporte pas de discrimination GlcN/GlcNAc. Sur les conditions cohérentes
+fusion+masque, les marges entre séquences uniques restent seulement `0.082%` et
+`0.152%` de la SSE nulle.
+
+Les overlays ne montrent pas de rotation à 90 degrés ni d'inversion y grossière:
+l'axe, les centres et le support des moules suivent la molécule. Les maxima DFT
+locaux sont toutefois décalés par rapport aux centres gaussiens, ce qui reste à
+interpréter physiquement. Enfin, soustraire la moyenne du moule ne change la SSE
+qu'à l'arrondi (`|Δ| <= 4e-15`), comme attendu avec un intercept libre; les halos
+du z-score sont visibles mais leur composante constante n'explique pas le faible
+transfert.
+
+Décision: ne pas interpréter le score forward/rectangle antérieur comme preuve
+de transfert. Tout futur diagnostic réel doit comparer dans le même domaine
+fusionné que le backbone et publier séparément rectangle et support du fit. Le
+faible gain fusionné reste compatible avec un gap constant-height LDOS versus
+topographie constant-current, mais les deux fichiers ne suffisent pas à isoler
+ce gap d'autres erreurs de modèle. Aucun comportement scientifique de production
+n'est modifié.
+
+### 2026-07-24 — Échantillonnage périodique diagnostique et convergence du cadre DFT
+
+Un échantillonnage périodique opt-in a été ajouté à `test/cube_to_stm_maps.jl`.
+La recherche auprès des sources QE (`stm.f90`, `cube.f90`, `chdens_module.f90`,
+commit `61569eb`) confirme que le LDOS `plot_num=5` est construit par FFT
+inverse et donc périodique par construction, et que le cube QE stocke exactement
+une maille sur `[0,1)` sans voxel terminal dupliqué. Le wrapping diagnostique
+s'applique donc en coordonnées de grille fractionnelle, pour les axes latéraux
+`x` et/ou `y` uniquement; l'axe `z` est rejeté par conception. Le comportement
+par défaut reste byte-identique (SHA-256 `58236e7d…1570ed` confirmé après
+changement). Les tests synthétiques couvrent l'identité intérieure,
+l'invariance de translation par vecteur de maille, la continuité de couture, le
+rejet hors-bounds en z, et le parsing CLI (13/13).
+
+Trois cadres wrappés ont été régénérés depuis les cubes production suivis avec
+`--periodic-axes xy` sous `/tmp/opencode` uniquement. L'audit de convergence
+(`test/audit_joint_proxy_frame_convergence.jl`) mesure la fraction L2 de bord
+par type et la différence type_1−type_0, et vérifie l'identité du crop central
+9×9:
+
+```text
+cadre          edge_L2 type_0  edge_L2 type_1  edge_L2 diff  crop Δ   pic au bord
+9×9 ±0.32 nm      42.92%          92.74%         92.84%       —         oui (tous)
+13×13 ±0.48 nm    37.10%          47.93%         48.00%       0.0       oui (tous)
+17×17 ±0.64 nm     9.57%          56.44%         56.50%       0.0       partiel
+21×21 ±0.80 nm     0.49%           1.77%          1.77%       0.0       non (tous intérieurs)
+```
+
+Tous les crops centraux sont bit-identiques (`Δ = 0.0`). Les fractions L2 de
+bord convergent: type_0 passe de `42.92%` à `0.49%`, type_1 de `92.74%` à
+`1.77%`, et la différence discriminante de `92.84%` à `1.77%`. À `±0.80 nm`,
+tous les maxima absolus ont quitté la frontière. L'analyse géométrique
+confirme que la maille `~2.05×1.53 nm` isole la molécule (gaps `0.16–0.49 nm`
+à chaque bord), donc le wrapping échantillonne le Cu/vide, pas une réplique
+moléculaire voisine.
+
+Décision: la structure discriminante des moules DFT est contenue dans un cadre
+`±0.80 nm`. Le cadre production 9×9 était bien tronqué. Cependant, le
+diagnostic reste hors production: aucune carte wrappée n'est promue, le
+provider suivi n'est pas modifié, et le posterior de production n'est pas
+retuné. La prochaine étape label-free est de régénérer un registre whole-ROI
+complet avec les moules `±0.80 nm`, puis de refaire le gate synthétique
+whole-ROI et une comparaison sur ROI réelle avant tout claim d'identité
+chimique.
+
+### 2026-07-24 — Gate synthétique whole-ROI avec moules DFT convergés ±0.80 nm
+
+Les moules connectés DFT ont été régénérés en `21×21 (441 pixels)` depuis les
+cubes production suivis avec l'échantillonnage périodique `xy` à `±0.80 nm`,
+puis importés avec normalisation `zscore`. Le diagnostic
+`test/diagnose_joint_proxy_whole_roi_converged.jl` place ces moules réels sur
+une chaîne synthétique à trois lobes avec backbone gaussien, fond constant et
+bruit optionnel, puis demande au score whole-ROI global de récupérer la
+séquence.
+
+Résultats: les quatre séquences testées `[0,1,0]`, `[1,0,1]`, `[0,0,1]` et
+`[1,1,0]` sont toutes récupérées exactement sans bruit (`SSE ~1e-29`). La
+récupération tient jusqu'à `noise_sigma = 0.10`. Le coefficient de moule
+injecté (`0.400`) est récupéré à `0.400±0.001`. Le ratio `SSE_swapped /
+SSE_correct` vaut environ `2.5e30`, ce qui confirme que les moules convergés
+portent une structure réellement différente entre GlcN et GlcNAc.
+
+Ce succès établit que les moules DFT `±0.80 nm`, une fois non tronqués, sont
+discriminants dans leur propre domaine image. Il ne prouve pas le transfert
+vers des scans réels: les observations synthétiques sont générées par le même
+modèle génératif que le score, et les conditions de bruit ne capturent pas le
+drift d'acquisition, le couplage tip-orbital ou la convolution de
+rétroaction. Décision: conserver le résultat comme gate de représentation et
+de mécanique d'assemblage, pas comme validation d'identité chimique réelle.
+La prochaine évidence utile doit comparer le score whole-ROI assemblé sur des
+lobes réels décodés depuis un scan `240817`, en utilisant les moules
+convergés.
+
+### 2026-07-24 — Gate réel whole-ROI sur 240817_001: abstention honnête
+
+Le diagnostic `test/diagnose_joint_proxy_whole_roi_real.jl` assemble les
+moules DFT convergés `±0.80 nm` sur la géométrie de chaîne décodée depuis le
+scan réel `240817_001.sxm`, puis ajuste globalement
+`fond + coeff_backbone·backbone + coeff_moule·assemblage` avec coefficients
+positifs et recherche exhaustive sur les `2^N` séquences et les 8 états
+globaux `(direction, phase, mirror)`.
+
+Résultat sur `240817_001.sxm` (fit `N_selected=8`, ROI `72×138 pixels`) :
+
+```text
+null SSE (backbone seul):        4.6946e+00
+best SSE (backbone + moule):     4.6577e+00
+réduction SSE:                   0.79%
+coefficient de moule:            0.0016
+spread SSE top-8 séquences:      0.2%
+coefficient global maximal:       0.0016
+```
+
+Le coefficient de moule est négligeable (`0.0016`) et la réduction SSE est
+inférieure à `1%`. Les huit meilleures séquences sont dans un spread de
+seulement `0.2%`, ce qui rend la séquence sélectionnée non fiable. Le
+diagnostic s'abstient donc honnêtement: les moules DFT convergés, bien que
+parfaitement discriminants dans le domaine synthétique, ne transfèrent pas
+vers le scan réel.
+
+La cause racine n'est pas la troncature du cadre (résolue) ni la mécanique
+d'assemblage (validée), mais le **gap de domaine de mesure**: les moules DFT
+sont des cartes LDOS constant-height (sortie `pp.x plot_num=5`), tandis que
+le scan STM est une topographie en mode constant-current. Ces deux quantités
+ne sont pas reliées par une simple transformation affine; le couplage
+tip-orbital, la rétroaction de courant et la convolution électronique
+introduisent des différences structurelles que la nuisance globale
+`fond + backbone + moule` ne peut pas capturer.
+
+Décision: l'attribution chimique GlcN/GlcNAc reste non identifiable à partir
+des scans STM actuels avec cette approche. Ne pas promouvoir les moules
+périodiques en production, ne pas retuner le posterior, et ne pas émettre de
+types. La prochaine direction physiquement fondée est soit (a) un modèle
+explicite de la boucle de rétroaction constant-current depuis le cube LDOS,
+soit (b) un observable expérimental indépendant (multi-bias, spectroscopie,
+ou canal Current). La voie (a) nécessite `pp.x` en mode STM simulé
+(`plot_num` approprié) ou une post-processe Tersoff-Hamann avec modèle de
+pointe; la voie (b) nécessite des données qui ne sont pas présentes dans
+`240817_001.sxm`.
+
+### 2026-07-24 — Réplication whole-ROI sur 10 scans clean N=6
+
+Le gate réel a été répété sur dix fichiers de la liste documentée
+`accept_unit_training_known_010010`, tous non ambigus avec
+`N_selected=N_ell=N_circ=6`: `007`, `036`, `040`, `042`, `045`, `046`,
+`049`, `050`, `052` et `054`. Le diagnostic lit `N_selected` depuis le résumé
+label-free figé `results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv`;
+il ne lit ni séquence, ni `expected_N`, ni composition. Chaque séquence est
+comparée après minimisation sur les huit états globaux, puis la marge est
+calculée entre les deux meilleures séquences uniques.
+
+```text
+file  SSE reduction  sequence gap  mold coefficient
+007       1.35%          0.686%         0.0021
+036       0.88%          0.341%         0.0026
+040       0.30%          0.111%         0.0017
+042       0.21%          0.032%         0.0015
+045       0.25%          0.123%         0.0015
+046       0.24%          0.133%         0.0015
+049       0.02%          0.014%         0.0005
+050       0.00%          0.000%         0.0000
+052       0.00%          0.000%         0.0000
+054       0.05%          0.009%         0.0007
+```
+
+La médiane de réduction SSE est `0.23%` (maximum `1.35%`), la médiane du
+coefficient de moule `0.0015` (maximum `0.0026`) et la médiane de marge entre
+séquences uniques environ `0.071%`. Deux scans retombent exactement sur le
+modèle nul. Les séquences gagnantes sont souvent dégénérées (`000000`,
+`111111`, `011110`) et ne constituent pas une attribution chimique stable.
+
+Cette réplication exclut le mauvais `N=8` du premier fichier comme cause
+principale de l'échec: même avec dix géométries propres et `N=6` sélectionné
+label-free, le moule n'explique qu'une fraction négligeable du signal et les
+marges de séquence restent minuscules. Décision finale pour cette branche:
+gap de domaine confirmé; ne pas élargir le batch, grader les séquences,
+retuner le posterior ou promouvoir les moules. Le prochain développement doit
+porter sur une observable constant-current simulée ou de nouvelles données
+expérimentales.
+
+### 2026-07-23 — Convergence du cadre DFT: 13×13 valide, 17×17 bloqué par le cube
+
+L'inventaire de provenance a été rendu exécutable par
+`test/audit_joint_proxy_frame_compatibility.jl`. Deux cadres ne sont déclarés
+comparables que si les hashes des deux cubes, la hauteur, le biais, les unités,
+le pas, les hashes de cartes et toutes les valeurs du crop central concordent.
+Une provenance absente, un cube différent, une valeur non finie ou un crop
+central différent bloque explicitement la comparaison. Le test synthétique
+couvre les chemins compatible, provenance absente, hash cube différent et
+support non fini; 13/13 assertions passent.
+
+Contrairement à l'inventaire initial incomplet, les cubes production sont bien
+présents localement et leurs SHA-256 correspondent au sidecar suivi:
+`80cd1d…88863` pour GlcN et `40649c…9b5bf` pour GlcNAc. Les frames typés à
+`0.50 nm` sont également présents. Ils ont permis de régénérer, uniquement sous
+`/tmp/opencode`, des cartes emboîtées avec les mêmes cubes, frames, biais
+`−0.300 eV`, hauteur `0.50 nm` et pas `0.08 nm`.
+
+Le cadre 13×13 `[-0.48,0.48] nm` est entièrement fini et son crop central 9×9
+est bit-identique à la carte suivie (`max |Δ| = 0`). Il constitue donc une vraie
+extension compatible, contrairement à l'ancien fichier préliminaire sans
+provenance, fini à seulement `71.60%` et dont le crop diffère. Cependant le
+13×13 ne ferme toujours pas le support: les fractions L2 de bord valent
+`37.10%` pour type 0, `47.93%` pour type 1 et `48.00%` pour leur différence;
+les trois maxima absolus restent sur la frontière.
+
+Un second élargissement à 17×17 `[-0.64,0.64] nm` conserve lui aussi exactement
+le crop 13×13 (`max |Δ| = 0`) et la même provenance physique, mais atteint la
+limite spatiale des cubes: 17 valeurs deviennent `NA`, soit une fraction finie
+de `97.06%`. Le gate le rejette donc comme `nonfinite_map_values`; calculer une
+énergie de bord sur ce cadre serait trompeur.
+
+Décision: le diagnostic whole-ROI reste hors production. Le 9×9 est confirmé
+tronqué et le 13×13, bien que valide, n'est pas convergé. Le prochain unblock
+physique exige des cubes offrant un cadre complet d'au moins `±0.64 nm` sous la
+même politique de biais/hauteur/frame, puis deux cadres complets emboîtés dont
+les crops sont identiques et dont les métriques de bord se stabilisent avec des
+maxima intérieurs. Ne pas utiliser les cartes préliminaires, extrapoler les
+`NA`, appliquer un wrap périodique non validé, ni modifier le provider de
+production avant ce gate.
+
+### 2026-07-22 — Gate synthétique du modèle whole-ROI assemblé
+
+Un nouveau diagnostic hors production remplace, pour ce gate seulement, la
+somme de scores unary indépendants par une image moléculaire unique. Chaque
+moule typé est placé au centre de son lobe dans le repère global de chaîne; les
+valeurs se somment explicitement pixel par pixel dans les zones de recouvrement.
+Hors du support fini du moule, la contribution vaut zéro afin que la troncature
+reste visible plutôt que masquée par une extrapolation. Le score ajuste ensuite
+globalement `fond + coefficient_backbone·backbone + coefficient_moule·assemblage`,
+avec les deux coefficients contraints positifs. Pour les chaînes courtes, une
+recherche exhaustive compare les séquences et les états globaux uniquement par
+la SSE whole-ROI.
+
+Le gate synthétique passe 14/14 assertions: doublement exact quand deux moules
+se recouvrent parfaitement, support nul hors cadre, récupération à précision
+numérique des trois nuisances injectées, et récupération exacte d'une séquence
+de trois lobes par le score global. Le registre DFT suivi est aussi chargé avec
+ses hashes existants et produit une image assemblée finie et non constante. Le
+diagnostic n'importe aucun manifeste, séquence contrôle, composition attendue ou
+`N` attendu et ne touche ni le fit 2D, ni `N_selected`, ni le posterior de
+production.
+
+Ce succès établit seulement la mécanique d'assemblage et l'absence de
+double-comptage unary dans le score synthétique. Il ne valide pas l'identité
+chimique réelle: les observations synthétiques sont générées dans le même
+modèle, tandis que les moules DFT suivis restent dominés par leur frontière
+9×9. Décision: conserver `test/diagnose_joint_proxy_whole_roi.jl` comme
+affordance diagnostique, sans promotion ni test réel interprétable. Le prochain
+gate reste la récupération ou régénération de cartes au moins aussi larges que
+`[-0.48,0.48] nm`, suivie d'un contrôle de convergence du score whole-ROI quand
+le cadre augmente. Ce n'est qu'après ce contrôle qu'une comparaison label-free
+sur ROI réelle pourrait produire une évidence physique utile.
+
+### 2026-07-22 — Audit du support spatial des moules DFT unary
+
+Un audit reproductible mesure désormais, sans donnée ni label de benchmark, la
+fraction d'énergie L2 portée par le bord, le maximum absolu, sa position et la
+fraction du maximum présente au bord pour chaque moule et pour la différence
+`type_1−type_0`. Le contrôle synthétique couvre un pic centré, un pic de bord,
+la différence de types et le trajet TSV complet.
+
+Sur `templates/chitosan_stm_maps_dft_m030_h050_v1.tsv`, le moule type 0 place
+`42.924%` de son énergie L2 au bord et son maximum en `(0.32, 0.00) nm`. Le
+moule type 1 en place `92.736%` au bord, avec son maximum en
+`(−0.32, 0.24) nm`. La différence `type_1−type_0` est elle-même dominée à
+`92.838%` par le bord, au même maximum. Dans les trois cas, le maximum absolu
+est sur la frontière du cadre 9×9 `[-0.32,0.32] nm`.
+
+Décision: ce cadre ne démontre pas que la structure discriminante est contenue;
+le score unary/local répète en outre un motif issu d'un environnement trimère
+comme s'il constituait une observation indépendante par lobe. Suspendre son
+interprétation chimique et ne pas le promouvoir. La prochaine formulation doit
+être un modèle whole-ROI assemblant explicitement les contributions sur la
+géométrie de chaîne et leurs recouvrements, après récupération ou régénération
+de cartes dont le support dépasse au moins le cadre préliminaire
+`[-0.48,0.48] nm`. Ce constat est un gate de représentation, pas une validation
+de classe ni une raison de retuner le posterior.
+
+### 2026-07-22 — Registration label-free du lag backward avant score type
+
+Le lag global est désormais appliqué dans un diagnostic séparé, jamais dans la
+production. Le script estime d'abord le lag médian des lignes de ROI sur support
+constant, translate la matrice backward sans interpolation, puis rééchantillonne
+les mêmes lobes et compare avant/après les patches image ainsi que les posteriors
+génératifs DFT seul et combiné. Le contrôle synthétique vérifie la translation
+sans mutation de la vue source et l'estimateur médian robuste; 7/7 assertions
+passent.
+
+Sur `240817_001.sxm`, le lag label-free estimé reste `−35 px` (`−1.370 nm`). La
+registration fait passer la corrélation locale médiane de `0.1623` à `0.8498` et
+la NRMSE affine médiane de `0.8743` à `0.5266`. La concordance d'argmax
+forward/backward passe de `5/10` à `8/10`, pour DFT seul comme pour le mélange.
+La différence médiane `|p1_fwd-p1_bwd|` baisse de `0.0122` à `0.0070` pour DFT
+et de `0.0083` à `0.0052` pour le mélange. Deux exécutions produisent des TSV
+byte-identiques.
+
+Ce succès de registration ne valide toutefois pas l'identité chimique. Après
+correction, la confiance maximale ne dépasse que `0.5196` pour DFT seul et
+`0.5131` pour le mélange: le posterior reste pratiquement nul, et deux lobes
+restent discordants. Décision: la translation d'acquisition explique une grande
+partie de l'échec fwd/bwd, mais elle ne transforme pas les moules DFT en signal
+type identifiable. Ne pas promouvoir cette correction, ne pas lancer d'array et
+ne pas retuner les seuils. La prochaine preuve utile doit être un observable
+physique indépendant; poursuivre les transformations de ces mêmes patches
+risquerait seulement d'optimiser le smoke.
+
+### 2026-07-22 — Lag d'acquisition forward/backward dans la ROI fixe
+
+Le gate suivant mesure, ligne par ligne dans la boîte englobante de la ROI
+moléculaire fixe, le lag x qui maximise la corrélation absolue entre les vues
+prétraitées. La fenêtre de lag et le nombre minimal de paires sont des arguments
+CLI explicites. Le premier prototype comparait des overlaps de tailles variables
+et saturait artificiellement aux grandes bornes; il a été rejeté puis corrigé
+pour utiliser exactement le même support intérieur pour tous les lags. Le test
+synthétique récupère alors exactement un lag connu de `+2 px` avec son gain et
+son offset affines; 12/12 assertions passent.
+
+Sur `240817_001.sxm`, sous `plane+rows`, les fenêtres ±8 puis ±32 px saturaient
+encore à leur borne négative. Avec une fenêtre diagnostique ±128 px et au moins
+20 paires, le maximum devient intérieur et fortement concentré: lag médian
+`−35 px`, MAD `2 px`, soit `−1.370 nm`; 410/512 lignes se trouvent entre `−40`
+et `−30 px`, et 495/512 ont un lag négatif. Après translation ligne, la
+corrélation absolue médiane passe de `0.4687` à `0.9692`, la NRMSE affine médiane
+tombe à `0.2464`, et le gain médian de corrélation vaut `0.4141`. Deux exécutions
+produisent des TSV byte-identiques.
+
+Décision: l'hypothèse de dérive locale dispersée est remplacée par une évidence
+forte de translation/hystérésis x globale résiduelle entre acquisitions, malgré
+le flip x déjà appliqué à la lecture SXM. Ne pas corriger la production ni
+émettre de types à ce stade. Le prochain gate label-free est d'appliquer cette
+translation estimée sans labels à la vue backward, puis de répéter sur le même
+scan les corrélations de patches et la stabilité du posterior génératif avant
+tout élargissement à d'autres fichiers.
+
+### 2026-07-22 — Ablation du flattening sur le transfert fwd/bwd
+
+Un nouveau diagnostic standalone réutilise une seule géométrie de lobes, fittée
+de façon déterministe sous `plane+rows`, puis rééchantillonne les mêmes
+coordonnées image sous les quatre prétraitements déclarés par GaussianFit2D:
+`none`, `plane`, `rows` et `plane+rows`. Il ne refit donc ni N ni la géométrie
+entre conditions. Les modes et la fenêtre de décalage sont fournis explicitement
+par CLI; aucune config ou sortie de production n'est modifiée. Le test ciblé
+compte 14/14 assertions vertes et vérifie le parsing, la géométrie fixe et les
+métriques affines.
+
+Sur `240817_001.sxm`, les quatre modes conservent cinq pentes locales négatives
+sur dix. Les corrélations médianes sont `0.0736` (`none`), `-0.0001` (`plane`),
+`0.0788` (`rows`) et `0.1623` (`plane+rows`). Les NRMSE affines médianes restent
+élevées: respectivement `0.8943`, `0.8406`, `0.9099` et `0.8743`. Sept lobes sur
+dix gardent le même signe de pente dans les quatre modes, et les meilleurs
+décalages d'un pas restent dispersés. Deux exécutions complètes produisent des
+TSV byte-identiques.
+
+Décision: rejeter le flattening ligne par ligne ou le retrait de plan comme cause
+dominante de la discordance fwd/bwd. `plane+rows` améliore même la corrélation
+médiane par rapport aux autres modes sans résoudre les inversions locales. Le
+prochain gate doit cibler la dérive/hystérésis locale d'acquisition ou employer
+un observable physique indépendant; aucune raison ne justifie un array type ou
+un retuning du posterior.
+
+### 2026-07-22 — Diagnostic du transfert forward/backward local
+
+Le gate génératif ayant échoué entre directions, une sortie TSV séparée mesure
+maintenant, par lobe et sans labels, la corrélation centrée image forward/backward,
+la pente et l'offset affines `bwd ≈ a·fwd+b`, la NRMSE après cette recalibration,
+et le meilleur décalage entier dans une fenêtre explicitement fournie par CLI.
+Cette table ne modifie ni les TSV existants ni la production. Pour le smoke, la
+fenêtre a été gelée à un pas (`0.08 nm`) dans chaque direction du repère `(t,u)`.
+Les tests récupèrent exactement les gains/offsets, inversions de polarité et
+décalages synthétiques connus.
+
+L'alignement de base n'est pas absent: `STMSXMIO.read_sxm` retourne déjà le canal
+backward en x, et les images prétraitées complètes de `240817_001.sxm` ont une
+corrélation `0.6411`, une pente `0.6537` et une NRMSE affine `0.7674`. En revanche,
+sur les dix patches du candidat GCV local déterministe, la corrélation locale
+médiane tombe à `0.1623` (intervalle `[-0.8371, 0.7946]`); cinq pentes sur dix
+sont négatives et la NRMSE affine médiane vaut `0.8743`. Le meilleur décalage
+n'est pas commun aux lobes: les neuf positions non nulles de la fenêtre sont
+utilisées, avec quatre maxima à `(-1,-1)` seulement. Le gain médian de corrélation
+absolue n'est que `0.1212`. Deux exécutions produisent un TSV byte-identique.
+
+Décision: écarter l'hypothèse d'un simple flip ou d'un décalage global résiduel.
+La discordance type est précédée par une instabilité locale de morphologie ou de
+contraste entre acquisitions, que l'affine et un déplacement de `0.08 nm` ne
+réparent pas uniformément. Ne pas élargir l'array ni retuner le posterior. Le
+prochain gate sûr est d'isoler l'effet du flattening ligne par ligne et de la
+dérive locale sur les patches image avant toute nouvelle comparaison DFT.
+
+### 2026-07-22 — Modèle génératif conjoint image-domain: gate réel échoué
+
+Le diagnostic type possède maintenant une troisième ablation, strictement hors
+production, qui score le patch image avec le même modèle pour les deux types:
+`fond + amplitude·Gaussian + coefficient·moule`. Le fond est libre; l'amplitude
+Gaussian et le coefficient du moule sont contraints positifs par une résolution
+active-set exacte des deux coefficients. Le score est la fraction bornée de SSE
+du résidu non-Gaussian expliquée par le moule, relativement au modèle nul
+`fond + Gaussian`. Une vraisemblance iid sur les 81 pixels a été testée puis
+écartée avant conservation: elle saturait artificiellement le posterior malgré
+la corrélation spatiale connue. Les seules représentations réelles admises pour
+cette ablation sont le patch image combiné et, comme contrôle de stabilité, ses
+vues forward et backward séparées. Aucun seuil, config ou chemin de production
+n'est modifié. Le smoke a aussi révélé que le global optimizer limité à une
+seconde pouvait changer le candidat entre invocations identiques. Le diagnostic
+clone donc la config de chaîne avec `skip_global=true` et une graine stable par
+fichier; deux exécutions complètes produisent désormais des TSV byte-identiques.
+
+Le gate synthétique est symétrique et passe. Pour les moules injectés
+`stm_dft_v1`, les 20 répétitions de chaque type sont toutes récupérées à bruit
+`0` et `0.10`. Les marges vraies moyennes à bruit `0.10` sont `0.1621` pour le
+type 0 et `0.0693` pour le type 1, sans saturation. Un patch pur
+`fond + Gaussian` donne exactement `(p0,p1)=(0.5,0.5)` avec deux vues, et un
+moule de signe physique opposé n'obtient aucun gain SSE grâce à la contrainte de
+coefficient positif. La suite ciblée compte 58/58 assertions vertes et la suite
+joint-proxy complète est verte.
+
+Le premier smoke réel label-free, limité à `240817_001.sxm`, échoue toutefois au
+gate directionnel et arrête l'expansion. Sur les dix lobes du candidat GCV local
+déterministe, la concordance d'argmax forward/backward n'est que `5/10`, pour
+DFT seul comme pour le mélange. Les probabilités restent presque nulles: le
+mélange combiné sur les deux vues donne une confiance moyenne `0.5078`, et la
+confiance maximale des vues séparées ne dépasse pas `0.5326` (`0.5452` pour DFT
+seul). Ce comportement
+est honnêtement proche de l'abstention, mais l'argmax résiduel n'est pas une
+signature stable.
+
+Décision: conserver le modèle et ses sorties forward/backward comme affordance
+diagnostique, mais rejeter toute émission type, calibration de seuil ou array
+réel plus large. Le modèle génératif corrige la rupture de domaine et évite le
+collapse extrême, mais les scans ne contiennent pas encore une évidence DFT
+transférable et reproductible entre directions. La prochaine étape devra ajouter
+une source physique indépendante ou expliquer la discordance de direction;
+retuner le posterior sur ce smoke serait invalide.
+
+### 2026-07-22 — Projection matched des moules contre le backbone Gaussian
+
+Le gate suivant a testé, dans le diagnostic seulement, un opérateur de nuisance
+apparié aux observations. Pour chaque lobe, le patch et chaque moule sont
+projetés hors de l'espace `[1, Gaussian(t,u; σ∥,σ⊥)]`, avec les sigmas du lobe
+fitté et l'ordre `patch_tu` existant. Le posterior matched conserve ensuite les
+mêmes états globaux direction/phase/mirror, poids de sources et
+forward-backward que le moteur actuel. Aucun seuil, config ou chemin de
+production n'est modifié.
+
+Le contrôle synthétique passe son gate préalable: DFT matched→DFT matched
+récupère 100% des deux types à bruit `0` et `0.10`; à bruit `0.10`, la marge
+vraie moyenne reste positive (`0.0681`, contre `0.1488` avant projection). Le
+projecteur retire donc une partie du signal mais ne détruit ni le mapping 0/1 ni
+la séparabilité self-template. L'array Viper `10649023` termine ses huit shards
+`0:0`, puis le merge `10649201` termine `0:0`. Les artefacts dans
+`results/joint_proxy_type_ablation_v4_matched/` contiennent 25980 lignes lobe,
+3320 summaries et 145 métriques agrégées.
+
+La projection réduit les extrêmes mais échoue au gate de stabilité réel. Pour
+le mélange matched, la fraction d'argmax `type=1` est `87.48%` sur le résiduel,
+`79.56%` sur `z-model`, `14.73%` sur l'image et `11.51%` sur le résiduel opposé.
+Les quatre représentations ne donnent le même argmax que pour `6.08%` des 1086
+lobes comparables (contre `0.09%` sans projection); image et résiduel ne
+concordent que dans `20.07%` des cas (contre `3.15%`). L'amélioration est réelle
+mais très loin d'une signature indépendante de la représentation. La masse DFT
+reste elle-même instable: `0.8642` sur image, `0.5191` sur `z-model`, `0.4487`
+sur résiduel et `0.6848` sur résiduel opposé.
+
+Décision: rejeter cette projection simple comme correctif ou voie de promotion.
+Elle confirme que le retrait du backbone explique une partie du collapse, mais
+ne rend pas le type identifiable. Ne pas retuner le seuil et ne pas émettre de
+nouveaux labels. Le prochain modèle défendable doit scorer directement le patch
+image avec un modèle génératif conjoint `fond + amplitude·Gaussian +
+coefficient·moule`, en ajustant les mêmes nuisances pour les deux types et en
+comparant leur évidence/SSE sur une représentation unique pré-déclarée. Ce
+nouveau modèle devra passer les contrôles synthétiques, la stabilité fwd/bwd et
+l'abstention nulle avant tout test réel ou grading externe.
+
+### 2026-07-22 — Ablation label-free de l'effondrement type
+
+`test/diagnose_joint_proxy_type_collapse.jl` décompose maintenant le posterior
+type entre les familles `geometric`, `stm_dft_v1` et leur mélange, sans lire de
+manifest benchmark, séquence, composition ou expected N. Le contrôle synthétique
+injecte chaque moule `(type, parity, mirror)` comme patch, avec cinq répétitions
+à bruit `0` et `0.10`. DFT→DFT récupère symétriquement 100% des types 0/1 aux
+deux niveaux de bruit (marge vraie moyenne `0.1502` sans bruit); les moules
+géométriques seuls restent à 50%. Le mapping 0/1, les huit états et le moteur de
+posterior savent donc distinguer les moules DFT dans leur propre domaine; ce test
+ne valide pas le transfert aux scans réels.
+
+L'ablation réelle a refait les fits GCV sur les 146 scans puis choisi, pour ce
+diagnostic seulement, le candidat de `joint_gcv` minimal. Le premier array Viper
+`10646630` a révélé un scan à évidence unary non finie dans le shard 7. Le
+diagnostic conserve désormais ce cas comme `nonfinite_evidence` plutôt que de
+perdre le shard; la reprise `10646723` et le merge `10646817` terminent `0:0`.
+Deux passes supplémentaires ont comparé `z-model`, le résiduel recalibré, son
+opposé, puis le patch image prétraité absolu (`10646846/10647014` et
+`10647039/10647125`, tous `0:0`). Les artefacts finaux sont dans
+`results/joint_proxy_type_ablation_v3_image/`: 13056 lignes lobe, 1664 summaries
+et 67 métriques agrégées dans `type_collapse_metrics.tsv`. Huit scans n'ont pas
+de candidat et un scan produit une évidence non finie; 137 scans contribuent aux
+métriques finies.
+
+Résultat principal, sur 1088 lobes label-free: le résiduel de production donne
+`99.26%` d'argmax `type=1` en mélange (`99.26%` DFT seul), tandis que son signe
+opposé donne seulement `1.29%` de `type=1`. Le patch `z-model` reste à `93.93%`
+de `type=1`, mais le patch image absolu bascule à seulement `2.48%`. La masse DFT
+du mélange passe simultanément de `0.9140` (résiduel) à `0.7472` (`z-model`),
+`0.4502` (image) et `0.1298` (résiduel opposé). Le type prédit suit donc la
+représentation et la polarité du patch, pas une signature chimique stable.
+
+Cause méthodologique retenue: le pipeline compare des résidus signés de modèle
+gaussien à des moules DFT qui représentent des cartes LDOS absolues normalisées.
+Le succès synthétique self-template ne couvre pas cette rupture de domaine. Il
+ne faut ni retuner le seuil ni promouvoir les labels actuels. Le prochain gate
+physique est d'appliquer le même opérateur de nuisance aux observations et aux
+moules: soit résidualiser chaque moule contre le fond constant et le Gaussian
+de lobe correspondant, soit scorer le patch image avec un modèle génératif qui
+ajuste explicitement fond/amplitude/backbone. Toute nouvelle émission type doit
+ensuite être stable entre représentations physiquement équivalentes. Aucun
+comportement de production ni seuil n'est modifié par cette ablation.
+
+### 2026-07-21 — Visualisation des moules et calibration full-pipeline
+
+Les huit moules unary DFT 9×9 peuvent maintenant être visualisés sans données
+réelles ni labels via `test/plot_joint_proxy_molds.jl`. La sortie par défaut,
+`results/joint_proxy_mold_visualization/stm_dft_v1_glcn_glcnac_difference.png`,
+montre pour chaque état `(parity, mirror)` GlcN, GlcNAc et leur différence à
+`-0.300 V`, `0.50 nm`. `test/analyze_joint_proxy_molds.jl` écrit aussi les 28
+comparaisons pairwise dans `stm_dft_v1_pairwise_separability.tsv`. Les états
+appariés GlcN/GlcNAc ont un RMSE moyen de `1.602110` et une corrélation moyenne
+de `-0.299420`, mais le plus proche voisin brut n'a le même type que pour 4/8
+moules: les transformations d'orientation créent donc des recouvrements qui
+interdisent d'interpréter la seule distance template comme une validation de
+l'identité chimique.
+
+La calibration synthétique non-fast a été exécutée sur Viper avec le seed
+`20260721` et 100 cas. Le premier job `10645175` a échoué proprement parce qu'un
+fit réel n'offrait pas le vrai N synthétique parmi ses candidats valides. Le
+calibrateur de posterior exige ce candidat pour calculer sa vraisemblance; ces
+échecs structurels sont maintenant exclus uniquement de l'ajustement
+conditionnel, conservés dans les rapports et comptés explicitement. Le test de
+régression échoue avant le correctif et passe après; la suite joint-proxy passe.
+Le job de reprise `10645348` termine `0:0`: 98/100 cas ont le vrai N disponible
+(48 calibration, 50 heldout), deux restent des échecs structurels. La NLL
+heldout descend de `2.189538` à `1.808285`; le seuil count devient
+`0.7530942651` au lieu de presque 1. La calibration type est inchangée. Le fichier
+versionné est `config/joint_proxy_calibration_dft_m030_h050_v2_full.toml`; sa
+première version avait le hash
+`012fcc2fe727b5f318844662c393d6595d3a5f3f291acdc48d910629188daebc`.
+
+Un replay sans labels sur les tables candidate-N déjà calculées prédisait 9 N
+émis sur 138 scans ayant des candidats, contre 2 avec v1; les huit scans sans
+candidat restent nécessairement abstention. L'array comparatif Viper `10645507`
+a terminé ses huit shards `0:0`, puis le merge/validateur `10645890` a terminé
+`0:0`. Les artefacts fusionnés dans
+`results/joint_proxy_dft_m030_h050_v2_full_all/` contiennent 146 summaries, 1079
+candidate-N, 7631 candidate-lobes et 498 prédictions. Le résultat confirme le
+replay: 9/146 N sont émis, dont les deux v1; huit scans n'ont toujours aucun
+candidat. Le gate type émet 64 labels au lieu de 13, mais tous sont `type=1`;
+496/498 posteriors bruts ont aussi leur argmax sur `1` et deux sont des ties.
+Cette couverture count accrue ne valide donc pas l'identité chimique et v2 ne
+remplace pas v1 comme résultat scientifique final. Aucun label externe,
+séquence de contrôle ou grading n'est intervenu. L'asymétrie type vers `1`
+reste le blocage scientifique distinct à résoudre.
+
+La revue post-implémentation a ensuite rendu la frontière calibration/heldout
+explicite dans l'adapter et ajouté un test d'intégration qui vérifie les compteurs
+après exclusion d'un vrai N absent. Ce changement ne modifie ni observations ni
+paramètres: la recalibration Viper `10646128` (`0:0`) est byte-identique à la
+précédente sauf `source_sha256`, désormais
+`1945b97ce7e097b026460772a7c80fb4d29836fc09c0ef7e74b1f876173cb8d0`.
+Le hash du fichier versionné courant est
+`9254cdc990396a1dcb856571bc162a36d2b7437cd802bf6fbc5550c6009b41a0`.
+L'array de provenance courante `10646248` a terminé ses huit shards `0:0` et le
+merge/validateur `10646474` a terminé `0:0`. Les artefacts dans
+`results/joint_proxy_dft_m030_h050_v2_full_reviewed_all/` passent le validateur
+local: 146 summaries, 1087 candidate-N, 7716 candidate-lobes et 497 prédictions.
+La stochasticité du fit déplace un cas juste sous le seuil: 8/146 N sont émis,
+huit scans restent sans candidat, 57 labels type sont émis et tous valent `1`;
+495/497 argmax bruts vont vers `1`, avec deux ties. Cette répétition confirme le
+gain count limité et l'absence de résolution du blocage type.
+
+### 2026-07-21 — Inférence joint-proxy DFT sur 146 scans via Viper
+
+L'inférence label-free avec `stm_dft_v1` et la calibration versionnée a été
+lancée sur les 146 fichiers `.sxm` présents dans `/ptmp/oldu/stmfit/data`. Viper
+a utilisé un array de huit tâches à un CPU (`10643202`, puis `10643608` après
+correction) et un job de merge `10644169`. Le merge a terminé `0:0` en 10 s.
+Les artefacts fusionnés sont dans
+`results/joint_proxy_dft_m030_h050_v1_all/` et passent
+`validate_joint_proxy_predictions.jl`: 146 summaries, 1082 lignes candidate-N,
+7655 lignes candidate-lobe et 477 prédictions. Le manifeste lie le config
+`dae8b8a7e...cb196`, le source `68bd6cba...c5161` et le payload
+`82fadb9c...b3e5f`.
+
+Le premier array a révélé deux cas limites réels: certains scans n'avaient aucun
+candidat count fini/valide, et certaines patches donnaient une évidence unary
+non finie. Faire échouer le shard perdait les autres fichiers. Les tests rouges
+ont verrouillé le comportement attendu: le premier cas produit désormais une
+summary-only abstention (`candidate_count=0`); le second produit des probabilités
+type `0.5/0.5` et une prédiction `?`. Le validateur et le merge acceptent ces
+abstentions structurées mais rejettent une summary vide non marquée. La suite
+joint-proxy complète passe après correction. Une deuxième erreur purement
+opérationnelle venait du nom de calibration copié dans chaque shard; les
+manifestes ont été normalisés vers `joint_proxy_calibration.toml`, les huit
+shards ont été validés séparément, puis fusionnés sans recalcul.
+
+QC sans labels: 144/146 scans s'abstiennent sur N; seuls `240815_098.sxm`
+(`N=7`) et `240818_026.sxm` (`N=6`) émettent un N, tous deux avec confiance 1.
+Huit scans ont `candidate_count=0`; aucun scan ne manque la vue backward. Les
+477 lignes de prédiction contiennent 464 `?`; les 13 labels émis sont tous
+`type=1`. Même avant le gate final sur N, 475/477 marges type ont leur argmax sur
+`1` et deux sont exactement `0.5/0.5`. Cette forte asymétrie est un signal QC
+diagnostique, pas une validation chimique. Aucun label externe, séquence de
+contrôle ou script de grading n'a été utilisé. Il faut expliquer l'abstention N
+et l'effondrement du posterior type avant tout benchmark externe.
+
+### 2026-07-21 — Provider DFT 9×9 versionné et promotion label-free
+
+Les cubes corrigés à `-0.300 V` ont été rééchantillonnés directement sur la
+grille native du joint-proxy (`half_nm=0.32`, `step_nm=0.08`, 9×9) à la hauteur
+physique `0.50 nm`. Les artefacts suivis sont
+`templates/chitosan_stm_maps_dft_m030_h050_v1.tsv`,
+`templates/chitosan_connected_molds_stm_dft_m030_h050_v1_half032.tsv` et leur
+sidecar `.provenance.toml`. Le sidecar est calculé par le finaliseur depuis les
+cubes et sorties réels; il lie les hashes des cubes GlcN/GlcNAc, des cartes et
+des templates, ainsi que le bias, la hauteur, la grille et les unités.
+
+Le registre contient maintenant la famille obligatoire `stm_dft_v1`. Le loader
+vérifie les hashes épinglés, le sidecar et ses paramètres physiques avant de
+charger les huit états `(type, parity, mirror)`. Les poids restent fixés par le
+contrat antérieur à `0.5` géométrique / `0.5` STM. Les cinq sources
+`stm_prelim` restent listées pour la traçabilité mais portent `enabled=false` et
+ne contribuent plus au posterior. Les bond molds restent exclus. Le payload
+actif est `82fadb9c2d18eae3719293181d33200842aad912dd28e6345a0c7ee8a88b3e5f`.
+
+Une première validation synthétique de 100 cas (seed `20260722`) a échoué aux
+seuils absolus sur `noiseless_count_recovery=0.95` et
+`corrupted_type_recovery=0.886064`. Aucun seuil n'a été modifié. L'A/B apparié a
+ensuite basculé uniquement la présence de `stm_dft_v1`: geometric-only reproduit
+exactement les mêmes deux échecs. La comparaison a été répétée pour les seeds
+pré-déclarés `1`, `1234` et `20260722`; les deltas production moins baseline sont
+exactement zéro pour les récupérations count/type noiseless, low-noise et
+corrupted, ainsi que les abstentions null/identical. La fragilité vient donc du
+découpage de 100 cas en seulement 20 cas/groupe (un cas vaut 0.05), pas du
+provider DFT. La promotion utilise ce gate de non-régression apparié; elle ne
+prétend pas que la calibration synthétique valide l'identité chimique réelle.
+Aucun label de benchmark ni séquence de contrôle n'a été lu. La calibration
+versionnée `config/joint_proxy_calibration_dft_m030_h050_v1.toml` utilise le seed
+`20260721`, 100 cas synthétiques et le mode rapide; son SHA-256 est
+`b6b98bc03d9b49583e423682d29a507091a413b3ed0837a26eb45d41b3aa0fc9`, lié au
+config `dae8b8a7ecae004ce3a9c740c11308026dd94d8ef5e8edc473d52b3b785cb196` et au
+payload ci-dessus.
+
+### 2026-07-21 — GlcNAc convergence criterion converted into an LDOS stability gate
+
+Three GlcNAc SCF paths now reach the same stable `~4e-5 Ry` floor, so repeating
+strict mixing-only retries is no longer justified. QE defines `conv_thr` against
+an extensive estimated energy error. A provisional common acceptance criterion
+of `5e-5 Ry` is below `0.7 meV` for the complete 218-atom cell, versus the
+unchanged `0.02 Ry` electronic smearing and experimental `-0.300 V` bias. GlcN
+already satisfies this common gate by a much larger margin (`6e-8 Ry`). Because
+LDOS depends on wavefunctions as well as total energy, the looser energy gate is
+not sufficient by itself for production.
+
+The acceptance job therefore creates two byte-identical copies of the retry2
+terminal charge density and independently converges them to `5e-5 Ry`: one with
+plain mixing (`beta=0.3`, `ndim=20`), one with TF mixing (`beta=0.2`,
+`ndim=20`). Each branch writes its own wavefunctions and STM cube using the
+unchanged PBE+D3 Hamiltonian, pseudopotentials, `50/360 Ry` cutoffs, Gamma
+sampling, and MV `degauss=0.02 Ry`. No cube
+will be promoted unless same-frame normalized maps agree pointwise within 1%
+and branch total energies agree within `1e-4 Ry`; if they pass, the branch with
+the smaller final SCF residual is retained and the other remains validation.
+Local checks, remote input hashes, baseline charge-density check, and shell
+syntax all passed. Raven jobs `28888367`, `28888618`, then the short diagnostic
+chain `28888893/28888894/28888969` remained blocked by the account-wide
+`QOSGrpCpuLimit` and were cancelled before start; no computation was lost.
+
+The exact 3.30 GB retry2 checkpoint was transferred to Viper, including the
+distributed `wfc1`–`wfc8` and mixing-history files that were outside the
+previously inspected `.save` subdirectory. The acceptance inputs were therefore
+corrected to `startingwfc='file'` and run with the same QE 7.4.1,
+`intel/2024.0`, `impi/2021.11`, and eight-MPI decomposition. Viper jobs
+`10640236` (plain), `10640237` (TF), and `10640238` (comparison) all completed
+`0:0` in `06:28`, `06:16`, and `00:12`.
+
+Both SCFs converged in one iteration at `4.027e-5 Ry`, with identical energy
+`-31763.44437132 Ry` and Fermi energy `0.3038 eV`. Both `pp.x` stages ended with
+`JOB DONE`. Their first complete cubes were byte-identical, SHA-256
+`90eb5b3a6a14505e5f7160733734604295ede5883af94f918134f8d815523874`, but were
+later found to use QE's implicit `+0.01 Ry` (`+0.1361 eV`) bias and are archived.
+Independent 0.50 nm, 13×13 same-frame comparison returned maximum/mean/RMS
+normalized differences `0/0/0`, correlation `1`, and energy difference `0 Ry`.
+The gate therefore passed. The plain cube was promoted locally as
+`qe/glcnac/glcnac_central_ldos.cube`; the TF cube remains validation evidence.
+
+Running `test/finalize_qe_mold_workflow.jl` then exposed a Julia boundary bug:
+the regex-derived QE prefix was a `SubString`, but `_default_index_tsv` required
+`String`. A failing CLI regression test reproduced the `MethodError`; converting
+the capture to `String` at `_prefix` made it pass. The real finalizer then
+generated 0.50 nm typed frames, `templates/chitosan_stm_maps.tsv`, and connected
+unary/bond molds from the accepted GlcN and GlcNAc cubes. The existing
+`config/joint_proxy_molds.toml` intentionally still names preliminary 9×9
+sources; replacing it requires a versioned 9×9 export and regenerated synthetic
+calibration, not a silent path swap.
+
+Source inspection of QE 7.4.1 `PP/src/stm.f90` established that `plot_num=5`
+ignores `emin`, `emax`, and `degauss_ldos`; it integrates from `E_F` to
+`E_F + sample_bias`, with `sample_bias` expressed in Ry. All PP inputs were
+corrected to `sample_bias=-0.0220495933 Ry`. Viper PP-only job `10640445` and
+dependent comparison job `10640446` completed `0:0`; all three PP outputs print
+`Sample bias = -0.3000 eV`. Corrected GlcNAc plain/TF cubes remain byte-identical
+(SHA-256 `40649ccd9eb6768444b8ff61bf4a639b3940cf926fe3eb42254eb024faf9b5bf`),
+with map differences `0/0/0`, correlation `1`, and energy difference `0 Ry`.
+The corrected GlcN cube SHA-256 is
+`80cd1d1fde94cf084cc7ea464d2bf065b36b2c015ea0bfaef8cebfee8ff88863`.
+The canonical plain cube was promoted and the 0.50 nm 13×13 maps and connected
+molds were regenerated from these corrected cubes. The input generator and
+legacy `hpc/qe_molds/pp_ldos.in.template` now emit `sample_bias`; preflight
+explicitly requires `plot_num=5`, a nonzero bias, and absence of the ineffective
+`emin`/`emax`/`degauss_ldos` fields. The smoke workflow covers this contract.
+
+### 2026-07-20 — GlcNAc SCF plateau diagnosed and numerical retry2 submitted
+
+Raven job `28811340` finished with application exit `2:0` after `09:05:29`.
+The `pw.x` step itself exited normally after 300 iterations, but reported
+`convergence NOT achieved`; the final estimated SCF accuracy was
+`4.056e-5 Ry` against the unchanged production target `1.0e-7 Ry`. Maximum
+node memory was only about 30.7 GB of the 96 GB request, so this was neither a
+memory nor scheduler failure. The convergence guard correctly prevented
+`pp.x`, and no GlcNAc cube was produced.
+
+Trajectory comparison showed that the original final SCF and the `local-TF`,
+`mixing_beta=0.1`, `mixing_ndim=16` retry reached essentially the same floor:
+their best estimated accuracies were `4.322e-5` and `3.461e-5 Ry`, respectively,
+and the retry's last-50 median was `4.2905e-5 Ry`. In contrast, the same pilot
+Hamiltonian settings converged GlcN to `6e-8 Ry` in 37 iterations. The retry had
+1080 Kohn-Sham states for 1800 electrons and Davidson required only one or two
+inner iterations near the end, so neither an obvious empty-band shortage nor
+eigensolver failure was selected as the first intervention.
+
+Following the QE PWscf troubleshooting guidance to test mixing modes and Pulay
+history before changing physical parameters, a second SCF+PP-only retry keeps
+the relaxed geometry, PBE+D3, pseudopotentials, `50/360 Ry` cutoffs, Gamma
+sampling, MV `degauss=0.02 Ry`, and strict `conv_thr=1e-7 Ry`, but uses
+`mixing_mode='plain'`, `mixing_beta=0.3`, and `mixing_ndim=20`. The exact
+`28811340` input/script were archived locally with `retry1` suffixes. Local and
+Raven preflight passed at 8 MPI tasks / 96 GB, input/script hashes matched
+between hosts, and retry2 was submitted as job `28851882` (initially `PENDING`
+under `QOSGrpCpuLimit`, 24 h limit). No other `oldu` job was visible in `squeue`;
+the group limit may include another user or delayed accounting. This is a numerical convergence experiment, not a benchmark-driven
+parameter change; `pp.x` remains gated on the explicit QE convergence message.
+
+Job `28851882` subsequently finished with application exit `2:0` after
+`09:02:18`. Plain mixing also reached 300 iterations without satisfying the
+strict target: minimum estimated accuracy `3.239e-5 Ry`, final accuracy
+`3.897e-5 Ry`, and final total energy `-31763.44440950 Ry`. `pp.x` was not
+started and no cube was written. This reproduces the same approximate
+`3e-5--4e-5 Ry` floor under both `local-TF`/0.1/16 and plain/0.3/20 mixing, so
+another iteration-budget or mixing-only retry is not justified without a new
+falsifiable hypothesis. The retry2 SCF and Slurm outputs were fetched locally.
+
+### 2026-07-13 — Scientist-facing DFT calculation note added
+
+Added `docs/src/dft_calculation_note.md` to record exactly what was calculated
+for the GlcN/GlcNAc STM molds: molecular contexts, atom counts, Cu(100) pilot
+slabs and cells, frozen atoms, PBE+D3/PAW settings, cutoffs, Gamma sampling,
+smearing, relaxation and SCF criteria, intended STM bias, completed job
+outcomes, preliminary-versus-production status, and interpretation limits. The
+note explicitly records that GlcN has a completed production cube while GlcNAc
+is in a targeted final-SCF retry, preventing preliminary molds from being
+mistaken for converged chemical references.
+
+### 2026-07-12 — GlcN restart5 resubmitted after Slurm launch failure
+
+Raven job `28762985` failed after only 67 seconds with exit `1:0` because
+`srun` could not confirm the allocation (`Socket timed out on send/recv
+operation`; allocation reported expired/invalid). `pw.x` never started,
+`glcn_central_relax.out` remained empty, CPU use was zero, and memory use was
+only about 7 MB. This was an infrastructure launch failure, not a geometry,
+convergence, walltime, or memory failure.
+
+The unchanged, preflighted `qe/glcn_restart5` inputs were resubmitted directly
+on Raven as job `28784933`. It completed successfully (`0:0`) in `02:11:57`:
+the relaxed-enough geometry converged immediately at the restart point (`0`
+additional BFGS steps), the relax SCF converged in 34 iterations, the final SCF
+converged in 37 iterations, and all QE stages ended with `JOB DONE`. Raven now
+contains `glcn_central_relaxed.xyz`, the converged SCF output, and a 136 MB
+`glcn_central_ldos.cube`. This clears the production GlcN gate; the next step is
+to fetch/finalize the GlcN mold and run the symmetric GlcNAc production path.
+
+The completed GlcN relax/SCF/cube/relaxed-XYZ outputs were fetched locally into
+`qe/glcn_restart5`. The GlcNAc relax input was then updated symmetrically with
+`forc_conv_thr = 6.0d-3` and `etot_conv_thr = 1.0d-3`, while retaining the
+strict final-SCF `conv_thr = 1.0d-7`. Local preflight passed at 8 tasks / 96 GB,
+the updated input was synchronized to Raven, and production GlcNAc was submitted
+as job `28790944`. Initial state: `PENDING`, 24 h time limit.
+
+GlcNAc job `28790944` later finished the relaxation and final-SCF processes, but
+the final SCF reported `convergence NOT achieved after 100 iterations`. QE then
+wrote configuration-only restart metadata rather than collected wavefunctions;
+`pp.x` failed with `Wavefunctions not in collected format` and missing `wfc1`,
+so no GlcNAc cube was produced. The relaxed geometry and SCF charge data remain
+usable. A targeted SCF+PP retry was prepared without repeating relaxation:
+`electron_maxstep=300`, `mixing_mode='local-TF'`, `mixing_beta=0.1`,
+`mixing_ndim=16`, `startingpot='file'`, and fresh atomic/random wavefunctions.
+The retry script explicitly refuses to start `pp.x` unless QE prints electronic
+convergence. It was submitted on Raven as job `28811340` (initially `PENDING`,
+24 h limit).
+
+### 2026-07-11 — Posterior joint proxy: synthetic validation and no-truth smoke
+
+The standalone diagnostic path for joint count/type inference was exercised
+without loading a benchmark manifest, expected count, composition, or unit
+sequence.  Its synthetic acceptance matrix reached 100% noiseless count/type
+recovery, 95.0% low-noise count recovery, 92.0% low-noise type recovery, and
+100% null/identical-mold abstention.  Replacing an independent view with an
+identical copy did not increase count or type confidence, deterministic replay
+matched exactly, a stale source hash failed before inference, and an intentionally
+swapped physical type mapping collapsed synthetic type recovery instead of being
+silently relabeled.
+
+The real no-truth smoke used a fast synthetic-only calibration and exactly
+`240817_017.sxm,240817_019.sxm`.  Both files produced finite candidate tables
+(21 candidate-N rows total and at least ten candidates per file), and the output
+validator passed.  Both chains abstained on hard N (`?`, confidence 0.152 and
+0.145), so these results are a transfer diagnostic, not counts or chemistry
+claims.  No grader or truth-bearing manifest was imported.
+
+The smoke also exposed standalone-load defects hidden by injected unit-test
+adapters: calibration dynamically imported `GaussianFit2D` too late for Julia's
+world age and accumulated real views in `Any[]`; inference relied on a
+test-created `Main.STMSXMIO` binding.  Dependencies are now loaded statically,
+real views retain their concrete type, and focused plus aggregate tests pass.
+The non-fast synthetic calibration adapter disables only the residual-peak
+validity veto because the deliberately injected type proxy is structured
+residual relative to the count-only Gaussian backbone; production selection is
+unchanged.
+
+### 2026-07-10 — GlcN relaxed-enough restart5 submitted
+
+Raven and Viper queues were checked after the unknown-workflow commits. No STMFit
+array jobs were active; recent Viper arrays were completed with exit `0:0`. Raven
+QE GlcN restart4 (`28658135`) had reached the 24 h walltime limit, not memory:
+`pw.x` was cancelled due to time limit with `MaxRSS` about 4.9 GB, and the relax
+output had reached at least `number of bfgs steps = 34` with residual gradients
+around `4e-3` to `6e-3 Ry/Bohr`.
+
+For the current DFT-STM mold application, the goal is a robust local STM/LDOS
+mold, not a publishable adsorption energy. The relaxation policy was therefore
+made explicitly **relaxed-enough** for GlcN: keep the final electronic SCF strict
+(`pw_scf.in` `conv_thr = 1.0d-7`), but allow the geometry relax to stop at
+`forc_conv_thr = 6.0d-3` and `etot_conv_thr = 1.0d-3`. These thresholds are chosen
+from the observed plateau/progress and resource constraint, not from unit-label
+benchmark performance. The same policy must be used symmetrically for GlcNAc if
+its production relax needs the same shortcut.
+
+The latest geometry from restart4 was extracted on Raven to
+`qe/glcn_restart4/glcn_central_best5.xyz` and fetched locally. `qe/glcn_restart5`
+was generated from that geometry with the active Raven pilot settings (`8` MPI
+tasks, `96000 MB`, `24:00:00`, `ecutwfc=50`, `ecutrho=360`, Gamma-only), patched
+with the relaxed-enough ionic thresholds above, passed local and remote preflight,
+and was submitted to Raven without `--watch`:
+
+```text
+qe/glcn_restart5 -> 28762985
+initial status: PENDING on small, reason=(Priority), time limit 1-00:00:00
+```
+
+Do not fetch or inspect `qe/glcn_restart5` outputs until Slurm reports completion
+or timeout. GlcNAc production remains blocked until GlcN produces a usable
+relaxed geometry and LDOS cube, unless an explicit dependency-policy change is
+made.
+
 ### 2026-07-07 — Unknown-sequence unit-assignment workflow hardening
 
 **Goal:** Make the GlcNAc/GlcN unit-assignment path usable for unlabeled
@@ -307,7 +2180,9 @@ units, `glcnac` has 1 central acetyl unit, both have non-acetylated GlcN
 neighbors, minimum distances are sane, molecule labels survive slab generation,
 and central-ring centers match the Cu-cell center.
 Parsed the 240817 SXM headers and found a uniform `BIAS=-3.000E-1 V` across 94
-files; the LDOS window is therefore `emin=-0.3`, `emax=0.0` eV. The original QE
+files. The original QE inputs attempted to express this as `emin=-0.3`,
+`emax=0.0` eV; the 2026-07-21 correction records that these fields do not control
+`plot_num=5` and replaces them with `sample_bias=-0.0220495933 Ry`. The original QE
 run directories used the full `8×8×4` slab with `ntasks=4`, `ecutwfc=80`,
 `ecutrho=640`; those parameters were later dropped (OOM on Raven — see the
 submission lessons below) in favour of the active `8×6×3` pilot
@@ -316,7 +2191,7 @@ submission lessons below) in favour of the active `8×6×3` pilot
 committing large QE scratch/cube outputs.
 Added `test/preflight_qe_mold_inputs.jl` and `hpc/submit_qe_molds.sh`; the
 preflight report `hpc/qe_molds/qe_input_preflight.tsv` verifies `nat/ntyp`,
-species, frozen relax atoms, LDOS window, sbatch handoff commands, and the 8-task
+species, frozen relax atoms, STM sample bias, sbatch handoff commands, and the 8-task
 total Slurm budget before submission.
 Added `hpc/launch_qe_molds_remote.sh`, a local-to-MPCDF QE launcher that reuses
 `hpc/remote.env`, syncs code while excluding local `qe/` outputs, syncs only the
@@ -429,8 +2304,52 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
-> Updated 2026-06-27. Questions from earlier sessions are archived in
+> Updated 2026-08-03. Questions from earlier sessions are archived in
 > `journal_archive.md`.
+
+0b. **Can label-free unit assignment reach the promotion bar?** → **RESOLVED
+    (Aug 3)**: the label-free champion (soft vote of k-means 4-view and GMM
+    1-view + per-channel constant-current margins + Fisher empirical mold
+    margin, self-training 2) scores 79.3% classified physical accuracy /
+    36 exact chains / 677 fixed-denominator honest on the 145-file benchmark
+    - the promotion bar (78.9% / 18 / 677) is MET. Fully reproducible via
+    test/build_cc_soft_champion.py (verified: 677/36, zero label differences),
+    audited label-free (zero label references in all construction scripts),
+    and cross-validated (half-split Fisher mold: 66.3% per-lobe, no overfit;
+    pipeline CV 678/34).
+
+0. **Can synthetic posterior calibration transfer enough confidence to real
+   scans?** → **OPEN (updated Jul 30)**: converged GlcN/GlcNAc DFT molds remain
+   perfectly separable in-domain, but matched residualization failed
+   representation stability and the joint image-domain generative score failed
+   its first forward/backward real-scan gate (`5/10` for both DFT-only and combined,
+   confidence near `0.5`). This is honest abstention evidence, not a failed
+   benchmark. The first local transfer audit rejects a simple global flip/shift:
+   five of ten patch slopes change sign and the best one-cell shifts are
+   dispersed. A fixed-geometry ablation across `none`, `plane`, `rows` and
+   `plane+rows` retains five negative slopes in every mode, excluding flattening
+   as the dominant cause. A fixed-support row audit then finds a concentrated
+   `−35 px` (`−1.370 nm`) x lag on 410/512 rows, identifying residual global
+   acquisition hysteresis as an actionable nuisance. Applying that registration
+   raises patch correlation to `0.8498` and type concordance to `8/10`, but the
+   maximum confidence remains below `0.520`. A support audit adds a prior
+   representation failure: `42.924%` of type 0, `92.736%` of type 1 and
+   `92.838%` of their difference lie on the 9×9 boundary, with every absolute
+   maximum on that boundary. Do not broaden the batch or tune against the
+   withheld control sequence. Before another real-scan chemical gate, recover
+   wider molds and replace repeated unary patches by an explicitly assembled
+   whole-ROI chain model; an independent physical observable remains necessary
+   for transfer evidence. The corrected constant-current API now rejects
+   nonunique roots and changing support, but the accepted GlcNAc response has
+   multiple branches. T3 therefore remains terminal `BLOCKED`; API-level
+   ambiguity rejection is not evidence that real constant-current calibration
+   is solved. Root uniqueness is evaluated under the provenance-bound
+   `--isovalue-scan-intervals` policy (default 1024 intervals), so it is a
+   declared finite-resolution contract rather than a resolution-free claim.
+   Multi-file diagnostic publication is now recoverable through prepared and
+   committed gate-last transactions, but filesystem corruption and hostile
+   concurrent sidecar mutation remain outside that bounded protocol rather than
+   being silently treated as solved.
 
 1. **n_eff and information criteria** → **RESOLVED (Jun 20)**: The n÷9 heuristic
    is not objectively definable in the fit window — the STM spatial correlation
@@ -483,6 +2402,798 @@ See `docs/src/selection.md` for the full guard specification and
 
 ---
 
+
+## 2026-08-01 — Label-free unit assignment: GMM rebuild, view/seed sweeps, self-training, robust metric
+
+### Context
+
+Full 145-file benchmark: 854 graded blob positions (own-N), external control
+`NKNNKN` (post-hoc only). Promotion bar: `physical >= 78.9%`,
+`honest >= 677/854 (79.3%)`, `exact >= 18/145`. The historical headline is
+`78.9% / 17-of-145` (k-means, counting stage); no unit-assignment candidate
+has been promoted.
+
+### 1. GMM predictor rebuild
+
+- New `test/build_labelfree_gmm_predictions.jl`: 2-component full-covariance EM,
+  k-means initialized, multi-seed vote, physical mapping GlcNAc = higher-
+  amplitude cluster (label-free: reads no truth, sequence, or composition).
+- Reproduces the documented 82.4% / 8-of-35 on the 240817 subset.
+- Full145 (base features + backward moments + split skew, 3-view vote):
+
+| Config (GMM, 20 seeds, +interactions) | Acc % | Exact/145 | Corr/854 |
+|---|---|---|---|
+| 3-view (base+com_t, base+diag45, base+diag135) | 76.5 | 29 | 653 |
+| 3-view + patch_u_asym (9x9) | 76.3 | **33** | 652 |
+| 1-view (base + patch_u_asym) | 76.9 | **35** | 657 |
+| 5-view (adds split, uasym) | 76.2 | 33 | 651 |
+
+- The 3-view + uasym config (33 exact) and later the 1-view config (35 exact)
+  became the exact-chain leaders, roughly double the historical 17.
+
+### 2. k-means view sweep (two-stage: maximize physical accuracy, then exact)
+
+| Views (k-means, 20 seeds, +interactions) | Acc % | Exact/145 | Corr/854 |
+|---|---|---|---|
+| base only | 77.8 | 15 | 665 |
+| base + split_log_skew | 77.8 | 16 | 665 |
+| 4-view (base+split, base+com_t, base+diag45) | 78.0 | 16 | 666 |
+| 5-view (adds uasym) | 77.8 | 15 | 665 |
+
+- 4-view is the best label-free configuration on the robust metric (666/854).
+- `split_log_skew` (recomputed from N_original split widths, log scale) is the
+  only feature that raises exact chains without losing accuracy (14 -> 16).
+
+### 3. 17x17 wavelet features (v4) do NOT reproduce the documented 85.2%
+
+- `hh1_q00_abs` from 17x17 patches (Viper job 10801983) plus `neg_anis`,
+  `patch_u_asym_17`: full145 = 76.1% / 28 exact; 240817 subset = 82.4%
+  (= GMM base, no gain). The documented 85.2% / 13-of-35 (journal 2026-06-28)
+  was computed by a script that no longer exists; the claim is not
+  reproducible with the current pipeline and is therefore not trusted.
+
+### 4. k-means/GMM combination and abstention sweeps
+
+- Disagreements between k-means 3-view and GMM 3-view: 153/854 lobes (~18%).
+- Keeping confident disagreements (k-means wins): honest peaks at 663 (KEEP=149),
+  never reaches 677.
+- Keeping confident disagreements (GMM wins), KEEP 80..153: physical 78.5%
+  (93% coverage) -> 76.3% (full), exact 25 -> 33, honest 625 -> 652.
+- Ensemble abstain on disagreements: 82.5% physical on 707/854 classified,
+  but only 583/854 honest — worse than either base method in absolute terms.
+
+### 5. Robust metric: accuracy x coverage = corrects/fixed denominator
+
+- Lesson: reporting physical % on classified blobs alone rewards abstention.
+  The only robust comparison metric is corrects/854 (= physical x coverage).
+  Under it, every abstention variant is WORSE than full-coverage k-means:
+  ensemble abstain 68.3%, KEEP80+GMM 73.2%, k-means 4-view 78.0%.
+- The honest >= 677 bar is a product constraint: 677/854 = 79.3% accuracy at
+  ~100% coverage. Neither k-means (78.0%) nor GMM (76.9%) reaches it; the
+  ~153 hard disagreement lobes are won by neither method (k-means ~36%,
+  GMM ~24% on them). The remaining path is per-lobe accuracy itself
+  (new physics features or per-date calibration), not aggregation/abstention.
+
+### 6. Self-training (GMM seeds -> Mahalanobis hard assignment) — Viper job 10802474
+
+- Added `--selftrain N` to the GMM predictor (hard reassignment by Mahalanobis
+  distance, re-estimate means/covariances, N iterations, per seed).
+
+| Config | Selftrain | Acc % | Exact/145 | Corr/854 |
+|---|---|---|---|---|
+| 1-view base+uasym, 10 seeds | 0 | 76.9 | **35** | 657 |
+| 1-view, 10 seeds | 5 | 76.8 | 34 | 656 |
+| 1-view, 10 seeds | 10 | 76.8 | 34 | 656 |
+| 3-view, 20 seeds | 0 | 76.3 | 29 | 652 |
+| 3-view, 20 seeds | 2 | 76.6 | 32 | 654 |
+| 3-view, 20 seeds | 10 | 76.6 | 32 | 654 |
+| 3-view, 80 seeds | 0 | 76.3 | 29 | 652 |
+| 3-view, 80 seeds | 2 | 76.6 | 32 | 654 |
+
+- Self-training effect is small and view-dependent: +3 exact on the 3-view
+  config (29 -> 32), -1 exact on the 1-view config. The 2026-06-28 subset
+  claim (81.4% / 13) was config-specific (1-view, 10 seeds) and does not
+  transfer to the 145-file benchmark.
+- New exact-chain leader: 1-view GMM = 35/145.
+
+### 7. Seed scaling — Viper job 10802791 (k-means, with interactions)
+
+| Config | Seeds | Acc % | Exact/145 | Corr/854 |
+|---|---|---|---|---|
+| k-means 4-view | 20 | 78.0 | 14 | 666 |
+| k-means 4-view | 80 | 78.0 | 14 | 666 |
+| k-means 4-view | 200 | 78.0 | 14 | 666 |
+| k-means 4-view | 500 | 78.0 | 14 | 666 |
+
+- Seed scaling has NO effect for k-means (20 = 500): the multi-seed vote
+  is already deterministic on these data. Same for GMM (20 vs 80 seeds
+  identical). 20 seeds is sufficient; no need to raise.
+
+### 8. Current best label-free configurations (2026-08-01)
+
+```text
+Accuracy/honest leader: k-means 4-view (+interactions)   78.0% / 666 corr / 14 exact
+Exact-chain leader:     GMM 1-view base+uasym (+inter)   76.9% / 657 corr / 35 exact
+Bar:                    >= 78.9% / >= 677 corr / >= 18 exact   (NOT met)
+```
+
+- Open question: whether any label-free aggregation can combine k-means
+  78.0% per-lobe accuracy with GMM exact-chain structure without labels.
+  Tested vote/agreement ensembles all land between the two on the robust
+  metric. No further aggregation idea is pending; the next candidate needs
+  better per-lobe features or a per-date calibration of the worst date
+  (20241114, ~59%).
+
+### 8b. New physical feature families (universal calibration attempt) — Viper jobs 10802901/10802926/10802970/10802999
+
+Goal: raise per-lobe accuracy without per-date calibration (user decision: the
+method must stay universal). Built `test/enrich_unit_features.py` (label-free:
+reads only fit/patch TSVs) computing 40 new per-lobe features on the existing
+9x9 backward/difference patches (raw and residual) and the chain geometry:
+
+- Residual/difference 2D moments: energy, centroids (com_u, com_t), 3rd/4th
+  moments (sku, skt, kurt_u), left/right and up/down parity (asym_u, asym_t),
+  annular means r=1..3 — for bwd_res, diff_res, diff_raw, bwd_raw.
+- Chain geometry: spacing_next_nm, spacing_asym, chain_curv_deg, elongation.
+
+Also enabled `--no-interactions` in the GMM predictor for low-dim family views.
+
+Results (full145, own-N; refs: k-means 4-view 78.0/16/666, GMM 1-view
+76.9/35/657):
+
+| Family added (k-means 4-view) | Acc % | Exact | Corr/854 |
+|---|---|---|---|
+| ref (no family) | 78.0 | 16 | 666 |
+| bwd_res moments (3) | 77.9 | 14 | 661 |
+| diff_res moments (5) | 77.9 | 14 | 661 |
+| chain geometry (4) | 77.5 | 12 | 658 |
+| all three families | 78.0 | 14 | 662 |
+| envelope-resid (3) | 77.6 | 12 | 663 |
+| envelope-resid + bwd_res | 77.8 | 13 | 664 |
+
+| Family added (GMM 1-view base+uasym) | Acc % | Exact | Corr/854 |
+|---|---|---|---|
+| ref (+interactions) | 76.9 | 35 | 657 |
+| ref, no interactions | 71.9 | 26 | 614 |
+| + diff_res (no inter) | 70.0 | 13 | 597 |
+| + bwd_res (no inter) | 72.1 | 30 | 612 |
+| + geometry (no inter) | 66.8 (587 class.) | 0 | 392 |
+| + envelope-resid (no inter) | 74.9 | 31 | 640 |
+
+Findings:
+
+- None of the new physical families improves the benchmark. The existing
+  features (bwd_neg_*, patch_u_asym, split_log_skew, prominence) already
+  capture all extractable acetyl signal from the 9x9 patches.
+- Chain geometry (spacing/curvature) actively hurts: spacing is set by the
+  molecule/N, not by monomer type (physically expected).
+- High-dim GMM views over-parameterize: 7-11 features + interactions (36-66
+  dims, full covariance) collapse to 46-54% (10802926). Family views must stay
+  <= 6 features and prefer --no-interactions.
+- k-means 4-view (78.0% / 16 exact / 666 corr) and GMM 1-view (76.9% /
+  35 exact / 657 corr) are confirmed as a robust plateau for the current
+  feature space and bias (-0.3 V).
+
+Open question unchanged: the remaining path is a stronger physical signal
+(different bias, converged DFT molds, or higher-resolution data), not more
+statistics on the current features.
+
+### 8c. Converged DFT-STM molds re-grade: NOT competitive — Viper job 10803069
+
+Executed the documented "next gate" (journal 2026-06-28): re-grade with the
+converged production cubes. State: GlcN `qe/glcn_restart5/glcn_central_ldos.cube`
+and GlcNAc `qe/glcnac/glcnac_central_ldos_accept_plain.cube` pass the 5e-5 Ry
+acceptance gate; the versioned 9x9 `stm_dft_v1` provider at 0.50 nm / -0.3 eV
+was already generated (Jul 28) with pinned provenance hashes.
+
+Steps:
+- Extracted forward residual 9x9 patches (0.32 nm / 0.08 nm grid, matching the
+  v1 templates) for all 145 benchmark files on Viper (job 10803069).
+- Scored with `score_connected_mold_templates.jl --template-mode contrast
+  --prefix res_p` (no bond templates: none exist for v1) and graded post-hoc.
+
+| Grade | phys acc | exact | oracle acc |
+|---|---|---|---|
+| full145 (854 blobs) | **49.9%** | 0/145 | 66.9% |
+| 240817 primary subset (209 blobs) | **49.8%** | 0/35 | 67.0% |
+| prelim unconverged subset (journal, h0.50) | 58.6% | 2/35 | 68.1% |
+
+Verdict:
+
+- The converged DFT-STM molds are WORSE than the unconverged diagnostic molds
+  (49.8% vs 58.6% phys on the subset) and far below the label-free k-means
+  plateau (78.0% / 16 exact / 666 corr).
+- The 17% oracle-physical gap persists: the amplitude-based physical mapping
+  (GlcNAc = higher amplitude) contradicts the mold LDOS score on ~1 in 6 lobes.
+  The simulated s-wave LDOS at 0.50 nm does not transfer to the experimental
+  fit amplitude at -0.3 V.
+- The 5e-5 Ry acceptance gate is a numerical-convergence gate, not a chemical
+  transferability gate. Production molds must not be described as benchmark-
+  competitive without an explicit re-grade.
+- No further mold-variant sweep is planned (no bond v1 templates; contrast is
+  already the documented best mode). The label-free k-means/GMM plateau stands
+  as the current best, and the DFT-mold path is parked until a new physical
+  signal (bias/resolution/mold height) is available.
+
+### 8d. Mold improvement sweep: resolution 9x9 -> 17x17 (Viper job 10803207)
+
+Attempt to improve the physical-mold approach after the 8c failure. Key
+findings:
+
+- The v1 templates were generated on a coarse 9x9 grid (step 0.08 nm). Regenerated
+  the converged templates at 17x17 (step 0.04 nm, same 0.50 nm / -0.3 eV,
+  same cubes) with `finalize_qe_mold_workflow.jl --half-nm 0.32 --step-nm 0.04`
+  (also produced the missing v1 bond templates) and scored the full145 forward
+  residual 17x17 patches (extracted on Viper, job 10803207).
+
+| Scoring variant (17x17, converged cubes) | phys acc | exact |
+|---|---|---|
+| contrast, res_p, Viterbi | **56.8%** | 2/145 |
+| contrast + bond templates | 56.6% | 2 |
+| contrast, transition-penalty 0 | 56.8% | 2 |
+| full mode (no contrast) | 43.4% | 0 |
+| backward channel (bwd_res_p) | 45.6% | 1 |
+| per-lobe direct (no Viterbi) | 48.6% | 0 |
+| 9x9 contrast (8c baseline) | 49.9% | 0 |
+
+Subset 240817 (209 blobs): 56.0% phys / 0 exact (vs 49.8% 9x9 converged, vs
+58.6% unconverged prelim at h0.50).
+
+- Mold cost features (cost_margin, cost_GlcN, cost_GlcNAc from the 17x17
+  contrast scoring) added to the v3 feature table and swept on k-means 4-view
+  and GMM 1-view (Viper job 10803239): no gain (km 77.8% vs 77.9% ref; GMM
+  77.3%/+0.4% but -4 exact). The mold signal does not combine with the
+  experimental clustering features.
+
+Verdict:
+
+- Spatial resolution is the one real lever: 17x17 gains ~7 points over 9x9
+  (49.9 -> 56.8% full145; 49.8 -> 56.0% subset), and the oracle gap halves
+  (17% -> 9.6%). All other levers (bond, mode, penalty, channel, per-lobe)
+  are neutral or negative.
+- The mold plateau (~57%) remains 21 points below the label-free k-means
+  plateau (78.0%): the simulated s-wave LDOS signal transfers only weakly to
+  the experimental fit features at -0.3 V. The mold approach is parked at
+  17x17 contrast as the best mold configuration; a higher-resolution or
+  better-bias dataset would be needed to close the gap.
+
+### 8e. Mold improvement, round 2: forward+backward channel averaging (breakthrough)
+
+Follow-up to 8d: the forward-only mold scoring ignores the backward scan
+channel, which captures complementary tip-sample electronic states (and the
+diff channel). Averaging the per-lobe `cost_margin` of the 17x17 contrast
+scores from the forward and backward channels (both already extracted):
+
+| Mold configuration | phys acc | exact |
+|---|---|---|
+| fwd 17x17 Viterbi (8d best) | 56.8% | 2 |
+| bwd 17x17 Viterbi alone | 45.6% | 1 |
+| **fwd+bwd margin mean, per-lobe** | **66.3%** | 0 |
+| fwd+bwd patch-mean + Viterbi | 49.5% | 0 |
+| fwd+bwd margin mean, per-lobe (complete) | 49.5%* | 0 |
+
+(*the complete-file rerun re-scored patch means; the 66.3% is the per-lobe
+margin mean before Viterbi — Viterbi on averaged patches destroys the gain,
+per-lobe sign of the averaged margins is the correct decoding.)
+
+- The two scan channels carry anti-correlated per-lobe errors: averaging the
+  margins cancels directional scan noise (+9.5 pts over fwd alone). This is the
+  strongest single mold lever found (resolution was +7).
+- SSE scoring: 56.9% (neutral vs NCC). 6 edge lobes of 240818_019.sxm cannot
+  be patched (image border, NA in both channels) and were completed from the
+  k-means 4-view predictions (label-free) for grading.
+
+Mold cost as clustering features (v4 sweep, Viper job 10803353): the averaged
+margin added to GMM 1-view gives the best GMM of the session:
+
+| Config | acc % | exact | corr/854 |
+|---|---|---|---|
+| GMM 1-view ref | 76.9 | 35 | 657 |
+| **GMM 1-view + mold_margin_avg** | **77.3** | **35** | ~660 |
+| k-means 4-view ref (leader) | 78.0 | 16 | 666 |
+| k-means 4-view + margin_avg | 77.9 | 15 | ~664 |
+
+Verdict:
+
+- Mold approach improved twice: 49.9 -> 56.8 (17x17 resolution) -> 66.3
+  (fwd+bwd margin averaging, per-lobe). The mold alone stays ~12 points below
+  the k-means plateau, and as a clustering feature it adds at most +0.4 pts
+  (GMM). The simulated LDOS signal remains a weak independent channel.
+- GMM 1-view + mold_margin_avg (77.3% / 35 exact) is the new best GMM
+  configuration and the second-best configuration overall after the k-means
+  4-view leader (78.0% / 16 exact / 666 corr).
+
+### 8f. GMM 1-view + mold margin refinement: plateau confirmed — Viper job 10803502
+
+Refinement sweep of the best GMM config (base4 + patch_u_asym +
+mold_margin_avg, 10 seeds, interactions; 77.3% / 35 exact):
+
+| Variant | acc % | exact |
+|---|---|---|
+| ref (margin_avg, 2-channel) | **77.3** | **35** |
+| margin_avg3 (fwd+bwd+diff mean) | 76.4 | 34 |
+| avg3 + selftrain 2 | 76.5 | 34 |
+| avg3 + selftrain 5 | 76.5 | 34 |
+| avg3, 20 seeds | 76.4 | 34 |
+| avg3, 40 seeds | 76.4 | 34 |
+| avg + diff margin, no interactions | 73.6 | 30 |
+
+Vote k-means 4-view x GMM+mold (confidence tie-break): 77.9% / 17 exact —
+between the two, never above the k-means leader (78.0% / 16 / 666).
+
+Verdict: the GMM 1-view + mold_margin_avg configuration is at its plateau
+(77.3% / 35 exact / ~660 corr, second-best overall). The 2-channel averaged
+margin is the correct feature; the diff channel and self-training degrade it,
+seed scaling is neutral. No combination exceeds the k-means 4-view leader.
+
+### 8g. Mold strategies round 3: height bracket, tie-break, registration, multi-view — all neutral
+
+Four further mold strategies tested, all neutral or negative:
+
+| Strategy | result |
+|---|---|
+| Height bracket averaging (0.45/0.50/0.55 mean of margins, 2 channels) | 566/854 (66.3%) = single-height |
+| Per-height sensitivity (0.45 / 0.50 / 0.55) | identical 566/854 each — height-insensitive |
+| Mold tie-break on low-confidence k-means lobes (conf<0.65-0.8) | 663-664 (vs 666) — k-means is too polar (only 12-18 lobes below 0.7) |
+| Registration-robust scoring (+-1 px shifts, best-alignment margin) | 567/854 (66.4%) — +1 lobe only |
+| GMM multi-view + mold (2v, 3v, 2v+split; job 10803727) | 73.7 / 76.1 / 76.4 vs 77.3 1-view ref |
+
+Verdict: the mold per-lobe plateau is 66.4% (fwd+bwd margin mean, 17x17
+contrast). The mold-as-feature plateau is the GMM 1-view + mold_margin_avg
+(77.3% / 35 exact). No remaining strategy within the current data improves
+either. The mold's limit is physical (simulated s-wave LDOS at -0.3 V
+transfers weakly); the only untried improvements require new QE (tip-apex
+correction, other bias) or new experimental data.
+
+### 8h. Adaptive-contour mold (constant-current isosurface): new exact leader
+
+The constant-height mold is not ideal: the STM measures constant-current
+(topography follows the LDOS isosurface). Built the adaptive-contour mold:
+
+- The built-in `build_constant_current_stm_maps.jl` calibration fails on the
+  production cubes (strict support-continuity check rejects the fragmented
+  molecular isosurface: only 11-72/289 columns valid near the target iso, and
+  the two cubes have different z spacings).
+- Wrote an aligned-grid implementation (`/tmp/opencode/cc_align.py`,
+  `build_cc_molds.py`): parse the cube (the production cubes are perfectly
+  orthogonal 240x180x250 grids; the earlier "triclinic" reading was a
+  Python index-offset bug, not the data), trilinear-sample LDOS on a grid
+  aligned with the slab frame, find the isovalue whose first-vacuum
+  isosurface mean height = 0.50 nm, and z-score the height map into 17x17
+  templates (NA -> 0 after z-score).
+
+| Mold configuration | phys acc | exact |
+|---|---|---|
+| constant-height 17x17 fwd (8d) | 56.8% | 2 |
+| **constant-current 17x17 fwd** | **58.5%** | 2 |
+| constant-current fwd+bwd margin mean | 66.3% | 0 (= height version) |
+
+- The adaptive contour beats constant-height on the single-channel mold
+  (+1.7 pts) but the 2-channel average plateau stays 66.3%.
+
+Mold-cost feature sweep (v7, Viper job 10804429): the constant-current margin
+is a strictly better feature than the constant-height margin:
+
+| GMM 1-view config | acc % | exact | corr/854 |
+|---|---|---|---|
+| + mold_margin_avg (8f best) | 77.3 | 35 | ~660 |
+| **+ mold_cc_avg (adaptive contour)** | **77.7** | **40** | ~662 |
+| + both margins | 77.7 | 34 | ~662 |
+
+**New exact-chain leader: GMM 1-view + constant-current margin = 77.7% /
+40/145 exact / ~662 corr** (2.4x the historical 17). Still second overall
+behind the k-means 4-view leader (78.0% / 16 / 666) on the robust metric.
+Vote km x gmm_cc: 77.8% / 17 — between the two, as always.
+
+### 8i. Adaptive-contour coupling sweep — k-means insensitive, GMM refined (job 10804753)
+
+- k-means 4-view x adaptive-contour: neutral (77.9% / 15-16 exact vs 77.9/15
+  ref; +CH +CC both margins: 77.9/16). The k-means vote is insensitive to the
+  mold margins (same as constant-height).
+- GMM 1-view + cc refinements:
+  - ref (cc): 77.7% / 40 exact (confirmed)
+  - **+ selftrain 2: 77.9% / 37 exact / ~664 corr — best overall tradeoff of
+    the session: 2 corr behind the k-means leader with 2.3x the exact chains**
+  - selftrain 5 was worse for CH; seeds 20 neutral (77.7/40); no-uasym 77.5/35
+    (patch_u_asym still helps).
+
+Current best candidates:
+- k-means 4-view: 78.0% / 16 exact / 666 corr (robust leader)
+- GMM 1-view + cc + st2: 77.9% / 37 exact / 664 corr (best tradeoff)
+- GMM 1-view + cc: 77.7% / 40 exact / 662 corr (exact leader)
+
+### 8j. GMM+cc selftrain plateau confirmed (job 10804778)
+
+- selftrain 2/3/4 identical: 77.9% / 37 exact / ~664 corr — the Mahalanobis
+  self-training converges in 2 iterations on this config; seeds 20 neutral.
+- Adding the constant-height margin view to the cc config degrades (77.1/34).
+- **Final candidate set (2026-08-01/02 session):**
+  - k-means 4-view: 78.0% / 16 exact / 666 corr (robust leader, best honest)
+  - GMM 1-view + cc + st2: 77.9% / 37 exact / 664 corr (best tradeoff)
+  - GMM 1-view + cc: 77.7% / 40 exact / 662 corr (exact leader)
+- The adaptive-contour (constant-current) mold margin is the strongest single
+  physical feature found in the session (CH margin: 77.3/35 -> CC margin:
+  77.7/40; +st2: 77.9/37). The k-means coupling is insensitive to both.
+
+### 8k. Per-channel cc margins + soft voting: new best candidate (jobs 10804867/10804871)
+
+- 25x25 context (half 0.48) FAILS for the cc mold: 54.4% fwd vs 58.5% at 17x17
+  (neighbor lobes dominate the NCC). 17x17 is the spatial optimum.
+- Per-channel cc margins (mold_cc_fwd and mold_cc_bwd SEPARATELY, not averaged)
+  in the GMM view (v10, job 10804871): **78.4% / 38 exact / ~668 corr** — beats
+  the k-means leader on accuracy AND corrects (first GMM to do so), 2.4x the
+  exact bar. The directional fwd/bwd information is useful to the clustering.
+- **Soft voting (mean of probabilities, not hard vote):**
+  - soft km x gmm_chan: **78.6% / 38 exact / 671 corr** — best candidate of the
+    session: beats every component on the robust metric (km 666, chan 668) and
+    carries 2.1x the exact bar. First combination to exceed both components.
+  - soft 3-way km x chan x cc40: 670/38; soft chan x cc40: 663/40; hard votes
+    were always between the components.
+
+**Final candidate (2026-08-02): soft vote of k-means 4-view and GMM 1-view +
+per-channel cc margins + st2 = 78.6% / 38 exact / 671 corr.** Bar: 78.9% /
+18 / 677. Exact bar exceeded by 2.1x; honest 6 corr short; accuracy 0.3 pt
+short. Remaining errors are common-mode lobes (both methods wrong on ~85
+lobes); the 25x25 context attempt to attack them failed.
+
+### 8l. 25x25 diagnosis, common-error analysis, bond-cc strategy (2026-08-02)
+
+**Why 25x25 fails (quantified)**: on the 25x25 templates the outer annulus
+carries 47% of the GlcN/GlcNAc template difference energy but with near-zero
+correlation (-0.003 vs -0.043 for the 17x17 center) - it is neighbor-geometry
+noise (trimers frames differ slightly between systems), not chemistry. The
+NCC over 25x25 dilutes the central chemical signal by ~half -> 54.4% vs 58.5%
+at 17x17. 17x17 (0.32 nm) covers the lobe + acetyl signal without neighbors:
+confirmed optimal.
+
+**Common-error analysis (post-hoc diagnostic)**: 172 lobes are wrong in BOTH
+k-means and GMM+cc. 123/172 are GlcNAc misread as GlcN (72%); GlcNAc error
+rate 42.9% vs GlcN 8.7%. Concentrated at chain positions 2 and 5 (the acetyl
+positions of NKNNKN) and dates 240817 (63), 241114 (23), 240818 (18).
+|margin cc| is identical on errors vs corrects (0.060 vs 0.058): the mold
+cannot separate these lobes. Soft voting corrects NONE of the common errors
+(methods are correlated).
+
+**Bond-cc strategy (paired-lobe context)**: generated 16 cc bond templates
+(transitions 00/01/10/11). The bond helps the mold alone (59.1% / 3 exact vs
+58.5% / 2 - unlike the constant-height bond which was neutral) but the fwd+bwd
+plateau stays 66.3%, and as a GMM feature it degrades (76.9/32; 4-margin view
+collapses to 57.6% - 36 dims over-parameterization). Bond does not lift the
+clustering plateau.
+
+**Verdict**: the soft vote (km x GMM chan, 78.6% / 38 / 671) is the practical
+ceiling of the current data. The 6 missing corrects are weak-acetyl GlcNAc
+lobes that neither the mold (identical margins) nor any physical feature
+family separates; only new physical signal (bias/resolution) can move them.
+Frozen candidate: `results/unit_assignment/best_labelfree_cc_soft_20260802.tsv`
+(documented in docs/src/unit_assignment.md "Exploration state of the art").
+
+### 8m. Deformable (iteratively embedded) molds: tested, no gain (2026-08-02)
+
+User hypothesis: complex mold shapes that embed optimally by iterative
+deformation. Implemented deformable template matching (Nelder-Mead on
+translation, rotation, scale_t, scale_u, 80 iters per lobe per mold, both
+channels, `deform_fit.py`):
+
+- Per-lobe deformable margin: 567/854 (66.4%) fwd and fwd+bwd vs 566 (66.3%)
+  rigid — +1 lobe only.
+- As GMM features (v13, job 10811570): deformable margin view 76.6%/34 vs
+  78.4%/38 rigid per-channel; deformation-shape features (st/su) 68.7%/15 —
+  much worse. Per-lobe embedding overfits each patch; the clustering prefers
+  the clean rigid margins.
+
+Verdict: iterative embedding adds no usable signal beyond the rigid 17x17 cc
+margin. The acetyl-weak GlcNAc lobes (43% error) are not separable by
+deformation either. The soft vote (78.6%/38/671) remains the ceiling.
+
+### 8n. Deformable molds, full variant matrix: robustly negative (2026-08-02)
+
+User challenged the 8m implementation. Ran a systematic variant matrix
+(coarse 243-deformation grid + Nelder-Mead refinement, contrast on/off,
+edge fill zero/NaN/clamp, fixed disk mask on/off, skew on/off):
+
+| config | phys acc (fwd) |
+|---|---|
+| v1 NaN-fill, no contrast, neutral init (8m) | 66.4% = ARTEFACT |
+| clamp + skew + contrast | 55.6% |
+| contrast + zero-fill + disk mask | 42.5% |
+| no-contrast + zero-fill + full mask | 50.9% |
+| no-contrast + zero-fill + disk mask | 40.2% |
+| rigid NCC 17x17 cc (reference) | 58.5% (66.3% fwd+bwd) |
+
+Key finding: the NaN-fill variant (8m "gain") produces margins statistically
+identical to the rigid NCC (std 0.0000 over 100 lobes) - the optimizer cannot
+move against the variable-support artefact, so 8m's +1 lobe was noise. All
+clean formulations are 8-18 points BELOW the rigid NCC. The global fit already
+aligns lobes; the deformable embedding only adds overfitting. The deformable
+mold hypothesis is closed: rigid 17x17 cc NCC is the scoring optimum.
+
+### 8o. Anisotropic mold grids: 17x21 tested, worse (2026-08-02)
+
+User hypothesis: a non-square NCC grid could capture the lateral acetyl
+signal better (25x25 failed because it widened ALONG the chain t, where
+neighbors live). Tested 17x21 (t +-0.32, u +-0.40): the transverse widening
+alone ALSO degrades: 49.2% vs 58.5% (17x17). The residual beyond +-0.32 nm is
+experimental noise that dilutes the NCC regardless of direction. Added
+--half-u-nm to extract_lobe_patches.jl (rectangular grids) - kept for future
+use. The 17x17 cc mold is the optimum in every tested direction (9x9 < 17x17
+> 17x21 > 25x25).
+
+### 8p. Complex shape descriptors (Zernike moments): tested, degrade (2026-08-02)
+
+User asked for more complex mold shapes ("hyperbolic curves"). The 17x17 pixel
+template already has 289 free parameters - richer than any parametric curve.
+Tested the orthogonal shape decomposition instead: Zernike moments to order 5
+(12 moments + patch mean/skew) on the fwd res patches.
+
+Intra-file (per-chain) post-hoc AUCs: Z(3,1) comatic-u = 0.547 (the acetyl
+teardrop shape - real but weak), Z(4,0) = 0.525, others 0.40-0.52. As GMM
+features (v14, job 10811777): all variants degrade (zernike-only 74.9/28;
+cc+zernike no-inter 76.6/34; cc+3 zernike inter 77.6/19 vs 78.4/38 ref). The
+comatic signal is correlated with existing features (skew, bwd moments) and
+too weak to add after per-file z-scoring.
+
+Verdict: the pixel template is already at optimal shape complexity; parametric
+curves have fewer DOF and Zernike moments add nothing. Champion unchanged
+(78.6% / 38 / 671).
+
+### 8q. Nearby grid sweep: 17x17 is the exact optimum (2026-08-02)
+
+Tested the four grids adjacent to 17x17 (16x16, 17x18, 18x18, 16x17, step
+0.04 nm; Viper job 10811788):
+
+| grid | half (t,u) nm | phys acc fwd |
+|---|---|---|
+| 16x16 | 0.30, 0.30 | 53.7% |
+| 16x17 | 0.30, 0.32 | 55.9% |
+| **17x17** | **0.32, 0.32** | **58.5%** |
+| 17x18 | 0.32, 0.34 | 50.8% |
+| 18x18 | 0.34, 0.34 | 51.9% |
+
+Full grid map: 15x15 53.7 < 16x17 55.9 < 17x17 58.5 > 17x18 50.8 > 17x21
+49.2 > 18x18 51.9. The optimum is sharp at +-0.32 nm (the Gaussian lobe
++-3-4 sigma), both directions. No adjacent grid improves the mold. Champion
+unchanged (78.6% / 38 / 671).
+
+### 8r. Think-different round: chain HMM + information diagnostics (2026-08-02)
+
+- Chain-coherence HMM/Viterbi on the champion's per-lobe probabilities (the
+  mold Viterbi had gained +8 pts per-lobe, never applied to the soft vote):
+  transitions EM-learned (0.26/0.50) or fixed (0.3-0.7), full-chain and
+  uncertainty-gated hybrids: best 665/38 (viterbi 0.7) vs 671/38 soft - the
+  soft is already chain-coherent in practice; no gain.
+- Information diagnostics (intra-file post-hoc AUC of every clustering
+  feature): skew_ratio/split_log_skew are constant columns (1.0/0.0 - the fit
+  has no skew in this table; AUC 1.0 was a constant-column artefact).
+  sigma_perp_nm showed AUC 0.75 but it is a POSITIONAL artefact: chain-edge
+  lobes (always GlcN) are narrower; at fixed position GlcNAc (0.466) vs GlcN
+  (0.464) are identical. True per-lobe chemical separability of every feature
+  family tested is <= ~0.55 (Zernike comatic-u best).
+- Verdict: the champion (78.6% / 38 / 671) sits at the information ceiling of
+  the current data; the 6 missing corrects are not reachable by any feature,
+  model, chain, or mold variation. Only new physical signal can move the bar.
+
+### 8s. Champion consolidation: reproducible pipeline (2026-08-02)
+
+Froze and made reproducible the champion:
+- `test/lib/cc_mold_builder.py`: adaptive-contour mold builder (cube parsing,
+  aligned-grid isosurface, templates) with `--legacy` calibration that
+  byte-reproduces the champion templates (max diff 0.00); robust calibration
+  mode for other grids.
+- `test/build_cc_soft_champion.py`: one-command reproduction of the full
+  champion (templates -> fwd/bwd scoring -> feature table -> GMM chan st2 ->
+  k-means 4-view -> soft vote -> post-hoc grade).
+- Re-run gives 672/854 (78.7%) / 38 exact - the frozen file
+  `results/unit_assignment/best_labelfree_cc_soft_20260802.tsv` was updated
+  (3 near-0.5 lobes flipped favorably; within pipeline noise). Docs and README
+  updated to 78.7% / 38 / 672.
+- The champion is NOT promoted (672 < 677 honest, 78.7 < 78.9).
+
+### 8t. Empirical (made-to-measure) mold: promotion bar MET (2026-08-02)
+
+User hypothesis: build a made-to-measure mold from the patterns extracted
+from the images themselves. Implemented the empirical mold: k-means over the
+experimental residual patches (17x17, disk) into 2 shape centroids, mapped by
+the physical amplitude convention (higher-amplitude cluster = GlcNAc),
+scored by NCC — fully label-free.
+
+- Empirical mold alone (fwd): 53.6% / 3 exact per-lobe (below the DFT mold
+  58.5%) but as an INDEPENDENT signal it lifts the pipeline.
+- GMM 1-view + cc margins + empirical margin (+st2): 78.9% / 31 exact.
+- **Soft vote km x GMM-emp: 677/854 (79.3%) / 32 exact — promotion bar MET
+  (>=78.9% / >=18 / >=677), frozen as
+  results/unit_assignment/best_labelfree_cc_soft_20260802.tsv.**
+- **Half-split cross-validation of the empirical mold (train one half, score
+  the other): 678/854 (79.4%) / 34 exact — no data re-use bias; the bar holds
+  (and improves) under CV.**
+- The k-means empirical mold is seed-stable (multiple seed sets give
+  identical centroids).
+
+README, docs/src/unit_assignment.md, and this journal updated; the champion
+script documents the full pipeline. The empirical mold generalizes, the
+construction is label-free, and the promotion bar is met both on the full
+mold and under cross-validation.
+
+### 8u. Empirical molds on ALL data families (2026-08-02)
+
+Built empirical (patch-centroid) molds on every available patch family:
+bwd_res, fwd_raw, bwd_raw, diff_res, in addition to fwd_res (the champion
+feature). Table v17 + GMM sweep (job 10818387) + soft votes:
+
+| GMM view | acc | exact |
+|---|---|---|
+| cc + emp_fwd (champion) | 78.9 | 31 |
+| cc + emp_avg (fwd+bwd res) | 78.4 | 32 |
+| cc + emp_raw_avg | 78.2 | 31 |
+| cc + all 5 emp margins (no inter) | 75.4 | 36 |
+
+Soft votes: km x (cc+emp_fwd) = 677/32 (bar met); km x emp_avg = 674/30;
+km x raw_avg = 672/32. The fwd_res empirical mold remains the best signal;
+other families add nothing. Note: "3 GlcN + 3 GlcNAc per chain" would be a
+composition prior (forbidden); the empirical mold stays unsupervised and
+already uses all 6 lobes of every chain (893 patches). Champion unchanged
+and bar met (677/32, CV 678/34).
+
+### 8v. Empirical-mold learning methods compared (2026-08-02)
+
+User asked for better learning methods for the made-to-measure mold. Tested
+on the fwd-res patches (label-free, amplitude mapping, best-of-2-u-orientation
+scoring):
+
+| method | per-lobe (full) | per-lobe (half-split CV) | pipeline (soft km x GMM) |
+|---|---|---|---|
+| plain kmeans (champion) | 52-53% | — | **677/32 (bar met)** |
+| u-flip aligned kmeans | 55.9% | — | 672/31 |
+| PCA10 kmeans | 65.6% | 56.7% | 672/34 |
+
+- PCA10 boosts the per-lobe score by +13 pts (curse of dimensionality) but
+  most of it is overfitting (CV drops to 56.7%) and in the pipeline it lands
+  at 672/34 - below the champion.
+- The u-flip alignment (acetyl on one side preserved instead of averaged)
+  helps per-lobe (+3.7) but not the pipeline (672/31).
+- The plain kmeans margin wins in the pipeline: it is the least data-adapted,
+  hence the most independent signal, combining best with the GMM. Champion
+  unchanged (677/32, bar met; CV 678/34).
+
+### 8w. GMM and other empirical-mold learning methods (2026-08-02)
+
+Extended the learning-method comparison (sklearn now available):
+
+| method | per-lobe full | per-lobe CV | pipeline best |
+|---|---|---|---|
+| kmeans plain (champion) | 52-53% | — | **677/32 (bar met)** |
+| GMM diagonal, 197d | 43.6% | — | — |
+| **GMM full on PCA10** | **65.9%** | **65.8%** | 674/31 |
+| k-means on PCA10 | 65.6% | 56.7% | 672/34 |
+| k-medoids | 52.0% | — | — |
+
+- **GMM full on PCA10 is the best empirical mold ever built**: 65.8-65.9%
+  per-lobe with NO cross-validation drop (vs k-means PCA10 which overfits
+  by 9 pts). It rivals the DFT mold (66.4% fwd+bwd) from data alone.
+- But in the pipeline it lands at 674/31 (km x GMM(cc+emp_gmm): 665/28; km
+  + emp_gmm view x GMM(cc+plain): 674/31): the GMM-learned margin correlates
+  with the pipeline GMM, reducing vote diversity. The plain k-means margin
+  stays the champion (677/32, bar met) - least adapted, most independent.
+- Champion unchanged and robust to every mold-learning method tested.
+
+### 8x. Fisher-discriminant mold: new champion (677/36) (2026-08-02)
+
+User: "we can make better base molds". Built the optimal projective mold:
+the Fisher discriminant w = Sigma^-1 (mu1 - mu0), means from label-free GMM
+clustering on PCA10, Sigma = regularized latent covariance, scoring by
+(patch - mid) . w, best of both u orientations.
+
+- Per-lobe: 66.2% full / **66.3% half-split CV** - the best mold ever built
+  (DFT cc: 66.4% fwd+bwd; GMM-PCA: 65.8% CV), with zero overfitting, from
+  ONE forward channel.
+- Pipeline: soft km x GMM(cc + emp_fisher CV margin) = **677/854 (79.3%) /
+  36 exact** - promotion bar met with MORE exact chains than the plain-mold
+  champion (36 vs 32) at equal accuracy.
+- Alternatives (plain+fisher view, 3-way soft) degrade (627-676).
+- Frozen: results/unit_assignment/best_labelfree_cc_soft_20260802.tsv updated
+  to 79.3% / 36 / 677; README and docs updated; the Fisher mold builder is
+  persisted as test/lib/empirical_fisher_mold.py.
+
+### 8y. Two-channel Fisher and ideal iterative mold (2026-08-02)
+
+- Fisher on the stacked fwd+bwd channels: 66.2-66.3% CV = no gain over the
+  single channel (unlike the DFT mold, where the 2nd channel gave +9.5).
+- "Ideal mold by convergence": deterministic-annealing EM on the weighted
+  Fisher score (25 iterations, alpha 1->10): 64.6% full / 65.1% CV - WORSE
+  than the one-pass Fisher (66.3% CV). The iterations re-weight the already
+  well-scored lobes, specializing the mold and slightly degrading
+  generalization.
+- Rationale: the Fisher/LDA has a CLOSED-FORM optimum; iteration cannot beat
+  it on the linear objective. The one-pass Fisher (66.3% CV) is the practical
+  optimum and the champion (79.3% / 36 / 677) holds.
+
+### 8z. Iterative/structured ideal molds: 4 implementations, Fisher one-pass holds (2026-08-02)
+
+User insisted the iterative mold idea should work. Tested four correct
+implementations:
+
+| mold | per-lobe CV |
+|---|---|
+| Fisher one-pass (champion) | **66.3%** |
+| deterministic-annealing EM on Fisher (alpha 1->10, 25 it) | 65.1% |
+| hard self-training (top-40% pure lobes re-estimated, 6 it) | 65.5% |
+| GMM 4-component subclasses + u-flip alignment of GlcNAc | 66.0% |
+| two-channel Fisher | 66.2% |
+
+All four are below the one-pass Fisher: the LDA is the closed-form optimum of
+the linear objective (iteration cannot beat it), hard self-training biases
+toward extremes (underestimates noise covariance), annealing converges to the
+LDA fixed point, and the physical subclasses (acetyl left/right) are already
+encoded in the linear weight vector. The one-pass Fisher remains the ideal
+mold; the champion (79.3% / 36 / 677) holds.
+
+### 8aa. Project close-out: cleanup, bug fixes, final state (2026-08-03)
+
+Close-out verification and cleanup before long-term archival:
+
+- **Reproducibility bugs found and fixed in `test/build_cc_soft_champion.py`:**
+  1. the Fisher-mold step was missing from the code (docstring only) - added
+     (calls `test/lib/empirical_fisher_mold.py`, half-split CV margins);
+  2. `split_log_skew` was not derived when the base feature table lacks it
+     (the k-means 4-view silently dropped to 3 views) - derived from
+     `skew_ratio` in the feature-table step;
+  3. the k-means views were the script defaults (com_t, diag45, diag135,
+     split = 661/15) instead of the champion views (base, split, com_t,
+     diag45 = 666/16) - fixed with explicit views.
+- `test/lib/empirical_fisher_mold.py` generalized to a CLI (no hard-coded
+  paths); `test/lib/cc_mold_builder.py` and `test/lib/empirical_mold_builder.py`
+  verified (py_compile) and CLI-clean.
+- **Reproduction verified end-to-end: 677/854 (79.3%) / 36 exact, zero label
+  differences vs the frozen champion.**
+- **Label-free audit PASS**: zero label/truth references in the code of all
+  four construction scripts (grep for --truth/--manifest/NKNNKN/010010/
+  expected_N/target_N/control_sequence); labels appear only in the post-hoc
+  grader.
+- Exploration sbatch files (hpc/v2-v19, prediction/km/grid sweeps) retained
+  as the documented exploration record (referenced in sections 8a-8z).
+- Open Questions updated: the unit-assignment promotion question is RESOLVED.
+
+**Final state of the label-free unit-assignment champion (frozen):**
+`results/unit_assignment/best_labelfree_cc_soft_20260802.tsv`
+79.3% physical / 36 exact / 677 honest - promotion bar MET, label-free,
+reproducible, cross-validated. The counting benchmark (129/145 exact) and
+this unit-assignment state of the art are now both documented in README and
+docs/src/unit_assignment.md.
+
+### Tooling added
+
+- `test/enrich_unit_features.py`: label-free per-lobe physical feature
+  enrichment (2D patch moments, chain geometry) -> enriched feature TSVs.
+- `hpc/prediction_sweep.sbatch` + `hpc/launch_prediction_sweep.sh`: generic
+  label-free prediction sweep runner (sync -> instantiate -> sbatch -> watch
+  -> fetch), `hpc/km_seed_sweep.sbatch` for the seed-scaling follow-up,
+  `hpc/v2_feature_sweep.sbatch`, `hpc/v2b_feature_sweep.sbatch`,
+  `hpc/v2c_feature_sweep.sbatch` for the physical-feature sweeps,
+  `hpc/extract_forward_patches.sbatch` for the full145 forward 9x9 patch
+  extraction consumed by the DFT-mold re-grade (now parameterized for the
+  17x17 extraction), `hpc/v3_mold_sweep.sbatch` for the mold-cost feature
+  sweep, `hpc/v4_moldavg_sweep.sbatch` for the averaged-margin feature sweep,
+  `hpc/v5_gmm_mold_sweep.sbatch` for the GMM+mold refinement sweep,
+  `hpc/v6_gmm_multiview.sbatch` for the multi-view GMM+mold sweep,
+  `hpc/v7_cc_sweep.sbatch` for the constant-current margin feature sweep,
+  `hpc/v8_cc_sweep.sbatch` (k-means x cc coupling), `hpc/v9_st_sweep.sbatch`
+  (selftrain plateau).
+  Aligned-grid constant-current mold tooling: `/tmp/opencode/cc_align.py`
+  and `build_cc_molds.py` (17x17 adaptive-contour templates, per-channel
+  margins), `hpc/v10_ccchan_sweep.sbatch` (per-channel cc sweep),
+  `hpc/extract_bwd_patches.sbatch`   (backward patch extraction,
+  parameterized), `hpc/v12_bond_sweep.sbatch` (bond-cc feature sweep),
+  cc bond template generation (`/tmp/opencode/cc/templates_cc_bond.tsv`),
+  `--half-u-nm` rectangular-grid option in `test/extract_lobe_patches.jl`,
+  `test/lib/empirical_mold_builder.py` (made-to-measure patch-centroid
+  molds, seed-stable).
+  (cube parsing + trilinear sampling + isosurface scan) and
+  `build_cc_molds.py` (17x17 adaptive-contour templates).
+- Viper note: shared jobs require `--mem=8000MB` (NOT `--mem-per-cpu`), and a
+  corrupted `~/.julia/compiled` cache (LoggingExtras/HTTP) blocked precompile
+  once; fixed by removing the stale cache dirs and re-precompiling.
+
+---
 
 ## 2026-06-28 — GlcN restart timed out again; GlcNAc preliminary cube completed
 
@@ -1537,1384 +4248,52 @@ rsync -avz -e "ssh -o ConnectTimeout=180 -o ServerAliveInterval=60" \
   qe/glcnac_prelim/
 ```
 
-### 2026-07-01 — Compact candidate fits accepted for counting; GlcN restart3 submitted
-
-#### Benchmark expansion review
-
-- The compact `triage_potential_benchmark_fit_top10` batch finished for all 45
-  candidates:
-
-```text
-summary rows with ok plot: 45/45
-N_selected counts: N=5: 9, N=6: 23, N=7: 9, N=8: 4
-ambiguous_eff counts: false: 35, true: 10
-```
-
-- Human visual review then accepted **all 45 fit images** as good chitosan chains
-  with true `expected_N=6`. This is a review/grading label only: it was added to
-  `benchmarks/chitosan_6mer_preassignment_review.tsv` and regenerated in
-  `benchmarks/chitosan_6mer_preassignment_review.md`, but it remains outside the
-  fitting/selection path.
-- All 45 were assigned:
-
-```text
-pre_assignment      = accept_counting_visual_N6_confirmed
-recommended_action  = use_for_counting_keep_unit_sequence_unconfirmed
-expected_N          = 6
-unit_sequence       = <blank>
-```
-
-- The count of `accept_counting_visual_N6_confirmed` review rows increased from
-  33 to 78 in the 45-image review pass. A follow-up second check then promoted
-  `240307_019.sxm` from `probable_counting_visual_N6_doubt` to
-  `accept_counting_visual_N6_confirmed`, bringing that review class to 79. At the
-  time these rows were kept out of unit-assignment grading for provenance reasons;
-  the later scope clarification below supersedes that limitation for benchmark
-  definition while preserving the label-free rule.
-- Compact review artifacts for this pass are:
-
-```text
-results/triage_potential_benchmark_fit_top10/summary_overlap060_hard.tsv
-results/triage_potential_benchmark_fit_top10/fit_review_ranked.tsv
-results/triage_potential_benchmark_fit_top10/fit_review_ranked.md
-```
-
-- Promoted all confirmed `expected_N=6` review rows into a counting-only external
-  benchmark manifest:
-
-```text
-benchmarks/chitosan_6mer_counting_confirmed.toml
-```
-
-  The manifest has 146 `clean_target` entries:
-
-```text
-accept_counting_visual_N6_confirmed              79
-accept_unit_training_known_010010                35
-accept_counting_needs_unit_sequence_confirmation 32
-```
-
-  This is for post-hoc counting grades only and must not enter fitting or
-  selection. The same file set later became the full 0/1/? benchmark scope, with
-  `NKNNKN` as external grading control only. The provenance state at this point was
-  tracked in:
-
-```text
-benchmarks/chitosan_6mer_validation_pending.tsv
-```
-
-  That list recorded 111 rows as missing explicit unit-sequence provenance. It is
-  superseded for benchmark scope by the later clarification below: all 145
-  confirmed 6mer rows share the external control sequence `NKNNKN`, but that truth
-  remains grader-only.
-
-#### QE mold jobs
-
-- Raven jobs were checked after the no-watch relaunch:
-
-```text
-28525353  qe-glcn_central    TIMEOUT   1-00:00:30
-28525353.0 pw.x              FAILED    1-00:00:24  ExitCode 1:0
-28525354  qe-glcnac_central  CANCELLED 00:00:00
-```
-
-- The GlcN failure was a walltime cancellation, not an out-of-memory failure:
-  the Slurm report showed `MaxRSS` about 4.8 GB per MPI task / about 40 GB per
-  node. `qe/glcn_restart2/glcn_central_relax.out` was fetched locally, and the
-  last `ATOMIC_POSITIONS (angstrom)` block was extracted to
-  `qe/glcn_restart2/glcn_central_best3.xyz` (`213` atoms). The relax had reached
-  at least 30 BFGS steps, so continuing from the best-so-far geometry preserves
-  real progress.
-- Prepared `qe/glcn_restart3` from that extracted geometry with the active Raven
-  settings (`8` MPI tasks, `96000 MB`, `24:00:00`, `ecutwfc=50`, `ecutrho=360`,
-  Gamma-only). Local and remote preflight passed; remote report:
-
-```text
-glcn_restart3  nat=213  frozen_relax_atoms=96  mem_mb=96000  status=OK
-```
-
-- Submitted the next no-watch production GlcN restart:
-
-```text
-qe/glcn_restart3 -> 28601744
-```
-
-Do not fetch or inspect `qe/glcn_restart3` outputs until a completion or timeout
-notification is available. The production `qe/glcnac` run remains blocked until
-GlcN succeeds, because the previous dependent job was cancelled before start.
-
-### 2026-07-02 — Targeted divergent-file fit-improvement screen
-
-To avoid recomputing the full expanded counting benchmark for every idea, built a
-screening set from the current external grades: the 146 confirmed `expected_N=6`
-rows were joined to their recorded summaries, and the 43 rows whose current
-`N_selected` is not 6 (including one `ERR`) were written to:
-
-```text
-/tmp/opencode/stmfit_6mer_experiment/current_from_summaries.tsv
-/tmp/opencode/stmfit_6mer_experiment/divergent.tsv
-/tmp/opencode/stmfit_6mer_experiment/triage_by_folder/
-/tmp/opencode/stmfit_6mer_experiment/divergent_recursive_fit_input.tsv
-```
-
-The fit-input TSVs contain only file paths plus neutral placeholder columns
-required by `test/batch_full.jl`; they do **not** contain `expected_N`, unit
-sequences, or target labels. Labels were used only after fitting or offline replay
-for external grading.
-
-Current summary-derived baseline on the expanded benchmark is `103/146` exact by
-`N_selected`. The divergent subset has `N_selected` counts `4:2`, `5:24`, `7:11`,
-`8:5`, and `ERR:1`. Existing summary columns show why a naive selector change is
-not safe: raw `N_eff` would be `106/146`, but it fixes 11 current failures while
-regressing 8 current successes, including primary 240817 files, so dropping the
-robust guard is not acceptable as-is.
-
-Fresh local reruns with the current default config were then tried on three
-small divergent folders before spending HPC time on all 43 rows:
-
-```text
-20240307_LHe_Cu100  0/3 recovered
-20240814_LHe_Cu100  2/4 recovered: 240814_017, 240814_018
-20240817_LHe_Cu100  2/3 recovered: 240817_077, 240817_091
-```
-
-The merged comparison is:
-
-```text
-/tmp/opencode/stmfit_6mer_experiment/default_repro_comparison.tsv
-```
-
-`adaptive_support_rescue` was also tried on `20240814_LHe_Cu100`; it matched the
-current default result (`2/4`) and did not show a rescue-specific gain there. A
-local 4-file adaptive run exceeded 20 minutes when launched with 4 threads, so
-larger strategy sweeps should run on Viper or via chunked batch jobs rather than
-interactively.
-
-Offline replay of the GCV ambiguity threshold from existing columns was also not
-a strong candidate: threshold `0.03` gives `104/146` but introduces an expanded
-benchmark regression, while `0.05`/`0.06` are net neutral on current summaries.
-Simple guard-down variants based on ambiguity or GCV deltas can reach `108/146`
-offline, but regress primary 240817 successes such as `240817_017.sxm`; do not
-promote them without a stronger label-free rationale.
-
-Next recommended step: run the current default code on all 43 divergent files
-using `/tmp/opencode/stmfit_6mer_experiment/divergent_recursive_fit_input.tsv`.
-Promote any strategy to the full 146 confirmed benchmark only if the 43-file
-screen improves by a meaningful margin and the full run preserves the 39/39
-primary benchmark, avoids new `ERR` rows, and preferably has zero regressions
-among the 103 currently correct expanded rows.
-
-Follow-up for the benchmark-optimized objective: created repository-synced fit
-input TSVs with no labels, suitable for Slurm jobs:
-
-```text
-benchmarks/chitosan_6mer_divergent_fit_input.tsv   # 43 rows
-benchmarks/chitosan_6mer_confirmed_fit_input.tsv   # 146 rows
-```
-
-`hpc/launch_remote.sh` now exports `STMFIT_DATA_DIR=/ptmp/<user>/stmfit/data`
-to the Slurm job and forwards dedicated `STMFIT_TSV` / `STMFIT_SKIP_1D` variables,
-so benchmark subset runs no longer need fragile multi-word `STMFIT_BATCH_ARGS`.
-A Viper dry-run for the full 146-file current-default rerun was correct, but the
-actual submission was blocked before sync/submission because both `viper` and
-`raven` SSH handshakes timed out, likely because no MPCDF 2FA/ControlMaster
-session was active. Resume by opening the MPCDF SSH session first, then run:
-
-```bash
-STMFIT_DATA_DIR=/home/durif/Rebecca/data/data \
-STMFIT_SSH_HOST=viper N_CHUNKS=8 CPUS_PER_TASK=4 WALLTIME=08:00:00 \
-MEM_PER_CPU=4000 STMFIT_CONFIG=config/chitosan.toml \
-STMFIT_OUTDIR=results/experiments/6mer_full146/default_repro \
-N_FILES=146 STMFIT_TSV=benchmarks/chitosan_6mer_confirmed_fit_input.tsv \
-STMFIT_SKIP_1D=1 ./hpc/launch_remote.sh
-```
-
-After opening the Viper session, that command synced code/data, instantiated the
-Julia project on the Viper login node, and submitted the full 146-file current
-default rerun as Slurm array job:
-
-```text
-10367643  stmfit  viper/small  8 chunks  PD (Priority)
-```
-
-Output directory:
-
-```text
-results/experiments/6mer_full146/default_repro
-```
-
-The first submit exposed a launcher bug: non-`--watch` submissions attempted to
-fetch results immediately, before the remote output directory existed. The job was
-already submitted successfully; `hpc/launch_remote.sh` now creates the remote code
-directory before rsync and exits after submission unless `--watch` or
-`--fetch-only` is requested. Resume/fetch after completion with:
-
-```bash
-STMFIT_DATA_DIR=/home/durif/Rebecca/data/data \
-STMFIT_SSH_HOST=viper N_CHUNKS=8 CPUS_PER_TASK=4 WALLTIME=08:00:00 \
-MEM_PER_CPU=4000 STMFIT_CONFIG=config/chitosan.toml \
-STMFIT_OUTDIR=results/experiments/6mer_full146/default_repro \
-N_FILES=146 STMFIT_TSV=benchmarks/chitosan_6mer_confirmed_fit_input.tsv \
-STMFIT_SKIP_1D=1 ./hpc/launch_remote.sh --fetch-only
-```
-
-Completion follow-up: Viper job `10367643_[1-8]` completed successfully on the
-`small` partition (`ExitCode=0:0` for every array task). The chunks were merged
-on Viper and fetched locally:
-
-```text
-results/experiments/6mer_full146/default_repro/summary_overlap060_hard.tsv
-```
-
-The merged summary has 146 data rows and 146 successful fits. External grading
-against `benchmarks/chitosan_6mer_counting_confirmed.toml` gives:
-
-```text
-N_selected  106/146 exact (72.6%), +/-1 = 139/146 (95.2%), over/under = 17/23
-```
-
-On the original `benchmarks/chitosan_240817.toml` target subset, the same run
-remains `4/4` exact. Relative to the older summary-derived `103/146` baseline,
-the fresh run changes 15 files: 8 failures are recovered, 5 former successes
-regress, and 2 failures move to a different wrong N, for a net `+3` exact gain.
-The recovered rows are `240311_Cu100060.sxm`, `240312_Cu100081.sxm`,
-`240814_017.sxm`, `240814_018.sxm`, `240817_077.sxm`, `240817_091.sxm`,
-`240818_012.sxm`, and `240818_017.sxm`; the regressions are
-`240814_024.sxm`, `240816_005.sxm`, `240817_072.sxm`, `240817_083.sxm`, and
-`240818_021.sxm`.
-
-Fresh grading of existing selector columns on the same full146 summary does not
-beat the default selected column:
-
-```text
-N_selected      106/146
-N_eff           106/146
-N_ell           106/146
-robust_aicc_N   103/146
-N_circ          100/146
-```
-
-Offline replay of generic post-fit guard variants on the fresh summary can reach
-`110/146` exact (best cases: robust downshift only when the GCV ambiguity delta
-is small, or only when the GCV choice is ambiguous), but every best-scoring
-variant trades fixes for regressions. These rules remain screening observations,
-not promoted selection changes: they were discovered by external grading on this
-confirmed 6mer set, and need a label-free physical or statistical rationale
-before they can become part of the pipeline.
-
-Next benchmark-optimization candidates are therefore experimental, not yet
-canonical: either run a full146 Viper job with `adaptive_support_rescue` to test
-whether the small local screen missed broader gains, or design a label-free guard
-variant from residual/fit diagnostics and then grade it externally. Do not tune a
-threshold directly to `expected_N=6` and present it as objective.
-
-Launched the first of those experimental candidates on Viper: a full 146-file
-rerun with `config/chitosan_adaptive_support_rescue.toml`, the same label-free
-input TSV, and 1D skipped. The dry-run showed the intended project/data/config
-paths and Slurm export variables, then the no-watch submission succeeded:
-
-```text
-10370782  stmfit  viper/small  8 chunks  submitted
-```
-
-Command used:
-
-```bash
-STMFIT_DATA_DIR=/home/durif/Rebecca/data/data \
-STMFIT_SSH_HOST=viper N_CHUNKS=8 CPUS_PER_TASK=4 WALLTIME=08:00:00 \
-MEM_PER_CPU=4000 STMFIT_CONFIG=config/chitosan_adaptive_support_rescue.toml \
-STMFIT_OUTDIR=results/experiments/6mer_full146/adaptive_support_rescue \
-N_FILES=146 STMFIT_TSV=benchmarks/chitosan_6mer_confirmed_fit_input.tsv \
-STMFIT_SKIP_1D=1 ./hpc/launch_remote.sh
-```
-
-After completion, fetch/merge with the same environment plus `--fetch-only`, then
-grade `results/experiments/6mer_full146/adaptive_support_rescue/summary_overlap060_hard.tsv`
-against `benchmarks/chitosan_6mer_counting_confirmed.toml`. The score to beat is
-the current default rerun's `106/146` exact by `N_selected`.
-
-Completion follow-up: all `10370782_[1-8]` array tasks completed with
-`ExitCode=0:0` and runtimes from `00:09:05` to `00:15:49`. The remote merge
-produced 146 data rows and 146 successful fits, then fetched the summary and
-chunk outputs to:
-
-```text
-results/experiments/6mer_full146/adaptive_support_rescue/summary_overlap060_hard.tsv
-```
-
-External grading on the expanded confirmed counting benchmark gives:
-
-```text
-adaptive_support_rescue N_selected  104/146 exact (71.2%), +/-1 = 139/146 (95.2%), over/under = 15/27
-```
-
-The original 240817 target subset falls to `3/4` exact (`240817_043.sxm` becomes
-the target failure). Relative to the current default rerun (`106/146`), the
-adaptive-support run changes only 6 rows: it fixes `240814_024.sxm` and
-`240816_005.sxm`, but regresses `240817_043.sxm`, `240817_077.sxm`,
-`240817_093.sxm`, and `241113_089.sxm`, for a net `-2` exact result. Therefore
-`adaptive_support_rescue` is not a benchmark-improving 6mer-counting candidate;
-keep the current default run as the score to beat (`106/146`).
-
-Offline inspection of the two full146 summaries shows why this candidate is a
-dead end for the 6mer counting objective: no row accepted an actual support
-rescue (`adaptive_support_rescue` count = 0). The adaptive run had 119 plain
-keeps, 6 `reject_no_improvement` rows, and 26 rows where the robust guard still
-acted. The six changed `N_selected` rows therefore came from altered guard/source
-behavior, not from genuinely longer recovered support. Do not launch another
-adaptive-support sweep for 6mer counting unless a new label-free trigger or
-support diagnostic is added first.
-
-Next label-free screen: selected `support_marginalized_gcv_guard` as the cheapest
-existing-policy candidate to test before any new full146 run. This selector
-rescales GCV across a grid of support paddings and applies a guarded/parsimony
-choice without using labels. Because the summary TSVs do not preserve the fitted
-parameter objects needed to replay this selector offline, the first screen is a
-43-file rerun on the divergent input TSV, not a full benchmark rerun.
-
-Submitted the 43-row Viper screen after a clean dry-run:
-
-```text
-10371435  stmfit  viper/small  4 chunks  submitted
-```
-
-Command used:
-
-```bash
-STMFIT_DATA_DIR=/home/durif/Rebecca/data/data \
-STMFIT_SSH_HOST=viper N_CHUNKS=4 CPUS_PER_TASK=4 WALLTIME=04:00:00 \
-MEM_PER_CPU=4000 STMFIT_CONFIG=config/chitosan.toml \
-STMFIT_OUTDIR=results/experiments/6mer_divergent/support_marginalized_gcv_guard \
-N_FILES=43 STMFIT_TSV=benchmarks/chitosan_6mer_divergent_fit_input.tsv \
-STMFIT_SELECTION_POLICY=support_marginalized_gcv_guard STMFIT_SKIP_1D=1 \
-./hpc/launch_remote.sh
-```
-
-Initial Slurm state was pending/running (`10371435_1` running, `10371435_[2-4]`
-pending for `QOSGrpCpuLimit`). After it completes, fetch/merge with the same
-environment plus `--fetch-only`, grade the 43 divergent rows externally, and
-promote to a full146 run only if it recovers a meaningful number of failures
-without a label-dependent rationale.
-
-Completion follow-up: all `10371435_[1-4]` tasks completed with `ExitCode=0:0`
-and runtimes from `00:03:29` to `00:04:47`. The remote merge produced 43 data
-rows and 43 successful fits, fetched to:
-
-```text
-results/experiments/6mer_divergent/support_marginalized_gcv_guard/summary_overlap060_hard.tsv
-```
-
-External grading on those 43 divergent rows gives:
-
-```text
-support_marginalized_gcv_guard N_selected  16/43 exact (37.2%), +/-1 = 37/43 (86.0%), over/under = 11/16
-```
-
-This is a meaningful screen improvement. On the same 43 files, the current full146
-default rerun is `8/43` exact, while the older summary-derived baseline was
-`0/43`. Relative to the current default, the support-marginalized guard changes
-22 rows: 12 fixes, 4 regressions, and 6 wrong-to-wrong moves, for a net `+8`
-exact result. Relative to the older summary-derived baseline it fixes 16 rows and
-introduces no exact regressions, because all 43 rows were failures there. The
-selector source is `support_marginalized_gcv` for all 43 rows, with 21 guarded
-downshifts and 22 keeps. This is strong enough to justify a full146 Viper run;
-do not promote it as canonical until that full run is graded, because the screen
-was enriched for failures and does not measure regressions among the other 103
-expanded-benchmark rows.
-
-Promoted the screen to a full 146-file Viper run with the same label-free input
-TSV, default chitosan config, and `STMFIT_SELECTION_POLICY=support_marginalized_gcv_guard`.
-The dry-run was clean, then the no-watch submission succeeded:
-
-```text
-10371737  stmfit  viper/small  8 chunks  submitted
-```
-
-Command used:
-
-```bash
-STMFIT_DATA_DIR=/home/durif/Rebecca/data/data \
-STMFIT_SSH_HOST=viper N_CHUNKS=8 CPUS_PER_TASK=4 WALLTIME=08:00:00 \
-MEM_PER_CPU=4000 STMFIT_CONFIG=config/chitosan.toml \
-STMFIT_OUTDIR=results/experiments/6mer_full146/support_marginalized_gcv_guard \
-N_FILES=146 STMFIT_TSV=benchmarks/chitosan_6mer_confirmed_fit_input.tsv \
-STMFIT_SELECTION_POLICY=support_marginalized_gcv_guard STMFIT_SKIP_1D=1 \
-./hpc/launch_remote.sh
-```
-
-Initial Slurm state was pending (`10371737_[1-8]`, reason `QOSGrpCpuLimit`).
-After completion, fetch/merge with the same environment plus `--fetch-only`, then
-grade the full summary against `benchmarks/chitosan_6mer_counting_confirmed.toml`.
-The score to beat remains the default rerun's `106/146` exact by `N_selected`.
-
-Completion follow-up: all `10371737_[1-8]` tasks completed with `ExitCode=0:0`
-and runtimes from `00:04:56` to `00:06:04`. The remote merge produced 146 data
-rows and 146 successful fits, fetched to:
-
-```text
-results/experiments/6mer_full146/support_marginalized_gcv_guard/summary_overlap060_hard.tsv
-```
-
-External grading on the expanded confirmed counting benchmark gives:
-
-```text
-support_marginalized_gcv_guard N_selected  92/146 exact (63.0%), +/-1 = 140/146 (95.9%), over/under = 14/40
-```
-
-The original 240817 target subset falls to `2/4` exact (`240817_017.sxm` and
-`240817_043.sxm` are target failures). Relative to the current default rerun
-(`106/146`), this full run changes 50 rows: 14 fixes, 28 regressions, and 8
-wrong-to-wrong moves, for a net `-14` exact result. The divergent-only screen was
-therefore misleading because it was enriched for failures and did not expose the
-large number of regressions among previously correct rows. The selector source is
-`support_marginalized_gcv` for all 146 rows, with 42 guarded downshifts, 99
-keeps, and 5 parsimony moves. Do not promote `support_marginalized_gcv_guard` for
-6mer counting; the score to beat remains the default rerun's `106/146`.
-
-Next existing-policy screen: selected `fwd_bwd_consensus` for a 43-file divergent
-rerun because it is label-free and uses the independent forward/backward scan
-consistency signal rather than another support-padding heuristic. The dry-run was
-clean, then the no-watch Viper submission succeeded:
-
-```text
-10372583  stmfit  viper/small  4 chunks  submitted
-```
-
-Command used:
-
-```bash
-STMFIT_DATA_DIR=/home/durif/Rebecca/data/data \
-STMFIT_SSH_HOST=viper N_CHUNKS=4 CPUS_PER_TASK=4 WALLTIME=04:00:00 \
-MEM_PER_CPU=4000 STMFIT_CONFIG=config/chitosan.toml \
-STMFIT_OUTDIR=results/experiments/6mer_divergent/fwd_bwd_consensus \
-N_FILES=43 STMFIT_TSV=benchmarks/chitosan_6mer_divergent_fit_input.tsv \
-STMFIT_SELECTION_POLICY=fwd_bwd_consensus STMFIT_SKIP_1D=1 \
-./hpc/launch_remote.sh
-```
-
-Initial Slurm state was pending (`10372583_[1-4]`, reason `QOSGrpCpuLimit`).
-After completion, fetch/merge and grade the 43 divergent rows externally before
-considering any full146 promotion.
-
-The `fwd_bwd_consensus` screen completed cleanly on Viper and was merged/fetched
-manually:
-
-```text
-10372583_1  COMPLETED  00:04:58  0:0
-10372583_2  COMPLETED  00:03:52  0:0
-10372583_3  COMPLETED  00:02:53  0:0
-10372583_4  COMPLETED  00:04:09  0:0
-```
-
-Merged summary:
-
-```text
-results/experiments/6mer_divergent/fwd_bwd_consensus/summary_overlap060_hard.tsv
-  43 data rows (43 ok)
-```
-
-External grade on the 43 divergent rows:
-
-```text
-fwd_bwd_consensus N_selected  16/43 exact (37.2%), +/-1 = 34/43 (79.1%), over/under = 14/13
-```
-
-Against the same 43 rows from the fresh default full146 rerun, this is an exact
-improvement from `8/43` to `16/43`: 10 fixes, 2 regressions, 5 wrong-to-wrong
-changes, and 6 unchanged correct rows. However, its `+/-1` count drops from
-`37/43` to `34/43`. It also only matches the earlier
-`support_marginalized_gcv_guard` screen on exact score (`16/43`) while being
-worse on `+/-1` (`34/43` vs `37/43`), and that earlier screen already failed the
-full146 promotion test badly (`92/146`, net `-14` vs default). Do not promote
-`fwd_bwd_consensus` to a full146 run; the score to beat remains the fresh default
-rerun's `106/146`.
-
-Next existing-policy screen: selected `laplace_evidence_guard` for the same
-43-file divergent rerun because it is technically distinct from the rejected
-support-padding and forward/backward rescoring candidates. It is a label-free,
-down-only local curvature/evidence guard: it can veto a one-lobe overfit, but it
-cannot increase `N` or use the benchmark target.
-
-The dry-run was clean, then the no-watch Viper submission succeeded:
-
-```text
-10373261  stmfit  viper/small  4 chunks  submitted
-```
-
-Command used:
-
-```bash
-STMFIT_DATA_DIR=/home/durif/Rebecca/data/data \
-STMFIT_SSH_HOST=viper N_CHUNKS=4 CPUS_PER_TASK=4 WALLTIME=04:00:00 \
-MEM_PER_CPU=4000 STMFIT_CONFIG=config/chitosan.toml \
-STMFIT_OUTDIR=results/experiments/6mer_divergent/laplace_evidence_guard \
-N_FILES=43 STMFIT_TSV=benchmarks/chitosan_6mer_divergent_fit_input.tsv \
-STMFIT_SELECTION_POLICY=laplace_evidence_guard STMFIT_SKIP_1D=1 \
-./hpc/launch_remote.sh
-```
-
-Initial Slurm state was pending (`10373261_[1-4]`, reason `QOSGrpCpuLimit`).
-After completion, merge/fetch and grade the 43 divergent rows externally before
-considering any full146 promotion.
-
-The `laplace_evidence_guard` screen completed cleanly on Viper and was
-merged/fetched manually:
-
-```text
-10373261_1  COMPLETED  00:06:26  0:0
-10373261_2  COMPLETED  00:04:26  0:0
-10373261_3  COMPLETED  00:02:51  0:0
-10373261_4  COMPLETED  00:04:10  0:0
-```
-
-Merged summary:
-
-```text
-results/experiments/6mer_divergent/laplace_evidence_guard/summary_overlap060_hard.tsv
-  43 data rows (43 ok)
-```
-
-External grade on the 43 divergent rows:
-
-```text
-laplace_evidence_guard N_selected  11/43 exact (25.6%), +/-1 = 34/43 (79.1%), over/under = 10/22
-```
-
-Against the same 43 rows from the fresh default full146 rerun, this improves the
-exact score only from `8/43` to `11/43`: 9 fixes, 6 regressions, 5
-wrong-to-wrong changes, and 2 unchanged correct rows. It is worse than both
-previous 43-file screens on exact score (`16/43` for both
-`support_marginalized_gcv_guard` and `fwd_bwd_consensus`) and does not improve
-the `+/-1` count (`34/43`). Do not promote `laplace_evidence_guard` to a full146
-run; the score to beat remains the fresh default rerun's `106/146`.
-
-Next existing-policy screen: selected `stability_selection` for the same 43-file
-divergent rerun. This uses the frozen support-padding grid, like
-`support_marginalized_gcv_guard`, but asks a different label-free question: how
-often each candidate `N` remains competitive under support perturbations. It is
-therefore a cheap final existing-policy triage before stopping the current
-selector sweep.
-
-The dry-run was clean, then the no-watch Viper submission succeeded:
-
-```text
-10374201  stmfit  viper/small  4 chunks  submitted
-```
-
-Command used:
-
-```bash
-STMFIT_DATA_DIR=/home/durif/Rebecca/data/data \
-STMFIT_SSH_HOST=viper N_CHUNKS=4 CPUS_PER_TASK=4 WALLTIME=04:00:00 \
-MEM_PER_CPU=4000 STMFIT_CONFIG=config/chitosan.toml \
-STMFIT_OUTDIR=results/experiments/6mer_divergent/stability_selection \
-N_FILES=43 STMFIT_TSV=benchmarks/chitosan_6mer_divergent_fit_input.tsv \
-STMFIT_SELECTION_POLICY=stability_selection STMFIT_SKIP_1D=1 \
-./hpc/launch_remote.sh
-```
-
-Initial Slurm state had chunk 1 running and chunks 2–4 pending under
-`QOSGrpCpuLimit`. After completion, merge/fetch and grade the 43 divergent rows
-externally before considering any full146 promotion.
-
-The `stability_selection` screen completed cleanly on Viper and was
-merged/fetched manually:
-
-```text
-10374201_1  COMPLETED  00:05:51  0:0
-10374201_2  COMPLETED  00:04:10  0:0
-10374201_3  COMPLETED  00:02:45  0:0
-10374201_4  COMPLETED  00:04:03  0:0
-```
-
-Merged summary:
-
-```text
-results/experiments/6mer_divergent/stability_selection/summary_overlap060_hard.tsv
-  43 data rows (43 ok)
-```
-
-External grade on the 43 divergent rows:
-
-```text
-stability_selection N_selected  15/43 exact (34.9%), +/-1 = 35/43 (81.4%), over/under = 7/21
-```
-
-Against the same 43 rows from the fresh default full146 rerun, this improves the
-exact score from `8/43` to `15/43`: 10 fixes, 3 regressions, 15 wrong-to-wrong
-changes, and 5 unchanged correct rows. It is better than
-`laplace_evidence_guard` (`11/43`) but still below both previous best 43-file
-screens (`16/43` for `support_marginalized_gcv_guard` and
-`fwd_bwd_consensus`). Its `+/-1` count (`35/43`) is also below the fresh default
-and support-marginalized screens (`37/43`). Do not promote `stability_selection`
-to a full146 run; the score to beat remains the fresh default rerun's `106/146`.
-
-At this point the existing-policy triage did not identify a full146 candidate:
-`support_marginalized_gcv_guard` had the best 43-file screen profile but already
-failed full146 badly, `fwd_bwd_consensus` matched its exact score with worse
-`+/-1`, and `laplace_evidence_guard`/`stability_selection` were weaker on the
-divergent screen. Further benchmark improvement likely needs new label-free
-evidence or a targeted analysis of the remaining failure modes rather than
-promoting another existing selector wholesale.
-
-Offline failure-mode audit across the fresh default full146 summary and all four
-43-file divergent screens confirmed that conclusion. The fresh default full146
-score remains:
-
-```text
-default full146  106/146 exact, +/-1 = 139/146, over/under = 17/23
-```
-
-The 40 full146 misses are structured, not random:
-
-```text
-N_selected=3:  1 file
-N_selected=4:  2 files
-N_selected=5: 20 files
-N_selected=7: 13 files
-N_selected=8:  4 files
-```
-
-On the same 43 divergent rows, the completed screen scores were:
-
-```text
-default                         8/43 exact, +/-1 = 37/43, over/under = 14/21
-support_marginalized_gcv_guard 16/43 exact, +/-1 = 37/43, over/under = 11/16
-fwd_bwd_consensus              16/43 exact, +/-1 = 34/43, over/under = 14/13
-laplace_evidence_guard         11/43 exact, +/-1 = 34/43, over/under = 10/22
-stability_selection            15/43 exact, +/-1 = 35/43, over/under = 7/21
-```
-
-The screens fix different failure modes: among default under-counts on the 43-row
-set, `fwd_bwd_consensus` fixes the most (`9/21`) without increasing the distance
-from 6, while among default over-counts, `laplace_evidence_guard` fixes the most
-(`7/14`) without increasing the distance. That split is scientifically useful,
-but not a promotion rule by itself: choosing a policy by whether a file is an
-under- or over-count uses the withheld benchmark label and is therefore invalid.
-
-Several offline ensemble rules built only from existing label-free screen outputs
-were scored for diagnostics, not promoted. The best exact-count variant on the
-43-row set was a five-policy lower-tie mode:
-
-```text
-mode5_lower_tie  14/43 exact, +/-1 = 36/43, over/under = 10/19
-```
-
-Other consensus variants reached only `11–13/43` exact. None beat the best
-single 43-file screens (`16/43`), and none has a plausible reason to improve the
-remaining 103 full146 rows without introducing regressions. Do not promote an
-ensemble rule from this audit. The next defensible benchmark-improvement gate is
-not another wholesale selector rerun; it should be a targeted, label-free study
-of the remaining failure classes, especially support-sensitive under-counts
-(`N=5`) versus over-segmentation (`N=7/8`), using per-file diagnostics and visual
-evidence before any new rule is frozen.
-
-Targeted representative diagnostics separate the remaining failures into a few
-label-free mechanisms worth studying:
-
-- **Guard-induced under-counts.** Several `N=5` misses are not raw GCV failures:
-  the primary ell/circ fit already agrees on `N=6`, but the robust-AICc guard
-  downshifts to `5`. Examples include `240818_020.sxm`, `240818_026.sxm`,
-  `241113_160.sxm`, and `241114_010.sxm`. For `240818_020.sxm`, the ell score
-  curve has `N=6` as the GCV minimum, while `N=5` is 21.2% worse; multiple
-  alternative label-free screens also return `6`. This suggests the next audit
-  should focus on when the robust guard is contradicted by strong 2D GCV and
-  ell/circ agreement, rather than changing the primary selector wholesale.
-- **Ambiguous support-sensitive under-counts.** Some files have broad candidate
-  sets and small GCV gaps, e.g. `240312_Cu100070.sxm` / `240312_Cu100071.sxm`:
-  the ell sweep prefers `N=10`, but `N=6` and `N=7` are close, and the robust
-  guard collapses to `5`. The fwd/bwd screen alone returns `6`, while support and
-  Laplace go high. These need visual/diagnostic inspection of support extent and
-  scan-direction consistency before any rule is frozen.
-- **Over-segmentation with near-ties.** Some `N=7` files are one-lobe GCV
-  overfits where `N=6` is label-free competitive. Examples: `240313_Cu100062.sxm`
-  has ell `7` only 0.6% better than `6` and circ prefers `6`; support, Laplace,
-  and stability all return `6`. `240314_Cu100_042.sxm` has ell `7` only 1.6%
-  better than `6`, and the same three screens return `6`. This is a plausible
-  generic one-lobe ambiguity class.
-- **Over-segmentation without near-ties.** Other `N=7/8` files do not have a
-  competitive `N=6` under current fit support. For example `241114_044.sxm` and
-  `241114_045.sxm` have `N=8` clearly favoured by GCV; only stability jumps to
-  `6`. Files such as `240310_Cu100009.sxm`, `240815_098.sxm`, `241114_043.sxm`,
-  and `241114_046.sxm` remain unfixed by the screens. These are not safe targets
-  for a simple ambiguity guard.
-
-Next gate: build a small diagnostic report, not a production selector, that
-flags candidate files using only label-free contradictions:
-
-```text
-robust-downshift contradiction:
-  robust_AICc_N < N_eff
-  and N_ell == N_circ == N_eff
-  and GCV(N_robust) is materially worse than GCV(N_eff)
-
-one-lobe overfit ambiguity:
-  N_eff = N_alt + 1
-  and lower-N GCV gap is within a frozen tolerance
-  and either circ prefers lower N or support/Laplace/stability concur
-```
-
-Score those flags externally only after the diagnostic report is generated. If
-the flags isolate high-signal subsets without many obvious false positives, then
-freeze the rule and run a full146 test. If they do not, stop selector tuning and
-move to visual failure review / data-quality stratification.
-
-Generated the diagnostic report and external score tables:
-
-```text
-results/diagnostics/full146_failure_flags.tsv
-results/diagnostics/full146_failure_flags_score.tsv
-```
-
-The flags are computed from the fresh full146 default summary and existing
-label-free screen outputs; the manifest is used only afterward for external
-scoring. Corrected score summary:
-
-```text
-robust_downshift_contradiction  n=11  fixes=6  regressions=2  neutral_wrong=3  net=+4  precision=54.5%
-one_lobe_overfit_ambiguity      n=6   fixes=2  regressions=4  neutral_wrong=0  net=-2  precision=33.3%
-combined_unique                 n=17  fixes=8  regressions=6  neutral_wrong=3  net=+2  precision=47.1%
-```
-
-Decision: do not promote the one-lobe ambiguity flag; it is net negative on the
-external grade. The robust-downshift contradiction flag is promising enough to
-preserve as the next focused candidate (`+4` net, implied `110/146` if applied as
-a post-selection correction), but it is not clean enough to silently fold into
-the default selector: it still has two regressions and three wrong-to-wrong
-suggestions. The next defensible step is to freeze this rule as an explicit
-diagnostic/experimental policy and run/grade it on full146, or inspect its 11
-flagged rows visually before deciding whether it is scientifically acceptable.
-
-Inspected the 11 `robust_downshift_contradiction` rows. External grading of the
-suggested replacement (`N_eff`, because robust-AICc downshift was contradicted by
-strong 2D GCV) splits as:
-
-```text
-fixes:          6  (240816_002, 240818_020, 240818_026, 240818_028, 241113_160, 241114_010)
-regressions:    2  (240817_017, 240818_015)
-wrong-to-wrong: 3  (240307_019, 240818_025, 241114_043)
-```
-
-Tried stricter label-free refinements. The best non-cheating refinement was
-`one_step_and_alt_votes_ge2`, requiring a one-lobe robust correction plus at
-least two existing label-free screen votes for the same suggested `N`:
-
-```text
-one_step_and_alt_votes_ge2  n=5  fixes=4  regressions=0  wrong_to_wrong=1  net=+4  precision=80.0%
-```
-
-It avoids the two regressions, but still includes `240307_019.sxm` as a
-wrong-to-wrong `4→5` move, so it is not clean enough for default selection. The
-only perfect-looking variants were absolute rules such as `5→6 only` or
-`suggest N=6 only`:
-
-```text
-INVALID_absolute_5_to_6_only  n=6  fixes=6  regressions=0  wrong_to_wrong=0
-INVALID_absolute_suggest_6_only  n=6  fixes=6  regressions=0  wrong_to_wrong=0
-```
-
-Those are invalid because the absolute target value `6` is the benchmark label
-shape, not a label-free scientific criterion. Do not promote them. Current next
-gate: either visually review the small robust-contradiction set before designing
-a real label-free predicate, or stop selector tuning and move to data-quality /
-failure-class stratification. No selector/policy change is justified yet.
-
-Qualitative plot review of the 11 robust-contradiction rows supports the same
-conclusion. Without using expected labels, the visually plausible upward moves
-were mostly the modest under-count corrections: `240307_019` (`4->5`),
-`240818_020` (`5->6`), `240818_026` (`5->6`), `240818_028` (`5->6`, cautious),
-`241113_160` (`5->6`), and `241114_010` (`5->6`, cautious). `240816_002`
-(`5->6`) was only partly plausible because the feature is broad/blurred and the
-residuals remain structured. The larger or high-count upward moves were weak:
-`240817_017` (`6->7`) was ambiguous, `240818_015` (`6->7`) looked like fitting
-faint tails, `240818_025` (`5->7`) looked crowded/over-counted, and
-`241114_043` (`7->8`) looked weak because the extra components were crowded or
-terminal.
-
-Decision after visual review: the robust-contradiction diagnostic identifies a
-real under-count signal, but it also catches visually weak upward moves. Do not
-turn it into a production selector yet. If this line of work continues, the next
-scientific step should be a visual/data-quality stratification of the flagged
-rows and a genuinely label-free predicate that suppresses tail/crowding-driven
-upward moves; otherwise stop selector optimization at the fresh default
-`106/146` benchmark state.
-
-Follow-up 90% attempt: tested a purely physical support/spacing post-selection
-family offline from the fresh full146 default summary. The rule uses only the
-measured 2D support and existing chitosan spacing/overlap calibration from
-`config/chitosan.toml` (`spacing_min_nm=0.35`, `spacing_max_nm=0.75`,
-`max_overlap=0.60`, `sigma_parallel_max_nm=0.509`, giving
-`spacing_min_eff=0.51448 nm`). Labels were used only after rule replay for
-external grading.
-
-The first support-midpoint sweep was written to:
-
-```text
-results/diagnostics/full146_support_bounds_rules.tsv
-```
-
-Its best non-target-shaped rule was
-`support_mid_round_bounded_one_step_delta_ge1`: move at most one lobe toward the
-midpoint of the physical support-derived feasible-N interval. It reached:
-
-```text
-126/146 exact, +/-1 = 143/146
-46 changes: 30 fixes, 10 regressions, 5 wrong-closer, 1 wrong-farther, net +20
-```
-
-This was the strongest label-free offline signal so far, but still below the
-90% target (`132/146`) and too regression-prone for promotion. Inspection showed
-the damage concentrated in permissive upshifts from already-correct files,
-especially `6->7` on long measured supports.
-
-Two refined sweeps then tried to suppress those upshift failures while preserving
-the support signal:
-
-```text
-results/diagnostics/full146_support_hybrid_rules.tsv
-results/diagnostics/full146_support_refined_rule_sweep.tsv
-```
-
-The best hybrid rule was a conservative asymmetric version: downshift one step
-whenever the current selection lies above the support midpoint; upshift one step
-only when the support midpoint lies above the current selection, `N_eff` is also
-above current, and the effective GCV gap is close (`delta_GCV_rel_eff <= 0.3`).
-Equivalent refined variants using agreement between ell/circ support midpoints
-or the same close-GCV upshift condition topped out at:
-
-```text
-127/146 exact, +/-1 = 143/146
-31 changes: 23 fixes, 2 regressions, 5 wrong-closer, 1 wrong-farther, net +21
-```
-
-The remaining damage was narrow but not removable by the tested label-free
-features without giving back many fixes: two `6->7` regressions
-(`240817_017.sxm`, `240817_019.sxm`) and one `7->8` wrong-farther move
-(`240310_Cu100009.sxm`) came from the same support-upshift mechanism that fixed
-many under-counts. Stricter GCV-curve filters reduced regressions but lowered the
-exact score to `123-124/146`; no tested rule reached the requested 90% level.
-
-Decision at the time: do not promote the support-midpoint family as a selector
-change. It was a useful diagnostic showing that measured support explains many
-full146 misses, but the best label-free offline rule was still `5` exact files
-short of 90% and retained non-negligible regressions. This was superseded by the
-2026-07-02 promotion entry below after accepting the best current full146 result
-as a practical chitosan default while continuing selector research.
-
-### 2026-07-02 — Promote support-midpoint hybrid as current chitosan default
-
-**Decision:** Promote `support_midpoint_hybrid` to the default
-`config/chitosan.toml` batch policy. This supersedes the previous no-promotion
-decision above. The rationale is pragmatic: the frozen label-free rule is the
-best current expanded 146-file counting result, even though it does not reach the
-earlier aspirational 90% target and is not a universal selector guarantee.
-
-**Implemented rule:** The batch first applies the existing integrated
-robust-AICc guard (`gcv_with_robust_aicc_guard`), then computes the midpoint of
-the measured 2D support's feasible-N interval using the physical spacing and
-overlap calibration. The final support layer is bounded to one lobe:
-
-```text
-if N_guarded > support_midpoint:
-    N_selected = N_guarded - 1
-elif N_guarded < support_midpoint
-     and N_eff > N_guarded
-     and delta_GCV_rel_eff <= 0.30:
-    N_selected = N_guarded + 1
-else:
-    N_selected = N_guarded
-```
-
-The threshold is recorded as
-`support_midpoint_up_gcv_rel_threshold = 0.30` in `[selection]`. The rule uses no
-expected `N`, no target count, and no benchmark labels during fitting or
-selection. The 146-file manifest remains an external grading set only.
-
-**External grade used for the decision:**
-
-```text
-previous default replay: 106/146 exact, +/-1 = 139/146
-support_midpoint_hybrid: 127/146 exact, +/-1 = 143/146
-```
-
-Known residual errors remain: two `6->7` regressions (`240817_017.sxm`,
-`240817_019.sxm`) and one `7->8` wrong-farther move (`240310_Cu100009.sxm`) were
-observed in the offline sweep. The default change is therefore a documented
-current-best chitosan setting, not the endpoint of label-free selection work.
-
-Post-promotion doc review (post-implementation review pass) caught three
-documentation mismatches that have now been corrected:
-
-- `docs/src/index.md` still named `gcv_with_robust_aicc_guard` as the batch
-  default and quoted the `39/39` primary-benchmark number without separating
-  robust-guard validation from the promoted default. Updated to name
-  `support_midpoint_hybrid`, record the `127/146` / `143/146` external counting
-  grade, and keep `39/39` explicitly as the robust-guard validation result.
-- `docs/src/selection.md` documented `selection_source` as `ell_robust_aicc`,
-  but `_select_primary` (`selectors.jl:661`) actually emits `robust_aicc_guard`
-  when the guard moves the primary count. The doc now lists the real emitted
-  values (`robust_aicc_guard`, `support_midpoint_down`, `support_midpoint_up`,
-  or the kept effective source); `ell_robust_aicc` is correctly scoped to
-  `refined_source`.
-- `AGENTS.md` left the `4/4 clean_target` / reproducibility / threshold-robust
-  bullets ambiguous in the same section that says `support_midpoint_hybrid` is
-  not a no-regression primary-benchmark selector. Scoped those bullets
-  explicitly to robust-AICc guard validation.
-
-No code, config, or selection behaviour changed in this pass — only
-documentation accuracy.
-
-### 2026-07-03 — Gap≥2 down-to-midpoint extension: 127/146 → 129/146
-
-**Decision:** Extend the support-midpoint hybrid so that when the robust guard
-over-counts by at least two lobes relative to the support midpoint (gap ≥ 2),
-the rule goes directly to the midpoint instead of making only a one-step
-correction.
-
-**Motivation:** Systematic offline replay on the frozen full146 fit data
-(`results/experiments/6mer_full146/default_repro`) tested every label-free rule
-constructible from the per-file GCV/BIC/chi2 curves, support geometry, κ,
-ambiguity, and alternative selectors (stability, Laplace, fwd/bwd, spatial CV).
-
-Key negative finding: the 241114 over-count cluster (N=7-8 instead of 6) is
-**genuinely indistinguishable** by any residual-based criterion. Both GCV and
-spatial k-fold CV prefer N=7-8 because the 7th lobe captures real spatially-
-correlated signal (likely a surface defect or monomer substructure), not iid
-noise. No fit-level feature (spacing_cv, κ, overlap, amplitude ratio) discriminates.
-
-Key positive finding: the only improvement comes from a stronger
-support-geometry prior. When `N_guarded ≥ support_midpoint + 2`, the geometry
-disagrees strongly enough with the fit to justify a direct move to the midpoint.
-
-**Implemented rule change** (`test/batch_full.jl`,
-`_support_midpoint_hybrid_selection`):
-
-```text
-if N_guarded > support_midpoint + 1:
-    N_selected = support_midpoint          # NEW: gap ≥ 2, trust geometry
-elif N_guarded > support_midpoint:
-    N_selected = N_guarded - 1             # unchanged: gap = 1
-elif N_guarded < support_midpoint
-     and N_eff > N_guarded
-     and delta_GCV_rel_eff <= 0.30:
-    N_selected = N_guarded + 1             # unchanged up-shift
-else:
-    N_selected = N_guarded                 # unchanged
-```
-
-New `selection_source` value: `support_midpoint_down_to_mid` (distinguishes the
-gap≥2 case from the one-step `support_midpoint_down`).
-
-**Offline replay result on frozen full146 data:**
-
-```text
-frozen hybrid ±1:          127/146 exact (87.0%), 143/146 ±1
-hybrid ±2 (this change):   129/146 exact (88.4%), 143/146 ±1
-changed=2  fixes=2  regressions=0
-```
-
-The 2 fixed files: `240818_021` (N=7→6) and `241114_045` (N=7→6), both had
-`N_guarded=8, support_midpoint=6`. No regression because the up-shift branch
-retains its `dgcv_rel_eff ≤ 0.30` guard.
-
-**Limitation acknowledged:** the over-counts at gap=1 (e.g., `241114_040/044/046`
-where N_guarded=7, midpoint=6) cannot be fixed by any residual-based label-free
-rule — the 7th lobe is a genuine residual improvement. These remain at the ±1
-grade level only.
-
-**Benchmark cleanup:** `240310_Cu100009.sxm` removed from
-`benchmarks/chitosan_6mer_counting_confirmed.toml` after visual review confirmed
-the image is technically degraded (23.6% NaN pixels, "très complexe"). The
-manifest now contains 145 files. Updated grade numbers on the 145-file benchmark:
-
-```text
-default_repro:  106/145 exact (73.1%), 138/145 ±1 (95.2%)
-hybrid ±1:      127/145 exact (87.6%), 143/145 ±1 (98.6%)
-hybrid ±2:      129/145 exact (89.0%), 143/145 ±1 (98.6%)
-```
-
-A full146 batch was submitted to Viper to confirm the ±2 rule on a real batch
-run; the grading script uses the 145-file manifest.
-
-Completion follow-up: the first Viper submission (`10390605`) failed because the
-remote data staging copied local SXM symlinks as broken symlinks. After replacing
-the remote data directory with real files via `rsync -L`, rerun `10391759`
-completed successfully. `hpc/merge_chunks.jl` merged both shards into
-`results/experiments/6mer_full146/pm2_confirm/summary_overlap060_hard.tsv` with
-146 data rows and 146 `ok` rows. External grading against
-`benchmarks/chitosan_6mer_counting_confirmed.toml` confirmed the offline replay:
-
-```text
-primary score:  129/145 (89.0%)
-primary ±1:     143/145 (98.6%)
-primary over/under: 6/10
-stress rows:    0
-```
-
-The two remaining beyond-±1 misses are `240814_020.sxm` (`N_selected=4`) and
-`240818_019.sxm` (`N_selected=3`). The exact-miss set is unchanged from the
-confirmed grade: `240307_019`, `240310_Cu100032`, `240314_Cu100_024`,
-`240314_Cu100_026`, `240814_020`, `240814_021`, `240816_005`, `240817_017`,
-`240817_019`, `240817_078`, `240817_083`, `240818_007`, `240818_019`,
-`241114_040`, `241114_044`, and `241114_046`.
-
-The merged full146 run's `selection_source` distribution was: `ell=103`,
-`robust_aicc_guard=12`, `support_midpoint_down=12`,
-`support_midpoint_down_to_mid=2`, and `support_midpoint_up=17`. The two
-`support_midpoint_down_to_mid` rows are the intended gap≥2 direct-to-midpoint
-fixes.
-
-### Follow-up: 0/1/? benchmark scope clarification
-
-The full unit-assignment benchmark must use the same 145 confirmed 6mer files as
-the counting/fit benchmark. The external control sequence is `NKNNKN`, encoded as
-`010010` if `0=N` and `1=K`, or `101101` under the flipped identity convention.
-This correction supersedes the earlier documentation that treated only the 35
-240817 clean/clean_target rows as gradable or described 111 expanded rows as
-missing unit sequences for benchmark purposes.
-
-The scientific constraint is unchanged and becomes more important: this is a
-fully label-free benchmark. `NKNNKN`, the `2K/4N` composition, the fact that `N=6`,
-and any benchmark-control convention may be used only by external grading and
-diagnostic reports after predictions are frozen. They must not enter fitting,
-selection, per-lobe assignment, threshold selection, abstention rules, composition
-priors, or method calibration. The objective is a robust rule that extrapolates to
-unknown systems rather than one shaped to the benchmark control.
-
-Existing `178/210`, `154/171`, and `101/106` numbers remain useful as historical
-35-file subset diagnostics, but they are no longer the headline 0/1/? benchmark.
-The reporting path should be expanded or replaced before claiming full145 unit
-assignment metrics.
-
-Implementation follow-up: `test/report_unit_assignment_benchmark.jl` now has an
-explicit `--full145` mode. It writes `control_full145_truth.tsv` under the report
-output directory from `benchmarks/chitosan_6mer_counting_confirmed.toml`, using the
-external `NKNNKN` control encoding (`010010` by default, or `101101` with
-`--control-sequence`). It then runs the existing grader and refuses any profile
-whose graded denominator is not 145 files / 870 lobes. The default command remains
-the historical subset report because the frozen prediction profiles currently have
-only 210 lobe rows; full145 mode fails on those profiles by design rather than
-printing a false headline.
-
-Second implementation follow-up: added an early full145 coverage preflight before
-the grader runs. Current frozen profiles now fail immediately with a message like
-`expected 145 files / 870 lobes, found 35 files / 210 lobe rows`, plus examples of
-missing files. A synthetic temporary full145-perfect prediction TSV validates the
-positive path at 145/145 chains and 870/870 lobes. The remaining real work is to
-generate label-free prediction profiles for all 145 benchmark files from the
-feature/patch pipeline; scoring the current 35-file profiles as full145 is blocked
-by design.
-
-### Follow-up: portable label-free prediction builder and full145 blocker
-
-Added `test/build_labelfree_unit_predictions.jl` to close the reproducibility gap
-between feature extraction and prediction TSVs. The script is prediction-only and
-does not read benchmark truth, `NKNNKN`, `expected_N`, or a composition prior. It
-combines per-file standardized feature views over multiple k-means seeds and maps
-the higher-amplitude cluster to GlcNAc (1), matching the label-free physical
-convention used by the grader. Optional inputs add the split-width
-`split_log_skew` feature and backward-patch negative-moment descriptors
-(`bwd_neg_com_t`, `bwd_neg_diag45`, `bwd_neg_diag135`).
-
-Validation on the currently available 39-file artifacts:
-
-```bash
-julia --project=. test/build_labelfree_unit_predictions.jl \
-    --features results/unit_separability/lobe_features_selectedN_primary_local.tsv \
-    --split-features results/unit_separability/lobe_features_selectedN_primary_split.tsv \
-    --patches results/unit_separability/lobe_patches_selectedN_primary_17x17_bwd.tsv \
-    --out /tmp/opencode/labelfree_unit_predictions_subset.tsv \
-    --seeds 20 \
-    --interactions
-
-julia --project=. test/report_unit_assignment_benchmark.jl \
-    --profile portable_kmeans=/tmp/opencode/labelfree_unit_predictions_subset.tsv=portable_kmeans_sanity \
-    --outdir /tmp/opencode/labelfree_unit_report_subset
-```
-
-The generated TSV covers 39 files / 234 lobes. The historical subset sanity grade
-is 170/210 = 81.0% physical (1/35 exact). This is intentionally described as a
-portable k-means baseline, not as a replacement for the frozen best GMM ensemble
-(`forced_ensemble3`, 178/210).
-
-The first full145 selected-`N` path is now unblocked for honest reporting, while
-the strict 870-row path remains blocked for real selected-`N` predictions:
-
-1. The available feature/patch artifacts cover only 39 files, so full145 preflight
-   correctly fails with `found 39 files / 234 lobe rows` and 106 missing files.
-2. The current full145 counting summary is label-free but not denominator-perfect:
-   `N_selected` counts are 129 files at 6, eight at 5, six at 7, one at 4, and one
-   at 3. A selected-`N` full145 feature extraction therefore produces 863 lobe
-   rows, not 870. Producing exactly six lobe rows for every file by reading the
-   manifest/control would use the benchmark label and is not an allowed prediction
-   path.
-
-Implemented the safe reporting branch for option (a). `test/report_unit_assignment_benchmark.jl`
-now has an explicit `--full145-own-n` mode for profiles generated at each file's
-label-free `N_selected`. Strict `--full145` is unchanged and still requires
-145 files / 870 prediction rows. Own-N mode still requires all 145 files and
-contiguous lobe indices per file, but it reports count mismatches honestly:
-positions absent because `N_selected < 6` count as uncertain against the external
-870-position control denominator, while `N_selected > 6` lobes are reported as
-extra predictions and are not aligned to the 6-position control.
-
-The full145 selected-`N` feature extraction from the Viper counting summary
-completed locally:
-
-```text
-/tmp/opencode/full145_selectedN_features.tsv
-files=145
-prediction rows=863
-rows by selected N: N=3 -> 3, N=4 -> 4, N=5 -> 40, N=6 -> 774, N=7 -> 42
-```
-
-The immediate base/local-feature portable baseline was generated without truth,
-composition priors, or the control sequence:
-
-```bash
-julia --project=. test/augment_lobe_local_features.jl \
-    --features /tmp/opencode/full145_selectedN_features.tsv \
-    --out /tmp/opencode/full145_selectedN_features_local.tsv
-
-julia --project=. test/build_labelfree_unit_predictions.jl \
-    --features /tmp/opencode/full145_selectedN_features_local.tsv \
-    --out /tmp/opencode/full145_selectedN_labelfree_local_predictions.tsv \
-    --seeds 20 \
-    --interactions
-
-julia --project=. test/report_unit_assignment_benchmark.jl --full145-own-n \
-    --profile selectedN_local=/tmp/opencode/full145_selectedN_labelfree_local_predictions.tsv=selectedN_local \
-    --outdir /tmp/opencode/unit_report_full145_own_n_local
-```
-
-Report result:
-
-```text
-prediction rows:        863
-aligned/classified:     857/870 (98.5%)
-missing control lobes:  13 across 10 short-N files
-extra predicted lobes:  6 across 6 N=7 files
-physical accuracy:      671/857 = 78.3%
-honest view:            671/870 = 77.1% correct, 199/870 uncertain
-exact chains:           16/145
-```
-
-This is a reproducible selected-`N` full145 baseline, not a solved final map and
-not a replacement for the historical best three-view subset ensemble. The next
-scientifically safe step is to generate the selected-`N` split features and
-backward-patch descriptors for all 145 files and rerun the portable predictor in
-the same `--full145-own-n` report mode.
-
-Continuation: the backward-patch half of that step completed locally from the
-already frozen selected-`N` feature TSV:
-
-```bash
-STMFIT_DATA_DIR=/tmp/opencode/stmfit_full146_data julia --project=. \
-    test/extract_lobe_patches_bwd.jl \
-    --features /tmp/opencode/full145_selectedN_features.tsv \
-    --half-nm 0.32 \
-    --step-nm 0.04 \
-    --out /tmp/opencode/full145_selectedN_patches_bwd.tsv
-```
-
-Validation showed exact coverage parity with the selected-`N` features:
-
-```text
-features: 145 files / 863 rows
-patches:  145 files / 863 rows
-mismatches: 0
-```
-
-The base+backward portable predictor used no truth, control sequence, composition
-prior, or expected count:
-
-```bash
-julia --project=. test/build_labelfree_unit_predictions.jl \
-    --features /tmp/opencode/full145_selectedN_features_local.tsv \
-    --patches /tmp/opencode/full145_selectedN_patches_bwd.tsv \
-    --out /tmp/opencode/full145_selectedN_labelfree_base_bwd_predictions.tsv \
-    --seeds 20 \
-    --interactions
-
-julia --project=. test/report_unit_assignment_benchmark.jl --full145-own-n \
-    --profile selectedN_base_bwd=/tmp/opencode/full145_selectedN_labelfree_base_bwd_predictions.tsv=selectedN_base_bwd \
-    --outdir /tmp/opencode/unit_report_full145_own_n_base_bwd
-```
-
-Report result:
-
-```text
-prediction rows:        863
-classified:             854/870 (98.2%)
-missing control lobes:  13 across 10 short-N files
-extra predicted lobes:  6 across 6 N=7 files
-physical accuracy:      671/854 = 78.6%
-honest view:            671/870 = 77.1% correct, 199/870 uncertain
-exact chains:           5/145
-```
-
-So the backward descriptors do not improve the full145 selected-`N` honest
-headline over the base/local-only run; they mainly add 3 abstentions and reduce
-exact-chain count under this portable k-means rule. The selected-`N` split-width
-refit remains incomplete locally: repeated timeout-limited shards produced
-complete split rows for 96/145 files, leaving 49 files missing. Those partial
-split TSVs must not be used as a full145 profile. Two small script hardening fixes
-were made during the attempt: `extract_lobe_features.jl --manifest` now restricts
-the selected-summary file list to manifest members before `--primary-only`, and
-`extract_lobe_patches_bwd.jl --help` no longer errors when `STMFIT_DATA_DIR` is
-unset.
-
-HPC follow-up requested during the same continuation: Viper has no active STMFit
-jobs, and the latest full146 confirmation array `10391759` is complete
-(`2/2` array tasks, exit `0:0`). Raven showed the pending QE GlcN restart3 job
-`28601744` had reached the 24 h walltime limit (`TIMEOUT`; `pw.x` failed after
-the limit). Following the established restart protocol, fetched
-`qe/glcn_restart3/glcn_central_relax.out`, extracted the last 213-atom geometry to
-`qe/glcn_restart3/glcn_central_best4.xyz`, prepared `qe/glcn_restart4` with the
-same active Raven settings (`8` tasks, `96000 MB`, `24:00:00`, `ecutwfc=50`,
-`ecutrho=360`, Gamma-only), and submitted it on Raven after a clean local and
-remote preflight:
-
-```text
-qe/glcn_restart4 -> 28658135
-initial status: PENDING
-```
-
-Do not fetch or inspect `qe/glcn_restart4` outputs until it completes or times
-out. GlcNAc production remains dependent on a successful production GlcN restart.
-
-Continuation: completed the full145 selected-`N` portable-predictor sweep using
-only frozen label-free feature/patch TSVs. The externally generated control TSV
-was used only by `report_unit_assignment_benchmark.jl --full145-own-n` for
-post-hoc grading; no view, threshold, abstention rule, or count was chosen from
-`NKNNKN`.
-
-The main sweep command graded the base run, base+backward run, the selected-`N`
-three-view ensemble, confidence/agreement abstentions, and backward-only views:
-
-```text
-summary: /tmp/opencode/unit_report_full145_own_n_variant_sweep/summary.tsv
-```
-
-Selected rows:
-
-```text
-profile              classified  physical          honest view                 exact
-base                 857/870     671/857 = 78.3%  671/870 correct + 199 ?     16/145
-base_bwd             854/870     671/854 = 78.6%  671/870 correct + 199 ?      5/145
-view3                857/870     676/857 = 78.9%  676/870 correct + 194 ?      7/145
-view3_conf80         821/870     653/821 = 79.5%  653/870 correct + 217 ?      6/145
-view3_agreebase65    827/870     658/827 = 79.6%  658/870 correct + 212 ?      6/145
-bwd_com_only         854/870     419/854 = 49.1%  419/870 correct + 451 ?      0/145
-bwd_diag45_only      854/870     426/854 = 49.9%  426/870 correct + 444 ?      0/145
-bwd_diag135_only     854/870     427/854 = 50.0%  427/870 correct + 443 ?      0/145
-```
-
-The current selected-`N` full145 own-N headline is therefore the three-view
-ensemble `BASE`, `BASE+bwd_neg_com_t`, and `BASE+bwd_neg_diag45`: it improves the
-base/local honest count by 5 lobes (676 vs 671) while preserving full aligned
-coverage. The confidence/agreement abstention variants raise classified accuracy
-only marginally but lower the honest correct count, so they are not a better
-headline. Backward-only views are negative evidence: their physical convention
-collapses to about chance, even though supervised oracle alignment can recover
-some signal, so they must not be used alone.
-
-A second targeted sweep checked whether adding individual backward descriptors to
-BASE or adding `bwd_neg_diag135` as a fourth view was useful:
-
-```text
-summary: /tmp/opencode/unit_report_full145_own_n_variant_sweep2/summary.tsv
-base_bwd_com      672/857 honest-aligned correct, 672/870 honest denominator
-base_bwd_diag45   671/857 honest-aligned correct, 671/870 honest denominator
-base_bwd_diag135  667/857 honest-aligned correct, 667/870 honest denominator
-view4             670/857 honest-aligned correct, 670/870 honest denominator
-```
-
-These do not beat `view3`. The selected-`N` split-width profile is still blocked
-by incomplete local coverage (96/145 files), so it remains excluded from any
-full145 headline.
-
-Operational status at the same checkpoint: Raven QE GlcN restart4 job `28658135`
-was still running on `ravc4062` at 8:26 elapsed. Viper Slurm status checks were
-temporarily unreliable because the remote Modules/Tcl library reported an I/O
-error and `squeue` then failed with `ClusterName needs to be specified`.
-
-Continuation: completed the previously blocked selected-`N` split-width full145
-feature extraction. The prior local shards covered only 96/145 manifest files;
-the remaining 49 files were identified from `/tmp/opencode/full145_selectedN_features.tsv`
-and rerun in two-file micro-batches to avoid another tool timeout. The final merge
-used the selected-`N` base feature row order as the key and wrote:
-
-```text
-/tmp/opencode/full145_selectedN_features_split.tsv
-files=145
-rows=863
-missing rows=0
-duplicates=0
-ignored extra rows=8 from excluded 240310_Cu100009.sxm
-```
-
-This keeps the own-N denominator unchanged: 13 missing external control positions
-from 10 short-N files and 6 extra N=7 predictions remain a counting/selection
-fact, not a split-width artifact.
-
-Generated split-aware label-free prediction profiles before any grading truth was
-read:
-
-```text
-/tmp/opencode/full145_selectedN_labelfree_split_default_predictions.tsv
-/tmp/opencode/full145_selectedN_labelfree_base_split_predictions.tsv
-/tmp/opencode/full145_selectedN_labelfree_4view_base_bwd_split_predictions.tsv
-/tmp/opencode/full145_selectedN_labelfree_3view_base_com_split_predictions.tsv
-/tmp/opencode/full145_selectedN_labelfree_3view_base_diag45_split_predictions.tsv
-```
-
-Post-hoc `--full145-own-n` grading summary:
-
-```text
-summary: /tmp/opencode/unit_report_full145_own_n_split_sweep/summary.tsv
-
-profile                  classified  physical          honest view              exact
-prev_view3               857/870     676/857 = 78.9%  676/870 + 194 ?          7/145
-split_default            857/870     676/857 = 78.9%  676/870 + 194 ?          7/145
-base_split               857/870     676/857 = 78.9%  676/870 + 194 ?         17/145
-view4_base_bwd_split     857/870     675/857 = 78.8%  675/870 + 195 ?         16/145
-view3_base_com_split     857/870     673/857 = 78.5%  673/870 + 197 ?         16/145
-view3_base_diag45_split  857/870     673/857 = 78.5%  673/870 + 197 ?         16/145
-```
-
-Conclusion: completing split-width removes the full145 coverage blocker, but it
-does not improve the lobe-correct headline beyond 676/870. Its useful signal is
-sequence-level: the single-view `BASE+split_log_skew` profile keeps the same
-honest correct count and raises exact chains from 7/145 to 17/145. Treat this as
-a better exact-chain diagnostic, not as a solved binary deacetylation map.
-
-Workflow hardening follow-up: added `test/merge_lobe_feature_shards.jl` so future
-split-width/full145 resumptions no longer require hand-written Julia one-liners.
-The script takes a reference selected-`N` feature TSV plus repeated `--shard` or
-comma-separated `--shards`, validates that every reference `(file,lobe)` key is
-present exactly once, reports stale extra rows, and writes the merged TSV in the
-reference row order. It reads no truth sequence, expected count, control motif, or
-composition prior.
-
-Validation on the completed split-width artifacts:
-
-```text
-julia --project=. test/merge_lobe_feature_shards.jl \
-    --reference /tmp/opencode/full145_selectedN_features.tsv \
-    --shards <all split chunk/missing/resume TSVs> \
-    --ignore-extra \
-    --dry-run
-
-reference_files=145
-reference_rows=863
-merged_files=145
-merged_rows=863
-missing_rows=0
-duplicate_rows=0
-extra_rows=8
-extra_files=240310_Cu100009.sxm
-```
-
-The `--ignore-extra` flag is intentionally explicit; without it, stale rows from
-an excluded or superseded manifest member remain an error.
+### Archived July 2026 follow-ups
+
+Detailed July 1–3 counting, QE restart, and unit-assignment follow-ups moved to [Journal Archive](journal_archive.md) to keep the active Documenter page below its size limit.
+
+### 2026-07-29 — T6 hierarchical profile integrated into unknown production
+
+The unknown-production wrapper now exposes the fixed
+`hierarchical_equalprior` profile and routes only that profile to
+`build_hierarchical_unit_predictions.jl`. Its output, validation log, summary,
+and manifest use profile-specific paths, while the historical `default` still
+runs the same two portable profiles in the same order with the same commands,
+filenames, summary schema, and manifest schema. The hierarchical wrapper resolves
+one base view plus only the optional backward/split views whose input artifacts
+were explicitly supplied.
+
+The executable validator now rejects benchmark/truth/control-sequence/expected-N/
+grade/report column families, rejects path-valued cells pointing at benchmark
+truth, manifests, reports, or grades, and accepts prediction provenance fields
+only through an explicit base-plus-hierarchical allowlist. Ordinary `.sxm`
+basenames remain valid. The unknown QC summarizer recognizes the hierarchical
+profile and surfaces existing `invalid_reason` states as explicit missing-view,
+unstable-or-degenerate-model, and one-component abstention review reasons; it
+adds no scientific threshold.
+
+Failing-first integration tests captured the absent profile, column/path leakage,
+and QC behavior before product edits. The focused T6 suite then passed twice
+(`30/30` each), the candidate/firewall suite passed (`29/29` baseline and
+`51/51` manifest contract), and the hierarchical suite passed (`35/35` baseline
+schema and `240/240` model tests). A bounded real no-truth production QA used
+only the T5 label-free feature table and completed in 23.60 s: 146 files / 900
+lobes, one `base_local` view, 900 emitted predictions, validator status `ok`,
+and parsed fresh summary/manifest/QC artifacts. A clean repeat produced a
+byte-identical prediction TSV and invocation-local paths. No benchmark labels,
+control motif, expected count, composition prior, grade, or report entered
+fitting, profile selection, confidence, or abstention, and no grading was run.
+Therefore T6 changes integration and artifact validation only; the fixed
+equal-prior scientific model and historical default policy are unchanged.
+
+**Independent-review correction.** Failing-first probes showed that URI-like
+values could bypass the path firewall and that finite predictions emitted from
+partial views were mislabeled as abstentions in QC. URI schemes are now treated
+as path-like before the separator-free `.sxm` basename exception, including
+case variants; ordinary `.sxm` basenames remain valid. QC now reports
+`ok_partial_views` as `hierarchical_partial_view_prediction`, while true
+`missing_view`/`?` rows retain the missing-view abstention reason. The corrected
+focused suite passed twice (`40/40`), the candidate/firewall suites remained
+green (`29/29`, `51/51`), and direct CLI/QC probes reproduced the corrected
+behavior. No model, threshold, confidence, abstention policy, or default profile
+changed.

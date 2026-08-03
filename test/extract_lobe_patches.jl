@@ -19,6 +19,7 @@ struct Options
     out_tsv::String
     data_dir::String
     half_nm::Float64
+    half_u_nm::Float64
     step_nm::Float64
 end
 
@@ -27,6 +28,7 @@ function _parse_cli(args)
     out_tsv = DEFAULT_OUT
     data_dir = get(ENV, "STMFIT_DATA_DIR", "")
     half_nm = 0.32
+    half_u_nm = 0.32
     step_nm = 0.08
     i = 1
     while i <= length(args)
@@ -39,6 +41,8 @@ function _parse_cli(args)
         elseif startswith(arg, "--data-dir="); data_dir = split(arg, "=", limit=2)[2]; i += 1
         elseif arg == "--half-nm"; half_nm = parse(Float64, args[i+1]); i += 2
         elseif startswith(arg, "--half-nm="); half_nm = parse(Float64, split(arg, "=", limit=2)[2]); i += 1
+        elseif arg == "--half-u-nm"; half_u_nm = parse(Float64, args[i+1]); i += 2
+        elseif startswith(arg, "--half-u-nm="); half_u_nm = parse(Float64, split(arg, "=", limit=2)[2]); i += 1
         elseif arg == "--step-nm"; step_nm = parse(Float64, args[i+1]); i += 2
         elseif startswith(arg, "--step-nm="); step_nm = parse(Float64, split(arg, "=", limit=2)[2]); i += 1
         elseif arg in ("-h", "--help")
@@ -49,7 +53,8 @@ function _parse_cli(args)
               --features PATH   Lobe feature TSV [$(DEFAULT_FEATURES)]
               --out PATH        Output patch TSV [$(DEFAULT_OUT)]
               --data-dir PATH   SXM data directory [\$STMFIT_DATA_DIR]
-              --half-nm FLOAT   Patch half-size along axis/perp [0.32]
+              --half-nm FLOAT   Patch half-size along the chain t [0.32]
+              --half-u-nm FLOAT Patch half-size transverse u [0.32]
               --step-nm FLOAT   Patch grid spacing [0.08]
             """)
             exit(0)
@@ -60,7 +65,7 @@ function _parse_cli(args)
     isempty(data_dir) && error("No data directory: set STMFIT_DATA_DIR or pass --data-dir")
     isdir(data_dir) || error("Data directory not found: $data_dir")
     isfile(features) || error("Features TSV not found: $features")
-    return Options(features, out_tsv, data_dir, half_nm, step_nm)
+    return Options(features, out_tsv, data_dir, half_nm, half_u_nm, step_nm)
 end
 
 function _eval_peak(x, y, cx, cy, ax, ay, A, spar, sperp, skew_ratio)
@@ -104,7 +109,8 @@ function main()
         push!(get!(by_file, basename(row["file"]), Dict{String,String}[]), row)
     end
     coords = collect(-opt.half_nm:opt.step_nm:opt.half_nm)
-    pix_names = [@sprintf("%03d", i) for i in 1:(length(coords)^2)]
+    coords_u = collect(-opt.half_u_nm:opt.step_nm:opt.half_u_nm)
+    pix_names = [@sprintf("%03d", i) for i in 1:(length(coords) * length(coords_u))]
 
     mkpath(dirname(opt.out_tsv))
     open(opt.out_tsv, "w") do io
@@ -145,7 +151,7 @@ function main()
                 for row in rs
                     cx = _parse_f(row["x_nm"]); cy = _parse_f(row["y_nm"])
                     raw_vals = Float64[]; res_vals = Float64[]
-                    for u in coords, t in coords
+                    for u in coords_u, t in coords
                         x = cx + t * ax + u * (-ay)
                         y = cy + t * ay + u * ax
                         push!(raw_vals, _interp(xs, ys, z_smooth, x, y))
@@ -158,7 +164,7 @@ function main()
                                 [isfinite(v) ? @sprintf("%.7g", v) : "NA" for v in res_norm])
                     println(io, join(vals, '\t'))
                 end
-                @printf("[%d/%d] %-24s patches=%d grid=%dx%d\n", idx, length(by_file), file, length(rs), length(coords), length(coords))
+                @printf("[%d/%d] %-24s patches=%d grid=%dx%d\n", idx, length(by_file), file, length(rs), length(coords), length(coords_u))
             catch e
                 @warn "Failed" file reason=sprint(showerror, e)
             end

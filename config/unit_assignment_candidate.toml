@@ -1,0 +1,148 @@
+# Unit-assignment challenger candidate manifest.
+#
+# Provenance-only: this file is NOT a model, NOT a selection config, and NOT a
+# fit/selection/calibration artifact. It records the frozen provenance, exact
+# feature lists, equal view weights, seeds, bootstrap count, date parser rule,
+# constant-current physical policy, leave-date-out gate, common real gates,
+# ranking rule, and promotion thresholds for the label-free 0/1 unit-assignment
+# challenger defined in `.omo/plans/improve-unit-assignment-benchmark.md`
+# (T0-T9). The dedicated checker test/check_unit_assignment_candidate_manifest.jl
+# enforces the firewall and the hash-binding contract declared here.
+#
+# FIREWALL. The benchmark control motif/encoding, the benchmark truth/count
+# column names, and benchmark truth/grade paths are forbidden everywhere EXCEPT
+# inside the dedicated [grader_only] section at the bottom of this file. They
+# must never enter fitting, feature construction, candidate selection,
+# confidence, abstention, or calibration. The checker scans this file
+# line-by-line and rejects any forbidden token or path fragment that appears
+# outside [grader_only].
+#
+# STATUS. grade_status is "locked" until T7 writes the frozen challenger hash.
+# While locked, provenance is "pending". T7 sets grade_status to "frozen_once",
+# flips provenance to "frozen", and writes candidate.frozen_hash. After that,
+# any mutation of the non-grader content is rejected because the recomputed
+# canonical hash no longer matches the stored frozen_hash.
+
+[candidate]
+name = "hierarchical_equalprior_constant_current"
+plan = ".omo/plans/improve-unit-assignment-benchmark.md"
+version = 1
+grade_status = "locked"
+frozen_hash_required_after = "T7"
+
+[denominator]
+# The distinct grader-only artifact that fixes the 145-file / 870-control
+# denominator is referenced by field name only; the actual path lives in
+# [grader_only]. The unknown-production path must not name it directly.
+counting_manifest_field = "grader_only.denominator_manifest"
+files = 145
+control_positions_per_file = 6
+control_positions_total = 870
+
+[firewall]
+policy = "Label-free: no benchmark labels, motifs, expected counts, or grade feedback may enter fitting, features, selection, confidence, abstention, or calibration."
+grader_only_section = "grader_only"
+checker = "test/check_unit_assignment_candidate_manifest.jl"
+
+[provenance]
+# Every feature TSV, cube, generated map, mold, and config consumed by the
+# challenger must be bound here by SHA-256. Status "pending" is permitted only
+# while grade_status = "locked"; T7 requires every entry below to be a real
+# 64-hex SHA-256 digest and provenance.status = "frozen".
+status = "pending"
+feature_tsves = "pending"
+constant_current_cubes = "pending"
+generated_maps = "pending"
+molds = "pending"
+configs = "pending"
+
+[features]
+# Exact feature lists pinned at T0. Equal class priors; no lobe index, no
+# transitions, no run lengths, no per-chain class counts, no top-k rule, and no
+# prior learned from the repeated benchmark motif.
+policy = "equal_priors"
+base_local = ["amp_prominence", "amp_neighbor_ratio", "integrated_prominence", "amp_rel"]
+base_gaussian = ["amplitude", "sigma_parallel_nm", "sigma_perp_nm", "integrated"]
+backward_descriptors = ["bwd_neg_com_t", "bwd_neg_diag45"]
+split_descriptor = ["split_log_skew"]
+# Current frozen production views (label-free); the hierarchical T4 emission
+# policy below constrains how these features may be combined.
+production_views = ["base_local", "base_local+bwd_neg_com_t", "base_local+bwd_neg_diag45", "base_local+split_log_skew"]
+hierarchical_emission_policy = "shared two-component diagonal Gaussian over normalized features; class priors fixed (0.5, 0.5); no occupancy regularizer; higher-amplitude cluster maps to the acetyl-bearing unit"
+
+[views]
+# Equal view weights; missing views are omitted and their count reported.
+policy = "equal_weights"
+weight = 0.25
+
+[bootstrap]
+# Fixed scan-bootstrap rule. Resample whole scans within training dates; never
+# resample lobes independently.
+count = 500
+seeds_range_start = 0
+seeds_range_stop = 499
+resample_unit = "whole_scan_within_training_dates"
+
+[date_parser]
+# Leave-one-date-out rule. Parse exactly one leading YYYYMMDD token from the
+# folder/relative path; zero or multiple leading YYYYMMDD tokens fail the fold.
+rule = "leading_yyyymmdd_token"
+source = "folder_or_relative_path"
+ambiguous = "fail"
+missing = "fail"
+
+[constant_current]
+# Physical policy only; no benchmark-tuned parameter. The nominal isovalue is
+# fixed by the mean-height policy above the Cu reference; the five bracket
+# heights are diagnostics only and may not be selected by a benchmark grade.
+mean_height_policy_nm = 0.50
+sensitivity_bracket_nm = [0.40, 0.45, 0.50, 0.55, 0.60]
+bracket_policy = "diagnostics_only"
+observable_note = "QE plot_num=5 values are treated as a discrete sum of |psi_n(r)|^2 over the bias window; no absolute nA-to-cube conversion is claimed."
+
+[one_vs_two_gate]
+# 1-vs-2 identifiability gate, mandatory before freezing.
+per_date_fold_rule = "every held-out date fold has positive per-lobe log-likelihood improvement for the two-component model vs the one-component companion"
+scan_bootstrap_rule = "percentile 95% lower confidence bound of the mean scan-bootstrap improvement is above zero"
+pass_condition = "every held-out date fold positive AND scan-bootstrap 95% lower confidence bound above zero"
+
+[real_gates]
+# Common real no-truth gates shared by both lanes.
+registration_interior_to_bounds = true
+beat_shifted_and_rotated_controls = true
+forward_backward_agreement = true
+fixed_perturbation_agreement = true
+abstain_on_invalid_isosurface = true
+abstain_on_registration_boundary = true
+do_not_widen_bounds_or_select_bracket_from_outputs = true
+
+[ranking]
+# No-truth ranking rule used to choose among eligible lanes at T7.
+order = ["greater_emitted_lobe_coverage", "greater_minimum_perturbation_agreement", "greater_median_normalized_margin", "exact_tie_constant_current_physics_candidate"]
+
+[promotion]
+# Final post-hoc promotion thresholds on the fixed 145 files / 870 control
+# positions. Coverage, short-N positions, and extra lobes remain separate
+# report fields and must not be hidden by the headline.
+denominator_files = 145
+denominator_control_positions = 870
+honest_correct_min = 677
+physical_accuracy_classified_min_fraction = 0.789
+exact_chains_min = 18
+
+[grader_only]
+# Dedicated grader-only section. The forbidden tokens and paths declared above
+# ARE permitted here because they name the external benchmark workflow that
+# grades frozen predictions post-hoc. They must never occur anywhere else in
+# this file. The checker treats this section as the only firewall exception.
+denominator_manifest = "benchmarks/chitosan_6mer_counting_confirmed.toml"
+grade_script = "test/report_unit_assignment_benchmark.jl"
+grade_status_field = "candidate.grade_status"
+control_motif = "NKNNKN"
+control_encoding = "010010"
+truth_column = "sequence"
+expected_count_column = "expected_N"
+target_count_column = "target_N"
+grade_status_locked = "locked"
+grade_status_frozen_once = "frozen_once"
+grade_status_graded = "graded"

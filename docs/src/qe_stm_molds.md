@@ -3,6 +3,10 @@
 This page describes how to produce STM/LDOS molds for GlcN/GlcNAc unit
 assignment using Quantum ESPRESSO on an HPC system such as MPCDF Raven/Viper.
 
+For the scientist-facing description of the atomic systems, approximations,
+parameters, quantities calculated, completed jobs, and interpretation limits,
+see [DFT-STM Calculation Note for GlcN and GlcNAc](dft_calculation_note.md).
+
 ## Objective
 
 The desired mold is not a molecular contour. STM is sensitive to the local density
@@ -36,8 +40,9 @@ to all eight left/central/right contexts.
 ## QE Workflow
 
 For the 240817 chitosan scans, the SXM headers contain a uniform bias of
-`-0.300 V` over the folder. The first prepared QE input directories therefore use
-`emin=-0.3 eV`, `emax=0.0 eV` for occupied-state LDOS export. These run
+`-0.300 V` over the folder. QE `pp.x` with `plot_num=5` uses `sample_bias` in
+Ry, not `emin`/`emax`; the prepared production inputs therefore use
+`sample_bias=-0.0220495933 Ry`, which QE reports as `-0.3000 eV`. These run
 directories live under `qe/` and are gitignored because QE outputs can be large.
 
 Before submission, validate the prepared inputs with:
@@ -109,7 +114,11 @@ julia --project=. test/smoke_qe_mold_workflow.jl
 This creates a temporary synthetic trimer/slab, prepares QE inputs via
 `--cell-metadata`, simulates the relax-to-SCF handoff, extracts a frame, samples
 two synthetic cube files with typed `--frame` arguments, and imports connected STM
-molds. It does not validate chemistry or run Quantum ESPRESSO.
+molds. The constant-current smoke leg uses a dedicated strictly monotone
+`value = 3z` cube so its target has one continuous fixed-support root branch;
+the constant-height leg retains its original synthetic cube. This fixture
+replacement preserves all smoke assertions. It does not validate chemistry or
+run Quantum ESPRESSO.
 
 The initial trimer geometries can be regenerated with:
 
@@ -171,8 +180,7 @@ julia --project=. test/prepare_qe_mold_inputs.jl \
     --out-dir qe/glcn \
     --prefix glcn_central \
     --fix-below-z ZCUT \
-    --emin-ev EMIN \
-    --emax-ev EMAX
+    --sample-bias-ev -0.3
 ```
 
 Repeat with `type=1` / `glcnac_central` geometry. The helper writes
@@ -260,6 +268,108 @@ that same coordinate system. `height_nm` samples a constant-height plane along
 rather than a volumetric LDOS cube, set the frame origin and height so the
 sampled plane matches that map.
 
+## Diagnostic constant-current transformation
+
+`test/build_constant_current_stm_maps.jl` provides a separate, diagnostic-only
+transformation of the accepted LDOS cubes. It finds the first bracketed crossing
+when sampling from vacuum toward the slab and writes both the resulting height
+map and an explicit validity mask. Missing, ambiguous, non-finite, or
+insufficiently sampled crossings remain invalid; they are never replaced by
+zero or extrapolated heights.
+
+```bash
+julia --project=. test/build_constant_current_stm_maps.jl \
+    --cube0 qe/glcn/glcn_central_ldos.cube \
+    --frame0 qe/glcn/frame.tsv \
+    --cube1 qe/glcnac/glcnac_central_ldos.cube \
+    --frame1 qe/glcnac/frame.tsv \
+    --cube-units bohr \
+    --half-nm 0.80 \
+    --step-nm 0.08 \
+    --isovalue-scan-intervals 1024 \
+    --out-prefix /tmp/opencode/chitosan_cc_diag
+```
+
+The nominal `0.50 nm` mean-height policy and fixed
+`0.40, 0.45, 0.50, 0.55, 0.60 nm` bracket are declared before grading. Each
+height produces a typed map and mask; the sidecar binds the observable, both
+cube hashes, sample bias, per-type Cu reference frames, nominal and bracket
+heights, typed nominal isovalues, cube-normal spacing, crossing policy, nominal
+map/mask hashes, and the remaining bracket artifact paths and hashes. The
+`type_frames` and `type_isovalues` provenance tables each contain exactly one
+entry for type `0` and one for type `1`, so relaxed GlcN and GlcNAc cubes may
+keep their distinct local frames and separately calibrated nominal isovalues
+instead of copying, averaging, or selecting one value for both geometries.
+Historical common-frame or single-explicit-isovalue synthetic calls are still
+normalized into two typed entries. The constant-current map and validity mask
+are published as a recoverable gate-last transaction: same-directory staged
+files and a durable `prepared` marker precede destination changes, the map gate
+is backed up first and installed last, and a durable `committed` marker records
+the completed generation. On rerun, prepared recovery restores the old complete
+set; committed recovery retains the new complete set and removes transaction
+residue. Destination symlinks are replaced as directory entries rather than
+followed. The same bounded protocol publishes the frozen diagnostic summary,
+controls, and PNG set, with its summary TSV as the gate. It covers the tested
+writer failures and explicit interruption points, but does not claim recovery
+from filesystem corruption or hostile concurrent mutation of sidecars.
+Provenance creation fails unless every declared non-nominal bracket
+height has a bound map and invalid-mask artifact. The two cubes must also
+resolve to the same normal-axis sampling spacing. Periodic cube wrapping is
+rejected in this provenance-bound builder because that transform is not part of
+the sidecar contract; it remains available only in the lower-level T1 diagnostic
+sampler. The real whole-ROI diagnostic imports the nominal map over
+`--half-nm 0.80 --step-nm 0.08`, producing the 21×21 (`441` pixel) mold support
+expected by the whole-ROI consumer; the builder invocation for that chain must
+use the same explicit support. Whole-ROI real diagnostic validation rejects a constant-current
+sidecar unless both typed frame and typed isovalue entries are present, the
+height/grid/units/z-spacing fields and `isovalue_scan_intervals` are well formed,
+the nominal map extents and
+step match those fields, the bracket artifact hashes match their paths, and the
+connected mold TSV consumed by scoring has its own binding sidecar tying it back
+to the nominal map hash and importer convention. The matching registration
+config is
+`config/joint_proxy_whole_roi_constant_current.toml`; its registration ranges
+and numerical-tie tolerances are copied unchanged from the frozen whole-ROI
+diagnostic config.
+
+For each typed cube, mean-height calibration uses the explicit validated
+`--isovalue-scan-intervals` policy, default `1024`. The sidecar records that value
+as `isovalue_scan_intervals`, and whole-ROI validation requires it to match. The
+default therefore evaluates 1025 equally spaced isovalues including both
+endpoints of the declared interval. It partitions the valid response into
+continuous fixed-column-support segments and accepts the target only when exactly
+one segment contains exactly one root, which is then refined by bisection.
+The public calibration controls are validated before any target conversion,
+frame work, scan construction, or bisection: `max_iter` must be a positive
+non-`Bool` integer and `height_tol_factor` must be a positive finite non-`Bool`
+real. Valid custom values feed the existing bisection tolerance and iteration
+limit; the defaults and root policy are unchanged.
+An exact root at either endpoint of the declared scan range is rejected because
+two-sided continuity and a crossing within the declared interval cannot be
+established. An exact interior root requires both immediate adjacent scan
+responses to be finite and their valid-column support to remain unchanged;
+an isolated exact sample, including one with only one finite neighbour, is
+rejected as continuity-ambiguous. Multiple target roots and any target crossing
+at a support discontinuity are also explicit ambiguity errors; the code does
+not choose the first, lowest, highest, or best-covered branch. A target outside
+the reachable range or an interval with no valid crossings also fails
+explicitly. Root uniqueness is assessed at the declared scan resolution, not
+claimed independently of resolution.
+
+This stronger rejection contract does not make the accepted real cube gate pass.
+The accepted GlcNAc response remains multibranch, so T3 remains terminal
+`BLOCKED` without a separately predeclared and validated physical branch policy.
+No support threshold or branch preference was retuned from that failure.
+
+This transformation does **not** calibrate current. QE `plot_num=5` is a
+discrete occupied-state `|psi_n(r)|^2` sum over the bias window, not amperes, so
+no nA-to-cube conversion is claimed. The temporary provider name is
+`stm_dft_cc_diag`; it is not registered as `stm_dft_v1`, does not modify
+`config/joint_proxy_molds.toml`, and cannot enter fitting, `N_selected`,
+calibration, thresholds, or production abstention. Its synthetic gate validates
+the transformation and scoring mechanics only, not GlcN/GlcNAc transfer on real
+STM scans.
+
 ## Import And Score
 
 Convert the map TSV into connected templates:
@@ -272,6 +382,25 @@ julia --project=. test/import_stm_mold_maps.jl \
     --half-nm 0.48 \
     --step-nm 0.08
 ```
+
+For the diagnostic constant-current chain, import the nominal map with its
+constant-current sidecar so the connected mold TSV gets a child binding sidecar:
+
+```bash
+julia --project=. test/import_stm_mold_maps.jl \
+    --maps /tmp/opencode/chitosan_cc_diag_h050.tsv \
+    --out /tmp/opencode/chitosan_cc_diag_h050_connected.tsv \
+    --half-nm 0.80 \
+    --step-nm 0.08 \
+    --source-provenance /tmp/opencode/chitosan_cc_diag.provenance.toml
+```
+
+This writes
+`/tmp/opencode/chitosan_cc_diag_h050_connected.tsv.provenance.toml` by default.
+Whole-ROI constant-current validation receives the actual `--molds` path and
+checks this child sidecar before loading the TSV for scoring. A stale mold,
+stale source-map hash, malformed numeric provenance, or missing bracket artifact
+is rejected before any scan is scored.
 
 Then decode the experimental patches:
 
@@ -295,9 +424,41 @@ julia --project=. test/grade_unit_assignment.jl \
 
 ## Rules
 
-- Choose the bias window from the STM experiment, not from benchmark performance.
+- Choose the sample bias from the STM experiment, not from benchmark performance.
 - Choose the sampling height from the simulated/experimental STM setup, not from
   sequence accuracy.
 - The beta-(1->4) linkage constrains orientation and parity only; it must not
   impose a GlcNAc count or an alternating sequence.
 - Keep `010010` and any unit truth outside mold construction and scoring.
+
+## Joint posterior provider contract
+
+`config/joint_proxy_molds.toml` exposes STM molds through a versioned registry
+rather than embedding them in inference code. Each provider supplies unary
+templates for both physical unit identities across parity and mirror states on
+the configured 9×9 patch grid. The active `stm_dft_v1` source is required and
+hash-pinned; geometric and DFT each carry weight `0.5`. Preliminary heights stay
+listed but disabled and the tracked geometric provider remains reproducible.
+
+The consumer writes five auditable artifacts: candidate-N posterior rows,
+candidate-lobe geometry/type rows, selected-candidate `0/1/?` predictions, chain
+summaries, and a run manifest containing config/source/payload SHA-256 hashes.
+Neither provider nor consumer accepts an expected N, composition count, control
+sequence, or grader input.
+
+The production promotion performed the following steps:
+
+1. extract both maps with the same physical height, field of view, orientation,
+   normalization, parity, mirror, and grid convention;
+2. register the generated TSVs and provenance sidecar as the non-preliminary
+   `stm_dft_v1` source family without
+   changing hard-label rules or production `N_selected`;
+3. regenerate the synthetic calibration so provenance binds the new source and
+   payload hashes;
+4. run paired synthetic non-regression/QC first, retaining `?` calls; and
+5. use any known sequence only afterward for external reporting, never to choose
+   height, family weight, flip, threshold, or abstention.
+
+The two-file 2026-07-11 smoke used the geometric/preliminary contract and
+validated file/schema flow only. Both real chains abstained on hard count, so it
+does not validate chemical identity or counting accuracy.
