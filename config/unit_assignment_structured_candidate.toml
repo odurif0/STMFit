@@ -1,0 +1,44 @@
+[candidate]
+name = "structured_label_free_unit_assignment"
+plan = ".omo/plans/structured-label-free-unit-assignment.md"
+version = 2
+model_config = "config/unit_assignment_structured_model.toml"
+lifecycle_schema = "sidecar_receipts_v1"
+
+[provenance]
+v1_candidate = "config/unit_assignment_candidate.toml"
+v1_candidate_sha256 = "9dac84437ef0a9c2118b77d4e371efd71a5365595794167a112a338ca3e4a1aa"
+model_config_sha256 = "b3bac29d7dbecb0a9a46ec4b81a283c6b6cd4dda586c639b29d8ea105ecbd5ad"
+checker_source = "test/check_unit_assignment_candidate_manifest.jl"
+spacing_source = "config/chitosan.toml"
+spacing_source_sha256 = "a24460ab5114bd3907c063c1f6d7b678113037e084881a7fbbb211db9eeaf2d9"
+forward_patch_producer = "test/extract_lobe_patches.jl"
+forward_patch_producer_sha256 = "f79258197cd123f833e0541647c4e7107044149deb558ba765fbeee0545737ad"
+backward_patch_producer = "test/extract_lobe_patches_bwd.jl"
+backward_patch_producer_sha256 = "4f866a1e27289a0cf010a6ed4b5e0b92454dc55f97807d33cc95edb9e87182ba"
+
+[freeze]
+candidate_hash_scope = "exact_file_bytes"
+model_hash_scope = "exact_file_bytes"
+canonical_hash_exceptions = []
+receipt_chain = ["absence", "freeze_receipt", "grade_reservation", "grade_final"]
+receipt_files = ["freeze_receipt.toml", "grade_reservation.toml", "grade_final.toml"]
+receipt_states = ["unfrozen", "frozen_once", "grade_reserved", "graded"]
+prior_receipt_hash_required = true
+rewrite_prior_receipt = false
+mutable_toml_state = false
+
+[grader_only]
+denominator_manifest = "benchmarks/chitosan_6mer_counting_confirmed.toml"
+denominator_manifest_sha256 = "6036098fc50623ed68447cc97ff5d576f2c3054ba34206ca0ef07bc4ec55b210"
+grade_script = "test/report_unit_assignment_benchmark.jl"
+grade_script_sha256 = "5897918a8044bb7869622fb8152f6713f48b8226ba548a3999c47d290c3bff33"
+profile = "structured_v2"
+denominator_files = 145
+denominator_control_positions = 870
+lobes_classified_min = 854
+physical_accuracy_numerator = 677
+physical_accuracy_denominator = 854
+exact_chains_min = 36
+honest_correct_min = 677
+strict_improvement_required = true

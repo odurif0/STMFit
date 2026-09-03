@@ -71,6 +71,42 @@ have built-in defaults):
     `support_midpoint_hybrid`.
 - **`[preprocessing]`** — SXM channel name/direction, stride, flatten, smoothing.
 
+### Structured Todo 9 diagnostic policy
+
+The label-free structured diagnostics use an immutable policy block in
+`config/unit_assignment_structured_model.toml`:
+
+```toml
+[selection.diagnostics.policy]
+schema = "structured_diagnostics_policy_v1"
+residual_model = "fixed_nu8_diagonal_student_t_two"
+residual_formula = "x_minus_posterior_weighted_component_mean"
+residual_fallback = "matched_one_component_student_t_mean"
+residual_failure = "BLOCKED"
+icc_estimator = "ICC_1_1_oneway_random_unbalanced"
+icc_date_centering = "row_weighted_per_date_per_feature"
+icc_feature_pooling = "equal_feature_summed_squares"
+icc_unbalanced_group_size = "n0=(N-sum(n_s^2)/N)/(K-1)"
+view_score = "mean_lobes(log_predictive_density/dimension)"
+view_contrast = "mean(bwd_com,bwd_diag)-mean(base,split)"
+channel_drop_features = ["bwd_neg_com_t", "bwd_neg_diag45"]
+channel_drop_refit = "fresh_inner_training_base_local"
+channel_drop_statistic = "mean(full_bwd_scores)-refit_base_score"
+channel_drop_same_sign = "strict_nonzero_each_inner_date"
+quantile_method = "Hyndman_Fan_type_7_explicit"
+permutation_tail = "upper_inclusive_plus_one"
+view_tail = "two_sided_zero_inclusive_plus_one"
+threshold_equality = "SKIPPED"
+holm_order = ["mfa_q1", "scan_effects", "view_asymmetry"]
+holm_reject_equality = true
+```
+
+Missing or differing policy keys are `BLOCKED`. Diagnostics remain follow-up
+only and are recomputed inside the outer/inner training partitions. Channel
+dropout removes both backward descriptors, freshly refits `base_local` on the
+same inner-training rows, and rescores the untouched held-out rows; it is not
+the original backward-versus-non-backward view contrast.
+
 ### Calibrating a new molecule
 
 Start from the annotated template:
@@ -394,3 +430,100 @@ STMMolecularFit.FitSlideConfig(
     global_maxiter = 5000,    # NLopt max iterations
 )
 ```
+
+## Structured evaluator-v1 policy (correction3 pending review)
+
+`config/unit_assignment_structured_evaluator.toml` is the correction3
+policy/evidence-only candidate. It is authoritative only after parent
+acceptance, a fresh independent Oracle PASS, and reviewer-owned `GateClosure`;
+until then Todo 13 remains
+blocked. The replaced predecessor config is preserved as an exact historical
+preimage in correction2 evidence. The live config binds canonical
+repository-relative paths, exact bytes, source-bundle members, Julia
+1.12/1.12.6, the checked Todo 12/Todo 13 markers, and immutable T8, T11, and
+T12 authorities. Symlinks, hardlinks, path escapes, stale hashes, duplicate or
+substituted members, and runtime mismatches fail closed before scoring work.
+
+The frozen implementation semantics are explicit: `j_mivc=log(0.5)+log
+f_mvc(x_iv)`, `a_miv=logsumexp_c(j_mivc)`, `pi_mivc=exp(j-a)`, clipping only
+state 1 to `[1e-12,1-1e-12]`, shared `A_i`, and
+`eta_mic=(1/|A_i|)sum_v(a_miv+log(pi_clipped_mivc))`. Then
+`U_mi=logsumexp_c(eta_mic)` and `q_mic=exp(eta-U)`. Structural absence is
+omitted for both models; partial views use `1/|A_i|`; empty `A_i` is
+`U=0,q=(0.5,0.5),?`, and an eligible incident edge is `BLOCKED`.
+
+The exact status event/reason/consequence tables, edge-null lifecycle, graph
+reference selection and per-scan `logZ` rule are in the config. Graph output
+uses T12 marginals, never Viterbi or report-wide totals. Scoring fixes
+`E_s`, `M_s=nodes_s+|E_s|`,
+`L_C1=sum_i(U_C1_i)+sum_e(N_e)`, and
+`L_meta=sum_i(U_selected_i)+sum_e(N_e)+I_graph*logZ_T12_s`; T12 is only a
+relative graph normalizer. The gate uses one Mersenne Twister per seed 0–499,
+paired whole-scan resampling, Type 7 interpolation
+`0.525*x_(13)+0.475*x_(14)`, and exhaustive inclusive sign masks with no `+1`.
+
+The validator's results are policy/static/synthetic evidence only. They are not
+physical calibration, application processing, benchmark validation, or a
+permission to use labels; any external labels or grading are post-gate only.
+The correction2 validator snapshots authorities descriptor-relatively,
+revalidates identities and bytes before return, and reports structured status,
+reason, and truthful work counters. Exact selected-model/unary-fit/T11/T12
+reference keys and cardinalities are required; metric populations are pooled
+over their explicitly frozen node/pair scopes.
+
+### Correction3 integration addendum
+
+Correction3 integration is a worker/static/synthetic evidence phase only. It
+does not create, import, execute, or authorize either Todo13 evaluator product.
+The parent-reproduced policy and authority lanes are bound losslessly: 680
+policy/semantic mutations plus 163 authority mutations produce 843 projected
+rows, but the integrator does **not** independently reimplement those 843
+mutations. The integration validator snapshots the live configuration and all
+consumed lane/predecessor inputs descriptor-relatively, validates the
+source-authored 202-key policy, binds 20 roles, 32 bundle members, 42
+claim/review checks, 13 structural checks, and revalidates every snapshot after
+semantic fixtures before its final Julia runtime check. Its evidence is not a
+benchmark or 10–20mer application claim; labels remain external reporting only.
+
+### Correction4 no-replace provenance successor
+
+Correction3 is technically green but remains historically blocked because its
+canonical paths were replaced while correcting the combined-row projection.
+Correction4 is a provenance-only successor: it freshly regenerates the same six
+canonical static/synthetic files twice from the immutable correction3 validator,
+then publishes the run-1 bytes once with exclusive no-replace creation. It does
+not change science, configuration, thresholds, T8/T11/T12, GCV, `n_eff`, labels,
+benchmarks, application claims, or Todo behavior. The live evaluator config
+remains a candidate; Todo13 products remain absent and blocked pending parent
+acceptance, a fresh Oracle, and reviewer-owned GateClosure.
+
+### Correction5 terminalization caveat
+
+Correction4's six canonical `O_EXCL` bytes remain valid and are referenced
+without republishing. Its `DoneClaim` is non-authoritative because it carries
+the predecessor-hash terminalization defect and its finalizer failed before the
+final Boulder closure. Correction5 preserves those failure artifacts and cleans
+only the captured staging residue. No science, configuration, threshold, GCV,
+`n_eff`, T8/T11/T12, label, benchmark, application, or Todo behavior changes;
+Todo13 remains blocked pending parent acceptance, a fresh Oracle PASS, and
+reviewer-owned GateClosure.
+
+### Correction6 parent-owned atomic publication boundary
+
+Correction5 cleanup remains valid, but Correction5 is non-authoritative because
+its evidence closure omitted the cleanup receipt and its terminal replay omitted
+all six required per-path canonical bindings. Correction6 references the
+existing Correction4 canonical bytes without republishing them. Its complete
+19-file payload is sealed in a hidden same-parent stage, and publication is
+established only when the parent supplies and accepts the external checkpoint,
+the descriptor-bound publisher performs exactly one
+`renameat2(RENAME_NOREPLACE)`, and the parent records the external publication
+receipt. The publisher reports both the transient basename-manifest namespace
+and the final repository-relative manifest namespace; it writes neither
+manifest nor receipt into the repository.
+
+Correction6 never authorizes Todo13 itself. Todo13 remains blocked pending
+parent acceptance of that receipt, a fresh independent Oracle PASS, and
+reviewer-owned `GateClosure`. This is administrative provenance only: it
+changes no policy, configuration, calibration, threshold, GCV, `n_eff`, T8,
+T11, T12, label, benchmark, application, or Todo behavior.

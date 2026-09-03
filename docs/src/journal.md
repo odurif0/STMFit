@@ -3160,6 +3160,83 @@ reproducible, cross-validated. The counting benchmark (129/145 exact) and
 this unit-assignment state of the art are now both documented in README and
 docs/src/unit_assignment.md.
 
+### 8ab. End-to-end score, mold-assisted detection, terminal-mold question (2026-08-03)
+
+- End-to-end score (steps 1+2, frozen champion, summary.tsv):
+  honest_correct_frac 77.8% (677/870 fixed denominator; 854 classified,
+  16 missing from 14 short-N files, 38 extra lobes); sequence_exact 36/145;
+  step-1 alone: 106/145 N-exact files.
+- The 16 missing lobes are almost all the TERMINAL position 6 (GlcN), not
+  GlcNAc: the fit misses the chain-end lobe (weaker signal).
+- Mold-assisted detection test (cc mold slid beyond the last fitted lobe,
+  after plane flattening): correlation peaks exist for 2/3 short-N files
+  (NCC 0.09-0.15 vs 0.03 reference) - the mold sees missed terminal lobes;
+  the end-to-end gain would be capped at ~+16 corrects (693/870).
+- Terminal-lobe shapes: correlation matrix shows ends (pos 1, 6) are more
+  variable (intra 0.46-0.63) than internals (0.71-0.79), BUT a terminal mold
+  (mean of chain-end patches, label-free geometric property) matches internal
+  lobes BETTER (0.765) than terminal ones (0.653): the terminal lobes have no
+  distinct common shape, only more noise. A special border mold is NOT
+  justified by the data; the central mold remains the right detection and
+  assignment template.
+
+### 8ac. Chantier: mold-assisted detection of missed lobes — closed (2026-08-03)
+
+Goal: recover the 16 missed terminal lobes (step 1) for a higher end-to-end
+score (677/870 -> up to 693/870). Three options tested:
+
+- Option 1 (targeted Gaussian refit at expected position, plane-flattened):
+  amplitudes of the missed lobes (0.011-0.051) fully overlap the noise of
+  complete files (0.016-0.051); non-separating.
+- Option 2 (chain-spacing constraint): already embedded (expected position =
+  last lobe + mean spacing); peaks are not selectively at the expected
+  spacing.
+- Option 3 (visual): 14 vignettes at the expected lobe-6 position - 1 clear
+  lobe (240814_020), 1 uncertain (240814_021), 12 nothing (noise/gradient).
+
+Verdict: the 16 missed terminal lobes are at the image noise level or absent
+(which is exactly why the global fit missed them); the end-to-end score
+677/870 (77.8%) is at the physical ceiling of these data. Only 240814_020
+(a N=4 file missing two lobes) shows a detectable lobe at the expected
+position (+1-2 corrects possible). Tooling kept: test/detect_missed_lobes.py
+(correlation slide) and test/refit_missed_lobes.py (targeted refit), both
+label-free. No further optimization within these data is measurable; the
+champion and the end-to-end score stand.
+
+### 8ad. Chantier step-1: extra-N rule — RETRACTED (label-free violation, 2026-08-03)
+
+A label-free attempt to recover the 25 extra-N files: suffixal removal of
+7th+ lobes whose amplitude < 0.6 x median(lobes 1-6). It improved the grade
+(679/37 vs 677/36) - BUT the rule hard-codes "6" (the expected N of the
+6mer benchmark), violating the invariant "must not use expected N". In
+production (10-20mer, variable N) it would truncate every chain at 6 lobes.
+RETRACTED: the correction is not a valid label-free result; the champion
+remains 677/36 (79.3% / 36 exact / 677 honest, end-to-end 77.8%).
+
+Reformulation test (break-based, no expected N): the extra lobes show NO
+geometric break (spacings 6-7 are 0.8-1.1x the chain median; high angles are
+spread along curved chains). No label-free rule can identify the extra lobes
+on these images. Lesson: any N correction encoding the expected count
+violates the label-free firewall; the step-1 gains measured earlier are not
+reachable within the invariant.
+
+### 8ae. New-lever search: mean-channel patches and pair features (2026-08-03)
+
+Two new levers tested (user pushed for more):
+
+- Fisher mold on the MEAN (fwd+bwd)/2 patches: 50.1% CV vs 66.3% (fwd alone).
+  Patch averaging dilutes the signal; averaging works only at the margin
+  level (8e), not at the raw-patch level.
+- Pair features: per-lobe correlation with the next/previous neighbor lobe.
+  corr_diff (next - prev) reaches AUC 0.598 intra-file - THE strongest single
+  signal measured in the session (unary ceiling was 0.55). Physically: the
+  acetyl breaks the neighbor-transition symmetry. But in the GMM pipeline the
+  pair view is redundant (655/849 vs ref; pair view on 585 central lobes
+  loses coverage; 2-view vote 655/34) - the information is already captured
+  by the multi-dimensional clustering.
+- The extra-N rule was RETRACTED (8ad: label-free violation); the champion
+  (677/36) and the end-to-end 77.8% stand as the only valid state.
+
 ### Tooling added
 
 - `test/enrich_unit_features.py`: label-free per-lobe physical feature
@@ -4297,3 +4374,837 @@ focused suite passed twice (`40/40`), the candidate/firewall suites remained
 green (`29/29`, `51/51`), and direct CLI/QC probes reproduced the corrected
 behavior. No model, threshold, confidence, abstention policy, or default profile
 changed.
+
+### 2026-08-09 — Todo 9 B2 option A policy amendment
+
+The user-authorized option A amendment resolves the Todo 9 estimator-policy
+blocker by freezing the current defensible, label-free mechanics in
+`[selection.diagnostics.policy]` and implementing the missing real channel
+dropout. The policy now binds the fixed-ν=8 Student-t posterior-mean residual
+with its matched one-component fallback, date-centered unbalanced ICC(1,1),
+equal-feature summed-squares pooling, exact configured view contrast, explicit
+Hyndman–Fan Type 7 quantiles, inclusive finite-sample tails, strict equality
+handling, and deterministic Holm ordering.
+
+Dropout now removes exactly `bwd_neg_com_t` and `bwd_neg_diag45`, freshly refits
+`base_local` on the same inner-training partition, and rescored the untouched
+held-out rows. It is a separate statistic and cannot alias the original view
+contrast. Missing or differing policy keys fail closed as `BLOCKED`; all three
+diagnostics remain follow-up-only and cannot alter v2 selection or graph gates.
+
+Option A was selected because it resolves the concrete under-specification and
+implementation defect with minimal change while preserving the existing
+defensible mechanics. The proposed v3 featurewise-standardized residual tests
+and hierarchical reliability model are deferred to a separate future
+preregistered study and do not affect v2. Independent review confirmed the
+amendment (`282/282` fresh assertions, no blocking finding, confidence `0.97`),
+including the bounded T8-to-T9 config-hash handoff. Todo 9 is now `[x]`; no
+benchmark or real-scan claim is made here.
+
+### 2026-08-09 — Todo 12 handoff decision: residualized option A
+
+Scoping Todo 12 exposed a publication gap rather than a new statistical-model
+choice. Todo 11 fits its conditional and state-independent Student-t densities
+on correlations after subtracting the frozen endpoint-predictor residualizer,
+but its current atomic report publishes only hashes and diagnostics. Applying
+those residual-space parameters directly to raw Todo 10 correlations would be
+a different, invalid model; silently refitting inside graph inference or
+accepting caller-supplied matrices would also violate the frozen contract.
+
+The user selected option A. T11 will receive an append-only, exact-schema graph
+handoff that serializes its frozen unary probabilities, residualizer parameters
+and per-edge predictions, and conditional/null density parameters. Todo 12 must
+validate the Todo 10 rows and the new T11 receipt, parse raw correlations,
+subtract the bound prediction internally, and only then construct the
+category-ordered log-density-ratio factors. The fitting mathematics, admission
+decision, zero pair prior, and graph-disabled fallback are unchanged. The
+extension requires deterministic synthetic round trips and a new independent
+review before Todo 12 starts; the frozen plan hash is unchanged.
+
+Option B—a separately fitted model in raw-correlation space—remains a future
+preregistered sensitivity study. Its simpler handoff and potential retention of
+residualized-away signal do not justify mixing it into v2 because it could
+double-count endpoint information and would require full refitting, admission,
+controls, and provenance. No benchmark or real-scan claim is made by this
+decision.
+
+### 2026-08-09 — First residualized handoff serialization rejected
+
+The first T11 publication extension passed its synthetic suite (`521/521`
+twice) and preserved admission replay hashes, but independent review rejected
+it as a Todo 12 authority. The implementation published transforms only for
+edges already retained as fit samples, so Todo 10 eligible edges whose endpoint
+predictors were nonfinite had no explicit ineligible row. It also serialized
+residuals and tested density evaluation from those residuals, bypassing the
+required auditable path in which Todo 12 reads the original Todo 10 correlation
+and subtracts a T11-bound prediction.
+
+The same review found that the per-edge digest covered only identity and two
+observations rather than the exact complete Todo 10 row, deduplicated fits lost
+their full partition-reference list, and the density/reversal/equal-density and
+atomic publication adversaries were too weak for the claims made. Finally, the
+evidence claim misstated the manifest entry count and had no distinct replay
+digest for the three handoff artifacts. These are publication/evidence defects,
+not evidence against the admitted residual-space science. The green claim is
+retained append-only but is non-authoritative; Todo 12 remains blocked until a
+corrected complete-edge handoff receives a fresh independent PASS.
+
+### 2026-08-09 — First handoff correction partially accepted
+
+The first correction preserved all scientific replay hashes and independently
+closed the prediction-only transform, exact Todo 10 row-byte digest, complete
+fit-reference, and distinct handoff-replay findings. The rereview nevertheless
+kept Todo 12 blocked. An early `insufficient_dates` return constructed a dummy
+full fit without carrying the complete edge-transform state, so that terminal
+SKIPPED path emitted no explicit `unavailable/residualizer_unavailable` rows.
+
+The remaining issues are verification gaps rather than fitted-model changes:
+the tests must explicitly assemble the category-ordered 2×2 factor matrix from
+raw table bytes minus the serialized prediction, prove reversal permutation and
+actual unary-posterior reduction for zero factors, and complete the adversarial
+publication matrix with a directory-target symlink plus no-fit/no-inference
+assertions. The accepted closures and append-only manifest-count correction
+remain valid; a second bounded correction is required before Todo 12.
+
+### 2026-08-10 — Residualized T11 graph handoff confirmed
+
+The second bounded correction closed the remaining terminal-path and test-proof
+gaps without changing admission science. The early insufficient-date full fit
+now preserves every Todo 10 eligible edge as an explicit unavailable or
+predictor-ineligible transform row. Tests independently parse persisted raw
+Todo 10 rows, subtract only serialized T11 predictions, build the explicit
+`[00 01; 10 11]` factor matrix, verify reversal permutation, and demonstrate
+that zero edge factors reduce two-node marginals and MAP labels to unary-only
+results. Expanded publication adversaries prove fail-closed behavior without
+fit, shuffle, or graph inference, including directory and member symlinks.
+
+Independent review passed all seven graph-handoff findings at confidence
+`0.99`; a fresh suite passed `821/821`, while admission and handoff replay hashes
+remained unchanged. The authoritative downstream chain is the correction2
+claim plus final review, receipt v2, handoff v1, and its three exact TSVs. Todo
+12 may now implement option A against that chain. Option B remains a separate
+future preregistered raw-correlation study; no benchmark or real-scan claim is
+made here.
+
+### 2026-08-10 — First Todo 12 inference claim rejected
+
+The first exact-chain implementation passed its focused synthetic suite twice,
+but independent review found that the fixture contained only one full-refit
+reference and therefore did not establish the required nested reference
+semantics. Deduplicated fits with multiple held-out target dates were constrained
+to one canonical row, projected onto the wrong date, mislabeled, and recomputed
+without the declared cache. Reversed fits returned nodes in reversed order and
+did not perform a runtime equivalence check.
+
+The review also separated integrity from numerical behavior: valid density,
+DP, or reversal failures were incorrectly converted to `BLOCKED` instead of
+`FAIL`. File validation reread paths after snapshot, Todo 11 replay/dependency/
+residualizer bindings and Todo 10 spacing/topology consequences were incomplete,
+and factor provenance was not retained in immutable results. These are inference
+and evidence defects, not evidence against the admitted residual-space model.
+The T11 test-only integration amendment remains valid, while the first T12 claim
+is append-only historical evidence and cannot authorize Todo 13.
+
+### 2026-08-10 — Todo 12 correction2 still rejected on semantic validation
+
+The second correction expanded path, topology, status and factor-provenance
+tests to `306/306`, but independent review found remaining fail-open semantics.
+Todo 11's top-level result hash and diagnostic partitions/ESS/starts/scores/
+shuffle/bootstrap artifacts were still mostly treated as hash-bound bytes rather
+than reconstructed evidence. Consequently fitted-row failures could disagree
+with an overall PASS, and synthetic shared-fit transforms could differ by
+reference while the cache keyed only the fit and edge.
+
+The fixture also included held-out target dates in partition training dates,
+and Todo 10 segment checking did not reject noncontiguous reuse of one segment
+ID. The direct mutation matrix was smaller than its evidence claim, and its
+append-only count correction confused the 14 listed evidence paths with the 15
+manifest lines that include the list itself. Scientific recurrence, reversal,
+label-free scope and the admitted T11 handoff remain unchanged; correction3 is
+limited to these integrity and evidence defects, and Todo 13 remains blocked.
+
+### 2026-08-10 — Todo 12 correction3 rejected on real T11 byte semantics
+
+Correction3 passed `370/370` and the full T11 regression, but independent review
+showed that its hand-built fixtures still diverged from actual T11 publication.
+Real ESS rows serialize a date count, permit zero support in early terminal
+states, and vary category ESS/support; scores and shuffle rows bind a score hash,
+not a fit hash. Gate predicates, partition score/raw hashes, scan/date
+aggregations and stage-dependent sparse start rows were not reconstructed
+exactly.
+
+The shared-fit fixture also used impossible final-LODO references instead of the
+real outer-inner cross-pair formed when two outer/inner holdouts leave the same
+training dates. Recurrence, factor construction, fit-level transform identity,
+contiguous Todo 10 topology and label-free boundaries remain valid. Correction4
+therefore changes test fixture provenance: test-only bytes will be generated by
+the T11 serializer itself, while product T12 continues to have no source-level
+dependency on T11. Todo 13 remains blocked.
+
+### 2026-08-11 — Todo 12 correction10 stopped at the T11 fixed-point precondition
+
+Correction9 correctly removed the tunable scale tolerance but then rejected the
+unchanged serializer-produced `C1` full-refit conditional covariance. The
+published non-diagonal matrix has minimum eigenvalue exactly five ordered-positive
+Float64 ULPs below `1e-4`; reapplying the frozen T11 projection produces
+`0.0045253227996870917`, `-0.001649753170197811`, and
+`0.00071502530906223923`, rather than byte-identical canonical fields. Its
+original condition number is `51.403481087493361`, so the failure is the
+canonical-byte fixed-point requirement, not the condition cap.
+
+The user authorized the non-tunable Julia 1.12 five-ULP representation protocol:
+ordinary exact floor/cap checks remain unchanged; only non-diagonal ordered-
+positive distances one through five ULP below the floor may proceed when the
+reprojected canonical fields are byte-identical; the original matrix must remain
+the density input. The actual producer row is not such a fixed point, so the
+writer stopped with a correction10 `BlockerReceipt` and did not widen the rule,
+rewrite producer values, clip matrices, or change T12 inference. Todo12, T11,
+and the docs build were not run after this precondition failed. This is a
+serialization/integrity blocker only: it makes no benchmark, real-data, or
+Todo 13 claim, and does not alter label-free scientific semantics.
+
+### 2026-08-11 — Phase-A T11 exact post-reconstruction scale certification
+
+The authorized producer correction keeps `SCALE_FLOOR=1e-4`,
+`CONDITION_CAP=1e4`, model/configuration, and thresholds unchanged. The defect
+was representational: `_project_scale` returned eigenvalues and a reconstructed
+matrix before certifying the exact canonical `%.17g` fields that T11 stored and
+then used. On Julia 1.12.6, the producer now canonicalizes and reparses the
+reconstructed matrix, re-diagonalizes that stored matrix, and returns those
+fresh values. If canonical reconstruction alone crosses a floor/cap boundary
+after an otherwise feasible target, a deterministic diagonal `q` closure is
+rebuilt from the original stored matrix and doubled until the stored matrix
+certifies; there is no tolerance, tunable window, threshold change, or generic
+jitter.
+
+The known conditional covariance receives this closure and publishes only its
+certified stored matrix. Non-PASS null/conditional scales are published
+numerically only when the same exact stored certificate passes; invalid triples
+are all `NA`, while stage means and start diagnostics remain. The emitted PASS
+report was reparsed and every numeric scale triple was independently certified.
+The T11 suite increased from `821/821` to `1337/1337`; focused replay remained
+`13281332403bd7202c95a1bc9f0216bae1a1e5ead328a5e9569c0b30cd98bc81`, while
+complete replay changed from `fe4a755d4c8f013169b7e58f177e314235ec80ca5f9cd8a4e047c20a720da73b`
+to `427bfb6d3f97a077fa748f713e1d15ccc0eaac56b4485aedcb24fe2b7abe6d21` and
+graph replay changed from `ba344516bd1356188400a7dcd3b639e1cddeaf6e06bfd3349a59dc4b2d7e702b`
+to `dc15a94bb8bf373a62dcb1fba1598711ece0f99882082de7568eac6aab6aa474`.
+Both sequential replays were `PASS`, with no terminal status change; CLI help
+also passed without invoking construction/evaluation. This is a producer
+representation and provenance correction only: it makes no benchmark or
+real-data claim, uses no labels or composition prior, and leaves Todo 13 and
+the read-only T12 lane suspended pending review.
+
+### 2026-08-11 — Todo 12 Phase-B scale-certification authority rebind
+
+The authorized Phase-B rebind makes the independently reviewed T11
+post-reconstruction scale certification the effective Todo 12 authority while
+preserving the correction2 claim, review, and source bundle as immutable
+ancestry. The fixed authority inventory is now exactly 22 paths (19 historical
+paths plus the effective T11 claim, review, and canonical source bundle). The
+live T11 source identity is `616decd955cc808958247d005102ff277f336586bd75f5b8529de0bd16042746`,
+the effective source bundle is
+`7a024ceba895e670a6cf666b568b50e9bb32da110d1639c93e268d96ed5ecdaa`, and the
+old `fd9cec0f28d824d9e1a2c7bafb0d0ec0b9cfb2eed7d634add7ab44d089421cad`
+bundle is rejected as current receipt authority but retained as ancestry.
+
+The unused universal graph-replay identity was removed. Runtime validation now
+recomputes replay from each report's exact three handoff snapshots in declared
+order; the sealed T11 suite replay
+`dc15a94bb8bf373a62dcb1fba1598711ece0f99882082de7568eac6aab6aa474` is evidence
+for that suite only. Direct adversaries cover content-distinct valid reports,
+literal sealed-replay substitution, stale handoff artifacts, semantic
+corruption after wrapper rehashing, and historical-source substitution. Exact
+stored-scale checks remain `lambda_min >= 1e-4` and `condition <= 1e4`, with no
+tolerance or clipping exception.
+
+The complete Todo 12 suite passed `855/855` in each of two sequential Julia
+1.12.6 runs. Both runs produced identical result replay
+`09bfbbcdd6e49f935e3b533d720376a40450baef5d6925b1dfedf1eec14de344`,
+provenance replay
+`9f41653b5de58388ea82c862f8eafb2934121cbd627ef786917e48102e63af51`,
+correction7 matrix rows/counts (`129`, `261/261`), and correction9 exact-scale
+matrix rows/counts (`154`, `17/17`). The T11 regression passed `1337/1337`
+with focused replay
+`13281332403bd7202c95a1bc9f0216bae1a1e5ead328a5e9569c0b30cd98bc81`, complete
+replay `427bfb6d3f97a077fa748f713e1d15ccc0eaac56b4485aedcb24fe2b7abe6d21`,
+and sealed-suite graph replay
+`dc15a94bb8bf373a62dcb1fba1598711ece0f99882082de7568eac6aab6aa474`.
+
+All pre-existing T12 evidence paths remained byte-identical to the preflight
+inventory, and regenerated matrices, logs, and boundaries were written only
+under the new scale-certification-rebind root. This is a provenance and
+serialization-integrity rebind only: no expected counts, labels, benchmark
+grades, real data, composition prior, model thresholds, or Todo 13 activity
+were used or changed. Todo 12 remains pending fresh independent Oracle review.
+
+### 2026-08-11 — Todo 12 scale-certification rebind exact eigensolver correction
+
+Independent review rejected the Phase-B claim because Todo 12 computed an
+authoritative `eigen(Symmetric(scale))` decomposition but discarded its
+`Float64` eigenvalues for a custom off-diagonal trace/determinant estimate. The
+exact stored counterexample was
+`[0.32262332547297057 -0.46740750707094925; -0.46740750707094925
+0.6774766745270292]`: T11 obtains eigenvalues
+`[9.999999999998899e-5, 0.9999999999999998]`, condition
+`10000.000000001099`, and rejects at the floor, while the custom Todo 12
+estimate accepted it. The correction removes that analytic branch and uses
+`Float64.(decomposition.values)` directly, retaining the exact positive,
+`lambda_min >= 1e-4`, and condition `<= 1e4` checks without tolerance,
+clipping, fixed-point exception, or alternate density matrix.
+
+The exact counterexample was added to the regenerated correction9 matrix and
+the public seven-path fixture now refreshes all wrappers and blocks with
+`model_mismatch` before scan/factor/DP work (`0/0/0`). A test-only parity audit
+over certified interior, exact diagonal, rotated certified, non-diagonal floor,
+and non-diagonal cap matrices passed `19/19`; T11 acceptance/rejection and
+Todo 12 disposition agree. Correction evidence is isolated under the new
+append-only correction root, while the Phase-B `231/231` manifest, review, and
+all older T12 evidence remain byte-identical.
+
+Two sequential Todo 12 runs passed `891/891` with identical result replay
+`09bfbbcdd6e49f935e3b533d720376a40450baef5d6925b1dfedf1eec14de344` and
+provenance replay
+`9f41653b5de58388ea82c862f8eafb2934121cbd627ef786917e48102e63af51`.
+Correction7 remains `129` rows / `261/261`; correction9 is `155` rows /
+`34/34`, with byte-identical repeated matrix and boundary outputs. T11 passed
+`1337/1337` with focused replay
+`13281332403bd7202c95a1bc9f0216bae1a1e5ead328a5e9569c0b30cd98bc81`, complete
+replay `427bfb6d3f97a077fa748f713e1d15ccc0eaac56b4485aedcb24fe2b7abe6d21`,
+and graph replay
+`dc15a94bb8bf373a62dcb1fba1598711ece0f99882082de7568eac6aab6aa474`.
+The updated source bundle is `structured-chain-inference-source-v5` with
+current edge, unchanged chain, and test hashes
+`d1cce4047eaaf99faacb8c11dd3844669c5f6528a2bded011e004cb432417d46`,
+`cdc0c788d49298f50721b091535a238cd552454d9885404456c593e4625ea39f`, and
+`112ffafe7a3db87994e9654c31dd9ef7c68c49cdbf4566b2a082b914918d6759`.
+No benchmark, real-data, label, composition-prior, or Todo 13 activity was
+used; the correction claim remains pending fresh independent review.
+
+### 2026-08-11 — Todo 12 checked-plan and checked-T11 authority rebind
+
+After the checked Todo12 plan was independently authorized, T12's fixed
+authority was rebound append-only to the checked-plan T11 publication. The
+prior correction2 ancestry and the immediately prior scale-certified tuple
+remain explicit historical authorities: scale claim
+`5dc185994ecd9e117ba9f8dc782e70360daf397a2348e57fd65b2b14a4ffdfe2`, review
+`93f986d6baa3dd8cf850328055c750b27b9873ae67da54f3360ae05c31b22e30`, and
+source bundle `7a024ceba895e670a6cf666b568b50e9bb32da110d1639c93e268d96ed5ecdaa`.
+The checked-plan T11 claim/review/source bundle are now the effective tuple:
+`61b009a55a4ab403b4a2391f3a0a4d5b5bf72b3b21bc684703ac1b52dacd33cd`,
+`c02a8fdd553533d844b4d49f13b3cda2658bc02a38589092172d1a4b394cdb83`, and
+`b5e54d763523e937734d03742b7323a0f1da191591cf7683a17ff142f01c233b`.
+The checked plan binding is `a9b386d613829e8f7e20b6e33f8e80898fa9a55f0b344dbb92ea64ac6804f3d0`,
+replacing the old unchecked `e3e11942a9ce26e30c402655f359696d2e2bb38fe7fb3e28ff2a2988e839d38e`.
+
+The T12 runtime authority inventory therefore grows from 22 to exactly 25
+unique paths by appending the checked-plan T11 claim, review, and canonical
+source bundle. The live T11 source is
+`ca7ea9b05b55a5185a5f08834b4fec4e748830f3eb24cac1a45f387e4d768575`; its CLI
+binding remains unchanged. Two fresh T12 suites passed `903/903`, with
+authority mutation coverage `103/103`, while exact scale semantics, parity,
+graph replay, matrices, and all downstream failure/status behavior remained
+unchanged. The T11 regression passed `1337/1337`; focused, complete, and graph
+replays remained respectively
+`13281332403bd7202c95a1bc9f0216bae1a1e5ead328a5e9569c0b30cd98bc81`,
+`427bfb6d3f97a077fa748f713e1d15ccc0eaac56b4485aedcb24fe2b7abe6d21`, and
+`dc15a94bb8bf373a62dcb1fba1598711ece0f99882082de7568eac6aab6aa474`.
+
+This is an administrative provenance rebind only: no scientific formula,
+threshold, scale rule, benchmark, real-data, label, composition prior, or
+Todo13 activity changed. Prior T11/T12/T3/T10 evidence remains immutable and
+Todo13 remains blocked pending fresh independent T12 review.
+
+### 2026-08-12 — Todo 12 checked-plan final evidence and cleanup correction
+
+The final checked-plan review correctly blocked the prior claim for missing
+required evidence and task-owned temporary cleanup. Its reported
+`5f47064b210a1f837cd3fc38c4494046af899ad7646a7cd9b0faf0a7aabbd12a`
+reconstruction is not byte-exact and cannot be reproduced from the prescribed
+operations. Independently replaying exactly those five test reversals—removing
+the checked-plan evidence segment, removing the three checked-plan authority
+paths from both lists, restoring the 22-path assertion, and restoring the
+historical stale-source constant—produced the sealed predecessor
+`112ffafe7a3db87994e9654c31dd9ef7c68c49cdbf4566b2a082b914918d6759` from the
+current `376847c800fec317acdc33444798869c65c87b4bb6c159c594594082cf6f6b71`.
+The corresponding edge-model reversal also reproduced
+`d1cce4047eaaf99faacb8c11dd3844669c5f6528a2bded011e004cb432417d46`.
+
+Current product bytes were not rewritten. The correction is evidence and
+cleanup only: the exact eigensolver and label-free boundaries remain unchanged.
+The fresh T12 suites passed `903/903` twice and T11 passed `1337/1337`, with
+the prior result/provenance and focused/complete/graph replays unchanged.
+The four checked-plan matrix/log outputs remained byte-identical. Only the
+enumerated task-owned `/tmp/opencode` paths were removed; unrelated temporary
+entries were not traversed or deleted. No benchmark, real-data, label,
+composition-prior, scientific-threshold, or Todo13 activity occurred.
+
+### 2026-08-12 — Todo 13 evaluator-v1 policy preregistration
+
+Todo 13's evaluator contract was under-specified in four decision-critical
+areas: absolute multi-view unary evidence, the common-null lifecycle,
+composition of complete scores around relative Todo 12 graph evidence, and
+partial-view/descriptive formulas. Following the authorized recommendation in
+`structured-t13-evaluator-policy-proposal.md`, evaluator-v1 is now frozen in
+`config/unit_assignment_structured_evaluator.toml` and bound to the checked plan
+and immutable Todo 8, T11, and T12 authorities.
+
+The chosen policy uses a log opinion pool of absolute joint view evidence with a
+shared C1/C2 active mask, available-view renormalization, structural omission,
+uniform all-view-missing output (`U=0`, posterior `(0.5,0.5)`, output `?`), and
+explicit `SKIPPED`, fallback, `FAIL`, and `BLOCKED` statuses. The common null is
+fit after unary and residualization but before conditional feasibility;
+conditional `SKIPPED` retains selected unary evidence without graph evidence,
+while numerical failures never fall back. Complete scores use the fixed
+`M_s=nodes_s+eligible_edges_s` denominator and Todo 12 only as a relative graph
+normalizer: `L_C1=sum U_C1+sum N_e` and
+`L_meta=sum U_selected+sum N_e+I_graph logZ_T12`.
+
+The gate is preregistered as 500 paired whole-scan-within-date bootstrap
+replicates, Type-7 quantiles, strict positive lower bounds and every-date
+positivity, plus an exhaustive inclusive upper-tail date sign test without a
+`+1` correction. Coverage, normalized entropy, strict view agreement, and the
+76+30+5=111 / +9=120 parameter accounting are descriptive/frozen metrics. These
+are non-label-derived evaluator scoring decisions, not benchmark calibration,
+physical calibration, or a benchmark claim. Rejected alternatives include
+model-specific null densities for all-view abstention, post-admission common
+null fitting, graph evidence treated as a complete likelihood, changed
+denominators, pooled/edge resampling, nearest-rank quantiles, strict sign tails,
+and a `+1` correction.
+
+The policy prerequisite is complete, but Todo 13 itself is unimplemented and
+unexecuted. A fresh independent Oracle owns validation after the terminal
+claim; Todo 13 remains blocked until that policy review is sealed PASS. No
+benchmark, real-data, label, expected-count, class-count, composition-prior,
+or producer/construction activity occurred.
+
+### 2026-08-13 — Todo 13 evaluator-policy correction
+
+The original Todo 13 evaluator-policy claim was independently rejected by
+Oracle session `ses_005da658cffeE4gMqcpl5dX1lh` at confidence `0.99`. Its claim,
+config, and validator remain immutable historical evidence and are not
+authoritative. The six blocker classes were non-unique semantics,
+pathless/unenforced authority, unguarded runtime and numerical gates,
+string/exception-only validation, incomplete evidence with a non-genuine
+prewrite guard, and overstated documentation.
+
+This append-only correction freezes implementation-unique unary, status,
+edge/null, graph-reference, complete-score, bootstrap/sign, metric, and
+serialization semantics. It binds canonical repository-relative authority paths,
+exact source-bundle members, Julia `1.12`/`1.12.6`, the checked Todo 12 and
+unchecked Todo 13 markers, and the existing `1e-4`/`1e4` scale constraints.
+Authority failures return structured `BLOCKED` reasons before formula,
+bootstrap, or graph work. The correction validator uses hand-computed and
+synthetic fixtures, structured mutation results with zero-work counters, and
+byte-identical canonical replay rather than string-presence or exception-only
+claims.
+
+No threshold, model, predecessor source/test, label boundary, GCV, `n_eff`,
+real-data, benchmark, or historical evidence bytes changed. Todo 12 remains
+checked; Todo 13 remains unchecked, unimplemented, and blocked. Validation here
+is policy/static/synthetic only: it creates no 10–20mer application processing
+claim and no benchmark claim. The correction is pending a fresh independent
+Oracle PASS and GateClosure; it does not authorize Todo 13.
+
+### 2026-08-13 — Todo 13 evaluator-policy correction2
+
+The first evaluator-policy correction was rejected by Oracle as fail-open. The
+live `f2795a8f...` config was replaced for correction2, while its exact 11,480
+byte preimage, failed claim/evidence, and failed review remain preserved as
+immutable historical artifacts and are explicitly non-authoritative.
+
+Correction2 closes the remaining defects: every policy value and role-specific
+authority binding is independently enforced; descriptor-based snapshots and
+before-return revalidation reject changed bytes, symlinks, hardlinks, identity
+collisions, and path substitution; runtime is checked before reads and before
+successful return; consumed versus terminal statuses are machine-readable; the
+selected model/unary-fit/T11/T12 reference chain and cardinalities are exact;
+entropy and pooled view-agreement populations are explicit; bootstrap/sign
+replays use actual seeded arithmetic; and mutation results report structured
+reasons with zero scientific work on static failures.
+
+No threshold, predecessor source/test, model, label boundary, GCV, `n_eff`,
+benchmark/application claim, real-data activity, or historical evidence byte was
+changed. Evidence is policy/static/synthetic only. Todo 12 remains checked,
+Todo 13 remains absent, unchecked, unimplemented, and blocked pending a fresh
+independent Oracle PASS and GateClosure. External labels remain limited to
+post-gate reporting and cannot authorize this prerequisite.
+
+### 2026-08-13 — Todo 13 evaluator-policy correction3 integration
+
+Correction3 lane integration was completed as a policy/static/synthetic
+evidence phase. The parent-reproduced policy lane (680 mutations) and authority
+lane (163 mutations) were losslessly bound as 843 projected rows; the
+integrator did not reimplement or independently rerun those lane mutations.
+The integrated validator independently checked the 202-key policy, 20 roles,
+32 bundle members, 35 authority snapshots, 42 claim/review checks, 13
+structural checks, semantic formula/reference/metric fixtures, 500 bootstrap
+replicates, 32 sign masks, final snapshot revalidation, and two integration
+probes. Two fresh integrated runs were byte-identical.
+
+Correction2 remains historical and blocked. No threshold, model, T8, T11, T12,
+GCV, `n_eff`, label, real-data, benchmark, grader, or composition-prior
+behavior changed. Todo 13 products remain absent and the Todo 13 marker remains
+unchecked; status remains `BLOCKED_PENDING_INDEPENDENT_REVIEW` pending parent
+acceptance, a fresh independent Oracle PASS, and reviewer-owned GateClosure.
+
+### 2026-08-13 — Todo 13 evaluator-policy correction4 provenance successor
+
+Correction4 is a provenance-only successor to the technically green correction3
+integration. Correction3's historical canonical publication was blocked because
+the canonical paths were replaced while correcting the combined-row projection.
+Correction4 freshly regenerates the six canonical static/synthetic files in two
+fresh Julia runs, requires run-1/run-2 byte equality with the current correction3
+outputs, and publishes run-1 exactly once using descriptor-relative exclusive
+no-replace creation with a durable receipt and replay.
+
+This successor changes no science, live evaluator configuration, threshold,
+model, T8/T11/T12, GCV, `n_eff`, label, benchmark, application, or Todo behavior.
+The evidence is static/synthetic only; Todo13 products remain absent and the
+phase remains `BLOCKED_PENDING_INDEPENDENT_REVIEW` pending parent acceptance, a
+fresh Oracle, and reviewer-owned GateClosure. No review or GateClosure is
+created by this worker.
+
+### 2026-08-14 — Todo 13 evaluator-policy correction5 terminalization caveat
+
+Correction5 records the parent-validated administrative terminalization of the
+failed correction4 publication. Correction4's six canonical `O_EXCL` bytes
+remain valid by reference and were not republished. Its `DoneClaim` is
+non-authoritative because of the predecessor-hash defect and the unqualified
+`close_checked` finalizer failure before final Boulder closure. The captured
+staging residue was cleaned descriptor-relatively; the failure artifacts remain
+preserved in Correction5 evidence.
+
+No science, configuration, threshold, GCV, `n_eff`, T8/T11/T12, label,
+benchmark, application, or Todo behavior changed. Todo13 remains blocked pending
+parent acceptance, a fresh independent Oracle PASS, and reviewer-owned
+GateClosure. This entry is append-only; no review, GateClosure, or Todo13
+product was created.
+
+### 2026-08-14 — Todo 13 evaluator-policy correction6 S0 staged evidence closure
+
+Correction5 cleanup remains valid, but Correction5 is non-authoritative because
+its evidence closure omitted the cleanup receipt and its terminal replay omitted
+all six required per-path canonical bindings. Correction6 S0 references the
+Correction4 canonical bytes without republishing them and stages only the
+administrative evidence required for parent-owned atomic publication. No policy,
+configuration, calibration, threshold, GCV, `n_eff`, T8, T11, T12, label,
+benchmark, application, or Todo behavior changed. Todo13 remains blocked pending
+parent atomic publication and acceptance, a fresh Oracle PASS, and
+reviewer-owned GateClosure.
+
+### 2026-08-14 — Correction6 S0 rejection and clean rebuild clarification
+
+The first hidden Correction6 S0 stage was rejected before S1 by the parent/Oracle
+because the publisher did not bind the parent checkpoint device/inode and the
+final repository-relative manifest, its self-test used unsafe check-then-write
+helpers, and several payload observations were unqualified temporal claims.
+The official Correction6 root and all external checkpoint/receipt controls
+remained absent; no rename, publication, receipt, review, or GateClosure
+occurred. The rejected stage was removed descriptor-relatively after verifying
+its exact 19-file identity and manifest, and a wholly new 19-file payload was
+assembled with the corrected publisher contract.
+
+The rebuild adds no scientific or policy change. It binds both manifest
+namespaces, classifies pre-rename failures as `not_committed`, post-rename
+failures as `ambiguous`, and complete verified publication as
+`committed_verified`; it creates no in-root receipt or post-publication files.
+Any eventual publication can be proven only by the parent-owned external
+checkpoint and receipt. Todo13 remains blocked pending parent acceptance of the
+receipt, a fresh Oracle PASS, and reviewer-owned GateClosure.
+
+### 2026-08-15 — Correction6 interrupted-state reconciliation clarification
+
+The prior rejection note's statement that a wholly new payload had already been
+assembled was premature. The interruption occurred after safe removal of the
+old rejected stage and the durable documentation update, but before the new
+Correction6 payload assembly. The parent then independently confirmed that the
+hidden stage, official root, checkpoint controls, and receipt controls were all
+absent, and that Correction3, Correction4, and Correction5 were unchanged.
+This resumed run assembled the corrected 19-file stage with the repaired
+publisher and payload-seal contracts. No publication, review, GateClosure,
+Todo13 product, or scientific/policy change occurred.
+
+### 2026-08-15 — Todo 13 grouped evaluator implementation and synthetic verification
+
+GateClosed evaluator-v1 policy was implemented as the named module
+`StructuredUnitAssignmentEvaluator` in
+`test/evaluate_structured_unit_assignment.jl`, with its focused suite in
+`test/test_structured_evaluator.jl`. The evaluator composes the existing T8,
+T11, and T12 boundaries, uses fold-wide training-only unary selection, preserves
+the fixed Todo 10 node/eligible-edge observations and common null, and emits the
+nine deterministic evaluator artifacts. It does not expose a synthetic or
+generic-factor production bypass.
+
+The first Phase 1 Oracle review rejected the implementation with twelve
+blockers covering nested scan/date identity, shared view masks, date-grouped
+inner selection, exception classification, common-null lifecycle, T11/T12
+reference use, outer C2 fallback, snapshot/publication lifecycle, provenance,
+and CLI firewall ordering. Two bounded remediation passes closed those defects.
+The final Phase 1 rereview passed at confidence `0.999` for evaluator SHA-256
+`3221ed25ed4ce0ac110170492f33ca4145c525d3437fed373dc8be7416acf825`.
+
+The final focused suite has 252 deterministic assertions. Two independent runs
+passed with byte-identical stdout SHA-256
+`158de38798a82d3fac0071e8cacfaaa3d896d159483073d6d9f5870a5c4f38b8`
+and empty stderr. It independently checks the absolute unary and scan-score
+formulas, date-clustered 500-seed bootstrap, complete inclusive sign space,
+fixed denominators, null cancellation, graph log evidence once per multi-node
+block, pooled metrics, held-out leakage sentinel, malformed topology,
+provenance/result binding, authority snapshots, CLI rejection, and atomic
+publication. The structured firewall also passed 379 assertions, and the T8
+boundary passed 3886 assertions with its frozen replay and source hashes.
+
+Attempts to rerun the entire standalone T11 and T12 research programs locally
+were stopped by execution timeouts after their completed testsets had remained
+green; these interrupted attempts are not reported as suite passes. Their
+immutable previously accepted 1337/1337 and 903/903 evidence remains the
+unchanged predecessor authority. No real scan, external correctness data,
+composition prior, model/threshold parameter, GCV, or `n_eff` behavior was used
+or changed. This establishes static/synthetic implementation evidence only, not
+a 10–20mer application or benchmark claim. Todo 13 remains unchecked pending
+the final independent implementation review and administrative closure.
+
+### 2026-08-15 — Todo 13 final-review remediation
+
+The first Todo 13 implementation Review 2 was `FAIL` at confidence `0.999`.
+Although the core score and provenance tests were green, the evaluator did not
+aggregate outer-fold terminals with the frozen `BLOCKED > FAIL > SKIPPED >
+PASS` precedence, empty terminal reports lacked the required unconsumed event,
+and the CLI publication path replaced an original blocked reason. The durable
+suite also covered only five-date sign enumeration and did not exercise enough
+snapshot-mutation and publication-state failures.
+
+The remediation now evaluates every canonical outer fold, catches only
+structured evaluator terminals, chooses the winning status and reason
+independently of input order, discards partial scientific rows on a non-PASS
+winner, and emits one zero-work terminal event. The production blocker receipt
+retains the original reason. Exhaustive sign enumeration is a private pure
+helper used by production and checked independently for every `K=1…13`, with
+inclusive ties, exact powers-of-two denominators, no correction term, and the
+strict boundary between `1/16` and `1/32`. Snapshot bytes and directory
+membership are mutation-tested; valid and failed context publication plus
+`not_committed`, `ambiguous`, and `committed_verified` classifications are
+covered without adding a production fault or synthetic CLI option.
+
+One attempted test-only follow-up accidentally restored the pre-remediation
+evaluator bytes despite its assigned scope. Parent SHA checks rejected that
+state before acceptance, and a fresh targeted evaluator lane restored the
+changes without modifying the tests. The reconciled evaluator SHA-256 is
+`7b4717077c24f122298e61cd944d55ab439ef278b32a76ec8a6fa8049735dd2e`;
+the test SHA-256 is
+`86d758174968851e50d64fced8369749ac128f23384b879b856e72b27a0dbe78`.
+Two parent runs passed 65,945 assertions with byte-identical stdout SHA-256
+`32622f50c4090e5b7b6090df7865be205847a59fed65a5533afc2b6950693e72`
+and empty stderr. The 48 focused parent probes and 379 firewall assertions also
+passed.
+
+No real scan, external correctness data, composition prior, parameter,
+threshold, GCV, `n_eff`, or predecessor authority changed. This remains
+static/synthetic implementation evidence only. Todo 13 remains unchecked and
+no PASS closure is claimed until a fresh independent Review 2 accepts this
+exact reconciled state.
+
+### 2026-08-15 — Todo 13 parent-probe count correction
+
+The parent probe log contains four passing testsets with `25 + 5 + 6 + 7 =
+43` assertions. The two earlier journal statements of `48` were an arithmetic
+reporting error, not five missing or failed assertions. Todo 13 closure evidence
+must cite the truthful `43/43` count and the exact probe-log SHA-256
+`e14aa1083b3e122ba1a6cb3e4714ba24601225a644df259d1a34db52d4f75a9f`.
+
+The first closure staging claim also described itself as already published.
+Oracle rejected that administrative state before final-root publication. The
+staging root was removed, the final `closure-v1` root remained absent, and no
+plan checkbox or Boulder closure state changed. The rebuilt staged claim must
+remain explicitly pending atomic publication; only a post-publication external
+receipt may assert that publication completed.
+
+### 2026-08-15 — Todo 13 terminal closure
+
+Fresh Oracle Review 2 accepted the reconciled evaluator and tests at confidence
+`0.999`, closing `R2-01`, `R2-02`, and `R2-03`. The immutable implementation
+evidence root contains 27 files / 47,071 bytes. Its root manifest SHA-256 is
+`a8f40846213cd976e4ffdd1c8d40e078718f30a917d9ad5ffd4fd38ef3a76aef`
+with 26/26 manifested members; the claim and review hashes are respectively
+`30cdfbf9be939104f76b93aa0ed610b17c5db20079af0ae32dfe781cecccc183`
+and `1b383bda991f113b31923700a57731af56834c4ef0c2e7b3e8743e6ee24981c0`.
+
+The no-replace directory rename committed the staged root, but the publisher
+then stopped before its external receipt because it compared dictionaries that
+contained stage-path versus final-path objects. Independent reconciliation
+confirmed identical device/inode `65028/34566775`, all 27 regular read-only
+files, every root-manifest hash, final-root mode `0555`, and stage ENOENT. No
+final-root byte was written after rename. The external receipt classifies the
+state as `committed_verified_after_interrupted_parent_check` and has SHA-256
+`59cf1c60006c549c6df6c8c07e9e9915494d5ed08d392095fa9a1cbfa5896249`.
+
+The Todo 13 plan marker was changed by exactly one byte to checked; the checked
+plan SHA-256 is
+`6aa00c9b2f5139149270ef8fb47e5caf9b6cb070c7a0bcba62c261f65d3de26e`.
+Boulder now records Todo 13 `PASS`/closed with final SHA-256
+`508a7444d9f4bd03f9ed3be1631e114c316062dc24f414c3d62d352326c7e92f`
+and 198,074 bytes. The evaluator config and all T8/T11/T12 authorities remain
+unchanged.
+
+This closes only the static/synthetic Todo 13 implementation. No real scan or
+application validation was performed; interrupted local T11/T12 reruns are not
+passes, and only their unchanged accepted 1337/1337 and 903/903 evidence is
+cited. Post-rename ambiguity is covered by source control-flow and classifier
+tests, not an induced kernel/fsync failure. No later Todo is authorized by this
+closure.
+
+### 2026-08-15 — Todo 13 postclosure runtime-authority rebind
+
+The valid Todo 13 implementation closure exposed a postclosure lifecycle bug:
+the production evaluator still treated the pre-implementation Plan/Boulder
+bytes and prerequisite `todo13_may_start`/product-absence facts as permanent
+runtime invariants. Consequently, checking Todo 13 and recording its authorized
+closure caused the real authority path to reject the evaluator it had just
+accepted. Rolling the Plan or Boulder back was forbidden.
+
+The runtime authority was rebound without changing the evaluator config or any
+scientific/model/scoring/selection/threshold behavior. Live Plan and Boulder
+bytes are no longer runtime snapshots; their hashes remain explicitly qualified
+historical provenance. Runtime authority instead validates the immutable
+prerequisite GateClosure/review and the complete implementation closure. All 27
+closure files and three exact directory inventories are retained through the
+production context and revalidated before computation and publication, including
+read-only modes, identities, bytes, links, and membership. Normal and blocker
+receipts are now schema version 2, omit unqualified Plan/Boulder hashes, and state
+`live_plan_boulder_runtime_authority=false`.
+
+The final evaluator and test SHA-256 values are respectively
+`c1d467e9a7bdc0767230e4d9d72bb08e159e1b8a6c9b3a293e3e14d16fc26121`
+and
+`964d7af75d48c5af0d189ebb93f8d400b3c0b53fbd29dfc2f9d05e22a908e103`;
+the evaluator config remains
+`ec0546096b3c4742cd86d8c3d40788a5894d20fc5a4702b0318581f10f8b0b90`.
+Two parent runs each passed 66,017 assertions with byte-identical stdout
+SHA-256 `4626eafd12d0cb4b18a6d08e335aa5eaaf0d4bfe5c48356a844536b383040486`
+and empty stderr. The live authority probe passed with digest
+`93b0c2778a24094b8283917dca7060274b9d856a932a5e03419756d7d7e072c8`,
+59 snapshots, 27 closure snapshots, and three inventories. The structured
+firewall passed 379/379 and the CLI help preflight passed.
+
+Fresh Oracle review passed at confidence `0.999`. The immutable correction root
+contains 22 files in three directories / 225,183 bytes. Its 21-entry root
+manifest SHA-256 is
+`4f868912be545952575a076e27635bf062a4d2e7c5518c32ecd54f239c89c7fc`;
+claim/review hashes are
+`4392ac2d8ee7084015e558652e5890f2a65aee4b61c65f151ef93f16bf936456`
+and
+`6634f9d6f41a9d90802d750499b34b052c4bc898f83893bda6cf84b8cde27a5e`.
+The no-replace rename preserved device/inode `65028/34803464`; the stage is
+absent. Checkpoint and publication-receipt hashes are
+`49ba8d29f23db65813030179c85ffccd7476dfb9e84e3cd9f316c1896c6027ab`
+and
+`af6adfb3ceb9b3f2d6e7a902621bd1e25818c6fd427a0a56430ca13770575842`.
+
+Boulder now records evaluator runtime readiness at SHA-256
+`8c4d6e15761a79de807ac0a7ddd48302750c9f7486925a9d86750d20a782bcbe`
+and 204,075 bytes. This is static/synthetic authority evidence only: no real
+scan or application validation was performed, and this seal authorizes no later
+Todo.
+
+### 2026-08-20 — Receipt-gated evaluator publication fallback
+
+Oracle review identified a real filesystem defect on Viper `/ptmp`: directory
+`renameat2(RENAME_NOREPLACE)` returned numeric `EINVAL`, so blocker publication
+returned status 2 without an output receipt. The evaluator's preferred
+renameat2 path remains unchanged for filesystems that support it. The bounded
+correction adds a fallback only for `EINVAL`, `ENOSYS`, and
+`EOPNOTSUPP`/`ENOTSUP`; other rename errors remain fail-closed.
+
+The fallback reserves a mode-0700 destination exclusively, transfers sorted
+non-receipt files with no-overwrite hard links, and makes a completely fsynced
+`receipt.toml` visible last. Receipt visibility begins the ambiguous state;
+the destination is never cleaned after that point unless all exact inventory,
+identity, mode, byte, fsync, and production-context checks pass. Pre-receipt
+failures leave a no-receipt collision residue, while private stage cleanup is
+allowed only after device/inode revalidation. Existing output is accepted only
+as an exact nine-file report or receipt-only blocker publication; directory
+existence alone is not a committed result. This protocol is separate from the
+parent-owned immutable evidence publisher and makes no scientific or benchmark
+claim.
+
+RED coverage against the fail-open publication seam recorded 66,445 passes,
+4 failures, and 6 errors. After the fallback implementation, the focused
+evaluator suite passed 66,513 assertions with zero failures/errors; the final
+required two-run validation is recorded by the parent orchestrator. Synthetic
+coverage includes preferred and errno-gated fallback paths, blocker/report
+sets, collisions and residue, races, wrong modes and links, fsync failures,
+context mutation before/after receipt, interruption states, and identity-safe
+stage cleanup.
+
+The final focused suite also includes the explicit numeric `ENOTSUP` alias
+probe: both validation runs passed 66,515 assertions with zero failures,
+errors, or broken tests. No public replay was run and no downstream or
+immutable-evidence publication authorization is implied.
+
+Clarification: the two direct Julia 1.12.6 runs were executed in this bounded
+validation; the parent-owned item still pending is the real Viper capability
+and four-main probe.
+
+### 2026-08-20 — Publication errno and receipt-state correction
+
+Correction to the fallback record above: on Linux this lane accepts exactly
+numeric errno `22` (`EINVAL`), `38` (`ENOSYS`), and `95`
+(`EOPNOTSUPP`, also `ENOTSUP`). Numeric `45` is `EL2NSYNC` and is rejected;
+there is no string-based errno parsing or alias acceptance. The receipt state
+is now marked `ambiguous` immediately after a successful receipt hard link, and
+also when a concurrent receipt collision is detected. The preferred rename
+path marks the state ambiguous immediately after successful no-replace rename,
+before destination inspection.
+
+The exact-case RED run recorded 66,552 passes and 2 failures; the corrected
+GREEN run passed 66,554 assertions with zero failures/errors. Added checks cover
+mode-0700 reservation, identity-bracketed payload/receipt bytes, path-specific
+pre/post-receipt fsync faults, and separate payload/receipt no-overwrite
+collisions. No scientific, benchmark, configuration, T12, Plan, or evidence
+bytes were changed.
+
+### 2026-08-20 — Runtime-v3 Viper closure and public replay
+
+The final receipt-gated evaluator bytes are
+`a9eccab2747602ee107af73f83dc4a1d69b90c2e457f64ddd1ce8595704178fa`
+for `evaluate_structured_unit_assignment.jl` and
+`a243489c59b9934d6c6992ba0e43431a0abb0f70d7016deb26ab21c8584be7a9`
+for its test. The runtime-v3 config remained
+`a0a04794b346f351c61a281384869bcde3f378aa0836c9271197d4004488586e`.
+The resulting authority contains 153 snapshots and 35 inventories, with digest
+`9eb003f7f329b359f3d6cb08dc4c8b35f4363895d1dd6906c8c655689127ed8d`.
+Two parent Julia 1.12.6 runs passed 66,553 assertions each with empty stderr.
+
+Viper job `10971601` preserved the real `/ptmp` capability and four-main
+probe. It completed `0:0`: `renameat2(RENAME_NOREPLACE)` returned numeric
+errno 22, hard links passed, and the v3, v2, v1, and historical blocker calls
+each returned status 2 with exactly one config-bound `receipt.toml` and no
+publication-layer error. Their receipt hashes are respectively
+`dfbcfc326850a10fa6b350f0a6bd0b5713b6e630fac69ab3f01ebeda78dbde53`,
+`26bfd2e6a2a3b17ad51758a53715d385af64fc9b27ff58d806120d645f357391`,
+`f288c3360ba1dc79da3e12e7f497e08075a7ead68a7dde9e92f8ddd281b40c05`,
+and `0778029855a04f76b6774b21906f97fb98752ef7d32c7a664804cc52305f8ba9`.
+The eight raw probe files and receipts are bound by the retained
+`probe-files.sha256`; capability, four-main, and Slurm stderr are empty.
+
+The final serial public replay, Viper array job `10971530`, completed both
+tasks `0:0` in 8 min 41 s and 8 min 52 s. Both captured suite outputs are
+byte-identical at
+`2066b570205f33c89952cbd3fbe6eafda28d31c13f031fcea7be185b6bc00a18`
+and report 66,562 assertions with zero failures, errors, or broken tests; both
+Slurm stderr files are empty. The common public identity is status `PASS`,
+evidence
+`3c8fb798119209647e362c5fe94c1848d2a636d8cd28693001a729ddf1f6b9bf`,
+T12 result
+`12ab5fe91ed6ea3bbb061519fa297f95bfdbc785418d9de12dd83efe14c50dec`,
+T12 provenance
+`60482aa611455c78d8fdf2522da3c2477edf10dc41f42adccef8ad26ee02b639`,
+and final decision
+`4bdb18827ecf559156d51190f5a499181d2041ac4f44f31443b6c12659782938`.
+The T12 result/provenance identities are unchanged from the pre-fallback
+diagnostic, so the portability correction changed no scientific output.
+
+This closes runtime validation only. T14 remains forbidden until the
+append-only T13 runtime-v3 evidence root is independently reviewed and
+atomically published; no Plan checkbox, benchmark grade, or production
+configuration was changed here.

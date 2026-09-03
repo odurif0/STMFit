@@ -663,6 +663,36 @@ map/mask pairs together with the provenance writer—as one recoverable generati
 under the same gate-last protocol, so provenance is visible only for a complete
 old or complete new generation and a partial install never exposes a mixed set.
 
+### Structured evaluator publication
+
+The structured evaluator prefers Linux `renameat2(RENAME_NOREPLACE)` for its
+already-fsynced private stage. Some filesystems reject directory publication
+with `EINVAL`; the only fallback cases are numeric `EINVAL`, `ENOSYS`, and
+`EOPNOTSUPP`/`ENOTSUP`. Other rename errors, including `EXDEV`, `EIO`, `EPERM`,
+and `EACCES`, fail closed and do not enter the fallback.
+
+The fallback exclusively reserves the destination with a mode-`0700` `mkdir`,
+records and continuously revalidates its device/inode, and transfers sorted
+non-receipt files with no-overwrite hard links. The staged `receipt.toml` is
+hard-linked last and is the commit marker: visibility of that receipt makes the
+publication ambiguous until destination/stage fsyncs, exact bytes and
+inventory, file/directory modes, regular non-symlink single-link identities,
+and production-context revalidation all pass. Only then is the result
+`committed_verified`.
+
+An interruption before reservation cleans only an identity-verified private
+stage. A reservation failure before receipt leaves a no-receipt residue, which
+is a collision on retry; failures at or after receipt never remove the
+destination. Existing output is accepted only when it is the complete expected
+set (nine report files or the receipt-only blocker set), with a mode-`0700`
+directory, mode-`0644` regular non-symlink single-link files, and exact bytes.
+Empty, extra, missing, symlinked, hard-linked, wrong-mode, or differing output
+is never adopted or overwritten.
+
+This receipt-gated fallback is the evaluator's ordinary output transaction; it
+is distinct from the parent-owned immutable evidence publisher used for
+authority roots and publication evidence.
+
 The public hierarchical two-component EM fit validates all controls before data
 or fit work: `n_starts` is a positive non-`Bool` integer representable as `Int`,
 `first_seed` is a non-`Bool` integer representable as `Int` satisfying

@@ -48,7 +48,7 @@ recoverable from the current code alone.
 
 ## Setup and focused verification
 
-CI uses Julia 1.11 and explicitly develops local packages before instantiate.
+CI uses Julia 1.12 and explicitly develops local packages before instantiate.
 Use the same bootstrap on a clean depot; do not hand-edit `Manifest.toml`:
 
 ```bash
