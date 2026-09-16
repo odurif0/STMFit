@@ -5349,3 +5349,22 @@ distinction from a first moment, invalid patches/columns/keys, and unchanged
 finite-pair voting arithmetic. `julia --project=.
 test/test_reconstructed_unit_assignment.jl` passes **31 assertions** on Julia
 1.13. Next are native constant-current/Fisher ports and raw-to-QC integration.
+
+### 2026-09-16 — External reconstruction comparison and native CLI check
+
+`test/compare_reconstructed_champion.jl` compares two saved prediction tables
+without fitting or choosing a descriptor. It reports every key in their union,
+missing/extra lobes, assignment disagreements, and reported confidence deltas.
+An optional external benchmark manifest only prepares rows for the existing,
+separate grader. Production cannot accept a reference/benchmark option and never
+calls this report. Matching aggregate accuracy is deliberately not used as a
+reconstruction criterion; exact assignment/confidence equality is reported
+separately and only establishes equality on the supplied inputs.
+
+The external comparison tests pass 9 assertions on synthetic changed/identical/
+partial tables and benchmark-only row export. The descriptor suite now passes
+32 assertions, including execution of its actual CLI. That CLI test caught and
+fixed a Julia macro-parsing error in the main guard (`@__FILE__` needs a function
+boundary before `&&`). No scientific setting changed. The raw-to-QC native
+wrapper is being integrated; its first 8 input-boundary checks pass, but a full
+real-data run and champion comparison have not yet been performed.

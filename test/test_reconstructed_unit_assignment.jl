@@ -83,3 +83,8 @@ end
         @test actual[("unknown.sxm", 3)]["invalid_reason"] == "missing_gmm"
     end
 end
+
+@testset "Descriptor CLI is runnable on the active Julia" begin
+    cmd = `$(Base.julia_cmd()) --project=$(dirname(@__DIR__)) $(joinpath(@__DIR__, "build_reconstructed_descriptor.jl")) --help`
+    @test occursin("patch_u_asym_reconstructed", read(cmd, String))
+end

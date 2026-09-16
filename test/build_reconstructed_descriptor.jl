@@ -22,4 +22,4 @@ function main(args=ARGS)
     augment_descriptor(opts["--features"], opts["--patches"], opts["--out"], opts["--config"])
 end
 
-abspath(PROGRAM_FILE) == @__FILE__ && main()
+abspath(PROGRAM_FILE) == abspath(@__FILE__) && main()
