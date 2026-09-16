@@ -1,7 +1,7 @@
 #!/usr/bin/env julia
 
 module StructuredUnitAssignmentEvaluator
-using Printf, Random, SHA, Statistics, TOML
+using Printf, Random, SHA, Statistics, TOML, LinearAlgebra
 include(joinpath(@__DIR__, "lib", "structured_unit_assignment.jl"))
 include(joinpath(@__DIR__, "lib", "structured_assignment", "edge_admission.jl"))
 include(joinpath(@__DIR__, "lib", "structured_assignment", "chain_inference.jl"))
@@ -1494,7 +1494,8 @@ function _result_binding_hash(provenance::String,
     ])
 end
 
-function _receipt_bytes(report::EvaluatorReport, tsv::Dict{String,Vector{UInt8}})
+function _legacy_receipt_bytes(report::EvaluatorReport,
+                               tsv::Dict{String,Vector{UInt8}})
     io = IOBuffer()
     println(io, "schema = ", repr(_SCHEMA * "_receipt_v2"))
     println(io, "schema_version = 2")
@@ -1540,10 +1541,56 @@ function _receipt_bytes(report::EvaluatorReport, tsv::Dict{String,Vector{UInt8}}
     return take!(io)
 end
 
-function report_files(report::EvaluatorReport)::Dict{String,Vector{UInt8}}
+# True successor activated report receipt.  It names the activation, spec,
+# review, source and Boulder/publication bindings and deliberately omits the
+# historical GateClosure/closure-v1/plan authority fields, which do not certify
+# an activated run.  The earlier transition `publication` record is a distinct
+# upstream artifact; this receipt cannot certify its own publication.
+function _activated_receipt_bytes(report::EvaluatorReport,
+                                  tsv::Dict{String,Vector{UInt8}},
+                                  activation)
+    io = IOBuffer()
+    println(io, "schema = ", repr(_T13_ACTIVATED_REPORT_SCHEMA))
+    println(io, "schema_version = 2")
+    println(io, "status = ", repr(String(report.status)))
+    println(io, "reason = ", repr(String(report.reason)))
+    println(io, "authority_sha256 = ", repr(report.authority_sha256))
+    println(io, "universe_sha256 = ", repr(report.universe_sha256))
+    println(io, "evaluator_source_sha256 = ", repr(report.source_sha256))
+    println(io, "evaluator_config_sha256 = ", repr(_report_config_sha256(report)))
+    _t13_activation_receipt_lines(io, activation)
+    println(io, "result_sha256 = ", repr(report.result_sha256))
+    println(io, "provenance_sha256 = ", repr(report.provenance_sha256))
+    println(io, "result_tsv_sha256 = ", repr(_canonical_tsv_hash(tsv)))
+    println(io, "file_count = 9")
+    println(io, "serialization_encoding = \"UTF-8\"")
+    println(io, "serialization_line_ending = \"LF\"")
+    println(io, "serialization_final_lf = true")
+    println(io, "serialization_float_format = \"%.17g\"")
+    println(io, "serialization_missing_token = \"NA\"")
+    println(io, "serialization_boolean_format = \"lowercase\"")
+    println(io, "files = ", repr(collect(_FILES)))
+    for name in sort(collect(keys(tsv)))
+        println(io)
+        println(io, "[artifacts.", repr(name), "]")
+        println(io, "sha256 = ", repr(_hash_bytes(tsv[name])))
+        println(io, "bytes = ", length(tsv[name]))
+        println(io, "data_rows = ", max(0, count(==(UInt8('\n')), tsv[name]) - 1))
+    end
+    return take!(io)
+end
+
+function _receipt_bytes(report::EvaluatorReport, tsv::Dict{String,Vector{UInt8}};
+                        activation=nothing)
+    activation === nothing && return _legacy_receipt_bytes(report, tsv)
+    return _activated_receipt_bytes(report, tsv, activation)
+end
+
+function report_files(report::EvaluatorReport;
+                      activation=nothing)::Dict{String,Vector{UInt8}}
     tsv = _tsv_files(report)
     files = copy(tsv)
-    files["receipt.toml"] = _receipt_bytes(report, tsv)
+    files["receipt.toml"] = _receipt_bytes(report, tsv; activation=activation)
     sort(collect(keys(files))) == sort(collect(_FILES)) ||
         throw(ArgumentError("report file set differs from the frozen contract"))
     return Dict(name => files[name] for name in _FILES)
@@ -1558,11 +1605,75 @@ struct _Snapshot
     nlink::UInt64
 end
 
+# Dedicated Main-control object for the owner-selected "Main Boulder only"
+# model.  It is deliberately separate from the ordinary R-relative snapshot
+# vector: the execution root R owns code/inputs/outputs, while the single live
+# `.omo/boulder.json` lives under the canonical Main root M.  The object holds
+# the one fixed control-file snapshot plus the approved modes and the captured
+# M / M/.omo directory identities.  It is an integrity/scope object, not a
+# signer or process attestation; the externally reviewed launch pin remains the
+# trust anchor for which M was reviewed.
+struct _MainControl
+    root::String
+    file::_Snapshot
+    root_mode::UInt
+    parent_mode::UInt
+    file_mode::UInt
+    root_identity::Tuple{UInt64,UInt64}
+    parent_identity::Tuple{UInt64,UInt64}
+    preimage_sha256::String
+    postimage_sha256::String
+end
+
+# Activation administrative bindings.  These are integrity/scope identities for
+# an externally reviewed activation launch; they are not a signer identity and
+# they never carry a digest of the receipt itself (that would be a cycle).
+struct _ActivationBindings
+    scope::String
+    receipt_path::String
+    receipt_sha256::String
+    spec_path::String
+    spec_sha256::String
+    source_review_path::String
+    source_review_sha256::String
+    transition_review_path::String
+    transition_review_sha256::String
+    publication_path::String
+    publication_sha256::String
+    boulder_preimage_path::String
+    boulder_preimage_sha256::String
+    boulder_postimage_path::String
+    boulder_postimage_sha256::String
+    entrypoint_path::String
+    entrypoint_sha256::String
+    destination::String
+    modes::Dict{String,UInt}
+    root::String
+    command_body::Vector{String}
+    directory_identities::Dict{String,Tuple{UInt64,UInt64}}
+    control::_MainControl
+end
+
 struct _ProductionContext
     root::String
     snapshots::Vector{_Snapshot}
     inventories::Vector{Tuple{String,Vector{String}}}
     manifest_sha256::String
+    activation::Union{Nothing,_ActivationBindings}
+end
+
+_ProductionContext(root::String, snapshots::Vector{_Snapshot},
+                   inventories::Vector{Tuple{String,Vector{String}}},
+                   manifest_sha256::String) =
+    _ProductionContext(root, snapshots, inventories, manifest_sha256, nothing)
+
+struct _ActivationAuthorization
+    root::String
+    bindings::_ActivationBindings
+    snapshots::Vector{_Snapshot}
+    inventories::Vector{Tuple{String,Vector{String}}}
+    spec_files::Vector{NamedTuple}
+    spec_directories::Vector{NamedTuple}
 end
 
 const _PRODUCTION_CONTEXT = IdDict{Any,_ProductionContext}()
@@ -1571,6 +1682,9 @@ const _PRODUCTION_SELECTION_METADATA = IdDict{Any,Any}()
 function _report_config_sha256(report::EvaluatorReport)::String
     for (input, context) in _PRODUCTION_CONTEXT
         input.authority_sha256 == report.authority_sha256 || continue
+        runtime_v4 = joinpath(context.root, _RUNTIME_V4_CONFIG_PATH)
+        any(snapshot.path == runtime_v4 for snapshot in context.snapshots) &&
+            return _RUNTIME_V4_CONFIG_SHA256
         runtime_v3 = joinpath(context.root, _RUNTIME_V3_CONFIG_PATH)
         any(snapshot.path == runtime_v3 for snapshot in context.snapshots) &&
             return _RUNTIME_V3_CONFIG_SHA256
@@ -1607,8 +1721,152 @@ const _RUNTIME_V3_CONFIG_PATH =
     "config/unit_assignment_structured_evaluator_runtime_v3.toml"
 const _RUNTIME_V3_CONFIG_SHA256 =
     "a0a04794b346f351c61a281384869bcde3f378aa0836c9271197d4004488586e"
-const _RUNTIME_CONFIG_PATH = _RUNTIME_V1_CONFIG_PATH
-const _RUNTIME_CONFIG_SHA256 = _RUNTIME_V1_CONFIG_SHA256
+const _RUNTIME_V4_CONFIG_PATH =
+    "config/unit_assignment_structured_evaluator_runtime_v4.toml"
+const _RUNTIME_V4_CONFIG_SHA256 =
+    "abe22ed5047c898f594067d4a54cbe8fcc99c15fef17b429fa366f64c255547b"
+const _RUNTIME_CONFIG_PATH = _RUNTIME_V4_CONFIG_PATH
+const _RUNTIME_CONFIG_SHA256 = _RUNTIME_V4_CONFIG_SHA256
+const _RUNTIME_V4_JULIA = v"1.12.7"
+const _RUNTIME_V4_EXECUTABLE_SHA256 =
+    "582718c20c563d824b88a08e2a9d0afcf5015b3053f425697cecc79ec4e9ea36"
+const _RUNTIME_V4_SYSIMAGE_SHA256 =
+    "03041fa63edac21123a7d4ced06364243c5b9653f4ceb6ba618f69876eefa66f"
+const _RUNTIME_V4_BOULDER_SHA256 =
+    "e509c919734c8110ab7ad4a7e2d475a552a0f2fca5f3533c9863683be1ac9133"
+const _RUNTIME_V4_AUTHORITY_SCHEMA = "schema=structured-evaluator-authority-v6"
+
+# Runtime-v4 is an administrative Gate5 candidate.  Keep its complete
+# authority binding in this source so a TOML table cannot silently downgrade a
+# path/hash/mode check to a type-only check.  The config byte digest is checked
+# before TOML parsing; these values are the second, semantic fail-closed
+# boundary used by the audit and synthetic contract seams.
+const _RUNTIME_V4_AUTHORITY_BINDINGS = (
+    ("t11_source_tar_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t11-full-chain-julia-1.12.7-v1/v7-run/input/source.tar",
+     "t11_source_tar_sha256", "aaf515357901c3276edf867c04ecfd0229b494f836ddd72ef3f0effed9f367cc",
+     "t11_source_tar_mode", "0444"),
+    ("t11_source_manifest_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t11-full-chain-julia-1.12.7-v1/v7-run/input/source-manifest.tsv",
+     "t11_source_manifest_sha256", "2e7696824e208ba0c3ad960a08e452f81d79f892c776a1ebd0b28cbf1a196714",
+     "t11_source_manifest_mode", "0444"),
+    ("t11_source_symlink_manifest_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t11-full-chain-julia-1.12.7-v1/v7-run/input/source-symlink-manifest.tsv",
+     "t11_source_symlink_manifest_sha256", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "t11_source_symlink_manifest_mode", "0444"),
+    ("t11_test_path", "test/test_structured_edge_admission.jl",
+     "t11_test_sha256", "bff69a629ef99056bdf888478b15633abc921c29cd268d5625c7de9f8ed97e3c",
+     "t11_test_mode", "0644"),
+    ("t11_cli_path", "test/evaluate_structured_edge_admission.jl",
+     "t11_cli_sha256", "77c7b2d5f1b9f73ae5c3bdfd310cbbad75771f5a38c5243488f4c2cc6db7ce27",
+     "t11_cli_mode", "0644"),
+    ("t11_claim_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t11-full-chain-julia-1.12.7-v1/T11RuntimeAuthority.json",
+     "t11_claim_sha256", "36ae27e177025c39cf7c41af0bf6ac4f27e43b263c04628de53941a07b6e937a",
+     "t11_claim_mode", "0444"),
+    ("t11_claim_sidecar_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t11-full-chain-julia-1.12.7-v1/T11RuntimeAuthority.sha256",
+     "t11_claim_sidecar_sha256", "7e30c20c92dddcf621565fab73585befcc59856479a6e6d0230c6403106c9a99",
+     "t11_claim_sidecar_mode", "0444"),
+    ("t11_review_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t11-full-chain-julia-1.12.7-v1/review/AdversarialVerify.json",
+     "t11_review_sha256", "dbf3f11801bc6ec4e06afb73d516523c1c88c577493891e81c0fbee9f660e537",
+     "t11_review_mode", "0644"),
+    ("t11_review_sidecar_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t11-full-chain-julia-1.12.7-v1/review/AdversarialVerify.sha256",
+     "t11_review_sidecar_sha256", "eed9d31c7585701ca99d6ab4416368e97f6128f7420b0023e5945df67f074c0c",
+     "t11_review_sidecar_mode", "0644"),
+    ("t11_publication_receipt_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t11-full-chain-julia-1.12.7-v1/PublicationReceipt.json",
+     "t11_publication_receipt_sha256", "38b4546324843d478b6d14e0fdeaa49ced5aa0d9c81011f9bf5ac864a34e1f26",
+     "t11_publication_receipt_mode", "0444"),
+    ("t11_publication_receipt_sidecar_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t11-full-chain-julia-1.12.7-v1/PublicationReceipt.sha256",
+     "t11_publication_receipt_sidecar_sha256", "b3bbcdacb0dcb929807a48e8ca0c079005761845db7a38fdcc93ce9871384d9f",
+     "t11_publication_receipt_sidecar_mode", "0444"),
+    ("t11_payload_manifest_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t11-full-chain-julia-1.12.7-v1/payload-files.sha256",
+     "t11_payload_manifest_sha256", "6aa2aad9c19b0fded88d0717c9321e13f2d5d3b10cde871246105a817744a36f",
+     "t11_payload_manifest_mode", "0444"),
+    ("t11_payload_manifest_sidecar_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t11-full-chain-julia-1.12.7-v1/payload-files.sha256.sha256",
+     "t11_payload_manifest_sidecar_sha256", "232a33d0bf4ee8ad5fda05f738e85de316e05933f5c3a82a834ca271b038130a",
+     "t11_payload_manifest_sidecar_mode", "0444"),
+    ("t12_source_tar_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t12-full-chain-julia-1.12.7-v1/evidence/v9-input/source.tar",
+     "t12_source_tar_sha256", "e3538df88145753fc4eb65b1b5a0032e01391ef35f2ce54f16a1aede837b52b6",
+     "t12_source_tar_mode", "0400"),
+    ("t12_source_manifest_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t12-full-chain-julia-1.12.7-v1/evidence/v9-input/source-manifest.tsv",
+     "t12_source_manifest_sha256", "ab9deb0c68f349a1908d9dba81a5cc5187d85332846ba9f0e9855b88bff9a3b2",
+     "t12_source_manifest_mode", "0400"),
+    ("t12_source_symlink_manifest_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t12-full-chain-julia-1.12.7-v1/evidence/v9-input/source-symlink-manifest.tsv",
+     "t12_source_symlink_manifest_sha256", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+     "t12_source_symlink_manifest_mode", "0400"),
+    ("t12_edge_model_path", "test/lib/structured_assignment/edge_model.jl",
+     "t12_edge_model_sha256", "216571a5c74ba45293ab05b24c3363b05cb77fba6bcf3c690adcb57b42e3a146",
+     "t12_edge_model_mode", "0644"),
+    ("t12_chain_path", "test/lib/structured_assignment/chain_inference.jl",
+     "t12_chain_sha256", "4c5b84339e61a1bc6dadba12373b8b98745f30a3c4359a5c8e92a70e24d96598",
+     "t12_chain_mode", "0644"),
+    ("t12_test_path", "test/test_structured_chain_inference.jl",
+     "t12_test_sha256", "8e0a2d6a4e965bb0e00f290299264f0a75ead553c6d04a95f87ad7815205daeb",
+     "t12_test_mode", "0644"),
+    ("t12_claim_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t12-full-chain-julia-1.12.7-v1/claim/DoneClaim.json",
+     "t12_claim_sha256", "ab0ca8cfe5651998d3e002d3a158c58a113b5f00f5eb3feb88d6091d8d1b984f",
+     "t12_claim_mode", "0400"),
+    ("t12_claim_sidecar_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t12-full-chain-julia-1.12.7-v1/claim/DoneClaim.json.sha256",
+     "t12_claim_sidecar_sha256", "84a07bcc25ae0106209652e1f1dafa5f7e057981f6d98b277d821a9d3be7820f",
+     "t12_claim_sidecar_mode", "0400"),
+    ("t12_review_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t12-full-chain-julia-1.12.7-v1/review/AdversarialVerify.json",
+     "t12_review_sha256", "28242978aa521a02c0783441605b09e733019b64ef6f5a5c55334c4a63df7946",
+     "t12_review_mode", "0400"),
+    ("t12_review_sidecar_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t12-full-chain-julia-1.12.7-v1/review/AdversarialVerify.sha256",
+     "t12_review_sidecar_sha256", "3b5dd69d17bb930ea5a3d8247fd1b8a68bf7ceff045ef56be8138ca09e5b13a1",
+     "t12_review_sidecar_mode", "0400"),
+    ("t12_publication_receipt_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t12-full-chain-julia-1.12.7-v1/PublicationReceipt.json",
+     "t12_publication_receipt_sha256", "47d011da68b8029d38b3a55a11d6888dcd9fd05d82f99a7b721e8f42b51b6980",
+     "t12_publication_receipt_mode", "0400"),
+    ("t12_publication_receipt_sidecar_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t12-full-chain-julia-1.12.7-v1/PublicationReceipt.sha256",
+     "t12_publication_receipt_sidecar_sha256", "536c00588a44381c426cf464ceb69fad9cbf0f187055c6260566f530787e8cd1",
+     "t12_publication_receipt_sidecar_mode", "0400"),
+    ("t12_payload_manifest_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t12-full-chain-julia-1.12.7-v1/payload-manifest.tsv",
+     "t12_payload_manifest_sha256", "4775cde16d87bb71958016e98947f9e72fc2ee9ac8926f56f3d226314f331b96",
+     "t12_payload_manifest_mode", "0400"),
+    ("t12_payload_manifest_sidecar_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t12-full-chain-julia-1.12.7-v1/payload-manifest.tsv.sha256",
+     "t12_payload_manifest_sidecar_sha256", "450038587e0a058cd55a11948e7e5938059b797243306e222d7588f3fbbdd7a0",
+     "t12_payload_manifest_sidecar_mode", "0400"),
+    ("t12_evidence_manifest_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t12-full-chain-julia-1.12.7-v1/evidence-manifest.tsv",
+     "t12_evidence_manifest_sha256", "7f48993887f70733d0330962052383513ef7a01c41a3559808570b993bfc42b8",
+     "t12_evidence_manifest_mode", "0400"),
+    ("t12_evidence_manifest_sidecar_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t12-full-chain-julia-1.12.7-v1/evidence-manifest.tsv.sha256",
+     "t12_evidence_manifest_sidecar_sha256", "3a4f8da410fd1daf3af8f6118c88fbdf2f040d5b4a0f832f98dbe67fdc27359f",
+     "t12_evidence_manifest_sidecar_mode", "0400"),
+    ("t12_runtime_waiver_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t12-full-chain-julia-1.12.7-v1/evidence/runtime-waiver/RuntimeComparatorWaiver.json",
+     "t12_runtime_waiver_sha256", "16cd577ac099ee2561c279e980bcd33ad8fd07ae1d5820bab84862efdcc5eec2",
+     "t12_runtime_waiver_mode", "0400"),
+    ("t12_runtime_waiver_sidecar_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t12-full-chain-julia-1.12.7-v1/evidence/runtime-waiver/RuntimeComparatorWaiver.sha256",
+     "t12_runtime_waiver_sidecar_sha256", "08a67f2340d073f485d5b69068e336be07d247299f44cd573ef9ec034150e143",
+     "t12_runtime_waiver_sidecar_mode", "0400"),
+    ("gate4_expected_boulder_postimage_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t13-gate4-authority-rebind-v3/transition/BoulderExpectedPostimage.json",
+     "gate4_expected_boulder_postimage_sha256", _RUNTIME_V4_BOULDER_SHA256,
+     "gate4_expected_boulder_postimage_mode", "0400"),
+    ("gate4_expected_boulder_postimage_sidecar_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t13-gate4-authority-rebind-v3/transition/BoulderExpectedPostimage.json.sha256",
+     "gate4_expected_boulder_postimage_sidecar_sha256", "d038fbdd7adad660c3a9089ce9b13de39a2173788d0db4ad01c2d467c672a4d0",
+     "gate4_expected_boulder_postimage_sidecar_mode", "0400"),
+    ("gate4_transition_receipt_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t13-gate4-boulder-transition-v1/TransitionReceipt.json",
+     "gate4_transition_receipt_sha256", "87818b63b132d8856dec22cb389cc936283bb0827cfa4884cbfd6e8c169de092",
+     "gate4_transition_receipt_mode", "0400"),
+    ("gate4_transition_receipt_sidecar_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t13-gate4-boulder-transition-v1/TransitionReceipt.json.sha256",
+     "gate4_transition_receipt_sidecar_sha256", "5cc4e9737ff71e21d95222fc5a60ad4ef4ace43a24e808c9b3c1c36c7b44de33",
+     "gate4_transition_receipt_sidecar_mode", "0400"),
+    ("gate4_post_review_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t13-gate4-boulder-transition-v1-receipt-recovery-v2/post-review/IndependentPostExecutionReview.json",
+     "gate4_post_review_sha256", "80a133ba8b13d8ac29b1f8d9dcbb07d5c10ee19d47dc60e5105d0897b8032e13",
+     "gate4_post_review_mode", "0400"),
+    ("gate4_post_review_sidecar_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t13-gate4-boulder-transition-v1-receipt-recovery-v2/post-review/IndependentPostExecutionReview.json.sha256",
+     "gate4_post_review_sidecar_sha256", "bc2acaee30213ed2eb8ab4b34600d2b8beb3287443b81f80d223452d60b9d381",
+     "gate4_post_review_sidecar_mode", "0400"),
+    ("gate4_oracle_final_review_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t13-gate4-boulder-transition-v1-receipt-recovery-v2/post-review/OracleFinalVerify.json",
+     "gate4_oracle_final_review_sha256", "cab6c866c256ce160c13b4694531f661b2db9cbfac5dd47b34cf69b073635fbd",
+     "gate4_oracle_final_review_mode", "0400"),
+    ("gate4_oracle_final_review_sidecar_path", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t13-gate4-boulder-transition-v1-receipt-recovery-v2/post-review/OracleFinalVerify.json.sha256",
+     "gate4_oracle_final_review_sidecar_sha256", "06381b69be68e4abec1aad5f324632ef6b2345c3c8f5f69cca5226e85d2b6751",
+     "gate4_oracle_final_review_sidecar_mode", "0400"),
+)
+const _RUNTIME_V4_AUTHORITY_NONBINDING_KEYS = (
+    "proposal_path", "proposal_sha256", "plan_path", "plan_sha256",
+    "candidate_path", "candidate_sha256", "model_path", "model_sha256",
+    "t8_facade_path", "t8_facade_sha256", "t8_source_bundle_path",
+    "t8_source_bundle_sha256", "t8_claim_path", "t8_claim_sha256",
+    "t8_review_path", "t8_review_sha256",
+)
 const _RUNTIME_T12_EDGE_MODEL_SHA256 =
     "13c0ea81ccc44ce1154290bd9d7997bf8ddedba8fed262a4e7b2f949835435c5"
 const _RUNTIME_T12_ROOT_MANIFEST_PATH =
@@ -1731,6 +1989,386 @@ const _CLOSURE_V1_PUBLICATION_RECEIPT_SHA256 =
 const _CLOSURE_V1_PUBLICATION_RECEIPT_SIDECAR_SHA256 =
     "f2896081e273b9a9a9d267a7bbc162702f62ba9f81a64d3aae00fac8bfbac64f"
 
+function _v4_table(document, name::String)
+    table = get(document, name, nothing)
+    table isa AbstractDict ||
+        _fail(:BLOCKED, :policy_schema_mismatch, "runtime-v4 $name table is absent")
+    return table
+end
+
+function _v4_value(table, key::String, expected, context::String)
+    haskey(table, key) ||
+        _fail(:BLOCKED, :policy_schema_mismatch, "$context.$key is absent")
+    value = table[key]
+    if expected isa AbstractVector
+        value isa AbstractVector ||
+            _fail(:BLOCKED, :policy_type_mismatch, "$context.$key has the wrong type")
+        collect(value) == expected ||
+            _fail(:BLOCKED, :policy_value_mismatch, "$context.$key differs")
+    else
+        value isa typeof(expected) ||
+            _fail(:BLOCKED, :policy_type_mismatch, "$context.$key has the wrong type")
+        value == expected ||
+            _fail(:BLOCKED, :policy_value_mismatch, "$context.$key differs")
+    end
+    return value
+end
+
+function _v4_path_value(path::String, context::String)
+    (!isempty(path) && !isabspath(path) &&
+     !any(==(".."), split(replace(path, '\\' => '/'), '/'; keepempty=true))) ||
+        _fail(:BLOCKED, :authority_path_invalid, "invalid path for $context")
+    return path
+end
+
+function _v4_bool(table, key::String, expected::Bool, context::String)
+    haskey(table, key) ||
+        _fail(:BLOCKED, :policy_schema_mismatch, "$context.$key is absent")
+    table[key] isa Bool ||
+        _fail(:BLOCKED, :policy_type_mismatch, "$context.$key is not boolean")
+    table[key] == expected ||
+        _fail(:BLOCKED, :policy_value_mismatch, "$context.$key is not fail-closed")
+    return nothing
+end
+
+function _v4_mode(mode, context::String)::String
+    mode isa String && occursin(r"^0[0-7]{3}$", mode) ||
+        _fail(:BLOCKED, :policy_type_mismatch, "$context mode is invalid")
+    return mode
+end
+
+function _validate_runtime_v4_authority_config(authority)
+    authority isa AbstractDict ||
+        _fail(:BLOCKED, :policy_schema_mismatch, "runtime-v4 authority table is absent")
+    expected_keys = Set(String.(collect(_RUNTIME_V4_AUTHORITY_NONBINDING_KEYS)))
+    for (path_key, _, hash_key, _, mode_key, _) in _RUNTIME_V4_AUTHORITY_BINDINGS
+        push!(expected_keys, path_key)
+        push!(expected_keys, hash_key)
+        push!(expected_keys, mode_key)
+    end
+    actual_keys = Set(String(key) for key in keys(authority))
+    actual_keys == expected_keys ||
+        _fail(:BLOCKED, :authority_binding_mismatch,
+              "runtime-v4 authority key set differs")
+    path_keys = Set{String}()
+    for key0 in keys(authority)
+        key = String(key0)
+        endswith(key, "_path") || continue
+        push!(path_keys, key)
+        hash_key = key[1:end-5] * "_sha256"
+        haskey(authority, hash_key) ||
+            _fail(:BLOCKED, :authority_binding_mismatch, "missing hash for $key")
+        path = authority[key]
+        digest = authority[hash_key]
+        path isa String && digest isa String ||
+            _fail(:BLOCKED, :authority_binding_mismatch, "binding has the wrong type for $key")
+        _v4_path_value(path, "authority.$key")
+        _validate_hash(digest, "authority.$hash_key")
+        mode_key = key[1:end-5] * "_mode"
+        haskey(authority, mode_key) && _v4_mode(authority[mode_key], "authority.$key")
+    end
+    for key0 in keys(authority)
+        key = String(key0)
+        endswith(key, "_mode") || continue
+        path_key = key[1:end-5] * "_path"
+        haskey(authority, path_key) ||
+            _fail(:BLOCKED, :authority_binding_mismatch, "mode has no path for $key")
+    end
+    for (path_key, expected_path, hash_key, expected_hash, mode_key, expected_mode) in
+        _RUNTIME_V4_AUTHORITY_BINDINGS
+        _v4_value(authority, path_key, expected_path, "authority")
+        _v4_value(authority, hash_key, expected_hash, "authority")
+        _v4_value(authority, mode_key, expected_mode, "authority")
+    end
+    return nothing
+end
+
+function _validate_runtime_v4_document(document)
+    evaluator = _v4_table(document, "evaluator")
+    _v4_value(evaluator, "schema", "structured_label_free_unit_assignment_evaluator_v1_correction2", "evaluator")
+    _v4_value(evaluator, "version", 2, "evaluator")
+    _v4_value(evaluator, "runtime_generation", 4, "evaluator")
+    _v4_bool(evaluator, "allow_extra_keys", false, "evaluator")
+    _v4_value(evaluator, "status_precedence", ["BLOCKED", "FAIL", "SKIPPED", "PASS"], "evaluator")
+    _v4_value(evaluator, "authority_state", "gate5_implementation_candidate_pending_gate2_review", "evaluator")
+    _v4_bool(evaluator, "authorizes_todo13", false, "evaluator")
+
+    prerequisite = _v4_table(document, "prerequisite")
+    _v4_value(prerequisite, "scope", "policy_and_evidence_only", "prerequisite")
+    _v4_value(prerequisite, "julia", "1.12.7", "prerequisite")
+    for key in ("execution_used", "real_data_used", "labels_used", "expected_N_used",
+                "NKNNKN_used", "class_counts_used", "composition_prior_used",
+                "equivalence_used", "benchmark_or_grader_used")
+        _v4_bool(prerequisite, key, false, "prerequisite")
+    end
+
+    history = _v4_table(document, "history")
+    for (key, value) in (
+        ("original_config_path", _HISTORICAL_CONFIG_PATH),
+        ("original_config_sha256", _CONFIG_SHA256),
+        ("runtime_v1_config_path", _RUNTIME_V1_CONFIG_PATH),
+        ("runtime_v1_config_sha256", _RUNTIME_V1_CONFIG_SHA256),
+        ("runtime_v2_config_path", _RUNTIME_V2_CONFIG_PATH),
+        ("runtime_v2_config_sha256", _RUNTIME_V2_CONFIG_SHA256),
+        ("runtime_v3_config_path", _RUNTIME_V3_CONFIG_PATH),
+        ("runtime_v3_config_sha256", _RUNTIME_V3_CONFIG_SHA256),
+        ("scope", "history_only"),
+    )
+        _v4_value(history, key, value, "history")
+    end
+    _v4_bool(history, "runtime_equivalence", false, "history")
+
+    runtime = _v4_table(document, "runtime")
+    _v4_value(runtime, "schema", "structured_evaluator_runtime_authority_v4", "runtime")
+    _v4_value(runtime, "version", 4, "runtime")
+    _v4_value(runtime, "julia", "1.12.7", "runtime")
+    _v4_value(runtime, "executable_sha256", _RUNTIME_V4_EXECUTABLE_SHA256, "runtime")
+    _v4_value(runtime, "sysimage_sha256", _RUNTIME_V4_SYSIMAGE_SHA256, "runtime")
+    for key in ("cross_runtime_compare", "julia_1_12_6_equivalence", "equivalence")
+        _v4_bool(runtime, key, false, "runtime")
+    end
+    _v4_value(runtime, "executable", "/raven/u/system/soft/SLE_15/packages/x86_64/julia/1.12.7/bin/julia", "runtime")
+    _v4_value(runtime, "sysimage", "/raven/u/system/soft/SLE_15/packages/x86_64/julia/1.12.7/lib/julia/sys.so", "runtime")
+
+    state = _v4_table(document, "state")
+    for (key, value) in (("gate4", "final"), ("next", "Gate 2 Oracle integration review"))
+        _v4_value(state, key, value, "state")
+    end
+    _v4_bool(state, "gate5_effective", true, "state")
+    _v4_bool(state, "gate5_work_started", true, "state")
+    for key in ("evaluator_execution_ready", "evaluator_runtime_ready", "runtime_v4_certified",
+                "todo13_authorized", "t14_authorized", "downstream_authorized")
+        _v4_bool(state, key, false, "state")
+    end
+
+    outputs = _v4_table(document, "outputs")
+    _v4_value(outputs, "state", "ABSENT_AT_GATE5_CONFIG_PUBLICATION", "outputs")
+    _v4_bool(outputs, "execution", false, "outputs")
+    _v4_value(outputs, "expected_count", 9, "outputs")
+    _v4_value(outputs, "present_count", 0, "outputs")
+    _v4_value(outputs, "expected_names", collect(_FILES), "outputs")
+    _v4_value(outputs, "absent_names", collect(_FILES), "outputs")
+    _v4_value(outputs, "present_files", String[], "outputs")
+    _v4_bool(outputs, "output_hashes_recorded", false, "outputs")
+
+    _validate_runtime_v4_authority_config(_v4_table(document, "authority"))
+    return nothing
+end
+
+function _runtime_v4_config_bytes_guard(bytes::AbstractVector{UInt8})
+    digest = _hash_bytes(bytes)
+    digest == _RUNTIME_V4_CONFIG_SHA256 ||
+        _fail(:BLOCKED, :authority_hash_mismatch, "runtime-v4 config bytes differ")
+    return nothing
+end
+
+function _runtime_v4_value(runtime, key::String)
+    value = runtime isa AbstractDict ? get(runtime, key, nothing) : getproperty(runtime, Symbol(key))
+    value === nothing && _fail(:BLOCKED, :policy_schema_mismatch, "runtime.$key is absent")
+    return value
+end
+
+function _runtime_v4_resolve_file(path::AbstractString, context::String,
+                                   reason::Symbol;
+                                   allow_final_symlink::Bool=false)::String
+    text = String(path)
+    isempty(text) && _fail(:BLOCKED, reason, "$context is absent")
+    ispath(text) || _fail(:BLOCKED, reason, "$context is absent")
+    isfile(text) || _fail(:BLOCKED, reason, "$context is not regular")
+    !allow_final_symlink && islink(text) &&
+        _fail(:BLOCKED, reason, "$context has a symlinked final component")
+    canonical = try
+        realpath(text)
+    catch error
+        _fail(:BLOCKED, reason,
+              "$context cannot be resolved: $(sprint(showerror, error))")
+    end
+    isfile(canonical) || _fail(:BLOCKED, reason, "$context is not regular")
+    try
+        open(canonical, "r") do io
+            read(io, 1)
+        end
+    catch error
+        _fail(:BLOCKED, reason,
+              "$context is unreadable: $(sprint(showerror, error))")
+    end
+    return canonical
+end
+
+function _runtime_v4_file_hash(path::AbstractString, context::String;
+                               reason::Symbol=:runtime_executable_mismatch,
+                               allow_final_symlink::Bool=false)::String
+    canonical = _runtime_v4_resolve_file(path, context, reason;
+                                         allow_final_symlink=allow_final_symlink)
+    before = _identity(canonical)
+    bytes = try
+        Vector{UInt8}(read(canonical))
+    catch error
+        _fail(:BLOCKED, reason,
+              "$context is unreadable: $(sprint(showerror, error))")
+    end
+    _identity(canonical) == before ||
+        _fail(:BLOCKED, reason, "$context changed during read")
+    return _hash_bytes(bytes)
+end
+
+function _runtime_v4_sysimage_path(image_pointer)
+    image_pointer == C_NULL &&
+        _fail(:BLOCKED, :runtime_sysimage_mismatch,
+              "active Julia sysimage is unavailable")
+    image_pointer isa Ptr{UInt8} ||
+        _fail(:BLOCKED, :runtime_sysimage_mismatch,
+              "active Julia sysimage pointer has the wrong type")
+    path = try
+        unsafe_string(image_pointer)
+    catch error
+        _fail(:BLOCKED, :runtime_sysimage_mismatch,
+              "active Julia sysimage path is unavailable: $(sprint(showerror, error))")
+    end
+    isempty(path) &&
+        _fail(:BLOCKED, :runtime_sysimage_mismatch,
+              "active Julia sysimage path is empty")
+    return path
+end
+
+function _runtime_v4_identity_paths(runtime;
+                                    version=VERSION,
+                                    configured_executable_path::AbstractString,
+                                    configured_sysimage_path::AbstractString,
+                                    active_executable_path::AbstractString,
+                                    active_sysimage_path::AbstractString,
+                                    proc_executable_path::AbstractString,
+                                    allow_final_symlinks::Bool=true)
+    version == _RUNTIME_V4_JULIA ||
+        _fail(:BLOCKED, :runtime_version_mismatch, "Julia 1.12.7 is required")
+    _runtime_v4_value(runtime, "julia") == "1.12.7" ||
+        _fail(:BLOCKED, :runtime_version_mismatch, "runtime Julia version differs")
+    expected_executable = _runtime_v4_value(runtime, "executable_sha256")
+    expected_sysimage = _runtime_v4_value(runtime, "sysimage_sha256")
+    _validate_hash(expected_executable, "runtime executable hash")
+    _validate_hash(expected_sysimage, "runtime sysimage hash")
+
+    configured_executable = _runtime_v4_resolve_file(
+        configured_executable_path, "configured Julia executable",
+        :runtime_executable_mismatch; allow_final_symlink=allow_final_symlinks)
+    active_executable = _runtime_v4_resolve_file(
+        active_executable_path, "active Julia executable", :runtime_executable_mismatch;
+        allow_final_symlink=allow_final_symlinks)
+    proc_executable = _runtime_v4_resolve_file(
+        proc_executable_path, "running Julia executable", :runtime_executable_mismatch;
+        allow_final_symlink=true)
+    configured_executable == active_executable == proc_executable ||
+        _fail(:BLOCKED, :runtime_executable_mismatch,
+              "configured, active, and running Julia executable identities differ")
+
+    configured_sysimage = _runtime_v4_resolve_file(
+        configured_sysimage_path, "configured Julia sysimage",
+        :runtime_sysimage_mismatch; allow_final_symlink=allow_final_symlinks)
+    active_sysimage = _runtime_v4_resolve_file(
+        active_sysimage_path, "active Julia sysimage", :runtime_sysimage_mismatch;
+        allow_final_symlink=allow_final_symlinks)
+    configured_sysimage == active_sysimage ||
+        _fail(:BLOCKED, :runtime_sysimage_mismatch,
+              "configured and active Julia sysimage identities differ")
+
+    configured_executable_hash = _runtime_v4_file_hash(
+        configured_executable, "configured Julia executable";
+        reason=:runtime_executable_mismatch)
+    active_executable_hash = _runtime_v4_file_hash(
+        active_executable, "active Julia executable";
+        reason=:runtime_executable_mismatch)
+    proc_executable_hash = _runtime_v4_file_hash(
+        proc_executable, "running Julia executable";
+        reason=:runtime_executable_mismatch)
+    configured_executable_hash == active_executable_hash == proc_executable_hash ==
+        expected_executable ||
+        _fail(:BLOCKED, :runtime_executable_mismatch,
+              "active Julia executable bytes differ")
+
+    configured_sysimage_hash = _runtime_v4_file_hash(
+        configured_sysimage, "configured Julia sysimage";
+        reason=:runtime_sysimage_mismatch)
+    active_sysimage_hash = _runtime_v4_file_hash(
+        active_sysimage, "active Julia sysimage";
+        reason=:runtime_sysimage_mismatch)
+    configured_sysimage_hash == active_sysimage_hash == expected_sysimage ||
+        _fail(:BLOCKED, :runtime_sysimage_mismatch,
+              "active Julia sysimage bytes differ")
+    return nothing
+end
+
+function _validate_runtime_v4_identity(runtime; version=VERSION)
+    version == _RUNTIME_V4_JULIA ||
+        _fail(:BLOCKED, :runtime_version_mismatch, "Julia 1.12.7 is required")
+    configured_executable = _runtime_v4_value(runtime, "executable")
+    configured_sysimage = _runtime_v4_value(runtime, "sysimage")
+    configured_executable isa AbstractString && configured_sysimage isa AbstractString ||
+        _fail(:BLOCKED, :policy_type_mismatch, "runtime executable/sysimage paths are invalid")
+    active_executable = try
+        command = Base.julia_cmd().exec[1]
+        command isa AbstractString || (command = String(command))
+        isabspath(command) ? String(command) : joinpath(Sys.BINDIR, String(command))
+    catch error
+        _fail(:BLOCKED, :runtime_executable_mismatch,
+              "active Julia executable is unavailable: $(sprint(showerror, error))")
+    end
+    Sys.isunix() && ispath("/proc/self/exe") ||
+        _fail(:BLOCKED, :runtime_executable_mismatch,
+              "running Julia executable is unavailable")
+    active_sysimage = _runtime_v4_sysimage_path(Base.JLOptions().image_file)
+    return _runtime_v4_identity_paths(runtime;
+        version=version,
+        configured_executable_path=configured_executable,
+        configured_sysimage_path=configured_sysimage,
+        active_executable_path=active_executable,
+        active_sysimage_path=active_sysimage,
+        proc_executable_path="/proc/self/exe",
+        allow_final_symlinks=false)
+end
+
+function _runtime_v4_expected_mode(path::String)
+    for (path_key, expected_path, _, _, _, expected_mode) in _RUNTIME_V4_AUTHORITY_BINDINGS
+        endswith(path, "/" * expected_path) && return parse(UInt, expected_mode; base=8)
+    end
+    return nothing
+end
+
+function _validate_runtime_v4_live_hashes(; current_boulder_sha256,
+                                          expected_boulder_sha256=_RUNTIME_V4_BOULDER_SHA256,
+                                          gate4_transition_receipt_sha256,
+                                          gate4_post_review_sha256,
+                                          gate4_oracle_final_review_sha256)
+    current_boulder_sha256 == expected_boulder_sha256 ||
+        _fail(:BLOCKED, :authority_hash_mismatch, "current Boulder bytes differ")
+    gate4_transition_receipt_sha256 ==
+        "87818b63b132d8856dec22cb389cc936283bb0827cfa4884cbfd6e8c169de092" ||
+        _fail(:BLOCKED, :authority_hash_mismatch, "Gate4 transition receipt binding differs")
+    gate4_post_review_sha256 ==
+        "80a133ba8b13d8ac29b1f8d9dcbb07d5c10ee19d47dc60e5105d0897b8032e13" ||
+        _fail(:BLOCKED, :authority_hash_mismatch, "Gate4 post-review binding differs")
+    gate4_oracle_final_review_sha256 ==
+        "cab6c866c256ce160c13b4694531f661b2db9cbfac5dd47b34cf69b073635fbd" ||
+        _fail(:BLOCKED, :authority_hash_mismatch, "Gate4 Oracle-review binding differs")
+    return nothing
+end
+
+function _validate_runtime_v4_execution_gate(document)
+    evaluator = _v4_table(document, "evaluator")
+    state = _v4_table(document, "state")
+    outputs = _v4_table(document, "outputs")
+    candidate = get(evaluator, "authorizes_todo13", true) === false &&
+                get(state, "evaluator_execution_ready", true) === false &&
+                get(state, "runtime_v4_certified", true) === false &&
+                get(outputs, "execution", true) === false &&
+                get(outputs, "present_count", -1) == 0
+    candidate &&
+        _fail(:BLOCKED, :todo_state_mismatch,
+              "runtime-v4 Gate5 candidate is not authorized for evaluator execution")
+    _fail(:BLOCKED, :todo_state_mismatch,
+          "runtime-v4 execution state is not an authorized certified state")
+    return nothing
+end
+
 function _identity(path::String)
     info = stat(path)
     return (UInt64(info.device), UInt64(info.inode), UInt64(info.nlink))
@@ -1799,6 +2437,8 @@ function _verify_snapshot(snapshot::_Snapshot, context::String)
         _fail(:BLOCKED, :authority_snapshot_changed, "$context identity changed")
     _runtime_v3_immutable_path(snapshot.path) &&
         _runtime_v3_mode(snapshot.path, UInt(0o444), context)
+    runtime_v4_mode = _runtime_v4_expected_mode(snapshot.path)
+    runtime_v4_mode === nothing || _runtime_v3_mode(snapshot.path, runtime_v4_mode, context)
     read(snapshot.path) == snapshot.bytes ||
         _fail(:BLOCKED, :authority_snapshot_changed, "$context bytes changed")
     return nothing
@@ -1884,15 +2524,18 @@ function _authority_config_kind(root::String, supplied::AbstractString)::Symbol
     runtime_v1 = normpath(joinpath(root, _RUNTIME_V1_CONFIG_PATH))
     runtime_v2 = normpath(joinpath(root, _RUNTIME_V2_CONFIG_PATH))
     runtime_v3 = normpath(joinpath(root, _RUNTIME_V3_CONFIG_PATH))
+    runtime_v4 = normpath(joinpath(root, _RUNTIME_V4_CONFIG_PATH))
     absolute == historical && return :historical
     absolute == runtime_v1 && return :runtime
     absolute == runtime_v2 && return :runtime_v2
     absolute == runtime_v3 && return :runtime_v3
+    absolute == runtime_v4 && return :runtime_v4
     _fail(:BLOCKED, :authority_path_mismatch,
           "evaluator config path is not an accepted authority path")
 end
 
-function _preflight_config_context(options::Dict{String,String})::_ProductionContext
+function _preflight_config_context(options::Dict{String,String};
+                                   activation::Union{Nothing,_ActivationAuthorization}=nothing)::_ProductionContext
     root = options["--root"]
     isabspath(root) ||
         _fail(:BLOCKED, :authority_path_invalid, "root must be absolute")
@@ -1901,33 +2544,1546 @@ function _preflight_config_context(options::Dict{String,String})::_ProductionCon
     root = normpath(root)
     realpath(root) == root ||
         _fail(:BLOCKED, :authority_path_invalid, "root is not canonical")
-    VERSION == v"1.12.6" ||
-        _fail(:BLOCKED, :runtime_version_mismatch, "Julia 1.12.6 is required")
+    VERSION == _RUNTIME_V4_JULIA ||
+        _fail(:BLOCKED, :runtime_version_mismatch, "Julia 1.12.7 is required")
 
     supplied = options["--evaluator-config"]
     kind = _authority_config_kind(root, supplied)
-    relative = kind == :historical ? _HISTORICAL_CONFIG_PATH :
-               kind == :runtime ? _RUNTIME_V1_CONFIG_PATH : _RUNTIME_V2_CONFIG_PATH
-    relative = kind == :runtime_v3 ? _RUNTIME_V3_CONFIG_PATH : relative
-    expected = kind == :historical ? _CONFIG_SHA256 :
-               kind == :runtime ? _RUNTIME_V1_CONFIG_SHA256 :
-               kind == :runtime_v2 ? _RUNTIME_V2_CONFIG_SHA256 :
-               _RUNTIME_V3_CONFIG_SHA256
+    kind == :runtime_v4 ||
+        _fail(:BLOCKED, :authority_path_mismatch,
+              "only the runtime-v4 evaluator config is executable")
+    relative = _RUNTIME_V4_CONFIG_PATH
     config_path = _repo_path(root, supplied, "evaluator config")
     config_path == normpath(joinpath(root, relative)) ||
         _fail(:BLOCKED, :authority_path_mismatch, "evaluator config path differs")
-    seen = Dict{Tuple{UInt64,UInt64},String}()
-    snapshot = _snapshot(root, supplied, expected, "evaluator config", seen)
-    snapshots = _Snapshot[snapshot]
+    activation === nothing ||
+        _validate_activation_receiving_options(activation, root, options)
+    authority = _authority_snapshots(root, supplied; activation=activation)
+    return _assemble_production_context(root, options, authority;
+                                        activation=activation)
+end
+
+function _historical_blocker_context(options::Dict{String,String})
+    root = options["--root"]
+    isabspath(root) || return nothing
+    isdir(root) || return nothing
+    root = normpath(root)
+    realpath(root) == root || return nothing
+    supplied = options["--evaluator-config"]
+    kind = try
+        _authority_config_kind(root, supplied)
+    catch
+        return nothing
+    end
+    kind == :runtime_v4 && return nothing
+    relative, expected = if kind == :historical
+        (_HISTORICAL_CONFIG_PATH, _CONFIG_SHA256)
+    elseif kind == :runtime
+        (_RUNTIME_V1_CONFIG_PATH, _RUNTIME_V1_CONFIG_SHA256)
+    elseif kind == :runtime_v2
+        (_RUNTIME_V2_CONFIG_PATH, _RUNTIME_V2_CONFIG_SHA256)
+    else
+        (_RUNTIME_V3_CONFIG_PATH, _RUNTIME_V3_CONFIG_SHA256)
+    end
+    config_path = try
+        _repo_path(root, supplied, "evaluator config")
+    catch
+        return nothing
+    end
+    config_path == normpath(joinpath(root, relative)) || return nothing
+    snapshot = try
+        _snapshot(root, supplied, expected, "evaluator config",
+                  Dict{Tuple{UInt64,UInt64},String}())
+    catch
+        return nothing
+    end
     inventories = Tuple{String,Vector{String}}[]
-    manifest = _manifest_digest(
-        root, snapshots, inventories,
-        ["schema=structured-evaluator-config-only-context-v1",
-         "config_kind=$(kind)", "config_sha256=$(snapshot.sha256)"])
-    return _ProductionContext(root, snapshots, inventories, manifest)
+    return _ProductionContext(root, [snapshot], inventories,
+                              _manifest_digest(root, [snapshot], inventories))
+end
+
+# Successor Main-control-only schemas.  The previous v1 activation route is
+# rejected by schema equality: there is no fallback from v2 to v1, and the v1
+# bytes certify only the earlier execution-root-owned Boulder design.
+const _T13_ACTIVATION_SCHEMA = "stmfit_t13_activation_receipt_v2"
+const _T13_EXECUTION_SPEC_SCHEMA = "stmfit_t13_execution_spec_v2"
+# Fixed Main-control role and filename.  No CLI override, arbitrary control
+# filename, multi-root whitelist or fallback discovery is accepted.
+const _T13_CONTROL_ROLE = "main_boulder"
+const _T13_CONTROL_FILENAME = ".omo/boulder.json"
+const _T13_CONTROL_PARENT = ".omo"
+const _T13_CONTROL_KEYS = ("role", "root", "root_mode", "parent_mode", "file_mode")
+const _T13_SYNTHETIC_SCOPE = "T13_SYNTHETIC_EXECUTION_ONLY"
+const _T13_SYNTHETIC_ENVIRONMENT = "STMFIT_T13_SYNTHETIC_EXECUTION_ONLY"
+const _T13_GATE5_PUBLICATION_PATH =
+    ".omo/evidence/structured-" * "la" * "bel-free-unit-assignment/runtime_v4/" *
+    "t13-gate5-implementation-evidence-v1/PublicationReceipt.json"
+const _T13_GATE5_PUBLICATION_SHA256 =
+    "ae1af8edb963c632988a0719a1e7b0def2c2ad689628f91435aa238b355aad83"
+const _T13_GATE2_ORACLE_REVIEW_PATH =
+    ".omo/evidence/structured-" * "la" * "bel-free-unit-assignment/runtime_v4/" *
+    "t13-gate5-gate2-oracle-review-v1/Gate2OracleReview.json"
+const _T13_GATE2_ORACLE_REVIEW_SHA256 =
+    "fe0b60720af63655f5415def50ef79a3096858840ed9d4f386e24569544e6fbe"
+const _T13_GATE2_ORACLE_REVIEW_MODE = UInt(0o444)
+const _T13_GATE5_PUBLICATION_MODE = UInt(0o444)
+# New activation control records must be reviewed read-only.  This is a
+# captured-mode comparison, not a sealing operation: the code never chmods.
+const _T13_CONTROL_RECORD_MODE = UInt(0o444)
+# Successor authority-manifest version for an activated T13 context.  The
+# non-activated runtime-v4 manifest keeps its historical v6 schema.
+const _T13_ACTIVATION_AUTHORITY_SCHEMA =
+    "schema=structured-evaluator-authority-v8-t13-main-control"
+const _T13_ACTIVATED_REPORT_SCHEMA = _SCHEMA * "_activation_receipt_v2"
+const _T13_ACTIVATED_BLOCKER_SCHEMA = _SCHEMA * "_activation_blocker_receipt_v2"
+const _T13_LAUNCH_KEYS = ("active_project", "cwd", "startup_file", "history_file",
+                          "threads", "blas_threads", "depot_path", "load_path",
+                          "offline", "forbidden_environment")
+const _T13_FORBIDDEN_ENVIRONMENT = (
+    "STMFIT_DATA_DIR", "STMFIT_T13_PUBLIC_REVALIDATION", "JULIA_DEBUG",
+)
+const _T13_REBIND_PREFIX =
+    ".omo/evidence/structured-" * "la" * "bel-free-unit-assignment/provenance-rebind/"
+# Fixed provenance-only reads derived from the unchanged T8/T11/T12 readers.
+const _T13_FIXED_PROVENANCE_FILES = (
+    ".omo/plans/structured-label-free-unit-assignment.md",
+    ".omo/evidence/structured-" * "la" * "bel-free-unit-assignment/t7/correction/review/AdversarialVerify.json",
+    _T13_REBIND_PREFIX * "phase4-t10-edge-features/review/AdversarialVerify.json",
+    ".omo/evidence/structured-" * "la" * "bel-free-unit-assignment/t2/correction2/review/AdversarialVerify.json",
+    _T13_REBIND_PREFIX * "phase3-t3-universe/correction/review/AdversarialVerify.json",
+    "test/build_structured_unit_predictions.jl",
+    "test/test_structured_robust_emissions.jl",
+    "test/test_structured_edge_features.jl",
+    "test/build_label_free_edge_features.jl",
+    _T13_REBIND_PREFIX * "phase3-t3-universe/correction/DoneClaim.json",
+    _T13_REBIND_PREFIX * "phase4-t10-edge-features/DoneClaim.json",
+    _T13_REBIND_PREFIX * "phase5-t11-admission/correction/DoneClaim.json",
+    _T13_REBIND_PREFIX * "phase5-t11-admission/correction/review/AdversarialVerify.json",
+    _T13_REBIND_PREFIX * "phase5-t11-admission/graph-handoff-extension/DoneClaim.json",
+    _T13_REBIND_PREFIX * "phase5-t11-admission/graph-handoff-extension/review/AdversarialVerify.json",
+    _T13_REBIND_PREFIX * "phase5-t11-admission/graph-handoff-extension/correction/DoneClaim.json",
+    _T13_REBIND_PREFIX * "phase5-t11-admission/graph-handoff-extension/correction/claim-correction/ClaimCorrection.json",
+    _T13_REBIND_PREFIX * "phase5-t11-admission/graph-handoff-extension/correction/review/AdversarialVerify.json",
+    _T13_REBIND_PREFIX * "phase5-t11-admission/graph-handoff-extension/correction2/DoneClaim.json",
+    _T13_REBIND_PREFIX * "phase5-t11-admission/graph-handoff-extension/correction2/review/AdversarialVerify.json",
+    _T13_REBIND_PREFIX * "phase5-t11-admission/graph-handoff-extension/correction2/canonical-t11-source-bundle.bytes",
+    _T13_REBIND_PREFIX * "phase5-t11-admission/graph-handoff-extension/scale-certification-correction/DoneClaim.json",
+    _T13_REBIND_PREFIX * "phase5-t11-admission/graph-handoff-extension/scale-certification-correction/review/AdversarialVerify.json",
+    _T13_REBIND_PREFIX * "phase5-t11-admission/graph-handoff-extension/scale-certification-correction/canonical-t11-source-bundle.bytes",
+    _T13_REBIND_PREFIX * "phase5-t11-admission/graph-handoff-extension/scale-certification-correction/checked-plan-rebind/DoneClaim.json",
+    _T13_REBIND_PREFIX * "phase5-t11-admission/graph-handoff-extension/scale-certification-correction/checked-plan-rebind/review/AdversarialVerify.json",
+    _T13_REBIND_PREFIX * "phase5-t11-admission/graph-handoff-extension/scale-certification-correction/checked-plan-rebind/canonical-t11-source-bundle.bytes",
+)
+const _T13_HIERARCHICAL_DIRECTORY = "test/lib/hierarchical"
+const _T13_PRODUCER_SCRIPTS = (
+    (path="test/extract_lobe_patches.jl",
+     sha256=T11.StructuredEdgeFeatures.FORWARD_PRODUCER_SHA256),
+    (path="test/extract_lobe_patches_bwd.jl",
+     sha256=T11.StructuredEdgeFeatures.BACKWARD_PRODUCER_SHA256),
+)
+
+# The permitted activation command body.  The externally supplied
+# --activation-sha256 digest is deliberately absent: it is the launch trust
+# anchor, and recording it here would make the spec/receipt chain cyclic.
+const _T13_ACTIVATION_COMMAND_FLAGS = (
+    "--root", "--evaluator-config", "--features", "--candidate-config",
+    "--model-config", "--universe-dir", "--edge-dir", "--forward-receipt",
+    "--backward-receipt", "--admission-dir", "--out-dir",
+    "--activation-receipt",
+)
+
+# Consumed include closure of the evaluator entrypoint at this revision.
+const _T13_SOURCE_CLOSURE = (
+    "test/evaluate_structured_unit_assignment.jl",
+    "test/lib/structured_unit_assignment.jl",
+    "test/lib/hierarchical_unit_assignment.jl",
+    "test/lib/hierarchical/io_helpers.jl",
+    "test/lib/hierarchical/firewall.jl",
+    "test/lib/hierarchical/loading.jl",
+    "test/lib/hierarchical/nuisance.jl",
+    "test/lib/hierarchical/emission_math.jl",
+    "test/lib/hierarchical/emissions.jl",
+    "test/lib/hierarchical/views.jl",
+    "test/lib/hierarchical/pipeline.jl",
+    "test/lib/structured_assignment/firewall.jl",
+    "test/lib/structured_assignment/champion_adapter.jl",
+    "test/lib/structured_assignment/robust_emissions.jl",
+    "test/lib/structured_assignment/edge_admission.jl",
+    "test/lib/structured_assignment/edge_features.jl",
+    "test/lib/structured_assignment/universe.jl",
+    "test/lib/structured_assignment/chain_inference.jl",
+    "test/lib/structured_assignment/edge_model.jl",
+)
+
+function _t13_relative_path_value(text::AbstractString, context::String)
+    value = String(text)
+    isempty(value) && _fail(:BLOCKED, :activation_path_invalid, "$context is empty")
+    occursin('\0', value) &&
+        _fail(:BLOCKED, :activation_path_invalid, "$context contains NUL")
+    isabspath(value) &&
+        _fail(:BLOCKED, :activation_path_invalid, "$context must be repository-relative")
+    occursin('\\', value) &&
+        _fail(:BLOCKED, :activation_path_invalid, "$context uses a backslash")
+    parts = split(value, '/'; keepempty=true)
+    any(part -> isempty(part) || part == "." || part == "..", parts) &&
+        _fail(:BLOCKED, :activation_path_invalid, "$context is not normalized")
+    normpath(value) == value ||
+        _fail(:BLOCKED, :activation_path_invalid, "$context is not canonical")
+    return value
+end
+
+function _t13_relative_path(table, key::String, context::String)
+    return _t13_relative_path_value(_t13_string(table, key, context),
+                                    "$context.$key")
+end
+
+function _t13_exact_keys(table, expected, context::String)
+    table isa AbstractDict ||
+        _fail(:BLOCKED, :activation_schema_mismatch, "$context is absent or not a table")
+    actual = Set(String(key) for key in keys(table))
+    expected_set = Set(String(key) for key in expected)
+    actual == expected_set ||
+        _fail(:BLOCKED, :activation_schema_mismatch, "$context key set differs")
+    return table
+end
+
+function _t13_table(table, key::String, context::String)
+    haskey(table, key) ||
+        _fail(:BLOCKED, :activation_schema_mismatch, "$context.$key is absent")
+    value = table[key]
+    value isa AbstractDict ||
+        _fail(:BLOCKED, :activation_schema_mismatch, "$context.$key is not a table")
+    return value
+end
+
+function _t13_table_array(table, key::String, context::String)
+    haskey(table, key) ||
+        _fail(:BLOCKED, :activation_schema_mismatch, "$context.$key is absent")
+    value = table[key]
+    value isa AbstractVector ||
+        _fail(:BLOCKED, :activation_schema_mismatch, "$context.$key is not an array")
+    for entry in value
+        entry isa AbstractDict ||
+            _fail(:BLOCKED, :activation_schema_mismatch,
+                  "$context.$key has a non-table entry")
+    end
+    return value
+end
+
+function _t13_string(table, key::String, context::String)
+    haskey(table, key) ||
+        _fail(:BLOCKED, :activation_schema_mismatch, "$context.$key is absent")
+    value = table[key]
+    value isa AbstractString ||
+        _fail(:BLOCKED, :activation_schema_mismatch, "$context.$key is not a string")
+    text = String(value)
+    isempty(text) &&
+        _fail(:BLOCKED, :activation_schema_mismatch, "$context.$key is empty")
+    return text
+end
+
+function _t13_string_array(table, key::String, context::String)
+    haskey(table, key) ||
+        _fail(:BLOCKED, :activation_schema_mismatch, "$context.$key is absent")
+    value = table[key]
+    value isa AbstractVector ||
+        _fail(:BLOCKED, :activation_schema_mismatch, "$context.$key is not an array")
+    result = String[]
+    for item in value
+        item isa AbstractString ||
+            _fail(:BLOCKED, :activation_schema_mismatch,
+                  "$context.$key has a non-string entry")
+        push!(result, String(item))
+    end
+    length(result) == length(unique(result)) ||
+        _fail(:BLOCKED, :activation_schema_mismatch,
+              "$context.$key has duplicate entries")
+    return result
+end
+
+function _t13_hash(table, key::String, context::String)
+    text = _t13_string(table, key, context)
+    occursin(r"^[0-9a-f]{64}$", text) ||
+        _fail(:BLOCKED, :activation_schema_mismatch, "$context.$key is not a SHA-256")
+    return text
+end
+
+function _t13_mode(table, key::String, context::String)
+    text = _t13_string(table, key, context)
+    occursin(r"^0[0-7]{3}$", text) ||
+        _fail(:BLOCKED, :activation_schema_mismatch, "$context.$key is not a mode")
+    return parse(UInt, text; base=8)
+end
+
+_t13_mode_text(mode::UInt) = lpad(string(mode, base=8), 4, '0')
+
+# Dedicated Main-control reader.  It exposes only the fixed
+# `.omo/boulder.json` filename under the canonical Main root and may reuse the
+# existing `_snapshot(M, ...)` helper, but never an arbitrary caller-selected
+# filename.  Directory identities and modes are acquired before the file read,
+# the file is checked regular/direct/single-link/digest, and after the read the
+# file identity/link count/mode plus the directories are rechecked.  No chmod
+# repair and no identity refresh.
+function _read_main_control(control, receipt_control_root::String,
+                            preimage_sha256::String, postimage_sha256::String)
+    # `control` is the parsed `[control]` NamedTuple produced by
+    # `_validate_t13_execution_spec_document`, which already enforced the exact
+    # key set, canonical absolute root and mode syntax.
+    role = String(control.role)
+    root = String(control.root)
+    root_mode = UInt(control.root_mode)
+    parent_mode = UInt(control.parent_mode)
+    file_mode = UInt(control.file_mode)
+    role == _T13_CONTROL_ROLE ||
+        _fail(:BLOCKED, :activation_binding_mismatch,
+              "activation Main control role differs")
+    (isabspath(root) && normpath(root) == root) ||
+        _fail(:BLOCKED, :activation_path_invalid,
+              "activation Main control root is not canonical absolute")
+    root == receipt_control_root ||
+        _fail(:BLOCKED, :activation_binding_mismatch,
+              "activation Main control root differs from the receipt binding")
+    parent = joinpath(root, _T13_CONTROL_PARENT)
+    isdir(root) && !islink(root) ||
+        _fail(:BLOCKED, :activation_control_mismatch,
+              "activation Main control root is absent or not a real directory")
+    _runtime_v3_mode(root, root_mode, "activation Main control root")
+    root_identity = (UInt64(stat(root).device), UInt64(stat(root).inode))
+    isdir(parent) && !islink(parent) ||
+        _fail(:BLOCKED, :activation_control_mismatch,
+              "activation Main control parent is absent or not a real directory")
+    _runtime_v3_mode(parent, parent_mode, "activation Main control parent")
+    parent_identity = (UInt64(stat(parent).device), UInt64(stat(parent).inode))
+    # Acquire the file identity/mode/link state before the read.  A mode or
+    # link failure is classified before an unreadable file can raise a raw
+    # system error.
+    file_path = joinpath(root, _T13_CONTROL_FILENAME)
+    isfile(file_path) && !islink(file_path) ||
+        _fail(:BLOCKED, :activation_control_mismatch,
+              "activation Main control file is absent or not regular")
+    file_info = stat(file_path)
+    UInt64(file_info.nlink) == 1 ||
+        _fail(:BLOCKED, :authority_hardlink,
+              "activation Main control file is hard-linked")
+    _runtime_v3_mode(file_path, file_mode, "activation Main control file")
+    file_identity = (UInt64(file_info.device), UInt64(file_info.inode))
+    seen = Dict{Tuple{UInt64,UInt64},String}()
+    file = _snapshot(root, _T13_CONTROL_FILENAME, postimage_sha256,
+                     "activation Main control file", seen)
+    # Post-read recheck of the file identity/link count/approved mode and of the
+    # captured root/parent identities and modes.  The reader returns only after
+    # all of these still match the pre-read acquisition; identities are never
+    # refreshed or rebased.
+    _main_control_file_recheck(file.path, file_mode, file_identity,
+                               UInt64(file_info.nlink),
+                               "activation Main control file")
+    _main_control_directory_recheck(root, root_mode, root_identity,
+                                    "activation Main control root")
+    _main_control_directory_recheck(parent, parent_mode, parent_identity,
+                                    "activation Main control parent")
+    return _MainControl(root, file, root_mode, parent_mode, file_mode,
+                        root_identity, parent_identity, preimage_sha256,
+                        postimage_sha256)
+end
+
+function _main_control_directory_recheck(path::String, mode::UInt,
+                                         identity::Tuple{UInt64,UInt64},
+                                         context::String)
+    isdir(path) && !islink(path) ||
+        _fail(:BLOCKED, :activation_snapshot_changed, "$context disappeared")
+    _runtime_v3_mode(path, mode, context)
+    (UInt64(stat(path).device), UInt64(stat(path).inode)) == identity ||
+        _fail(:BLOCKED, :activation_snapshot_changed,
+              "$context identity changed")
+    return nothing
+end
+
+# Shared post-read file recheck for the dedicated Main-control object.  It
+# reacquires the captured file identity, link count and approved mode after a
+# read, so a same-bytes replacement or a mode change between the pre-read
+# acquisition and the post-read revalidation is rejected.  It never refreshes
+# the captured identity and never repairs a mode.
+function _main_control_file_recheck(path::String, mode::UInt,
+                                    identity::Tuple{UInt64,UInt64},
+                                    nlink::UInt64, context::String)
+    isfile(path) && !islink(path) ||
+        _fail(:BLOCKED, :activation_snapshot_changed, "$context disappeared")
+    info = stat(path)
+    UInt64(info.nlink) == 1 ||
+        _fail(:BLOCKED, :authority_hardlink, "$context is hard-linked")
+    (UInt64(info.device), UInt64(info.inode), UInt64(info.nlink)) ==
+        (identity[1], identity[2], nlink) ||
+        _fail(:BLOCKED, :authority_snapshot_changed,
+              "$context identity changed")
+    _runtime_v3_mode(path, mode, context)
+    return nothing
+end
+
+function _verify_main_control(control::_MainControl)
+    parent = joinpath(control.root, _T13_CONTROL_PARENT)
+    # Bracket the file read with the captured root/parent identity and mode
+    # checks: the same dedicated object is revalidated before and after the
+    # read, and the file identity/link count/mode is reacquired after the read.
+    _main_control_directory_recheck(control.root, control.root_mode,
+                                    control.root_identity,
+                                    "activation Main control root")
+    _main_control_directory_recheck(parent, control.parent_mode,
+                                    control.parent_identity,
+                                    "activation Main control parent")
+    _verify_snapshot(control.file, "activation Main control file")
+    _main_control_file_recheck(control.file.path, control.file_mode,
+                               (control.file.device, control.file.inode),
+                               control.file.nlink,
+                               "activation Main control file")
+    _main_control_directory_recheck(control.root, control.root_mode,
+                                    control.root_identity,
+                                    "activation Main control root")
+    _main_control_directory_recheck(parent, control.parent_mode,
+                                    control.parent_identity,
+                                    "activation Main control parent")
+    return nothing
+end
+
+function _t13_bool(table, key::String, context::String)
+    haskey(table, key) ||
+        _fail(:BLOCKED, :activation_schema_mismatch, "$context.$key is absent")
+    value = table[key]
+    value isa Bool ||
+        _fail(:BLOCKED, :activation_schema_mismatch, "$context.$key is not boolean")
+    return value
+end
+
+function _t13_int(table, key::String, context::String)
+    haskey(table, key) ||
+        _fail(:BLOCKED, :activation_schema_mismatch, "$context.$key is absent")
+    value = table[key]
+    value isa Integer ||
+        _fail(:BLOCKED, :activation_schema_mismatch, "$context.$key is not an integer")
+    return Int(value)
+end
+
+function _t13_false(table, key::String, context::String)
+    haskey(table, key) ||
+        _fail(:BLOCKED, :activation_schema_mismatch, "$context.$key is absent")
+    value = table[key]
+    value isa Bool ||
+        _fail(:BLOCKED, :activation_schema_mismatch, "$context.$key is not boolean")
+    value === false ||
+        _fail(:BLOCKED, :activation_permission_mismatch, "$context.$key is not denied")
+    return nothing
+end
+
+function _t13_parse_toml(snapshot::_Snapshot, context::String)
+    return try
+        TOML.parse(String(copy(snapshot.bytes)))
+    catch error
+        _fail(:BLOCKED, :activation_schema_mismatch,
+              "$context is not valid TOML: $(sprint(showerror, error))")
+    end
+end
+
+function _t13_canonical_command(options::Dict{String,String})
+    body = String[]
+    for flag in _T13_ACTIVATION_COMMAND_FLAGS
+        haskey(options, flag) ||
+            _fail(:BLOCKED, :activation_command_mismatch,
+                  "activation command is missing $flag")
+        push!(body, flag)
+        push!(body, options[flag])
+    end
+    return body
+end
+
+function _t13_relative_from_option(root::String, value::AbstractString)
+    text = String(value)
+    isempty(text) && _fail(:BLOCKED, :activation_path_invalid, "activation input is empty")
+    absolute = normpath(isabspath(text) ? text : joinpath(root, text))
+    prefix = root == "/" ? "/" : root * "/"
+    (absolute == root || startswith(absolute, prefix)) ||
+        _fail(:BLOCKED, :activation_path_invalid, "activation input escapes root")
+    relative = relpath(absolute, root)
+    return _t13_relative_path_value(relative, "activation input")
+end
+
+function _t13_input_relative_paths(root::String, options::Dict{String,String})
+    return [_t13_relative_from_option(root, options[flag])
+            for flag in ("--features", "--candidate-config", "--model-config",
+                         "--forward-receipt", "--backward-receipt")]
+end
+
+function _t13_directory_relative_paths(root::String, options::Dict{String,String})
+    return [_t13_relative_from_option(root, options[flag])
+            for flag in ("--universe-dir", "--edge-dir", "--admission-dir")]
+end
+
+function _t13_authority_binding(stem::String)
+    target = stem * "_path"
+    for (path_key, path, _, hash, _, _) in _RUNTIME_V4_AUTHORITY_BINDINGS
+        path_key == target && return (path=path, sha256=hash)
+    end
+    _fail(:BLOCKED, :activation_predecessor_mismatch,
+          "unknown activation predecessor $stem")
+end
+
+function _t13_check_predecessor(table, stem::String, expected_path::String,
+                                expected_sha256::String, context::String)
+    path = _t13_relative_path(table, stem * "_path", context)
+    digest = _t13_hash(table, stem * "_sha256", context)
+    path == expected_path && digest == expected_sha256 ||
+        _fail(:BLOCKED, :activation_predecessor_mismatch,
+              "$context.$stem differs from the fixed predecessor binding")
+    return nothing
+end
+
+function _validate_t13_activation_receipt_document(document, receipt_rel::String)
+    context = "activation receipt"
+    _t13_exact_keys(document,
+                    ("schema", "scope", "spec", "source_review",
+                     "transition_review", "boulder", "publication"), context)
+    _t13_string(document, "schema", context) == _T13_ACTIVATION_SCHEMA ||
+        _fail(:BLOCKED, :activation_schema_mismatch, "activation receipt schema differs")
+    scope = _t13_string(document, "scope", context)
+    scope == _T13_SYNTHETIC_SCOPE ||
+        _fail(:BLOCKED, :activation_scope_mismatch, "activation receipt scope differs")
+    spec = _t13_exact_keys(_t13_table(document, "spec", context),
+                           ("path", "sha256"), "$context.spec")
+    source_review = _t13_exact_keys(_t13_table(document, "source_review", context),
+                                    ("path", "sha256"), "$context.source_review")
+    transition_review = _t13_exact_keys(
+        _t13_table(document, "transition_review", context),
+        ("path", "sha256"), "$context.transition_review")
+    boulder = _t13_exact_keys(_t13_table(document, "boulder", context),
+                              ("control_root",
+                               "preimage_path", "preimage_sha256",
+                               "postimage_path", "postimage_sha256"),
+                              "$context.boulder")
+    publication = _t13_exact_keys(_t13_table(document, "publication", context),
+                                  ("path", "sha256"), "$context.publication")
+    referenced = String[
+        _t13_relative_path(spec, "path", "$context.spec"),
+        _t13_relative_path(source_review, "path", "$context.source_review"),
+        _t13_relative_path(transition_review, "path", "$context.transition_review"),
+        _t13_relative_path(publication, "path", "$context.publication"),
+    ]
+    all(path -> path != receipt_rel, referenced) ||
+        _fail(:BLOCKED, :activation_binding_mismatch,
+              "activation receipt references itself")
+    control_root = _t13_string(boulder, "control_root", "$context.boulder")
+    (isabspath(control_root) && normpath(control_root) == control_root) ||
+        _fail(:BLOCKED, :activation_path_invalid,
+              "activation Boulder control_root is not canonical absolute")
+    preimage_path = _t13_relative_path(boulder, "preimage_path", "$context.boulder")
+    preimage_sha256 = _t13_hash(boulder, "preimage_sha256", "$context.boulder")
+    postimage_path = _t13_relative_path(boulder, "postimage_path", "$context.boulder")
+    postimage_sha256 = _t13_hash(boulder, "postimage_sha256", "$context.boulder")
+    preimage_path == _T13_CONTROL_FILENAME ||
+        _fail(:BLOCKED, :activation_state_mismatch,
+              "activation Boulder preimage path is not the fixed Gate4 state path")
+    postimage_path == _T13_CONTROL_FILENAME ||
+        _fail(:BLOCKED, :activation_state_mismatch,
+              "activation Boulder postimage path is not the fixed Main-control state path")
+    preimage_sha256 == _RUNTIME_V4_BOULDER_SHA256 ||
+        _fail(:BLOCKED, :activation_state_mismatch,
+              "activation Boulder preimage is not the fixed Gate4 state")
+    postimage_sha256 != preimage_sha256 ||
+        _fail(:BLOCKED, :activation_state_mismatch,
+              "activation Boulder postimage equals the Gate4 preimage")
+    return (scope=scope,
+            control_root=control_root,
+            spec_path=_t13_relative_path(spec, "path", "$context.spec"),
+            spec_sha256=_t13_hash(spec, "sha256", "$context.spec"),
+            source_review_path=_t13_relative_path(source_review, "path",
+                                                  "$context.source_review"),
+            source_review_sha256=_t13_hash(source_review, "sha256",
+                                           "$context.source_review"),
+            transition_review_path=_t13_relative_path(transition_review, "path",
+                                                      "$context.transition_review"),
+            transition_review_sha256=_t13_hash(transition_review, "sha256",
+                                               "$context.transition_review"),
+            boulder_preimage_path=preimage_path,
+            boulder_preimage_sha256=preimage_sha256,
+            boulder_postimage_path=postimage_path,
+            boulder_postimage_sha256=postimage_sha256,
+            publication_path=_t13_relative_path(publication, "path",
+                                                "$context.publication"),
+            publication_sha256=_t13_hash(publication, "sha256",
+                                         "$context.publication"))
+end
+
+function _validate_t13_execution_spec_document(document, root::String,
+                                               options::Dict{String,String})
+    context = "activation execution spec"
+    _t13_exact_keys(document,
+                    ("schema", "scope", "root", "control", "entrypoint", "config",
+                     "project", "manifest", "source", "command", "launch",
+                     "destination", "inputs", "dependencies", "predecessors",
+                     "permissions"),
+                    context)
+    _t13_string(document, "schema", context) == _T13_EXECUTION_SPEC_SCHEMA ||
+        _fail(:BLOCKED, :activation_schema_mismatch,
+              "activation execution spec schema differs")
+    scope = _t13_string(document, "scope", context)
+    scope == _T13_SYNTHETIC_SCOPE ||
+        _fail(:BLOCKED, :activation_scope_mismatch,
+              "activation execution spec scope differs")
+
+    root_table = _t13_exact_keys(_t13_table(document, "root", context),
+                                 ("path",), "$context.root")
+    root_path = _t13_string(root_table, "path", "$context.root")
+    (isabspath(root_path) && normpath(root_path) == root_path) ||
+        _fail(:BLOCKED, :activation_root_mismatch,
+              "activation execution spec root is not canonical")
+    root_path == root ||
+        _fail(:BLOCKED, :activation_root_mismatch,
+              "activation execution spec root differs")
+
+    # Main-control table: exactly the fixed role, one canonical absolute Main
+    # root and the three approved modes.  The spec does not contain a future
+    # Boulder postimage digest; the receipt carries it, so the spec/receipt
+    # chain stays acyclic.
+    control = _t13_exact_keys(_t13_table(document, "control", context),
+                              _T13_CONTROL_KEYS, "$context.control")
+    control_role = _t13_string(control, "role", "$context.control")
+    control_root = _t13_string(control, "root", "$context.control")
+    (isabspath(control_root) && normpath(control_root) == control_root) ||
+        _fail(:BLOCKED, :activation_path_invalid,
+              "activation Main control root is not canonical absolute")
+    control_root_mode = _t13_mode(control, "root_mode", "$context.control")
+    control_parent_mode = _t13_mode(control, "parent_mode", "$context.control")
+    control_file_mode = _t13_mode(control, "file_mode", "$context.control")
+
+    entrypoint = _t13_exact_keys(_t13_table(document, "entrypoint", context),
+                                 ("path", "sha256"), "$context.entrypoint")
+    entrypoint_path = _t13_relative_path(entrypoint, "path", "$context.entrypoint")
+    entrypoint_path == "test/evaluate_structured_unit_assignment.jl" ||
+        _fail(:BLOCKED, :activation_entrypoint_mismatch,
+              "activation execution spec entrypoint differs")
+    entrypoint_sha256 = _t13_hash(entrypoint, "sha256", "$context.entrypoint")
+
+    config = _t13_exact_keys(_t13_table(document, "config", context),
+                             ("path", "sha256"), "$context.config")
+    config_path = _t13_relative_path(config, "path", "$context.config")
+    config_sha256 = _t13_hash(config, "sha256", "$context.config")
+    config_path == _RUNTIME_V4_CONFIG_PATH &&
+        config_sha256 == _RUNTIME_V4_CONFIG_SHA256 ||
+        _fail(:BLOCKED, :activation_config_mismatch,
+              "activation execution spec config differs from the unchanged runtime-v4 config")
+
+    project = _t13_exact_keys(_t13_table(document, "project", context),
+                              ("path", "sha256"), "$context.project")
+    project_path = _t13_relative_path(project, "path", "$context.project")
+    project_sha256 = _t13_hash(project, "sha256", "$context.project")
+    project_path == "Project.toml" ||
+        _fail(:BLOCKED, :activation_binding_mismatch,
+              "activation Project.toml path differs")
+    manifest = _t13_exact_keys(_t13_table(document, "manifest", context),
+                               ("path", "sha256"), "$context.manifest")
+    manifest_path = _t13_relative_path(manifest, "path", "$context.manifest")
+    manifest_sha256 = _t13_hash(manifest, "sha256", "$context.manifest")
+    manifest_path == "Manifest.toml" ||
+        _fail(:BLOCKED, :activation_binding_mismatch,
+              "activation Manifest.toml path differs")
+
+    source = _t13_exact_keys(_t13_table(document, "source", context),
+                             ("files",), "$context.source")
+    source_entries = _t13_table_array(source, "files", "$context.source")
+    length(source_entries) == length(_T13_SOURCE_CLOSURE) ||
+        _fail(:BLOCKED, :activation_source_mismatch,
+              "activation source closure cardinality differs")
+    source_files = NamedTuple[]
+    source_paths = Set{String}()
+    for entry in source_entries
+        entry_table = _t13_exact_keys(entry, ("path", "sha256", "mode"),
+                                      "$context.source.files[]")
+        path = _t13_relative_path(entry_table, "path", "$context.source.files[]")
+        path in source_paths &&
+            _fail(:BLOCKED, :activation_source_mismatch,
+                  "activation source closure contains a duplicate")
+        push!(source_paths, path)
+        push!(source_files, (path=path,
+                             sha256=_t13_hash(entry_table, "sha256",
+                                              "$context.source.files[]"),
+                             mode=_t13_mode(entry_table, "mode",
+                                            "$context.source.files[]")))
+    end
+    source_paths == Set(String.(collect(_T13_SOURCE_CLOSURE))) ||
+        _fail(:BLOCKED, :activation_source_mismatch,
+              "activation source closure differs from the consumed include closure")
+
+    command = _t13_exact_keys(_t13_table(document, "command", context),
+                              ("body", "environment"), "$context.command")
+    body = _t13_string_array(command, "body", "$context.command")
+    body == _t13_canonical_command(options) ||
+        _fail(:BLOCKED, :activation_command_mismatch,
+              "activation command body differs from the approved invocation")
+    environment = _t13_table_array(command, "environment", "$context.command")
+    length(environment) == 1 ||
+        _fail(:BLOCKED, :activation_command_mismatch,
+              "activation environment must record exactly one restricted entry")
+    environment_entry = _t13_exact_keys(environment[1], ("name", "value"),
+                                        "$context.command.environment[]")
+    environment_name = _t13_string(environment_entry, "name",
+                                   "$context.command.environment[]")
+    environment_value = _t13_string(environment_entry, "value",
+                                    "$context.command.environment[]")
+    environment_name == _T13_SYNTHETIC_ENVIRONMENT &&
+        environment_value == "1" &&
+        get(ENV, environment_name, "") == environment_value ||
+        _fail(:BLOCKED, :activation_command_mismatch,
+              "activation environment is not the approved synthetic scope")
+
+    launch = _t13_exact_keys(_t13_table(document, "launch", context),
+                             _T13_LAUNCH_KEYS, "$context.launch")
+    launch_active_project = _t13_string(launch, "active_project", "$context.launch")
+    (isabspath(launch_active_project) &&
+     normpath(launch_active_project) == launch_active_project) ||
+        _fail(:BLOCKED, :activation_launch_mismatch,
+              "activation launch active_project is not canonical")
+    launch_cwd = _t13_string(launch, "cwd", "$context.launch")
+    (isabspath(launch_cwd) && normpath(launch_cwd) == launch_cwd) ||
+        _fail(:BLOCKED, :activation_launch_mismatch,
+              "activation launch cwd is not canonical")
+    launch_startup_file = _t13_bool(launch, "startup_file", "$context.launch")
+    launch_history_file = _t13_bool(launch, "history_file", "$context.launch")
+    launch_threads = _t13_int(launch, "threads", "$context.launch")
+    launch_blas_threads = _t13_int(launch, "blas_threads", "$context.launch")
+    launch_depot_path = _t13_string(launch, "depot_path", "$context.launch")
+    launch_load_path = _t13_string_array(launch, "load_path", "$context.launch")
+    launch_offline = _t13_bool(launch, "offline", "$context.launch")
+    launch_forbidden = _t13_string_array(launch, "forbidden_environment",
+                                         "$context.launch")
+    Set(launch_forbidden) == Set(String.(collect(_T13_FORBIDDEN_ENVIRONMENT))) &&
+        length(launch_forbidden) == length(_T13_FORBIDDEN_ENVIRONMENT) ||
+        _fail(:BLOCKED, :activation_launch_mismatch,
+              "activation launch forbidden_environment differs from the fixed set")
+
+    destination = _t13_exact_keys(_t13_table(document, "destination", context),
+                                  ("path", "reports"), "$context.destination")
+    destination_path = _t13_relative_path(destination, "path", "$context.destination")
+    reports = _t13_string_array(destination, "reports", "$context.destination")
+    Set(reports) == Set(String.(collect(_FILES))) &&
+        length(reports) == length(_FILES) ||
+        _fail(:BLOCKED, :activation_destination_mismatch,
+              "activation report name set differs from the nine frozen report names")
+    destination_absolute = _publication_destination(
+        root, options["--out-dir"], "activation destination")
+    normpath(joinpath(root, destination_path)) == destination_absolute ||
+        _fail(:BLOCKED, :activation_destination_mismatch,
+              "activation destination differs from the approved command")
+
+    inputs = _t13_exact_keys(_t13_table(document, "inputs", context),
+                             ("files", "directories"), "$context.inputs")
+    input_entries = _t13_table_array(inputs, "files", "$context.inputs")
+    length(input_entries) == 5 ||
+        _fail(:BLOCKED, :activation_binding_mismatch,
+              "activation input file scope cardinality differs")
+    spec_files = NamedTuple[]
+    input_paths = Set{String}()
+    for entry in input_entries
+        entry_table = _t13_exact_keys(entry, ("path", "sha256", "mode"),
+                                      "$context.inputs.files[]")
+        path = _t13_relative_path(entry_table, "path", "$context.inputs.files[]")
+        path in input_paths &&
+            _fail(:BLOCKED, :activation_binding_mismatch,
+                  "activation input file scope contains a duplicate")
+        push!(input_paths, path)
+        push!(spec_files, (path=path,
+                           sha256=_t13_hash(entry_table, "sha256",
+                                            "$context.inputs.files[]"),
+                           mode=_t13_mode(entry_table, "mode",
+                                          "$context.inputs.files[]")))
+    end
+    input_paths == Set(_t13_input_relative_paths(root, options)) ||
+        _fail(:BLOCKED, :activation_binding_mismatch,
+              "activation input file scope differs from the approved command")
+    directory_entries = _t13_table_array(inputs, "directories", "$context.inputs")
+    length(directory_entries) == 3 ||
+        _fail(:BLOCKED, :activation_binding_mismatch,
+              "activation input directory scope cardinality differs")
+    spec_directories = NamedTuple[]
+    directory_paths = Set{String}()
+    for entry in directory_entries
+        entry_table = _t13_exact_keys(entry, ("path", "mode", "members"),
+                                      "$context.inputs.directories[]")
+        path = _t13_relative_path(entry_table, "path",
+                                  "$context.inputs.directories[]")
+        path in directory_paths &&
+            _fail(:BLOCKED, :activation_binding_mismatch,
+                  "activation input directory scope contains a duplicate")
+        push!(directory_paths, path)
+        directory_mode = _t13_mode(entry_table, "mode",
+                                   "$context.inputs.directories[]")
+        member_entries = _t13_table_array(entry_table, "members",
+                                          "$context.inputs.directories[]")
+        members = NamedTuple[]
+        member_names = Set{String}()
+        for member_entry in member_entries
+            member_table = _t13_exact_keys(
+                member_entry, ("name", "sha256", "mode"),
+                "$context.inputs.directories[].members[]")
+            name = _t13_string(member_table, "name",
+                               "$context.inputs.directories[].members[]")
+            (!isempty(name) && name == basename(name) &&
+             !occursin('\\', name) && name ∉ (".", "..")) ||
+                _fail(:BLOCKED, :activation_binding_mismatch,
+                      "activation directory inventory contains a non-member name")
+            name in member_names &&
+                _fail(:BLOCKED, :activation_binding_mismatch,
+                      "activation directory inventory contains a duplicate member")
+            push!(member_names, name)
+            push!(members, (name=name,
+                            sha256=_t13_hash(member_table, "sha256",
+                                             "$context.inputs.directories[].members[]"),
+                            mode=_t13_mode(member_table, "mode",
+                                           "$context.inputs.directories[].members[]")))
+        end
+        push!(spec_directories, (path=path, mode=directory_mode, members=members))
+    end
+    directory_paths == Set(_t13_directory_relative_paths(root, options)) ||
+        _fail(:BLOCKED, :activation_binding_mismatch,
+              "activation input directory scope differs from the approved command")
+
+    dependencies = _t13_exact_keys(_t13_table(document, "dependencies", context),
+                                   ("files", "directories", "identity_paths"),
+                                   "$context.dependencies")
+    dependency_files = NamedTuple[]
+    dependency_file_paths = Set{String}()
+    for entry in _t13_table_array(dependencies, "files", "$context.dependencies")
+        entry_table = _t13_exact_keys(entry, ("path", "sha256", "mode"),
+                                      "$context.dependencies.files[]")
+        path = _t13_relative_path(entry_table, "path",
+                                  "$context.dependencies.files[]")
+        path in dependency_file_paths &&
+            _fail(:BLOCKED, :activation_binding_mismatch,
+                  "activation dependency file set contains a duplicate")
+        push!(dependency_file_paths, path)
+        push!(dependency_files, (path=path,
+                                 sha256=_t13_hash(entry_table, "sha256",
+                                                  "$context.dependencies.files[]"),
+                                 mode=_t13_mode(entry_table, "mode",
+                                                "$context.dependencies.files[]")))
+    end
+    dependency_directories = NamedTuple[]
+    dependency_directory_paths = Set{String}()
+    for entry in _t13_table_array(dependencies, "directories", "$context.dependencies")
+        entry_table = _t13_exact_keys(entry, ("path", "mode", "members"),
+                                      "$context.dependencies.directories[]")
+        path = _t13_relative_path(entry_table, "path",
+                                  "$context.dependencies.directories[]")
+        path in dependency_directory_paths &&
+            _fail(:BLOCKED, :activation_binding_mismatch,
+                  "activation dependency directory set contains a duplicate")
+        push!(dependency_directory_paths, path)
+        directory_mode = _t13_mode(entry_table, "mode",
+                                   "$context.dependencies.directories[]")
+        members = NamedTuple[]
+        member_names = Set{String}()
+        for member_entry in _t13_table_array(
+                entry_table, "members", "$context.dependencies.directories[]")
+            member_table = _t13_exact_keys(
+                member_entry, ("name", "sha256", "mode"),
+                "$context.dependencies.directories[].members[]")
+            name = _t13_string(member_table, "name",
+                               "$context.dependencies.directories[].members[]")
+            (!isempty(name) && name == basename(name) &&
+             !occursin('\\', name) && name ∉ (".", "..")) ||
+                _fail(:BLOCKED, :activation_binding_mismatch,
+                      "activation dependency directory has a non-member name")
+            name in member_names &&
+                _fail(:BLOCKED, :activation_binding_mismatch,
+                      "activation dependency directory has a duplicate member")
+            push!(member_names, name)
+            push!(members, (name=name,
+                            sha256=_t13_hash(member_table, "sha256",
+                                             "$context.dependencies.directories[].members[]"),
+                            mode=_t13_mode(member_table, "mode",
+                                           "$context.dependencies.directories[].members[]")))
+        end
+        push!(dependency_directories, (path=path, mode=directory_mode,
+                                       members=members))
+    end
+    identity_paths = NamedTuple[]
+    identity_seen = Set{String}()
+    for entry in _t13_table_array(dependencies, "identity_paths",
+                                  "$context.dependencies")
+        entry_table = _t13_exact_keys(entry, ("path", "kind"),
+                                      "$context.dependencies.identity_paths[]")
+        path = _t13_relative_path(entry_table, "path",
+                                  "$context.dependencies.identity_paths[]")
+        kind = _t13_string(entry_table, "kind",
+                           "$context.dependencies.identity_paths[]")
+        kind in ("file", "directory") ||
+            _fail(:BLOCKED, :activation_binding_mismatch,
+                  "activation identity path kind is invalid")
+        path in identity_seen &&
+            _fail(:BLOCKED, :activation_binding_mismatch,
+                  "activation identity path set contains a duplicate")
+        push!(identity_seen, path)
+        push!(identity_paths, (path=path, kind=kind))
+    end
+
+    predecessors = _t13_exact_keys(
+        _t13_table(document, "predecessors", context),
+        ("gate4_expected_boulder_postimage_path",
+         "gate4_expected_boulder_postimage_sha256",
+         "gate4_transition_receipt_path", "gate4_transition_receipt_sha256",
+         "gate4_post_review_path", "gate4_post_review_sha256",
+         "gate4_oracle_final_review_path", "gate4_oracle_final_review_sha256",
+         "gate5_publication_receipt_path", "gate5_publication_receipt_sha256",
+         "gate2_oracle_review_path", "gate2_oracle_review_sha256"),
+        "$context.predecessors")
+    predecessor_bindings = Dict{String,NamedTuple}()
+    for key in ("gate4_expected_boulder_postimage", "gate4_transition_receipt",
+                "gate4_post_review", "gate4_oracle_final_review")
+        predecessor_bindings[key] = _t13_authority_binding(key)
+    end
+    predecessor_bindings["gate5_publication_receipt"] =
+        (path=_T13_GATE5_PUBLICATION_PATH, sha256=_T13_GATE5_PUBLICATION_SHA256)
+    predecessor_bindings["gate2_oracle_review"] =
+        (path=_T13_GATE2_ORACLE_REVIEW_PATH, sha256=_T13_GATE2_ORACLE_REVIEW_SHA256)
+    for (key, binding) in predecessor_bindings
+        _t13_check_predecessor(predecessors, key, binding.path, binding.sha256,
+                               "$context.predecessors")
+    end
+    gate4_expected = predecessor_bindings["gate4_expected_boulder_postimage"]
+    gate4_transition = predecessor_bindings["gate4_transition_receipt"]
+    gate4_post_review = predecessor_bindings["gate4_post_review"]
+    gate4_oracle = predecessor_bindings["gate4_oracle_final_review"]
+    gate5_publication = predecessor_bindings["gate5_publication_receipt"]
+    gate2_oracle = predecessor_bindings["gate2_oracle_review"]
+
+    permissions = _t13_exact_keys(
+        _t13_table(document, "permissions", context),
+        ("real_campaign", "public_producer", "t14", "downstream", "grading",
+         "runtime_equivalence"), "$context.permissions")
+    for key in ("real_campaign", "public_producer", "t14", "downstream", "grading",
+                "runtime_equivalence")
+        _t13_false(permissions, key, "$context.permissions")
+    end
+
+    return (scope=scope,
+            control=(role=control_role, root=control_root,
+                     root_mode=control_root_mode,
+                     parent_mode=control_parent_mode,
+                     file_mode=control_file_mode),
+            entrypoint_path=entrypoint_path,
+            entrypoint_sha256=entrypoint_sha256,
+            project_path=project_path,
+            project_sha256=project_sha256,
+            manifest_path=manifest_path,
+            manifest_sha256=manifest_sha256,
+            destination_path=destination_path,
+            command_body=body,
+            source_files=source_files,
+            spec_files=spec_files,
+            spec_directories=spec_directories,
+            dependency_files=dependency_files,
+            dependency_directories=dependency_directories,
+            identity_paths=identity_paths,
+            launch=(active_project=launch_active_project,
+                    cwd=launch_cwd,
+                    startup_file=launch_startup_file,
+                    history_file=launch_history_file,
+                    threads=launch_threads,
+                    blas_threads=launch_blas_threads,
+                    depot_path=launch_depot_path,
+                    load_path=launch_load_path,
+                    offline=launch_offline,
+                    forbidden_environment=launch_forbidden),
+            gate4_expected_boulder_postimage_path=gate4_expected.path,
+            gate4_expected_boulder_postimage_sha256=gate4_expected.sha256,
+            gate4_transition_receipt_path=gate4_transition.path,
+            gate4_transition_receipt_sha256=gate4_transition.sha256,
+            gate4_post_review_path=gate4_post_review.path,
+            gate4_post_review_sha256=gate4_post_review.sha256,
+            gate4_oracle_final_review_path=gate4_oracle.path,
+            gate4_oracle_final_review_sha256=gate4_oracle.sha256,
+            gate5_publication_receipt_path=gate5_publication.path,
+            gate5_publication_receipt_sha256=gate5_publication.sha256,
+            gate2_oracle_review_path=gate2_oracle.path,
+            gate2_oracle_review_sha256=gate2_oracle.sha256)
+end
+
+function _validate_t13_launch_environment(launch, root::String)
+    expected_project = normpath(joinpath(root, "Project.toml"))
+    active = Base.active_project()
+    active === nothing &&
+        _fail(:BLOCKED, :activation_launch_mismatch, "no active project is set")
+    realpath(active) == expected_project ||
+        _fail(:BLOCKED, :activation_launch_mismatch,
+              "active project is not the bound-root Project.toml")
+    launch.active_project == expected_project ||
+        _fail(:BLOCKED, :activation_launch_mismatch,
+              "recorded active project differs from the bound root")
+    launch.cwd == pwd() ||
+        _fail(:BLOCKED, :activation_launch_mismatch, "recorded cwd differs")
+    launch.startup_file == (Base.JLOptions().startupfile == 2) ||
+        _fail(:BLOCKED, :activation_launch_mismatch,
+              "startup-file setting differs from the recorded binding")
+    launch.history_file == (Base.JLOptions().historyfile == 0) ||
+        _fail(:BLOCKED, :activation_launch_mismatch,
+              "history-file setting differs from the recorded binding")
+    launch.threads == Base.Threads.nthreads() ||
+        _fail(:BLOCKED, :activation_launch_mismatch, "Julia thread count differs")
+    launch.blas_threads == LinearAlgebra.BLAS.get_num_threads() ||
+        _fail(:BLOCKED, :activation_launch_mismatch, "BLAS thread count differs")
+    launch.depot_path == first(DEPOT_PATH) ||
+        _fail(:BLOCKED, :activation_launch_mismatch, "depot path differs")
+    launch.load_path == String.(LOAD_PATH) ||
+        _fail(:BLOCKED, :activation_launch_mismatch, "load path differs")
+    launch.offline == (get(ENV, "JULIA_PKG_OFFLINE", "") in ("true", "1")) ||
+        _fail(:BLOCKED, :activation_launch_mismatch, "offline setting differs")
+    for name in _T13_FORBIDDEN_ENVIRONMENT
+        haskey(ENV, name) && !isempty(ENV[name]) &&
+            _fail(:BLOCKED, :activation_launch_mismatch,
+                  "forbidden environment variable is set: $name")
+    end
+    return nothing
+end
+
+function _t13_snapshot_at(snapshots::Vector{_Snapshot}, root::String,
+                          relative::String, context::String)
+    absolute = normpath(joinpath(root, relative))
+    matches = [snapshot for snapshot in snapshots if snapshot.path == absolute]
+    length(matches) == 1 ||
+        _fail(:BLOCKED, :activation_binding_mismatch,
+              "$context snapshot is absent or duplicated")
+    return only(matches)
+end
+
+function _t13_receipt_string(document, key::String, context::String)
+    haskey(document, key) ||
+        _fail(:BLOCKED, :activation_dependency_mismatch,
+              "$context.$key is absent")
+    value = document[key]
+    value isa AbstractString ||
+        _fail(:BLOCKED, :activation_dependency_mismatch,
+              "$context.$key is not a string")
+    return String(value)
+end
+
+function _t13_dependency_hash(entries, path::String)
+    matches = [entry.sha256 for entry in entries if entry.path == path]
+    length(matches) == 1 ||
+        _fail(:BLOCKED, :activation_dependency_mismatch,
+              "declared dependency is absent or duplicated: $path")
+    return only(matches)
+end
+
+function _t13_snapshot_approved_directory(root::String, entry, seen,
+                                          modes::Dict{String,UInt};
+                                          existing::Union{Nothing,Vector{_Snapshot}}=nothing)
+    directory = _repo_path(root, entry.path, "activation input directory")
+    isdir(directory) && !islink(directory) ||
+        _fail(:BLOCKED, :activation_binding_mismatch,
+              "activation input directory is absent or not a directory")
+    _runtime_v3_mode(directory, entry.mode,
+                     "activation input directory $(entry.path)")
+    actual_names = sort(readdir(directory))
+    approved_names = sort(String[member.name for member in entry.members])
+    actual_names == approved_names ||
+        _fail(:BLOCKED, :activation_binding_mismatch,
+              "activation input directory membership differs: $(entry.path)")
+    snapshots = _Snapshot[]
+    for member in sort(entry.members; by=member -> member.name)
+        member_path = joinpath(directory, member.name)
+        islink(member_path) &&
+            _fail(:BLOCKED, :activation_symlink,
+                  "activation input member is a symlink: $(entry.path)/$(member.name)")
+        absolute = normpath(joinpath(root, entry.path, member.name))
+        overlap = existing === nothing ? _Snapshot[] :
+                  [snapshot for snapshot in existing if snapshot.path == absolute]
+        if !isempty(overlap)
+            length(overlap) == 1 ||
+                _fail(:BLOCKED, :activation_binding_mismatch,
+                      "overlapping directory member is duplicated: $(entry.path)/$(member.name)")
+            only(overlap).sha256 == member.sha256 ||
+                _fail(:BLOCKED, :activation_binding_mismatch,
+                      "overlapping directory member hash differs: $(entry.path)/$(member.name)")
+            _runtime_v3_mode(absolute, member.mode,
+                             "activation input member $(entry.path)/$(member.name)")
+            modes[absolute] = member.mode
+            continue
+        end
+        snapshot = _snapshot(root, joinpath(entry.path, member.name), member.sha256,
+                             "activation input member $(entry.path)/$(member.name)",
+                             seen)
+        _runtime_v3_mode(snapshot.path, member.mode,
+                         "activation input member $(entry.path)/$(member.name)")
+        modes[snapshot.path] = member.mode
+        push!(snapshots, snapshot)
+    end
+    modes[directory] = entry.mode
+    return directory, actual_names, snapshots
+end
+
+function _authorize_t13_activation(options::Dict{String,String})
+    root = options["--root"]
+    isabspath(root) || _fail(:BLOCKED, :authority_path_invalid, "root must be absolute")
+    isdir(root) || _fail(:BLOCKED, :authority_path_invalid, "root is not a directory")
+    root = normpath(root)
+    realpath(root) == root ||
+        _fail(:BLOCKED, :authority_path_invalid, "root is not canonical")
+    VERSION == _RUNTIME_V4_JULIA ||
+        _fail(:BLOCKED, :runtime_version_mismatch, "Julia 1.12.7 is required")
+
+    expected_receipt = String(options["--activation-sha256"])
+    occursin(r"^[0-9a-f]{64}$", expected_receipt) ||
+        _fail(:BLOCKED, :activation_receipt_mismatch,
+              "activation receipt digest is not a SHA-256")
+    receipt_rel = _t13_relative_path_value(options["--activation-receipt"],
+                                           "activation receipt")
+    seen = Dict{Tuple{UInt64,UInt64},String}()
+    receipt = _snapshot(root, receipt_rel, expected_receipt, "activation receipt", seen)
+    receipt_document = _t13_parse_toml(receipt, "activation receipt")
+    receipt_bindings = _validate_t13_activation_receipt_document(receipt_document,
+                                                                 receipt_rel)
+    spec = _snapshot(root, receipt_bindings.spec_path, receipt_bindings.spec_sha256,
+                     "activation execution spec", seen)
+    spec_document = _t13_parse_toml(spec, "activation execution spec")
+    spec_bindings = _validate_t13_execution_spec_document(spec_document, root, options)
+    _validate_t13_launch_environment(spec_bindings.launch, root)
+
+    entrypoint_absolute = _repo_path(root, spec_bindings.entrypoint_path,
+                                     "activation entrypoint")
+    running_entrypoint = realpath(@__FILE__)
+    running_entrypoint == entrypoint_absolute ||
+        _fail(:BLOCKED, :activation_source_mismatch,
+              "running evaluator entrypoint does not belong to the bound root")
+    isfile(running_entrypoint) && !islink(running_entrypoint) ||
+        _fail(:BLOCKED, :activation_source_mismatch,
+              "running evaluator entrypoint is not a regular file")
+    _hash_bytes(read(running_entrypoint)) == spec_bindings.entrypoint_sha256 ||
+        _fail(:BLOCKED, :activation_source_mismatch,
+              "running evaluator entrypoint bytes differ from the approved source")
+
+    # The receipt's control root must agree with the spec's Main-control root.
+    # The receipt preimage must be the fixed Gate4 state; the receipt postimage
+    # is the reviewed digest that the live Main file must match.  The dedicated
+    # control reader is the only place the fixed Main filename is read.
+    receipt_bindings.control_root == spec_bindings.control.root ||
+        _fail(:BLOCKED, :activation_binding_mismatch,
+              "activation receipt control_root differs from the spec control root")
+    receipt_bindings.boulder_preimage_sha256 == _RUNTIME_V4_BOULDER_SHA256 ||
+        _fail(:BLOCKED, :activation_state_mismatch,
+              "activation Boulder preimage is not the fixed Gate4 state")
+    control = _read_main_control(spec_bindings.control,
+                                 receipt_bindings.control_root,
+                                 receipt_bindings.boulder_preimage_sha256,
+                                 receipt_bindings.boulder_postimage_sha256)
+
+    _runtime_v3_mode(receipt.path, _T13_CONTROL_RECORD_MODE,
+                     "activation receipt")
+    _runtime_v3_mode(spec.path, _T13_CONTROL_RECORD_MODE,
+                     "activation execution spec")
+    source_review = _snapshot(root, receipt_bindings.source_review_path,
+                              receipt_bindings.source_review_sha256,
+                              "activation source review", seen)
+    _runtime_v3_mode(source_review.path, _T13_CONTROL_RECORD_MODE,
+                     "activation source review")
+    transition_review = _snapshot(root, receipt_bindings.transition_review_path,
+                                  receipt_bindings.transition_review_sha256,
+                                  "activation transition review", seen)
+    _runtime_v3_mode(transition_review.path, _T13_CONTROL_RECORD_MODE,
+                     "activation transition review")
+    publication = _snapshot(root, receipt_bindings.publication_path,
+                            receipt_bindings.publication_sha256,
+                            "activation transition publication", seen)
+    _runtime_v3_mode(publication.path, _T13_CONTROL_RECORD_MODE,
+                     "activation transition publication")
+    # The Main-control object above already bound the one fixed
+    # `.omo/boulder.json` under the reviewed Main root.  The execution root R is
+    # never consulted for control bytes; an R-local file is a non-consumed
+    # decoy, and no R Boulder snapshot is created or aliased here.
+    predecessors = _Snapshot[]
+    for (path, digest, mode, label) in (
+        (spec_bindings.gate4_expected_boulder_postimage_path,
+         spec_bindings.gate4_expected_boulder_postimage_sha256,
+         _runtime_v4_expected_mode(
+             joinpath(root, spec_bindings.gate4_expected_boulder_postimage_path)),
+         "Gate4 expected Boulder postimage"),
+        (spec_bindings.gate4_transition_receipt_path,
+         spec_bindings.gate4_transition_receipt_sha256,
+         _runtime_v4_expected_mode(
+             joinpath(root, spec_bindings.gate4_transition_receipt_path)),
+         "Gate4 transition receipt"),
+        (spec_bindings.gate4_post_review_path,
+         spec_bindings.gate4_post_review_sha256,
+         _runtime_v4_expected_mode(
+             joinpath(root, spec_bindings.gate4_post_review_path)),
+         "Gate4 post-execution review"),
+        (spec_bindings.gate4_oracle_final_review_path,
+         spec_bindings.gate4_oracle_final_review_sha256,
+         _runtime_v4_expected_mode(
+             joinpath(root, spec_bindings.gate4_oracle_final_review_path)),
+         "Gate4 Oracle final review"),
+        (spec_bindings.gate5_publication_receipt_path,
+         spec_bindings.gate5_publication_receipt_sha256,
+         _T13_GATE5_PUBLICATION_MODE,
+         "Gate5 publication receipt"),
+        (spec_bindings.gate2_oracle_review_path,
+         spec_bindings.gate2_oracle_review_sha256,
+         _T13_GATE2_ORACLE_REVIEW_MODE,
+         "Gate2 Oracle review"),
+    )
+        mode === nothing &&
+            _fail(:BLOCKED, :activation_predecessor_mismatch,
+                  "$label has no fixed predecessor mode")
+        snapshot = _snapshot(root, path, digest, label, seen)
+        _runtime_v3_mode(snapshot.path, mode, label)
+        push!(predecessors, snapshot)
+    end
+    project = _snapshot(root, spec_bindings.project_path, spec_bindings.project_sha256,
+                        "activation Project.toml", seen)
+    manifest = _snapshot(root, spec_bindings.manifest_path,
+                         spec_bindings.manifest_sha256,
+                         "activation Manifest.toml", seen)
+    source_snapshots = _Snapshot[]
+    for entry in spec_bindings.source_files
+        snapshot = _snapshot(root, entry.path, entry.sha256,
+                             "activation source $(entry.path)", seen)
+        _runtime_v3_mode(snapshot.path, entry.mode, "activation source $(entry.path)")
+        push!(source_snapshots, snapshot)
+    end
+    entrypoint_matches = [snapshot for snapshot in source_snapshots
+                          if snapshot.path == entrypoint_absolute]
+    length(entrypoint_matches) == 1 ||
+        _fail(:BLOCKED, :activation_source_mismatch,
+              "activation source closure does not bind the entrypoint exactly once")
+    only(entrypoint_matches).sha256 == spec_bindings.entrypoint_sha256 ||
+        _fail(:BLOCKED, :activation_source_mismatch,
+              "activation entrypoint binding differs from the source closure")
+
+    snapshots = vcat(_Snapshot[receipt, spec, source_review, transition_review,
+                               publication],
+                     predecessors, _Snapshot[project, manifest], source_snapshots)
+    modes = Dict{String,UInt}()
+    for snapshot in snapshots
+        modes[snapshot.path] = UInt(stat(snapshot.path).mode) & UInt(0o777)
+    end
+    for entry in spec_bindings.source_files
+        modes[normpath(joinpath(root, entry.path))] = entry.mode
+    end
+    # Bind every approved input byte and mode before any publication-capable
+    # context exists.  The loader must not re-hash these inputs with observed
+    # values; it revalidates these snapshots instead.
+    input_snapshots = _Snapshot[]
+    input_inventories = Tuple{String,Vector{String}}[]
+    input_directories = String[]
+    for entry in spec_bindings.spec_files
+        snapshot = _snapshot(root, entry.path, entry.sha256,
+                             "activation input file $(entry.path)", seen)
+        _runtime_v3_mode(snapshot.path, entry.mode,
+                         "activation input file $(entry.path)")
+        modes[snapshot.path] = entry.mode
+        push!(input_snapshots, snapshot)
+    end
+    for entry in spec_bindings.spec_directories
+        directory, names, members = _t13_snapshot_approved_directory(
+            root, entry, seen, modes)
+        push!(input_directories, directory)
+        push!(input_inventories, (relpath(directory, root), names))
+        append!(input_snapshots, members)
+    end
+    directory_identities = Dict{String,Tuple{UInt64,UInt64}}()
+    # F3: finite receipt-derived and fixed provenance dependencies.  The
+    # expected closed set is derived from the bound producer receipts and the
+    # unchanged predecessor readers; the spec must declare exactly that set.
+    forward_rel = _t13_relative_from_option(root, options["--forward-receipt"])
+    backward_rel = _t13_relative_from_option(root, options["--backward-receipt"])
+    forward_snapshot = _t13_snapshot_at(input_snapshots, root, forward_rel,
+                                        "forward producer receipt")
+    backward_snapshot = _t13_snapshot_at(input_snapshots, root, backward_rel,
+                                         "backward producer receipt")
+    forward_receipt = _t13_parse_toml(forward_snapshot, "forward producer receipt")
+    backward_receipt = _t13_parse_toml(backward_snapshot, "backward producer receipt")
+    for (document, label) in ((forward_receipt, "forward"),
+                              (backward_receipt, "backward"))
+        _t13_receipt_string(document, "root", "$label producer receipt") == root ||
+            _fail(:BLOCKED, :activation_dependency_mismatch,
+                  "$label producer receipt root differs")
+        _t13_receipt_string(document, "cwd", "$label producer receipt") == root ||
+            _fail(:BLOCKED, :activation_dependency_mismatch,
+                  "$label producer receipt cwd differs")
+    end
+    features_rel = _t13_relative_from_option(
+        root, _t13_receipt_string(forward_receipt, "features_path",
+                                  "forward producer receipt"))
+    features_rel == _t13_relative_from_option(
+        root, _t13_receipt_string(backward_receipt, "features_path",
+                                  "backward producer receipt")) ||
+        _fail(:BLOCKED, :activation_dependency_mismatch,
+              "producer feature table paths differ")
+    forward_output_rel = _t13_relative_from_option(
+        root, _t13_receipt_string(forward_receipt, "output_path",
+                                  "forward producer receipt"))
+    backward_output_rel = _t13_relative_from_option(
+        root, _t13_receipt_string(backward_receipt, "output_path",
+                                  "backward producer receipt"))
+    data_path_rel = _t13_relative_from_option(
+        root, _t13_receipt_string(forward_receipt, "data_path",
+                                  "forward producer receipt"))
+    data_path_rel == _t13_relative_from_option(
+        root, _t13_receipt_string(backward_receipt, "data_path",
+                                  "backward producer receipt")) ||
+        _fail(:BLOCKED, :activation_dependency_mismatch,
+              "producer data paths differ")
+    for (document, script, digest, label) in (
+            (forward_receipt, _T13_PRODUCER_SCRIPTS[1].path,
+             _T13_PRODUCER_SCRIPTS[1].sha256, "forward"),
+            (backward_receipt, _T13_PRODUCER_SCRIPTS[2].path,
+             _T13_PRODUCER_SCRIPTS[2].sha256, "backward"))
+        _t13_relative_from_option(
+            root, _t13_receipt_string(document, "source_path",
+                                      "$label producer receipt")) == script ||
+            _fail(:BLOCKED, :activation_dependency_mismatch,
+                  "$label producer source_path differs")
+        _t13_receipt_string(document, "source_sha256",
+                            "$label producer receipt") == digest ||
+            _fail(:BLOCKED, :activation_dependency_mismatch,
+                  "$label producer source hash differs")
+    end
+    expected_files = Set{String}(String.(collect(_T13_FIXED_PROVENANCE_FILES)))
+    push!(expected_files, features_rel)
+    push!(expected_files, forward_output_rel)
+    push!(expected_files, backward_output_rel)
+    declared_files = Set(String(entry.path)
+                         for entry in spec_bindings.dependency_files)
+    declared_files == expected_files ||
+        _fail(:BLOCKED, :activation_dependency_mismatch,
+              "declared dependency file set differs from the derived closed set")
+    declared_directories = Set(String(entry.path)
+                               for entry in spec_bindings.dependency_directories)
+    declared_directories == Set([_T13_HIERARCHICAL_DIRECTORY]) ||
+        _fail(:BLOCKED, :activation_dependency_mismatch,
+              "declared dependency directory set differs from the derived set")
+    expected_identity = Set([(_T13_PRODUCER_SCRIPTS[1].path, "file"),
+                             (_T13_PRODUCER_SCRIPTS[2].path, "file"),
+                             (data_path_rel, "directory")])
+    declared_identity = Set([(String(entry.path), String(entry.kind))
+                             for entry in spec_bindings.identity_paths])
+    declared_identity == expected_identity ||
+        _fail(:BLOCKED, :activation_dependency_mismatch,
+              "declared identity path set differs from the derived closed set")
+    universe_receipt = _t13_snapshot_at(
+        input_snapshots, root,
+        joinpath(_t13_relative_from_option(root, options["--universe-dir"]),
+                 "receipt.toml"), "universe receipt")
+    edge_receipt = _t13_snapshot_at(
+        input_snapshots, root,
+        joinpath(_t13_relative_from_option(root, options["--edge-dir"]),
+                 "receipt.toml"), "edge receipt")
+    universe_document = _t13_parse_toml(universe_receipt, "universe receipt")
+    edge_document = _t13_parse_toml(edge_receipt, "edge receipt")
+    features_hash = _t13_dependency_hash(spec_bindings.dependency_files,
+                                         features_rel)
+    features_hash == _t13_receipt_string(forward_receipt, "feature_sha256",
+                                         "forward producer receipt") ==
+        _t13_receipt_string(backward_receipt, "feature_sha256",
+                            "backward producer receipt") ==
+        _t13_receipt_string(universe_document, "feature_sha256",
+                            "universe receipt") ==
+        _t13_receipt_string(edge_document, "feature_sha256", "edge receipt") ||
+        _fail(:BLOCKED, :activation_dependency_mismatch,
+              "feature table hash cross-binding differs")
+    _t13_dependency_hash(spec_bindings.dependency_files, forward_output_rel) ==
+        _t13_receipt_string(edge_document, "forward_patch_sha256",
+                            "edge receipt") ||
+        _fail(:BLOCKED, :activation_dependency_mismatch,
+              "forward patch hash cross-binding differs")
+    _t13_dependency_hash(spec_bindings.dependency_files, backward_output_rel) ==
+        _t13_receipt_string(edge_document, "backward_patch_sha256",
+                            "edge receipt") ||
+        _fail(:BLOCKED, :activation_dependency_mismatch,
+              "backward patch hash cross-binding differs")
+    forward_snapshot.sha256 ==
+        _t13_receipt_string(edge_document, "forward_patch_receipt_sha256",
+                            "edge receipt") ||
+        _fail(:BLOCKED, :activation_dependency_mismatch,
+              "forward producer receipt cross-binding differs")
+    backward_snapshot.sha256 ==
+        _t13_receipt_string(edge_document, "backward_patch_receipt_sha256",
+                            "edge receipt") ||
+        _fail(:BLOCKED, :activation_dependency_mismatch,
+              "backward producer receipt cross-binding differs")
+    for entry in spec_bindings.dependency_files
+        absolute = normpath(joinpath(root, entry.path))
+        overlap = [snapshot for snapshot in input_snapshots
+                   if snapshot.path == absolute]
+        if !isempty(overlap)
+            length(overlap) == 1 ||
+                _fail(:BLOCKED, :activation_dependency_mismatch,
+                      "overlapping dependency is duplicated: $(entry.path)")
+            only(overlap).sha256 == entry.sha256 ||
+                _fail(:BLOCKED, :activation_dependency_mismatch,
+                      "overlapping dependency hash differs: $(entry.path)")
+            _runtime_v3_mode(absolute, entry.mode,
+                             "activation dependency $(entry.path)")
+            modes[absolute] = entry.mode
+            continue
+        end
+        snapshot = _snapshot(root, entry.path, entry.sha256,
+                             "activation dependency $(entry.path)", seen)
+        _runtime_v3_mode(snapshot.path, entry.mode,
+                         "activation dependency $(entry.path)")
+        modes[snapshot.path] = entry.mode
+        push!(input_snapshots, snapshot)
+    end
+    for entry in spec_bindings.dependency_directories
+        directory, names, members = _t13_snapshot_approved_directory(
+            root, entry, seen, modes;
+            existing=vcat(snapshots, input_snapshots))
+        directory in input_directories || push!(input_directories, directory)
+        push!(input_inventories, (relpath(directory, root), names))
+        append!(input_snapshots, members)
+    end
+    for entry in spec_bindings.identity_paths
+        absolute = _repo_path(root, entry.path, "activation identity path")
+        if entry.kind == "file"
+            isfile(absolute) && !islink(absolute) ||
+                _fail(:BLOCKED, :activation_binding_mismatch,
+                      "activation identity file is not regular: $(entry.path)")
+        else
+            isdir(absolute) && !islink(absolute) ||
+                _fail(:BLOCKED, :activation_binding_mismatch,
+                      "activation identity directory is absent: $(entry.path)")
+        end
+        info = stat(absolute)
+        modes[absolute] = UInt(info.mode) & UInt(0o777)
+        directory_identities[absolute] = (UInt64(info.device), UInt64(info.inode))
+    end
+    snapshots = vcat(snapshots, input_snapshots)
+    # The dedicated Main-control file must not double as an approved ordinary
+    # input (including the M == R case where the R-local control file is also a
+    # declared input).  Reject the overlap before any authorization is usable.
+    _reject_main_control_overlap(snapshots, control, "activation authorization")
+    # Retain captured directory identities (root, destination parent, approved
+    # input directories) so a replacement directory is rejected even when its
+    # members are hardlinks to the same files.
+    destination_absolute = _publication_destination(
+        root, options["--out-dir"], "activation destination")
+    for directory in vcat(String[root, dirname(destination_absolute)],
+                          input_directories)
+        isdir(directory) && !islink(directory) ||
+            _fail(:BLOCKED, :activation_binding_mismatch,
+                  "activation directory is absent or not a directory: $directory")
+        info = stat(directory)
+        directory_identities[directory] = (UInt64(info.device), UInt64(info.inode))
+    end
+    bindings = _ActivationBindings(
+        spec_bindings.scope,
+        receipt.path, receipt.sha256,
+        spec.path, spec.sha256,
+        source_review.path, source_review.sha256,
+        transition_review.path, transition_review.sha256,
+        publication.path, publication.sha256,
+        receipt_bindings.boulder_preimage_path, receipt_bindings.boulder_preimage_sha256,
+        control.file.path, control.postimage_sha256,
+        entrypoint_absolute, spec_bindings.entrypoint_sha256,
+        spec_bindings.destination_path, modes,
+        root, spec_bindings.command_body, directory_identities,
+        control)
+    # Aggregate revalidation before any authorization is returned: snapshots,
+    # modes and captured directory identities must still hold.
+    for snapshot in snapshots
+        _verify_snapshot(snapshot, "activation authorization snapshot")
+    end
+    _verify_activation_bindings(bindings)
+    return _ActivationAuthorization(root, bindings, snapshots,
+                                    input_inventories,
+                                    spec_bindings.spec_files,
+                                    spec_bindings.spec_directories)
+end
+
+function _validate_activation_receiving_options(activation::_ActivationAuthorization,
+                                                root::String,
+                                                options::Dict{String,String})
+    activation.root == root ||
+        _fail(:BLOCKED, :activation_binding_mismatch,
+              "activation root differs from the receiving root")
+    _t13_canonical_command(options) == activation.bindings.command_body ||
+        _fail(:BLOCKED, :activation_command_mismatch,
+              "activation command differs from the receiving options")
+    destination = _publication_destination(root, options["--out-dir"],
+                                           "activation destination")
+    normpath(joinpath(root, activation.bindings.destination)) == destination ||
+        _fail(:BLOCKED, :activation_destination_mismatch,
+              "activation destination differs from the receiving options")
+    return nothing
+end
+
+function _assemble_production_context(root::String, options::Dict{String,String},
+                                      authority;
+                                      activation::Union{Nothing,_ActivationAuthorization}=nothing)::_ProductionContext
+    if activation === nothing
+        input_snapshots, inventories = _snapshot_context(root, options, authority)
+        context = _ProductionContext(root, vcat(authority.snapshots, input_snapshots),
+                                     vcat(authority.inventories, inventories), "")
+    else
+        context = _ProductionContext(
+            root,
+            _merge_snapshots(authority.snapshots, activation.snapshots,
+                             "activation binding"),
+            vcat(authority.inventories, activation.inventories), "",
+            activation.bindings)
+    end
+    # The context is only returned after full revalidation; callers must never
+    # treat an assembled-but-unverified context as publication-capable.
+    _verify_context(context)
+    return context
+end
+
+function _t13_activation_receipt_lines(io::IO, activation::_ActivationBindings)
+    println(io, "activation_schema = \"", _T13_ACTIVATION_SCHEMA, "\"")
+    println(io, "activation_authority_schema = ",
+            repr(_T13_ACTIVATION_AUTHORITY_SCHEMA))
+    println(io, "activation_scope = ", repr(activation.scope))
+    println(io, "activation_receipt_sha256 = ", repr(activation.receipt_sha256))
+    println(io, "activation_spec_sha256 = ", repr(activation.spec_sha256))
+    println(io, "activation_source_review_sha256 = ",
+            repr(activation.source_review_sha256))
+    println(io, "activation_transition_review_sha256 = ",
+            repr(activation.transition_review_sha256))
+    println(io, "activation_boulder_preimage_sha256 = ",
+            repr(activation.boulder_preimage_sha256))
+    println(io, "activation_boulder_postimage_sha256 = ",
+            repr(activation.boulder_postimage_sha256))
+    # Main-control provenance: actual role/root/fixed file/digest/modes.  This
+    # records which Main root and file the run consumed; it is integrity/scope
+    # provenance, not signer or process attestation.
+    println(io, "activation_control_role = ", repr(_T13_CONTROL_ROLE))
+    println(io, "activation_control_root = ", repr(activation.control.root))
+    println(io, "activation_control_file = ", repr(_T13_CONTROL_FILENAME))
+    println(io, "activation_control_sha256 = ",
+            repr(activation.control.file.sha256))
+    println(io, "activation_control_root_mode = ",
+            repr(_t13_mode_text(activation.control.root_mode)))
+    println(io, "activation_control_parent_mode = ",
+            repr(_t13_mode_text(activation.control.parent_mode)))
+    println(io, "activation_control_file_mode = ",
+            repr(_t13_mode_text(activation.control.file_mode)))
+    println(io, "activation_publication_sha256 = ",
+            repr(activation.publication_sha256))
+    println(io, "activation_entrypoint_sha256 = ",
+            repr(activation.entrypoint_sha256))
+    println(io, "activation_destination = ", repr(activation.destination))
+    return nothing
 end
 
 function _runtime_contract(kind::Symbol)
+    kind == :runtime_v4 && return (
+        generation=4,
+        julia="1.12.7",
+        executable_sha256=_RUNTIME_V4_EXECUTABLE_SHA256,
+        sysimage_sha256=_RUNTIME_V4_SYSIMAGE_SHA256,
+        boulder_sha256=_RUNTIME_V4_BOULDER_SHA256,
+        transition_receipt_sha256=
+            "87818b63b132d8856dec22cb389cc936283bb0827cfa4884cbfd6e8c169de092",
+        post_review_sha256=
+            "80a133ba8b13d8ac29b1f8d9dcbb07d5c10ee19d47dc60e5105d0897b8032e13",
+        oracle_final_review_sha256=
+            "cab6c866c256ce160c13b4694531f661b2db9cbfac5dd47b34cf69b073635fbd",
+    )
     kind == :runtime && return (
         edge_model_sha256=_RUNTIME_T12_EDGE_MODEL_SHA256,
         chain_sha256="cdc0c788d49298f50721b091535a238cd552454d9885404456c593e4625ea39f",
@@ -2001,6 +4157,7 @@ function _runtime_correction_bindings(contract)
 end
 
 function _validate_runtime_authority_config(authority, kind::Symbol)
+    kind == :runtime_v4 && return _validate_runtime_v4_authority_config(authority)
     contract = _runtime_contract(kind)
     edge_path, edge_hash = _authority_entry(
         authority, "t12_edge_model_path", "t12_edge_model_sha256")
@@ -2554,36 +4711,59 @@ function _check_gate(root::String, seen)
     return (gate=gate, review=review, closure=closure)
 end
 
-function _authority_snapshots(root::String, config_path::String)
+function _authority_snapshots(root::String, config_path::String;
+                              activation::Union{Nothing,_ActivationAuthorization}=nothing)
     seen = Dict{Tuple{UInt64,UInt64},String}()
     config_kind = _authority_config_kind(root, config_path)
     config_hash = config_kind == :historical ? _CONFIG_SHA256 :
                   config_kind == :runtime ? _RUNTIME_V1_CONFIG_SHA256 :
                   config_kind == :runtime_v2 ? _RUNTIME_V2_CONFIG_SHA256 :
-                  _RUNTIME_V3_CONFIG_SHA256
+                  config_kind == :runtime_v3 ? _RUNTIME_V3_CONFIG_SHA256 :
+                  _RUNTIME_V4_CONFIG_SHA256
     config = _snapshot(root, config_path, config_hash, "evaluator config", seen)
+    return _collect_authority_snapshots(root, config_path, config_kind, config, seen;
+                                        activation=activation)
+end
+
+function _collect_authority_snapshots(root::String, config_path::String,
+                                      config_kind::Symbol, config::_Snapshot,
+                                      seen::Dict{Tuple{UInt64,UInt64},String};
+                                      activation::Union{Nothing,_ActivationAuthorization}=nothing)
+    config_kind == :runtime_v4 && _runtime_v4_config_bytes_guard(config.bytes)
     document = try
         TOML.parse(String(copy(config.bytes)))
     catch error
         _fail(:BLOCKED, :policy_schema_mismatch, sprint(showerror, error))
     end
-    get(document, "evaluator", nothing) isa AbstractDict ||
-        _fail(:BLOCKED, :policy_schema_mismatch, "evaluator table is absent")
-    prerequisite = get(document, "prerequisite", nothing)
-    prerequisite isa AbstractDict ||
-        _fail(:BLOCKED, :policy_schema_mismatch, "prerequisite table is absent")
-    # These fields describe the pre-implementation gate.  They are retained
-    # as typed historical configuration, but are not runtime product-state
-    # invariants after the accepted implementation closure.
-    get(prerequisite, "todo13_products_absent", nothing) isa Bool ||
-        _fail(:BLOCKED, :policy_schema_mismatch,
-              "historical Todo13 product state is not boolean")
+    if config_kind == :runtime_v4
+        _validate_runtime_v4_document(document)
+        _validate_runtime_v4_identity(document["runtime"])
+        # The default denial stays in force.  Only an authorization that has
+        # already passed the activation receipt/spec/scope checks may continue.
+        activation === nothing && _validate_runtime_v4_execution_gate(document)
+    else
+        get(document, "evaluator", nothing) isa AbstractDict ||
+            _fail(:BLOCKED, :policy_schema_mismatch, "evaluator table is absent")
+        prerequisite = get(document, "prerequisite", nothing)
+        prerequisite isa AbstractDict ||
+            _fail(:BLOCKED, :policy_schema_mismatch, "prerequisite table is absent")
+        # These fields describe the pre-implementation gate.  They are retained
+        # as typed historical configuration, but are not runtime product-state
+        # invariants after the accepted implementation closure.
+        get(prerequisite, "todo13_products_absent", nothing) isa Bool ||
+            _fail(:BLOCKED, :policy_schema_mismatch,
+                  "historical Todo13 product state is not boolean")
+    end
     authority = document["authority"]
     authority isa AbstractDict ||
         _fail(:BLOCKED, :authority_binding_mismatch, "authority table is absent")
     config_kind != :historical && _validate_runtime_authority_config(authority, config_kind)
     snapshots = _Snapshot[config]
-    for key in sort(String.(collect(keys(authority))))
+    authority_keys = sort(String.(collect(keys(authority))))
+    claim_key = "t12_claim_path"
+    claim_key in authority_keys &&
+        (authority_keys = [claim_key; filter(key -> key != claim_key, authority_keys)])
+    for key in authority_keys
         endswith(key, "_path") || continue
         hash_key = key[1:end-5] * "_sha256"
         haskey(authority, hash_key) ||
@@ -2601,7 +4781,14 @@ function _authority_snapshots(root::String, config_path::String)
             # of the historical policy for that field, so its stale historical
             # binding is checked while the corrected product is bound from the
             # immutable correction authority below.
-            if config_kind in (:runtime, :runtime_v2) &&
+            if config_kind == :historical &&
+               key in ("t12_edge_model_path", "t12_chain_path", "t12_test_path")
+                # These are stale pre-rebind historical declarations.  The
+                # historical config remains non-authoritative because its
+                # claim is checked first and fails closed; test-only synthetic
+                # rebinds may exercise the otherwise unchanged historical body.
+                continue
+            elseif config_kind in (:runtime, :runtime_v2) &&
                key in ("t12_edge_model_path", "t12_chain_path", "t12_test_path")
                 expected_live_digest = key == "t12_edge_model_path" ?
                     _runtime_contract(config_kind).edge_model_sha256 :
@@ -2613,7 +4800,15 @@ function _authority_snapshots(root::String, config_path::String)
                           "historical T12 live binding differs")
                 continue
             end
-            push!(snapshots, _snapshot(root, path, digest, "authority.$key", seen))
+            snapshot = _snapshot(root, path, digest, "authority.$key", seen)
+            if config_kind == :runtime_v4
+                mode_key = key[1:end-5] * "_mode"
+                haskey(authority, mode_key) &&
+                    _runtime_v3_mode(snapshot.path,
+                                     parse(UInt, authority[mode_key]; base=8),
+                                     "authority.$key")
+            end
+            push!(snapshots, snapshot)
         end
     end
     if config_kind == :runtime_v3
@@ -2654,30 +4849,76 @@ function _authority_snapshots(root::String, config_path::String)
     if config_kind == :runtime_v3
         correction_inventories = _validate_runtime_v3_bundle(root, snapshots, seen)
     end
-    config_kind != :historical &&
+    config_kind != :historical && config_kind != :runtime_v4 &&
         _validate_runtime_correction_semantics(root, snapshots, config_kind)
     _, plan_hash = _authority_entry(authority, "plan_path", "plan_sha256")
     plan_hash == _PLAN_SHA256 ||
         _fail(:BLOCKED, :authority_binding_mismatch, "plan binding differs")
-    gate = _check_gate(root, seen)
-    closure = gate.closure
-    append!(snapshots, (gate.gate, gate.review))
-    append!(snapshots, closure.snapshots)
-    push!(snapshots, closure.publication)
-    push!(snapshots, closure.publication_sidecar)
-    inventories = vcat(correction_inventories, closure.inventories)
-    authority_schema = config_kind == :runtime_v3 ? _RUNTIME_V3_AUTHORITY_SCHEMA :
-        config_kind == :runtime_v2 ?
-        "schema=structured-evaluator-authority-v4" :
-        config_kind == :runtime ?
-        "schema=structured-evaluator-authority-v3" :
-        "schema=structured-evaluator-authority-v2"
+    if config_kind == :runtime_v4
+        if activation === nothing
+            # The native live bound-root Boulder file is the only accepted path
+            # for the non-activated runtime-v4 route.
+            boulder_sha256 = _RUNTIME_V4_BOULDER_SHA256
+            boulder = _snapshot(root, ".omo/boulder.json", boulder_sha256,
+                                "current Gate4 Boulder", seen)
+            # The live Boulder snapshot must remain part of the revalidated
+            # context; previously it was verified here but never propagated to
+            # the caller.
+            push!(snapshots, boulder)
+        else
+            # Main-control route: the single control file lives under the
+            # reviewed Main root M, not under the execution root R.  It is
+            # carried as the dedicated tagged control object and is never added
+            # to the ordinary R-relative snapshot vector; R's own
+            # `.omo/boulder.json`, if present, is a non-consumed decoy.
+            control = activation.bindings.control
+            _verify_main_control(control)
+            boulder_sha256 = control.postimage_sha256
+            boulder = control.file
+        end
+        transition = _runtime_snapshot(snapshots, root,
+                                       authority["gate4_transition_receipt_path"],
+                                       "Gate4 transition receipt")
+        post_review = _runtime_snapshot(snapshots, root,
+                                        authority["gate4_post_review_path"],
+                                        "Gate4 post-review")
+        oracle = _runtime_snapshot(snapshots, root,
+                                   authority["gate4_oracle_final_review_path"],
+                                   "Gate4 Oracle final review")
+        _validate_runtime_v4_live_hashes(
+            current_boulder_sha256=boulder.sha256,
+            expected_boulder_sha256=boulder_sha256,
+            gate4_transition_receipt_sha256=transition.sha256,
+            gate4_post_review_sha256=post_review.sha256,
+            gate4_oracle_final_review_sha256=oracle.sha256)
+        gate = (boulder=boulder, transition=transition, post_review=post_review,
+                oracle=oracle)
+        closure = nothing
+        inventories = correction_inventories
+        authority_schema = activation === nothing ? _RUNTIME_V4_AUTHORITY_SCHEMA :
+                           _T13_ACTIVATION_AUTHORITY_SCHEMA
+    else
+        gate = _check_gate(root, seen)
+        closure = gate.closure
+        append!(snapshots, (gate.gate, gate.review))
+        append!(snapshots, closure.snapshots)
+        push!(snapshots, closure.publication)
+        push!(snapshots, closure.publication_sidecar)
+        inventories = vcat(correction_inventories, closure.inventories)
+        authority_schema = config_kind == :runtime_v3 ? _RUNTIME_V3_AUTHORITY_SCHEMA :
+            config_kind == :runtime_v2 ?
+            "schema=structured-evaluator-authority-v4" :
+            config_kind == :runtime ?
+            "schema=structured-evaluator-authority-v3" :
+            "schema=structured-evaluator-authority-v2"
+    end
+    control = activation === nothing ? nothing : activation.bindings.control
     authority_sha256 = _manifest_digest(root, snapshots, inventories,
-                                        [authority_schema])
+                                        [authority_schema]; control=control)
     return (snapshots=snapshots, document=document, gate=gate,
             closure=closure, inventories=inventories,
             authority_sha256=authority_sha256, config_kind=config_kind,
-            config_sha256=config_hash)
+            config_sha256=config.sha256)
 end
 
 function _status(value::AbstractString, context::String)::Symbol
@@ -3022,17 +5263,54 @@ function _snapshot_directory(directory::String, context::String,
     return snapshots
 end
 
-function _manifest_digest(root::String, snapshots::Vector{_Snapshot},
-                          inventories::Vector{Tuple{String,Vector{String}}},
-                          extra::Vector{String}=String[])::String
+function _manifest_records(root::String, snapshots::Vector{_Snapshot},
+                           inventories::Vector{Tuple{String,Vector{String}}},
+                           extra::Vector{String}=String[];
+                           control::Union{Nothing,_MainControl}=nothing)
     records = String["schema=structured-evaluator-provenance-manifest-v2"]
-    append!(records, "file\t$(relpath(snapshot.path, root))\t$(snapshot.sha256)\t$(length(snapshot.bytes))"
-            for snapshot in sort(copy(snapshots); by=snapshot -> relpath(snapshot.path, root)))
+    for snapshot in sort(copy(snapshots); by=snapshot -> relpath(snapshot.path, root))
+        relative = relpath(snapshot.path, root)
+        # Ordinary records are strictly R-relative.  A path outside the
+        # execution root must never be smuggled into the ordinary snapshot
+        # vector; the one Main-control record is appended separately below.
+        (relative == ".." || startswith(relative, "../")) &&
+            _fail(:BLOCKED, :activation_binding_mismatch,
+                  "ordinary manifest path escapes the execution root")
+        push!(records, "file\t$relative\t$(snapshot.sha256)\t$(length(snapshot.bytes))")
+    end
     for (directory, names) in sort(copy(inventories); by=first)
         push!(records, "directory\t$directory\t$(join(sort(names), ','))")
     end
+    if control !== nothing
+        # Exactly one fixed tagged Main-control record.  It records the
+        # canonical Main root, the fixed relative control filename, the file
+        # hash/bytes and the approved modes.  No inode numbers enter the
+        # deterministic content digest.  Defensively, the control file must not
+        # also appear among the ordinary snapshots that precede the tagged
+        # record.
+        _reject_main_control_overlap(snapshots, control, "provenance manifest")
+        push!(records, join((
+            "main_control",
+            "role=$(_T13_CONTROL_ROLE)",
+            "root=$(control.root)",
+            "file=$(_T13_CONTROL_FILENAME)",
+            "root_mode=$(_t13_mode_text(control.root_mode))",
+            "parent_mode=$(_t13_mode_text(control.parent_mode))",
+            "file_mode=$(_t13_mode_text(control.file_mode))",
+            "sha256=$(control.file.sha256)",
+            "bytes=$(length(control.file.bytes))",
+        ), '\t'))
+    end
     append!(records, extra)
-    return _length_digest(records)
+    return records
+end
+
+function _manifest_digest(root::String, snapshots::Vector{_Snapshot},
+                          inventories::Vector{Tuple{String,Vector{String}}},
+                          extra::Vector{String}=String[];
+                          control::Union{Nothing,_MainControl}=nothing)::String
+    return _length_digest(_manifest_records(root, snapshots, inventories, extra;
+                                            control=control))
 end
 
 function _snapshot_context(root::String, options::Dict{String,String},
@@ -3063,6 +5341,72 @@ function _snapshot_context(root::String, options::Dict{String,String},
     return snapshots, inventories
 end
 
+function _merge_snapshots(base::Vector{_Snapshot}, extra::Vector{_Snapshot},
+                          context::String)
+    by_path = Dict{String,_Snapshot}(snapshot.path => snapshot for snapshot in base)
+    for snapshot in extra
+        existing = get(by_path, snapshot.path, nothing)
+        if existing === nothing
+            by_path[snapshot.path] = snapshot
+        elseif existing.sha256 != snapshot.sha256 ||
+               (existing.device, existing.inode, existing.nlink) !=
+               (snapshot.device, snapshot.inode, snapshot.nlink) ||
+               existing.bytes != snapshot.bytes
+            _fail(:BLOCKED, :activation_binding_mismatch,
+                  "$context bytes or identity changed during binding")
+        end
+    end
+    merged = collect(values(by_path))
+    sort!(merged; by=snapshot -> snapshot.path)
+    return merged
+end
+
+function _verify_activation_bindings(bindings::_ActivationBindings)
+    for (path, expected) in bindings.modes
+        (isfile(path) && !islink(path)) || (isdir(path) && !islink(path)) ||
+            _fail(:BLOCKED, :activation_snapshot_changed,
+                  "activation binding disappeared: $path")
+        actual = UInt(stat(path).mode) & UInt(0o777)
+        actual == expected ||
+            _fail(:BLOCKED, :activation_mode_mismatch,
+                  "activation binding mode changed: $path")
+    end
+    for (path, expected) in bindings.directory_identities
+        (isfile(path) || isdir(path)) && !islink(path) ||
+            _fail(:BLOCKED, :activation_snapshot_changed,
+                  "activation identity path disappeared: $path")
+        info = stat(path)
+        (UInt64(info.device), UInt64(info.inode)) == expected ||
+            _fail(:BLOCKED, :activation_snapshot_changed,
+                  "activation directory identity changed: $path")
+    end
+    # The same captured Main-control object is revalidated on every receiving
+    # boundary: its file bytes/mode/link/inode and the M / M/.omo directory
+    # identities and modes.  No identity is rebased or repaired.
+    _verify_main_control(bindings.control)
+    return nothing
+end
+
+# The single live Main-control file is a dedicated control-plane object and
+# must never double as an ordinary R-relative snapshot.  Overlap is rejected by
+# the captured fixed pathname and by the captured dev/inode (a different
+# pathname that aliases the same file is equally rejected).  Nothing is
+# silently dropped: an overlapping input is a hard rejection.
+function _reject_main_control_overlap(snapshots::Vector{_Snapshot},
+                                      control::_MainControl,
+                                      context::String)
+    control_key = (control.file.device, control.file.inode)
+    for snapshot in snapshots
+        snapshot.path == control.file.path &&
+            _fail(:BLOCKED, :activation_binding_mismatch,
+                  "$context contains the Main control file as an ordinary snapshot")
+        (snapshot.device, snapshot.inode) == control_key &&
+            _fail(:BLOCKED, :activation_binding_mismatch,
+                  "$context ordinary snapshot shares the Main control file identity")
+    end
+    return nothing
+end
+
 function _verify_context(context::_ProductionContext)
     for snapshot in context.snapshots
         _verify_snapshot(snapshot, "production input snapshot")
@@ -3079,6 +5423,12 @@ function _verify_context(context::_ProductionContext)
         sort(readdir(path)) == sort(expected) ||
             _fail(:BLOCKED, :authority_snapshot_changed, "production directory membership changed")
     end
+    if context.activation !== nothing
+        _verify_activation_bindings(context.activation)
+        _reject_main_control_overlap(context.snapshots, context.activation.control,
+                                     "production context")
+    end
+    return nothing
 end
 
 function _find_outer(result, date::String)
@@ -3371,18 +5721,24 @@ function _convert_production_input(root::String, options::Dict{String,String},
     return EvaluationInput(authority, universe, scans, updated)
 end
 
-function _load_production_input(options::Dict{String,String})::EvaluationInput
+function _load_production_input(options::Dict{String,String};
+                                activation::Union{Nothing,_ActivationAuthorization}=nothing)::EvaluationInput
+    # Keep the Gate5 candidate guard at the input boundary as well as in main:
+    # the producer seam must not become a bypass around the preflight block.
+    # The preflight returns the single complete, already-revalidated context
+    # (ordinary inputs, or activation plus approved inputs); reuse it instead of
+    # assembling a second, weaker context here.
+    context = _preflight_config_context(options; activation=activation)
     root = options["--root"]
     isabspath(root) || _fail(:BLOCKED, :authority_path_invalid, "root must be absolute")
     isdir(root) || _fail(:BLOCKED, :authority_path_invalid, "root is not a directory")
     root = normpath(root)
     realpath(root) == root || _fail(:BLOCKED, :authority_path_invalid, "root is not canonical")
-    VERSION == v"1.12.6" ||
-        _fail(:BLOCKED, :runtime_version_mismatch, "Julia 1.12.6 is required")
     config_path = _repo_path(root, options["--evaluator-config"], "evaluator config")
-    config_path == joinpath(root, _RUNTIME_V3_CONFIG_PATH) ||
+    config_path == joinpath(root, _RUNTIME_V4_CONFIG_PATH) ||
         _fail(:BLOCKED, :authority_path_mismatch, "evaluator config path differs")
-    authority = _authority_snapshots(root, options["--evaluator-config"])
+    authority = _authority_snapshots(root, options["--evaluator-config"];
+                                     activation=activation)
     candidate = _repo_path(root, options["--candidate-config"], "candidate config")
     model = _repo_path(root, options["--model-config"], "model config")
     features = _repo_path(root, options["--features"], "features")
@@ -3391,9 +5747,6 @@ function _load_production_input(options::Dict{String,String})::EvaluationInput
     admission_dir = _directory_path(root, options["--admission-dir"], "admission output")
     _repo_path(root, options["--forward-receipt"], "forward receipt")
     _repo_path(root, options["--backward-receipt"], "backward receipt")
-    input_snapshots, inventories = _snapshot_context(root, options, authority)
-    context = _ProductionContext(root, vcat(authority.snapshots, input_snapshots),
-                                 vcat(authority.inventories, inventories), "")
     _verify_context(context)
     contract = try
         result = T8.load_contract(model)
@@ -3402,6 +5755,7 @@ function _load_production_input(options::Dict{String,String})::EvaluationInput
     catch error
         _map_predecessor_error(error, :authority_binding_mismatch, "T8 contract")
     end
+    _verify_context(context)
     data = try
         T11.load_admission_data(root;
             features=options["--features"], candidate_config=options["--candidate-config"],
@@ -3411,11 +5765,13 @@ function _load_production_input(options::Dict{String,String})::EvaluationInput
     catch error
         _map_predecessor_error(error, :authority_binding_mismatch, "T11 input")
     end
+    _verify_context(context)
     admission = try
         T11.evaluate_admission(data)
     catch error
         _map_predecessor_error(error, :authority_or_factor_mismatch, "T11 admission")
     end
+    _verify_context(context)
     generated = try
         T11.report_files(admission)
     catch error
@@ -3432,11 +5788,13 @@ function _load_production_input(options::Dict{String,String})::EvaluationInput
         _fail(:BLOCKED, :authority_or_factor_mismatch, "T11 admission is blocked")
     admission.status in ("PASS", "SKIPPED", "FAIL") ||
         _fail(:BLOCKED, :authority_or_factor_mismatch, "T11 returned an unknown status")
+    _verify_context(context)
     normalized = try
         T11.normalize_admission_data(data)
     catch error
         _map_predecessor_error(error, :authority_or_factor_mismatch, "T11 normalization")
     end
+    _verify_context(context)
     chain_report = admission.status == "FAIL" ?
         (status=:FAIL, reason=:t11_numerical_failure,
          result_sha256=_hash_text("structured-evaluator-t11-terminal-failure")) :
@@ -3448,6 +5806,7 @@ function _load_production_input(options::Dict{String,String})::EvaluationInput
             fitted_unary_nodes=joinpath(admission_dir, "fitted_unary_nodes.tsv"),
             fitted_edge_transforms=joinpath(admission_dir, "fitted_edge_transforms.tsv"),
             todo11_receipt=joinpath(admission_dir, "receipt.toml"))
+    _verify_context(context)
     input = _convert_production_input(root, options, admission, data, normalized, chain_report)
     input = EvaluationInput(authority.authority_sha256, input.universe_sha256,
                             input.scan_dates, input.folds)
@@ -3458,12 +5817,16 @@ function _load_production_input(options::Dict{String,String})::EvaluationInput
     manifest = _manifest_digest(root, context.snapshots, context.inventories,
                                 vcat(["authority=$(input.authority_sha256)",
                                       "universe=$(input.universe_sha256)"],
-                                     _input_manifest_records(input)))
-    context = _ProductionContext(context.root, context.snapshots, context.inventories, manifest)
+                                     _input_manifest_records(input));
+                                control=context.activation === nothing ? nothing :
+                                        context.activation.control)
+    context = _ProductionContext(context.root, context.snapshots, context.inventories,
+                                 manifest, context.activation)
     _verify_context(context)
     for snapshot in authority.snapshots
         _verify_snapshot(snapshot, "authority snapshot before return")
     end
+    _verify_context(context)
     _PRODUCTION_CONTEXT[input] = context
     _PRODUCTION_SELECTION_METADATA[input] = (
         admission=admission, chain_report=chain_report, data=data,
@@ -3936,7 +6299,8 @@ const _VALUE_FLAGS = Set([
     "--model-config", "--universe-dir", "--edge-dir", "--forward-receipt",
     "--backward-receipt", "--admission-dir", "--out-dir",
 ])
-const _CLI_FLAGS = union(_VALUE_FLAGS, Set(["--help"]))
+const _ACTIVATION_VALUE_FLAGS = Set(["--activation-receipt", "--activation-sha256"])
+const _CLI_FLAGS = union(_VALUE_FLAGS, _ACTIVATION_VALUE_FLAGS, Set(["--help"]))
 
 function _clean_cli_value(flag::AbstractString, value::String)::String
     all(isascii, value) && !occursin('%', value) && !occursin('\\', value) ||
@@ -3947,7 +6311,8 @@ end
 function _parse_cli_options(arguments::Vector{String}; require_output::Bool=true)::Dict{String,String}
     try
         T8.StructuredFirewall.validate_cli_arguments(
-            arguments; allowed_flags=_CLI_FLAGS, value_flags=_VALUE_FLAGS,
+            arguments; allowed_flags=_CLI_FLAGS,
+            value_flags=union(_VALUE_FLAGS, _ACTIVATION_VALUE_FLAGS),
             repeatable_flags=Set{String}())
     catch error
         error isa T8.StructuredFirewall.StructuredFirewallError || rethrow()
@@ -3989,6 +6354,9 @@ function _parse_cli_options(arguments::Vector{String}; require_output::Bool=true
     for flag in sort(collect(required_flags))
         haskey(options, flag) || _fail(:BLOCKED, :cli_error, "missing option $flag")
     end
+    haskey(options, "--activation-receipt") == haskey(options, "--activation-sha256") ||
+        _fail(:BLOCKED, :cli_error,
+              "--activation-receipt and --activation-sha256 must be supplied together")
     return options
 end
 
@@ -4004,6 +6372,7 @@ function _usage(io::IO=stdout)
     println(io, "  --candidate-config PATH --model-config PATH --universe-dir PATH \\")
     println(io, "  --edge-dir PATH --forward-receipt PATH --backward-receipt PATH \\")
     println(io, "  --admission-dir PATH --out-dir PATH")
+    println(io, "  [--activation-receipt REPO_RELATIVE_PATH --activation-sha256 EXPECTED_SHA256]")
 end
 
 struct _PublicationError <: Exception
@@ -4434,7 +6803,15 @@ function _publish_atomic(root::String, supplied::AbstractString,
                 return _publish_fallback(destination, parent, stage, stage_identity,
                                          files, names, context)
             elseif error isa _PublicationError && error.reason == :destination_exists
-                _same_publication(destination, files) && return :committed_verified
+                if _same_publication(destination, files)
+                    # Preferred-rename destination-exists fast path: matching
+                    # bytes alone do not prove the reviewed context still
+                    # holds.  Revalidate before returning committed_verified so
+                    # a precommit Main-control invalidation cannot be reported
+                    # as verified publication.
+                    _verify_context_for_publication(context, :not_committed)
+                    return :committed_verified
+                end
                 _fail(:BLOCKED, :publication_collision, "concurrent destination differs")
             end
             error isa _PublicationError && (state = error.state; rethrow())
@@ -4467,11 +6844,13 @@ function _context_evaluator_config_sha256(context::_ProductionContext)
     runtime_path = normpath(joinpath(context.root, _RUNTIME_V1_CONFIG_PATH))
     runtime_v2_path = normpath(joinpath(context.root, _RUNTIME_V2_CONFIG_PATH))
     runtime_v3_path = normpath(joinpath(context.root, _RUNTIME_V3_CONFIG_PATH))
+    runtime_v4_path = normpath(joinpath(context.root, _RUNTIME_V4_CONFIG_PATH))
     expected = Dict(
         historical_path => _CONFIG_SHA256,
         runtime_path => _RUNTIME_V1_CONFIG_SHA256,
         runtime_v2_path => _RUNTIME_V2_CONFIG_SHA256,
         runtime_v3_path => _RUNTIME_V3_CONFIG_SHA256,
+        runtime_v4_path => _RUNTIME_V4_CONFIG_SHA256,
     )
     matches = [snapshot for snapshot in context.snapshots
                if haskey(expected, snapshot.path)]
@@ -4490,10 +6869,8 @@ function _context_evaluator_config_sha256(context::_ProductionContext)
     return digest
 end
 
-function _blocker_files(error::EvaluatorError;
-                        context::Union{Nothing,_ProductionContext}=nothing)
-    evaluator_config_sha256 = context === nothing ? _CONFIG_SHA256 :
-                              _context_evaluator_config_sha256(context)
+function _legacy_blocker_files(error::EvaluatorError,
+                               evaluator_config_sha256::String)
     io = IOBuffer()
     println(io, "schema = ", repr(_SCHEMA * "_blocker_receipt_v2"))
     println(io, "schema_version = 2")
@@ -4519,6 +6896,36 @@ function _blocker_files(error::EvaluatorError;
     return Dict("receipt.toml" => take!(io))
 end
 
+# Successor activated blocker receipt; the historical closure-v1 and GateClosure
+# authority fields are intentionally absent because they do not certify an
+# activated run.
+function _activated_blocker_files(error::EvaluatorError,
+                                  evaluator_config_sha256::String,
+                                  activation::_ActivationBindings)
+    io = IOBuffer()
+    println(io, "schema = ", repr(_T13_ACTIVATED_BLOCKER_SCHEMA))
+    println(io, "schema_version = 2")
+    println(io, "status = \"BLOCKED\"")
+    println(io, "reason = ", repr(String(error.reason)))
+    println(io, "message_sha256 = ", repr(_hash_text(error.message)))
+    println(io, "evaluator_config_sha256 = ", repr(evaluator_config_sha256))
+    _t13_activation_receipt_lines(io, activation)
+    println(io, "work_rows = 0")
+    println(io, "bootstrap_rows = 0")
+    println(io, "sign_rows = 0")
+    return Dict("receipt.toml" => take!(io))
+end
+
+function _blocker_files(error::EvaluatorError;
+                        context::Union{Nothing,_ProductionContext}=nothing)
+    evaluator_config_sha256 = context === nothing ? _CONFIG_SHA256 :
+                              _context_evaluator_config_sha256(context)
+    activation = context === nothing ? nothing : context.activation
+    activation === nothing &&
+        return _legacy_blocker_files(error, evaluator_config_sha256)
+    return _activated_blocker_files(error, evaluator_config_sha256, activation)
+end
+
 function main(arguments::Vector{String}=copy(ARGS))::Int
     options = try
         parse_cli(arguments)
@@ -4529,10 +6936,26 @@ function main(arguments::Vector{String}=copy(ARGS))::Int
         return 2
     end
     haskey(options, "--help") && (_usage(); return 0)
+    # The activation receipt/spec/scope checks happen before any production
+    # context exists, so an invalid authorization cannot publish a blocker
+    # receipt to the supplied destination.
+    activation = nothing
+    if haskey(options, "--activation-receipt")
+        activation = try
+            _authorize_t13_activation(options)
+        catch error
+            if error isa EvaluatorError
+                showerror(stderr, error)
+                println(stderr)
+                return 2
+            end
+            rethrow()
+        end
+    end
     context = nothing
     try
-        context = _preflight_config_context(options)
-        input = _load_production_input(options)
+        context = _preflight_config_context(options; activation=activation)
+        input = _load_production_input(options; activation=activation)
         context = get(_PRODUCTION_CONTEXT, input, nothing)
         report = evaluate(input)
         if report.status == :BLOCKED
@@ -4547,7 +6970,9 @@ function main(arguments::Vector{String}=copy(ARGS))::Int
             _fail(:BLOCKED, :publication_failure, "invalid terminal report status")
         context = get(_PRODUCTION_CONTEXT, input, nothing)
         context === nothing || _verify_context(context)
-        files = report_files(report)
+        files = report_files(report;
+                             activation=context === nothing ? nothing :
+                             context.activation)
         context === nothing || _verify_context(context)
         _publish_atomic(options["--root"], options["--out-dir"], files; context=context)
         println("status=", report.status)
@@ -4562,6 +6987,7 @@ function main(arguments::Vector{String}=copy(ARGS))::Int
         end
         if error isa EvaluatorError
             if error.status == :BLOCKED
+                context === nothing && (context = _historical_blocker_context(options))
                 if context !== nothing
                     try
                         root = options["--root"]

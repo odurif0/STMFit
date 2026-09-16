@@ -1,0 +1,355 @@
+[evaluator]
+schema = "structured_label_free_unit_assignment_evaluator_v1_correction2"
+version = 2
+runtime_generation = 4
+allow_extra_keys = false
+status_precedence = ["BLOCKED", "FAIL", "SKIPPED", "PASS"]
+authority_state = "gate5_implementation_candidate_pending_gate2_review"
+authorizes_todo13 = false
+
+[prerequisite]
+scope = "policy_and_evidence_only"
+julia = "1.12.7"
+execution_used = false
+real_data_used = false
+labels_used = false
+expected_N_used = false
+NKNNKN_used = false
+class_counts_used = false
+composition_prior_used = false
+equivalence_used = false
+benchmark_or_grader_used = false
+
+[history]
+original_config_path = "config/unit_assignment_structured_evaluator.toml"
+original_config_sha256 = "ec0546096b3c4742cd86d8c3d40788a5894d20fc5a4702b0318581f10f8b0b90"
+runtime_v1_config_path = "config/unit_assignment_structured_evaluator_runtime.toml"
+runtime_v1_config_sha256 = "4a355c7ec5572976f5f54eaf14f2a01e8c91a9304d789e60b844388ac20939a4"
+runtime_v2_config_path = "config/unit_assignment_structured_evaluator_runtime_v2.toml"
+runtime_v2_config_sha256 = "69da829faf71a00ffec07e976c5c95245bbb57fd1ac7d0d98e2d54d8064175ae"
+runtime_v3_config_path = "config/unit_assignment_structured_evaluator_runtime_v3.toml"
+runtime_v3_config_sha256 = "a0a04794b346f351c61a281384869bcde3f378aa0836c9271197d4004488586e"
+scope = "history_only"
+runtime_equivalence = false
+
+[runtime]
+schema = "structured_evaluator_runtime_authority_v4"
+version = 4
+julia = "1.12.7"
+executable = "/raven/u/system/soft/SLE_15/packages/x86_64/julia/1.12.7/bin/julia"
+executable_sha256 = "582718c20c563d824b88a08e2a9d0afcf5015b3053f425697cecc79ec4e9ea36"
+sysimage = "/raven/u/system/soft/SLE_15/packages/x86_64/julia/1.12.7/lib/julia/sys.so"
+sysimage_sha256 = "03041fa63edac21123a7d4ced06364243c5b9653f4ceb6ba618f69876eefa66f"
+cross_runtime_compare = false
+julia_1_12_6_equivalence = false
+equivalence = false
+
+[state]
+gate4 = "final"
+gate5_effective = true
+gate5_work_started = true
+next = "Gate 2 Oracle integration review"
+evaluator_execution_ready = false
+evaluator_runtime_ready = false
+runtime_v4_certified = false
+todo13_authorized = false
+t14_authorized = false
+downstream_authorized = false
+
+[outputs]
+state = "ABSENT_AT_GATE5_CONFIG_PUBLICATION"
+execution = false
+expected_count = 9
+present_count = 0
+expected_names = ["bootstrap.tsv", "dates.tsv", "events.tsv", "folds.tsv", "nodes.tsv", "receipt.toml", "scans.tsv", "signs.tsv", "summary.tsv"]
+absent_names = ["bootstrap.tsv", "dates.tsv", "events.tsv", "folds.tsv", "nodes.tsv", "receipt.toml", "scans.tsv", "signs.tsv", "summary.tsv"]
+present_files = []
+output_hashes_recorded = false
+
+[authority]
+proposal_path = ".omo/start-work/structured-t13-evaluator-policy-proposal.md"
+proposal_sha256 = "29346e43bb5b1d2cbfc8c23560520c54c5d097ceadac4cc6dd6d272a2973a7e7"
+plan_path = ".omo/plans/structured-label-free-unit-assignment.md"
+plan_sha256 = "a9b386d613829e8f7e20b6e33f8e80898fa9a55f0b344dbb92ea64ac6804f3d0"
+candidate_path = "config/unit_assignment_structured_candidate.toml"
+candidate_sha256 = "09bf73577bdfbcc2fd6a2643c1f80c872bd14c21da38a2b68c3c056c8b7f69fd"
+model_path = "config/unit_assignment_structured_model.toml"
+model_sha256 = "b3bac29d7dbecb0a9a46ec4b81a283c6b6cd4dda586c639b29d8ea105ecbd5ad"
+t8_facade_path = "test/lib/structured_unit_assignment.jl"
+t8_facade_sha256 = "8c74f21924381146d58dd9611d5a75578e7b691db3c16c847164549fd48e30b9"
+t8_source_bundle_path = ".omo/evidence/structured-label-free-unit-assignment/t13/evaluator-policy-v1/correction/canonical-t8-source-bundle.bytes"
+t8_source_bundle_sha256 = "cd35714434dd5dfd6ee4a9557fd02bc92f98ac0f8225fc4b0e5165895321e73a"
+t8_claim_path = ".omo/evidence/structured-label-free-unit-assignment/provenance-rebind/phase2-candidate-t8/correction/DoneClaim.json"
+t8_claim_sha256 = "3b5e4a8c59cc608287b9361b9ad130b5c8cc4a9ebba871f66375f4e679a2482e"
+t8_review_path = ".omo/evidence/structured-label-free-unit-assignment/provenance-rebind/phase2-candidate-t8/correction/review/AdversarialVerify.json"
+t8_review_sha256 = "ae5939e7f6910d096b83441c2651233bfb52844c753860160f1dcb67c314af31"
+t11_source_tar_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t11-full-chain-julia-1.12.7-v1/v7-run/input/source.tar"
+t11_source_tar_sha256 = "aaf515357901c3276edf867c04ecfd0229b494f836ddd72ef3f0effed9f367cc"
+t11_source_tar_mode = "0444"
+t11_source_manifest_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t11-full-chain-julia-1.12.7-v1/v7-run/input/source-manifest.tsv"
+t11_source_manifest_sha256 = "2e7696824e208ba0c3ad960a08e452f81d79f892c776a1ebd0b28cbf1a196714"
+t11_source_manifest_mode = "0444"
+t11_source_symlink_manifest_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t11-full-chain-julia-1.12.7-v1/v7-run/input/source-symlink-manifest.tsv"
+t11_source_symlink_manifest_sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+t11_source_symlink_manifest_mode = "0444"
+t11_test_path = "test/test_structured_edge_admission.jl"
+t11_test_sha256 = "bff69a629ef99056bdf888478b15633abc921c29cd268d5625c7de9f8ed97e3c"
+t11_test_mode = "0644"
+t11_cli_path = "test/evaluate_structured_edge_admission.jl"
+t11_cli_sha256 = "77c7b2d5f1b9f73ae5c3bdfd310cbbad75771f5a38c5243488f4c2cc6db7ce27"
+t11_cli_mode = "0644"
+t11_claim_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t11-full-chain-julia-1.12.7-v1/T11RuntimeAuthority.json"
+t11_claim_sha256 = "36ae27e177025c39cf7c41af0bf6ac4f27e43b263c04628de53941a07b6e937a"
+t11_claim_mode = "0444"
+t11_claim_sidecar_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t11-full-chain-julia-1.12.7-v1/T11RuntimeAuthority.sha256"
+t11_claim_sidecar_sha256 = "7e30c20c92dddcf621565fab73585befcc59856479a6e6d0230c6403106c9a99"
+t11_claim_sidecar_mode = "0444"
+t11_review_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t11-full-chain-julia-1.12.7-v1/review/AdversarialVerify.json"
+t11_review_sha256 = "dbf3f11801bc6ec4e06afb73d516523c1c88c577493891e81c0fbee9f660e537"
+t11_review_mode = "0644"
+t11_review_sidecar_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t11-full-chain-julia-1.12.7-v1/review/AdversarialVerify.sha256"
+t11_review_sidecar_sha256 = "eed9d31c7585701ca99d6ab4416368e97f6128f7420b0023e5945df67f074c0c"
+t11_review_sidecar_mode = "0644"
+t11_publication_receipt_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t11-full-chain-julia-1.12.7-v1/PublicationReceipt.json"
+t11_publication_receipt_sha256 = "38b4546324843d478b6d14e0fdeaa49ced5aa0d9c81011f9bf5ac864a34e1f26"
+t11_publication_receipt_mode = "0444"
+t11_publication_receipt_sidecar_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t11-full-chain-julia-1.12.7-v1/PublicationReceipt.sha256"
+t11_publication_receipt_sidecar_sha256 = "b3bbcdacb0dcb929807a48e8ca0c079005761845db7a38fdcc93ce9871384d9f"
+t11_publication_receipt_sidecar_mode = "0444"
+t11_payload_manifest_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t11-full-chain-julia-1.12.7-v1/payload-files.sha256"
+t11_payload_manifest_sha256 = "6aa2aad9c19b0fded88d0717c9321e13f2d5d3b10cde871246105a817744a36f"
+t11_payload_manifest_mode = "0444"
+t11_payload_manifest_sidecar_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t11-full-chain-julia-1.12.7-v1/payload-files.sha256.sha256"
+t11_payload_manifest_sidecar_sha256 = "232a33d0bf4ee8ad5fda05f738e85de316e05933f5c3a82a834ca271b038130a"
+t11_payload_manifest_sidecar_mode = "0444"
+t12_source_tar_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t12-full-chain-julia-1.12.7-v1/evidence/v9-input/source.tar"
+t12_source_tar_sha256 = "e3538df88145753fc4eb65b1b5a0032e01391ef35f2ce54f16a1aede837b52b6"
+t12_source_tar_mode = "0400"
+t12_source_manifest_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t12-full-chain-julia-1.12.7-v1/evidence/v9-input/source-manifest.tsv"
+t12_source_manifest_sha256 = "ab9deb0c68f349a1908d9dba81a5cc5187d85332846ba9f0e9855b88bff9a3b2"
+t12_source_manifest_mode = "0400"
+t12_source_symlink_manifest_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t12-full-chain-julia-1.12.7-v1/evidence/v9-input/source-symlink-manifest.tsv"
+t12_source_symlink_manifest_sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+t12_source_symlink_manifest_mode = "0400"
+t12_edge_model_path = "test/lib/structured_assignment/edge_model.jl"
+t12_edge_model_sha256 = "216571a5c74ba45293ab05b24c3363b05cb77fba6bcf3c690adcb57b42e3a146"
+t12_edge_model_mode = "0644"
+t12_chain_path = "test/lib/structured_assignment/chain_inference.jl"
+t12_chain_sha256 = "4c5b84339e61a1bc6dadba12373b8b98745f30a3c4359a5c8e92a70e24d96598"
+t12_chain_mode = "0644"
+t12_test_path = "test/test_structured_chain_inference.jl"
+t12_test_sha256 = "8e0a2d6a4e965bb0e00f290299264f0a75ead553c6d04a95f87ad7815205daeb"
+t12_test_mode = "0644"
+t12_claim_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t12-full-chain-julia-1.12.7-v1/claim/DoneClaim.json"
+t12_claim_sha256 = "ab0ca8cfe5651998d3e002d3a158c58a113b5f00f5eb3feb88d6091d8d1b984f"
+t12_claim_mode = "0400"
+t12_claim_sidecar_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t12-full-chain-julia-1.12.7-v1/claim/DoneClaim.json.sha256"
+t12_claim_sidecar_sha256 = "84a07bcc25ae0106209652e1f1dafa5f7e057981f6d98b277d821a9d3be7820f"
+t12_claim_sidecar_mode = "0400"
+t12_review_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t12-full-chain-julia-1.12.7-v1/review/AdversarialVerify.json"
+t12_review_sha256 = "28242978aa521a02c0783441605b09e733019b64ef6f5a5c55334c4a63df7946"
+t12_review_mode = "0400"
+t12_review_sidecar_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t12-full-chain-julia-1.12.7-v1/review/AdversarialVerify.sha256"
+t12_review_sidecar_sha256 = "3b5dd69d17bb930ea5a3d8247fd1b8a68bf7ceff045ef56be8138ca09e5b13a1"
+t12_review_sidecar_mode = "0400"
+t12_publication_receipt_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t12-full-chain-julia-1.12.7-v1/PublicationReceipt.json"
+t12_publication_receipt_sha256 = "47d011da68b8029d38b3a55a11d6888dcd9fd05d82f99a7b721e8f42b51b6980"
+t12_publication_receipt_mode = "0400"
+t12_publication_receipt_sidecar_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t12-full-chain-julia-1.12.7-v1/PublicationReceipt.sha256"
+t12_publication_receipt_sidecar_sha256 = "536c00588a44381c426cf464ceb69fad9cbf0f187055c6260566f530787e8cd1"
+t12_publication_receipt_sidecar_mode = "0400"
+t12_payload_manifest_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t12-full-chain-julia-1.12.7-v1/payload-manifest.tsv"
+t12_payload_manifest_sha256 = "4775cde16d87bb71958016e98947f9e72fc2ee9ac8926f56f3d226314f331b96"
+t12_payload_manifest_mode = "0400"
+t12_payload_manifest_sidecar_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t12-full-chain-julia-1.12.7-v1/payload-manifest.tsv.sha256"
+t12_payload_manifest_sidecar_sha256 = "450038587e0a058cd55a11948e7e5938059b797243306e222d7588f3fbbdd7a0"
+t12_payload_manifest_sidecar_mode = "0400"
+t12_evidence_manifest_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t12-full-chain-julia-1.12.7-v1/evidence-manifest.tsv"
+t12_evidence_manifest_sha256 = "7f48993887f70733d0330962052383513ef7a01c41a3559808570b993bfc42b8"
+t12_evidence_manifest_mode = "0400"
+t12_evidence_manifest_sidecar_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t12-full-chain-julia-1.12.7-v1/evidence-manifest.tsv.sha256"
+t12_evidence_manifest_sidecar_sha256 = "3a4f8da410fd1daf3af8f6118c88fbdf2f040d5b4a0f832f98dbe67fdc27359f"
+t12_evidence_manifest_sidecar_mode = "0400"
+t12_runtime_waiver_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t12-full-chain-julia-1.12.7-v1/evidence/runtime-waiver/RuntimeComparatorWaiver.json"
+t12_runtime_waiver_sha256 = "16cd577ac099ee2561c279e980bcd33ad8fd07ae1d5820bab84862efdcc5eec2"
+t12_runtime_waiver_mode = "0400"
+t12_runtime_waiver_sidecar_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t12-full-chain-julia-1.12.7-v1/evidence/runtime-waiver/RuntimeComparatorWaiver.sha256"
+t12_runtime_waiver_sidecar_sha256 = "08a67f2340d073f485d5b69068e336be07d247299f44cd573ef9ec034150e143"
+t12_runtime_waiver_sidecar_mode = "0400"
+gate4_expected_boulder_postimage_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t13-gate4-authority-rebind-v3/transition/BoulderExpectedPostimage.json"
+gate4_expected_boulder_postimage_sha256 = "e509c919734c8110ab7ad4a7e2d475a552a0f2fca5f3533c9863683be1ac9133"
+gate4_expected_boulder_postimage_mode = "0400"
+gate4_expected_boulder_postimage_sidecar_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t13-gate4-authority-rebind-v3/transition/BoulderExpectedPostimage.json.sha256"
+gate4_expected_boulder_postimage_sidecar_sha256 = "d038fbdd7adad660c3a9089ce9b13de39a2173788d0db4ad01c2d467c672a4d0"
+gate4_expected_boulder_postimage_sidecar_mode = "0400"
+gate4_transition_receipt_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t13-gate4-boulder-transition-v1/TransitionReceipt.json"
+gate4_transition_receipt_sha256 = "87818b63b132d8856dec22cb389cc936283bb0827cfa4884cbfd6e8c169de092"
+gate4_transition_receipt_mode = "0400"
+gate4_transition_receipt_sidecar_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t13-gate4-boulder-transition-v1/TransitionReceipt.json.sha256"
+gate4_transition_receipt_sidecar_sha256 = "5cc4e9737ff71e21d95222fc5a60ad4ef4ace43a24e808c9b3c1c36c7b44de33"
+gate4_transition_receipt_sidecar_mode = "0400"
+gate4_post_review_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t13-gate4-boulder-transition-v1-receipt-recovery-v2/post-review/IndependentPostExecutionReview.json"
+gate4_post_review_sha256 = "80a133ba8b13d8ac29b1f8d9dcbb07d5c10ee19d47dc60e5105d0897b8032e13"
+gate4_post_review_mode = "0400"
+gate4_post_review_sidecar_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t13-gate4-boulder-transition-v1-receipt-recovery-v2/post-review/IndependentPostExecutionReview.json.sha256"
+gate4_post_review_sidecar_sha256 = "bc2acaee30213ed2eb8ab4b34600d2b8beb3287443b81f80d223452d60b9d381"
+gate4_post_review_sidecar_mode = "0400"
+gate4_oracle_final_review_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t13-gate4-boulder-transition-v1-receipt-recovery-v2/post-review/OracleFinalVerify.json"
+gate4_oracle_final_review_sha256 = "cab6c866c256ce160c13b4694531f661b2db9cbfac5dd47b34cf69b073635fbd"
+gate4_oracle_final_review_mode = "0400"
+gate4_oracle_final_review_sidecar_path = ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t13-gate4-boulder-transition-v1-receipt-recovery-v2/post-review/OracleFinalVerify.json.sha256"
+gate4_oracle_final_review_sidecar_sha256 = "06381b69be68e4abec1aad5f324632ef6b2345c3c8f5f69cca5226e85d2b6751"
+gate4_oracle_final_review_sidecar_mode = "0400"
+
+[unary]
+state_order = [0, 1]
+equal_prior = 0.5
+joint_formula = "j_mivc=log(0.5)+log f_mvc(x_iv)"
+view_log_evidence_formula = "a_miv=logsumexp_c(j_mivc)"
+raw_view_posterior_formula = "pi_mivc=exp(j_mivc-a_miv)"
+clip_state_one = "[1e-12,1-1e-12]"
+state_zero_is_complement = true
+clip_does_not_alter_view_log_evidence = true
+available_mask = "C1_training_valid_intersect_node_finite_shared_by_C1_C2"
+structural_missing_view = "omit_for_both_models"
+partial_view_weight = "1/|A_i|"
+model_choice_scope = "fold_wide_never_per_node_mixing"
+eta_formula = "eta_mic=(1/|A_i|)sum_v(a_miv+log(pi_clipped_mivc))"
+unary_score_formula = "U_mi=logsumexp_c(eta_mic)"
+posterior_formula = "q_mic=exp(eta_mic-U_mi)"
+empty_mask = "U=0;q=(0.5,0.5);output=?"
+empty_mask_incident_edge = "BLOCKED/all_views_missing_incident_edge"
+hard_output = "p1>0.5:1;p1<0.5:0;p1==0.5:?"
+orientation_authority = "exact_T8_bytes_and_canonical_bundle"
+
+[status]
+row_schema = "event|consumed|terminal_status|consequence"
+no_terminal_status = "NONE"
+terminal_statuses = ["BLOCKED", "FAIL", "SKIPPED", "PASS"]
+consumed_invariant = "consumed=true_iff_terminal_status=NONE_and_evaluation_continues;consumed=false_iff_terminal_status_is_terminal_and_returns_immediately"
+component_status_rule = "a_consumed_component_may_record_SKIPPED_diagnostically_but_component_status_never_substitutes_evaluator_terminal_status"
+unary_rows = ["authority_or_input_mismatch|false|BLOCKED|no_fit", "structural_view_omitted|true|NONE|local_omission", "c1_unavailable|false|SKIPPED|scope_unavailable", "c2_unavailable_fallback_c1|true|NONE|select_C1", "unary_numerical_failure|false|FAIL|no_fallback", "all_views_missing|true|NONE|valid", "all_views_missing_incident_edge|false|BLOCKED|no_fit"]
+edge_graph_rows = ["empty_edge_sum|true|NONE|continue_unary_only", "common_null_unavailable|false|SKIPPED|scope_unavailable", "common_null_numerical_failure|false|FAIL|no_fallback", "conditional_unavailable|true|NONE|retain_unary_common_null_graph_zero", "t11_numerical_failure|false|FAIL|no_fallback", "graph_disabled|true|NONE|graph_zero", "t12_failure|false|FAIL|no_fallback", "authority_or_factor_mismatch|false|BLOCKED|before_work"]
+final_rows = ["ok|false|PASS|complete_all_guards", "nonpositive_date|false|SKIPPED|first_nonpositive_date", "bootstrap_not_positive|false|SKIPPED|type7_lower_bound_nonpositive", "sign_not_significant|false|SKIPPED|p_ge_0.05", "numerical_failure|false|FAIL|numerical_failure", "incomplete_or_stale_evidence|false|BLOCKED|missing_substituted_duplicate_authority_date_scan_row_receipt"]
+precedence = ["BLOCKED", "FAIL", "SKIPPED", "PASS"]
+
+[edge]
+eligible_set = "exact_Todo10_eligible_and_all_14_endpoint_predictors_finite"
+predictor_names = ["amp_prominence", "amp_neighbor_ratio", "integrated_prominence", "amp_rel", "bwd_neg_com_t", "bwd_neg_diag45", "split_log_skew"]
+endpoint_order = "left_then_right_increasing_observed_t_nm"
+normalization = "existing_T11_per_scan_normalization"
+residualizer = "existing_T11_shared_residualizer"
+common_null_fit = "once_per_training_reference_before_conditional_feasibility"
+nu = 8
+null_score = "N_e=log_t_8(r_e;mu0,S0)"
+scale_eigenvalue_floor = 1.0e-4
+scale_condition_cap = 1.0e4
+scale_check = "eigen(Symmetric(scale)).values"
+scale_exception = "none"
+
+[graph_output]
+enable_condition = "selected_unary_fit_and_T11_PASS_and_T12_PASS"
+selected_model_source = "fold_wide_selected_unary_model_id"
+selected_model_allowed = ["C1", "C2"]
+selected_unary_fit_source = "outer_fold_selected_unary_fit_sha256"
+t11_resolution_key_fields = ["model", "unary_fit_sha256", "fit_role", "scope", "outer_date", "target_date"]
+t11_resolution_predicate = "model=selected_model;unary_fit_sha256=selected_unary_fit_sha256;fit_role=partition;scope=outer_score;outer_date=heldout_date;target_date=heldout_date"
+t11_resolution_cardinality = 1
+t12_fit_sha256_source = "fit_sha256_of_unique_t11_resolution"
+t12_reference_key_fields = ["model", "fit_sha256", "fit_role", "scope", "outer_date", "target_date"]
+t12_reference_predicate = "model=selected_model;fit_sha256=t12_fit_sha256;fit_role=partition;scope=outer_score;outer_date=heldout_date;target_date=heldout_date"
+t12_reference_cardinality = 1
+reference_alias_policy = "fit_sha256_only_model_only_first_reference_final_lodo_and_report_total_resolution_forbidden"
+block_key_fields = ["model", "fit_sha256", "fit_role", "scope", "outer_date", "target_date", "file", "date", "segment_id"]
+block_file_cardinality = "every_selected_block_contains_nodes_and_factors_from_exactly_one_scan_file_and_heldout_date"
+scan_logz = "sum_log_evidence_of_only_blocks_matching_exact_reference_and_scan_file_date"
+reference_selection = "one_T12_reference_per_held_out_target_date"
+reference_scope = "fit_role=partition;scope=outer_score;outer_date=target_date=held_out_date"
+reference_integrity = "missing_duplicate_extra_mismatch_BLOCKED"
+disabled_logz = 0.0
+enabled_probabilities = "T12_marginals"
+disabled_probabilities = "selected_unary_q"
+node_cardinality = "every_node_exactly_once"
+factor_cardinality = "every_eligible_edge_exactly_once"
+split_isolated = "unary_only"
+exact_half_output = "?"
+
+[scoring]
+edge_set = "E_s_fixed_exact_Todo10_eligible_finite_14_predictors"
+denominator = "M_s=nodes_s+|E_s|"
+denominator_positive = true
+c1_score = "L_C1=sum_i(U_C1_i)+sum_e(N_e)"
+meta_score = "L_meta=sum_i(U_selected_i)+sum_e(N_e)+I_graph*logZ_T12_s"
+scan_difference = "D_s=(L_meta-L_C1)/M_s"
+inner_c2_difference = "D_unary_s=(sum_i(U_C2_i)-sum_i(U_C1_i))/M_s"
+same_observations_null_denominator = true
+t12_role = "relative_graph_normalizer_only"
+
+[gate]
+bootstrap_count = 500
+seed_start = 0
+seed_stop = 499
+rng = "one_Random.MersenneTwister(Int(seed))_per_replicate"
+iteration_order = "dates_ascending_then_scans_ascending"
+resampling = "paired_precomputed_D_s_scan_indices_with_replacement_within_date_original_count"
+aggregation = "mean_scans_per_date_then_mean_dates"
+quantile_method = "Type7_h=1+(n-1)p;j=floor(h);gamma=h-j;Q=(1-gamma)x_j+gamma*x_(j+1)"
+quantile_lower_p = 0.025
+quantile_500_result = "0.525*x_(13)+0.475*x_(14)"
+quantile_strict = true
+inner_c2_requirements = "every_inner_date_mean>0_and_type7_lower_bound>0"
+sign_dates = "sorted_dates_bit_order"
+sign_masks = "0:2^K-1;bit1=+1;bit0=-1;all_positive=2^K-1"
+sign_observed = "Tobs=mean(d_k)"
+sign_mask_score = "Tmask=mean(sign*d)"
+sign_tail = "Float64_inclusive_Tmask>=Tobs"
+sign_p = "count/2^K"
+sign_plus_one = false
+primary_alpha = 0.05
+pass_requirements = "p<0.05_and_every_date_mean>0_and_final_type7_lower_bound>0"
+
+[metrics]
+coverage = "mean_all_nodes(A_i_nonempty_and_final_p1!=0.5)"
+entropy_probability = "final_p1=T12_marginal_p1_if_graph_enabled_else_selected_unary_q1"
+entropy_scope = "every_frozen_node_in_all_scored_outer_scans_including_all_views_missing"
+entropy_node_formula = "H_i=-(p_i*log(p_i)+(1-p_i)*log(1-p_i))/log(2);0log0=0"
+entropy_aggregation = "sum_i(H_i)/count_all_frozen_nodes_pooled;no_scan_date_or_chain_reweighting"
+entropy_empty_scope = "BLOCKED"
+view_agreement_probability = "selected_fold_model_pregraph_unclipped_raw_view_posterior_pi_miv1"
+view_agreement_pair_scope = "unordered_pairs_v_lt_w_in_config_view_order_with_v_and_w_both_in_A_i"
+view_agreement_pair_formula = "(pi_iv1-0.5)*(pi_iw1-0.5)>0"
+view_agreement_ties = "nonagreement"
+view_agreement_aggregation = "sum_i(agreeing_pairs_i)/sum_i(available_unordered_pairs_i)_pooled;never_mean_node_ratios"
+view_agreement_denominator_zero = "NA_retain_integer_numerator_and_denominator"
+unary_parameter_count = "76=16+20+20+20"
+residualizer_parameter_count = "30=15x2"
+null_parameter_count = "5=2+3"
+conditional_edge_parameter_count = "9=6+3"
+graph_new_parameter_count = 0
+unary_meta_total = 111
+graph_meta_total = 120
+selection_role = "descriptive_only_never_BIC_AICc_GCV"
+
+[serialization]
+float_format = "%.17g"
+missing_token = "NA"
+encoding = "UTF-8"
+line_ending = "LF"
+final_lf = true
+boolean_format = "lowercase"
+integer_format = "canonical_base10_no_plus_no_leading_zeros"
+ordering = "dates_scans_views_nodes_date_file_t_nm_lobe_Todo10_edges_seed_0_499_sign_mask_ascending"
+replay_excludes = "timestamp_absolute_root_machine_temp_paths"
+
+[validation]
+validator_version = "structured_evaluator_policy_correction2_v1"
+snapshot_authority_once = true
+canonical_repo_relative_paths = true
+regular_distinct_files = true
+reject_symlink_roots_ancestors_members = true
+verify_snapshot_before_return = true
+recompute_bundle_members = true
+fail_before_work_on_authority_failure = true
+allowed_reasons = ["policy_encoding_mismatch", "policy_schema_mismatch", "policy_type_mismatch", "policy_value_mismatch", "authority_binding_mismatch", "authority_path_invalid", "authority_symlink", "authority_hardlink", "authority_identity_collision", "authority_path_mismatch", "authority_hash_mismatch", "authority_bundle_mismatch", "authority_member_hash_mismatch", "authority_snapshot_changed", "runtime_version_mismatch", "todo_state_mismatch", "todo13_product_present", "scope_violation", "replay_mismatch", "manifest_mismatch", "t12_reference_mismatch", "metric_replay_mismatch", "bootstrap_replay_mismatch", "sign_replay_mismatch"]
+structured_result = "status_reason_counters_and_canonical_replay"
+invalid_mutation_work = "status_BLOCKED_exact_reason_formula_bootstrap_sign_graph_metric_output_counters_zero"

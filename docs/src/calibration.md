@@ -112,12 +112,10 @@ properties, not molecule properties: they are the same for any molecule on the
 same STM with the same flatten/smooth settings. Only the molecule-specific
 quantities (FWHM, spacing, n_max) need re-measurement.
 
-## Structured evaluator-v1 is not physical calibration (correction3 pending review)
+## Historical structured evaluator policies are not physical calibration
 
-The evaluator config is a policy/static/synthetic correction3 prerequisite, not a
-physical calibration and not an application or benchmark result. It becomes
-authoritative only after parent acceptance, a fresh independent Oracle PASS, and
-reviewer-owned `GateClosure`. Its
+The historical evaluator configs are policy/static/synthetic prerequisites, not
+physical calibration and not application or benchmark results. Their
 canonical path/hash/runtime/member checks must pass before any formula,
 bootstrap, or graph work; Todo 13 remains blocked until that gate.
 
@@ -183,3 +181,53 @@ parent acceptance of the external receipt, a fresh independent Oracle PASS, and
 reviewer-owned `GateClosure`. No policy, configuration, calibration, threshold,
 GCV, `n_eff`, T8, T11, T12, label, benchmark, application, or Todo behavior
 changes.
+
+### Gate5 runtime-v4 administrative note
+
+The final Julia 1.12.7 runtime-v4 candidate changes no calibration, scientific,
+physical, model, threshold, GCV, or `n_eff` parameter. Its scientific suffix,
+from `[unary]` through EOF, is byte-identical to certified runtime-v3. The
+runtime-v4 tables, runtime identity, source-archive bindings, and output state
+are administrative configuration fields; they are not additions to the
+calibration model. This is migration evidence only. Gate2 remains pending, and
+Todo13 execution, its outputs, T14, and downstream work remain unauthorized
+and unstarted.
+
+### Inactive T13 activation successor is not recalibration
+
+The accepted T13 activation successor is an administrative/control-plane
+contract, not a calibration change. It performs no recalibration and adds no
+new benchmark or application claim. The runtime-v4 config and all scientific
+formulas, parameters, thresholds, GCV, and `n_eff` remain unchanged, and the
+ordinary invocation, default evaluator CLI, and public unary-selection producer
+remain fail-closed. The activation execution spec, activation receipt, and the
+activation-specific report and blocker receipts are integrity and scope
+records: they bind inputs, environment, identities, and predecessor bytes, but
+they do not validate scientific accuracy, do not turn "processed" output into
+validation, and are not benchmark or application evidence. The finite
+dependency and launch bindings described in `config.md` are likewise
+control-plane checks. The T11 recomputation and T12 consumption are part of the
+consumed read surface but are not executed in this inactive phase, and a
+positive heavy T8/T11/T12 integration remains untested. A digest chosen by an
+arbitrary caller is not authorization; authorization is the parent-reviewed
+ACT-3 decision and the exact launch it pins, and Julia performs no
+cryptographic signer verification. No production T13 run is authorized, and
+the first future grant, if any, covers frozen synthetic execution only.
+
+### Proposed inactive Main-control successor v2 changes no calibration
+
+The v2 candidate is an administrative/control-plane implementation candidate,
+not a calibration change. It changes no scientific formula, parameter,
+calibration, threshold, GCV, `n_eff`, label firewall, or benchmark claim, and
+the runtime-v4 config, eight scientific TSV schemas, legacy serializer, and
+ordinary invocation remain unchanged. The two-root `M`/`R` split, the single
+live Main ledger, and the dedicated control snapshot are integrity and scope
+controls; they do not validate scientific accuracy or turn synthetic mock
+protocol data into producer-execution evidence. MC-2 attempt 1/3 returned
+BLOCKED; the bounded non-scientific remediation then passed fresh validation on
+2026-09-11 (targeted 227/227, focused 414/414, synthetic 58/58, existing full
+67002/67002, firewall 379/379, all exit 0), which does not make the old
+`ed1ac6b1` counts current and does not constitute MC-2 acceptance. MC-2 attempt
+2/3 review remains pending, and the heavy positive T8/T11/T12 pipeline remains
+untested. No T13 run, input generation, ledger, grant, or transition is
+authorized by this description.

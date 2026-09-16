@@ -1,0 +1,84 @@
+name: Runtime v4 synthetic contract
+
+on:
+  push:
+    paths:
+      - 'Project.toml'
+      - 'Manifest.toml'
+      - 'config/unit_assignment_structured_evaluator.toml'
+      - 'config/unit_assignment_structured_evaluator_runtime.toml'
+      - 'config/unit_assignment_structured_evaluator_runtime_v2.toml'
+      - 'config/unit_assignment_structured_evaluator_runtime_v3.toml'
+      - 'config/unit_assignment_structured_evaluator_runtime_v4.toml'
+      - 'test/evaluate_structured_unit_assignment.jl'
+      - 'test/lib/structured_assignment/**'
+      - 'test/test_structured_evaluator.jl'
+      - 'test/test_structured_edge_admission.jl'
+      - '.github/workflows/runtime-v4-contract.yml'
+  pull_request:
+    paths:
+      - 'Project.toml'
+      - 'Manifest.toml'
+      - 'config/unit_assignment_structured_evaluator.toml'
+      - 'config/unit_assignment_structured_evaluator_runtime.toml'
+      - 'config/unit_assignment_structured_evaluator_runtime_v2.toml'
+      - 'config/unit_assignment_structured_evaluator_runtime_v3.toml'
+      - 'config/unit_assignment_structured_evaluator_runtime_v4.toml'
+      - 'test/evaluate_structured_unit_assignment.jl'
+      - 'test/lib/structured_assignment/**'
+      - 'test/test_structured_evaluator.jl'
+      - 'test/test_structured_edge_admission.jl'
+      - '.github/workflows/runtime-v4-contract.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: runtime-v4-contract-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  synthetic-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+      - name: Set up Julia
+        uses: julia-actions/setup-julia@v3
+        with:
+          version: '1.12.7'
+      - name: Cache Julia artifacts
+        uses: julia-actions/cache@v3
+      - name: Verify Julia runtime
+        run: julia -e '@assert VERSION == v"1.12.7"'
+      - name: Bootstrap local packages
+        run: |
+          julia --project=. -e '
+            using Pkg
+            for p in ["STMFitCore","STMSXMIO","GaussianFit1D","GaussianFit2D","STMMolecularFit"]
+                Pkg.develop(PackageSpec(path="packages/$p.jl"))
+            end
+            Pkg.instantiate(); Pkg.precompile()'
+      - name: Record bootstrapped environment
+        run: |
+          git diff --exit-code -- Project.toml
+          sha256sum Project.toml Manifest.toml > "$RUNNER_TEMP/runtime-v4-environment.sha256"
+      - name: Run synthetic contract
+        run: |
+          if [[ -e .omo ]]; then
+            echo '::error::.omo exists before the synthetic contract'
+            exit 1
+          fi
+
+          test_status=0
+          STMFIT_GATE5_RUNTIME_V4_SYNTHETIC_CONTRACT=1 julia --project=. test/test_structured_evaluator.jl || test_status=$?
+
+          if [[ -e .omo ]]; then
+            echo '::error::.omo exists after the synthetic contract'
+            exit 1
+          fi
+
+          sha256sum --check "$RUNNER_TEMP/runtime-v4-environment.sha256"
+          exit "$test_status"

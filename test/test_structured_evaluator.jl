@@ -13,11 +13,18 @@ using Statistics
 include(joinpath(@__DIR__, "evaluate_structured_unit_assignment.jl"))
 const E = StructuredUnitAssignmentEvaluator
 Test.TESTSET_PRINT_ENABLE[] = false
+const GATE5_SYNTHETIC_CONTRACT =
+    get(ENV, "STMFIT_GATE5_RUNTIME_V4_SYNTHETIC_CONTRACT", "0")
+GATE5_SYNTHETIC_CONTRACT in ("0", "1") ||
+    error("STMFIT_GATE5_RUNTIME_V4_SYNTHETIC_CONTRACT must be exactly 0 or 1")
 
 # Reuse the authoritative Todo 10 synthetic fixture builder without changing
 # the frozen evaluator source.  The prefix ends immediately after
 # make_cli_fixture and before the edge-admission test products.
-const EDGE_FIXTURE_SUPPORT = let
+const EDGE_FIXTURE_SUPPORT = if GATE5_SYNTHETIC_CONTRACT == "1"
+    nothing
+else
+    let
     support = Module(:T13EdgeFixtureSupport)
     Core.eval(support, :(include(path::AbstractString) = Base.include(@__MODULE__, path)))
     source = joinpath(@__DIR__, "test_structured_edge_admission.jl")
@@ -44,7 +51,8 @@ const EDGE_FIXTURE_SUPPORT = let
                            end""",
                            count=1)
     Base.include_string(support, under_source, source)
-    support
+        support
+    end
 end
 
 const VIEW_NAMES = (
@@ -64,6 +72,13 @@ const HISTORICAL_EVALUATOR_CONFIG = "config/unit_assignment_structured_evaluator
 const RUNTIME_EVALUATOR_CONFIG = "config/unit_assignment_structured_evaluator_runtime.toml"
 const RUNTIME_V2_EVALUATOR_CONFIG = "config/unit_assignment_structured_evaluator_runtime_v2.toml"
 const RUNTIME_V3_EVALUATOR_CONFIG = "config/unit_assignment_structured_evaluator_runtime_v3.toml"
+const RUNTIME_V4_EVALUATOR_CONFIG = "config/unit_assignment_structured_evaluator_runtime_v4.toml"
+const HISTORICAL_T12_CLAIM_DECLARATION_SHA256 =
+    "293c70b11bb9b6215eb0be54f80db3af8997370589743b1b0c7620f095385614"
+const HISTORICAL_T12_CLAIM_OBSERVED_SHA256 =
+    "0c9378459af0511cfc3ee2e43eadc20a9968d23c92f51f14ec042f8350f95109"
+const SYNTHETIC_NON_AUTHORITY_MARKER = "SYNTHETIC-NON-AUTHORITY.toml"
+const GATE5_COVERAGE_MAP = joinpath(@__DIR__, "structured_evaluator_gate5_coverage.toml")
 
 function view_set(c2_gap::Real; c1_gap::Real=0.0,
                  c2_missing::Bool=false, names=VIEW_NAMES)
@@ -383,7 +398,8 @@ function local_context(root::String)
 end
 
 function isolated_authority_fixture(root::String;
-                                    config_rel::String=HISTORICAL_EVALUATOR_CONFIG)
+                                    config_rel::String=HISTORICAL_EVALUATOR_CONFIG,
+                                    synthetic_non_authority_rebind::Bool=false)
     source_root = abspath(joinpath(@__DIR__, ".."))
     config = TOML.parse(read(joinpath(source_root, config_rel), String))
     paths = String[config_rel,
@@ -396,6 +412,12 @@ function isolated_authority_fixture(root::String;
                    E._CLOSURE_V1_PUBLICATION_RECEIPT_SIDECAR_PATH]
     append!(paths, String(value) for (key, value) in config["authority"]
             if endswith(String(key), "_path"))
+    if config_rel in (RUNTIME_EVALUATOR_CONFIG, RUNTIME_V2_EVALUATOR_CONFIG)
+        contract = E._runtime_contract(config_rel == RUNTIME_EVALUATOR_CONFIG ?
+                                       :runtime : :runtime_v2)
+        push!(paths, joinpath(dirname(contract.root_manifest_path),
+                              contract.edge_model_product_path))
+    end
     append!(paths, [
         "test/lib/structured_assignment/universe.jl",
         "test/lib/structured_assignment/robust_emissions.jl",
@@ -419,6 +441,12 @@ function isolated_authority_fixture(root::String;
         mkpath(dirname(destination))
         cp(source, destination; force=true)
         chmod(destination, 0o644)
+    end
+    if config_rel in (RUNTIME_EVALUATOR_CONFIG, RUNTIME_V2_EVALUATOR_CONFIG)
+        contract = E._runtime_contract(config_rel == RUNTIME_EVALUATOR_CONFIG ?
+                                       :runtime : :runtime_v2)
+        chmod(joinpath(root, dirname(contract.root_manifest_path),
+                       contract.edge_model_product_path), 0o444)
     end
     if config_rel == RUNTIME_V3_EVALUATOR_CONFIG
         root_source = joinpath(source_root, E._RUNTIME_V3_T12_ROOT)
@@ -461,7 +489,39 @@ function isolated_authority_fixture(root::String;
     end
     chmod(joinpath(root, E._CLOSURE_V1_PUBLICATION_RECEIPT_PATH), 0o444)
     chmod(joinpath(root, E._CLOSURE_V1_PUBLICATION_RECEIPT_SIDECAR_PATH), 0o444)
+    synthetic_marker = nothing
+    synthetic_config_sha256 = nothing
+    if synthetic_non_authority_rebind
+        copied_claim_path = joinpath(root, String(config["authority"]["t12_claim_path"]))
+        copied_claim_sha256 = E._hash_bytes(read(copied_claim_path))
+        @test copied_claim_sha256 == HISTORICAL_T12_CLAIM_OBSERVED_SHA256
+        declaration_sha256 = String(config["authority"]["t12_claim_sha256"])
+        @test declaration_sha256 == HISTORICAL_T12_CLAIM_DECLARATION_SHA256
+        config_path = joinpath(root, config_rel)
+        original_config = String(read(config_path))
+        count(HISTORICAL_T12_CLAIM_DECLARATION_SHA256, original_config) == 1 ||
+            error("synthetic authority rebind requires exactly one T12 declaration")
+        rebound_config = replace(original_config,
+                                  HISTORICAL_T12_CLAIM_DECLARATION_SHA256 =>
+                                  HISTORICAL_T12_CLAIM_OBSERVED_SHA256; count=1)
+        write(config_path, rebound_config)
+        synthetic_config_sha256 = E._hash_bytes(read(config_path))
+        original_config_sha256 = E._hash_bytes(read(joinpath(source_root, config_rel)))
+        synthetic_marker = joinpath(root, SYNTHETIC_NON_AUTHORITY_MARKER)
+        open(synthetic_marker, "w") do io
+            println(io, "synthetic = true")
+            println(io, "authority_effective = false")
+            println(io, "original_config_path = ", repr(config_rel))
+            println(io, "original_config_sha256 = ", repr(original_config_sha256))
+            println(io, "synthetic_config_sha256 = ", repr(synthetic_config_sha256))
+            println(io, "t12_claim_declaration_sha256 = ", repr(declaration_sha256))
+            println(io, "t12_claim_observed_sha256 = ", repr(copied_claim_sha256))
+            println(io, "missing_original_recovered = false")
+            println(io, "production_use_forbidden = true")
+        end
+    end
     return (config=joinpath(root, config_rel),
+            config_rel=config_rel,
             plan=joinpath(root, ".omo/plans/structured-label-free-unit-assignment.md"),
             boulder=joinpath(root, ".omo/boulder.json"),
             gate=joinpath(root, ".omo/evidence/structured-label-free-unit-assignment/t13/evaluator-policy-v1/correction6-GateClosure.json"),
@@ -476,7 +536,230 @@ function isolated_authority_fixture(root::String;
             noncontrol=joinpath(root, E._CLOSURE_V1_ROOT, "scope-audit.json"),
             closure_root=joinpath(root, E._CLOSURE_V1_ROOT),
             closure_guards=joinpath(root, E._CLOSURE_V1_ROOT, "guards"),
-            closure_review=joinpath(root, E._CLOSURE_V1_ROOT, "review"))
+            closure_review=joinpath(root, E._CLOSURE_V1_ROOT, "review"),
+            synthetic_marker=synthetic_marker,
+            synthetic_config_sha256=synthetic_config_sha256,
+            synthetic_non_authority_rebind=synthetic_non_authority_rebind)
+end
+
+function attempt_synthetic_historical_collector(fixture)
+    fixture.synthetic_non_authority_rebind ||
+        error("synthetic historical collector requires the explicit fixture opt-in")
+    marker = TOML.parse(read(fixture.synthetic_marker, String))
+    @test marker["synthetic"] === true
+    @test marker["authority_effective"] === false
+    @test marker["original_config_path"] == fixture.config_rel
+    @test marker["original_config_sha256"] ==
+          E._hash_bytes(read(joinpath(pwd(), fixture.config_rel)))
+    @test marker["synthetic_config_sha256"] == fixture.synthetic_config_sha256
+    @test marker["t12_claim_declaration_sha256"] ==
+          HISTORICAL_T12_CLAIM_DECLARATION_SHA256
+    @test marker["t12_claim_observed_sha256"] == HISTORICAL_T12_CLAIM_OBSERVED_SHA256
+    @test marker["missing_original_recovered"] === false
+    @test marker["production_use_forbidden"] === true
+
+    root = dirname(dirname(fixture.config))
+    production_error = try
+        E._authority_snapshots(root, fixture.config_rel)
+        nothing
+    catch caught
+        caught
+    end
+    @test production_error isa E.EvaluatorError
+    @test production_error.status == :BLOCKED
+    @test production_error.reason == :authority_hash_mismatch
+    @test production_error.message == "evaluator config bytes differ"
+
+    kind = E._authority_config_kind(root, fixture.config_rel)
+    seen = Dict{Tuple{UInt64,UInt64},String}()
+    config = E._snapshot(root, fixture.config_rel, fixture.synthetic_config_sha256,
+                         "synthetic evaluator config", seen)
+    collector_error = try
+        E._collect_authority_snapshots(root, fixture.config_rel, kind, config, seen)
+        nothing
+    catch caught
+        caught
+    end
+    @test collector_error isa E.EvaluatorError
+    @test collector_error.status == :BLOCKED
+    @test collector_error.reason == :authority_hash_mismatch
+    @test collector_error.message == "closure root manifest member bytes differ"
+    # This seam deliberately has no integrated authority result.  The copied
+    # documents remain historical documents, not a synthetic production chain.
+    integrated_historical_authority = nothing
+    @test integrated_historical_authority === nothing
+    throw(collector_error)
+end
+
+const HISTORICAL_TRACKED_CONFIGS = (
+    HISTORICAL_EVALUATOR_CONFIG,
+    RUNTIME_EVALUATOR_CONFIG,
+    RUNTIME_V2_EVALUATOR_CONFIG,
+    RUNTIME_V3_EVALUATOR_CONFIG,
+)
+
+function assert_live_historical_t12_claim_blocked(config_rel::String)
+    caught = try
+        E._authority_snapshots(pwd(), config_rel)
+        nothing
+    catch error
+        error
+    end
+    @test caught isa E.EvaluatorError
+    @test caught.status == :BLOCKED
+    @test caught.reason == :authority_hash_mismatch
+    @test caught.message == "authority.t12_claim_path bytes differ"
+    return nothing
+end
+
+const CLOSURE_DECLARED_GUARD_SHA256 =
+    "5f6c97d0c5074025f1566785512ca6c03a31e54fe065044d047a7ac32cd9fcd2"
+const CLOSURE_OBSERVED_GUARD_SHA256 =
+    "54d25100c5edc0ce7794368c1018cbe6b90ddd4430ad4cac626dad7f8d3d743e"
+
+function prepare_synthetic_closure_manifest!(fixture)
+    path = fixture.root_manifest
+    original = Vector{UInt8}(read(path))
+    text = String(copy(original))
+    marker = TOML.parse(read(fixture.synthetic_marker, String))
+    if count(CLOSURE_DECLARED_GUARD_SHA256, text) == 6
+        synthetic = replace(text, CLOSURE_DECLARED_GUARD_SHA256 =>
+                            CLOSURE_OBSERVED_GUARD_SHA256; count=6)
+        rewrite_readonly(path, Vector{UInt8}(codeunits(synthetic)))
+        synthetic_sha256 = E._hash_bytes(read(path))
+    else
+        count(CLOSURE_OBSERVED_GUARD_SHA256, text) == 6 ||
+            error("synthetic closure requires six declared or rewritten guard rows")
+        haskey(marker, "synthetic_manifest_sha256") ||
+            error("synthetic manifest marker is absent")
+        synthetic_sha256 = String(marker["synthetic_manifest_sha256"])
+    end
+    open(fixture.synthetic_marker, "w") do io
+        for (key, value) in (
+            ("synthetic", marker["synthetic"]),
+            ("authority_effective", marker["authority_effective"]),
+            ("original_config_path", marker["original_config_path"]),
+            ("original_config_sha256", marker["original_config_sha256"]),
+            ("synthetic_config_sha256", marker["synthetic_config_sha256"]),
+            ("t12_claim_declaration_sha256", marker["t12_claim_declaration_sha256"]),
+            ("t12_claim_observed_sha256", marker["t12_claim_observed_sha256"]),
+            ("missing_original_recovered", marker["missing_original_recovered"]),
+            ("production_use_forbidden", marker["production_use_forbidden"]),
+            ("integrated_authority_valid", false),
+            ("declared_manifest_sha256", E._CLOSURE_V1_ROOT_MANIFEST_SHA256),
+            ("synthetic_manifest_sha256", synthetic_sha256),
+            ("declared_guard_sha256", CLOSURE_DECLARED_GUARD_SHA256),
+            ("observed_guard_sha256", CLOSURE_OBSERVED_GUARD_SHA256),
+            ("rewritten_records", 6),
+        )
+            println(io, key, " = ", repr(value))
+        end
+    end
+    return synthetic_sha256
+end
+
+function synthetic_closure_components(fixture)
+    synthetic_manifest_sha256 = prepare_synthetic_closure_manifest!(fixture)
+    marker = TOML.parse(read(fixture.synthetic_marker, String))
+    @test marker["synthetic"] === true
+    @test marker["authority_effective"] === false
+    @test marker["production_use_forbidden"] === true
+    @test marker["integrated_authority_valid"] === false
+    @test marker["declared_manifest_sha256"] == E._CLOSURE_V1_ROOT_MANIFEST_SHA256
+    @test marker["synthetic_manifest_sha256"] == synthetic_manifest_sha256
+    @test marker["declared_guard_sha256"] == CLOSURE_DECLARED_GUARD_SHA256
+    @test marker["observed_guard_sha256"] == CLOSURE_OBSERVED_GUARD_SHA256
+    @test marker["rewritten_records"] == 6
+    @test marker["missing_original_recovered"] === false
+    root = dirname(dirname(fixture.config))
+    seen = Dict{Tuple{UInt64,UInt64},String}()
+    manifest = E._snapshot(root, E._CLOSURE_V1_ROOT_MANIFEST_PATH,
+                           synthetic_manifest_sha256,
+                           "synthetic closure root manifest", seen)
+    bundle = E._validate_closure_manifest(root, manifest, seen)
+    gate = E._snapshot(root, relpath(fixture.gate, root), E._GATECLOSURE_SHA256,
+                       "GateClosure component", seen)
+    prerequisite_review = E._snapshot(root, relpath(fixture.prerequisite_review, root),
+                                      E._REVIEW_SHA256, "Todo13 review component", seen)
+    publication = E._snapshot(root, E._CLOSURE_V1_PUBLICATION_RECEIPT_PATH,
+                              E._CLOSURE_V1_PUBLICATION_RECEIPT_SHA256,
+                              "closure-v1 publication receipt component", seen)
+    publication_sidecar = E._snapshot(root, E._CLOSURE_V1_PUBLICATION_RECEIPT_SIDECAR_PATH,
+                                      E._CLOSURE_V1_PUBLICATION_RECEIPT_SIDECAR_SHA256,
+                                      "closure-v1 publication sidecar component", seen)
+    claim = bundle.members[E._CLOSURE_V1_CLAIM_PATH]
+    claim_sidecar = bundle.members[E._CLOSURE_V1_CLAIM_SIDECAR_PATH]
+    review = bundle.members[E._CLOSURE_V1_REVIEW_PATH]
+    review_sidecar = bundle.members[E._CLOSURE_V1_REVIEW_SIDECAR_PATH]
+    E._validate_sidecar(claim_sidecar, E._CLOSURE_V1_CLAIM_SHA256,
+                        E._CLOSURE_V1_CLAIM_PATH, "closure-v1 DoneClaim")
+    E._validate_sidecar(review_sidecar, E._CLOSURE_V1_REVIEW_SHA256,
+                        E._CLOSURE_V1_REVIEW_PATH, "closure-v1 review")
+    E._validate_sidecar(publication_sidecar, E._CLOSURE_V1_PUBLICATION_RECEIPT_SHA256,
+                        E._CLOSURE_V1_PUBLICATION_RECEIPT_PATH,
+                        "closure-v1 publication receipt")
+    E._validate_closure_claim(claim)
+    E._validate_closure_review(review)
+    E._validate_publication_receipt(publication)
+    snapshots = vcat(bundle.snapshots, [gate, prerequisite_review, publication,
+                                        publication_sidecar])
+    return (manifest=manifest, bundle=bundle, snapshots=snapshots,
+            inventories=bundle.inventories,
+            synthetic_manifest_sha256=synthetic_manifest_sha256,
+            config_sha256=fixture.synthetic_config_sha256)
+end
+
+function runtime_component_snapshots(fixture, kind::Symbol)
+    root = dirname(dirname(fixture.config))
+    contract = E._runtime_contract(kind)
+    seen = Dict{Tuple{UInt64,UInt64},String}()
+    snapshots = E._Snapshot[]
+    config = E._snapshot(root, fixture.config_rel, fixture.synthetic_config_sha256,
+                         "synthetic runtime evaluator config", seen)
+    push!(snapshots, config)
+    for (relative, expected, context) in (
+        (contract.root_manifest_path, contract.root_manifest_sha256, "runtime root manifest"),
+        (contract.claim_path, contract.claim_sha256, "runtime correction claim"),
+        (contract.review_path, contract.review_sha256, "runtime correction review"),
+        (contract.publication_path, contract.publication_sha256, "runtime publication receipt"),
+        (joinpath(dirname(contract.root_manifest_path), contract.edge_model_product_path),
+         contract.edge_model_sha256, "runtime corrected edge product"),
+    )
+        push!(snapshots, E._snapshot(root, relative, expected, context, seen))
+    end
+    product = E._runtime_snapshot(snapshots, root,
+        joinpath(dirname(contract.root_manifest_path), contract.edge_model_product_path),
+        "runtime corrected edge product")
+    E._runtime_v3_mode(product.path, UInt(0o444), "runtime corrected edge product")
+    source = E._current_snapshot(joinpath(root, "test/evaluate_structured_unit_assignment.jl"),
+                                 "evaluator source component", seen)
+    source === nothing || push!(snapshots, source)
+    E._validate_runtime_correction_semantics(root, snapshots, kind)
+    return (snapshots=snapshots, inventories=Tuple{String,Vector{String}}[],
+            config_sha256=fixture.synthetic_config_sha256)
+end
+
+function runtime_v3_component_snapshots(fixture)
+    root = dirname(dirname(fixture.config))
+    contract = E._runtime_contract(:runtime_v3)
+    seen = Dict{Tuple{UInt64,UInt64},String}()
+    snapshots = E._Snapshot[]
+    push!(snapshots, E._snapshot(root, fixture.config_rel, fixture.synthetic_config_sha256,
+                                "synthetic runtime-v3 evaluator config", seen))
+    inventories = E._validate_runtime_v3_bundle(root, snapshots, seen)
+    for (relative, expected, context) in (
+        ("test/lib/structured_assignment/edge_model.jl", contract.edge_model_sha256,
+         "runtime-v3 live edge product"),
+        ("test/lib/structured_assignment/chain_inference.jl", contract.chain_sha256,
+         "runtime-v3 live chain product"),
+        ("test/test_structured_chain_inference.jl", contract.corrected_test_sha256,
+         "runtime-v3 live test product"),
+    )
+        push!(snapshots, E._snapshot(root, relative, expected, context, seen))
+    end
+    E._validate_runtime_correction_semantics(root, snapshots, :runtime_v3)
+    return (snapshots=snapshots, inventories=inventories,
+            config_sha256=fixture.synthetic_config_sha256)
 end
 
 function rewrite_readonly(path::String, bytes::Vector{UInt8})
@@ -596,9 +879,404 @@ function synthetic_selection_context(; full_c2_status="PASS",
     return input, metadata, bindings
 end
 
+if GATE5_SYNTHETIC_CONTRACT == "1"
+    const GATE5_MODE_RESULTS = @testset "Gate5 runtime-v4 fail-closed synthetic contract" begin
+        bytes = Vector{UInt8}(read(joinpath(pwd(), RUNTIME_V4_EVALUATOR_CONFIG)))
+        document = TOML.parse(String(copy(bytes)))
+        blocked(f) = authority_blocked(f)
+        blocked_reason(f) = try
+            f()
+            :identity_passed
+        catch caught
+            caught isa E.EvaluatorError && caught.status == :BLOCKED ?
+                caught.reason : :unexpected_identity_error
+        end
+
+        function test_canonical_path(path; allow_final_symlink=false)
+            path isa AbstractString || return nothing
+            isempty(path) && return nothing
+            try
+                ispath(path) && isfile(path) || return nothing
+                !allow_final_symlink && islink(path) && return nothing
+                canonical = realpath(path)
+                isfile(canonical) || return nothing
+                canonical
+            catch
+                nothing
+            end
+        end
+
+        function test_sysimage_path()
+            image_pointer = try
+                Base.JLOptions().image_file
+            catch
+                return nothing
+            end
+            image_pointer == C_NULL && return nothing
+            image_pointer isa Ptr{UInt8} || return nothing
+            try
+                path = unsafe_string(image_pointer)
+                isempty(path) ? nothing : path
+            catch
+                nothing
+            end
+        end
+
+        function test_file_hash(path)
+            path === nothing && return nothing
+            try
+                E._hash_bytes(read(path))
+            catch
+                nothing
+            end
+        end
+
+        @test E._hash_bytes(bytes) ==
+              "abe22ed5047c898f594067d4a54cbe8fcc99c15fef17b429fa366f64c255547b"
+        @test E._RUNTIME_CONFIG_PATH == RUNTIME_V4_EVALUATOR_CONFIG
+        for (relative, digest) in (
+            (HISTORICAL_EVALUATOR_CONFIG,
+             "ec0546096b3c4742cd86d8c3d40788a5894d20fc5a4702b0318581f10f8b0b90"),
+            (RUNTIME_EVALUATOR_CONFIG,
+             "4a355c7ec5572976f5f54eaf14f2a01e8c91a9304d789e60b844388ac20939a4"),
+            (RUNTIME_V2_EVALUATOR_CONFIG,
+             "69da829faf71a00ffec07e976c5c95245bbb57fd1ac7d0d98e2d54d8064175ae"),
+            (RUNTIME_V3_EVALUATOR_CONFIG,
+             "a0a04794b346f351c61a281384869bcde3f378aa0836c9271197d4004488586e"),
+            (RUNTIME_V4_EVALUATOR_CONFIG,
+             "abe22ed5047c898f594067d4a54cbe8fcc99c15fef17b429fa366f64c255547b"),
+        )
+            @test E._hash_bytes(read(joinpath(pwd(), relative))) == digest
+        end
+        v3 = Vector{UInt8}(read(joinpath(pwd(), RUNTIME_V3_EVALUATOR_CONFIG)))
+        marker = Vector{UInt8}(codeunits("[unary]\n"))
+        @test bytes[first(findfirst(marker, bytes)):end] ==
+              v3[first(findfirst(marker, v3)):end]
+        @test E._validate_runtime_v4_document(document) === nothing
+        authority = document["authority"]
+        expected_authority_keys = Set(String.(collect(E._RUNTIME_V4_AUTHORITY_NONBINDING_KEYS)))
+        for (path_key, _, hash_key, _, mode_key, _) in E._RUNTIME_V4_AUTHORITY_BINDINGS
+            push!(expected_authority_keys, path_key)
+            push!(expected_authority_keys, hash_key)
+            push!(expected_authority_keys, mode_key)
+        end
+        @test length(expected_authority_keys) == 133
+        @test Set(String.(collect(keys(authority)))) == expected_authority_keys
+        @test document["evaluator"]["allow_extra_keys"] === false
+        for legacy_key in ("t11_source_path", "t11_source_sha256", "t11_source_mode",
+                           "t12_source_path", "t12_source_sha256", "t12_source_mode")
+            @test !haskey(authority, legacy_key)
+        end
+        for (prefix, root, mode) in (
+            ("t11_source", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t11-full-chain-julia-1.12.7-v1/v7-run/input", UInt(0o444)),
+            ("t12_source", ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/t12-full-chain-julia-1.12.7-v1/evidence/v9-input", UInt(0o400)),
+        )
+            for (suffix, basename) in (("tar", "source.tar"),
+                                        ("manifest", "source-manifest.tsv"),
+                                        ("symlink_manifest", "source-symlink-manifest.tsv"))
+                stem = "$(prefix)_$(suffix)"
+                path = authority[stem * "_path"]
+                @test path == root * "/" * basename
+                @test parse(UInt, authority[stem * "_mode"]; base=8) == mode
+            end
+        end
+        @test !occursin(r"t11_source_path\s*=\s*\"test/", String(copy(bytes)))
+        @test !occursin(r"t12_source_path\s*=\s*\"test/", String(copy(bytes)))
+        @test !occursin(r"(?i)t13.*output.*sha256|output.*t13.*sha256", String(copy(bytes)))
+        mutated_source_hash = deepcopy(document)
+        mutated_source_hash["authority"]["t11_source_tar_sha256"] = "0"^64
+        @test blocked(() -> E._validate_runtime_v4_document(mutated_source_hash))
+        mutated_legacy_key = deepcopy(document)
+        mutated_legacy_key["authority"]["t11_source_path"] =
+            "test/evaluate_structured_unit_assignment.jl"
+        @test blocked(() -> E._validate_runtime_v4_document(mutated_legacy_key))
+        runtime = document["runtime"]
+        configured_executable_path = get(runtime, "executable", nothing)
+        configured_sysimage_path = get(runtime, "sysimage", nothing)
+        active_executable_path = try
+            command = Base.julia_cmd().exec[1]
+            command isa AbstractString || (command = String(command))
+            isabspath(command) ? String(command) : joinpath(Sys.BINDIR, String(command))
+        catch
+            nothing
+        end
+        proc_executable_path = Sys.isunix() && ispath("/proc/self/exe") ?
+            "/proc/self/exe" : nothing
+        active_sysimage_path = test_sysimage_path()
+        configured_executable = test_canonical_path(configured_executable_path)
+        active_executable = test_canonical_path(active_executable_path)
+        proc_executable = test_canonical_path(proc_executable_path;
+                                               allow_final_symlink=true)
+        configured_sysimage = test_canonical_path(configured_sysimage_path)
+        active_sysimage = test_canonical_path(active_sysimage_path)
+        configured_executable_hash = test_file_hash(configured_executable)
+        active_executable_hash = test_file_hash(active_executable)
+        proc_executable_hash = test_file_hash(proc_executable)
+        configured_sysimage_hash = test_file_hash(configured_sysimage)
+        active_sysimage_hash = test_file_hash(active_sysimage)
+        expected_identity_reason = if VERSION != v"1.12.7" ||
+                                      get(runtime, "julia", nothing) != "1.12.7"
+            :runtime_version_mismatch
+        elseif configured_executable === nothing || active_executable === nothing ||
+               proc_executable === nothing ||
+               !(configured_executable == active_executable == proc_executable)
+            :runtime_executable_mismatch
+        elseif configured_sysimage === nothing || active_sysimage === nothing ||
+               configured_sysimage != active_sysimage
+            :runtime_sysimage_mismatch
+        elseif configured_executable_hash === nothing ||
+               active_executable_hash === nothing || proc_executable_hash === nothing ||
+               !(configured_executable_hash == active_executable_hash ==
+                 proc_executable_hash == get(runtime, "executable_sha256", nothing))
+            :runtime_executable_mismatch
+        elseif configured_sysimage_hash === nothing || active_sysimage_hash === nothing ||
+               !(configured_sysimage_hash == active_sysimage_hash ==
+                 get(runtime, "sysimage_sha256", nothing))
+            :runtime_sysimage_mismatch
+        else
+            nothing
+        end
+        identity_result = try
+            E._validate_runtime_v4_identity(runtime)
+            nothing
+        catch caught
+            caught
+        end
+        @test expected_identity_reason === nothing ? identity_result === nothing :
+              (identity_result isa E.EvaluatorError &&
+               identity_result.status == :BLOCKED &&
+               identity_result.reason == expected_identity_reason)
+        identity_passed = identity_result === nothing
+        identity_error_reason = identity_result isa E.EvaluatorError ?
+            identity_result.reason : expected_identity_reason
+        @test blocked(() -> E._validate_runtime_v4_identity(
+            document["runtime"]; version=v"1.12.7-rc1"))
+        @test blocked(() -> E._runtime_v4_sysimage_path(C_NULL))
+        @test blocked(() -> E._runtime_v4_config_bytes_guard(vcat(bytes, UInt8('x'))))
+        for (key, replacement) in (("t11_claim_path", "tampered.json"),
+                                   ("t12_review_sha256", "0"^64),
+                                   ("gate4_post_review_mode", "0644"))
+            mutated = deepcopy(document)
+            mutated["authority"][key] = replacement
+            @test blocked(() -> E._validate_runtime_v4_document(mutated))
+        end
+        @test blocked(() -> E._validate_runtime_v4_live_hashes(
+            current_boulder_sha256="0"^64,
+            gate4_transition_receipt_sha256=
+                "87818b63b132d8856dec22cb389cc936283bb0827cfa4884cbfd6e8c169de092",
+            gate4_post_review_sha256=
+                "80a133ba8b13d8ac29b1f8d9dcbb07d5c10ee19d47dc60e5105d0897b8032e13",
+            gate4_oracle_final_review_sha256=
+                "cab6c866c256ce160c13b4694531f661b2db9cbfac5dd47b34cf69b073635fbd"))
+        @test blocked(() -> E._validate_runtime_v4_live_hashes(
+            current_boulder_sha256=E._RUNTIME_V4_BOULDER_SHA256,
+            gate4_transition_receipt_sha256="0"^64,
+            gate4_post_review_sha256=
+                "80a133ba8b13d8ac29b1f8d9dcbb07d5c10ee19d47dc60e5105d0897b8032e13",
+            gate4_oracle_final_review_sha256=
+                "cab6c866c256ce160c13b4694531f661b2db9cbfac5dd47b34cf69b073635fbd"))
+
+        identity_root = mktempdir()
+        try
+            executable = joinpath(identity_root, "julia")
+            sysimage = joinpath(identity_root, "sys.so")
+            write(executable, "controlled executable")
+            write(sysimage, "controlled sysimage")
+            executable_alias = joinpath(identity_root, "julia-alias")
+            sysimage_alias = joinpath(identity_root, "sys-alias")
+            symlink(executable, executable_alias)
+            symlink(sysimage, sysimage_alias)
+            seam_runtime = deepcopy(document["runtime"])
+            seam_runtime["executable_sha256"] = E._hash_bytes(read(executable))
+            seam_runtime["sysimage_sha256"] = E._hash_bytes(read(sysimage))
+            seam_kwargs = (; version=v"1.12.7",
+                configured_executable_path=executable_alias,
+                configured_sysimage_path=sysimage_alias,
+                active_executable_path=executable,
+                active_sysimage_path=sysimage,
+                proc_executable_path=executable)
+            @test E._runtime_v4_identity_paths(seam_runtime; seam_kwargs...) === nothing
+
+            wrong_executable = deepcopy(seam_runtime)
+            wrong_executable["executable_sha256"] = "0"^64
+            @test blocked_reason(() -> E._runtime_v4_identity_paths(
+                wrong_executable; seam_kwargs...)) == :runtime_executable_mismatch
+            wrong_sysimage = deepcopy(seam_runtime)
+            wrong_sysimage["sysimage_sha256"] = "0"^64
+            @test blocked_reason(() -> E._runtime_v4_identity_paths(
+                wrong_sysimage; seam_kwargs...)) == :runtime_sysimage_mismatch
+
+            executable_copy = joinpath(identity_root, "julia-copy")
+            cp(executable, executable_copy; force=true)
+            executable_copy_kwargs = merge(
+                seam_kwargs, (configured_executable_path=executable_copy,))
+            @test blocked_reason(() -> E._runtime_v4_identity_paths(seam_runtime;
+                executable_copy_kwargs...)) == :runtime_executable_mismatch
+            sysimage_copy = joinpath(identity_root, "sys-copy")
+            cp(sysimage, sysimage_copy; force=true)
+            sysimage_copy_kwargs = merge(
+                seam_kwargs, (configured_sysimage_path=sysimage_copy,))
+            @test blocked_reason(() -> E._runtime_v4_identity_paths(seam_runtime;
+                sysimage_copy_kwargs...)) == :runtime_sysimage_mismatch
+            no_symlink_kwargs = merge(seam_kwargs, (allow_final_symlinks=false,))
+            @test blocked_reason(() -> E._runtime_v4_identity_paths(seam_runtime;
+                no_symlink_kwargs...)) == :runtime_executable_mismatch
+        finally
+            rm(identity_root; recursive=true, force=true)
+        end
+
+        for historical in (RUNTIME_EVALUATOR_CONFIG, RUNTIME_V2_EVALUATOR_CONFIG,
+                           RUNTIME_V3_EVALUATOR_CONFIG)
+            @test blocked(() -> E._preflight_config_context(Dict{String,String}(
+                "--root" => pwd(), "--evaluator-config" => historical)))
+        end
+        fixture_root = mktempdir()
+        try
+            destination = joinpath(fixture_root, RUNTIME_V4_EVALUATOR_CONFIG)
+            mkpath(dirname(destination))
+            cp(joinpath(pwd(), RUNTIME_V4_EVALUATOR_CONFIG), destination; force=true)
+            options = Dict{String,String}(
+                "--root" => fixture_root,
+                "--evaluator-config" => RUNTIME_V4_EVALUATOR_CONFIG)
+            error = try E._preflight_config_context(options); nothing catch caught; caught end
+            @test error isa E.EvaluatorError
+            expected_fixture_reason = identity_passed ? :todo_state_mismatch :
+                                     identity_error_reason
+            @test error isa E.EvaluatorError && error.status == :BLOCKED &&
+                  error.reason == expected_fixture_reason
+            @test !ispath(joinpath(fixture_root, ".omo"))
+            @test !ispath(joinpath(fixture_root, "data"))
+            @test !ispath(joinpath(fixture_root, "results"))
+        finally
+            rm(fixture_root; recursive=true, force=true)
+        end
+    end
+    counts = Test.get_test_counts(GATE5_MODE_RESULTS)
+    println("assertions=", counts.passes,
+            " fails=", counts.fails,
+            " errors=", counts.errors,
+            " broken=", counts.broken)
+    exit(counts.fails == 0 && counts.errors == 0 ? 0 : 1)
+end
+
 Test.TESTSET_PRINT_ENABLE[] = false
 
 const RESULTS = @testset "Todo13 evaluator pure seam" begin
+    @testset "Gate5 runtime-v4 live source archive bindings" begin
+        # Archive bytes belong to the authority-backed suite, not clean CI.
+        authority = TOML.parsefile(RUNTIME_V4_EVALUATOR_CONFIG)["authority"]
+        for prefix in ("t11_source", "t12_source"),
+            suffix in ("tar", "manifest", "symlink_manifest")
+            stem = "$(prefix)_$(suffix)"
+            absolute = joinpath(pwd(), authority[stem * "_path"])
+            @test isfile(absolute)
+            @test !islink(absolute)
+            @test E._hash_bytes(read(absolute)) == authority[stem * "_sha256"]
+            @test UInt(stat(absolute).mode) & UInt(0o777) ==
+                  parse(UInt, authority[stem * "_mode"]; base=8)
+        end
+    end
+
+    @testset "authority collector is test-only and production-bound" begin
+        source = read(joinpath(@__DIR__, "evaluate_structured_unit_assignment.jl"), String)
+        wrapper_start = first(findfirst("function _authority_snapshots(", source))
+        collector_start = first(findfirst(
+            "function _collect_authority_snapshots(", source))
+        collector_call = "_collect_authority_snapshots(root, config_path, config_kind, config, seen;"
+        wrapper_source = source[wrapper_start:collector_start - 1]
+        @test count(collector_call, wrapper_source) == 1
+        @test count("_collect_authority_snapshots(", source) == 2
+        collector_end = first(findnext("function _status(", source, collector_start))
+        collector_source = source[collector_start:collector_end - 1]
+        @test !occursin("_ProductionContext", collector_source)
+        preflight_start = first(findfirst("function _preflight_config_context(", source))
+        load_start = first(findfirst("function _load_production_input(", source))
+        main_start = first(findfirst("function main(arguments::Vector{String}", source))
+        @test occursin("_authority_snapshots(root, supplied;",
+                       source[preflight_start:load_start - 1])
+        @test occursin("_authority_snapshots(root, options[\"--evaluator-config\"];",
+                       source[load_start:main_start - 1])
+        historical_blocker_start = first(findfirst(
+            "function _historical_blocker_context(", source))
+        @test !occursin("_collect_authority_snapshots",
+                        source[preflight_start:historical_blocker_start - 1])
+        @test !occursin("_collect_authority_snapshots", source[load_start:main_start - 1])
+        @test !occursin("_collect_authority_snapshots", source[main_start:end])
+    end
+
+    @testset "Gate5 coverage map retains lower-level categories" begin
+        coverage = TOML.parsefile(GATE5_COVERAGE_MAP)
+        @test coverage["schema"] == "structured_evaluator_gate5_coverage_v1"
+        records = coverage["category"]
+        @test all(haskey(record, key) for record in records
+                  for key in ("id", "former_integrated_testset_location",
+                              "replacement_testset_location", "status"))
+        required = Set([
+            "historical_live_first_failure",
+            "synthetic_historical_collector_second_failure",
+            "integrated_historical_v0_v3_positive",
+            "closure_manifest_26_records_27_files",
+            "closure_root_inventories_2_6_21",
+            "closure_missing_extra_members",
+            "closure_duplicate_malformed_rows",
+            "closure_depth_root_escape",
+            "closure_six_guard_mutations",
+            "closure_symlink_hardlink",
+            "closure_writable_file_directory",
+            "closure_claim_review_publication_semantics",
+            "closure_sidecar_mutation",
+            "runtime_v1_v2_contract_bindings",
+            "runtime_v1_v2_missing_extra_identity_mode",
+            "runtime_v1_v2_claim_review_publication_semantics",
+            "runtime_v1_v2_product_manifest_mutations",
+            "runtime_v3_bundle_cardinality_bindings",
+            "runtime_v3_missing_extra_symlink_hardlink_mode",
+            "runtime_v3_claim_review_publication_semantics",
+            "runtime_v3_product_manifest_mutation",
+            "toctou_snapshot_replacement",
+            "toctou_directory_inventory",
+            "toctou_inode_hardlink_changes",
+            "runtime_path_identity_guard",
+            "runtime_v4_synthetic_contract_32",
+        ])
+        @test required ⊆ Set(String(record["id"]) for record in records)
+        retired = [record for record in records if record["status"] == "intentionally_retired"]
+        @test length(retired) == 1
+        @test retired[1]["id"] == "integrated_historical_v0_v3_positive"
+        @test all(record["status"] != "intentionally_retired" for record in records
+                  if record["id"] != "integrated_historical_v0_v3_positive")
+    end
+
+    @testset "T13 Main-control successor schemas and legacy serializers" begin
+        # The successor route is v2-only and Main-control-only.  The v1
+        # schemas certify the earlier execution-root-owned Boulder design and
+        # must not be accepted by these constants.
+        @test E._T13_ACTIVATION_SCHEMA == "stmfit_t13_activation_receipt_v2"
+        @test E._T13_EXECUTION_SPEC_SCHEMA == "stmfit_t13_execution_spec_v2"
+        @test E._T13_ACTIVATION_AUTHORITY_SCHEMA ==
+              "schema=structured-evaluator-authority-v8-t13-main-control"
+        @test E._T13_CONTROL_ROLE == "main_boulder"
+        @test E._T13_CONTROL_FILENAME == ".omo/boulder.json"
+        @test E._T13_ACTIVATED_REPORT_SCHEMA ==
+              E._SCHEMA * "_activation_receipt_v2"
+        @test E._T13_ACTIVATED_BLOCKER_SCHEMA ==
+              E._SCHEMA * "_activation_blocker_receipt_v2"
+        # The non-activated serializers are unchanged and never mention the
+        # Main-control route or its activation bindings.
+        report = E.EvaluatorReport(
+            :PASS, :ok, E.NamedTuple[], E.NamedTuple[], E.NamedTuple[],
+            E.NamedTuple[], E.NamedTuple[], E.NamedTuple[], NamedTuple(),
+            "a"^64, "b"^64, "c"^64, Float64[], "d"^64, "e"^64)
+        tsv = Dict{String,Vector{UInt8}}("bootstrap.tsv" => Vector{UInt8}("x\n"))
+        legacy = String(E._receipt_bytes(report, tsv))
+        @test legacy == String(E._legacy_receipt_bytes(report, tsv))
+        @test occursin("schema = \"" * E._SCHEMA * "_receipt_v2\"", legacy)
+        @test occursin("gateclosure_sha256", legacy)
+        @test !occursin("activation_schema", legacy)
+        @test !occursin("main_control", legacy)
+        @test !occursin("control_root", legacy)
+    end
+
     @testset "happy formulas, artifacts, and deterministic replay" begin
         input = happy_input()
         first_report = E.evaluate(input)
@@ -1064,131 +1742,178 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
             end
         end
 
-        @testset "T13 public producer temporary-fixture boundary" begin
+        @testset "T13 runtime-v4 config hash and scientific suffix" begin
+            v4_bytes = Vector{UInt8}(read(joinpath(pwd(), RUNTIME_V4_EVALUATOR_CONFIG)))
+            v3_bytes = Vector{UInt8}(read(joinpath(pwd(), RUNTIME_V3_EVALUATOR_CONFIG)))
+            @test E._hash_bytes(read(joinpath(pwd(), HISTORICAL_EVALUATOR_CONFIG))) ==
+                  E._CONFIG_SHA256
+            @test E._hash_bytes(read(joinpath(pwd(), RUNTIME_EVALUATOR_CONFIG))) ==
+                  E._RUNTIME_V1_CONFIG_SHA256
+            @test E._hash_bytes(read(joinpath(pwd(), RUNTIME_V2_EVALUATOR_CONFIG))) ==
+                  E._RUNTIME_V2_CONFIG_SHA256
+            @test E._hash_bytes(v3_bytes) == E._RUNTIME_V3_CONFIG_SHA256
+            @test E._hash_bytes(v4_bytes) == E._RUNTIME_V4_CONFIG_SHA256
+            marker = Vector{UInt8}(codeunits("[unary]\n"))
+            @test v4_bytes[first(findfirst(marker, v4_bytes)):end] ==
+                  v3_bytes[first(findfirst(marker, v3_bytes)):end]
+            @test E._validate_runtime_v4_document(
+                TOML.parse(String(copy(v4_bytes)))) === nothing
+        end
+
+        @testset "T13 historical public-producer replay boundary" begin
             source_root = realpath(joinpath(@__DIR__, ".."))
-            if VERSION != v"1.12.6"
-                public_error = try
-                    E.produce_unary_selection_evidence(source_root;
-                        evaluator_config=RUNTIME_V3_EVALUATOR_CONFIG,
-                        features=".tmp-t13-public-fixture-missing/features.tsv",
-                        candidate_config="config/unit_assignment_structured_candidate.toml",
-                        model_config="config/unit_assignment_structured_model.toml",
-                        universe_dir=".tmp-t13-public-fixture-missing/universe",
-                        edge_dir=".tmp-t13-public-fixture-missing/edges",
-                        forward_receipt=".tmp-t13-public-fixture-missing/forward.toml",
-                        backward_receipt=".tmp-t13-public-fixture-missing/backward.toml",
-                        admission_dir=".tmp-t13-public-fixture-missing/admission")
-                    nothing
-                catch error
-                    error
-                end
-                @test public_error isa E.EvaluatorError
-                @test public_error.reason == :runtime_version_mismatch
-            elseif get(ENV, "STMFIT_T13_PUBLIC_REVALIDATION", "0") != "1"
-                @test get(ENV, "STMFIT_T13_PUBLIC_REVALIDATION", "0") == "0"
-            else
-                fixture = EDGE_FIXTURE_SUPPORT.make_cli_fixture_under(source_root;
-                                                                       cleanup=false)
-                root = fixture.root
-                try
-                    feature_sha = EDGE_FIXTURE_SUPPORT.file_sha256(fixture.original_features)
-                    keys_sha = bytes2hex(sha256(
-                        E.T11.StructuredEdgeFeatures.StructuredUniverse._key_identity_bytes(
-                            Tuple(E.T11.StructuredEdgeFeatures.StructuredUniverse.LobeKey(
-                                node.file, node.lobe) for node in fixture.data.nodes),
-                        ),
-                    ))
-                    commands = E.T11.StructuredEdgeFeatures.expected_producer_commands(
-                        source_root;
-                        features=fixture.original_features,
-                        data_dir=fixture.producer_data,
-                        forward_patches=fixture.forward_patches,
-                        backward_patches=fixture.backward_patches,
-                    )
-                    write(fixture.forward_receipt,
-                        EDGE_FIXTURE_SUPPORT.synthetic_patch_receipt_text(
-                            source_root, :forward, fixture.original_features,
-                            fixture.producer_data, fixture.forward_patches, feature_sha,
-                            keys_sha, length(fixture.data.nodes), commands.forward))
-                    write(fixture.backward_receipt,
-                        EDGE_FIXTURE_SUPPORT.synthetic_patch_receipt_text(
-                            source_root, :backward, fixture.original_features,
-                            fixture.producer_data, fixture.backward_patches, feature_sha,
-                            keys_sha, length(fixture.data.nodes), commands.backward))
-                    edge_receipt = joinpath(fixture.edges, "receipt.toml")
-                    EDGE_FIXTURE_SUPPORT.replace_toml_value!(
-                        edge_receipt, "forward_patch_receipt_sha256",
-                        EDGE_FIXTURE_SUPPORT.file_sha256(fixture.forward_receipt))
-                    EDGE_FIXTURE_SUPPORT.replace_toml_value!(
-                        edge_receipt, "backward_patch_receipt_sha256",
-                        EDGE_FIXTURE_SUPPORT.file_sha256(fixture.backward_receipt))
-                    EDGE_FIXTURE_SUPPORT.replace_toml_value!(
-                        edge_receipt, "forward_command", commands.forward)
-                    EDGE_FIXTURE_SUPPORT.replace_toml_value!(
-                        edge_receipt, "backward_command", commands.backward)
-                    admission_dir = joinpath(root, "synthetic", "admission")
-                    mkpath(admission_dir)
-                    data = E.T11.load_admission_data(source_root;
-                        features=relpath(fixture.features, source_root),
-                        candidate_config="config/unit_assignment_structured_candidate.toml",
-                        model_config="config/unit_assignment_structured_model.toml",
-                        universe_dir=relpath(fixture.universe, source_root),
-                        edge_dir=relpath(fixture.edges, source_root),
-                        forward_receipt=relpath(fixture.forward_receipt, source_root),
-                        backward_receipt=relpath(fixture.backward_receipt, source_root))
-                    admission = E.T11.evaluate_admission(data)
-                    for (name, bytes) in E.T11.report_files(admission)
-                        write(joinpath(admission_dir, name), bytes)
-                    end
-                    public_call() = E.produce_unary_selection_evidence(source_root;
-                        evaluator_config=RUNTIME_V3_EVALUATOR_CONFIG,
-                        features=relpath(fixture.features, source_root),
-                        candidate_config="config/unit_assignment_structured_candidate.toml",
-                        model_config="config/unit_assignment_structured_model.toml",
-                        universe_dir=relpath(fixture.universe, source_root),
-                        edge_dir=relpath(fixture.edges, source_root),
-                        forward_receipt=relpath(fixture.forward_receipt, source_root),
-                        backward_receipt=relpath(fixture.backward_receipt, source_root),
-                        admission_dir=relpath(admission_dir, source_root))
-                    first_evidence = try
-                        public_call()
-                    catch error
-                        error
-                    end
-                    if !(first_evidence isa E.UnarySelectionEvidence)
-                        println(stderr, "PUBLIC_PRODUCER_FAILURE: ",
-                                sprint(showerror, first_evidence))
-                    end
-                    @test first_evidence isa E.UnarySelectionEvidence
-                    if first_evidence isa E.UnarySelectionEvidence
-                        @test first_evidence.status isa Symbol
-                        @test first_evidence.status in (:PASS, :SKIPPED, :FAIL)
-                        @test !isempty(first_evidence.outer_decisions)
-                        @test first_evidence.final_decision isa E.UnarySelectionDecision
-                        @test !isempty(first_evidence.t12_result_sha256)
-                        @test !isempty(first_evidence.t12_provenance_sha256)
-                        second_evidence = public_call()
-                        @test second_evidence isa E.UnarySelectionEvidence
-                        @test second_evidence.evidence_hash == first_evidence.evidence_hash
-                        @test second_evidence.bindings == first_evidence.bindings
-                        println("PUBLIC_REPLAY_V3",
-                                " status=", first_evidence.status,
-                                " evidence_hash=", first_evidence.evidence_hash,
-                                " authority_sha256=", first_evidence.authority_sha256,
-                                " t12_result_sha256=", first_evidence.t12_result_sha256,
-                                " t12_provenance_sha256=", first_evidence.t12_provenance_sha256,
-                                " final_decision_sha256=",
-                                first_evidence.final_decision.decision_hash)
-                    end
-                finally
-                    make_tree_writable(root)
-                    rm(root; recursive=true, force=true)
-                end
+            public_error = try
+                E.produce_unary_selection_evidence(source_root;
+                    evaluator_config=RUNTIME_V3_EVALUATOR_CONFIG,
+                    features=".tmp-t13-public-fixture-missing/features.tsv",
+                    candidate_config="config/unit_assignment_structured_candidate.toml",
+                    model_config="config/unit_assignment_structured_model.toml",
+                    universe_dir=".tmp-t13-public-fixture-missing/universe",
+                    edge_dir=".tmp-t13-public-fixture-missing/edges",
+                    forward_receipt=".tmp-t13-public-fixture-missing/forward.toml",
+                    backward_receipt=".tmp-t13-public-fixture-missing/backward.toml",
+                    admission_dir=".tmp-t13-public-fixture-missing/admission")
+                nothing
+            catch error
+                error
             end
+            @test public_error isa E.EvaluatorError
+            @test public_error.reason == :authority_path_mismatch
+            @test occursin("only the runtime-v4 evaluator config is executable",
+                           public_error.message)
             @test isempty(filter(name -> startswith(name, ".tmp-t13-public-fixture-"),
                                  readdir(source_root)))
         end
-    end
+
+        # Preserve the historical fixture/replay body as audit authority.  Gate5
+        # deliberately never executes historical T13 producers.
+        if false
+            @testset "T13 public producer temporary-fixture boundary" begin
+                source_root = realpath(joinpath(@__DIR__, ".."))
+                if VERSION != v"1.12.6"
+                    public_error = try
+                        E.produce_unary_selection_evidence(source_root;
+                            evaluator_config=RUNTIME_V3_EVALUATOR_CONFIG,
+                            features=".tmp-t13-public-fixture-missing/features.tsv",
+                            candidate_config="config/unit_assignment_structured_candidate.toml",
+                            model_config="config/unit_assignment_structured_model.toml",
+                            universe_dir=".tmp-t13-public-fixture-missing/universe",
+                            edge_dir=".tmp-t13-public-fixture-missing/edges",
+                            forward_receipt=".tmp-t13-public-fixture-missing/forward.toml",
+                            backward_receipt=".tmp-t13-public-fixture-missing/backward.toml",
+                            admission_dir=".tmp-t13-public-fixture-missing/admission")
+                        nothing
+                    catch error
+                        error
+                    end
+                    @test public_error isa E.EvaluatorError
+                    @test public_error.reason == :runtime_version_mismatch
+                elseif get(ENV, "STMFIT_T13_PUBLIC_REVALIDATION", "0") != "1"
+                    @test get(ENV, "STMFIT_T13_PUBLIC_REVALIDATION", "0") == "0"
+                else
+                    fixture = EDGE_FIXTURE_SUPPORT.make_cli_fixture_under(source_root;
+                                                                           cleanup=false)
+                    root = fixture.root
+                    try
+                        feature_sha = EDGE_FIXTURE_SUPPORT.file_sha256(fixture.original_features)
+                        keys_sha = bytes2hex(sha256(
+                            E.T11.StructuredEdgeFeatures.StructuredUniverse._key_identity_bytes(
+                                Tuple(E.T11.StructuredEdgeFeatures.StructuredUniverse.LobeKey(
+                                    node.file, node.lobe) for node in fixture.data.nodes),
+                            ),
+                        ))
+                        commands = E.T11.StructuredEdgeFeatures.expected_producer_commands(
+                            source_root;
+                            features=fixture.original_features,
+                            data_dir=fixture.producer_data,
+                            forward_patches=fixture.forward_patches,
+                            backward_patches=fixture.backward_patches,
+                        )
+                        write(fixture.forward_receipt,
+                            EDGE_FIXTURE_SUPPORT.synthetic_patch_receipt_text(
+                                source_root, :forward, fixture.original_features,
+                                fixture.producer_data, fixture.forward_patches, feature_sha,
+                                keys_sha, length(fixture.data.nodes), commands.forward))
+                        write(fixture.backward_receipt,
+                            EDGE_FIXTURE_SUPPORT.synthetic_patch_receipt_text(
+                                source_root, :backward, fixture.original_features,
+                                fixture.producer_data, fixture.backward_patches, feature_sha,
+                                keys_sha, length(fixture.data.nodes), commands.backward))
+                        edge_receipt = joinpath(fixture.edges, "receipt.toml")
+                        EDGE_FIXTURE_SUPPORT.replace_toml_value!(
+                            edge_receipt, "forward_patch_receipt_sha256",
+                            EDGE_FIXTURE_SUPPORT.file_sha256(fixture.forward_receipt))
+                        EDGE_FIXTURE_SUPPORT.replace_toml_value!(
+                            edge_receipt, "backward_patch_receipt_sha256",
+                            EDGE_FIXTURE_SUPPORT.file_sha256(fixture.backward_receipt))
+                        EDGE_FIXTURE_SUPPORT.replace_toml_value!(
+                            edge_receipt, "forward_command", commands.forward)
+                        EDGE_FIXTURE_SUPPORT.replace_toml_value!(
+                            edge_receipt, "backward_command", commands.backward)
+                        admission_dir = joinpath(root, "synthetic", "admission")
+                        mkpath(admission_dir)
+                        data = E.T11.load_admission_data(source_root;
+                            features=relpath(fixture.features, source_root),
+                            candidate_config="config/unit_assignment_structured_candidate.toml",
+                            model_config="config/unit_assignment_structured_model.toml",
+                            universe_dir=relpath(fixture.universe, source_root),
+                            edge_dir=relpath(fixture.edges, source_root),
+                            forward_receipt=relpath(fixture.forward_receipt, source_root),
+                            backward_receipt=relpath(fixture.backward_receipt, source_root))
+                        admission = E.T11.evaluate_admission(data)
+                        for (name, bytes) in E.T11.report_files(admission)
+                            write(joinpath(admission_dir, name), bytes)
+                        end
+                        public_call() = E.produce_unary_selection_evidence(source_root;
+                            evaluator_config=RUNTIME_V3_EVALUATOR_CONFIG,
+                            features=relpath(fixture.features, source_root),
+                            candidate_config="config/unit_assignment_structured_candidate.toml",
+                            model_config="config/unit_assignment_structured_model.toml",
+                            universe_dir=relpath(fixture.universe, source_root),
+                            edge_dir=relpath(fixture.edges, source_root),
+                            forward_receipt=relpath(fixture.forward_receipt, source_root),
+                            backward_receipt=relpath(fixture.backward_receipt, source_root),
+                            admission_dir=relpath(admission_dir, source_root))
+                        first_evidence = try
+                            public_call()
+                        catch error
+                            error
+                        end
+                        if !(first_evidence isa E.UnarySelectionEvidence)
+                            println(stderr, "PUBLIC_PRODUCER_FAILURE: ",
+                                    sprint(showerror, first_evidence))
+                        end
+                        @test first_evidence isa E.UnarySelectionEvidence
+                        if first_evidence isa E.UnarySelectionEvidence
+                            @test first_evidence.status isa Symbol
+                            @test first_evidence.status in (:PASS, :SKIPPED, :FAIL)
+                            @test !isempty(first_evidence.outer_decisions)
+                            @test first_evidence.final_decision isa E.UnarySelectionDecision
+                            @test !isempty(first_evidence.t12_result_sha256)
+                            @test !isempty(first_evidence.t12_provenance_sha256)
+                            second_evidence = public_call()
+                            @test second_evidence isa E.UnarySelectionEvidence
+                            @test second_evidence.evidence_hash == first_evidence.evidence_hash
+                            @test second_evidence.bindings == first_evidence.bindings
+                            println("PUBLIC_REPLAY_V3",
+                                    " status=", first_evidence.status,
+                                    " evidence_hash=", first_evidence.evidence_hash,
+                                    " authority_sha256=", first_evidence.authority_sha256,
+                                    " t12_result_sha256=", first_evidence.t12_result_sha256,
+                                    " t12_provenance_sha256=", first_evidence.t12_provenance_sha256,
+                                    " final_decision_sha256=",
+                                    first_evidence.final_decision.decision_hash)
+                        end
+                    finally
+                        make_tree_writable(root)
+                        rm(root; recursive=true, force=true)
+                    end
+                end
+                @test isempty(filter(name -> startswith(name, ".tmp-t13-public-fixture-"),
+                                     readdir(source_root)))
+            end
+        end
+        end
 
     @testset "pooled date gate and fallback evidence" begin
         date_a = [node_for("a1.sxm", "20240101", 1, -100.0),
@@ -1592,18 +2317,53 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
         delete!(E._PRODUCTION_CONTEXT, skipped_input)
         delete!(E._PRODUCTION_CONTEXT, fail_input)
 
-        authority = E._authority_snapshots(pwd(), RUNTIME_EVALUATOR_CONFIG)
-        paths = [snapshot.path for snapshot in authority.snapshots]
-        @test any(endswith(path, "GateClosure.json") for path in paths)
-        @test any(endswith(path, "AdversarialVerify.json") for path in paths)
-        @test any(endswith(path, "closure-v1/DoneClaim.json") for path in paths)
-        @test any(endswith(path, "closure-v1/review/AdversarialVerify.json") for path in paths)
-        @test any(endswith(path, "closure-v1/root-manifest.sha256") for path in paths)
-        @test any(endswith(path, "closure-v1-publication-receipt.json") for path in paths)
-        @test !any(endswith(path, "boulder.json") for path in paths)
-        @test !any(endswith(path, "structured-label-free-unit-assignment.md") for path in paths)
-        @test any(endswith(path, "evaluate_structured_unit_assignment.jl") for path in paths)
-        @test occursin(r"^[0-9a-f]{64}$", authority.authority_sha256)
+        for config_rel in HISTORICAL_TRACKED_CONFIGS
+            assert_live_historical_t12_claim_blocked(config_rel)
+        end
+
+        @testset "live closure-v1 guard mismatch observation" begin
+            closure_root = joinpath(pwd(), E._CLOSURE_V1_ROOT)
+            manifest_path = joinpath(pwd(), E._CLOSURE_V1_ROOT_MANIFEST_PATH)
+            rows = [
+                begin
+                    fields = match(r"^([0-9a-f]{64})  (.+)$", line)
+                    fields === nothing && error("live closure manifest row is malformed")
+                    (declared=String(fields.captures[1]),
+                     relative=String(fields.captures[2]))
+                end for line in split(chomp(read(manifest_path, String)), '\n')]
+            @test E._hash_bytes(read(manifest_path)) == E._CLOSURE_V1_ROOT_MANIFEST_SHA256
+            @test length(rows) == 26
+            mismatches = [
+                (row=row, observed=E._hash_bytes(read(joinpath(pwd(), row.relative))))
+                for row in rows
+                if E._hash_bytes(read(joinpath(pwd(), row.relative))) != row.declared
+            ]
+            @test length(mismatches) == 6
+            @test length(unique(item.row.relative for item in mismatches)) == 6
+            @test length(unique((item.row.declared, item.observed) for item in mismatches)) == 1
+            @test only(unique(item.row.declared for item in mismatches)) ==
+                  CLOSURE_DECLARED_GUARD_SHA256
+            @test only(unique(item.observed for item in mismatches)) ==
+                  CLOSURE_OBSERVED_GUARD_SHA256
+
+            implementation_root = dirname(closure_root)
+            journal_guards = [
+                joinpath(directory, file)
+                for (directory, _, files) in walkdir(implementation_root)
+                for file in files
+                if endswith(file, "-journal-guard.toml")
+            ]
+            @test length(journal_guards) == 14
+            @test count(E._hash_bytes(read(path)) == CLOSURE_DECLARED_GUARD_SHA256
+                        for path in journal_guards) == 0
+            @test count(E._hash_bytes(read(path)) == CLOSURE_OBSERVED_GUARD_SHA256
+                        for path in journal_guards) == 14
+            repair_performed = false
+            disposition = "INVALID_UNVERIFIABLE_HISTORICAL_NON_LIVE"
+            @test repair_performed === false
+            @test disposition == "INVALID_UNVERIFIABLE_HISTORICAL_NON_LIVE"
+            @test !ispath(joinpath(closure_root, "synthetic-repair.marker"))
+        end
 
         # Rebind checks use a complete isolated authority fixture.  The live
         # Plan and Boulder are deliberately changed in the fixture only; the
@@ -1612,15 +2372,23 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
         authority_root = mktempdir()
         try
             fixture = isolated_authority_fixture(authority_root;
-                                                 config_rel=RUNTIME_EVALUATOR_CONFIG)
-            initial = E._authority_snapshots(authority_root,
-                                              RUNTIME_EVALUATOR_CONFIG)
+                                                 config_rel=RUNTIME_EVALUATOR_CONFIG,
+                                                 synthetic_non_authority_rebind=true)
+            attempted = try
+                attempt_synthetic_historical_collector(fixture)
+                nothing
+            catch caught
+                caught
+            end
+            @test attempted isa E.EvaluatorError
+            @test attempted.message == "closure root manifest member bytes differ"
+            initial = synthetic_closure_components(fixture)
             closure_members = [snapshot for snapshot in initial.snapshots
                                if E._is_closure_path(snapshot.path)]
             @test length(closure_members) == 27
-            @test length(initial.closure.snapshots) == 27
+            @test length(initial.bundle.snapshots) == 27
             @test Set(snapshot.path for snapshot in closure_members) ==
-                  Set(snapshot.path for snapshot in initial.closure.snapshots)
+                  Set(snapshot.path for snapshot in initial.bundle.snapshots)
             @test length(initial.inventories) == 3
             @test sort(collect(length(names) for (_, names) in initial.inventories)) == [2, 6, 21]
             @test Set(first.(initial.inventories)) ==
@@ -1635,9 +2403,8 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
             @test E._verify_context(context) === nothing
             write(fixture.plan, "later administrative Plan revision\n")
             write(fixture.boulder, "later administrative Boulder revision\n")
-            later = E._authority_snapshots(authority_root,
-                                           RUNTIME_EVALUATOR_CONFIG)
-            @test later.authority_sha256 == initial.authority_sha256
+            later = synthetic_closure_components(fixture)
+            @test later.synthetic_manifest_sha256 == initial.synthetic_manifest_sha256
             @test !any(endswith(path, "boulder.json") for path in
                        (snapshot.path for snapshot in later.snapshots))
             @test !any(endswith(path, "structured-label-free-unit-assignment.md") for path in
@@ -1651,17 +2418,117 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
                          fixture.publication, fixture.publication_sidecar)
                 original = Vector{UInt8}(read(path))
                 rewrite_readonly(path, vcat(original, UInt8('\n')))
-                @test authority_blocked(() ->
-                    E._authority_snapshots(authority_root,
-                                           RUNTIME_EVALUATOR_CONFIG))
+                closure_mutation_error = try
+                    synthetic_closure_components(fixture)
+                    nothing
+                catch caught
+                    caught
+                end
+                @test closure_mutation_error isa E.EvaluatorError &&
+                      closure_mutation_error.status == :BLOCKED
+                rewrite_readonly(path, original)
+            end
+
+            closure_semantic_error(path::String, mutate::Function) = begin
+                original = Vector{UInt8}(read(path))
+                info = stat(path)
+                mutated = mutate(String(copy(original)))
+                snapshot = E._Snapshot(path, Vector{UInt8}(codeunits(mutated)),
+                                       E._hash_bytes(original), UInt64(info.device),
+                                       UInt64(info.inode), UInt64(info.nlink))
+                try
+                    if path == fixture.claim
+                        E._validate_closure_claim(snapshot)
+                    elseif path == fixture.review
+                        E._validate_closure_review(snapshot)
+                    elseif path == fixture.publication
+                        E._validate_publication_receipt(snapshot)
+                    elseif path == fixture.claim_sidecar
+                        E._validate_sidecar(snapshot, E._CLOSURE_V1_CLAIM_SHA256,
+                                            E._CLOSURE_V1_CLAIM_PATH, "closure-v1 DoneClaim")
+                    elseif path == fixture.review_sidecar
+                        E._validate_sidecar(snapshot, E._CLOSURE_V1_REVIEW_SHA256,
+                                            E._CLOSURE_V1_REVIEW_PATH, "closure-v1 review")
+                    else
+                        E._validate_sidecar(snapshot, E._CLOSURE_V1_PUBLICATION_RECEIPT_SHA256,
+                                            E._CLOSURE_V1_PUBLICATION_RECEIPT_PATH,
+                                            "closure-v1 publication receipt")
+                    end
+                    nothing
+                catch caught
+                    caught
+                end
+            end
+            for (path, needle, replacement) in (
+                (fixture.claim, "\"status\": \"PASS\"", "\"status\": \"FAIL\""),
+                (fixture.review, "\"verdict\": \"PASS\"", "\"verdict\": \"FAIL\""),
+                (fixture.publication, "\"publication_state\": \"committed_verified_after_interrupted_parent_check\"",
+                 "\"publication_state\": \"staged\""),
+                (fixture.claim_sidecar, E._CLOSURE_V1_CLAIM_SHA256,
+                 "0"^64),
+                (fixture.review_sidecar, E._CLOSURE_V1_REVIEW_SHA256,
+                 "0"^64),
+                (fixture.publication_sidecar, E._CLOSURE_V1_PUBLICATION_RECEIPT_SHA256,
+                 "0"^64),
+            )
+                error = closure_semantic_error(path,
+                    text -> replace(text, needle => replacement; count=1))
+                @test error isa E.EvaluatorError
+                @test error.status == :BLOCKED
+            end
+
+            closure_manifest_error(bytes::Vector{UInt8}) = begin
+                info = stat(fixture.root_manifest)
+                snapshot = E._Snapshot(fixture.root_manifest, bytes,
+                                       E._hash_bytes(bytes), UInt64(info.device),
+                                       UInt64(info.inode), UInt64(info.nlink))
+                try
+                    E._validate_closure_manifest(authority_root, snapshot,
+                                                 Dict{Tuple{UInt64,UInt64},String}())
+                    nothing
+                catch caught
+                    caught
+                end
+            end
+            manifest_lines = split(chomp(read(fixture.root_manifest, String)), '\n')
+            malformed_error = closure_manifest_error(
+                Vector{UInt8}(codeunits(join(vcat(["malformed"], manifest_lines[2:end]), '\n') * "\n")))
+            @test malformed_error isa E.EvaluatorError
+            @test malformed_error.reason == :authority_bundle_mismatch
+            duplicate_lines = copy(manifest_lines)
+            duplicate_lines[1] = duplicate_lines[2]
+            duplicate_error = closure_manifest_error(
+                Vector{UInt8}(codeunits(join(duplicate_lines, '\n') * "\n")))
+            @test duplicate_error isa E.EvaluatorError
+            @test duplicate_error.reason == :authority_bundle_mismatch
+            depth_lines = copy(manifest_lines)
+            depth_index = findfirst(line -> occursin("/guards/", line), depth_lines)
+            depth_index === nothing && error("synthetic closure guard row is absent")
+            depth_lines[depth_index] = replace(depth_lines[depth_index],
+                                               "/guards/" => "/guards/nested/")
+            depth_error = closure_manifest_error(
+                Vector{UInt8}(codeunits(join(depth_lines, '\n') * "\n")))
+            @test depth_error isa E.EvaluatorError
+            @test depth_error.reason == :authority_bundle_mismatch
+            escape_lines = copy(manifest_lines)
+            escape_lines[1] = split(escape_lines[1], "  ")[1] * "  outside/file.toml"
+            escape_error = closure_manifest_error(
+                Vector{UInt8}(codeunits(join(escape_lines, '\n') * "\n")))
+            @test escape_error isa E.EvaluatorError
+            @test escape_error.reason == :authority_bundle_mismatch
+
+            for guard in readdir(fixture.closure_guards)
+                path = joinpath(fixture.closure_guards, guard)
+                original = Vector{UInt8}(read(path))
+                rewrite_readonly(path, vcat(original, UInt8('\n')))
+                @test authority_blocked(() -> synthetic_closure_components(fixture))
                 rewrite_readonly(path, original)
             end
 
             original_noncontrol = Vector{UInt8}(read(fixture.noncontrol))
             rewrite_readonly(fixture.noncontrol, vcat(original_noncontrol, UInt8('\n')))
             @test authority_blocked(() ->
-                E._authority_snapshots(authority_root,
-                                       RUNTIME_EVALUATOR_CONFIG))
+                synthetic_closure_components(fixture))
             rewrite_readonly(fixture.noncontrol, original_noncontrol)
             rewrite_readonly(fixture.noncontrol, vcat(original_noncontrol, UInt8('x')))
             @test authority_blocked(() -> E._verify_context(context))
@@ -1670,14 +2537,12 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
 
             chmod(fixture.noncontrol, 0o644)
             @test authority_blocked(() ->
-                E._authority_snapshots(authority_root,
-                                       RUNTIME_EVALUATOR_CONFIG))
+                synthetic_closure_components(fixture))
             @test authority_blocked(() -> E._verify_context(context))
             chmod(fixture.noncontrol, 0o444)
             chmod(fixture.closure_guards, 0o755)
             @test authority_blocked(() ->
-                E._authority_snapshots(authority_root,
-                                       RUNTIME_EVALUATOR_CONFIG))
+                synthetic_closure_components(fixture))
             @test authority_blocked(() -> E._verify_context(context))
             chmod(fixture.closure_guards, 0o555)
 
@@ -1687,8 +2552,7 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
             chmod(extra_file, 0o444)
             chmod(fixture.closure_root, 0o555)
             @test authority_blocked(() ->
-                E._authority_snapshots(authority_root,
-                                       RUNTIME_EVALUATOR_CONFIG))
+                synthetic_closure_components(fixture))
             remove_readonly(extra_file)
 
             extra_directory = joinpath(fixture.closure_root, "extra-directory")
@@ -1697,8 +2561,7 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
             chmod(extra_directory, 0o555)
             chmod(fixture.closure_root, 0o555)
             @test authority_blocked(() ->
-                E._authority_snapshots(authority_root,
-                                       RUNTIME_EVALUATOR_CONFIG))
+                synthetic_closure_components(fixture))
             remove_readonly(extra_directory)
 
             symlink_target = joinpath(authority_root, "symlink-target")
@@ -1709,8 +2572,7 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
             symlink(symlink_target, fixture.noncontrol)
             chmod(fixture.closure_root, 0o555)
             @test authority_blocked(() ->
-                E._authority_snapshots(authority_root,
-                                       RUNTIME_EVALUATOR_CONFIG))
+                synthetic_closure_components(fixture))
             remove_readonly(fixture.noncontrol)
             restore_readonly(fixture.noncontrol, original_noncontrol)
 
@@ -1721,13 +2583,11 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
             hardlink(hardlink_target, fixture.noncontrol)
             chmod(fixture.closure_root, 0o555)
             @test authority_blocked(() ->
-                E._authority_snapshots(authority_root,
-                                       RUNTIME_EVALUATOR_CONFIG))
+                synthetic_closure_components(fixture))
             remove_readonly(fixture.noncontrol)
             restore_readonly(fixture.noncontrol, original_noncontrol)
 
-            refreshed = E._authority_snapshots(authority_root,
-                                               RUNTIME_EVALUATOR_CONFIG)
+            refreshed = synthetic_closure_components(fixture)
             context = E._ProductionContext(authority_root, refreshed.snapshots,
                                             refreshed.inventories, "fixture-refreshed")
             @test E._verify_context(context) === nothing
@@ -1742,12 +2602,12 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
 
             remove_readonly(fixture.noncontrol)
             @test authority_blocked(() ->
-                E._authority_snapshots(authority_root,
-                                       RUNTIME_EVALUATOR_CONFIG))
+                synthetic_closure_components(fixture))
 
             history_root = mktempdir()
             try
-                history_fixture = isolated_authority_fixture(history_root)
+                history_fixture = isolated_authority_fixture(history_root;
+                    synthetic_non_authority_rebind=true)
                 seen = Dict{Tuple{UInt64,UInt64},String}()
                 # Historical-only preclosure marker reconstruction; runtime
                 # authority deliberately does not call _check_plan.
@@ -1903,6 +2763,88 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
             end
             force_errno(errno) = (event, args...) ->
                 event == :rename_noreplace ? errno : nothing
+
+            # Test-only prerequisite helper (added 2026-09-09 after the observed
+            # GPFS renameat2 capability difference, journal 2026-09-09): the
+            # preferred-publication block below exercises the REAL renameat2
+            # syscall via E._publish_atomic -> E._rename_noreplace, which needs a
+            # filesystem that supports RENAME_NOREPLACE. The suite TMPDIR may sit
+            # on a mount that rejects it with errno 22/38/95 (:rename_unsupported),
+            # so the helper probes small deterministic candidate roots
+            # (tempdir(), /tmp, /dev/shm — deduped, existing only) with the ACTUAL
+            # E._rename_noreplace (no forcing hook): it creates a private root,
+            # a source dir with a sentinel, an absent destination, requires the
+            # real rename to remove the source, keep destination + sentinel and
+            # preserve directory identity (st_dev/st_ino), removes its own probe
+            # entries, and returns the SAME private root for the publication test.
+            # ONLY the recognized E._PublicationError
+            # (state == :not_committed, reason == :rename_unsupported) moves on to
+            # the next candidate; any other failure is cleaned up and rethrown —
+            # nothing is skipped, broken, or forced to pass. If no candidate
+            # supports the syscall this fails the suite explicitly as a missing
+            # prerequisite (plain error, no new @test: assertion total unchanged).
+            # The rest of the suite keeps the persistent TMPDIR unchanged.
+            function preferred_rename_test_root()
+                candidates = String[]
+                for candidate in (tempdir(), "/tmp", "/dev/shm")
+                    directory = abspath(String(candidate))
+                    isdir(directory) || continue  # missing candidate: unavailable
+                    directory = realpath(directory)  # canonical; resolution
+                    # errors are unexpected and propagate loudly (no swallowing)
+                    directory in candidates && continue
+                    push!(candidates, directory)
+                end
+                isempty(candidates) && error(
+                    "preferred rename prerequisite: no candidate root available")
+                for candidate in candidates
+                    private = mktempdir(candidate;
+                                        prefix="gate5-preferred-rename-",
+                                        cleanup=false)
+                    source = joinpath(private, "probe-src")
+                    destination = joinpath(private, "probe-dst")
+                    try
+                        mkdir(source)
+                        write(joinpath(source, "sentinel.txt"), "gate5")
+                        ispath(destination) && error(
+                            "preferred rename prerequisite: destination " *
+                            "pre-exists in $candidate")
+                        before = stat(source)
+                        E._rename_noreplace(source, destination)
+                        ispath(source) && error(
+                            "preferred rename prerequisite: source survived " *
+                            "in $candidate")
+                        isdir(destination) || error(
+                            "preferred rename prerequisite: destination " *
+                            "missing in $candidate")
+                        isfile(joinpath(destination, "sentinel.txt")) || error(
+                            "preferred rename prerequisite: sentinel lost " *
+                            "in $candidate")
+                        read(joinpath(destination, "sentinel.txt"), String) ==
+                            "gate5" || error(
+                            "preferred rename prerequisite: sentinel bytes " *
+                            "differ in $candidate")
+                        after = stat(destination)
+                        (before.inode == after.inode &&
+                         before.device == after.device) || error(
+                            "preferred rename prerequisite: directory " *
+                            "identity changed in $candidate")
+                        rm(destination; recursive=true, force=true)
+                        return private
+                    catch caught
+                        rm(private; recursive=true, force=true)
+                        if caught isa E._PublicationError &&
+                           caught.state == :not_committed &&
+                           caught.reason == :rename_unsupported
+                            continue  # candidate lacks RENAME_NOREPLACE support
+                        end
+                        rethrow()
+                    end
+                end
+                error("preferred rename prerequisite unmet: no candidate " *
+                      "filesystem supports renameat2 RENAME_NOREPLACE " *
+                      "(errno 22/38/95 everywhere); a supported root is " *
+                      "required to exercise the preferred publication path")
+            end
 
             fallback_root = mktempdir()
             try
@@ -2149,7 +3091,7 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
                 end
             end
 
-            root = mktempdir()
+            root = preferred_rename_test_root()
             try
                 preferred_state = Ref{Symbol}(:not_committed)
                 error = with_hook((event, args...) -> begin
@@ -2417,7 +3359,7 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
         historical_bytes = Vector{UInt8}(read(joinpath(pwd(), HISTORICAL_EVALUATOR_CONFIG)))
         runtime_bytes = Vector{UInt8}(read(joinpath(pwd(), RUNTIME_EVALUATOR_CONFIG)))
         @test bytes2hex(sha256(historical_bytes)) == E._CONFIG_SHA256
-        @test bytes2hex(sha256(runtime_bytes)) == E._RUNTIME_CONFIG_SHA256
+        @test bytes2hex(sha256(runtime_bytes)) == E._RUNTIME_V1_CONFIG_SHA256
         @test E._authority_config_kind(pwd(), HISTORICAL_EVALUATOR_CONFIG) == :historical
         @test E._authority_config_kind(pwd(), RUNTIME_EVALUATOR_CONFIG) == :runtime
         historical_document = TOML.parse(String(historical_bytes))
@@ -2440,24 +3382,29 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
         authority_root = mktempdir()
         try
             fixture = isolated_authority_fixture(authority_root;
-                                                 config_rel=RUNTIME_EVALUATOR_CONFIG)
-            authority = E._authority_snapshots(authority_root, RUNTIME_EVALUATOR_CONFIG)
+                                                 config_rel=RUNTIME_EVALUATOR_CONFIG,
+                                                 synthetic_non_authority_rebind=true)
+            authority = runtime_component_snapshots(fixture, :runtime)
+            runtime_contract = E._runtime_contract(:runtime)
+            runtime_product_path = joinpath(authority_root,
+                dirname(runtime_contract.root_manifest_path),
+                runtime_contract.edge_model_product_path)
             required = [
                 joinpath(authority_root, RUNTIME_EVALUATOR_CONFIG),
                 joinpath(authority_root, E._RUNTIME_T12_ROOT_MANIFEST_PATH),
                 joinpath(authority_root, E._RUNTIME_T12_CLAIM_PATH),
                 joinpath(authority_root, E._RUNTIME_T12_REVIEW_PATH),
                 joinpath(authority_root, E._RUNTIME_T12_PUBLICATION_PATH),
+                runtime_product_path,
                 joinpath(authority_root, "test/evaluate_structured_unit_assignment.jl"),
             ]
             snapshot_paths = [snapshot.path for snapshot in authority.snapshots]
-            @test authority.config_kind == :runtime
+            @test authority.config_sha256 == fixture.synthetic_config_sha256
             @test all(count(==(path), snapshot_paths) == 1 for path in required)
             @test all(snapshot.nlink == 1 for snapshot in authority.snapshots)
             @test length(unique((snapshot.device, snapshot.inode)
                                for snapshot in authority.snapshots)) ==
                   length(authority.snapshots)
-            @test length(authority.authority_sha256) == 64
             @test !isempty(fixture.config)
 
             correction_paths = [
@@ -2465,12 +3412,13 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
                 joinpath(authority_root, E._RUNTIME_T12_CLAIM_PATH),
                 joinpath(authority_root, E._RUNTIME_T12_REVIEW_PATH),
                 joinpath(authority_root, E._RUNTIME_T12_PUBLICATION_PATH),
+                runtime_product_path,
             ]
             for path in correction_paths
                 original = Vector{UInt8}(read(path))
                 rewrite_readonly(path, vcat(original, UInt8('\n')))
                 @test authority_blocked(() ->
-                    E._authority_snapshots(authority_root, RUNTIME_EVALUATOR_CONFIG))
+                    runtime_component_snapshots(fixture, :runtime))
                 rewrite_readonly(path, original)
             end
 
@@ -2478,7 +3426,7 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
             missing_bytes = Vector{UInt8}(read(missing_path))
             remove_readonly(missing_path)
             @test authority_blocked(() ->
-                E._authority_snapshots(authority_root, RUNTIME_EVALUATOR_CONFIG))
+                runtime_component_snapshots(fixture, :runtime))
             write(missing_path, missing_bytes)
             chmod(missing_path, 0o644)
 
@@ -2488,10 +3436,10 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
                 E._RUNTIME_T12_EDGE_MODEL_SHA256 => "0"^64; count=1)
             rewrite_readonly(config_path, Vector{UInt8}(codeunits(mutated_config)))
             @test authority_blocked(() ->
-                E._authority_snapshots(authority_root, RUNTIME_EVALUATOR_CONFIG))
+                runtime_component_snapshots(fixture, :runtime))
             rewrite_readonly(config_path, original_config)
 
-            initial = E._authority_snapshots(authority_root, RUNTIME_EVALUATOR_CONFIG)
+            initial = runtime_component_snapshots(fixture, :runtime)
             semantic_error(path::String, bytes::Vector{UInt8}) = begin
                 snapshots = copy(initial.snapshots)
                 index = findfirst(snapshot -> snapshot.path == path, snapshots)
@@ -2537,7 +3485,7 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
             remove_readonly(victim)
             symlink(symlink_target, victim)
             @test authority_blocked(() ->
-                E._authority_snapshots(authority_root, RUNTIME_EVALUATOR_CONFIG))
+                runtime_component_snapshots(fixture, :runtime))
             remove_readonly(victim)
             write(victim, original)
             chmod(victim, 0o644)
@@ -2547,10 +3495,29 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
             remove_readonly(victim)
             hardlink(claim_path, victim)
             @test authority_blocked(() ->
-                E._authority_snapshots(authority_root, RUNTIME_EVALUATOR_CONFIG))
+                runtime_component_snapshots(fixture, :runtime))
             remove_readonly(victim)
             write(victim, original)
             chmod(victim, 0o644)
+
+            @test authority_blocked(() -> begin
+                chmod(runtime_product_path, 0o644)
+                runtime_component_snapshots(fixture, :runtime)
+            end)
+            chmod(runtime_product_path, 0o444)
+            product_original = Vector{UInt8}(read(runtime_product_path))
+            remove_readonly(runtime_product_path)
+            symlink(symlink_target, runtime_product_path)
+            @test authority_blocked(() -> runtime_component_snapshots(fixture, :runtime))
+            remove_readonly(runtime_product_path)
+            write(runtime_product_path, product_original)
+            chmod(runtime_product_path, 0o444)
+            remove_readonly(runtime_product_path)
+            hardlink(claim_path, runtime_product_path)
+            @test authority_blocked(() -> runtime_component_snapshots(fixture, :runtime))
+            remove_readonly(runtime_product_path)
+            write(runtime_product_path, product_original)
+            chmod(runtime_product_path, 0o444)
         finally
             make_tree_writable(authority_root)
             rm(authority_root; recursive=true, force=true)
@@ -2583,10 +3550,7 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
         runtime_v2_bytes = Vector{UInt8}(read(joinpath(pwd(), RUNTIME_V2_EVALUATOR_CONFIG)))
         @test bytes2hex(sha256(runtime_v2_bytes)) == E._RUNTIME_V2_CONFIG_SHA256
         @test E._authority_config_kind(pwd(), RUNTIME_V2_EVALUATOR_CONFIG) == :runtime_v2
-        authority = E._authority_snapshots(pwd(), RUNTIME_V2_EVALUATOR_CONFIG)
-        @test authority.config_kind == :runtime_v2
-        @test authority.config_sha256 == E._RUNTIME_V2_CONFIG_SHA256
-        @test length(authority.authority_sha256) == 64
+        assert_live_historical_t12_claim_blocked(RUNTIME_V2_EVALUATOR_CONFIG)
         contract = E._runtime_contract(:runtime_v2)
         @test contract.edge_model_sha256 ==
               "5e3b1c0371bb0387024714d420d25a96a9d076aa3f0ba6637a10899837a6c8b1"
@@ -2610,12 +3574,50 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
 
         authority_root = mktempdir()
         try
-            isolated_authority_fixture(authority_root; config_rel=RUNTIME_V2_EVALUATOR_CONFIG)
-            initial = E._authority_snapshots(authority_root, RUNTIME_V2_EVALUATOR_CONFIG)
+            fixture = isolated_authority_fixture(authority_root;
+                config_rel=RUNTIME_V2_EVALUATOR_CONFIG,
+                synthetic_non_authority_rebind=true)
+            initial = runtime_component_snapshots(fixture, :runtime_v2)
+            @test initial.config_sha256 == fixture.synthetic_config_sha256
+            runtime_v2_product_path = joinpath(authority_root,
+                dirname(contract.root_manifest_path), contract.edge_model_product_path)
             paths = [snapshot.path for snapshot in initial.snapshots]
             for relative in (contract.root_manifest_path, contract.claim_path,
                              contract.review_path, contract.publication_path)
                 @test count(==(joinpath(authority_root, relative)), paths) == 1
+            end
+            @test count(==(runtime_v2_product_path), paths) == 1
+            runtime_v2_semantic_error(path::String, mutate::Function) = begin
+                original = Vector{UInt8}(read(path))
+                info = stat(path)
+                index = findfirst(snapshot -> snapshot.path == path, initial.snapshots)
+                index === nothing && error("runtime-v2 semantic snapshot is absent")
+                old = initial.snapshots[index]
+                snapshots = copy(initial.snapshots)
+                snapshots[index] = E._Snapshot(path,
+                    Vector{UInt8}(codeunits(mutate(String(copy(original))))),
+                    old.sha256, UInt64(info.device), UInt64(info.inode), UInt64(info.nlink))
+                try
+                    E._validate_runtime_correction_semantics(authority_root, snapshots, :runtime_v2)
+                    nothing
+                catch caught
+                    caught
+                end
+            end
+            for (path, needle, replacement) in (
+                (joinpath(authority_root, contract.claim_path), "\"status\": \"PASS\"",
+                 "\"status\": \"FAIL\""),
+                (joinpath(authority_root, contract.review_path), "\"verdict\": \"PASS\"",
+                 "\"verdict\": \"FAIL\""),
+                (joinpath(authority_root, contract.publication_path),
+                 "\"publication_state\": \"committed_verified\"",
+                 "\"publication_state\": \"staged\""),
+            )
+                error = runtime_v2_semantic_error(path,
+                    text -> replace(text, needle => replacement; count=1))
+                @test error isa E.EvaluatorError
+                @test error.status == :BLOCKED
+                @test error.reason == :authority_binding_mismatch
             end
             for relative in (contract.root_manifest_path, contract.claim_path,
                              contract.review_path, contract.publication_path)
@@ -2623,9 +3625,29 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
                 original = Vector{UInt8}(read(path))
                 rewrite_readonly(path, vcat(original, UInt8('\n')))
                 @test authority_blocked(() ->
-                    E._authority_snapshots(authority_root, RUNTIME_V2_EVALUATOR_CONFIG))
+                    runtime_component_snapshots(fixture, :runtime_v2))
                 rewrite_readonly(path, original)
             end
+            @test authority_blocked(() -> begin
+                chmod(runtime_v2_product_path, 0o644)
+                runtime_component_snapshots(fixture, :runtime_v2)
+            end)
+            chmod(runtime_v2_product_path, 0o444)
+            product_original = Vector{UInt8}(read(runtime_v2_product_path))
+            symlink_target = joinpath(authority_root, "runtime-v2-product-target")
+            write(symlink_target, "product substitution\n")
+            remove_readonly(runtime_v2_product_path)
+            symlink(symlink_target, runtime_v2_product_path)
+            @test authority_blocked(() -> runtime_component_snapshots(fixture, :runtime_v2))
+            remove_readonly(runtime_v2_product_path)
+            write(runtime_v2_product_path, product_original)
+            chmod(runtime_v2_product_path, 0o444)
+            remove_readonly(runtime_v2_product_path)
+            hardlink(joinpath(authority_root, contract.claim_path), runtime_v2_product_path)
+            @test authority_blocked(() -> runtime_component_snapshots(fixture, :runtime_v2))
+            remove_readonly(runtime_v2_product_path)
+            write(runtime_v2_product_path, product_original)
+            chmod(runtime_v2_product_path, 0o444)
         finally
             make_tree_writable(authority_root)
             rm(authority_root; recursive=true, force=true)
@@ -2690,11 +3712,7 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
         @test bytes2hex(sha256(v3_bytes)) == E._RUNTIME_V3_CONFIG_SHA256
         @test E._authority_config_kind(pwd(), RUNTIME_V3_EVALUATOR_CONFIG) == :runtime_v3
         @test E._RUNTIME_V3_AUTHORITY_SCHEMA == "schema=structured-evaluator-authority-v5"
-
-        authority = E._authority_snapshots(pwd(), RUNTIME_V3_EVALUATOR_CONFIG)
-        @test authority.config_kind == :runtime_v3
-        @test authority.config_sha256 == E._RUNTIME_V3_CONFIG_SHA256
-        @test occursin(r"^[0-9a-f]{64}$", authority.authority_sha256)
+        assert_live_historical_t12_claim_blocked(RUNTIME_V3_EVALUATOR_CONFIG)
         contract = E._runtime_contract(:runtime_v3)
         @test contract.edge_model_sha256 == E._RUNTIME_V3_T12_EDGE_MODEL_SHA256
         @test contract.chain_sha256 == E._RUNTIME_V3_T12_CHAIN_SHA256
@@ -2707,29 +3725,62 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
         @test contract.chain_product_path == "products/v3/chain_inference.jl"
         @test contract.test_product_path ==
               "products/v3/test_structured_chain_inference.jl"
-        @test authority.config_sha256 ==
-              E._context_evaluator_config_sha256(E._ProductionContext(
-                  pwd(), [authority.snapshots[1]], Tuple{String,Vector{String}}[], "v3"))
+        @testset "historical v3 journal mismatch is unrepaired" begin
+            declaration_manifests = [
+                joinpath(pwd(), ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/",
+                         "t13-gate4-authority-rebind-v3/audit/v3-root-manifest-declarations.tsv"),
+                joinpath(pwd(), ".omo/evidence/structured-label-free-unit-assignment/runtime_v4/",
+                         "t13-gate4-authority-rebind-v3/audit/v3-payload-manifest-declarations.tsv"),
+            ]
+            @test length(declaration_manifests) == 2
+            declarations = [
+                split(line, '\t')
+                for path in declaration_manifests
+                for line in readlines(path)[2:end]
+                if length(split(line, '\t')) >= 7 &&
+                   endswith(split(line, '\t')[7], "docs/journal.md")
+            ]
+            @test all(length(row) == 12 for row in declarations)
+            @test all(endswith(row[7], "docs/journal.md") for row in declarations)
+            @test all(row[9] ==
+                      "479e95528ab5555680af3ba007157abfc2a4ccaaac954958a613f1d7a2498c1b"
+                      for row in declarations)
+            @test all(row[10] ==
+                      "fbb548b1a3c0d56a52fec799ac0c326e323133870ebc87e315f546f397871df7"
+                      for row in declarations)
+            @test all(row[11] == "DECLARATION_MISMATCH" for row in declarations)
+            historical_copy = joinpath(pwd(),
+                ".omo/evidence/structured-label-free-unit-assignment/t13/implementation/",
+                "runtime-authority-rebind-v3/docs/journal.md")
+            @test E._hash_bytes(read(historical_copy)) ==
+                  "fbb548b1a3c0d56a52fec799ac0c326e323133870ebc87e315f546f397871df7"
+            repair = false
+            @test repair === false
+            @test all(occursin("bytes preserved; no repair", row[12])
+                      for row in declarations)
+        end
 
         for (config, expected_kind) in ((RUNTIME_EVALUATOR_CONFIG, :runtime),
                                         (RUNTIME_V2_EVALUATOR_CONFIG, :runtime_v2))
             audit_root = mktempdir()
             try
-                isolated_authority_fixture(audit_root; config_rel=config)
-                audited = E._authority_snapshots(audit_root, config)
-                @test audited.config_kind == expected_kind
-                @test length(audited.authority_sha256) == 64
+                fixture = isolated_authority_fixture(audit_root;
+                    config_rel=config, synthetic_non_authority_rebind=true)
+                audited = runtime_component_snapshots(fixture, expected_kind)
+                @test audited.config_sha256 == fixture.synthetic_config_sha256
             finally
                 isdir(audit_root) && make_tree_writable(audit_root)
                 rm(audit_root; recursive=true, force=true)
             end
         end
 
-        authority_root = mktempdir()
+        authority_root = mktempdir(pwd(); prefix=".tmp-gate5-v3-authority-", cleanup=false)
         try
             fixture = isolated_authority_fixture(authority_root;
-                                                 config_rel=RUNTIME_V3_EVALUATOR_CONFIG)
-            initial = E._authority_snapshots(authority_root, RUNTIME_V3_EVALUATOR_CONFIG)
+                                                 config_rel=RUNTIME_V3_EVALUATOR_CONFIG,
+                                                 synthetic_non_authority_rebind=true)
+            initial = runtime_v3_component_snapshots(fixture)
+            @test initial.config_sha256 == fixture.synthetic_config_sha256
             correction_paths = [
                 joinpath(authority_root, contract.root_manifest_path),
                 joinpath(authority_root, contract.claim_path),
@@ -2770,11 +3821,42 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
                       for path in bundle_files)
             @test all(UInt(stat(path).mode) & UInt(0o777) == UInt(0o555)
                       for path in bundle_directories)
+            runtime_v3_semantic_error(path::String, mutate::Function) = begin
+                original = Vector{UInt8}(read(path))
+                index = findfirst(snapshot -> snapshot.path == path, initial.snapshots)
+                index === nothing && error("runtime-v3 semantic snapshot is absent")
+                old = initial.snapshots[index]
+                snapshots = copy(initial.snapshots)
+                snapshots[index] = E._Snapshot(path,
+                    Vector{UInt8}(codeunits(mutate(String(copy(original))))),
+                    old.sha256, old.device, old.inode, old.nlink)
+                try
+                    E._validate_runtime_correction_semantics(authority_root, snapshots, :runtime_v3)
+                    nothing
+                catch caught
+                    caught
+                end
+            end
+            for (path, needle, replacement) in (
+                (joinpath(authority_root, contract.claim_path), "\"status\": \"PASS\"",
+                 "\"status\": \"FAIL\""),
+                (joinpath(authority_root, contract.review_path), "\"verdict\": \"PASS\"",
+                 "\"verdict\": \"FAIL\""),
+                (joinpath(authority_root, contract.publication_path),
+                 "\"publication_state\": \"committed_verified\"",
+                 "\"publication_state\": \"staged\""),
+            )
+                error = runtime_v3_semantic_error(path,
+                    text -> replace(text, needle => replacement; count=1))
+                @test error isa E.EvaluatorError
+                @test error.status == :BLOCKED
+                @test error.reason == :authority_binding_mismatch
+            end
             for path in vcat(correction_paths, live_paths)
                 original = Vector{UInt8}(read(path))
                 rewrite_readonly(path, vcat(original, UInt8('\n')))
                 @test authority_blocked(() ->
-                    E._authority_snapshots(authority_root, RUNTIME_V3_EVALUATOR_CONFIG))
+                    runtime_v3_component_snapshots(fixture))
                 rewrite_readonly(path, original)
             end
 
@@ -2785,7 +3867,7 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
             remove_readonly(victim)
             symlink(live_symlink_target, victim)
             @test authority_blocked(() ->
-                E._authority_snapshots(authority_root, RUNTIME_V3_EVALUATOR_CONFIG))
+                runtime_v3_component_snapshots(fixture))
             remove_readonly(victim)
             write(victim, original)
             chmod(victim, 0o644)
@@ -2795,7 +3877,7 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
             remove_readonly(victim)
             hardlink(live_paths[1], victim)
             @test authority_blocked(() ->
-                E._authority_snapshots(authority_root, RUNTIME_V3_EVALUATOR_CONFIG))
+                runtime_v3_component_snapshots(fixture))
             remove_readonly(victim)
             write(victim, original)
             chmod(victim, 0o644)
@@ -2804,18 +3886,18 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
             original = Vector{UInt8}(read(nonselected))
             rewrite_readonly(nonselected, vcat(original, UInt8('\n')))
             @test authority_blocked(() ->
-                E._authority_snapshots(authority_root, RUNTIME_V3_EVALUATOR_CONFIG))
+                runtime_v3_component_snapshots(fixture))
             rewrite_readonly(nonselected, original)
 
             chmod(nonselected, 0o644)
             @test authority_blocked(() ->
-                E._authority_snapshots(authority_root, RUNTIME_V3_EVALUATOR_CONFIG))
+                runtime_v3_component_snapshots(fixture))
             chmod(nonselected, 0o444)
 
             nonselected_directory = dirname(nonselected)
             chmod(nonselected_directory, 0o755)
             @test authority_blocked(() ->
-                E._authority_snapshots(authority_root, RUNTIME_V3_EVALUATOR_CONFIG))
+                runtime_v3_component_snapshots(fixture))
             chmod(nonselected_directory, 0o555)
 
             symlink_target = joinpath(authority_root, "bundle-symlink-target")
@@ -2825,7 +3907,7 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
             chmod(nonselected_parent, 0o755)
             symlink(symlink_target, nonselected)
             @test authority_blocked(() ->
-                E._authority_snapshots(authority_root, RUNTIME_V3_EVALUATOR_CONFIG))
+                runtime_v3_component_snapshots(fixture))
             remove_readonly(nonselected)
             write(nonselected, original)
             chmod(nonselected, 0o444)
@@ -2836,7 +3918,7 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
             chmod(nonselected_parent, 0o755)
             hardlink(hardlink_source, nonselected)
             @test authority_blocked(() ->
-                E._authority_snapshots(authority_root, RUNTIME_V3_EVALUATOR_CONFIG))
+                runtime_v3_component_snapshots(fixture))
             remove_readonly(nonselected)
             write(nonselected, original)
             chmod(nonselected, 0o444)
@@ -2850,21 +3932,20 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
             chmod(extra, 0o444)
             chmod(bundle_root, 0o555)
             @test authority_blocked(() ->
-                E._authority_snapshots(authority_root, RUNTIME_V3_EVALUATOR_CONFIG))
+                runtime_v3_component_snapshots(fixture))
             remove_readonly(extra)
 
             missing = nonselected
             missing_bytes = Vector{UInt8}(read(missing))
             remove_readonly(missing)
             @test authority_blocked(() ->
-                E._authority_snapshots(authority_root, RUNTIME_V3_EVALUATOR_CONFIG))
+                runtime_v3_component_snapshots(fixture))
             chmod(dirname(missing), 0o755)
             write(missing, missing_bytes)
             chmod(missing, 0o444)
             chmod(dirname(missing), 0o555)
 
-            toctou_authority = E._authority_snapshots(
-                authority_root, RUNTIME_V3_EVALUATOR_CONFIG)
+            toctou_authority = runtime_v3_component_snapshots(fixture)
             toctou = E._ProductionContext(
                 authority_root, toctou_authority.snapshots,
                 toctou_authority.inventories, "runtime-v3-toctou")
@@ -2971,11 +4052,11 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
             error
         end
         @test v3_error isa E.EvaluatorError
-        @test v3_error.reason == :authority_path_invalid
-        @test occursin("candidate config is absent", v3_error.message)
+        @test v3_error.reason == :authority_path_mismatch
+        @test occursin("only the runtime-v4 evaluator config is executable", v3_error.message)
     end
 
-    @testset "T13 runtime-v2 main config preflight and blocker publication" begin
+    @testset "T13 historical main-config rejection and blocker hashes" begin
         function main_args(root::String, config::String, output::String)
             return String[
                 "--root", root, "--evaluator-config", config,
@@ -3008,63 +4089,59 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
             rm(stderr_path; force=true)
             return output
         end
-        function blocker_config_sha(output::String)
-            receipt = TOML.parse(read(joinpath(output, "receipt.toml"), String))
-            return receipt["evaluator_config_sha256"]
+        function config_context(config::String)
+            path = normpath(joinpath(pwd(), config))
+            bytes = Vector{UInt8}(read(path))
+            info = stat(path)
+            snapshot = E._Snapshot(path, bytes, bytes2hex(sha256(bytes)),
+                                   UInt64(info.device), UInt64(info.inode),
+                                   UInt64(info.nlink))
+            return E._ProductionContext(pwd(), [snapshot],
+                                        Tuple{String,Vector{String}}[], "config-context")
+        end
+        blocker = E.EvaluatorError(:BLOCKED, :authority_path_mismatch, "historical")
+        for (config, digest) in (
+            (HISTORICAL_EVALUATOR_CONFIG, E._CONFIG_SHA256),
+            (RUNTIME_EVALUATOR_CONFIG, E._RUNTIME_V1_CONFIG_SHA256),
+            (RUNTIME_V2_EVALUATOR_CONFIG, E._RUNTIME_V2_CONFIG_SHA256),
+            (RUNTIME_V3_EVALUATOR_CONFIG, E._RUNTIME_V3_CONFIG_SHA256),
+        )
+            context = config_context(config)
+            @test E._context_evaluator_config_sha256(context) == digest
+            receipt = TOML.parse(String(E._blocker_files(
+                blocker; context=context)["receipt.toml"]))
+            @test receipt["evaluator_config_sha256"] == digest
+            error = try
+                E._preflight_config_context(Dict{String,String}(
+                    "--root" => pwd(), "--evaluator-config" => config))
+                nothing
+            catch caught
+                caught
+            end
+            @test error isa E.EvaluatorError
+            @test error.status == :BLOCKED
+            @test error.reason == :authority_path_mismatch
+            @test occursin("only the runtime-v4 evaluator config is executable",
+                           error.message)
         end
 
         sandbox = mktempdir(pwd(); prefix=".tmp-t13-main-preflight-", cleanup=false)
         try
-            v2_output = joinpath(sandbox, "v2-blocker")
-            v2_options = Dict{String,String}(
-                "--root" => pwd(), "--evaluator-config" => RUNTIME_V2_EVALUATOR_CONFIG)
-            config_only = E._preflight_config_context(v2_options)
-            @test length(config_only.snapshots) == 1
-            @test isempty(config_only.inventories)
-            @test E._context_evaluator_config_sha256(config_only) ==
-                  E._RUNTIME_V2_CONFIG_SHA256
-            @test config_only.manifest_sha256 ==
-                  E._preflight_config_context(v2_options).manifest_sha256
-
-            v3_output = joinpath(sandbox, "v3-blocker")
-            v3_options = Dict{String,String}(
-                "--root" => pwd(), "--evaluator-config" => RUNTIME_V3_EVALUATOR_CONFIG)
-            v3_config_only = E._preflight_config_context(v3_options)
-            @test length(v3_config_only.snapshots) == 1
-            @test E._context_evaluator_config_sha256(v3_config_only) ==
-                  E._RUNTIME_V3_CONFIG_SHA256
-            @test v3_config_only.manifest_sha256 ==
-                  E._preflight_config_context(v3_options).manifest_sha256
-            v3_status, _, v3_stderr = run_main(
-                main_args(pwd(), RUNTIME_V3_EVALUATOR_CONFIG, v3_output))
-            @test v3_status == 2
-            @test occursin("candidate config is absent", v3_stderr)
-            @test isfile(joinpath(v3_output, "receipt.toml"))
-            @test readdir(v3_output) == ["receipt.toml"]
-            @test blocker_config_sha(v3_output) == E._RUNTIME_V3_CONFIG_SHA256
-
-            v2_status, _, v2_stderr = run_main(
-                main_args(pwd(), RUNTIME_V2_EVALUATOR_CONFIG, v2_output))
-            @test v2_status == 2
-            @test occursin("evaluator config path differs", v2_stderr)
-            @test isfile(joinpath(v2_output, "receipt.toml"))
-            @test readdir(v2_output) == ["receipt.toml"]
-            @test blocker_config_sha(v2_output) == E._RUNTIME_V2_CONFIG_SHA256
-
-            v1_output = joinpath(sandbox, "v1-blocker")
-            v1_status, _, v1_stderr = run_main(
-                main_args(pwd(), RUNTIME_EVALUATOR_CONFIG, v1_output))
-            @test v1_status == 2
-            @test occursin("evaluator config path differs", v1_stderr)
-            @test blocker_config_sha(v1_output) == E._RUNTIME_V1_CONFIG_SHA256
-
-            historical_output = joinpath(sandbox, "historical-blocker")
-            historical_status, _, historical_stderr = run_main(
-                main_args(pwd(), HISTORICAL_EVALUATOR_CONFIG, historical_output))
-            @test historical_status == 2
-            @test occursin("evaluator config path differs", historical_stderr)
-            @test blocker_config_sha(historical_output) == E._CONFIG_SHA256
-
+            for config in (HISTORICAL_EVALUATOR_CONFIG, RUNTIME_EVALUATOR_CONFIG,
+                           RUNTIME_V2_EVALUATOR_CONFIG, RUNTIME_V3_EVALUATOR_CONFIG)
+                output = joinpath(sandbox, replace(config, "/" => "-"))
+                status, _, stderr = run_main(main_args(pwd(), config, output))
+                @test status == 2
+                @test occursin("only the runtime-v4 evaluator config is executable", stderr)
+                @test isfile(joinpath(output, "receipt.toml"))
+                @test readdir(output) == ["receipt.toml"]
+                digest = config == HISTORICAL_EVALUATOR_CONFIG ? E._CONFIG_SHA256 :
+                         config == RUNTIME_EVALUATOR_CONFIG ? E._RUNTIME_V1_CONFIG_SHA256 :
+                         config == RUNTIME_V2_EVALUATOR_CONFIG ? E._RUNTIME_V2_CONFIG_SHA256 :
+                         E._RUNTIME_V3_CONFIG_SHA256
+                receipt = TOML.parse(read(joinpath(output, "receipt.toml"), String))
+                @test receipt["evaluator_config_sha256"] == digest
+            end
             unknown_output = joinpath(sandbox, "unknown-no-blocker")
             unknown_status, _, unknown_stderr = run_main(main_args(
                 pwd(), "config/unit_assignment_structured_evaluator_unknown.toml",
@@ -3078,23 +4155,15 @@ const RESULTS = @testset "Todo13 evaluator pure seam" begin
                 mkpath(joinpath(mutable_root, "config"))
                 mutable_config = joinpath(mutable_root, RUNTIME_V2_EVALUATOR_CONFIG)
                 cp(joinpath(pwd(), RUNTIME_V2_EVALUATOR_CONFIG), mutable_config; force=true)
-                mutable_output = joinpath(mutable_root, "blocker-after-mutation")
-                mutable_options = Dict{String,String}(
-                    "--root" => mutable_root,
-                    "--evaluator-config" => RUNTIME_V2_EVALUATOR_CONFIG)
-                @test E._context_evaluator_config_sha256(
-                    E._preflight_config_context(mutable_options)) ==
-                      E._RUNTIME_V2_CONFIG_SHA256
                 original = Vector{UInt8}(read(mutable_config))
                 mutated = replace(String(copy(original)),
                     "t12_edge_model_sha256" => "t12_edge_model_sha256_tampered";
                     count=1)
                 write(mutable_config, mutated)
-                mutation_status, _, mutation_stderr = run_main(
-                    main_args(mutable_root, RUNTIME_V2_EVALUATOR_CONFIG, mutable_output))
-                @test mutation_status == 2
-                @test occursin("bytes differ", mutation_stderr)
-                @test !ispath(mutable_output)
+                @test authority_blocked(() -> E._snapshot(
+                    mutable_root, RUNTIME_V2_EVALUATOR_CONFIG,
+                    E._RUNTIME_V2_CONFIG_SHA256, "evaluator config",
+                    Dict{Tuple{UInt64,UInt64},String}()))
             finally
                 isdir(mutable_root) && rm(mutable_root; recursive=true, force=true)
             end

@@ -1,0 +1,331 @@
+schema = "structured_evaluator_gate5_coverage_v1"
+
+[[category]]
+id = "historical_live_first_failure"
+former_integrated_testset_location = "Todo13 evaluator pure seam / provenance, authority, firewall, and publication"
+replacement_testset_location = "Todo13 evaluator pure seam / provenance, authority, firewall, and publication"
+status = "retained"
+
+[[category]]
+id = "synthetic_historical_collector_second_failure"
+former_integrated_testset_location = "T13 historical integrated authority setup"
+replacement_testset_location = "Todo13 evaluator pure seam / attempt_synthetic_historical_collector"
+status = "retained"
+
+[[category]]
+id = "integrated_historical_v0_v3_positive"
+former_integrated_testset_location = "T13 historical integrated authority success assertions"
+replacement_testset_location = "Todo13 evaluator pure seam / explicit no-integrated-positive assertion"
+status = "intentionally_retired"
+
+[[category]]
+id = "closure_manifest_26_records_27_files"
+former_integrated_testset_location = "provenance, authority, firewall, and publication / closure authority"
+replacement_testset_location = "provenance, authority, firewall, and publication / synthetic_closure_components"
+status = "retained"
+
+[[category]]
+id = "closure_root_inventories_2_6_21"
+former_integrated_testset_location = "provenance, authority, firewall, and publication / closure inventories"
+replacement_testset_location = "provenance, authority, firewall, and publication / synthetic_closure_components"
+status = "retained"
+
+[[category]]
+id = "closure_missing_extra_members"
+former_integrated_testset_location = "provenance, authority, firewall, and publication / closure member mutations"
+replacement_testset_location = "provenance, authority, firewall, and publication / _validate_closure_manifest"
+status = "retained"
+
+[[category]]
+id = "closure_duplicate_malformed_rows"
+former_integrated_testset_location = "provenance, authority, firewall, and publication / closure manifest mutations"
+replacement_testset_location = "provenance, authority, firewall, and publication / _validate_closure_manifest"
+status = "retained"
+
+[[category]]
+id = "closure_depth_root_escape"
+former_integrated_testset_location = "provenance, authority, firewall, and publication / closure manifest mutations"
+replacement_testset_location = "provenance, authority, firewall, and publication / _validate_closure_manifest"
+status = "retained"
+
+[[category]]
+id = "closure_six_guard_mutations"
+former_integrated_testset_location = "provenance, authority, firewall, and publication / closure journal guards"
+replacement_testset_location = "provenance, authority, firewall, and publication / synthetic closure manifest observation"
+status = "retained"
+
+[[category]]
+id = "closure_symlink_hardlink"
+former_integrated_testset_location = "provenance, authority, firewall, and publication / closure identity controls"
+replacement_testset_location = "provenance, authority, firewall, and publication / _snapshot and _verify_snapshot"
+status = "retained"
+
+[[category]]
+id = "closure_writable_file_directory"
+former_integrated_testset_location = "provenance, authority, firewall, and publication / closure modes"
+replacement_testset_location = "provenance, authority, firewall, and publication / _closure_directory and _verify_context"
+status = "retained"
+
+[[category]]
+id = "closure_claim_review_publication_semantics"
+former_integrated_testset_location = "provenance, authority, firewall, and publication / closure documents"
+replacement_testset_location = "provenance, authority, firewall, and publication / closure document validators"
+status = "retained"
+
+[[category]]
+id = "closure_sidecar_mutation"
+former_integrated_testset_location = "provenance, authority, firewall, and publication / closure sidecars"
+replacement_testset_location = "provenance, authority, firewall, and publication / _validate_sidecar"
+status = "retained"
+
+[[category]]
+id = "runtime_v1_v2_contract_bindings"
+former_integrated_testset_location = "T13 runtime authority correction rebind and v2"
+replacement_testset_location = "T13 runtime authority correction rebind and v2 / _runtime_contract and _runtime_correction_bindings"
+status = "retained"
+
+[[category]]
+id = "runtime_v1_v2_missing_extra_identity_mode"
+former_integrated_testset_location = "T13 runtime authority correction rebind and v2 / bundle mutations"
+replacement_testset_location = "T13 runtime authority correction rebind and v2 / runtime_component_snapshots"
+status = "retained"
+
+[[category]]
+id = "runtime_v1_v2_claim_review_publication_semantics"
+former_integrated_testset_location = "T13 runtime authority correction rebind and v2 / semantic mutations"
+replacement_testset_location = "T13 runtime authority correction rebind and v2 / _validate_runtime_correction_semantics"
+status = "retained"
+
+[[category]]
+id = "runtime_v1_v2_product_manifest_mutations"
+former_integrated_testset_location = "T13 runtime authority correction rebind and v2 / product bindings"
+replacement_testset_location = "T13 runtime authority correction rebind and v2 / runtime_component_snapshots"
+status = "retained"
+
+[[category]]
+id = "runtime_v3_bundle_cardinality_bindings"
+former_integrated_testset_location = "T13 runtime authority correction rebind v3 / correction bundle"
+replacement_testset_location = "T13 runtime authority correction rebind v3 / _validate_runtime_v3_bundle"
+status = "retained"
+
+[[category]]
+id = "runtime_v3_missing_extra_symlink_hardlink_mode"
+former_integrated_testset_location = "T13 runtime authority correction rebind v3 / adversarial bundle mutations"
+replacement_testset_location = "T13 runtime authority correction rebind v3 / runtime_v3_component_snapshots"
+status = "retained"
+
+[[category]]
+id = "runtime_v3_claim_review_publication_semantics"
+former_integrated_testset_location = "T13 runtime authority correction rebind v3 / correction documents"
+replacement_testset_location = "T13 runtime authority correction rebind v3 / _validate_runtime_correction_semantics"
+status = "retained"
+
+[[category]]
+id = "runtime_v3_product_manifest_mutation"
+former_integrated_testset_location = "T13 runtime authority correction rebind v3 / product and manifest mutations"
+replacement_testset_location = "T13 runtime authority correction rebind v3 / _validate_runtime_v3_bundle"
+status = "retained"
+
+[[category]]
+id = "toctou_snapshot_replacement"
+former_integrated_testset_location = "T13 runtime authority correction rebind v3 / TOCTOU"
+replacement_testset_location = "T13 runtime authority correction rebind v3 / _verify_context"
+status = "retained"
+
+[[category]]
+id = "toctou_directory_inventory"
+former_integrated_testset_location = "T13 runtime authority correction rebind v3 / TOCTOU directory inventory"
+replacement_testset_location = "T13 runtime authority correction rebind v3 / _verify_context"
+status = "retained"
+
+[[category]]
+id = "toctou_inode_hardlink_changes"
+former_integrated_testset_location = "T13 runtime authority correction rebind v3 / TOCTOU identities"
+replacement_testset_location = "T13 runtime authority correction rebind v3 / _verify_snapshot and _verify_context"
+status = "retained"
+
+[[category]]
+id = "runtime_path_identity_guard"
+former_integrated_testset_location = "Gate5 runtime-v4 fail-closed synthetic contract"
+replacement_testset_location = "Gate5 runtime-v4 fail-closed synthetic contract"
+status = "retained"
+
+[[category]]
+id = "runtime_v4_synthetic_contract_32"
+former_integrated_testset_location = "Gate5 runtime-v4 fail-closed synthetic contract"
+replacement_testset_location = "Gate5 runtime-v4 fail-closed synthetic contract"
+status = "retained"
+
+[[category]]
+id = "runtime_v4_live_source_archive_bindings"
+former_integrated_testset_location = "Gate5 runtime-v4 fail-closed synthetic contract / live archive files"
+replacement_testset_location = "Gate5 runtime-v4 live source archive bindings"
+status = "retained"
+
+[[category]]
+id = "activation_default_denial"
+former_integrated_testset_location = "not_present_in_gate5_integrated_suite"
+replacement_testset_location = "default gate and public producer stay blocked"
+status = "added"
+
+[[category]]
+id = "activation_cli_pairing"
+former_integrated_testset_location = "not_present_in_gate5_integrated_suite"
+replacement_testset_location = "MC remediation: neutral CLI pairing, firewall value, and CLI-through-main"
+status = "added"
+
+[[category]]
+id = "activation_receipt_schema_and_digest_anchor"
+former_integrated_testset_location = "not_present_in_gate5_integrated_suite"
+replacement_testset_location = "receipt and native Main-control schema boundaries"
+status = "added"
+
+[[category]]
+id = "activation_scope_and_permissions"
+former_integrated_testset_location = "not_present_in_gate5_integrated_suite"
+replacement_testset_location = "receipt and native Main-control schema boundaries"
+status = "added"
+
+[[category]]
+id = "activation_boulder_preimage_postimage"
+former_integrated_testset_location = "not_present_in_gate5_integrated_suite"
+replacement_testset_location = "receipt and native Main-control schema boundaries"
+status = "added"
+
+[[category]]
+id = "activation_source_closure_and_entrypoint"
+former_integrated_testset_location = "not_present_in_gate5_integrated_suite"
+replacement_testset_location = "positive real-context authorization in the bound root"
+status = "added"
+
+[[category]]
+id = "activation_command_environment_destination"
+former_integrated_testset_location = "not_present_in_gate5_integrated_suite"
+replacement_testset_location = "launch environment bindings are enforced"
+status = "added"
+
+[[category]]
+id = "activation_input_inventory_binding"
+former_integrated_testset_location = "not_present_in_gate5_integrated_suite"
+replacement_testset_location = "positive real-context authorization in the bound root"
+status = "added"
+
+[[category]]
+id = "activation_toctou_mode_identity_membership"
+former_integrated_testset_location = "not_present_in_gate5_integrated_suite"
+replacement_testset_location = "lower-level fabricated identity mutations are rejected (not filesystem replacement)"
+status = "added"
+
+[[category]]
+id = "activation_receipt_provenance_fields"
+former_integrated_testset_location = "not_present_in_gate5_integrated_suite"
+replacement_testset_location = "activated receipt schema and legacy equivalence"
+status = "added"
+
+[[category]]
+id = "activation_public_producer_denial"
+former_integrated_testset_location = "not_present_in_gate5_integrated_suite"
+replacement_testset_location = "default gate and public producer stay blocked"
+status = "added"
+
+[[category]]
+id = "activation_publication_equivalence"
+former_integrated_testset_location = "not_present_in_gate5_integrated_suite"
+replacement_testset_location = "lower-level publisher nine-file contract (not activation integration)"
+status = "added"
+
+[[category]]
+id = "activation_assembled_context_boundary"
+former_integrated_testset_location = "not_present_in_gate5_integrated_suite"
+replacement_testset_location = "assembled production context retains activation and rejects record drift"
+status = "added"
+
+[[category]]
+id = "activation_actual_source_boulder_replacement"
+former_integrated_testset_location = "not_present_in_gate5_integrated_suite"
+replacement_testset_location = "actual source pathname replacement is not rebased"
+status = "added"
+
+[[category]]
+id = "activation_actual_directory_replacement"
+former_integrated_testset_location = "not_present_in_gate5_integrated_suite"
+replacement_testset_location = "actual approved input directory replacement is rejected"
+status = "added"
+
+[[category]]
+id = "activation_main_control_two_root_positive"
+former_integrated_testset_location = "not_present_in_gate5_integrated_suite"
+replacement_testset_location = "MC remediation: real M/R positive and missing-M decoy"
+status = "added"
+
+[[category]]
+id = "activation_main_control_schema_boundaries"
+former_integrated_testset_location = "not_present_in_gate5_integrated_suite"
+replacement_testset_location = "receipt and native Main-control schema boundaries"
+status = "added"
+
+[[category]]
+id = "activation_main_control_v1_rejection"
+former_integrated_testset_location = "not_present_in_gate5_integrated_suite"
+replacement_testset_location = "v1 activation schemas cannot enable the successor route"
+status = "added"
+
+[[category]]
+id = "activation_main_control_preauthorization"
+former_integrated_testset_location = "not_present_in_gate5_integrated_suite"
+replacement_testset_location = "MC remediation: real M/R positive and missing-M decoy"
+status = "added"
+
+[[category]]
+id = "activation_main_control_replacement_mutation"
+former_integrated_testset_location = "not_present_in_gate5_integrated_suite"
+replacement_testset_location = "MC remediation: Main file inode keeps the dedicated control object"
+status = "added"
+
+[[category]]
+id = "activation_main_control_publication_hooks"
+former_integrated_testset_location = "not_present_in_gate5_integrated_suite"
+replacement_testset_location = "MC remediation: existing/EEXIST and real postcommit hooks"
+status = "added"
+
+[[category]]
+id = "activation_main_control_manifest_tagging"
+former_integrated_testset_location = "not_present_in_gate5_integrated_suite"
+replacement_testset_location = "MC remediation: real M/R positive and missing-M decoy"
+status = "added"
+
+[[category]]
+id = "activation_main_control_r_decoy"
+former_integrated_testset_location = "not_present_in_gate5_integrated_suite"
+replacement_testset_location = "MC remediation: real M/R positive and missing-M decoy"
+status = "added"
+
+[[category]]
+id = "activation_cli_through_main_neutral"
+former_integrated_testset_location = "not_present_in_gate5_integrated_suite"
+replacement_testset_location = "MC remediation: neutral CLI pairing, firewall value, and CLI-through-main"
+status = "added"
+
+[[category]]
+id = "activation_main_control_initial_acquisition"
+former_integrated_testset_location = "not_present_in_gate5_integrated_suite"
+replacement_testset_location = "MC remediation: initial acquisition vs post-capture identity replacement"
+status = "added"
+
+[[category]]
+id = "activation_main_control_postread_recheck"
+former_integrated_testset_location = "not_present_in_gate5_integrated_suite"
+replacement_testset_location = "MC remediation: post-read recheck and loader stage boundaries"
+status = "added"
+
+[[category]]
+id = "activation_main_control_input_overlap"
+former_integrated_testset_location = "not_present_in_gate5_integrated_suite"
+replacement_testset_location = "MC remediation: M==R control-as-input overlap is rejected"
+status = "added"
+
+[[category]]
+id = "activation_loader_stage_context_revalidation"
+former_integrated_testset_location = "not_present_in_gate5_integrated_suite"
+replacement_testset_location = "MC remediation: post-read recheck and loader stage boundaries"
+status = "added"

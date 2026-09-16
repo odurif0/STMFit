@@ -26,6 +26,138 @@ assignment** (GlcNAc/GlcN per lobe) — see the 2026-06-22 entry below and
 
 ## Investigation Timeline
 
+### 2026-09-09 - renameat2 filesystem capability difference diagnosed (GPFS rejects RENAME_NOREPLACE with errno 22; tmpfs supports it); bounded test-only prerequisite helper added; evidence-v5 successor preparation staged (no suite rerun, no scientific change)
+
+The approved Gate5 evidence-v5 collection (stage
+`.omo/run-continuation/t13-gate5-implementation-evidence-v4-stage`, run
+`run-ZxWyiYXW`) stopped at its first real-repo full-suite run with **66,986
+passed / 2 failed / 1 errored / 0 broken** (expected 66,989 with zero failures).
+Raw stdout was empty because the test disables Test result printing at two
+places (lines 15 and 1162) and the outer testset threw before the suite's own
+count line. A first diagnostic replay aborted at its own guard because it
+assumed exactly one marker occurrence — the pinned source has two; that
+mistaken-guard diagnostic is preserved unchanged. The corrected in-memory
+diagnostic (both marker lines flipped to `true`, nothing on disk touched,
+nothing repaired) localized all three problems to one testset,
+`receipt-gated renameat2 fallback` (test lines 3000/3001/3002):
+`error isa E._PublicationError` saw `nothing`, `error.state` consequently threw
+`FieldError`, and `preferred_state[]` stayed `:not_committed`.
+
+A tiny ctypes OS probe over `libc.renameat2` (diagnostics directory
+`diag-20260910T0058Z-renameat2-fs-probe`, run TMPDIR never written, equivalent
+scratch verified same `st_dev 0x33`) observed: on the GPFS `/u` checkout mount
+`renameat2(RENAME_NOREPLACE)` fails with **errno 22 (EINVAL)**; on `/tmp`
+(tmpfs) it succeeds (rc 0) and correctly rejects an existing destination with
+errno 17. The evaluator's `_rename_noreplace` maps errno 22/38/95 to
+`:rename_unsupported`, so `_publish_atomic` commits through `_publish_fallback`
+and never emits `:after_preferred_rename` — exactly the observed mechanism.
+Metadata language correction recorded here: the fallback path handles its own
+ambiguity internally and returns `:committed_verified`; the test's
+`preferred_state` Ref observes only the `:after_preferred_rename` hook event,
+which the fallback never emits.
+
+Correction (test-only, `test/test_structured_evaluator.jl`): new test-local
+helper `preferred_rename_test_root` (inside the same testset, near `with_hook`)
+probes small deterministic candidate roots (`tempdir()`, `/tmp`, `/dev/shm`;
+deduped, existing only) with the ACTUAL `E._rename_noreplace` and no forcing
+hook: private root + source dir + sentinel + absent destination; requires the
+real rename to remove the source, keep destination and sentinel, and preserve
+directory identity (`st_dev`/`st_ino`); removes its own probe entries; returns
+the SAME private root for the preferred-publication block (its `mktempdir()`
+was the only replaced line). Only the recognized
+`_PublicationError(state = :not_committed, reason = :rename_unsupported)`
+moves to the next candidate; any other failure is cleaned up and rethrown; if
+no candidate supports the syscall the suite fails explicitly as an unmet
+prerequisite (plain `error`, no skip/broken/forced pass, no new `@test`, so
+the assertion total stays 66,989). All four preferred-block assertions, the
+injected `:after_preferred_rename` exception, and the existing cleanup are
+unchanged; the rest of the suite keeps the persistent TMPDIR. The synthetic
+58-assertion contract is unaffected (helper lives only in the full-suite
+branch). No production evaluator, config, CI, or scientific/selection change;
+no T13 authorization; the fresh evidence-v5 successor preparation stage is
+staged pending parent/Oracle review, and the full collection has not been
+rerun.
+
+
+### 2026-09-09 - Gate5 evidence-v3 staging inaccessible after resumption (cause not proved); v4 preparation blocked in pre-execution review, v5 preparation staged (preparation only, no tests run)
+
+The 2026-09-09 Gate5 entry below states that the failed candidate and raw diagnostics
+"are preserved in temporary Gate5 staging". That temporary-preservation statement must be
+qualified: the staging directory `/tmp/opencode/stmfit-t13-gate5-implementation-evidence-v3-stage`
+was observed to be inaccessible after resumption; the cause is not proved. A search of the
+repository including `.omo`, `/tmp`, and retained tool output found no exact copy, so the
+v3 run cannot be independently replayed. The previously reported v3 values (receipt
+`32c17a168433d2e8080ed3b30f4e866122e48a4d37cd142f0689e87554d752ae`, summary
+`bd466be881957890dc051a9c586559fbe98d153c644ac074a2343fc606c1ea9f`, manifest
+`2a334cc77eb107fa3339dab9c3c0ed4d609594589af2128cc87ff86f37f30b7f`, final tar
+`9166e7129cc1f55dc0d162daad37316a3176dcb761d6e5e8657a882b9795075b`) are therefore
+historical remembered values only, with no current evidence and no independent replay;
+they are recorded here as history, not re-fabricated. The Oracle review of v3 was blocked
+by that absence and issued no correctness verdict.
+
+This entry records preparation only. A fresh, persistent, non-authorizing Gate5
+evidence-v4 protocol, runner, and read-only verifier were staged at
+`.omo/run-continuation/t13-gate5-implementation-evidence-v4-stage`; staging is persistent
+under `.omo` rather than `/tmp`, with an honest BASE-identity treatment (current HEAD is
+authoritative; the historical remembered base is unrecoverable). No tests, builds, Julia,
+or Pkg commands were executed for this entry; no scientific code or certified config
+changed; the sealed T11/T12/Gate4 artifacts and Boulder are untouched. Independent review
+of the v4 preparation is pending, no run has been executed, there is no T13/Gate2
+activation, and no formal authority target is authorized.
+
+Subsequent to that preparation, an Oracle pre-execution review of the v4 protocol and
+runner (task ses_f78be2774ffeKvCYgc814g87AO) returned BLOCKED before any execution. The
+four original v4 stage files were preserved byte-identical under
+`.omo/run-continuation/t13-gate5-implementation-evidence-v4-stage/preparation-revisions/rejected-692d84b/`
+with a factual rejection note; this is a preservation record of that review outcome, not a
+reconstruction of the review itself. The unsealed preparation was then refactored per the
+review: an execution-only runner (Python standard library, local-only — the host has
+python3 3.14.6 and no host/compute Python 3.6 execution is intended) recording raw
+argv/cwd/sanitized-env/UTC/exit per command with no summary parsing, no PASS flags, no
+receipts/manifests/publication and no automatic cleanup, plus a separate read-only
+preflight/postprocess tool, and two fixed manifests (candidate source; protected inputs)
+generated for parent and Oracle review and pinning before any run. The count-line contract
+was corrected: the test prints `assertions=<n> fails=<n> errors=<n> broken=<n>` (table
+output disabled), not a Test Summary table. Still no tests were executed in this phase;
+the fixed manifests record the repository state including this correction, and the
+v3 inaccessibility wording above was corrected from "lost across restart" to the observed
+"inaccessible after resumption (cause not proved)".
+
+### 2026-09-09 - Gate5 clean-checkout verification found a CI dependency
+
+The first isolated source-tar run of the final Gate5 candidate failed with
+64 passing assertions, 12 failures and 6 errors. The synthetic branch read
+six sealed T11/T12 archive and manifest files under `.omo`; these files were
+available during the earlier repository-local 82/82 run but are deliberately
+absent from CI. The earlier pass did not establish clean-checkout portability.
+
+Moved the 24 live-file existence, symlink, hash and mode assertions into the
+authority-backed full suite. The synthetic branch retains the exact config,
+schema, declared paths/modes and fail-closed runtime checks. No authority is
+copied into CI, no assertion is skipped, and production code and certified
+configs remain unchanged. The isolated synthetic run passes 58/58, and the
+full suite passes 66,989/66,989 twice with byte-identical stdout, empty stderr
+and no failed, errored or broken assertions. Source loading also passes.
+
+The next packaging check found that `Manifest.toml` is ignored by Git. A
+tracked-files export had silently omitted it, causing the Pkg hash check to
+fail before resolution. Preserve that failed run and include the exact ignored
+Manifest explicitly in the evidence archive. The CI `git diff` check also
+could not detect changes to this ignored file: retain the tracked Project
+check and hash both environment files across the synthetic run instead. CI
+still resolves dependencies independently; it does not reproduce the local
+ignored lockfile. With the Manifest included, clean Pkg resolution passes and
+leaves Project and Manifest byte-identical. The gitless documentation run
+then stops at Documenter's remote-link discovery because `.git` is absent;
+documentation must be verified with the normal Git-backed build, not by
+weakening its source-link configuration to accommodate this export.
+
+The failed candidate and raw diagnostics are preserved in temporary Gate5
+staging. The sealed closure-v1 observation remains a historical observation
+of its original inputs, not evidence that the revised test, workflow and coverage-map
+bytes have already passed review. Gate5 packaging and independent review must
+be repeated for this revision; Boulder and T13 authorization are unchanged.
+
 ### 2026-08-01 — Two-stage optimization: accuracy first, exact second (k-means view sweep)
 
 Following the observation that physical accuracy and exact chains can be
@@ -2304,7 +2436,7 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
-> Updated 2026-08-03. Questions from earlier sessions are archived in
+> Updated 2026-09-07. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
 0b. **Can label-free unit assignment reach the promotion bar?** → **RESOLVED
@@ -2399,6 +2531,20 @@ See `docs/src/selection.md` for the full guard specification and
    ring along the surface normal, consistent with the recommended range.
    Sensitivity bracket: 0.40–0.60 nm. The height was chosen from physics, not
    from benchmark unit-sequence accuracy.
+
+7. **Can the structured evaluator migrate from the historical runtime-v3
+   authority?** → **OPEN (updated Sep 7)**: Gate4 and the Gate1 transition are
+   final, so Gate5 implementation may continue. Runtime-v4 is a fail-closed
+   Julia 1.12.7 candidate for migration and CI work only. The root
+   `Project.toml` requires `julia = "=1.12.7"`; on Julia 1.12.7, `Pkg.resolve()`
+   made no Manifest change and
+   `Pkg.Types.workspace_resolve_hash(ctx.env)` equals Manifest `project_hash`
+   `af56fc4d010e652f014ae3cec6d4e804d4722f8d`. Gate2 Oracle integration review
+   remains pending. Todo13 evaluator execution, outputs, T14, and downstream
+   work remain unauthorized and unstarted. Historical v0–v3 configs remain
+   byte-identical records; each fails live first at stale T12 claim bytes, and
+   no old T12 bytes were reconstructed. No 1.12.6-to-1.12.7 equivalence claim
+   is made.
 
 ---
 
@@ -5208,3 +5354,553 @@ This closes runtime validation only. T14 remains forbidden until the
 append-only T13 runtime-v3 evidence root is independently reviewed and
 atomically published; no Plan checkbox, benchmark grade, or production
 configuration was changed here.
+
+### 2026-09-07 — Gate4 receipt recovery and Gate5 runtime-v4 candidate
+
+The exact authorized Gate4 Boulder transition reached postimage
+`e509c919…`, but the original applicator failed while publishing its receipt
+with `KeyError: operation_count`. No rollback occurred. Recovery-v1 was
+rejected before execution because of a review-directory mode protocol bug.
+Recovery-v2 did not modify Boulder; it published the missing receipt pair,
+proved idempotence, and received the final independent post-review and Oracle
+review. This is operational authority recovery, not scientific execution.
+
+The additive
+`config/unit_assignment_structured_evaluator_runtime_v4.toml` candidate is
+bound to Julia 1.12.7, exact executable and sysimage identities, fresh T11 and
+T12 runtime-v4 authorities, and the Gate4 postimage/receipt/review chain. Its
+final SHA-256 is
+`abe22ed5047c898f594067d4a54cbe8fcc99c15fef17b429fa366f64c255547b`. The
+`[unary]`-through-EOF block is byte-identical to certified runtime-v3, so no
+scientific, physical, model, calibration, threshold, GCV, or `n_eff` parameter
+changed. The candidate is deliberately fail-closed:
+`authorizes_todo13=false`, evaluator outputs and product hashes are absent, and
+Gate5 authorizes migration/CI work only.
+
+The root `Project.toml` requires `julia = "=1.12.7"`. On Julia 1.12.7,
+`Pkg.resolve()` made no Manifest change and
+`Pkg.Types.workspace_resolve_hash(ctx.env)` equals Manifest `project_hash`
+`af56fc4d010e652f014ae3cec6d4e804d4722f8d`. The candidate used no real data,
+labels, expected `N`, `NKNNKN`, class counts, composition prior,
+benchmark/grader, or runtime-equivalence result. No 1.12.6-to-1.12.7
+equivalence claim is made.
+
+Runtime-v4 does not bind mutable tracked evaluator or test source files. Each
+fresh T11/T12 authority package is bound instead to its immutable
+`source.tar`, `source-manifest.tsv`, and `source-symlink-manifest.tsv` members,
+with their exact path, SHA-256, and mode recorded in the administrative
+authority table. The runtime guard checks Julia 1.12.7, config bytes,
+binary/sysimage hashes, and canonical executable identity including
+`/proc/self/exe`. The agents' `/u/...` namespace does not canonicalize to the
+configured `/raven/u/...` path, so the production guard correctly blocks
+there. Positive path/hash behavior is tested only through controlled seams;
+there is no production bypass.
+
+The outputs state is `ABSENT_AT_GATE5_CONFIG_PUBLICATION`: nine expected
+evaluator artifacts, zero present, and no output hashes. The candidate remains
+fail-closed and not certified or execution-ready. Parent verification recorded
+the runtime-v4 synthetic contract as `82/82` and the complete evaluator suite
+as `66,965/66,965` on two consecutive runs, with zero failures, errors, or
+broken tests. Source load and the source diff check passed. The machine-readable
+`test/structured_evaluator_gate5_coverage.toml` records retained lower-level
+coverage; only the impossible integrated-positive historical status is retired.
+These are parent validation results, not a docs or CI build result. Gate4 and
+the Gate1 transition are final and Gate5 implementation may continue. Gate2
+Oracle integration review remains pending; Todo13 evaluator execution, its
+outputs, T14, and downstream work remain unauthorized and unstarted.
+
+Historical configs v0-v3 each fail live first at stale T12 claim bytes. No old
+T12 bytes were reconstructed. This is separate from the following append-only
+observation and from the old runtime-v3 journal mismatch.
+
+#### Gate5 historical closure-v1 mismatch observation
+
+The append-only observation root
+`.omo/evidence/structured-label-free-unit-assignment/runtime_v4/t13-gate5-historical-closure-v1-mismatch-observation-v1`
+records a separately observed closure-v1 defect. The intact closure root
+manifest has SHA-256
+`a8f40846213cd976e4ffdd1c8d40e078718f30a917d9ad5ffd4fd38ef3a76aef` and
+declares 26 records. Exactly six distinct journal-guard paths declare
+`5f6c97d0c5074025f1566785512ca6c03a31e54fe065044d047a7ac32cd9fcd2` but
+contain
+`54d25100c5edc0ce7794368c1018cbe6b90ddd4430ad4cac626dad7f8d3d743e`.
+Fourteen local observed copies contain the latter hash and zero contain the
+declared hash. The disposition is
+`INVALID_UNVERIFIABLE_HISTORICAL_NON_LIVE`; no repair or reconstruction was
+performed.
+
+The observation SHA-256 is
+`da9143cabacb5b974659aab2e41932d0592f16d7c66ccaa5cd3ce531d6cb4b0a`, its
+receipt SHA-256 is
+`b81ffc3b730a1cde623193159e69b7dd062d55ad9dda72bee9b7544583b32a67`, and the
+independent review SHA-256 is
+`b61330abcb5d18bc0be86e50e6992158ef95f2848989e4045b61c0fc0dd2e4bf`.
+The review verdict is `PASS_HISTORICAL_CLOSURE_OBSERVATION_ONLY`. This is
+factual observation only: it does not authorize Gate2, Todo13, or T14, and the
+runtime-v4 production branch does not consume closure-v1. It must remain
+distinct from the old runtime-v3 journal mismatch, which involved two
+declarations of one path.
+
+#### Current status (2026-09-07)
+
+Runtime-v4 is the current Gate5 implementation candidate. Runtime-v3 and the
+certified v0/v1/v2/v3 evaluator configs are historical, byte-identical Julia
+1.12.6-era authorities; runtime-v3 is not the live runtime. Gate4 and the
+Gate1 transition are final, but the current state is a migration/CI candidate
+with no evaluator product output, no product hash, and no authorization for
+Gate2 completion, Todo13 execution, T14, or downstream work.
+
+### 2026-09-10 — Inactive T13 activation successor contract (documentation lane)
+
+A simple flag flip cannot serve as the T13 activation path. The current
+runtime-v4 evaluator denies execution unconditionally, so there is no existing
+conditional branch to toggle; the live Boulder snapshot is constructed but not
+retained, so a flip would not propagate it; and the current checks do not bind
+the successor's source bytes, so they would observe whatever evaluator happens
+to be present. The successor therefore has to bind explicitly its
+source/include manifest, `Project.toml`/`Manifest.toml`, immutable config and
+predecessors, exact canonical root/runtime, command/environment/inputs/
+inventories/destination, and independently reviewed transition receipt.
+
+The accepted contract is inactive, not a grant. The entire runtime-v4 TOML
+stays unchanged, and the default evaluator CLI and public unary-selection
+producer remain fail-closed. The only added route is the paired optional
+`--activation-receipt <repository-relative-path>` and
+`--activation-sha256 <independently approved expected digest>`; both absent
+keeps the baseline blocked, and either one alone is invalid. Records use strict
+TOML schemas `stmfit_t13_execution_spec_v1` and
+`stmfit_t13_activation_receipt_v1`. The docs describe binding categories only;
+the exact schema map is returned by the implementation writer and reconciled by
+the parent, and no fine-grained key syntax is asserted here.
+
+Trust boundary: a digest chosen by an arbitrary caller is not authorization,
+and no signature system is claimed. Authorization is the actual parent-reviewed
+ACT-3 decision and the exact launch it pins. The order is acyclic: successor
+source/specification -> ACT-2 review -> preimage, exact patch, expected
+postimage -> ACT-3 review -> transition -> verified receipt last ->
+parent-pinned launch. Gate5 and Gate2 certify earlier bytes only; any successor
+requires new hashes and new evidence. Boulder remains
+`e509c919734c8110ab7ad4a7e2d475a552a0f2fca5f3533c9863683be1ac9133`, and no
+production T13 run is authorized. The first future grant, if any, is frozen
+synthetic T13 execution only; real campaigns, the public T14-facing producer,
+T14/downstream work, grading, and Julia 1.12.6 equivalence are excluded. The
+existing nine-file publisher and eight scientific TSV schemas are reused;
+administrative provenance succeeds the historical closure-v1 observation
+without rewriting it. No scientific formula, parameter, calibration, threshold,
+GCV, `n_eff`, or label-firewall behavior changes.
+
+Implementation and testing are pending in the concurrent code/test lane, and
+ACT-2 has not yet been used. This entry records documentation only: no build,
+Julia command, test, benchmark, or publication was run for it, and no new test
+counts are claimed. The original docs-origin verifier FAIL (`docs-origin-https`)
+remains FAIL and is not reinterpreted; the separate accepted link adjudication
+stands on its own and is not relabeled a verifier PASS.
+
+Open questions and prerequisites are carried in this appended entry rather
+than by editing older questions; Open Question 7 (structured evaluator
+migration) remains OPEN with Gate2 pending and Todo13 blocked.
+
+- Does the inactive successor keep the baseline and public producer fail-closed
+  while enabling only the paired-flag route? Focused negative/positive tests
+  are pending.
+- Does the exact successor schema map bind every accepted category without
+  introducing caller-selected authorization? Parent reconciliation of the code
+  writer's schema map is required before ACT-2.
+- Are the successor's new hashes and evidence sufficient to supersede the
+  Gate5/Gate2 certifications, which cover only earlier bytes?
+- Can the live Boulder snapshot be retained and propagated by the future
+  transition without changing Boulder `e509c919…`?
+- Which execution facilities are available for the future synthetic grant?
+  Slurm clients and SSH were absent in the ACT-1 preflight shell, so production
+  submission remains unresolved for ACT-3.
+
+### 2026-09-10 — ACT-2 remediation reconciled; inactive T13 candidate now implements the finite read surface
+
+ACT-2 attempt 1/3 returned BLOCKED with eight findings, so the inactive
+candidate was corrected before any review could pass. The material corrections
+and why they were required:
+
+- **F1 real running root**: the running entrypoint must satisfy both
+  `realpath(@__FILE__) == bound entrypoint under the root` and its approved byte
+  hash; the unauthorized content-only equality relaxation was removed.
+- **F2 shared context**: authorization, preflight, loader, and `main` now share
+  one revalidated production context, so a loader failure cannot publish a
+  blocker through an unverified context.
+- **F3 finite read surface**: the spec binds the receipt-derived producer
+  feature and patch tables, the fixed provenance reads, the complete
+  `test/lib/hierarchical` membership, and identity-only producer scripts and
+  raw-data directory. Names alone were not a closed consumed set.
+- **F4 launch bindings**: active project, cwd, startup/history flags, Julia and
+  BLAS threads, depot/load path, offline state, and the fixed forbidden
+  environment are recorded and checked. Application argv alone is not process
+  identity.
+- **F5 identities and scope**: snapshots retain device/inode/nlink, new control
+  records require captured read-only mode, and root, destination-parent, and
+  input-directory identities are retained and revalidated before authorization
+  return, before a publication-capable context, at loader return, and before
+  publication.
+- **F6 exact predecessors**: the stem lookup uses one convention, and the
+  completed Gate2 Oracle review is bound explicitly; the earlier Gate5
+  publication receipt alone is insufficient.
+- **F7 successor receipts**: activated runs use activation-specific report and
+  blocker schemas and omit the legacy GateClosure/closure-v1/plan authority
+  fields; the legacy serializer stays byte-identical for non-activated runs.
+- **F8 tests**: verbose focused tests now exercise the real shared context,
+  foreign root, launch/mode/identity boundaries, and schema differences.
+
+The native Boulder postimage path is now enforced: both receipt Boulder paths
+must be exactly `.omo/boulder.json` under the bound root, and a detached,
+correctly hashed copy is rejected.
+
+The candidate's test history contains only non-scientific diagnostic failures:
+a predecessor-stem lookup error, `Cmd(::Vector{String}; dir=...)` construction,
+a latest-world module-load ordering issue, and a foreign-root
+bootstrap-provenance copy gap. These are harness and loader-mechanics failures,
+not scientific, parameter, calibration, threshold, GCV, `n_eff`, or label
+failures. The evaluator is frozen at
+`ed1ac6b1d17d7e26f71ed4d421289e0753c42e6c15ed4fd9ad17f4eefacce6f5`; the
+focused test at the verified attempt was
+`66964f6b975d2ac8421835c99dc4262866668cf738f6fe4a3fedcbbbd40ff882` and is
+now under concurrent expectation and coverage edits. The
+latest focused full run remains failed: 85 passed, 2 failed, 0 errored, 0
+broken (87 total, exit 1). Both failures are test-lane expectation mismatches
+(an exact-command guard that fires before destination comparison, and a
+duplicate-path schema rejection that fires before dependency-set comparison);
+expectation and coverage fixes are in progress. No full pass exists; the
+result still needs independent verification, and ACT-2 has not accepted the
+candidate.
+
+This entry does not claim all eight findings are closed. Documentation was
+reconciled with the frozen implementation: native Boulder path, strict launch
+bindings, explicit Gate2 predecessor, read-only control records, preserved
+file and directory identities and scopes, the finite additional read
+dependencies, and the activation-specific receipt schema instead of the legacy
+v2 authority fields. The earlier transition publication record is a distinct
+upstream artifact; the final activation receipt cannot certify its own
+publication, and the launch digest is excluded from the spec command body, so
+the binding order remains acyclic. Julia checks integrity and scope against the
+externally parent-reviewed pin; it performs no cryptographic signer
+verification. The original docs-origin verifier FAIL and its separate link
+adjudication are unchanged. No scientific formula, parameter, calibration,
+threshold, GCV, `n_eff`, or label-firewall behavior changed, and no benchmark
+headline is claimed.
+
+Open questions and prerequisites carried in this appended entry:
+
+- Final focused, full, firewall, and docs validation is pending; the current
+  focused full result is 85/2 and remains failed.
+- ACT-2 independent review remains to be completed; the candidate is not
+  accepted.
+- Frozen approved inputs/environment and the ACT-3 control-plane transition
+  (receipt last, parent-pinned launch) are still required before execution.
+- Positive heavy T8/T11/T12 integration is still UNTESTED; T11 recomputation
+  and T12 consumption are in the read surface but were not run in this phase.
+
+### 2026-09-10 — Attempt-9 current verification evidence and remaining gates
+
+This appended entry records the current attempt-9 verification state. It
+supersedes the earlier 85/2 focused status as the current result; the earlier
+failed results remain recorded above and are not rewritten or reinterpreted.
+All attempt-9 evidence was produced from the frozen evaluator
+`ed1ac6b1d17d7e26f71ed4d421289e0753c42e6c15ed4fd9ad17f4eefacce6f5` and the
+current test file
+`f85051ef2635481fa55746381235a397b53180c148a388aaa4714377b6989e9f`. The
+private logs live under
+`.omo/run-continuation/t13-activation-inactive-candidate-v1/validation/attempt9-*`
+and `implementation/attempt9-*`; they are local verification records, not
+portable authority URLs. Every child exited 0.
+
+Current results:
+
+- Reporter probe (`validation/attempt9-reporter-probe/`): PASS, 2 s. The
+  `_activation_test_counts` and `_print_context_smoke_summary` helpers were
+  extracted module-aware and exercised directly: raw `Test` counts were
+  1/cumulative 0 and 1/cumulative 1, helper totals were 1 and 2, and the
+  combined summary was
+  `CONTEXT_SMOKE_TOTAL=passes=3 fails=0 errors=0 broken=0`.
+- Focused activation suite (`validation/attempt9-focused-suite/`): 1040 s,
+  `assertions=164 fails=0 errors=0 broken=0`, all 19 testsets passed,
+  including the C/D context and filesystem-replacement testsets (20/32/15) and
+  the F3 dependency testset (20). Fifty-two worker logs were retained under
+  `implementation/attempt9-focused-suite/worker-logs/`.
+- Synthetic contract with `STMFIT_GATE5_RUNTIME_V4_SYNTHETIC_CONTRACT=1`
+  (`validation/attempt9-synthetic-contract/`): 21 s,
+  `assertions=58 fails=0 errors=0 broken=0`.
+- Full evaluator suite with the flag absent
+  (`validation/attempt9-evaluator-full/`): 158 s,
+  `assertions=66,989 fails=0 errors=0 broken=0`; the child environment
+  recorded the flag as `<unset>`.
+- Structured firewall (`validation/attempt9-firewall/`): 67 s,
+  `structured-assignment firewall 379/379`.
+
+The immutable hash set was identical before and after the lane:
+`test/test_structured_evaluator_activation.jl f85051ef…`,
+`test/evaluate_structured_unit_assignment.jl ed1ac6b1…`,
+`test/test_structured_evaluator.jl 7db4ab14…`,
+`test/structured_evaluator_gate5_coverage.toml d4410945…`,
+`config/unit_assignment_structured_evaluator_runtime_v4.toml abe22ed5…`,
+`Project.toml 77d2809a…`, `Manifest.toml bde24310…`, and
+`.omo/boulder.json e509c919…`. `git status --short` was identical before and
+after. A parent-side replay of 500 source rows and 205 protected rows found
+only the six allowlisted existing changes plus the new activation test, with
+the config, `Project.toml`, `Manifest.toml`, plan, and Boulder bytes intact and
+the journal's initial Gate5 prefix unchanged.
+
+Qualifications and limits:
+
+- The earlier `--context-smoke` behavior already passed 3/3 testsets and 67/67
+  assertions with all eight workers exiting 0, but its report command failed
+  afterwards with `UndefVarError: total_passes` in the new smoke branch. The
+  reporting was repaired to use `Test.get_test_counts` direct plus cumulative
+  counts, and the reporter probe verifies the repaired path. Only the reporter
+  was fixed; the behavior result was unchanged.
+- Prior failed attempts remain failed in the record above and are not
+  relabeled as passing.
+- The earlier foreign-root bootstrap provenance copy gap and the Julia 1.12
+  latest-world module-load ordering failure were harness/fixture defects. They
+  were fixed in the test file only; the frozen evaluator was not weakened or
+  changed.
+- The C/D testsets exercise the actual shared production context and actual
+  filesystem replacements (an activation source file, the live fixture
+  Boulder, and an approved input directory). The ordinary authority used in
+  the context test is still an explicit fixture rather than the full ordinary
+  authority collector, so these are unit-level context-boundary checks, not a
+  main/end-to-end integration result. Positive heavy T8/T11/T12 integration
+  remains UNTESTED.
+- No ACT-2 PASS exists, no grant is issued, no Boulder transition was applied,
+  no T13 execution occurred, and no benchmark or application claim is made.
+  No Julia 1.12.6 equivalence is established, and no host CI result is claimed.
+
+Open questions carried in this appended entry (earlier Open Question 7 remains
+OPEN):
+
+- Run the normal `docs/make.jl` build on these frozen bytes, then take the
+  ACT-2 independent review of the same bytes.
+- ACT-3 still requires a frozen source/input specification, runtime bindings,
+  a dry-run, and the parent-pinned transition before any synthetic execution.
+- Positive heavy T8/T11/T12 integration is deferred to a later bounded
+  integration task and is not part of this inactive phase.
+
+### 2026-09-10 — Main-control successor v2 planning: owner rejects a second live ledger
+
+The owner selected "Boulder principal uniquement" and accepted declared
+synthetic fixtures for planning only. That choice rejects the proposed second
+live ledger and delegated execution namespace, so the accepted inactive v1
+implementation cannot be reused as-is: v1 ties the live ledger to its execution
+root, while the new requirement makes the canonical Main checkout `M` the sole
+continuously consulted authority. Isolated control therefore forces new
+administrative code and schemas (execution-spec v2, activation-receipt v2)
+rather than a small ledger edit; the old ACT-2 acceptance and its sealed record
+remain valid only for the old `ed1ac6b1` bytes and do not cover the new code.
+
+MC-1 is reconciled into the docs. The v2 plan separates the execution, source,
+and input root `R` from `M`; only `M/.omo/boulder.json` is live, an `R`-local
+Boulder is a non-consumed decoy with no fallback, mirror, copy, symlink,
+hardlink, shared-mount workaround, or operational `R` ledger, and a missing `M`
+fails closed. The spec's `[control]` table binds `role = main_boulder`, the
+canonical absolute `M` root, and its approved modes, with an agreeing
+`boulder.control_root` in the receipt; the fixed filename stays
+`.omo/boulder.json`, the existing paired CLI flags are unchanged, and active v1
+envelopes are rejected for production. A dedicated single control snapshot
+keeps the live `M` identity and ancestor identities separate from `R` data,
+while all other reads stay confined to `R` and the executing-source, Project,
+cwd, executable, and sysimage guards are preserved. The postimage hash lives in
+the downstream receipt, not the upstream spec, when it binds that spec, so the
+order stays acyclic.
+
+"Continuously consulted" is scoped honestly: the same live `M` is checked
+across the authorization, loader, error, and publication stages, not preempted
+inside an opaque numerical call, and there is no atomic transaction between
+Boulder and outputs. A detected Main change prevents verified publication;
+post-commit detection keeps ambiguous/error semantics with no automatic
+rollback, and immediate mid-call interruption still requires job cancellation.
+Any `M` byte or inode change can invalidate, including unrelated administrative
+fields; no semantic-revocation-only filter is claimed. The one narrow publisher
+change revalidates the Main control context before the existing-destination
+verified return, with receipt-last, no-overwrite, and no-fallback unchanged.
+Trust stays external: the reviewed spec and the parent-approved launch pin the
+real Main path and filesystem view; a role label or caller-selected digest is
+not authentication, and no cryptographic signer or full-process attestation is
+claimed.
+
+The declared synthetic producer receipts with literal `PASS` and Viper/Slurm
+fields are mock protocol data, not extractor-execution proof, and the owner
+authorized planning only. No input generation, submission, ledger
+initialization, transition, or T13 execution is authorized. Historical T2/T7
+files are not repaired; their original bytes may later be copied to a separate
+compatibility tree under a separately reviewed protocol. The old ACT-2 scope is
+preserved, and no scientific, calibration, GCV, `n_eff`, label, or benchmark
+change is made.
+
+Open questions and prerequisites carried in this appended entry:
+
+- New Main-only tests and the MC-2 review remain pending; the code writer's v2
+  implementation is concurrent and untested, and no count from the old
+  `ed1ac6b1` runs verifies the new code.
+- The input-generation protocol, compatible synthetic runtime/root, and HPC
+  execution plan remain unresolved and need a separately reviewed protocol.
+- The actual Main Boulder transition remains a later ACT-3 step; no T13 run is
+  authorized yet.
+- Exact activated-receipt schema strings must be checked against the code
+  writer's final bytes after reconciliation; no future hashes are recorded
+  here.
+
+### 2026-09-10 — Main-control successor v2 implementation candidate frozen; docs reconciled
+
+Both writers completed. The frozen evaluator is
+`56f887d2e803ab2fc3ea2a648038fe9cb53a607762eb0f8c3ee7ffaa958b9186`, and the
+source contract is
+`.omo/run-continuation/t13-main-control-successor-v1/implementation/main-control-contract.md`
+(`92412e1f4be5398fe7ceb6ef914812c2fca48d61ee6911f9d7d1e5206a580d74`). The
+docs were reconciled against the actual final code: spec
+`stmfit_t13_execution_spec_v2` with the exact `[control]` keys
+(`role = main_boulder`, `root`, `root_mode`, `parent_mode`, `file_mode`);
+receipt `stmfit_t13_activation_receipt_v2` with the five-key `boulder` table
+and agreeing `control_root`; exactly one tagged `main_control` manifest record
+in authority schema `schema=structured-evaluator-authority-v8-t13-main-control`
+(no inode, no `../`); and activated report/blocker schemas
+`..._activation_receipt_v2` / `..._activation_blocker_receipt_v2` with
+`schema_version = 2` and the `activation_control_*` fields. The only publisher
+change is the narrow preferred-rename `destination_exists` pre-return context
+verification; the publisher is not claimed completely unchanged.
+
+The v2 implementation candidate exists and passed static syntax checks only. No
+fresh tests have run on its bytes; the earlier `ed1ac6b1` counts
+(164/58/66989/379) remain old evidence for the old bytes and do not verify the
+successor. MC-2 acceptance is pending, as are the input-generation protocol,
+compatible synthetic runtime/root, HPC plan, and the actual Main Boulder
+transition (a later ACT-3 step). No T13 run, ledger, grant, or transition is
+authorized. No scientific, calibration, GCV, `n_eff`, label, or benchmark
+change is made.
+
+### 2026-09-10 — MC-2 attempt 1 blocked; bounded non-scientific remediation
+
+MC-2 attempt 1/3 returned BLOCKED. The dispatch smoke passed with genuine
+two-root authorization and foreign-source rejection, but the full focused
+command exited 1 at 352 pass, 13 fail, zero errors, zero broken (365 total;
+118 worker logs retained). No downstream synthetic, full-evaluator, firewall,
+or docs command ran.
+
+Oracle identified three actual production gaps: `_verify_main_control` lacked a
+complete post-read Main directory recheck and complete post-read file
+identity/mode checks; the promised context checks between the expensive loader
+stages were absent between T8/T11/T12; and the Main file could also be treated
+as an ordinary input when `M == R`, with no enforced exclusion. The bounded
+fixes are being implemented in the same four source paths and are not
+scientific changes: no schema, config, predecessor, or firewall change. The
+existing publisher `EEXIST` addition was reviewed correct, and no further
+publisher algorithm change is planned.
+
+The four observed test groups are separate and were not collapsed into one
+cause:
+
+- The CLI pairing case hit the earlier forbidden-CLI-value firewall because the
+  fixture parent path contains the word "control"; the pairing message is
+  reached only with neutral parser values.
+- The preauthorization parent/root replacement happens before the initial
+  capture, so it is a valid new baseline, not a missed revocation; the test
+  expected a change-since-capture rejection incorrectly.
+- The postcommit test installs only the `after_preferred_rename` hook, while
+  GPFS can take the fallback path whose `after_receipt_link` hook differs; a
+  committed outcome without a proven injected mutation does not establish a
+  missed revocation.
+- The worker passed a `SubString` to a `String`-only snapshot helper and used
+  the wrong ordinary merge proof for the dedicated Main object; the type error
+  prevented the intended file-inode check from running.
+
+No failed case is relabeled as passing, and new evidence is pending. The seven
+failed-revision source files are preserved byte-identically at
+`implementation/remediation-1-before/` (files 0444, directories 0555), the
+accepted old archive `637683d7…` is unchanged, and the neutral canonical test
+root `.omo/run-continuation/t13-mc-v1/` contains only mock `M`/`R` fixtures,
+never an operational second ledger. Main remains the sole live control
+authority and Boulder remains `e509c919…`.
+
+Open questions and prerequisites carried in this appended entry:
+
+- Re-run the targeted repaired cases, then the full focused suite and the
+  synthetic/full/firewall regressions and docs checks only after they pass.
+- MC-2 attempt 2/3 must review the repaired bytes and fresh evidence; the
+  current blocked state is not an acceptance.
+- After MC-2, the input-generation protocol, compatible synthetic runtime/root,
+  and the actual Main Boulder transition remain later ACT-3 work; no T13 run or
+  HPC submission is authorized yet.
+
+### 2026-09-11 — MC-2 remediation 1 verified by fresh evidence; docs aligned; MC-2 attempt 2/3 still pending
+
+UTC entry time 2026-09-11T00:44:04Z. This entry records the completed bounded,
+non-scientific remediation of the MC-2 attempt 1/3 BLOCKED gaps and its fresh
+validation. It is not an MC-2 PASS, not an acceptance, and not an ACT-3 grant.
+The prior journal prefix (337493 bytes, SHA-256
+`4563ecbb8bb007cecdde1b1304c1bd8d69fef394cc78d002e692981d66eb63f1`) is
+preserved byte-identically; every earlier entry and number, including the old
+`ed1ac6b1` counts (164/58/66989/379) and the attempt 1 failure, remains a
+historical record and is not rewritten.
+
+The three production gaps from attempt 1/3 were repaired in the same
+non-scientific source paths: complete post-read Main directory and file
+revalidation with retention of the original captured `_MainControl` object and
+identities (no rebasing, refresh, or `chmod` repair); explicit
+`_verify_context` checks between the expensive T8/T11/T12 loader stages in
+`_load_production_input` (staged revalidation, not an instant preemption or
+atomicity claim); and enforcement that the Main control file may not double as
+an ordinary `R`-relative snapshot or input, including the `M == R`
+control-as-input case, rejected as `activation_binding_mismatch` before
+authorization is usable. The already-reviewed publisher `destination_exists`
+`EEXIST` revalidation is unchanged, and no scientific, schema, config,
+calibration, threshold, GCV, `n_eff`, label, benchmark, Project, Manifest, or
+Boulder behavior changed.
+
+Fresh validation ran on the frozen remediation revision
+(`test/evaluate_structured_unit_assignment.jl` `cb5aacb8…`,
+`test/test_structured_evaluator_activation.jl` `fb4faf31…`,
+`test/test_structured_evaluator.jl` `e86adf23…` unchanged, coverage map
+`939e17a3…`). Five commands all exited 0: targeted `227/227`, focused
+`414/414`, synthetic `58/58`, existing full `67002/67002` with
+`STMFIT_GATE5_RUNTIME_V4_SYNTHETIC_CONTRACT` absent, and firewall `379/379`,
+with zero fails, errors, or broken tests. The before/after records show the
+twelve frozen hashes (the four remediation sources, the three docs files at
+their values when the commands ran, Main Boulder `e509c919…`, runtime-v4
+config `abe22ed5…`, `Project.toml` `77d2809a…`, `Manifest.toml` `bde24310…`,
+and the accepted baseline `SourceSnapshot.tar` `637683d7…`) and `git status`
+unchanged across all five commands. The real postcommit hook fired exactly
+once on `after_receipt_link`; the Main control hash changed while the mode was
+restored, the result was ambiguous with `authority_snapshot_changed`, and the
+nine committed destination files were preserved with no rollback. The
+CLI-through-Main neutral-root case reached the actual activation receipt and
+failed with `authority_hash_mismatch`, not the earlier forbidden-CLI firewall.
+The attempt 1/3 failure (352 pass / 13 fail / 0 error / 0 broken, 365 total,
+exit 1) is preserved as pre-remediation evidence, and no failed case is
+relabeled as passing.
+
+The docs were aligned to the actual remediated code and this evidence:
+`docs/src/config.md` and `docs/src/calibration.md` now state that the three
+bounded repairs are implemented and validated while MC-2 attempt 2/3 remains
+pending, replacing the stale "fix is being implemented and is not yet
+verified" wording; the publisher section continues to describe only the
+already-accepted `EEXIST` addition; and no other docs text or historical
+number was changed.
+
+Qualifications. The two roots are disposable mock `M`/`R` fixtures under
+allocated scratch, never the real checkout and never an operational ledger;
+the postcommit mutation is a unit fake, and no actual Main mutation occurred.
+The synthetic producer receipts with literal `PASS` and Viper/Slurm fields
+remain declared protocol mocks, not proof that the named extractors ran. The
+heavy positive T8/T11/T12 integration remains unverified, and no benchmark,
+headline, application, or new real-producer claim is made. This evidence does
+not constitute MC-2 acceptance; MC-2 attempt 2/3 review of the remediated bytes
+is still pending, and no MC-2 PASS may be recorded before that independent
+review.
+
+Current open questions:
+
+- The final docs build for this entry is the immediate next step; this entry
+  was frozen before the build, and the actual build outcome is reported
+  separately rather than appended here.
+- MC-2 attempt 2/3 must independently review the remediated bytes and the
+  fresh evidence; the blocked attempt 1/3 state is not an acceptance.
+- After MC-2, the compatible input-generation protocol, the synthetic
+  runtime/root, and a reviewed dry run remain unresolved and need a separately
+  reviewed protocol.
+- The actual Main Boulder transition remains a later ACT-3 step; no T13 run,
+  HPC submission, ledger initialization, or execution is authorized.
