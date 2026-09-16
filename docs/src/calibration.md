@@ -183,3 +183,13 @@ parent acceptance of the external receipt, a fresh independent Oracle PASS, and
 reviewer-owned `GateClosure`. No policy, configuration, calibration, threshold,
 GCV, `n_eff`, T8, T11, T12, label, benchmark, application, or Todo behavior
 changes.
+
+## Reconstruction versus calibration (2026-09-16)
+
+The user-approved Julia reconstruction has its own explicit numerical settings
+in `config/unit_assignment_reconstructed.toml`; see the config and unit-assignment
+references. The backward residual half-plane descriptor is a new definition,
+not a recovered calibration or an inferred original formula. Its 9×9 grid and
+normalization are fixed before comparison. The mold/Fisher settings port the
+existing method; no benchmark labels, expected counts, or frozen predictions
+are used to calibrate these quantities. The counting calibration is unchanged.

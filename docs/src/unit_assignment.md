@@ -1177,3 +1177,35 @@ STMFIT_DATA_DIR=/data julia -t 2 --project=. \
   `010010` or `101101` depending on the 0/1 identity convention. It is used
   exclusively for post-hoc grading, never in fit/selection/assignment-method
   calibration.
+
+## Explicit Julia reconstruction (2026-09-16)
+
+The original `patch_u_asym` producer is irrecoverable. The user approved a new,
+explicitly defined Julia 1.13 implementation and complete pipeline, followed by
+comparison with the frozen champion. This is `cc_soft_reconstructed_v1`, not a
+claim to have recovered the old formula. The old champion and its reported
+benchmark remain the historical reference. No variant is selected by benchmark
+accuracy or agreement with that reference.
+
+The descriptor `patch_u_asym_reconstructed` uses the backward residual patch
+sampled on a 9×9 grid (half-width 0.32 nm, step 0.08 nm), normalized by the
+existing extractor as `(p - median(p)) / std(p)` with the sample standard
+deviation. It is not normalized again. With `u` transverse to the fitted chain,
+
+```math
+A_u = \frac{\sum_{u,t} \operatorname{sign}(u) p(u,t)}{\sum_{u,t}|p(u,t)|}.
+```
+
+The center row has weight zero. Pixel serialization follows the extractor's
+`for u in coords, t in coords`: `t` varies fastest. This is deliberately tested
+rather than inheriting `enrich_unit_features.py`'s conflicting array-axis comment.
+Any nonfinite pixel or L1 mass ≤ `descriptor_zero_l1` yields `NA` with a reason;
+no lobe is dropped. This is half-plane asymmetry, **not** the u-weighted first
+moment mentioned elsewhere in the journal. The choice is explicit and made
+before comparing reconstructed predictions.
+
+Settings are in `config/unit_assignment_reconstructed.toml`. Synthetic tests
+check the known u/t orientation, reflection sign, positive-scale invariance,
+center-row behavior, and invalid-data handling. Complete binary agreement with
+a frozen output would establish agreement on those inputs only; matching three
+aggregate benchmark metrics is not a proof of formula identity.

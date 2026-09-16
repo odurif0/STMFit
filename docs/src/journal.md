@@ -2307,13 +2307,14 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-16. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
-0c. **Apply the frozen champion to new raw 10–20mer scans** → **BLOCKED
-    (Sep 16)**: recover the original `patch_u_asym` producer. The description
-    of a 9×9 residual-patch first moment is not a complete extraction recipe.
-    Do not invent a replacement or tune it to the benchmark. The 25 raw SXMs
-    and DFT cubes are available locally; the accepted benchmark reports still
-    reproduce under Julia 1.13. This blocks raw-input application, not regrading
-    the existing frozen predictions.
+0c. **Apply a reproducible native pipeline to raw 10–20mer scans** → **IN
+    PROGRESS (Sep 16)**: the original `patch_u_asym` producer is irrecoverable.
+    The user approved one explicitly defined Julia reconstruction, followed by
+    comparison with the frozen champion. The new half-plane descriptor is named
+    `patch_u_asym_reconstructed`, not claimed as the lost formula. Its settings
+    are fixed before comparison; no benchmark-guided variant search is allowed.
+    The 25 raw SXMs and DFT cubes exist locally. Native integration, application,
+    and comparison remain to be completed.
 
 0b. **Can label-free unit assignment reach the promotion bar?** → **RESOLVED
     (Aug 3)**: the label-free champion (soft vote of k-means 4-view and GMM
@@ -5319,3 +5320,32 @@ docs/make.jl` exits 0; Documenter only warns about archive/search-index size
 and skips deployment outside CI. Logs remain under
 `results/unknown_chitosan_milestone1/`. Milestone 1 remains incomplete pending
 the original `patch_u_asym` extraction recipe; no replacement was implemented.
+
+### 2026-09-16 — User-approved explicit descriptor reconstruction in Julia 1.13
+
+The user reports that the original untracked `patch_u_asym` producer is destroyed
+and approves implementing an explicit Julia descriptor with a complete pipeline,
+then comparing with the frozen champion. The previous recovery blocker is thus
+replaced by a bounded reconstruction task: one documented descriptor, one native
+pipeline, tests and one fixed comparison; no variant sweep or score-guided tuning.
+The historical champion is not replaced or relabeled as reproduced in advance.
+
+The new `cc_soft_reconstructed_v1` uses backward residual 9×9 patches, half-width
+0.32 nm and step 0.08 nm, already median/sample-std normalized by the extractor.
+`patch_u_asym_reconstructed = sum(sign(u)*p)/sum(abs(p))` is a half-plane parity
+statistic, not the ambiguous u-weighted first moment in the old journal. The
+extractor's actual u-outer/t-inner order is used (t varies fastest); inheriting
+the conflicting row-axis comment in `enrich_unit_features.py` would swap axes.
+Nonfinite samples or L1 mass ≤ 1e-12 yield NA and an explicit reason, not row
+removal. No labels, expected counts, composition prior or frozen outputs enter
+construction. Settings and the method name are in
+`config/unit_assignment_reconstructed.toml`, fixed before comparison.
+
+`test/build_reconstructed_descriptor.jl` is the native CLI;
+`test/lib/reconstructed_unit_assignment.jl` also supplies strict key checks and
+soft-vote output retaining unavailable lobes as ?. Synthetic checks verify u/t
+orientation, mirror sign, positive-scale invariance, central-row behavior, the
+distinction from a first moment, invalid patches/columns/keys, and unchanged
+finite-pair voting arithmetic. `julia --project=.
+test/test_reconstructed_unit_assignment.jl` passes **31 assertions** on Julia
+1.13. Next are native constant-current/Fisher ports and raw-to-QC integration.

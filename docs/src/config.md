@@ -527,3 +527,25 @@ parent acceptance of that receipt, a fresh independent Oracle PASS, and
 reviewer-owned `GateClosure`. This is administrative provenance only: it
 changes no policy, configuration, calibration, threshold, GCV, `n_eff`, T8,
 T11, T12, label, benchmark, application, or Todo behavior.
+
+## Reconstructed Julia unit assignment
+
+`config/unit_assignment_reconstructed.toml` is separate from the unchanged
+counting/calibration config. It names `cc_soft_reconstructed_v1` and fixes the
+new descriptor and numerical port before benchmark comparison:
+
+- `[model] descriptor*`: backward-residual half-plane asymmetry on the specified
+  9×9 grid; `descriptor_zero_l1` rejects zero/near-zero signal.
+- `[model] split_skew_ratio_max`: bound for the split-width feature refit.
+- `[model] mold_*`: template patch grid, target height, normal sampling interval
+  (upper bound exclusive), and the original first-below-target isovalue scan.
+- `[model] fisher_*`: PCA dimension, noise/GMM covariance regularization, native
+  GMM iteration limit/tolerance and deterministic seed.
+- `[selection]`: k-means/GMM seed counts, initial seed, GMM self-training,
+  interaction features and soft-vote threshold. No composition prior.
+- `[preprocessing]`: extractor normalization, `u_outer_t_inner` descriptor pixel
+  order, and the historical Fisher array layout preserved for numerical parity.
+
+These are fixed settings, not knobs to search against the benchmark. Invalid
+patches remain explicit missing inputs. Counting continues to use its own
+existing `[model]`, `[selection]`, and `[preprocessing]` config unchanged.
