@@ -5368,3 +5368,27 @@ fixed a Julia macro-parsing error in the main guard (`@__FILE__` needs a functio
 boundary before `&&`). No scientific setting changed. The raw-to-QC native
 wrapper is being integrated; its first 8 input-boundary checks pass, but a full
 real-data run and champion comparison have not yet been performed.
+
+### 2026-09-16 — Native constant-current mold port, fixed numerical comparison
+
+`test/build_cc_molds_native.jl` and `test/lib/cc_mold_native.jl` replace the Python
+constant-current builder for the explicitly reconstructed pipeline. All sampling
+and isovalue settings come from `config/unit_assignment_reconstructed.toml`.
+This port preserves the reference's first-axis-fast cube indexing, NumPy-style
+floating grids, highest occupied z sample, first isovalue below the target mean
+height, and existing parity/mirror/normalization rules. These conventions are
+not silently corrected or claimed to be a new physical validation of the cubes.
+
+On Julia 1.13, `test/test_cc_mold_native.jl` passes 143 synthetic assertions.
+One actual GlcN/GlcNAc pair comparison passes another 76 assertions (44.3 seconds
+for the reported testset). Python runs only as the test reference. LDOS samples,
+selected isovalues, missing values and height vectors match exactly; normalized
+values differ by at most 4.44e-16. The final template TSV is byte-identical.
+GlcN has 72/289 supported samples, mean height 0.4964 nm; GlcNAc has 235/289 and
+0.3814 nm. The latter follows the frozen first-below-target rule (target 0.50 nm),
+not a nearest-target optimization. Frame-file height 0.55 nm is not substituted
+for that explicit setting. No QE work or benchmark-guided setting change occurs.
+
+The real-pair log and reusable native templates are under
+`results/reconstructed_cc_soft_v1/mold_parity/` (log alongside that directory).
+Raw malformed inputs and existing outputs are rejected rather than overwritten.
