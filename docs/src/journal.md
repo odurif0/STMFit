@@ -5531,3 +5531,24 @@ The native Slurm entrypoint and its required inputs/environment are now also
 listed in `hpc/README.md`, including the single-allocation CPU limit, ordinary
 dry-run/submit/fetch commands, and separate local comparison. This documents
 existing execution behavior; no scientific setting or accepted metric changes.
+
+### 2026-09-16 — Raven job 30271312 submitted, results pending
+
+The clean-stdlib Pkg bootstrap installs the exact locked dependencies without
+changing `Project.toml` or `Manifest.toml` (local/remote SHA-256 equality checked).
+Its first precompile pass still reports a Pkg REPL-extension cache message;
+therefore its zero exit alone was not treated as readiness. A separate native
+import of GaussianFit2D, STMMolecularFit, Plots and Clustering then completes
+successfully under Julia 1.13.0 after warming the remaining caches (430 s).
+Both cohort metadata dry-runs and Slurm test-only had already passed.
+
+One actual Slurm job, **30271312**, is now submitted with
+`hpc/reconstructed_chitosan.sbatch`. Initial status is **PENDING (Priority)**.
+The job processes unknown25 first, then full146 with saved selected-N base
+geometry and newly generated split fits/patches. Inputs contain no benchmark
+labels. The source execution commit is `3f2e671`; later commits are documentation.
+Remote outputs will be `results/reconstructed_cc_soft_v1/raven_20260916_native_v1/unknown25` and `.../full146`.
+The log is `results/reconstructed_cc_soft_v1/native-30271312.log`.
+No result or milestone completion is claimed yet. Monitor this job; do not
+resubmit it. Fetch `/ptmp`-dependent outputs locally, validate coverage, then
+compare and grade using separate local Julia scripts with unchanged settings.
