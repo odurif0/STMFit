@@ -119,9 +119,36 @@ class ChampionProductionTests(unittest.TestCase):
         self.assertNotEqual(error.exception.code, 0)
         runner.assert_not_called()
 
+    def test_missing_frozen_descriptor_fails_before_mold_work(self):
+        self.table(self.features, ("file", "lobe", "amplitude", *champion.BASE4.split(",")),
+                   [("long.sxm", 1, 1, 1, 1, 1, 1)])
+        with self.assertRaisesRegex(ValueError, "patch_u_asym"):
+            champion.preflight_inputs(self.features, "unused_fwd", "unused_bwd")
+
+    def test_patch_coverage_mismatch_is_explicit(self):
+        columns = ("file", "lobe", "skew_ratio", "amplitude", *champion.BASE4.split(","),
+                   "patch_u_asym", "bwd_neg_com_t", "bwd_neg_diag45")
+        self.table(self.features, columns, [("long.sxm", 1, *([2] * (len(columns) - 2)))])
+        pixels = tuple(f"res_p{i:03d}" for i in range(1, 290))
+        self.table(self.km, ("file", "lobe", *pixels), [("other.sxm", 1, *([.1] * 289))])
+        with self.assertRaisesRegex(ValueError, "1 missing, 1 extra"):
+            champion.preflight_inputs(self.features, self.km, "unused_bwd")
+
+    def test_noncontiguous_reference_lobes_are_rejected(self):
+        columns = ("file", "lobe", "skew_ratio", "amplitude", *champion.BASE4.split(","),
+                   "patch_u_asym", "bwd_neg_com_t", "bwd_neg_diag45")
+        self.table(self.features, columns, [("long.sxm", 2, *([2] * (len(columns) - 2)))])
+        with self.assertRaisesRegex(ValueError, "Noncontiguous"):
+            champion.preflight_inputs(self.features, "unused_fwd", "unused_bwd")
+
     def test_main_only_invokes_frozen_builders_and_chosen_runtimes(self):
-        self.table(self.features, ("file", "lobe", "skew_ratio"), [("long.sxm", 1, 2)])
-        patches = self.table(self.root / "patches.tsv", ("file", "lobe"), [("long.sxm", 1)])
+        columns = ("file", "lobe", "skew_ratio", "amplitude", *champion.BASE4.split(","),
+                   "patch_u_asym", "bwd_neg_com_t", "bwd_neg_diag45")
+        self.table(self.features, columns, [("long.sxm", 1, *([2] * (len(columns) - 2)))])
+        pixel_columns = tuple(f"{prefix}_p{i:03d}" for prefix in ("res", "bwd_res")
+                              for i in range(1, 290))
+        patches = self.table(self.root / "patches.tsv", ("file", "lobe", *pixel_columns),
+                             [("long.sxm", 1, *([.1] * len(pixel_columns)))])
         cube = self.root / "cube"
         cube.write_text("stub")
         work = self.root / "work"

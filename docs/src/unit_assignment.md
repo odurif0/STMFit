@@ -595,6 +595,17 @@ margin**:
 | Exact chains | **36/145** | ≥ 18 ✓ |
 | Fisher mold CV (half-split) | 66.3% per-lobe, no overfit | — |
 
+**Raw-input application prerequisite (2026-09-16):** the champion consumes the
+precomputed `patch_u_asym` feature as well as the base, split, and backward
+features. Its original producer is not present in the current repository or
+local result scripts. The journal describes a first moment of a 9×9 residual
+patch but does not specify the complete normalization/axis convention. Do not
+replace it with a new descriptor or a 17×17 approximation. Recover the original
+producer before claiming a raw-SXM-to-champion run on new 10–20mer data. The
+builder now checks the required feature columns and matching 17×17 mold-patch
+keys before starting computation. This does not change the accepted benchmark
+or prevent regrading the frozen prediction below.
+
 Frozen prediction: `results/unit_assignment/best_labelfree_cc_soft_20260802.tsv`
 (145 files, 854 classified lobes, label-free construction; post-hoc grade only).
 Key building blocks (all label-free):

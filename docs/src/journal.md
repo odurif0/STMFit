@@ -2304,8 +2304,16 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
-> Updated 2026-08-03. Questions from earlier sessions are archived in
+> Updated 2026-09-16. Questions from earlier sessions are archived in
 > `journal_archive.md`.
+
+0c. **Apply the frozen champion to new raw 10–20mer scans** → **BLOCKED
+    (Sep 16)**: recover the original `patch_u_asym` producer. The description
+    of a 9×9 residual-patch first moment is not a complete extraction recipe.
+    Do not invent a replacement or tune it to the benchmark. The 25 raw SXMs
+    and DFT cubes are available locally; the accepted benchmark reports still
+    reproduce under Julia 1.13. This blocks raw-input application, not regrading
+    the existing frozen predictions.
 
 0b. **Can label-free unit assignment reach the promotion bar?** → **RESOLVED
     (Aug 3)**: the label-free champion (soft vote of k-means 4-view and GMM
@@ -5244,3 +5252,41 @@ Next: wire real selected-N feature extraction and the existing QC/plot commands.
 The 25 raw unknown scans are at
 `/home/durif/Rebecca/data/10_20mer_analysis`, not the repository's `data/` tree;
 the local DFT cubes exist. No remote calculation has been started.
+
+### 2026-09-16 — Champion input preflight and existing benchmark regressions
+
+The prediction-only champion now checks all mandatory frozen feature columns,
+contiguous feature lobes, and exact forward/backward 17×17 mold-patch key
+coverage before any expensive computation. This avoids building molds and
+fitting predictors only to discover that `patch_u_asym` or a patch is absent.
+The scientific feature definitions and model settings are unchanged.
+`python3 test/test_cc_soft_champion.py` passes 15 tests. Julia 1.13 also validates
+a two-lobe prediction fixture containing an explicit missing-component `?`.
+
+The raw-input application is blocked by one unrecovered scientific prerequisite:
+`patch_u_asym` is consumed by the frozen champion, but its producer is absent
+from current sources and local result scripts. The original example input
+`/tmp/opencode/full_features_origN_bwd_uasym.tsv` is also absent. The journal
+calls it a u-weighted first moment of a 9×9 residual patch; grid orientation,
+coordinate weights, normalization, and invalid/zero-signal behavior are not
+fully specified. A 17×17 approximation is not the frozen descriptor. Recover
+the original producer rather than inventing or benchmark-tuning a substitute.
+No remote job or new fitting campaign was started.
+
+Existing counting reports were rerun under Julia 1.13, using saved summaries
+and the existing external grader only:
+
+- `results/best_plots_240817_primary_rerun/summary_overlap060_hard.tsv` with
+  `benchmarks/chitosan_240817.toml`: **39/39 exact**.
+- `results/experiments/6mer_full146/pm2_confirm/summary_overlap060_hard.tsv`
+  with `benchmarks/chitosan_6mer_counting_confirmed.toml`:
+  **129/145 exact, 143/145 within one lobe**.
+
+The first expanded-report attempt mistakenly used the adjacent historical
+`adaptive_support_rescue` summary (104/145 exact, 138/145 within one). That was
+the wrong saved policy, not a code or scientific regression. The documented
+promoted `support_midpoint_hybrid` summary is `pm2_confirm`; the runbook now
+names its exact path and command. No candidates were refit or parameters
+changed. New reports/logs are under
+`results/unknown_chitosan_milestone1/counting_regression/`; the separately
+regraded frozen assignment remains **677/854 (79.3%), 36/145 exact**.

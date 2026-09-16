@@ -85,6 +85,28 @@ def read_lobe_table(path, required=("file", "lobe")):
     return columns, keyed
 
 
+def preflight_inputs(features, patches_fwd, patches_bwd):
+    required = ("file", "lobe", "amplitude", *BASE4.split(","), "patch_u_asym",
+                "bwd_neg_com_t", "bwd_neg_diag45")
+    columns, reference = read_lobe_table(features, required)
+    if not {"split_log_skew", "skew_ratio"}.intersection(columns):
+        raise ValueError("Features require split_log_skew or skew_ratio")
+    by_file = {}
+    for file, lobe in reference:
+        by_file.setdefault(file, set()).add(lobe)
+    for file, lobes in by_file.items():
+        if lobes != set(range(1, max(lobes) + 1)):
+            raise ValueError(f"Noncontiguous feature lobes for {file}")
+    for path, prefix in ((patches_fwd, "res"), (patches_bwd, "bwd_res")):
+        pixel_columns = tuple(f"{prefix}_p{i:03d}" for i in range(1, 290))
+        _, patches = read_lobe_table(path, ("file", "lobe", *pixel_columns))
+        missing = set(reference) - set(patches)
+        extra = set(patches) - set(reference)
+        if missing or extra:
+            raise ValueError(f"Patch coverage mismatch in {path}: "
+                             f"{len(missing)} missing, {len(extra)} extra keys")
+
+
 def write_soft_vote(features, pred_km, pred_gmm, out):
     """Keep the frozen vote for valid pairs and retain unavailable lobes as '?'."""
     _, reference = read_lobe_table(features)
@@ -145,8 +167,7 @@ def main(argv=None):
     args = ap.parse_args(argv)
 
     # Fail before computation, and never overwrite an earlier run.
-    for path in (args.features, args.patches_fwd, args.patches_bwd):
-        read_lobe_table(path)
+    preflight_inputs(args.features, args.patches_fwd, args.patches_bwd)
     for path in (args.cube0, args.cube1, args.frame0, args.frame1):
         if not os.path.isfile(path):
             raise ValueError(f"Missing mold input: {path}")

@@ -100,6 +100,22 @@ For broader external counting grades, use:
 benchmarks/chitosan_6mer_counting_confirmed.toml
 ```
 
+The saved production-policy counting summary is
+`results/experiments/6mer_full146/pm2_confirm/summary_overlap060_hard.tsv`
+(`support_midpoint_hybrid`). Reproduce its external report without refitting:
+
+```bash
+julia --project=. test/grade_chitosan_benchmark.jl \
+    --manifest benchmarks/chitosan_6mer_counting_confirmed.toml \
+    --results results/experiments/6mer_full146/pm2_confirm/summary_overlap060_hard.tsv \
+    --file-column filepath --column N_selected \
+    --out results/benchmark_grades/confirmed145_promoted_N_selected.tsv
+```
+
+Expected report: 129/145 exact and 143/145 within one lobe. The nearby
+`adaptive_support_rescue` directory contains a historical policy, not this
+production regression input.
+
 This manifest contains 145 visually/manually confirmed `expected_N=6` files
 derived from `benchmarks/chitosan_6mer_preassignment_review.tsv`. It is still an
 external grading manifest only and must not be read by fitting or selection code.
