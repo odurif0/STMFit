@@ -2313,8 +2313,10 @@ See `docs/src/selection.md` for the full guard specification and
     comparison with the frozen champion. The new half-plane descriptor is named
     `patch_u_asym_reconstructed`, not claimed as the lost formula. Its settings
     are fixed before comparison; no benchmark-guided variant search is allowed.
-    The 25 raw SXMs and DFT cubes exist locally. Native integration, application,
-    and comparison remain to be completed.
+    Native integration, component tests and a real one-file pilot now pass.
+    Raven job 30271312 is submitted for the 25-chain application followed by
+    the fixed 146-file reconstruction cohort. Monitor/fetch that job without
+    duplicate submission; local comparison and external grading are pending.
 
 0b. **Can label-free unit assignment reach the promotion bar?** → **RESOLVED
     (Aug 3)**: the label-free champion (soft vote of k-means 4-view and GMM
