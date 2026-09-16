@@ -155,8 +155,10 @@ changing selection logic.
   a storage device. Git identity is set repo-local (Olivier Durif
   <o.durif@fkf.mpg.de>); GitHub push goes through the local machine (raven has
   no credentials).
-- Julia: `julia +1.12.6 --project=.` everywhere (the Manifest is pinned to
-  1.12.6). The machine default 1.13 is not the project runtime.
+- Julia: use Julia 1.13 for milestone 1 (explicit user decision, 2026-09-16),
+  including tests and subprocesses. Local `julia --project=.` resolves to 1.13.0
+  through juliaup's `release` channel; the `+1.13` alias is not installed.
+  The Manifest was generated with 1.12.6; use Pkg, never hand-edit it.
 - The `.omo/` directory is retired; read it only as an archive
   (`STMFit-archive-20260916` on the local machine, residual staging on raven).
   Never write new agent state into the repo outside git.

@@ -5208,3 +5208,39 @@ This closes runtime validation only. T14 remains forbidden until the
 append-only T13 runtime-v3 evidence root is independently reviewed and
 atomically published; no Plan checkbox, benchmark grade, or production
 configuration was changed here.
+
+### 2026-09-16 — Unknown-chitosan: prediction-only frozen champion, Julia 1.13
+
+Milestone 1 resumes the real 10–20mer application, not a new method campaign.
+The user explicitly requires Julia 1.13 for production, tests, and subprocesses;
+local `julia --version` is `1.13.0` (juliaup `release`). The five local packages
+load under the root environment. The Manifest is not hand-edited.
+
+`build_cc_soft_champion.py` now stops after predictions. Its automatic benchmark
+report call and named-file exclusion are removed from the production path.
+The separate existing report command retains external benchmark membership.
+The mold settings, features, seeds, self-training, probability average, binary
+threshold, and finite-pair confidence arithmetic are unchanged. Feature keys,
+not the intersection of component keys, determine output coverage. Missing or
+nonfinite component predictions and explicit component abstentions now remain
+`?` with a reason instead of being dropped or replaced by a forced binary vote.
+This is a missing-data correction, not a new confidence threshold.
+
+Production inputs reject control columns and duplicate keys. A new explicit
+work directory and output file are required; earlier outputs are not overwritten.
+Python subprocesses use the invoking interpreter, and `--julia` can select the
+Julia 1.13 executable. Confidence remains an uncalibrated soft-vote margin.
+
+Verification: `python3 test/test_cc_soft_champion.py` passes 12 focused tests,
+including the frozen finite-pair arithmetic and tie, missing/invalid components,
+no named-file exclusion, forbidden inputs, output preservation, and prediction-
+only subprocess wiring. CLI help works. The existing post-hoc report on
+`results/unit_assignment/best_labelfree_cc_soft_20260802.tsv`, run under Julia
+1.13, reproduces **677/854 (79.3%) and 36/145 exact chains** in
+`results/unknown_chitosan_milestone1/benchmark_frozen/`. This is regrading the
+frozen predictions, not a full scientific rebuild. No counting rule changed.
+
+Next: wire real selected-N feature extraction and the existing QC/plot commands.
+The 25 raw unknown scans are at
+`/home/durif/Rebecca/data/10_20mer_analysis`, not the repository's `data/` tree;
+the local DFT cubes exist. No remote calculation has been started.

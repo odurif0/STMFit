@@ -608,8 +608,20 @@ Key building blocks (all label-free):
   cluster means + regularized noise covariance): the optimal linear score,
   66.3% per-lobe under half-split CV with no overfitting
   (`test/lib/empirical_fisher_mold.py`).
-- Fully reproducible: `test/build_cc_soft_champion.py` + the mold builders
-  rebuild templates, margins, both predictors, the soft vote, and the grade.
+- `test/build_cc_soft_champion.py` + the mold builders rebuild templates,
+  margins, both predictors, and the soft vote. The builder is prediction-only:
+  it keeps every input lobe, accepts no control data, and never starts grading.
+  Use Julia 1.13 (`--julia /path/to/julia` if needed), an explicit new `--workdir`,
+  and a new `--out` path. Missing component predictions remain `?`; confidence
+  is the existing soft-vote margin, not a calibrated probability.
+  Benchmark reporting is a separate post-hoc command on the frozen benchmark
+  prediction file:
+
+  ```bash
+  julia --project=. test/report_unit_assignment_benchmark.jl --full145-own-n \
+      --profile champion=results/unit_assignment/best_labelfree_cc_soft_20260802.tsv \
+      --outdir results/unit_assignment/champion_regression
+  ```
 - The 25x25 (0.48 nm half) context mold fails (54.4%): neighbor lobes dominate
   the NCC and dilute the central chemical signal; 17x17 (0.32 nm) is optimal.
 - All abstention, height-bracket, registration, and seed-scaling levers are

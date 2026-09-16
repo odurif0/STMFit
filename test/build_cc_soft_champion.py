@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reproduce the 2026-08-02 label-free unit-assignment champion.
+"""Build the frozen 2026-08-02 label-free unit-assignment champion.
 
 Champion: soft vote (mean of probabilities) of
   A) k-means 4-view (+ interactions, 20 seeds) and
@@ -8,27 +8,25 @@ Champion: soft vote (mean of probabilities) of
 The empirical mold is the Fisher discriminant: GMM-on-PCA10 cluster means
 and the regularized noise covariance (label-free, amplitude convention),
 half-split cross-validated (see test/lib/empirical_fisher_mold.py).
-Score: 79.3% classified physical accuracy / 36 exact chains / 677 of 854
-honest - the promotion bar (78.9% / 18 / 677) is MET (cross-validated).
 
-Label-free: no truth, sequence, or composition prior anywhere (audited:
-zero label references in all construction scripts). All grading happens only
-in the final post-hoc report step.
+Prediction only: no grading, control inputs, file exclusions, or composition
+prior. Use the separate benchmark report command after predictions exist.
+All feature keys are retained; unavailable component predictions emit '?'.
+Confidence is the frozen soft-vote margin, not a calibrated probability.
 
-Inputs (extracted on Viper, see docs/src/unit_assignment.md):
-  --features      per-lobe feature TSV (full145, e.g. full_features_origN_bwd_uasym.tsv)
+Inputs:
+  --features      selected-N per-lobe features, including split/bwd descriptors
   --patches-fwd   forward residual 17x17 patch TSV (step 0.04, half 0.32)
   --patches-bwd   backward residual 17x17 patch TSV (same grid)
   --cube0/--cube1 converged GlcN / GlcNAc LDOS cubes (bohr)
   --frame0/--frame1 relaxed-geometry frame TSVs
-  --out           final prediction TSV
-  --workdir       scratch dir [results/champion_cc_soft]
+  --out           final prediction TSV (must not exist)
+  --workdir       new directory for intermediate outputs (must not exist)
+  --julia         Julia executable [julia; project runtime: 1.13]
 
-Steps: cc templates (test/lib/cc_mold_builder.py --legacy) -> score both
-channels (test/score_connected_mold_templates.jl) -> Fisher mold
-(test/lib/empirical_fisher_mold.py, half-split CV margins) -> feature table
-with mold_cc_fwd/bwd + emp_fisher margins -> GMM 1-view chan st2 ->
-k-means 4-view -> soft vote -> post-hoc grade.
+Steps: frozen constant-current templates -> score both channels -> Fisher
+half-split CV margins -> feature table -> GMM and k-means -> soft vote.
+Scientific settings are unchanged from the frozen champion.
 """
 
 import argparse
@@ -43,7 +41,6 @@ BUILDER = os.path.join(ROOT, "test", "lib", "cc_mold_builder.py")
 SCORER = os.path.join(ROOT, "test", "score_connected_mold_templates.jl")
 GMM = os.path.join(ROOT, "test", "build_labelfree_gmm_predictions.jl")
 KM = os.path.join(ROOT, "test", "build_labelfree_unit_predictions.jl")
-GRADER = os.path.join(ROOT, "test", "report_unit_assignment_benchmark.jl")
 BASE4 = "amp_prominence,amp_neighbor_ratio,integrated_prominence,amp_rel"
 
 
@@ -52,7 +49,87 @@ def run(cmd):
     subprocess.run([str(c) for c in cmd], check=True, cwd=ROOT)
 
 
-def main():
+def read_lobe_table(path, required=("file", "lobe")):
+    """Check production columns and keys without using an expected count."""
+    with open(path, newline="") as stream:
+        reader = csv.DictReader(stream, delimiter="\t")
+        columns = reader.fieldnames or []
+        if len(columns) != len(set(columns)):
+            raise ValueError(f"Duplicate columns in {path}")
+        for column in columns:
+            normalized = "".join(c for c in column.lower() if c.isalnum())
+            if (normalized in {"sequence", "controlsequence", "expectedn", "targetn",
+                               "manifest", "grade", "report"}
+                    or any(token in normalized for token in ("benchmark", "truth"))
+                    or normalized.endswith("sequence")):
+                raise ValueError(f"Forbidden benchmark/control column: {column}")
+        missing = set(required) - set(columns)
+        if missing:
+            raise ValueError(f"{path} missing columns: {', '.join(sorted(missing))}")
+        rows = list(reader)
+    if not rows:
+        raise ValueError(f"Empty lobe table: {path}")
+    keyed = {}
+    for row in rows:
+        if None in row or any(value is None for value in row.values()):
+            raise ValueError(f"Malformed TSV row in {path}")
+        file = os.path.basename(row["file"].strip())
+        lobe = int(row["lobe"])
+        key = (file, lobe)
+        if not file or lobe < 1:
+            raise ValueError(f"Invalid lobe key in {path}: {key}")
+        if key in keyed:
+            raise ValueError(f"Duplicate lobe key in {path}: {key}")
+        row["file"] = file
+        keyed[key] = row
+    return columns, keyed
+
+
+def write_soft_vote(features, pred_km, pred_gmm, out):
+    """Keep the frozen vote for valid pairs and retain unavailable lobes as '?'."""
+    _, reference = read_lobe_table(features)
+    _, km_rows = read_lobe_table(pred_km, ("file", "lobe", "predicted", "probability_1"))
+    _, gmm_rows = read_lobe_table(pred_gmm, ("file", "lobe", "predicted", "probability_1"))
+    for component in (km_rows, gmm_rows):
+        if set(component) - set(reference):
+            raise ValueError("Component predictions contain keys absent from features")
+
+    def probability(rows, key):
+        row = rows.get(key)
+        if row is None or row["predicted"] == "?":
+            return None
+        if row["predicted"] not in ("0", "1"):
+            raise ValueError(f"Invalid component prediction for {key}")
+        try:
+            value = float(row["probability_1"])
+        except ValueError:
+            return None
+        if not math.isfinite(value):
+            return None
+        if not 0 <= value <= 1:
+            raise ValueError(f"Component probability outside [0, 1] for {key}")
+        return value
+
+    output_rows = []
+    for key in sorted(reference):
+        pk, pg = probability(km_rows, key), probability(gmm_rows, key)
+        missing = [name for name, value in (("kmeans", pk), ("gmm", pg)) if value is None]
+        if missing:
+            output_rows.append((*key, "?", "0.00000000", "NA",
+                                "missing_component:" + ",".join(missing)))
+        else:
+            p = (pk + pg) / 2
+            output_rows.append((*key, str(int(p >= 0.5)), f"{abs(p-0.5)*2:.8f}",
+                                f"{p:.8f}", "ok"))
+    os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
+    with open(out, "x", newline="") as stream:
+        writer = csv.writer(stream, delimiter="\t", lineterminator="\n")
+        writer.writerow(("file", "lobe", "predicted", "confidence", "probability_1",
+                         "invalid_reason"))
+        writer.writerows(output_rows)
+
+
+def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--features", required=True)
@@ -63,11 +140,20 @@ def main():
     ap.add_argument("--frame0", required=True)
     ap.add_argument("--frame1", required=True)
     ap.add_argument("--out", required=True)
-    ap.add_argument("--workdir", default=os.path.join(ROOT, "results", "champion_cc_soft"))
-    args = ap.parse_args()
+    ap.add_argument("--workdir", required=True, help="New directory for intermediate outputs")
+    ap.add_argument("--julia", default="julia", help="Julia executable (project runtime: 1.13)")
+    args = ap.parse_args(argv)
 
+    # Fail before computation, and never overwrite an earlier run.
+    for path in (args.features, args.patches_fwd, args.patches_bwd):
+        read_lobe_table(path)
+    for path in (args.cube0, args.cube1, args.frame0, args.frame1):
+        if not os.path.isfile(path):
+            raise ValueError(f"Missing mold input: {path}")
+    if os.path.lexists(args.out):
+        raise FileExistsError(f"Output already exists: {args.out}")
     wd = args.workdir
-    os.makedirs(wd, exist_ok=True)
+    os.makedirs(wd, exist_ok=False)
     templates = os.path.join(wd, "templates_cc_17.tsv")
     score_fwd = os.path.join(wd, "score_fwd.tsv")
     score_bwd = os.path.join(wd, "score_bwd.tsv")
@@ -76,20 +162,20 @@ def main():
     pred_km = os.path.join(wd, "pred_km.tsv")
 
     # 1. adaptive-contour templates (legacy calibration = champion calibration)
-    run(["python3", BUILDER, args.cube0, args.cube1, args.frame0, args.frame1,
+    run([sys.executable, BUILDER, args.cube0, args.cube1, args.frame0, args.frame1,
          templates, "--height", "0.50", "--half-nm", "0.32", "--step-nm", "0.04",
          "--legacy"])
 
     # 2. score both channels against the templates (contrast mode)
-    run(["julia", "--project=.", SCORER, "--patches", args.patches_fwd, "--templates",
+    run([args.julia, "--project=.", SCORER, "--patches", args.patches_fwd, "--templates",
          templates, "--template-mode", "contrast", "--prefix", "res", "--out", score_fwd])
-    run(["julia", "--project=.", SCORER, "--patches", args.patches_bwd, "--templates",
+    run([args.julia, "--project=.", SCORER, "--patches", args.patches_bwd, "--templates",
          templates, "--template-mode", "contrast", "--prefix", "bwd_res", "--out", score_bwd])
 
     # 2.5 Fisher empirical mold on the fwd residual patches (half-split CV
     # margins: the mold is trained on one half and applied to the other).
     fisher = os.path.join(wd, "emp_fisher")
-    run(["python3", os.path.join(ROOT, "test", "lib", "empirical_fisher_mold.py"),
+    run([sys.executable, os.path.join(ROOT, "test", "lib", "empirical_fisher_mold.py"),
          args.patches_fwd, "res", fisher])
 
     # 3. feature table: base features + per-channel cc margins + Fisher margin
@@ -127,46 +213,21 @@ def main():
             w.writerow(r)
 
     # 4. GMM 1-view + per-channel cc margins + Fisher margin + self-training 2
-    run(["julia", "--project=.", GMM, "--features", table, "--out", pred_gmm,
+    run([args.julia, "--project=.", GMM, "--features", table, "--out", pred_gmm,
          "--view", f"v_cc={BASE4},patch_u_asym,mold_cc_fwd,mold_cc_bwd,emp_fisher",
          "--seeds", "10", "--interactions", "--selftrain", "2"])
 
     # 5. k-means 4-view (base, base+split, base+com_t, base+diag45) + interactions
-    run(["julia", "--project=.", KM, "--features", table, "--out", pred_km,
+    run([args.julia, "--project=.", KM, "--features", table, "--out", pred_km,
          "--view", f"v_base={BASE4}",
          "--view", f"v_split={BASE4},split_log_skew",
          "--view", f"v_comt={BASE4},bwd_neg_com_t",
          "--view", f"v_diag45={BASE4},bwd_neg_diag45",
          "--seeds", "20", "--interactions"])
 
-    # 6. soft vote (mean of probabilities), drop non-manifest file
-    def load(p):
-        out = {}
-        with open(p) as f:
-            for r in csv.DictReader(f, delimiter="\t"):
-                try:
-                    p1 = float(r["probability_1"])
-                except (ValueError, KeyError):
-                    p1 = 0.5
-                out[(r["file"], int(r["lobe"]))] = p1
-        return out
-
-    km_p = load(pred_km)
-    gmm_p = load(pred_gmm)
-    with open(args.out, "w") as g:
-        g.write("file\tlobe\tpredicted\tconfidence\n")
-        for (file, lobe) in sorted(set(km_p) & set(gmm_p)):
-            if file == "240310_Cu100009.sxm":
-                continue
-            p = (km_p[(file, lobe)] + gmm_p[(file, lobe)]) / 2
-            g.write(f"{file}\t{lobe}\t{1 if p >= 0.5 else 0}\t{abs(p-0.5)*2:.8f}\n")
+    # 6. Soft vote on the full selected-N key set; grading is a separate command.
+    write_soft_vote(args.features, pred_km, pred_gmm, args.out)
     print(f"champion predictions: {args.out}")
-
-    # 7. post-hoc grade
-    run(["julia", "--project=.", GRADER, "--full145-own-n",
-         "--profile", f"champion={args.out}",
-         "--outdir", os.path.join(wd, "grade")])
-
 
 if __name__ == "__main__":
     main()
