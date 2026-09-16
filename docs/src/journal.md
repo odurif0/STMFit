@@ -5505,3 +5505,24 @@ without `.omo`, hidden agent directories, QE, data, or generated results. Only
 CC templates are transferred as inputs. The initial generic launcher dry-run
 pointed at the personal default Viper; the corrected dry-run explicitly sets
 `STMFIT_SSH_HOST=raven`. No calculation is run on a login node.
+
+### 2026-09-16 — Final local checks pass; Raven package setup still pending
+
+The final synthetic integration run passes **28 assertions**: 12 boundaries,
+9 end-to-end (including nonempty binary output on the sufficient synthetic
+cohort and the reconstructed model identifier), and 7 bounded chunk/merge
+checks. The docs build passes under Julia 1.13. These checks do not change or
+replace the real pilot's explicit small-cohort uncertainty.
+
+Plain rsync transfers of the tracked source, required raw scans, cached geometry,
+verified templates and the user-space Julia installation complete successfully.
+Raven reports Julia 1.13.0. Both actual remote-input metadata dry-runs pass with
+25 and 146 files. Slurm `--test-only` accepts the job (its processor accounting
+shows eight, within the observed group quota); this is not a submitted job.
+
+Initial project `Pkg` loading fails while precompiling `LibCURL_jll`, reporting
+an unavailable `Zstd_jll` precompiled image. A focused native `using Zstd_jll`
+then succeeds. Setup is retried by loading Pkg in the stdlib environment before
+activating the old project Manifest. No Manifest is manually edited, no Julia
+1.12 fallback is used, and no STM compute has run on the login node. Actual
+submission waits for dependency setup to complete successfully.
