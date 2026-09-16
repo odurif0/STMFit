@@ -5526,3 +5526,8 @@ then succeeds. Setup is retried by loading Pkg in the stdlib environment before
 activating the old project Manifest. No Manifest is manually edited, no Julia
 1.12 fallback is used, and no STM compute has run on the login node. Actual
 submission waits for dependency setup to complete successfully.
+
+The native Slurm entrypoint and its required inputs/environment are now also
+listed in `hpc/README.md`, including the single-allocation CPU limit, ordinary
+dry-run/submit/fetch commands, and separate local comparison. This documents
+existing execution behavior; no scientific setting or accepted metric changes.

@@ -307,3 +307,51 @@ terminating a shard. This workflow does not read benchmark labels.
 - [Viper-CPU User Guide](https://docs.mpcdf.mpg.de/doc/computing/viper-user-guide.html)
 - [Environment Modules](https://docs.mpcdf.mpg.de/doc/computing/software/environment-modules.html)
 - [HPC Software FAQ (`find-module`)](https://docs.mpcdf.mpg.de/faq/hpc_software.html)
+
+
+## Native reconstruction job (Julia 1.13)
+
+`reconstructed_chitosan.sbatch` is the bounded application/comparison job for
+`cc_soft_reconstructed_v1`. It runs the 25 unknown chains first, then the saved
+146-file geometry cohort. Both calls use the native production CLI; neither
+reads benchmark labels nor invokes a grader. At most four single-thread refit
+chunks run inside the one allocation. Requested resources are four CPUs,
+16,000 MB and 24 hours (Raven's test-only accounting reports eight processors).
+Do not submit a second concurrent job under the observed eight-CPU group quota.
+
+Prepare a normal code sync in `~/code/STMFit`, excluding agent state and generated
+outputs. The input directory must contain:
+
+- `unknown_raw/`: the 25 raw unknown SXMs, with unique basenames;
+- `full146_raw/`: raw SXMs matching all files in the saved geometry table;
+- `base_geometry_full146.tsv`: label-free selected-N base geometry, not truth;
+- `templates_cc.tsv`: templates from the fixed native CC builder.
+
+Use a verified Julia 1.13 executable, not the cluster's Julia 1.12 module. Only
+package setup/precompilation and path/key dry-runs run on the login node. For a
+fresh depot with the older root Manifest, load Pkg from the stdlib environment
+before activating the project, then verify normal production imports. Never
+hand-edit the Manifest or fall back to a different Julia version for this job.
+
+From the remote project directory, set the ordinary job environment:
+
+```bash
+export STMFIT_PROJECT_DIR="$HOME/code/STMFit"
+export JULIA_BIN="$HOME/software/julia-1.13.0/bin/julia"
+export STMFIT_INPUT_DIR="/ptmp/$USER/stmfit/reconstructed_cc_soft_v1_inputs"
+export STMFIT_OUTDIR="results/reconstructed_cc_soft_v1/my_new_run"
+mkdir -p results/reconstructed_cc_soft_v1
+sbatch --test-only --export=ALL hpc/reconstructed_chitosan.sbatch
+# After inspecting the dry-run and verifying the environment:
+sbatch --export=ALL hpc/reconstructed_chitosan.sbatch
+```
+
+`STMFIT_OUTDIR/unknown25` and `STMFIT_OUTDIR/full146` must not already exist.
+Monitor with `squeue`/`sacct`, then fetch logs and both output directories. Run
+`test/compare_reconstructed_champion.jl` and the existing external grader locally
+only after production completes. No cluster-side agent, approval artifact,
+or persistent job controller is involved. See
+[`docs/src/unit_assignment.md`](../docs/src/unit_assignment.md) for scientific
+limits and cache semantics. In particular, a one-chain cohort can be too small
+for Fisher PCA10; its explicit `?` output is not a failed count or a valid
+chemical benchmark.
