@@ -5448,3 +5448,24 @@ A focused real `251206_013.sxm` timing run has started locally with the explicit
 manual summaries), and the native checked CC templates. It is capped at 30
 minutes. No remote job has been submitted. Real full-cohort application and
 frozen-champion comparison remain pending.
+
+### 2026-09-16 — Explicit patch preprocessing in the native workflow
+
+Both patch extractors now accept optional `--config` and take stride, flattening
+and smoothing from its `[preprocessing]` section. The native wrapper passes the
+same count config to all three patch exports. Previously those extractors fixed
+1 / plane+rows / 1 internally, even if fitting used a different explicit config.
+Those exact legacy settings remain when the new option is omitted. Grid order,
+normalization, residual calculation and missing-file behavior are unchanged.
+
+`test/test_patch_preprocessing.jl` passes 69 Julia 1.13 assertions. A synthetic
+33×33 SXM gives byte-identical default and explicit `config/chitosan.toml`
+outputs; separate setting changes reach the actual preprocessing calls. Invalid
+configs fail before output creation. Both CLI option forms and forward/backward
+paths are covered. No real multi-scan fit was used for this test. Documentation
+also now separates historical 25-scan counting from the pending native
+assignment application and corrects the README's overly broad raw-champion
+reproducibility statement without changing any accepted benchmark number.
+
+The native documentation build passes under Julia 1.13, with only size-limit
+warnings for the old journal/search index and the normal local-deploy warning.

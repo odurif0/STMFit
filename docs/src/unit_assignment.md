@@ -1231,7 +1231,8 @@ GKSwstype=100 julia -t 4 --project=. test/run_reconstructed_chitosan.jl \
 Add `--dry-run` first. The output directory must not exist. Raw files may be
 nested, but their basenames must be unique. No benchmark manifest, expected N,
 reference predictions, grading option, control sequence, or composition prior
-is accepted by this command. The driver's historical triage-file default is
+is accepted by this command. The count config's `[preprocessing]` settings
+(`stride`, `flatten`, `smooth_radius_px`) also drive all patch exports. The driver's historical triage-file default is
 explicitly disabled. The 1D diagnostic stays disabled.
 
 Without cached inputs, the stages are counting, fixed-selected-N base and split

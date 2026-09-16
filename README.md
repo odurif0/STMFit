@@ -10,16 +10,26 @@ the expanded 145-file external counting grade: 129/145 exact, 143/145 within one
 lobe. The 0/1/? unit-assignment benchmark uses the same 145 files; its external
 control sequence is NKNNKN (010010/101101 by convention) for grading only, never
 for fitting, selection, thresholding, abstention, or method calibration.
-**Application (10–20mer):** 25/25 files processed; no ground-truth labels —
-visual validation is the arbiter.
+**Historical counting application (10–20mer):** 25/25 files processed, without
+known sequences. Visual QC is possible, but it does not establish chemical
+assignment accuracy.
 
 **Unit assignment state of the art (promoted):** label-free soft vote of the
 k-means 4-view and the GMM 1-view + adaptive-contour (constant-current) mold
 margins + empirical Fisher-discriminant mold margin: 79.3% classified
 physical accuracy / 36 exact chains / 677 correct of 854 — the promotion bar
 (78.9% / 18 / 677) is met; the Fisher mold generalizes under half-split
-cross-validation (66.3% per-lobe, no overfit). Reproducible via
-`test/build_cc_soft_champion.py` (see docs/src/unit_assignment.md).
+cross-validation (66.3% per-lobe, no overfit). Regrading the saved outputs
+reproduces these accepted metrics; a full raw-input rebuild of this exact
+champion lacks the irrecoverable original `patch_u_asym` producer.
+
+**Approved native reconstruction:** `test/run_reconstructed_chitosan.jl` uses
+Julia 1.13 and the separately named `cc_soft_reconstructed_v1`. Its descriptor
+is fixed before comparison; the champion is not relabeled as reproduced.
+Native component and synthetic end-to-end tests pass. Real 25-chain application
+and reconstructed benchmark comparison remain in progress. See
+[`docs/src/unit_assignment.md`](docs/src/unit_assignment.md#explicit-julia-reconstruction-2026-09-16)
+for the command, numerical differences and limitations.
 
 ## Packages
 
@@ -60,6 +70,8 @@ how to organize them).
 | `sensitivity_thresholds.jl {generate\|submit\|local\|compare}` | Measure robustness of N_selected to the selection threshold. |
 | `diagnose_neff.jl`, `diagnose_fullimg_autocorr.jl` | Effective-sample-size and spatial-correlation diagnostics. |
 | `summarize.jl [summary.tsv]` | Print stats from a summary TSV. |
+| `run_reconstructed_chitosan.jl` | Native Julia 1.13 reconstructed raw-to-0/1/? pipeline, explicit selected-N caches, QC and maps; no grading. |
+| `compare_reconstructed_champion.jl` | Separate keyed comparison with a saved reference; no fitting or parameter selection. |
 | `run_unknown_unit_assignment.jl` | Label-free unknown-sequence 0/1/? runner: predictions, summary, manifest, validation logs. |
 | `validate_unit_predictions.jl`, `summarize_unknown_unit_qc.jl`, `plot_unit_assignment.py` | Validate, QC, and plot unknown unit-assignment outputs without grading labels. |
 

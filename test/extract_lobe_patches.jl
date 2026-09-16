@@ -11,6 +11,9 @@ using GaussianFit2D: read_sxm, preprocess_channel, PatternConfig, get_channel
 include(joinpath(@__DIR__, "lib", "script_utils.jl"))
 using .ScriptUtils: _parse_f, _read_tsv
 
+include(joinpath(@__DIR__, "lib", "patch_preprocessing.jl"))
+using .PatchPreprocessing: PreprocessingSettings, load_patch_preprocessing
+
 const DEFAULT_FEATURES = "results/unit_separability/lobe_features_selectedN_primary.tsv"
 const DEFAULT_OUT = "results/unit_separability/lobe_patches_selectedN_primary.tsv"
 
@@ -21,12 +24,14 @@ struct Options
     half_nm::Float64
     half_u_nm::Float64
     step_nm::Float64
+    preprocessing::PreprocessingSettings
 end
 
 function _parse_cli(args)
     features = DEFAULT_FEATURES
     out_tsv = DEFAULT_OUT
     data_dir = get(ENV, "STMFIT_DATA_DIR", "")
+    config_path::Union{Nothing,String} = nothing
     half_nm = 0.32
     half_u_nm = 0.32
     step_nm = 0.08
@@ -39,6 +44,13 @@ function _parse_cli(args)
         elseif startswith(arg, "--out="); out_tsv = split(arg, "=", limit=2)[2]; i += 1
         elseif arg == "--data-dir"; data_dir = args[i+1]; i += 2
         elseif startswith(arg, "--data-dir="); data_dir = split(arg, "=", limit=2)[2]; i += 1
+        elseif arg == "--config"
+            config_path === nothing || error("Duplicate --config option")
+            i < length(args) && !startswith(args[i+1], "--") || error("Missing value for --config")
+            config_path = args[i+1]; i += 2
+        elseif startswith(arg, "--config=")
+            config_path === nothing || error("Duplicate --config option")
+            config_path = split(arg, "=", limit=2)[2]; i += 1
         elseif arg == "--half-nm"; half_nm = parse(Float64, args[i+1]); i += 2
         elseif startswith(arg, "--half-nm="); half_nm = parse(Float64, split(arg, "=", limit=2)[2]); i += 1
         elseif arg == "--half-u-nm"; half_u_nm = parse(Float64, args[i+1]); i += 2
@@ -53,6 +65,8 @@ function _parse_cli(args)
               --features PATH   Lobe feature TSV [$(DEFAULT_FEATURES)]
               --out PATH        Output patch TSV [$(DEFAULT_OUT)]
               --data-dir PATH   SXM data directory [\$STMFIT_DATA_DIR]
+              --config PATH     Optional count TOML: all three [preprocessing] fields
+                                (omitted: stride=1, flatten=plane+rows, smooth_radius_px=1)
               --half-nm FLOAT   Patch half-size along the chain t [0.32]
               --half-u-nm FLOAT Patch half-size transverse u [0.32]
               --step-nm FLOAT   Patch grid spacing [0.08]
@@ -65,7 +79,8 @@ function _parse_cli(args)
     isempty(data_dir) && error("No data directory: set STMFIT_DATA_DIR or pass --data-dir")
     isdir(data_dir) || error("Data directory not found: $data_dir")
     isfile(features) || error("Features TSV not found: $features")
-    return Options(features, out_tsv, data_dir, half_nm, half_u_nm, step_nm)
+    preprocessing = load_patch_preprocessing(config_path)
+    return Options(features, out_tsv, data_dir, half_nm, half_u_nm, step_nm, preprocessing)
 end
 
 function _eval_peak(x, y, cx, cy, ax, ay, A, spar, sperp, skew_ratio)
@@ -100,8 +115,8 @@ function _normalize_patch(vals)
     return [isfinite(v) ? (v - μ) / σ : NaN for v in vals]
 end
 
-function main()
-    opt = _parse_cli(ARGS)
+function main(args=ARGS)
+    opt = _parse_cli(args)
     _, rows = _read_tsv(opt.features)
     isempty(rows) && error("No feature rows in $(opt.features)")
     by_file = Dict{String,Vector{Dict{String,String}}}()
@@ -125,7 +140,8 @@ function main()
                 img = read_sxm(sxm_path)
                 ch = get_channel(img, "Z"; direction="fwd")
                 pcfg = PatternConfig(filepath=sxm_path, channel="Z", direction="fwd",
-                    stride=1, flatten="plane+rows", smooth_radius_px=1,
+                    stride=opt.preprocessing.stride, flatten=opt.preprocessing.flatten,
+                    smooth_radius_px=opt.preprocessing.smooth_radius_px,
                     output_dir=dirname(opt.out_tsv), no_plot=true)
                 xs, ys, raw, z, z_smooth, scaled_unit, noise = preprocess_channel(img, ch, pcfg)
                 nx, ny = length(xs), length(ys)
@@ -173,4 +189,6 @@ function main()
     println("Wrote: ", opt.out_tsv)
 end
 
-main()
+if abspath(PROGRAM_FILE) == @__FILE__
+    main()
+end

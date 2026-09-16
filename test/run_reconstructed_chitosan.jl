@@ -243,7 +243,8 @@ function execute_pipeline(opts)
             ("--patches-bwd", "patches_bwd17", "extract_lobe_patches_bwd.jl", cfg["model"]["mold_half_nm"], cfg["model"]["mold_step_nm"], "bwd_res_p", 17),
             ("--descriptor-patches", "patches_bwd9", "extract_lobe_patches_bwd.jl", cfg["model"]["descriptor_half_nm"], cfg["model"]["descriptor_step_nm"], "bwd_res_p", 9))
             path = cached_or_run(opts, key, joinpath(outdir, name * ".tsv"), name, script,
-                ["--features", geometry, "--data-dir", raw, "--half-nm", string(half), "--step-nm", string(step)], outdir)
+                ["--features", geometry, "--data-dir", raw, "--config", abspath(opts["--count-config"]),
+                 "--half-nm", string(half), "--step-nm", string(step)], outdir)
             header, patchkeys = lobe_table(path; required=[prefix * lpad(string(i), 3, '0') for i in 1:side^2])
             length(filter(c -> startswith(c, prefix), header)) == side^2 || error("Unexpected patch dimensions: $path")
             require_same_keys(basekeys, patchkeys, name)
