@@ -136,3 +136,27 @@ changing selection logic.
 - Package READMEs contain legacy standalone paths and 1D/BIC-era descriptions.
   For current methodology and commands, trust root scripts/config, root README,
   and `docs/src/`.
+
+## Process guardrails (added 2026-09-16, after the T11-T13 apparatus incident)
+
+- Every task starts from a stated scientific deliverable and its definition of
+  done. Process artifacts (protocols, authority ledgers, receipts, review
+  gates, staged snapshots) are NOT deliverables and do not count as progress.
+- Do not create authorization layers, meta-review cycles, multi-version
+  approval cascades, or new "runtime/activation" frameworks. Verification is:
+  tests + one human review. That is the whole mechanism.
+- HPC usage is deliberately boring: sync code (rsync or git relay), submit one
+  sbatch, poll squeue, fetch logs and outputs back locally. No agent
+  orchestration on the cluster, no cluster-side state that outlives a job.
+- Finish the application (unknown-chitosan 10-20mer workflow on the frozen
+  champion) before any new method campaign. New campaigns need a human-approved
+  scope, a time box, and the existing plan's Must-NOT-have list honored.
+- Commit early; never leave validated work uncommitted. The working tree is not
+  a storage device. Git identity is set repo-local (Olivier Durif
+  <o.durif@fkf.mpg.de>); GitHub push goes through the local machine (raven has
+  no credentials).
+- Julia: `julia +1.12.6 --project=.` everywhere (the Manifest is pinned to
+  1.12.6). The machine default 1.13 is not the project runtime.
+- The `.omo/` directory is retired; read it only as an archive
+  (`STMFit-archive-20260916` on the local machine, residual staging on raven).
+  Never write new agent state into the repo outside git.
