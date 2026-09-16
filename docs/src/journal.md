@@ -5469,3 +5469,39 @@ reproducibility statement without changing any accepted benchmark number.
 
 The native documentation build passes under Julia 1.13, with only size-limit
 warnings for the old journal/search index and the normal local-deploy warning.
+
+### 2026-09-16 — Real raw-input pilot completed; bounded Raven preparation
+
+The Julia 1.13 native pipeline completes from raw `251206_013.sxm` through count,
+base/split refits, three patch exports, CC/Fisher scores, predictions, validation,
+QC and maps. Wall time is **13 min 45.91 s**, maximum resident set size 1,268,908
+KiB (about 1.21 GiB). The adaptive-support count selects **11**; both fixed-N
+feature fits preserve 11 lobes (elliptical GCV 3.002e-6 base, 1.976e-6 split).
+All 11 final assignments are `?`, correctly, because each Fisher training half
+contains fewer than the configured ten rows. This expected small-cohort failure
+is explicit in `fisher_cv.tsv`, not replaced by invented binary labels. The full
+25-chain cohort is required for the intended unsupervised application. Outputs
+are under `results/reconstructed_cc_soft_v1/pilot_251206_013/`.
+
+Multi-file refits now use the existing extractor `--chunk` interface, with at
+most four single-thread subprocesses and BLAS limited to one thread. Counts,
+physical settings, selected N and cohort-wide classifiers are unchanged. Chunks
+are merged only with matching headers and unique contiguous lobe keys; complete
+expected counts are checked next. Seven focused chunk/merge tests pass alongside
+the twelve boundary tests. The full synthetic end-to-end check is being repeated
+with this execution wiring. This is standard bounded local subprocess work
+inside one allocation, not cluster-side agent orchestration.
+
+A simple `hpc/reconstructed_chitosan.sbatch` runs the 25-chain application first,
+then the fixed 146-file saved-geometry comparison input through reconstruction.
+It requests four CPUs, 16,000 MB and 24 hours, below the observed eight-CPU group
+quota. Labels/grading are absent; comparison and grading will run locally after
+fetch. Shell syntax passes; no job has yet been submitted. Raven SSH works but
+its Julia modules stop at 1.12, so the tested Julia 1.13 installation is copied
+to the user software directory. Dry-runs exposed old local agent metadata; the
+actual code sync uses tracked source files only (plus the existing root Manifest),
+without `.omo`, hidden agent directories, QE, data, or generated results. Only
+25 unknown SXMs, 146 geometry-matched SXMs, saved base geometry and verified native
+CC templates are transferred as inputs. The initial generic launcher dry-run
+pointed at the personal default Viper; the corrected dry-run explicitly sets
+`STMFIT_SSH_HOST=raven`. No calculation is run on a login node.

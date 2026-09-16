@@ -108,11 +108,43 @@ if "--e2e" in ARGS
             _, pred = lobe_table(joinpath(out, "predictions.tsv"))
             @test length(pred) == 40
             @test all(r["predicted"] in ("0", "1", "?") for r in values(pred))
+            @test any(r["predicted"] != "?" for r in values(pred))
+            @test all(r["model"] == "cc_soft_reconstructed_v1" for r in values(pred))
             @test isfile(joinpath(out, "summary.tsv"))
             @test isfile(joinpath(out, "review_queue.tsv"))
             @test filesize(joinpath(out, "plots", "summary_grid.png")) > 0
             @test length(readdir(joinpath(out, "plots", "standalone"))) == 5
             @test !isfile(joinpath(out, "failures.tsv"))
         end
+    end
+end
+
+@testset "Bounded feature-export chunks and exact merge" begin
+    mktempdir() do dir
+        calls = Channel{Tuple{String,Int}}(4)
+        function fake_runner(outdir, name, script, args; threads)
+            ci = findfirst(==("--chunk"), args)
+            chunk = ci === nothing ? "1/1" : args[ci+1]
+            put!(calls, (chunk, threads))
+            oi = findfirst(==("--out"), args)
+            file = "chunk_$(first(split(chunk, '/'))).sxm"
+            rows = [Dict("file"=>file, "lobe"=>string(i), "amplitude"=>"1.0") for i in 1:2]
+            write_table(args[oi+1], ["file", "lobe", "amplitude"], rows)
+        end
+        out = joinpath(dir, "merged.tsv")
+        export_features(dir, "base", "extract_lobe_features.jl", String[], out;
+                        nfiles=5, thread_budget=2, runner=fake_runner)
+        _, merged = lobe_table(out)
+        @test length(merged) == 4
+        @test Set([take!(calls), take!(calls)]) == Set([("1/2", 1), ("2/2", 1)])
+        @test_throws ErrorException merge_feature_chunks([out, out], joinpath(dir, "duplicate.tsv"))
+        @test !isfile(joinpath(dir, "duplicate.tsv"))
+        single = joinpath(dir, "single.tsv")
+        export_features(dir, "single", "extract_lobe_features.jl", String[], single;
+                        nfiles=1, thread_budget=4, runner=fake_runner)
+        @test take!(calls) == ("1/1", 4)
+        @test length(last(lobe_table(single))) == 2
+        @test_throws ErrorException export_features(dir, "bad", "x", String[], "bad";
+                                                    nfiles=0, runner=fake_runner)
     end
 end

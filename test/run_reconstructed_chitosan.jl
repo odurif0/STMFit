@@ -62,11 +62,11 @@ function parse_options(args)
     return opts
 end
 
-function run_stage(outdir, name, script, args)
-    cmd = `$(Base.julia_cmd()) --threads=$(min(Threads.nthreads(), 4)) --project=$ROOT $(joinpath(@__DIR__, script)) $args`
+function run_stage(outdir, name, script, args; threads=min(Threads.nthreads(), 4))
+    cmd = `$(Base.julia_cmd()) --threads=$threads --project=$ROOT $(joinpath(@__DIR__, script)) $args`
     println("[$name] ", cmd); flush(stdout)
     open(joinpath(outdir, "logs", name * ".log"), "w") do io
-        run(pipeline(addenv(cmd, "GKSwstype" => "100"); stdout=io, stderr=io))
+        run(pipeline(addenv(cmd, "GKSwstype" => "100", "OPENBLAS_NUM_THREADS" => "1"); stdout=io, stderr=io))
     end
 end
 
@@ -123,12 +123,53 @@ function prepare_raw(data_dir, outdir, files)
     return path
 end
 
-function cached_or_run(opts, key, output, name, script, args, outdir)
+function merge_feature_chunks(paths, output)
+    header = String[]
+    rows = Dict{String,String}[]
+    seen = Set{Tuple{String,Int}}()
+    for path in paths
+        chunk_header, chunk = lobe_table(path)
+        isempty(header) && (header = chunk_header)
+        header == chunk_header || error("Feature chunk headers differ")
+        for key in sort(collect(keys(chunk)))
+            key in seen && error("Duplicate lobe across feature chunks: $key")
+            push!(seen, key)
+            push!(rows, chunk[key])
+        end
+    end
+    isempty(rows) && error("No exported feature rows")
+    sort!(rows; by=row -> (row["file"], parse(Int, row["lobe"])))
+    return write_table(output, header, rows)
+end
+
+function export_features(outdir, name, script, args, output; nfiles,
+                         thread_budget=min(Threads.nthreads(), 4), runner=run_stage)
+    nfiles > 0 && thread_budget > 0 || error("Invalid feature-export workload")
+    nchunks = min(nfiles, thread_budget, 4)
+    if nchunks == 1
+        runner(outdir, name, script, vcat(args, ["--out", output]); threads=thread_budget)
+        return output
+    end
+    paths = [joinpath(outdir, "$(name)_chunk$(i).tsv") for i in 1:nchunks]
+    # Each child gets one Julia/BLAS thread; total CPU use stays within the
+    # parent's budget. Counting and downstream cohort-wide fitting stay intact.
+    @sync for (i, path) in enumerate(paths)
+        Threads.@spawn runner(outdir, "$(name)_chunk$(i)", script,
+            vcat(args, ["--chunk", "$i/$nchunks", "--out", path]); threads=1)
+    end
+    return merge_feature_chunks(paths, output)
+end
+
+function cached_or_run(opts, key, output, name, script, args, outdir; fit_files=0)
     if haskey(opts, key)
         println("[$name] reuse ", opts[key])
         return abspath(opts[key])
     end
-    run_stage(outdir, name, script, vcat(args, ["--out", output]))
+    if fit_files > 0
+        export_features(outdir, name, script, args, output; nfiles=fit_files)
+    else
+        run_stage(outdir, name, script, vcat(args, ["--out", output]))
+    end
     return output
 end
 
@@ -220,7 +261,7 @@ function execute_pipeline(opts)
         stage = "base_features"
         geometry = cached_or_run(opts, "--features", joinpath(outdir, "features.tsv"), stage,
             "extract_lobe_features.jl", ["--config", abspath(opts["--count-config"]), "--data-dir", raw,
-            "--selected-summary", abspath(selected)], outdir)
+            "--selected-summary", abspath(selected)], outdir; fit_files=length(files))
         basekeys = check_counts(geometry, counts)
         stage = "split_features"
         split_cfg = TOML.parsefile(opts["--count-config"])
@@ -230,7 +271,7 @@ function execute_pipeline(opts)
         open(io -> TOML.print(io, split_cfg), split_config_path, "w")
         split_features = cached_or_run(opts, "--split-features", joinpath(outdir, "features_split.tsv"), stage,
             "extract_lobe_features.jl", ["--config", split_config_path, "--data-dir", raw,
-            "--selected-summary", abspath(selected)], outdir)
+            "--selected-summary", abspath(selected)], outdir; fit_files=length(files))
         check_counts(split_features, counts)
         stage = "local_features"
         local_features = joinpath(outdir, "features_local.tsv")

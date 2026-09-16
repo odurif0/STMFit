@@ -320,9 +320,12 @@ The command has no benchmark/reference/grading input. The separate
 prediction; external grading stays separate. Do not search descriptor variants
 to recover the old aggregate score.
 
-Native CC/Fisher tests and the extracted-input synthetic pipeline pass. Actual
-25-chain application and rebuilt benchmark comparison are still pending at this
-point; these tests do not constitute milestone completion. No old terminal
+Native CC/Fisher tests and the extracted-input synthetic pipeline pass. One real
+raw-input pilot (`251206_013.sxm`) also completes in 13 min 46 s: N_selected=11,
+all 11 rows retained, QC and maps produced. Its isolated cohort is too small for
+PCA10 in each Fisher half, so all assignments are explicitly `?`. This is a
+technical pilot, not chemical validation. Actual 25-chain application and rebuilt
+benchmark comparison remain pending; the pilot is not milestone completion. No old terminal
 challenger status below is reopened by this bounded reconstruction.
 
 

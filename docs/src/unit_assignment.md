@@ -1232,7 +1232,10 @@ Add `--dry-run` first. The output directory must not exist. Raw files may be
 nested, but their basenames must be unique. No benchmark manifest, expected N,
 reference predictions, grading option, control sequence, or composition prior
 is accepted by this command. The count config's `[preprocessing]` settings
-(`stride`, `flatten`, `smooth_radius_px`) also drive all patch exports. The driver's historical triage-file default is
+(`stride`, `flatten`, `smooth_radius_px`) also drive all patch exports. Multi-file
+base/split refits use the extractor's existing `--chunk` option in at most four
+single-thread subprocesses, within the parent Julia thread budget. A strict
+keyed merge runs before cohort-wide assignment. No clustering is split by chunk. The driver's historical triage-file default is
 explicitly disabled. The 1D diagnostic stays disabled.
 
 Without cached inputs, the stages are counting, fixed-selected-N base and split
