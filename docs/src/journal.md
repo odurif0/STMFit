@@ -5419,3 +5419,32 @@ warning. Invalid patches and missing/degenerate opposite folds retain all input
 keys with NA and an explicit reason. Tests cover sign/orientation, fixed-partition
 NumPy linear algebra, EM arithmetic, fold independence, and unavailable scores.
 No benchmark labels or frozen predictions entered implementation or testing.
+
+### 2026-09-16 — Native raw-to-QC wrapper, synthetic end-to-end result
+
+`test/run_reconstructed_chitosan.jl` now composes counting or explicit cached
+selected-N geometry, base/split refits, local features, three patch exports,
+reconstructed descriptor, native CC/Fisher, existing Julia predictors, soft
+vote, validation, QC and native maps. It propagates the Julia 1.13 executable and
+up to four threads to subprocesses. The old default triage file is disabled.
+No Python, benchmark, known sequence, reference table, or automatic grader is
+called by production. Existing inputs can be reused explicitly; output paths
+must be new. Counts and lobe-key coverage are checked after every extraction.
+Missing files abort rather than silently reducing the cohort; `failures.tsv`
+retains the intended input file list and stage. Unknown counts are NA, not zero.
+
+The native pipeline has 12 passing input/failure-boundary assertions and seven
+passing end-to-end assertions on a five-chain/40-lobe synthetic extracted-input
+fixture. That fixture exercises real subprocesses through predictions, QC and
+five individual maps plus the grid. It does not exercise raw SXM parsing or
+Gaussian fitting. A separate one-chain plotting smoke passes and was visually
+checked; its initial Julia ternary parse error and clipped grid heading were
+fixed without changing science. The plot legend states 0=GlcN, 1=GlcNAc, ?=
+uncertain. Output confidence is an uncalibrated soft-vote margin; no new
+confidence-driven abstention rule is introduced.
+
+A focused real `251206_013.sxm` timing run has started locally with the explicit
+10–20mer adaptive-support config, a fresh count (not a choice between old auto /
+manual summaries), and the native checked CC templates. It is capped at 30
+minutes. No remote job has been submitted. Real full-cohort application and
+frozen-champion comparison remain pending.

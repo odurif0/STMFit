@@ -1209,3 +1209,113 @@ check the known u/t orientation, reflection sign, positive-scale invariance,
 center-row behavior, and invalid-data handling. Complete binary agreement with
 a frozen output would establish agreement on those inputs only; matching three
 aggregate benchmark metrics is not a proof of formula identity.
+
+
+### Native production command
+
+Use Julia **1.13** (`julia --version` must show 1.13.x). The root Manifest is
+not hand-edited. The production command launches only the same Julia executable:
+
+```bash
+GKSwstype=100 julia -t 4 --project=. test/run_reconstructed_chitosan.jl \
+  --data-dir /path/to/unknown_sxm_directory \
+  --count-config config/chitosan_10_20mer_adaptive_support_rescue.toml \
+  --config config/unit_assignment_reconstructed.toml \
+  --cube0 qe/glcn_restart5/glcn_central_ldos.cube \
+  --frame0 qe/glcn_restart5/frame.tsv \
+  --cube1 qe/glcnac/glcnac_central_ldos.cube \
+  --frame1 qe/glcnac/frame.tsv \
+  --outdir results/my_reconstructed_run
+```
+
+Add `--dry-run` first. The output directory must not exist. Raw files may be
+nested, but their basenames must be unique. No benchmark manifest, expected N,
+reference predictions, grading option, control sequence, or composition prior
+is accepted by this command. The driver's historical triage-file default is
+explicitly disabled. The 1D diagnostic stays disabled.
+
+Without cached inputs, the stages are counting, fixed-selected-N base and split
+refits, local amplitude features, normalized forward/backward 17×17 patches and
+backward 9×9 patches, descriptor, native constant-current molds/Fisher, existing
+Julia GMM/k-means predictors, soft vote, validation, QC and maps. `N_selected`
+comes from the configured label-free counting policy. Fixed-N feature extraction
+refits geometry; it does not restore the exact earlier fit or its adaptive
+support. This limitation matters when comparing regenerated and saved inputs.
+
+Useful cache options are `--selected-summary` (label-free `filepath,N_selected`),
+`--features`, `--split-features`, `--patches-fwd`, `--patches-bwd`,
+`--descriptor-patches`, and `--templates`. Cached geometry can skip counting;
+its contiguous lobe keys define the previously selected N, or must match an
+explicit selected summary. Every downstream table must cover exactly those
+keys. A subset is not silently substituted for a failed chain. Only genuine
+split-fit geometry is valid for `--split-features`; all-one skew ratios in a
+base fit are not a split-fit cache. A supplied mold table replaces cube/frame
+arguments. It must have been generated with the stated settings.
+
+Outputs include:
+
+- `predictions.tsv`: every selected lobe, `0/1/?`, uncalibrated soft-vote margin,
+  `probability_1`, invalid reason and explicit reconstructed model name;
+- `summary.tsv`: selected N and ordered assignment for each chain;
+- `review_queue.tsv`: generic, label-free QC; this is not an accuracy estimate;
+- `plots/standalone/*_chain.png` and `plots/summary_grid.png`: fitted-coordinate
+  maps with `0 = GlcN`, `1 = GlcNAc`, and gray `?`;
+- per-stage intermediates and `logs/`; a nonzero exit and `failures.tsv` identify
+  incomplete runs. Such a run must not be presented as a complete application.
+
+`?` means a required component is unavailable. Low soft-vote margins remain
+visible in the TSV/QC; no benchmark-chosen abstention threshold is added.
+Clustering and the Fisher fits use the supplied unlabeled cohort. Changing that
+cohort can change predictions; a one-file timing run is not the 25-file result.
+There is no known sequence for the 10–20mer application, so processing it cannot
+establish chemical accuracy.
+
+### Native numerical conventions
+
+The constant-current port retains the old first-axis-fast cube index, sampling
+grid increments, highest occupied z, and first-isovalue-below-target rule. Its
+actual GlcN/GlcNAc template TSV is byte-identical to the Python reference on the
+fixed inputs/settings. Target height is explicitly 0.50 nm, not the 0.55 nm
+field found in the frame files. The Python implementation is used only in tests.
+
+The Fisher port retains PCA10, full-covariance/free-weight GMM2, amplitude sign
+mapping, sample latent covariance plus ridge, opposite even/odd-lobe folds,
+raw-patch/centered-midpoint scoring, reflection maximum and six-decimal margins.
+The old row-major last-axis reversal flips physical **t** for these serialized
+patches, despite its historical `flip_u_disk` name. This is retained explicitly.
+The native initialization/RNG, Lloyd stopping and responsibility arithmetic
+differ from sklearn. Byte-identical sklearn predictions are not claimed.
+Invalid or degenerate folds retain their rows with NA and an explicit reason.
+
+### Comparison stays outside production
+
+After prediction, compare with the frozen table without changing parameters:
+
+```bash
+julia --project=. test/compare_reconstructed_champion.jl \
+  --predictions results/my_reconstructed_run/predictions.tsv \
+  --reference results/unit_assignment/best_labelfree_cc_soft_20260802.tsv \
+  --outdir results/my_reconstructed_comparison
+```
+
+This emits keyed label/confidence differences plus missing/extra lobes. It does
+not fit, choose settings, align to a known sequence, or grade automatically.
+Optional `--benchmark-manifest` is only an external reporting filter to create
+`predictions_for_external_grade.tsv`; run the existing grader separately.
+Compare like input cohorts and report refit/runtime/initialization differences.
+The frozen champion's accepted 79.3%, 36 exact chains and 677/854 remain a
+historical reference, not an accuracy claim for the reconstruction.
+
+Focused tests (Python/NumPy is needed only for numerical reference tests):
+
+```bash
+julia --project=. test/test_reconstructed_unit_assignment.jl
+julia --project=. test/test_cc_mold_native.jl
+julia --project=. test/test_empirical_fisher_native.jl
+GKSwstype=100 julia --project=. test/test_reconstructed_pipeline.jl --e2e
+julia --project=. test/test_compare_reconstructed_champion.jl
+```
+
+The synthetic pipeline test supplies extracted inputs. A separate real single-
+file check is needed for SXM/count/refit wiring. Multi-file Gaussian refits belong
+on the cluster after that timing check and a dry run, not on the local machine.

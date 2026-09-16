@@ -307,6 +307,25 @@ explicit abstention requiring review, not as a dropped lobe.
 
 <!-- UNKNOWN-CHITOSAN-WORKFLOW:END -->
 
+#### Approved native reconstruction (September 16)
+
+The lost `patch_u_asym` producer cannot be recovered. The approved replacement
+is explicitly named `cc_soft_reconstructed_v1`; it is not presented as the frozen
+champion under another name. Its fixed half-plane descriptor and native Julia
+1.13 raw-to-QC command are documented in
+[Explicit Julia reconstruction](unit_assignment.md#Explicit-Julia-reconstruction-(2026-09-16)).
+Use `test/run_reconstructed_chitosan.jl --help` and `--dry-run` before a run.
+The command has no benchmark/reference/grading input. The separate
+`test/compare_reconstructed_champion.jl` reports keyed output differences after
+prediction; external grading stays separate. Do not search descriptor variants
+to recover the old aggregate score.
+
+Native CC/Fisher tests and the extracted-input synthetic pipeline pass. Actual
+25-chain application and rebuilt benchmark comparison are still pending at this
+point; these tests do not constitute milestone completion. No old terminal
+challenger status below is reopened by this bounded reconstruction.
+
+
 ### Challenger terminal status (T9 closure)
 
 <!-- T9-TERMINAL-STATUS:START -->
