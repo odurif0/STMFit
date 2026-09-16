@@ -5290,3 +5290,20 @@ names its exact path and command. No candidates were refit or parameters
 changed. New reports/logs are under
 `results/unknown_chitosan_milestone1/counting_regression/`; the separately
 regraded frozen assignment remains **677/854 (79.3%), 36/145 exact**.
+
+### 2026-09-16 — Unknown-assignment figures: one-file grid and explicit convention
+
+`plot_unit_assignment.py` crashed on a one-file grid because its subplot axes
+were left as a nested array. Axes are now flattened for every file count. The
+grid title is method-neutral (`Label-free unit-assignment map`) instead of
+claiming that every input came from preliminary DFT molds at a fixed height.
+Standalone figures now show the existing convention explicitly: GlcN (0),
+GlcNAc (1), uncertain (?). Ordering, colors, confidence values, assignment
+thresholds, and the legacy overlay coordinate mapping are unchanged.
+
+`MPLBACKEND=Agg python3 test/test_plot_unit_assignment.py` passes three focused
+checks: one-file grid, standalone 0/1/? with the legend and confidence summary,
+and invalid prediction rejection. The champion preflight/vote suite still
+passes 15 tests. Julia 1.13 native package tests pass: STMFitCore 32 assertions,
+STMSXMIO 21 assertions. These checks use synthetic fixtures and existing tests;
+they do not imply successful raw-input application to the 25 real chains.

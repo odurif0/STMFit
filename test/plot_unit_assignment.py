@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Plot unit-assignment predictions overlaid on STM chain fits.
 
-Creates two outputs per file:
-  1. Standalone chain diagram (x_nm, y_nm scatter, 0/1 colored)
+Creates a summary grid and two outputs per file:
+  1. Standalone chain diagram (x_nm, y_nm scatter, 0/1/? colored)
   2. Annotated overlay on the existing best-fit PNG
+
+Uses the existing convention: 0 = GlcN, 1 = GlcNAc, ? = uncertain.
 
 Usage:
   python3 test/plot_unit_assignment.py \\
@@ -126,6 +128,7 @@ def plot_chain_standalone(feats, preds, f_name, out_path):
     ax.set_xlabel("x (nm)")
     ax.set_ylabel("y (nm)")
     ax.set_title(f"{f_name}  N={len(lobes)}", fontsize=10)
+    ax.legend(handles=legend_handles(), fontsize=8)
     ax.set_aspect("equal")
     ax.invert_yaxis()  # STM convention: y increases downward
     plt.tight_layout()
@@ -176,7 +179,7 @@ def plot_summary_grid(feats, preds, out_path, n_cols=5):
     n = len(files)
     n_rows = (n + n_cols - 1) // n_cols
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(n_cols * 3, n_rows * 2.8))
-    axes = np.array(axes).reshape(-1) if n > 1 else np.array([axes])
+    axes = np.asarray(axes).reshape(-1)
 
     for idx, f_name in enumerate(files):
         ax = axes[idx]
@@ -206,7 +209,7 @@ def plot_summary_grid(feats, preds, out_path, n_cols=5):
         axes[idx].axis("off")
 
     fig.legend(handles=legend_handles(), loc="lower center", ncol=3, fontsize=9)
-    fig.suptitle("Unit assignment — preliminary DFT-STM molds h=0.50 nm", fontsize=11)
+    fig.suptitle("Label-free unit-assignment map", fontsize=11)
     plt.tight_layout(rect=(0.0, 0.03, 1.0, 0.97))
     fig.savefig(out_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
