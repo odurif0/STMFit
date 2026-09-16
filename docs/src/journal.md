@@ -5307,3 +5307,15 @@ and invalid prediction rejection. The champion preflight/vote suite still
 passes 15 tests. Julia 1.13 native package tests pass: STMFitCore 32 assertions,
 STMSXMIO 21 assertions. These checks use synthetic fixtures and existing tests;
 they do not imply successful raw-input application to the 25 real chains.
+
+Follow-up verification for this figure change: the native `--mode all` CLI
+rendered the two-lobe 0/? fixture to
+`results/unknown_chitosan_milestone1/champion_fixture/plots/`. The standalone
+image was inspected; its unknown lobe is neutral gray and the chemical legend
+is explicit. The Julia 1.13 QC command flags the same fixture for uncertain
+fraction 0.5 and mean confidence 0.4, with no missing-plot flag. These are
+synthetic checks, not real-chain assignments. `GKSwstype=100 julia --project=.
+docs/make.jl` exits 0; Documenter only warns about archive/search-index size
+and skips deployment outside CI. Logs remain under
+`results/unknown_chitosan_milestone1/`. Milestone 1 remains incomplete pending
+the original `patch_u_asym` extraction recipe; no replacement was implemented.
