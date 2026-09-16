@@ -5392,3 +5392,30 @@ for that explicit setting. No QE work or benchmark-guided setting change occurs.
 The real-pair log and reusable native templates are under
 `results/reconstructed_cc_soft_v1/mold_parity/` (log alongside that directory).
 Raw malformed inputs and existing outputs are rejected rather than overwritten.
+
+### 2026-09-16 — Native empirical Fisher reconstruction
+
+The native Fisher component is in `test/lib/empirical_fisher_native.jl`, with
+`test/build_empirical_fisher_native.jl` as its production CLI. It reads only the
+forward patches and explicit reconstruction config. Python/NumPy is used only in
+numerical tests, not production. `test/test_empirical_fisher_native.jl` passes
+201 assertions under Julia 1.13, including separate-process byte replay.
+
+The fixed port keeps PCA10, a two-component full-covariance GMM with learned
+weights, center-pixel amplitude ordering, latent sample covariance plus ridge,
+Fisher back-projection, opposite even/odd-lobe folds, six-decimal margins, and
+the historical raw-patch/centered-midpoint score. The legacy row-major reshape
+and last-axis reversal actually reverse physical t for the current u-outer /
+t-inner extractor; the old `flip_u_disk` name did not identify the physical axis
+correctly. This convention is retained explicitly, not silently changed.
+
+This native GMM is not asserted to reproduce sklearn bit for bit. Julia's
+MersenneTwister, one two-center kmeans++ draw, Lloyd partition-stability stopping,
+exact responsibility masses (rather than sklearn's epsilon addition), and
+SVD/BLAS rounding can change fitted clusters. They are documented numerical
+implementation differences, not variants selected by champion agreement.
+Finite EM solutions at the configured iteration limit remain usable with a
+warning. Invalid patches and missing/degenerate opposite folds retain all input
+keys with NA and an explicit reason. Tests cover sign/orientation, fixed-partition
+NumPy linear algebra, EM arithmetic, fold independence, and unavailable scores.
+No benchmark labels or frozen predictions entered implementation or testing.
