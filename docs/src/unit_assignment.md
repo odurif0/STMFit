@@ -1273,8 +1273,10 @@ Outputs include:
   `probability_1`, invalid reason and explicit reconstructed model name;
 - `summary.tsv`: selected N and ordered assignment for each chain;
 - `review_queue.tsv`: generic, label-free QC; this is not an accuracy estimate;
-- `plots/standalone/*_chain.png` and `plots/summary_grid.png`: fitted-coordinate
-  maps with `0 = GlcN`, `1 = GlcNAc`, and gray `?`;
+- `plots/standalone/*_chain.png`: fitted-coordinate maps with `0 = GlcN`,
+  `1 = GlcNAc`, and gray `?`. The current plotter writes overview page 1 as
+  `plots/summary_grid.png`, additional numbered pages as needed, and the complete
+  file-to-page index in `plots/summary_pages.tsv` (at most eight chains per page);
 - per-stage intermediates and `logs/`; a nonzero exit and `failures.tsv` identify
   incomplete runs. Such a run must not be presented as a complete application.
 
@@ -1476,7 +1478,7 @@ after complete outputs are fetched and checked.
   summary remains mandatory.
 - All 900 cached `skew_ratio` values are one: this is not a split cache. An older
   39-file split table also has incompatible N on four scans. Neither is passed
-  as `--split-features`; all 146 genuine split fits will be computed anew.
+  as `--split-features`; job 11786116 computed all 146 genuine split fits anew.
 
 Prepared inputs are in
 `results/reconstructed_cc_soft_v1/full146_v1_inputs/`: byte-identical
@@ -1486,13 +1488,13 @@ symlinks. The raw names match the cache exactly. The wrapper's optional
 summary matches the cache; it is unset for this run. It does not auto-discover
 a summary. `STMFIT_OUTDIR` names the direct new full146 output directory.
 
-**Submitted September 18:** Viper job **11786116**, once, from `00528d2`.
-The initial scheduler state is `PENDING (QOSGrpCpuLimit)`; no scientific result
-or external grade is available yet. Code and inputs are staged separately from
-the older Viper tree, with matching hashes. Julia 1.13 normal production imports
-and the actual metadata dry-run pass after targeted package-cache setup; the
-Manifest and scientific settings are unchanged. See `hpc/README.md` for paths
-and the journal for the setup failures and their resolution. Do not resubmit.
+**Completed September 18:** Viper job **11786116**, submitted once from `00528d2`,
+finished `0:0` in **11m04s** (00:36:57–00:48:01 CEST). All 146/900 outputs have
+been fetched and checked; external comparison and grading are complete below.
+The eight-CPU allocation used Julia 1.13 without changing the Manifest or
+scientific settings. Code and inputs were staged separately from the older Viper
+tree. See `hpc/README.md` and the journal for paths, setup failures and recovery.
+The monitor is stopped. **Do not resubmit.**
 
 Completion requires all 146 files / 900 keys at each required stage, preserved
 base geometry and settings, explicit invalid-component reasons where needed,
@@ -1502,6 +1504,95 @@ missing control positions and extra predicted lobes as well as classified
 accuracy and exact chains. Equality of scores or assignments would not prove
 recovery of the lost descriptor. This fixed-cache comparison is **not a fresh
 Julia 1.13 count benchmark or a rebuilt promoted counting-to-assignment chain**.
+
+### Completed full146 reconstruction and grade (2026-09-18)
+
+The fixed application is under
+`results/reconstructed_cc_soft_v1/viper_20260917_full146_v1/`. All **184 output
+files plus Slurm log** match remote hashes; the 358 remote job source/key-runtime
+identities and 148 prepared inputs stayed unchanged during execution. Local Julia 1.13 saved-output verification
+passes **73/73** checks, including full 146/900 key coverage in twelve tables,
+genuine split chunks, base/config preservation, native component/final validators,
+and byte-identical saved descriptor/join/vote/summary/QC replays. No fit or
+classifier was rerun locally.
+
+**Assignments and uncertainty.** The final table has **695 zero / 198 one /
+7 `?`**, with 893 `ok` and seven `unavailable_gmm` reasons. Seven partial patches
+remain in every table and invalidate the strict descriptor/Fisher input checks.
+K-means retains two of its four views on those rows; GMM has no usable joint
+view, so the final vote does not substitute the lone available component.
+The abstaining keys are `240310_Cu100009:8`, `240818_015:1`,
+`240818_019:1–4`, and `241113_088:6` (all filenames end `.sxm`). For
+`240818_019`, two mold rows have infinite class costs, and the auxiliary scorer
+prints `0000` with infinite total cost. That is not chemical evidence; the final
+assignment correctly remains `????`. Only local cost margins, not decoded
+sequences, enter the predictor.
+
+Mean/median confidence is **0.79082 / 0.8** over all rows. There are **58 assigned
+margins below 0.20**, including **twelve exact finite ties** that remain label 1
+with confidence zero by the fixed `p >= 0.5` rule. These are not `?`. The two
+binary components disagree on **146/893 jointly available lobes**, across 106
+chains. Confidence remains an uncalibrated vote margin.
+
+QC flags **43/146 chains**: 40 N outliers, six low mean margins and one high
+uncertain fraction, with overlapping reasons. The N quartiles are both six, so
+the existing cohort-relative IQR rule flags every non-six count; this is not an
+expected-N prior or permission to change N. `241113_088` is QC `ok` despite one
+`?`. Missing-view flags are not evaluated by this final-table auto-QC call.
+Clean logs do not prove convergence of every optimizer/classifier seed.
+
+**Diagnostics, not tuning criteria.** There are 94 split-skew rows at the rounded
+effective optimizer bounds (45 lower / 49 upper), and 297 perpendicular widths
+at their rounded upper bound. The reconstructed descriptor median is 0.958684;
+634/893 finite values are at least 0.9. Fisher scores are positive on 875/893
+valid rows, before the predictor negates the score. These distributions do not
+establish chemical separation, calibrated probability or an original-descriptor
+match. No bounds, descriptor or thresholds were retuned.
+
+**Figures.** The original 146-panel overview had compressed/clipped panels and
+overlapping labels. Plot-only fix `6fa3297` produces **19 indexed pages** in
+`results/reconstructed_cc_soft_v1/viper_20260917_full146_v1_figures_v1/`.
+`summary_grid.png` is explicitly page 1; `summary_grid_002.png` through
+`summary_grid_019.png` and `summary_pages.tsv` cover every file once. All 146
+standalone PNGs are byte-identical to production. The layout regression passes
+**267/267**, all 900 colored markers are present in the overview panels, and
+representative pages plus sixteen standalone maps were visually inspected.
+Original figures are preserved. These are fitted-coordinate maps, not STM
+image overlays; class color does not encode confidence. A separate two-pixel
+GR raster-rounding issue was reproduced before correcting the generated
+integrity checker's exact-height assumption; it did not change production data.
+
+**External evaluation.** Reports are under
+`results/reconstructed_cc_soft_v1/viper_20260917_full146_v1_external/`.
+Comparison with `best_labelfree_cc_soft_20260802.tsv` gives **846/892 matching
+labels (94.8%)**, zero missing reference keys and eight extra keys, all from
+`240310_Cu100009.sxm`, outside the confirmed145 manifest. The filtered 145-file
+table has exactly the same 892 keys as the reference. Differences are 39
+reference-1 → reconstructed-0, one 0 → 1, and six binary → `?`; reported
+confidences are not identical either.
+
+| External full145 own-N quantity | Reconstructed result |
+|---|---:|
+| Control positions / predicted lobes | 870 / 892 |
+| Classified control positions | 849/870 (97.6%) |
+| Correct among classified | **666/849 (78.4%)** |
+| Correct over all control positions | **666/870 (76.6%)** |
+| Emitted errors / unclassified control positions | 183 / 21 |
+| Missing control positions | 16, in 14 short-N files |
+| Extra predicted lobes | 38, in 25 long-N files |
+| Exact chains | **24/145** |
+
+The 21 unclassified control positions are 16 missing plus five unavailable
+under the existing grading alignment. The report's post-hoc `honest_uncertain`
+value, **204/870**, also includes the 183 emitted errors; it is **not** a count
+of production abstentions. Extra lobes are reported, not aligned to the six
+external control positions or silently dropped from the production table.
+
+The frozen reference remains **677/854 (79.3%) and 36 exact chains**. The new
+result is lower and is **not promoted**. The authorized fixed reconstruction,
+comparison and grade are complete, with no label feedback into production.
+This does not recover the lost descriptor, rebuild the promoted counting chain,
+or validate the chemistry of the unknown 10–20mer application.
 
 ### Native numerical conventions
 
@@ -1548,6 +1639,7 @@ julia --project=. test/test_cc_mold_native.jl
 julia --project=. test/test_empirical_fisher_native.jl
 GKSwstype=100 julia --project=. test/test_reconstructed_pipeline.jl --e2e
 julia --project=. test/test_compare_reconstructed_champion.jl
+julia --project=. test/test_reconstructed_unit_assignment_plots.jl
 ```
 
 The synthetic pipeline test supplies extracted inputs. A separate real single-

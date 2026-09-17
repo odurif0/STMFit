@@ -410,15 +410,47 @@ Further constrained-shape and channel-disagreement diagnostics are recorded in
 
 No logged exception or Julia warning occurs. The split log for
 `260222_043.sxm` reports a coverage-floor clamp from 6 to its already selected
-fixed N=5; the five rows are retained, with no new count selection. The authorized
-full146 reconstruction was submitted once as **Viper job 11786116** on September
-18, from `00528d2`; its initial state is pending for group CPU quota. Comparison
-and grading await complete, verified outputs. Its fixed-cache scope is documented in
-[Approved full146 comparison](unit_assignment.md#Approved-full146-comparison-scope-(2026-09-17)):
-retain the 900 cached GCV lobe keys, do not pair them with the distinct 871-lobe
-promoted counting summary, and run comparison/grading only outside production.
-This application does not establish chemical accuracy or complete the milestone.
-No old terminal challenger status below is reopened.
+fixed N=5; the five rows are retained, with no new count selection. This unknown25
+application does not establish chemical accuracy. Its outputs are unchanged.
+
+#### Completed full146 reconstruction and external evaluation (2026-09-18)
+
+The single authorized **Viper job 11786116**, from `00528d2`, completed `0:0` in
+**11m04s**. All **146 files / 900 cached GCV lobe keys** are retained through
+assignment; this is not the distinct 871-lobe promoted counting summary or a
+fresh count benchmark. See the [fixed-cache scope](unit_assignment.md#Approved-full146-comparison-scope-(2026-09-17)).
+
+- Production: `results/reconstructed_cc_soft_v1/viper_20260917_full146_v1/`.
+  Final labels are **695 zero / 198 one / 7 `?`**. Seven incomplete patch rows
+  propagate to unavailable GMM input; no row is dropped or label forced.
+- Integrity: all 184 outputs plus Slurm log match remote hashes. Julia 1.13
+  saved-value checks pass **73/73**, including native validators and byte-identical
+  descriptor/join/vote/summary/QC replays. All inputs and scientific settings
+  remain unchanged. Clean logs do not prove every optimizer seed converged.
+- QC: **43/146 chains flagged**, including 40 cohort-relative N outliers,
+  six low mean margins and one high uncertain fraction (overlapping reasons).
+  There are twelve finite zero-margin votes, still label 1 by the frozen rule.
+  Mean confidence is 0.79082, not a calibrated chemical probability.
+- Figures: the original giant overview was poorly laid out. Plot-only fix
+  `6fa3297` leaves the 146 standalone PNGs byte-identical and creates **19 readable
+  overview pages** plus `summary_pages.tsv`, under
+  `results/reconstructed_cc_soft_v1/viper_20260917_full146_v1_figures_v1/`.
+  The original figures are preserved; these are fitted-coordinate maps, not raw
+  STM overlays. The layout regression passes **267/267**.
+- External comparison/grade:
+  `results/reconstructed_cc_soft_v1/viper_20260917_full146_v1_external/`.
+  Agreement is **846/892 overlapping labels**, with zero missing reference keys
+  and eight extra keys from the one file outside the confirmed145 manifest.
+  Full145 own-N grading gives **666/849 correct (78.4%)**, **24/145 exact chains**,
+  **16 missing control positions** and **38 extra predicted lobes**. Correctness
+  over all 870 control positions is **666/870 (76.6%)**. There are 183 emitted
+  errors and 21 unclassified control positions (16 missing + five unavailable).
+
+The reference remains **677/854 (79.3%) / 36 exact chains**. This reconstruction
+is not promoted, not an exact recovery of the lost descriptor, and not evidence
+of unknown-chain chemical accuracy. No benchmark result fed back into fitting,
+assignment, thresholds or abstention. The authorized full146 task is complete;
+no old terminal challenger status below is reopened.
 
 
 ### Challenger terminal status (T9 closure)

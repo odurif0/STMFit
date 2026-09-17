@@ -14,7 +14,7 @@ for fitting, selection, thresholding, abstention, or method calibration.
 known sequences. Visual QC is possible, but it does not establish chemical
 assignment accuracy.
 
-**Unit assignment state of the art (promoted):** label-free soft vote of the
+**Unit assignment (frozen promoted reference):** label-free soft vote of the
 k-means 4-view and the GMM 1-view + adaptive-contour (constant-current) mold
 margins + empirical Fisher-discriminant mold margin: 79.3% classified
 physical accuracy / 36 exact chains / 677 correct of 854 — the promotion bar
@@ -33,11 +33,16 @@ local integrity checks pass and QC is reproduced exactly. The model outputs
 **189 class-0 and 33 class-1 assignments, with no `?`**. However, **19/25 chains
 are flagged for review** for low mean confidence. Confidence is an uncalibrated
 vote margin; zero abstentions do not establish certainty or chemical accuracy.
-The original failed run is preserved. Full146 reconstruction was submitted once
-as **Viper job 11786116** on September 18 (initially waiting for group CPU quota).
-External comparison and grading await complete, verified outputs. This run
-retains the cached GCV geometry (146 scans / 900 lobes), not mixing it with the
-separate promoted-counting summary (871 lobes). Milestone 1 remains incomplete. See
+The original failed run is preserved. Full146 **Viper job 11786116** completed on
+September 18 in 11 min 04 s, retaining all **146 scans / 900 cached GCV lobes**:
+**695 class-0 / 198 class-1 / 7 `?`**, with 43 chains flagged for review.
+External full145 own-N grading gives **78.4% (666/849 classified positions)**
+and **24/145 exact chains**; 16 control positions are missing and 38 predicted
+lobes are extra. This is below the frozen reference, so the reconstruction is
+**not promoted** or claimed as an exact recovery. The authorized run and external
+evaluation are complete; historical-champion recovery and unknown-chain chemical
+validation remain unresolved. The 900-lobe cache is not the separate promoted
+counting summary (871 lobes). See
 [`docs/src/unit_assignment.md`](docs/src/unit_assignment.md#explicit-julia-reconstruction-2026-09-16)
 for the command, numerical differences and limitations.
 

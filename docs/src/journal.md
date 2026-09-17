@@ -2316,15 +2316,19 @@ See `docs/src/selection.md` for the full guard specification and
     review for low mean confidence. Confidence is uncalibrated; zero `?` does
     not establish certainty. The grid and seven priority standalone maps were
     inspected, but they are fitted-coordinate maps, not raw STM overlays.
-    Both monitors are stopped and the failed run is preserved. The user has now
-    approved the fixed full146 reconstruction and external comparison/grade.
-    Preparation retains the cached GCV geometry (146 files / 900 keys), not the
-    incompatible promoted-count summary (871 keys). Full146 was submitted once
-    on Viper as **11786116 (Sep 18)** from `00528d2`, initially pending for group
-    CPU quota. Source/input hashes, Julia 1.13 imports and metadata dry-run pass;
-    the Manifest is unchanged. Complete outputs and external comparison/grade
-    remain pending. No benchmark-guided tuning, chemical accuracy or milestone
-    completion is claimed. Do not resubmit old or current jobs.
+    All run monitors are stopped and failed outputs are preserved. The authorized
+    full146 reconstruction/comparison/grade is now **complete (Sep 18)**:
+    Viper job **11786116**, source `00528d2`, completed `0:0` in 11m04s with all
+    **146/900** cached GCV keys, **695 zero / 198 one / 7 `?`**, and unchanged
+    scientific inputs/settings. This is not the incompatible 871-key promoted
+    counting chain. Saved-output checks pass 73/73; plot-only fix `6fa3297` passes
+    267/267 and provides 19 readable overview pages without changing standalone
+    maps. External full145 own-N grade: **666/849 (78.4%), 24 exact chains**,
+    16 missing control positions, 38 extra lobes. The frozen reference remains
+    **677/854 (79.3%), 36 exact chains**. The reconstruction is not promoted or
+    called an exact historical recovery; unknown-chain chemical validation and
+    milestone closure remain unresolved. No benchmark-guided tuning or new
+    method campaign follows. Do not resubmit old or current jobs.
 
 0b. **Can label-free unit assignment reach the promotion bar?** → **RESOLVED
     (Aug 3)**: the label-free champion (soft vote of k-means 4-view and GMM
@@ -6258,3 +6262,99 @@ confidence. The scientific inputs, counts, fits, predictors, abstention rules,
 dependencies and unknown25 outputs are unchanged. External comparison and the
 full145 own-N grade are the next separate local step; no benchmark results
 were read to choose this layout or change predictions.
+
+
+### 2026-09-18 — Full146 external comparison and own-N grade completed
+
+After the preceding transfer, 146/900 integrity, log/QC and figure checks,
+the fixed reconstruction was evaluated locally under Julia 1.13. This is the
+authorized post-processing step, not a new fit, descriptor/threshold variant,
+counting run or training campaign. Production inputs and all 184 outputs remain
+byte-identical after evaluation. The plot-only source fix is `6fa3297`; the
+scientific job still comes from `00528d2`. Unknown25 and all earlier outputs
+remain untouched.
+
+**Keyed comparison.** `test/compare_reconstructed_champion.jl` read the completed
+900-row predictions and the frozen
+`results/unit_assignment/best_labelfree_cc_soft_20260802.tsv`. It finished in
+**3.92 s** and reports **846/892 matching labels (94.8%)**, **zero missing
+reference keys**, and **eight extra keys**. All eight extras are
+`240310_Cu100009.sxm`, the file outside the confirmed145 manifest. The external
+membership filter retains **892 rows / 145 files**, exactly the same key set
+as the reference; no production row was removed. Of 46 differing labels, 39
+change reference 1 to reconstructed 0, one changes 0 to 1, and six change a
+binary label to `?`. Reported confidences differ too (maximum absolute difference
+0.8). Agreement is not descriptor identity or proof of calibrated confidence.
+
+**Full145 own-N grade.** The separate
+`test/report_unit_assignment_benchmark.jl --full145-own-n` call uses only that
+filtered external copy, the confirmed145 manifest and the existing external
+control convention. It finishes in **11.47 s**. The registered control has
+**145 files / 870 positions**, while the label-free cache supplies **892 lobes**
+on those files. Missing control positions are **16 across 14 short-N files**;
+extra predicted lobes are **38 across 25 long-N files**. These counts are
+reported, not repaired, trimmed from production, or fed into model selection.
+This is not a fresh grade of the promoted 871-lobe counting chain.
+
+| Quantity | `cc_soft_reconstructed_v1` |
+|---|---:|
+| Classified control positions | 849/870 (97.6%) |
+| Physical convention correct / classified | **666/849 (78.4%)** |
+| Exact chains | **24/145** |
+| Correct / all control positions | **666/870 (76.6%)** |
+| Emitted errors | 183 |
+| Unclassified control positions | 21 = 16 missing + five unavailable |
+| Post-hoc `honest_uncertain` | 204 = 183 errors + 21 unclassified |
+| Supervised oracle diagnostic | 675/849 (79.5%), 24 exact chains |
+
+The oracle is not the label-free result and is not used to change labels.
+The lower-level grader's 854-position printout describes present control
+positions; the own-N report restores all 870, including the 16 absent ones.
+Likewise `honest_uncertain` is not a model abstention count. Production has
+seven `?`; the confirmed145 copy has six, one of which lies outside the
+aligned control positions. Per-file and per-position tables independently sum
+to the report. At positions 2 and 5, classified accuracy is 82/144 (56.9%) and
+65/143 (45.5%); these are external diagnostics, not calibration targets.
+
+**Comparison with the frozen reference and decision.** The accepted reference
+remains **677/854 (79.3%) and 36 exact chains**. The reconstruction has fewer
+correct classified positions and exact chains; it is **not promoted**. No new
+parameter search, confidence/abstention change or retraining is authorized or
+started. This completes the approved full146 application/comparison task, but
+not an exact recovery of the lost descriptor or chemical validation of unknown
+10–20mer sequences. Historical benchmark headlines remain attached to the
+frozen outputs, not copied onto this reconstruction.
+
+**Production QC context.** Final full146 labels are 695 zero / 198 one / seven
+`?`, with mean/median uncalibrated margin 0.79082/0.8. Twelve exact finite ties
+still emit 1; 58 assigned margins are below 0.20 (descriptive only). The binary
+components disagree on 146/893 jointly available rows across 106 chains. QC
+flags 43 chains: 40 N outliers, six low mean margins and one high uncertain
+fraction, with overlaps. Q1=Q3=6 explains the cohort-relative N flag; it is not
+an expected-N constraint. `241113_088` is QC `ok` despite one unavailable lobe;
+this auto-QC call does not evaluate missing component views.
+
+The seven incomplete-patch keys remain in descriptor, Fisher, component and
+final tables with their native reasons. In `240818_019`, two local mold rows
+have infinite costs and the auxiliary scorer prints `0000` with infinite file
+cost; the final assignment is correctly `????`. That nominal auxiliary
+sequence must not be treated as chemical evidence. No extra logged error or
+iteration-limit warning occurs, but not every optimizer/seed termination state
+is exported. Split skew has 94 rounded effective-bound hits (45 lower / 49
+upper); perpendicular widths have 297 upper hits. Descriptor median 0.958684
+and 875/893 positive exported Fisher scores are distributional diagnostics,
+not chemical class counts. None of these observations was used for retuning.
+
+**Local deliverables:**
+
+- Original complete production: `results/reconstructed_cc_soft_v1/viper_20260917_full146_v1/`.
+- Corrected figures, nineteen indexed pages and byte-identical standalone maps:
+  `results/reconstructed_cc_soft_v1/viper_20260917_full146_v1_figures_v1/`.
+- External reports: `results/reconstructed_cc_soft_v1/viper_20260917_full146_v1_external/`;
+  `comparison/` contains keyed differences and the membership-only grade input;
+  `grade_full145_own_n/` contains `report.md`, `summary.tsv`, per-file grades and
+  per-position errors. Commands and stdout are retained beside them.
+- Verification/log/visual evidence: `results/reconstructed_cc_soft_v1/full146_launch_v1/`,
+  including the preserved failed checker and intermediate layout probe.
+
+No generated results, raw inputs or benchmark-derived reports are committed.

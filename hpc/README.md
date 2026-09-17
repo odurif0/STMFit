@@ -372,8 +372,8 @@ September 17, from tested source `aa422a3`: **COMPLETED, exit 0:0**. It ran on
 24 hours were requested; accounting records **eight allocated CPUs** and
 MaxRSS **3,876,696 KiB (about 3.70 GiB)**. No second allocation was started.
 **Do not repeat the submission for this completed run.** Only unknown25 ran;
-full146 is now separately submitted as job 11786116; its external grade remains
-pending. See the full146-only section below.
+full146 has since completed separately as job 11786116, including local external
+evaluation. See the full146-only section below.
 
 All 25 files / 222 lobe keys are present through the application. Local Julia
 1.13 integrity verification passes 179 assertions; prediction validation passes
@@ -466,11 +466,12 @@ script (which would rerun unknown25). The new entrypoint requests one node/task,
 four CPUs, 16,000 MB and 24 hours. It does not hardcode a partition; Viper is the
 host for this multi-file fit. Authentication and Julia setup are now resolved.
 **Job 11786116 was submitted once on September 18 at 00:04:54 CEST**, from
-`00528d2`. Its initial state is `PENDING (QOSGrpCpuLimit)`, requesting four CPUs
-and 16,000 MB for 24 hours in the automatically selected `small` partition.
-Test-only ID 11786052 was not a scientific job; its estimate of eight processors
-is not an actual allocation. Accounting will establish the final allocation.
-**Do not repeat the submission.** Outputs, comparison and grading are pending.
+`00528d2`. After waiting for group CPU quota, it completed **`0:0`**, from
+**00:36:57 to 00:48:01 CEST (11m04s)** on `vipc2162`, in `small`. Four CPUs,
+16,000 MB and 24 hours were requested; accounting confirms **eight allocated
+CPUs** and **MaxRSS 3,486,576 KiB (about 3.33 GiB)**. Test-only ID 11786052 was
+not a scientific job. The monitor is cancelled. **Do not repeat the submission.**
+Outputs, local validation, separate comparison and own-N grading are complete.
 
 The existing `/u/oldu/code/STMFit` tree was left untouched. This run uses:
 
@@ -481,11 +482,32 @@ The existing `/u/oldu/code/STMFit` tree was left untouched. This run uses:
   under that project (the name retains the preparation date);
 - Slurm log: `results/reconstructed_cc_soft_v1/full146-11786116.log`.
 
-All 354 source/lock files and 148 inputs match their local SHA-256 values;
-four key Julia runtime files also match. Raw files are regular, not symlinks.
+At staging, all 354 source/lock files and 148 inputs matched the frozen local
+snapshot's SHA-256 values; four key Julia runtime files also matched. Raw files are regular, not symlinks.
 The actual Julia 1.13 metadata dry-run passed without output creation. Setup
 and preflight logs are local under
 `results/reconstructed_cc_soft_v1/full146_launch_v1/`.
+
+All **184 outputs (26,642,815 bytes)** plus Slurm log were fetched with
+`raw_inputs/` excluded at every level; all remote/local output hashes match.
+The remote job source, key runtime files and prepared inputs stayed unchanged. The original direct output
+has **900 keys / 146 files**, final **695 zero / 198 one / 7 `?`**, and 43 QC
+review chains. Native Julia 1.13 saved-output checks pass **73/73**. No fit,
+classifier or additional cluster job was run after completion.
+
+A separate local plot-only correction (`6fa3297`, **267/267** regression checks)
+repairs the crowded overview, preserving every standalone PNG byte-for-byte.
+The readable 19-page figure set and index are under
+`results/reconstructed_cc_soft_v1/viper_20260917_full146_v1_figures_v1/`;
+original job images are retained. This changes only presentation, not assignments.
+
+External-only reports are under
+`results/reconstructed_cc_soft_v1/viper_20260917_full146_v1_external/`:
+**846/892** labels agree with the frozen reference (zero missing reference keys,
+eight extra keys outside the confirmed145 manifest). The full145 own-N grade is
+**666/849 (78.4%) / 24 exact chains**, with **16 missing control positions** and
+**38 extra predicted lobes**. It is below the frozen reference, **677/854 (79.3%) /
+36 exact chains**; no promotion or benchmark-guided retuning follows.
 
 The scientific inputs are fixed at **146 scans / 900 cached GCV lobe keys**.
 This is an assignment reconstruction at the cache's own N, not a replay of the
@@ -516,7 +538,8 @@ An explicitly supplied summary must be compatible; nothing is auto-discovered.
 This nonadaptive case does not waive the original-summary requirement for
 adaptive-support data.
 
-After staging and checking the environment, use the existing workflow:
+Invocation reference for a **separately approved new run**, not a replay of
+completed job 11786116. After staging and checking the environment:
 
 ```bash
 # Set absolute STMFIT_PROJECT_DIR, JULIA_BIN, STMFIT_INPUT_DIR and STMFIT_OUTDIR.
