@@ -326,7 +326,7 @@ all 11 rows retained, QC and maps produced. Its isolated cohort is too small for
 PCA10 in each Fisher half, so all assignments are explicitly `?`. This is a
 technical pilot, not chemical validation; the pilot is not milestone completion.
 
-**September 17 application result:** Raven job `30271312` failed at the base
+**Initial September 17 attempt:** Raven job `30271312` failed at the base
 geometry coverage check after 1 h 00 min 05 s. Fresh counting covers all 25 scans
 with 222 selected lobes (range 5–16); geometry export retains 204 lobes over 23
 files. `260215_022.sxm` and `260220_083.sxm` each lack all nine selected lobes.
@@ -357,7 +357,7 @@ Outputs are under `results/reconstructed_cc_soft_v1/support_handoff_<scan>_v1/`
 3.18253642e-6 and 5.44586561e-6 respectively. This is fixed-N refitting on the
 selected support, not exact parameter replay; no settings were retuned.
 
-Native preparation now merges the old 204 valid base rows with the two nine-row
+Native preparation merged the old 204 valid base rows with the two nine-row
 recoveries, preserving every source row. Prepared inputs are in
 `results/reconstructed_cc_soft_v1/unknown25_resume_v1_inputs/`: original counting
 summary, complete base geometry (**25 files / 222 lobes**), genuine partial split
@@ -370,13 +370,50 @@ fits only the remaining **23 files / 204 lobes**, checks and merges the complete
 split table, then runs cohort-wide assignment/QC/maps. It does not repeat
 counting/base fits or run full146/grading. Its `--dry-run` checks metadata without
 reading SXM pixels, fitting or creating outputs. See `hpc/README.md` for staging
-and submission. **Job 30278010 was submitted once on Raven on September 17**
-from tested source `aa422a3`; its initial state is PENDING. The remote metadata
-dry-run and scheduler test-only passed, and all copied source/input identities
-match locally. Cohort assignments remain unavailable until the actual run
-finishes and its outputs are checked. Do not submit a duplicate, lower N, relax
-physical constraints, or omit a failure.
-No old terminal challenger status below is reopened by this bounded reconstruction.
+and submission. **Job 30278010 completed on Raven on September 17**, from tested
+source `aa422a3`: exit `0:0`, 6 min 16 s, eight allocated CPUs (four requested),
+MaxRSS about 3.70 GiB. The original count/base tables and 18 cached split rows
+were reused; the other 204 split rows were fitted. All downstream stages used
+the full 25-chain cohort. No settings, selected counts or files were changed.
+The failed run remains untouched and both monitors are stopped. Do not repeat
+this submission.
+
+The fetched application is in
+`results/reconstructed_cc_soft_v1/raven_20260917_unknown25_resume_v1/unknown25/`:
+
+- `predictions.tsv`: **222 keys / 25 files**, with **189 class-0, 33 class-1 and
+  zero `?`** model outputs; all component rows are available.
+- `summary.tsv`: the same selected counts (range 5–16), sequences and per-chain
+  assignment counts. These are predictions, not measured chemical composition.
+- `review_queue.tsv`: **19 chains flagged for low mean confidence**; one of
+  those, `251206_038.sxm` (N=16), also has the cohort-relative `n_outlier` flag.
+  Six chains have no listed review flag; that is not scientific validation.
+- `plots/`: 25 standalone fitted-coordinate maps and `summary_grid.png`. The
+  grid and seven priority standalone maps were inspected. These are not raw STM
+  overlays, and their class colors do not display the confidence margin.
+
+All 67 fetched file hashes (66 outputs plus Slurm log) match Raven. Local Julia
+1.13 verification passes **179 assertions**, covering all 12 intermediate/final
+lobe tables, exact cache reuse, saved-component vote replay, summary/QC and plot
+coverage. The native prediction validator passes; regenerated QC and the final
+vote table are byte-identical to their saved versions. No classifier or fit was
+rerun locally.
+
+`probability_1` is the mean of two component vote fractions, not a calibrated
+probability; `confidence = 2 * abs(probability_1 - 0.5)`. The lobe-wise mean is
+0.57016 and the minimum is 0.0375. Five margins are below 0.20 (a descriptive
+count, not a new threshold). `?` denotes unavailable components, not all low
+finite margins. The existing QC threshold is mean confidence <0.60. Read these
+fields alongside the maps rather than interpreting zero `?` as certainty.
+Further constrained-shape and channel-disagreement diagnostics are recorded in
+[Unit assignment](unit_assignment.md#Completed-unknown25-application-(2026-09-17)).
+
+No logged exception or Julia warning occurs. The split log for
+`260222_043.sxm` reports a coverage-floor clamp from 6 to its already selected
+fixed N=5; the five rows are retained, with no new count selection. Full146
+reconstruction/comparison/grading remain unexecuted and require a separate user
+decision. This application does not establish chemical accuracy or complete the
+milestone. No old terminal challenger status below is reopened.
 
 
 ### Challenger terminal status (T9 closure)

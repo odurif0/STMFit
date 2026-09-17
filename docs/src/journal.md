@@ -2307,29 +2307,31 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-17. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
-0c. **Apply a reproducible native pipeline to raw 10–20mer scans** → **BASE
-    GEOMETRY RECOVERED; COHORT JOB SUBMITTED (Sep 17)**: both rescued scans now
-    retain nine base and nine split lobes with the saved selected support.
-    Complete base geometry (25 files / 222 lobes) and two split caches (18 lobes)
-    are staged. After user approval, Raven job **30278010** was submitted once
-    from tested source `aa422a3` to fit the remaining 23 split files / 204 lobes
-    and run assignment/QC/maps on all 25 chains. The remote Julia 1.13 metadata
-    check and scheduler test-only pass; initial job state is PENDING. A local
-    five-minute monitor follows only this new job. Old failed job 30271312 and
-    its artifacts remain unchanged, with its monitor cancelled. Actual cohort
-    outputs, later full146 comparison/grading and milestone completion remain
-    pending. No benchmark-guided tuning or chemical validation is claimed.
+0c. **Apply a reproducible native pipeline to raw 10–20mer scans** → **UNKNOWN25
+    OUTPUTS COMPLETE; SCIENTIFIC VALIDATION STILL LIMITED (Sep 17)**: after the
+    selected-support repair, job **30278010** completed from `aa422a3` (exit 0:0,
+    6 min 16 s). All 25 scans / 222 keys are present, with exact cache reuse,
+    179 native integrity assertions and byte-identical saved-vote/QC replay.
+    The model assigns 189 class 0 / 33 class 1 / zero `?`; 19/25 chains need QC
+    review for low mean confidence. Confidence is uncalibrated; zero `?` does
+    not establish certainty. The grid and seven priority standalone maps were
+    inspected, but they are fitted-coordinate maps, not raw STM overlays.
+    Both monitors are stopped and the failed run is preserved. Full146
+    reconstruction/comparison/grading require a separate user decision; no
+    benchmark-guided tuning, chemical accuracy or milestone completion is
+    claimed.
 
 0b. **Can label-free unit assignment reach the promotion bar?** → **RESOLVED
     (Aug 3)**: the label-free champion (soft vote of k-means 4-view and GMM
     1-view + per-channel constant-current margins + Fisher empirical mold
     margin, self-training 2) scores 79.3% classified physical accuracy /
     36 exact chains / 677 fixed-denominator honest on the 145-file benchmark
-    - the promotion bar (78.9% / 18 / 677) is MET. Fully reproducible via
-    test/build_cc_soft_champion.py (verified: 677/36, zero label differences),
-    audited label-free (zero label references in all construction scripts),
-    and cross-validated (half-split Fisher mold: 66.3% per-lobe, no overfit;
-    pipeline CV 678/34).
+    - the promotion bar (78.9% / 18 / 677) is MET. Regrading saved outputs
+    reproduces the accepted metrics; a raw-input rebuild of that exact method
+    is not currently reproducible because the original `patch_u_asym` producer
+    is lost. The recorded half-split Fisher score (66.3% per-lobe) and pipeline
+    CV (678/34) are historical results, not new reconstruction validation. See
+    0c for the separately named native application.
 
 0. **Can synthetic posterior calibration transfer enough confidence to real
    scans?** → **OPEN (updated Jul 30)**: converged GlcN/GlcNAc DFT molds remain
@@ -5859,3 +5861,134 @@ predictions, uncertainty, validation/QC and figures must still be checked after
 completion. Failure will be reported with retained outputs and missing keys,
 not hidden by reducing N, omitting a scan or retuning. Full146 reconstruction
 and external comparison/grading remain separate later work.
+
+### 2026-09-17 — Unknown25 continuation completed; intact outputs, limited confidence
+
+**Deliverable:** complete and check the fixed `cc_soft_reconstructed_v1`
+application on all 25 unknown-chain scans, keeping the original adaptive
+selected summary, selected counts and scientific settings. Done for this
+application means complete file/lobe coverage, usable or explicitly unavailable
+components, reproducible prediction/QC tables and inspected diagnostic figures.
+It does not mean chemical accuracy, correct molecular lengths, recovery of the
+lost historical descriptor, or milestone 1 completion.
+
+Raven job **30278010**, submitted once from tested source **aa422a3** with
+`hpc/resume_reconstructed_unknown25.sbatch`, is **COMPLETED, exit 0:0**. Slurm
+records 20:55:39–21:01:55 CEST on September 17, elapsed **6 min 16 s**, node
+`ravc4043`, **eight allocated CPUs** and MaxRSS **3,876,696 KiB (3.70 GiB)**.
+The request was four CPUs, 16,000 MB and 24 hours. The monitor was stopped after
+completion. An expired `squeue` record returned "Invalid job id"; its nonzero
+exit suppressed a chained `sacct` call. A separate accounting query established
+completion. Queue disappearance was not treated as a failed scientific job.
+No resubmission, requeue, cancellation or second scientific job occurred.
+
+The continuation reused all **222 base rows / 25 files** and the **18 genuine
+split rows / two rescued scans**, fitted only **204 split rows / 23 files** with
+at most four single-thread children, then applied the native pipeline to the
+**full 25-chain cohort**. Counting, base geometry and CC templates were not
+recomputed. The original summary, support policies and all settings were kept.
+The earlier failed job 30271312 and its outputs remain untouched; its monitor
+also remains cancelled.
+
+**Fetch and verification.** The new result root is
+`results/reconstructed_cc_soft_v1/raven_20260917_unknown25_resume_v1/`; application
+outputs are under `unknown25/`. The separate Slurm log is
+`results/reconstructed_cc_soft_v1/unknown25-resume-30278010.log`. Rsync fetched
+**66 regular output files / 6,270,285 bytes**, excluding `raw_inputs/` at every
+level, plus that log. All **67 remote/local SHA-256 values match**. No generated
+result or raw file is committed.
+
+Local Julia **1.13.0** verification passes **179 assertions**. Every one of the
+12 intermediate/final lobe tables has the exact original **222 keys / 25 files**.
+The 18+204 split merge retains each source row, base columns remain unchanged
+through augmentation, required predictor values are finite, split configs match
+the unchanged settings, and per-chain summaries agree with predictions. The
+native validator passes. Reaggregation of the saved GMM/k-means votes and native
+QC regeneration are byte-identical to the saved TSVs. This is saved-output
+verification, not a new fit, classifier run or scientific parameter variant.
+Checks and logs are under
+`results/reconstructed_cc_soft_v1/raven_unknown25_resume_launch_v1/`
+(`verify_completed_unknown25.jl`, `completed_verification.log`,
+`local_prediction_validation.log`, `local_qc_validation.log`,
+`predictions_vote_check.tsv`, `review_queue_check.tsv`).
+
+**Actual model outputs.** There are **189 class-0 / 33 class-1 / zero `?`** rows,
+all named `cc_soft_reconstructed_v1` with `invalid_reason=ok`. Both component
+predictors have all 222 usable rows (GMM one view, k-means four views). All
+reconstructed descriptors and Fisher scores are finite; all forward/backward
+17×17 and backward 9×9 patch rows are finite with nonzero mass. This supplies
+complete diagnostic assignments, not a measurement of the chains' true 189/33
+composition. The selected N range is 5–16; no expected molecular length was
+used to change it.
+
+The lobe confidence is an **uncalibrated vote margin**,
+`2 * abs(probability_1 - 0.5)`, where `probability_1` averages two component vote
+fractions. Its minimum / median / mean / maximum are
+**0.0375 / 0.60 / 0.5701576577 / 0.7625**. Five values are below 0.20 (a descriptive
+count only); five GMM/k-means binary assignments disagree. The existing vote
+rule chooses 1 at a fraction >=0.5, including exact ties; there were no exact
+ties. It emits `?` for unavailable components, not all low finite margins.
+No confidence abstention rule was added. Zero `?` therefore does not mean
+certainty, and component agreement is not chemical validation.
+
+The unchanged QC flags **19/25 chains** for mean confidence <0.60. One of them,
+`251206_038.sxm` (N=16), also has the cohort-relative `n_outlier` flag (IQR fences
+[3.5, 15.5]); six chains have no listed flag. The weakest chain means are
+`260116_017.sxm` (0.43571429) and `260221_044.sxm` (0.4375). No missing-plot or
+noncontiguous-key flag occurs. An `ok` QC status is not proof of correctness.
+
+**Read-only diagnostic review.** All 17 run logs plus Slurm/accounting were
+read independently. No exception, Julia warning, missing-view message or
+Fisher iteration-limit warning was found. The split sweep for `260222_043.sxm`
+reports a coverage floor of 6 clamped to the already fixed N=5; it exports all
+five selected rows, rather than performing new count selection. Interleaved
+command printing in the outer Slurm log is concurrent logging, not malformed
+execution; separate chunk logs and output tables are coherent. Silence in logs
+does not prove per-start optimizer or per-seed classifier convergence, which
+is not fully serialized.
+
+Saved-output diagnostics expose limits beyond the basic integrity checks:
+
+- Split skew is within [0.5, 2], spanning 0.500031–1.999874. With an explicitly
+  descriptive distance of 0.001, five rows are near the lower bound and eleven
+  near the upper bound, over 14 files. At exported six-decimal precision,
+  parallel widths reach the effective optimizer endpoints in 1 lower / 17 upper
+  rows; perpendicular widths in 1 lower / 78 upper rows. The nominal range
+  [0.191, 0.509] nm maps through the bounded [-5, 5] optimizer coordinates to
+  approximately [0.193128, 0.506872] nm. These are constrained solutions, not
+  out-of-range errors or a new rejection rule; no bound was changed.
+- The reconstructed half-plane descriptor is concentrated toward +1: median
+  0.964083, range -0.945059–0.994111, 128/222 absolute values >0.95. This alone
+  establishes neither failure nor chemical meaning and does not identify the
+  lost historical producer. No descriptor variant was tried.
+- Mold-only forward/backward decoded labels disagree at **120/222 keys**. These
+  are intermediate results: the final predictor uses their unsigned absolute
+  `cost_margin` columns, not those sequences. This is **not forward/backward
+  chemical confirmation**. The read-only report is
+  `raven_unknown25_resume_launch_v1/completed_log_review.txt` under the same
+  reconstructed-results parent.
+
+**Figures.** All 25 standalone PNGs and the grid exist. The grid and seven
+priority standalone maps were viewed: both rescued scans, `260116_017.sxm`,
+`260221_044.sxm`, `251206_038.sxm`, `260222_043.sxm`, and `260221_048.sxm` (the
+minimum-margin lobe). Standalone markers and class labels are readable. They
+are **base fitted-coordinate maps, not raw STM overlays**; their colors do not
+encode margin size. Visual inspection does not establish correct counts,
+individually resolved chemical units or chemical identity. The earlier raw
+geometry overlays for the two rescued scans remain separate focused checks.
+
+Current README, runbook, unit-assignment and HPC status now describe the actual
+completed application and its limitations. The journal's current promotion
+answer also distinguishes saved-output regrading from the unavailable exact
+historical raw-input rebuild. No production code, dependency, Manifest, physical
+setting, selection rule or benchmark headline was changed. The Julia 1.13
+documentation build and `git diff --check` pass. Documentation warnings are
+limited to page/search-index sizes and skipped deployment; no broken-reference
+warning occurs.
+
+**Next, separately authorized work:** full146 reconstruction with these fixed
+settings, followed by external keyed comparison and grading. None has run as
+part of this continuation, no benchmark labels were read for the application,
+and the accepted frozen-champion metrics remain unchanged. The unknown25
+technical workflow is complete; chemical validation and milestone 1 as a whole
+remain unresolved.

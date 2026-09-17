@@ -359,12 +359,23 @@ chemical benchmark.
 
 ### Unknown25 continuation after the support handoff repair
 
-`resume_reconstructed_unknown25.sbatch` was submitted once as **Raven job
-30278010** on September 17, from tested source `aa422a3`. Its initial state is
-PENDING. **Do not repeat the submission for this run.** It processes the
-unknown25 application only; full146 and external grading remain separate later
-work. The job requests four CPUs, 16,000 MB and
-24 hours, with no concurrent second allocation under Raven's observed quota.
+`resume_reconstructed_unknown25.sbatch` completed as **Raven job 30278010** on
+September 17, from tested source `aa422a3`: **COMPLETED, exit 0:0**. It ran on
+`ravc4043` from 20:55:39 to 21:01:55 CEST (6 min 16 s). Four CPUs, 16,000 MB and
+24 hours were requested; accounting records **eight allocated CPUs** and
+MaxRSS **3,876,696 KiB (about 3.70 GiB)**. No second allocation was started.
+**Do not repeat the submission for this completed run.** Only unknown25 ran;
+full146 and external grading remain separate, unexecuted work.
+
+All 25 files / 222 lobe keys are present through the application. Local Julia
+1.13 integrity verification passes 179 assertions; prediction validation passes
+and saved-component vote/QC replay is byte-identical. All 67 fetched file hashes
+match Raven (66 outputs plus Slurm log), with `raw_inputs/` excluded at every
+level. The local output root is
+`results/reconstructed_cc_soft_v1/raven_20260917_unknown25_resume_v1/`.
+The monitor is stopped. The output is not chemical validation: 19/25 chains are
+flagged for low mean confidence. See the unit-assignment documentation for the
+model-output counts and limitations.
 
 The prepared local input directory is
 `results/reconstructed_cc_soft_v1/unknown25_resume_v1_inputs/`:
@@ -385,9 +396,9 @@ overwrite the failed run, or rely on the personal launcher's default host; this
 continuation targets **Raven explicitly**.
 
 The procedure used for this run is shown below for reproducibility. Job
-30278010 already exists; do not execute these submission commands again. Any
-later continuation needs a different unused output root. From the synced
-project on Raven, after checking its Julia 1.13 environment:
+30278010 has completed; do not execute these submission commands again. Any
+later run needs a separate user decision and a different unused output root.
+From the synced project on Raven, after checking its Julia 1.13 environment:
 
 ```bash
 cd "$HOME/code/STMFit"
@@ -399,7 +410,7 @@ export STMFIT_OUTDIR="results/reconstructed_cc_soft_v1/raven_20260917_unknown25_
 mkdir -p results/reconstructed_cc_soft_v1
 bash hpc/resume_reconstructed_unknown25.sbatch --dry-run
 sbatch --test-only --export=ALL hpc/resume_reconstructed_unknown25.sbatch
-# For the future separately submitted job, after checking those results:
+# Historical submission for job 30278010; DO NOT execute again:
 sbatch --export=ALL hpc/resume_reconstructed_unknown25.sbatch
 ```
 
@@ -422,8 +433,10 @@ or grader is invoked by this script.
 Split tables and their logs remain directly under `STMFIT_OUTDIR`; application
 outputs go under `STMFIT_OUTDIR/unknown25/`, with the outer application log in
 `STMFIT_OUTDIR/logs/unknown25.log`. Slurm writes
-`results/reconstructed_cc_soft_v1/unknown25-resume-<jobid>.log`. Poll the new job
-with `squeue`/`sacct` and fetch logs/outputs locally after it ends. Coverage
+`results/reconstructed_cc_soft_v1/unknown25-resume-<jobid>.log`. For a later
+separately approved run, poll its job ID and fetch logs/outputs after it ends.
+Use `sacct` independently if `squeue` no longer has the job: an invalid queue ID
+is not evidence of failure and must not suppress the accounting query. Coverage
 failure stops the job; do not omit files, lower N or change settings to make it
 pass. The failed job 30271312 and its artifacts remain unchanged.
 
@@ -433,5 +446,6 @@ Local regression (synthetic fixtures and a fake exporter; no scientific fit):
 julia -t 4 --project=. test/test_resume_reconstructed_unknown25.jl
 ```
 
-This tests the current script payload and actual shell dry-run/collision paths;
-it does not validate the unexecuted 23-file fit or chemical predictions.
+This tests the current script payload and actual shell dry-run/collision paths.
+It does not replace the completed-run integrity checks above or establish the
+chemical accuracy of any predictions.

@@ -1347,25 +1347,97 @@ Its separate `support_handoff_260220_083_v1/` directory contains the same output
 and the geometry-only overlay was inspected. Neither check identifies chemical
 classes, and neither recovered fit is claimed identical to the original fit.
 
-The two base recoveries have now been merged with the original 204 valid rows
-into complete **25-file / 222-lobe** base geometry. The two genuine split caches
-provide **18 lobes / 2 files**; **204 split lobes / 23 files** remain to fit. A
-native preparation check passes 29 assertions, including exact keys, unchanged
-source rows and byte-identical copies of the original summary and templates.
-Prepared inputs are in `results/reconstructed_cc_soft_v1/unknown25_resume_v1_inputs/`.
-`hpc/resume_reconstructed_unknown25.sbatch` completes only those missing split
-files, then passes complete geometry and the original selected summary to the
-unchanged native application. The classifiers still train on the full supplied
-25-chain cohort, not isolated files or the 23-file refit subset.
+The two base recoveries were merged with the original 204 valid rows into
+complete **25-file / 222-lobe** base geometry. The two genuine split caches
+provided **18 lobes / 2 files**, leaving **204 split lobes / 23 files** for the
+continuation. Native preparation passes 29 assertions, including exact keys,
+unchanged source rows and byte-identical original summary/template copies.
+Prepared inputs remain in `results/reconstructed_cc_soft_v1/unknown25_resume_v1_inputs/`.
+`hpc/resume_reconstructed_unknown25.sbatch` fits only the missing split files,
+then passes complete geometry and the original selected summary to the unchanged
+native application. The classifiers train on the full supplied 25-chain cohort,
+not isolated files or the 23-file refit subset.
 
-The user subsequently approved the actual continuation. **Raven job 30278010**
-was submitted once on September 17 from tested source `aa422a3`, with a new input
-and output directory. Its initial state is PENDING. Remote metadata checks pass
-under Julia 1.13 and all 383 checked source/lock/input hashes match locally;
-this is setup verification, not completed scientific processing. No complete
-cohort assignments, full146 execution, comparison or grade is available yet.
-The failed job is not resubmitted, and the frozen champion's metrics remain
+### Completed unknown25 application (2026-09-17)
+
+The user-approved continuation, **Raven job 30278010**, completed from tested
+source `aa422a3` under Julia 1.13: **exit 0:0, 6 min 16 s**, eight allocated CPUs
+(four requested), MaxRSS about 3.70 GiB. It reused the complete base table and
+18 cached split rows, fitted the other 204 split rows, and ran assignment/QC/maps
+on all 25 chains. No counting/base rerun, parameter change, file omission,
+full146 run or grader was included. The failed run and its artifacts remain
 unchanged.
+
+Outputs were fetched to
+`results/reconstructed_cc_soft_v1/raven_20260917_unknown25_resume_v1/`; the final
+application is in `unknown25/`. All 67 fetched hashes match Raven (66 output
+files plus Slurm log), excluding raw-input symlink directories. Native local
+verification passes **179 assertions**: all 12 intermediate/final lobe tables
+have exactly the original 222 keys, the split merge preserves cached/new rows,
+base fields remain unchanged through augmentation, and summary/QC/plot coverage
+is complete. Reaggregating saved component votes and rerunning QC reproduce the
+two saved TSVs byte-for-byte. No fit or classifier was rerun locally.
+
+| Output diagnostic | Observed result |
+|---|---|
+| Selected scans / lobes | 25 / 222; per-scan N range 5–16 |
+| Final class 0 / class 1 / `?` | 189 / 33 / 0 |
+| GMM / k-means components | All 222 rows usable; 1 / 4 views each |
+| Final confidence, min / median / mean / max | 0.0375 / 0.60 / 0.57016 / 0.7625 |
+| QC review / no listed flag | 19 / 6 chains |
+| Figures | 25 standalone maps and one grid |
+
+These class counts are **model outputs, not the sample's chemical composition**.
+`probability_1` is the arithmetic mean of the two component vote fractions;
+`confidence = 2 * abs(probability_1 - 0.5)` is an uncalibrated vote margin, not a
+probability of correctness. The fixed rule assigns class 1 when
+`probability_1 >= 0.5` (including a tie; none occurred here). It emits `?` for an unavailable
+component, not every low finite margin. Five margins are below 0.20 and the two
+component binary assignments disagree at five keys; these are descriptive
+counts, not new rejection rules. No abstention threshold was added.
+
+All 19 QC review rows have mean confidence <0.60. `251206_038.sxm` (N=16) also
+has `n_outlier`, relative to this cohort's IQR fences [3.5, 15.5], not an external
+length label. Six `ok` rows mean only that the existing QC found no listed flag.
+The weakest chain means are `260116_017.sxm` (0.43571) and `260221_044.sxm`
+(0.4375). No missing-plot or noncontiguous-key flag occurs.
+
+Read-only log review found no exception, Julia warning, missing-view message or
+Fisher iteration-limit warning. The sole split-fit diagnostic is a coverage-floor
+clamp from 6 to the already fixed N=5 for `260222_043.sxm`; all five selected rows
+are retained. Absence of a log warning does not prove every optimizer start or
+classifier seed converged; those diagnostics are not fully serialized.
+
+Other saved-output diagnostics remain relevant to interpretation:
+
+- Split skew spans 0.500031–1.999874, within the unchanged [0.5, 2] bounds. Sixteen
+  rows across 14 scans are within 0.001 of a bound (five lower, eleven upper).
+  At six-decimal export precision, parallel widths reach the effective optimizer
+  endpoints in 1 lower / 17 upper rows, perpendicular widths in 1 lower / 78 upper
+  rows. The nominal width interval is [0.191, 0.509] nm; the optimizer's [-5, 5]
+  transform reaches about [0.193128, 0.506872] nm. These are constrained fits,
+  not out-of-range values or a new validity test. No bound was retuned.
+- The reconstructed descriptor is finite with reason `ok` for every row, but
+  is concentrated toward +1 (median 0.964083; 128/222 absolute values >0.95).
+  This does not by itself establish failure, identity with the lost descriptor,
+  or chemical meaning. All Fisher scores and the three residual patch grids
+  are finite; the patch rows have nonzero mass.
+- Mold-only forward/backward binary decodings differ at **120/222 keys**. These
+  are intermediate diagnostics: the predictor uses the nonnegative absolute
+  `cost_margin` columns, not those decoded sequences. They therefore provide
+  **no forward/backward chemical confirmation** of the final assignments.
+
+The full grid and seven priority standalone maps were inspected: both rescued
+scans, the two lowest-mean-confidence scans, the N=16 outlier, the N=5 clamp case,
+and `260221_048.sxm` (minimum lobe margin). Markers and class labels are readable
+in the standalone plots. These are **base fitted-coordinate maps, not raw STM
+overlays**; colors do not encode margin magnitude. They do not establish correct
+counts, separately resolved chemical units, or chemical identity.
+
+Full146 reconstruction, external comparison and grading remain unexecuted and
+need a separate user decision. The frozen champion's accepted metrics are
+unchanged. This completes the unknown25 technical application and integrity
+checks, not chemical validation or milestone 1 as a whole.
 
 ### Native numerical conventions
 

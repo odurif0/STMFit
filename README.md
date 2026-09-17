@@ -26,15 +26,15 @@ champion lacks the irrecoverable original `patch_u_asym` producer.
 **Approved native reconstruction:** `test/run_reconstructed_chitosan.jl` uses
 Julia 1.13 and the separately named `cc_soft_reconstructed_v1`. Its descriptor
 is fixed before comparison; the champion is not relabeled as reproduced.
-Native component and synthetic end-to-end tests pass. The first full application
-stopped at geometry export (September 17): counting completed all 25 scans
-(222 selected lobes), but two adaptive-support refits were missing (18 lobes).
-The support handoff is corrected: both rescued scans now preserve their nine
-selected lobes in real base and split refits. Complete base geometry (25 files /
-222 lobes) and two split caches are ready. Raven job **30278010** was submitted
-on September 17 to finish the remaining 23 split files and full-cohort
-assignments; its initial state is PENDING. No cohort result or reconstructed
-benchmark comparison is available yet. See
+Native component and synthetic end-to-end tests pass. After the adaptive-support
+handoff repair, Raven job **30278010** completed the unknown25 application on
+September 17 in 6 min 16 s. All **25 scans / 222 selected lobes** are retained;
+local integrity checks pass and QC is reproduced exactly. The model outputs
+**189 class-0 and 33 class-1 assignments, with no `?`**. However, **19/25 chains
+are flagged for review** for low mean confidence. Confidence is an uncalibrated
+vote margin; zero abstentions do not establish certainty or chemical accuracy.
+The original failed run is preserved. Full146 reconstruction, comparison and
+external grading have not run; milestone 1 is not yet complete. See
 [`docs/src/unit_assignment.md`](docs/src/unit_assignment.md#explicit-julia-reconstruction-2026-09-16)
 for the command, numerical differences and limitations.
 
