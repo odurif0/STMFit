@@ -1317,10 +1317,29 @@ length, or add a retry with different parameters.
 
 Focused tests check metadata, both profiles/configs and support feasibility
 without optimization. Reading the saved 25-file summary preserves all 222
-selected lobes and restores rescue for exactly the two affected files. No new
-real fit or cohort run has been performed; actual geometry recovery and all
-downstream assignment results remain unverified. The frozen champion's metrics
-remain unchanged.
+selected lobes and restores rescue for exactly the two affected files.
+
+A subsequent real check on `260215_022.sxm` passes under Julia 1.13: both base and
+split refits export exactly the selected nine lobes, with finite geometry and
+GCV, using `refined_policy` from the unchanged saved counting summary. Both
+circular and elliptical configs reconstruct support **5.552874796122559 nm**,
+exactly the saved value, with 9,392 fit-mask pixels. The native geometry/support
+verification passes 76 assertions. A fused, preprocessed STM overlay shows the
+numbered fitted centers; these numbers are lobe indices, not chemical labels.
+
+Base/split GCV values are 5.63285686e-6 / 1.51047396e-6; elapsed times are
+74.49 / 84.94 s (one thread each, run in parallel). The base GCV differs from the
+original successful counting fit (3.18253642e-6). This confirms the support
+handoff, not recovery of identical fitted parameters. No refit was repeated or
+retuned to reduce that difference. The split skew range, 0.500329–1.097235,
+includes a value near the configured lower bound 0.5; it is not evidence of
+chemical identification.
+
+Artifacts are in `results/reconstructed_cc_soft_v1/support_handoff_260215_022_v1/`
+(`features_base.tsv`, `features_split.tsv`, `support_check.tsv`, logs and
+`geometry_overlay.png`). The old failed cohort outputs remain untouched.
+`260220_083.sxm` has not been refitted; no complete cohort assignments, new HPC
+job, comparison or grade was run. The frozen champion's metrics remain unchanged.
 
 ### Native numerical conventions
 

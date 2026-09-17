@@ -342,9 +342,16 @@ settings for both base and split refits, without changing N or any other setting
 Retain the original `--selected-summary` when resuming adaptive-support data;
 N-only cache metadata cannot identify that support and is rejected when a
 geometry refit is needed.
-Metadata/support regression tests do not establish recovery of real geometry.
-A real rescued-file check and any cohort continuation remain separate work.
-Do not lower N, relax physical constraints, or omit the two missing files.
+The first real rescued-file check now passes on `260215_022.sxm`: base and split
+each export nine lobes on the saved 5.552874796 nm support. Native checks cover
+exact keys, finite geometry/scores, both support configs and coordinate
+consistency (76 assertions); the geometry-only overlay was inspected. Base/split
+wall times are 74.49/84.94 s on one thread each. This is not an exact parameter
+replay: base GCV is 5.63285686e-6 versus 3.18253642e-6 in the original count.
+Outputs are under `results/reconstructed_cc_soft_v1/support_handoff_260215_022_v1/`.
+No classifier or HPC job was launched. `260220_083.sxm` and complete cohort
+outputs remain unverified; neither the pilot nor this check validates chemistry.
+Do not lower N, relax physical constraints, or omit the remaining failed scan.
 No old terminal challenger status below is reopened by this bounded reconstruction.
 
 

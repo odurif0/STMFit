@@ -2307,18 +2307,17 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-17. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
-0c. **Apply a reproducible native pipeline to raw 10–20mer scans** → **SUPPORT
-    HANDOFF CORRECTED; REAL REFIT CHECK PENDING (Sep 17)**: the original
-    `patch_u_asym` producer remains irrecoverable; the distinctly named Julia
-    reconstruction stays fixed, without benchmark-guided tuning. Raven job
-    30271312 failed with 25 count rows / 222 lobes but 23 geometry files / 204
-    lobes. The two rescued-support files lost their active support in export.
-    The requested repair now preserves that decision from `refined_policy`
-    in both base/split configs, without changing N or scientific settings.
-    Metadata/support tests are separate from actual refit success. Artifacts
-    are fetched, monitoring is cancelled, and no job is resubmitted. Real
-    geometry recovery, cohort assignments, full146 comparison and grading
-    remain unperformed.
+0c. **Apply a reproducible native pipeline to raw 10–20mer scans** → **FIRST
+    RESCUED-FILE REFIT PASSES; COHORT PENDING (Sep 17)**: the distinctly named
+    Julia reconstruction stays fixed, without benchmark-guided tuning. The
+    support handoff repair in `98c54ae` is tested, and `260215_022.sxm` now
+    exports all nine selected lobes in both base and split fits, with support
+    5.552874796122559 nm matching the saved count (76 real-file assertions).
+    This is neither exact geometry replay nor chemical validation. The other
+    missing scan, `260220_083.sxm`, and all cohort-level downstream outputs
+    remain unverified. Failed job 30271312 and its 25-count/23-geometry artifacts
+    are preserved; monitoring remains cancelled and no new job is submitted.
+    Complete unknown25 assignments and full146 comparison/grading remain to do.
 
 0b. **Can label-free unit assignment reach the promotion bar?** → **RESOLVED
     (Aug 3)**: the label-free champion (soft vote of k-means 4-view and GMM
@@ -5670,3 +5669,54 @@ No real Gaussian refit, full cohort, external comparison, grading, SSH transfer,
 or new Slurm submission is part of this repair. Existing failed artifacts stay
 unchanged. Scientific success after the repair remains unverified until a
 focused real rescued-file check and subsequent cohort continuation.
+
+### 2026-09-17 — Real rescued-file support repair check passes
+
+The user approved the focused single-file check following the support handoff
+repair (`98c54ae`). Only raw **260215_022.sxm** was processed, using Julia
+**1.13.0** and its existing saved counting row (`N_selected=9`,
+`refined_policy=adaptive_support_rescue`). The full 25-row summary was retained;
+`--files 260215_022.sxm` and a one-file raw symlink directory restricted this
+experiment. No counting selection, support choice or classifier was rerun.
+The split TOML was generated with native TOML code exactly as in the production
+runner: the same count config plus `peak_profile="split"` and the frozen
+`split_skew_ratio_max=2.0`. The source count config, summary, raw SXM and unit
+config are unchanged (SHA-256 checked before/after).
+
+Both actual extractor CLI processes exit **0** and produce **nine unique lobe
+rows**, keys `(260215_022.sxm, 1:9)`, with `source=ell` and finite geometry/GCV.
+They ran in parallel, one Julia/BLAS thread each, with a 20-minute safety timeout
+that was not reached:
+
+| Fit | Wall time | MaxRSS (KiB) | GCV |
+|---|---|---|---|
+| base | 74.49 s | 1,117,640 | 5.63285686e-6 |
+| split | 84.94 s | 1,113,704 | 1.51047396e-6 |
+
+Native post-checks recompute the same fused-ROI axis/support helpers without
+optimization. Both profiles, and their circular/elliptical configs, reproduce
+**5.552874796122559 nm** exactly as saved in the counting summary, with t limits
+**[-2.6520287145353896, 2.900846081587169] nm**, **9,392 fit pixels**, and the
+already configured rescue values `support_noise_k=1.5`, `support_padding_nm=0.75`.
+All **76 assertions pass**: selected keys/counts, finite fields, positive GCV,
+ordered positions/spacings, support feasibility and agreement, projected
+coordinate consistency, and base/split skew limits. The base profile has unit
+skew; split skew spans **0.500329–1.097235**, including a near-bound value.
+
+The geometry-only overlay on the fused, preprocessed STM ROI was inspected:
+numbered centers follow the chain signal. This is not proof of nine separately
+resolved chemical units, and the numbers are lobe indices rather than 0/1
+assignments. The new base GCV is **not** the original counting-fit GCV
+(3.1825364225520916e-6). Fixed-N refitting does not restore the old parameters;
+no bit-identical geometry is claimed, and no setting or refit was changed to
+improve that agreement.
+
+Outputs are saved in
+`results/reconstructed_cc_soft_v1/support_handoff_260215_022_v1/`: base/split
+feature TSVs, generated split config, time/resource logs, `verification.log`,
+`support_check.tsv`, a native verification script and `geometry_overlay.png`.
+The old 204-row failed-cohort geometry and 25-row count summary were not changed
+or merged. The support bug is removed for this real file; **260220_083.sxm is
+still untested** after the repair. No full cohort, unit assignment, external
+comparison/grade, SSH transfer or new Slurm job was launched. Milestone 1 remains
+incomplete until the remaining geometry and cohort-wide application are done.
