@@ -331,14 +331,20 @@ geometry coverage check after 1 h 00 min 05 s. Fresh counting covers all 25 scan
 with 222 selected lobes (range 5–16); geometry export retains 204 lobes over 23
 files. `260215_022.sxm` and `260220_083.sxm` each lack all nine selected lobes.
 These are the two scans whose counts used adaptive support rescue; the fixed-N
-extractor reads only `N_selected` and does not replay that support context.
+extractor in that run read only `N_selected` and lost that support context.
 The wrapper correctly stopped before assignment. `failures.tsv` preserves all
 25 intended files; no full146 run, comparison or new external grade occurred.
 Fetched artifacts are under
 `results/reconstructed_cc_soft_v1/raven_20260916_native_v1/unknown25/`.
-The internal monitor is cancelled and no job has been resubmitted. Restore the
-selected support context before any separately approved continuation; do not
-lower N, relax physical constraints, or omit the two files to make coverage pass.
+The internal monitor is cancelled and no job has been resubmitted. The requested
+handoff repair now reads `refined_policy` and reuses the existing rescue support
+settings for both base and split refits, without changing N or any other setting.
+Retain the original `--selected-summary` when resuming adaptive-support data;
+N-only cache metadata cannot identify that support and is rejected when a
+geometry refit is needed.
+Metadata/support regression tests do not establish recovery of real geometry.
+A real rescued-file check and any cohort continuation remain separate work.
+Do not lower N, relax physical constraints, or omit the two missing files.
 No old terminal challenger status below is reopened by this bounded reconstruction.
 
 

@@ -110,6 +110,9 @@ Recommended experimental use:
 `extract_lobe_features.jl` automatically fixes `n_min=n_max=N_selected` per file
 when `--selected-summary` is provided. This avoids an unnecessary N sweep and is
 important for split-width diagnostics, which add one fitted parameter per lobe.
+For adaptive-support counts, retain the original summary's `refined_policy`:
+accepted rescue reuses the configured rescue support in both circular and
+elliptical fits, including split-profile extraction. N is never reselected.
 
 Decision rule:
 
@@ -1243,16 +1246,24 @@ refits, local amplitude features, normalized forward/backward 17×17 patches and
 backward 9×9 patches, descriptor, native constant-current molds/Fisher, existing
 Julia GMM/k-means predictors, soft vote, validation, QC and maps. `N_selected`
 comes from the configured label-free counting policy. Fixed-N feature extraction
-refits geometry; it does not restore the exact earlier fit or its adaptive
-support. This limitation matters when comparing regenerated and saved inputs.
+refits geometry; it does not restore the exact earlier fitted parameters.
+For adaptive-support data, the original summary's `refined_policy` now replays
+the already selected support settings from the same count config. The raw scan
+and unchanged preprocessing reconstruct the support; a stored length alone is
+not used to infer its endpoints. Refit values can still differ from saved fits.
 
-Useful cache options are `--selected-summary` (label-free `filepath,N_selected`),
+Useful cache options are `--selected-summary` (label-free `filepath,N_selected`
+plus `refined_policy` for adaptive-support refits),
 `--features`, `--split-features`, `--patches-fwd`, `--patches-bwd`,
 `--descriptor-patches`, and `--templates`. Cached geometry can skip counting;
 its contiguous lobe keys define the previously selected N, or must match an
-explicit selected summary. Every downstream table must cover exactly those
-keys. A subset is not silently substituted for a failed chain. Only genuine
-split-fit geometry is valid for `--split-features`; all-one skew ratios in a
+explicit selected summary. When base or split geometry must be refitted with
+an adaptive-support config, keep the original selected summary even if another
+geometry table is cached; N-only metadata is insufficient and fails explicitly.
+Nonadaptive N-only summaries retain their existing behavior. Every downstream
+table must cover exactly the selected keys. A subset is not silently substituted
+for a failed chain. Only genuine split-fit geometry is valid for
+`--split-features`; all-one skew ratios in a
 base fit are not a split-fit cache. A supplied mold table replaces cube/frame
 arguments. It must have been generated with the stated settings.
 
@@ -1284,19 +1295,32 @@ with no duplicate or extra keys. All nine selected lobes are missing for each
 of `260215_022.sxm` and `260220_083.sxm`.
 
 The two missing files are exactly those selected by adaptive support rescue.
-The existing feature extractor imports only the selected N, then builds a new
-fit from the original, shorter support. It does not restore the rescued support
-context. Both fixed-N refits consequently report `No chain model fit succeeded`.
-The coverage check aborts, rather than silently discarding these 18 lobes.
+The extractor used in that job imported only the selected N, then built a new
+fit from the original, shorter support. It did not restore the rescued support
+context. Both fixed-N refits reported `No chain model fit succeeded`.
+The coverage check aborted, rather than silently discarding these 18 lobes.
 
 No cohort predictions, assignment QC/maps, full146 reconstruction, champion
 comparison or external grade were produced. `failures.tsv` lists all intended
 25 files. The failed outputs and logs were fetched to
 `results/reconstructed_cc_soft_v1/raven_20260916_native_v1/`; the Slurm log is
 `results/reconstructed_cc_soft_v1/native-30271312.log`. Monitoring is cancelled;
-no resubmission has occurred. The next repair must preserve/replay the selected
-support context, without changing N or the fixed scientific parameters. The
-frozen champion's metrics remain unchanged.
+no resubmission has occurred. The support handoff has since been corrected as
+requested: `refined_policy` identifies accepted rescue, including its robust-
+guard suffixes. The extractor copies the existing
+`adaptive_rescue_support_noise_k` and `adaptive_rescue_support_padding_nm`
+into both chain configs before a fixed-N fit. Keep/rejected/failed rescue modes
+retain the original support; the image preprocessing and other settings do not
+change. Unknown or missing adaptive metadata fails before any SXM read/output.
+The implementation does not run selection again, infer endpoints from a saved
+length, or add a retry with different parameters.
+
+Focused tests check metadata, both profiles/configs and support feasibility
+without optimization. Reading the saved 25-file summary preserves all 222
+selected lobes and restores rescue for exactly the two affected files. No new
+real fit or cohort run has been performed; actual geometry recovery and all
+downstream assignment results remain unverified. The frozen champion's metrics
+remain unchanged.
 
 ### Native numerical conventions
 
@@ -1338,6 +1362,7 @@ Focused tests (Python/NumPy is needed only for numerical reference tests):
 
 ```bash
 julia --project=. test/test_reconstructed_unit_assignment.jl
+julia --project=. test/test_selected_support_context.jl
 julia --project=. test/test_cc_mold_native.jl
 julia --project=. test/test_empirical_fisher_native.jl
 GKSwstype=100 julia --project=. test/test_reconstructed_pipeline.jl --e2e

@@ -2304,20 +2304,21 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
-> Updated 2026-09-16. Questions from earlier sessions are archived in
+> Updated 2026-09-17. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
-0c. **Apply a reproducible native pipeline to raw 10–20mer scans** → **BLOCKED
-    AT GEOMETRY EXPORT (Sep 17)**: the original `patch_u_asym` producer is
-    irrecoverable. The user approved the fixed, distinctly named Julia
-    reconstruction; no benchmark-guided variant search is allowed. Native
-    component tests and a real single-file pilot pass. Raven job 30271312 has
-    now failed the coverage check: 25 count rows / 222 selected lobes, but only
-    23 geometry files / 204 lobes. The fixed-N extractor loses the adaptive
-    support context for `260215_022.sxm` and `260220_083.sxm` (nine lobes each).
-    Artifacts are fetched, monitoring is cancelled, and no job is resubmitted.
-    Preserve the selected support in a repair before separately approved
-    continuation. Cohort assignments, full146 comparison and grading are absent.
+0c. **Apply a reproducible native pipeline to raw 10–20mer scans** → **SUPPORT
+    HANDOFF CORRECTED; REAL REFIT CHECK PENDING (Sep 17)**: the original
+    `patch_u_asym` producer remains irrecoverable; the distinctly named Julia
+    reconstruction stays fixed, without benchmark-guided tuning. Raven job
+    30271312 failed with 25 count rows / 222 lobes but 23 geometry files / 204
+    lobes. The two rescued-support files lost their active support in export.
+    The requested repair now preserves that decision from `refined_policy`
+    in both base/split configs, without changing N or scientific settings.
+    Metadata/support tests are separate from actual refit success. Artifacts
+    are fetched, monitoring is cancelled, and no job is resubmitted. Real
+    geometry recovery, cohort assignments, full146 comparison and grading
+    remain unperformed.
 
 0b. **Can label-free unit assignment reach the promotion bar?** → **RESOLVED
     (Aug 3)**: the label-free champion (soft vote of k-means 4-view and GMM
@@ -5621,3 +5622,51 @@ rescued-scan check. Actual downstream success remains unverified. README,
 runbook, unit-assignment documentation and this open question now report the
 observed blocker. The documentation build passes (28 s; only the existing
 archive/search-size warnings and skipped deployment); `git diff --check` passes.
+
+### 2026-09-17 — Replay selected adaptive support in feature extraction
+
+The user requested the support handoff correction first, not a new cohort run.
+`extract_lobe_features.jl` now retains each selected count together with its
+accepted/base support mode. It reads the original summary's `refined_policy`,
+including the existing robust-guard suffixes, rather than relying on
+`selection_source`, which a down-only guard may replace. Accepted rescue uses
+only the two rescue support values already present in the count TOML; keep,
+rejected and failed rescue cases keep base support. The fixed-N configuration
+is built before cloning its circular counterpart, so both circular and
+elliptical fits receive identical support settings. The same path handles
+Gaussian base and split-profile extraction. No selection is rerun, and no N,
+spacing/overlap constraint, preprocessing, optimizer or descriptor setting
+changes. There are no new physical defaults or config parameters.
+
+Ambiguous/missing adaptive metadata and malformed selected rows now fail before
+any SXM read/output, instead of guessing a support mode or silently changing the
+requested subset. Nonadaptive `filepath,N_selected` summaries remain supported.
+Adaptive resumes that need a base or split refit must retain the original
+`--selected-summary`, even when another geometry table is cached. This replays
+support from raw inputs and the unchanged config; it does not restore the old
+fitted parameters. The extractor now has the standard script-entry guard so
+tests can exercise its real parser/config path without launching a fit.
+
+A native Julia 1.13 check on the saved failed-run summary preserves all **25
+files and 222 selected lobes**, identifies exactly the two accepted rescues,
+and checks both Gaussian and split configs for every file (153 assertions).
+No SXM was read and no optimizer was invoked in that check.
+
+`test/test_selected_support_context.jl` passes **935 assertions** under Julia
+1.13, including all 18 emitted support/guard outcomes, unchanged fields in both
+profiles/configs, missing or ambiguous metadata, infeasible/feasible N=9 support,
+and actual synthetic support endpoints/masks without optimization. Twelve
+assertions exercise three real CLI subprocesses against unreadable dummy SXMs:
+missing adaptive metadata, a missing configured rescue value, and a requested
+file absent from the summary all fail with the expected diagnostic before any
+output directory/TSV is created. The complete focused suite exits 0 (56 s).
+
+The existing native pipeline regression also passes **28 assertions** (12
+boundaries, 9 synthetic extracted-input end-to-end, 7 chunk/merge); CLI help,
+`git diff --check` and the documentation build pass. The docs build reports only
+the existing archive/search-size warnings and skipped local deployment.
+
+No real Gaussian refit, full cohort, external comparison, grading, SSH transfer,
+or new Slurm submission is part of this repair. Existing failed artifacts stay
+unchanged. Scientific success after the repair remains unverified until a
+focused real rescued-file check and subsequent cohort continuation.

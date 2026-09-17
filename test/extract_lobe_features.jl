@@ -108,6 +108,8 @@ function _parse_cli(args)
               --selected-summary S  Optional batch summary TSV. If provided,
                                     features are extracted at N_selected from
                                     the summary instead of raw best GCV.
+                                    Adaptive runs also require refined_policy to
+                                    replay the selected support (base and split).
               --manifest M      Optional benchmark manifest for quality filtering
               --primary-only    With --manifest, keep only clean/clean_target files
             """)
@@ -137,26 +139,73 @@ function _read_exclude_set(path::String)
     return s
 end
 
-function _read_selected_n(path::String)
-    selected = Dict{String,Int}()
+# Replay the selected support; do not rerun selection or infer it from N.
+# The robust guard may overwrite selection_source after an accepted rescue,
+# but batch_full.jl preserves the active support in refined_policy.
+function _selected_uses_rescue(row, selection_policy)
+    refined = get(row, "refined_policy", "")
+    policy = refined
+    for suffix in ("_robust_guard_audit_only", "_robust_guard")
+        if endswith(policy, suffix)
+            policy = chop(policy; tail=length(suffix))
+            break
+        end
+    end
+    policy == "adaptive_support_rescue" && return true
+    policy in ("adaptive_support_rescue_keep", "adaptive_support_rescue_failed",
+               "adaptive_support_rescue_reject_no_improvement",
+               "adaptive_support_rescue_reject_circ_ell_incoherent",
+               "adaptive_support_rescue_reject_infeasible") && return false
+
+    policies = (selection_policy, refined, get(row, "selection_policy", ""),
+                get(row, "selection_source", ""), get(row, "refined_source", ""))
+    if any(p -> startswith(p, "adaptive_support"), policies)
+        error("Missing or unrecognized adaptive-support refined_policy $(repr(refined)) " *
+              "for $(row["filepath"]); supply the original counting summary, not N alone")
+    end
+    return false # Legacy nonadaptive filepath/N_selected summaries.
+end
+
+function _read_selected_context(path::String; selection_policy::AbstractString="")
+    selected = Dict{String,NamedTuple{(:n, :use_rescue),Tuple{Int,Bool}}}()
     isempty(path) && return selected
     isfile(path) || error("Selected summary not found: $path")
     lines = readlines(path)
-    isempty(lines) && return selected
-    header = split(lines[1], '\t'; keepempty=true)
-    file_idx = findfirst(==("filepath"), header)
-    n_idx = findfirst(==("N_selected"), header)
-    file_idx === nothing && error("Summary missing filepath column: $path")
-    n_idx === nothing && error("Summary missing N_selected column: $path")
-    for line in lines[2:end]
+    isempty(lines) && error("Empty selected summary: $path")
+    header = String.(strip.(split(lines[1], '\t'; keepempty=true)))
+    length(unique(header)) == length(header) || error("Duplicate summary columns: $path")
+    "filepath" in header || error("Summary missing filepath column: $path")
+    "N_selected" in header || error("Summary missing N_selected column: $path")
+    for (line_no, line) in enumerate(lines[2:end])
         isempty(strip(line)) && continue
-        vals = split(line, '\t'; keepempty=true)
-        length(vals) < max(file_idx, n_idx) && continue
-        n = tryparse(Int, vals[n_idx])
-        n === nothing && continue
-        selected[basename(vals[file_idx])] = n
+        vals = String.(strip.(split(line, '\t'; keepempty=true)))
+        length(vals) == length(header) || error("Malformed selected summary row $(line_no + 1): $path")
+        row = Dict(zip(header, vals))
+        file = basename(row["filepath"])
+        isempty(file) && error("Empty filepath in selected summary: $path")
+        haskey(selected, file) && error("Duplicate selected-summary file: $file")
+        n = tryparse(Int, row["N_selected"])
+        n !== nothing && n > 0 || error("Invalid N_selected for $file: $(row["N_selected"])")
+        get(row, "status", "ok") == "ok" || error("Unsuccessful counting row for $file")
+        selected[file] = (n=n, use_rescue=_selected_uses_rescue(row, selection_policy))
     end
+    isempty(selected) && error("No selected counts in summary: $path")
     return selected
+end
+
+# The replay requires the actual configured values, not new physical defaults.
+function _selected_rescue_settings(model)
+    for key in ("adaptive_rescue_support_noise_k", "adaptive_rescue_support_padding_nm")
+        haskey(model, key) || error("Accepted adaptive support requires model.$key")
+        value = model[key]
+        value isa Real && !(value isa Bool) && isfinite(value) ||
+            error("model.$key must be a finite number")
+    end
+    noise_k = Float64(model["adaptive_rescue_support_noise_k"])
+    padding = Float64(model["adaptive_rescue_support_padding_nm"])
+    noise_k > 0 || error("adaptive_rescue_support_noise_k must be positive")
+    padding >= 0 || error("adaptive_rescue_support_padding_nm must be nonnegative")
+    return noise_k, padding
 end
 
 function _read_manifest_quality(path::String)
@@ -245,7 +294,7 @@ function _refine_circ_to_ell(results_circ, img, pcfg, ccfg_ell, ctx_circ)
     return refined
 end
 
-function _configs(model, preproc, output_dir)
+function _configs(model, preproc, output_dir; selected_context=nothing)
     pcfg = PatternConfig(filepath="", channel="Z", direction="fwd",
         stride=get(preproc, "stride", 1),
         flatten=get(preproc, "flatten", "plane+rows"),
@@ -276,6 +325,15 @@ function _configs(model, preproc, output_dir)
         peak_profile=Symbol(String(get(model, "peak_profile", "gaussian"))),
         skew_ratio_max=Float64(get(model, "skew_ratio_max", 2.0)),
         intelligent_sweep=true, fuse_z_bwd=true)
+    if selected_context !== nothing
+        selected_context.n > 0 || error("Selected N must be positive")
+        # This is a fixed-N refit on the already selected support, including for
+        # split-width diagnostics. Do not reselect N or retry support variants.
+        ccfg.n_min = ccfg.n_max = selected_context.n
+        if selected_context.use_rescue
+            ccfg.support_noise_k, ccfg.support_padding_nm = _selected_rescue_settings(model)
+        end
+    end
     ccfg_circ = deepcopy(ccfg); ccfg_circ.chain_circular_sigmas = true
     return pcfg, ccfg, ccfg_circ
 end
@@ -284,14 +342,18 @@ function main()
     config_file, data_dir, out_tsv, files_opt, chunk_idx, chunk_total,
     exclude_file, selected_summary, manifest_file, primary_only = _parse_cli(ARGS)
     exclude_set = _read_exclude_set(exclude_file)
-    selected_n = _read_selected_n(selected_summary)
+    cfg = TOML.parsefile(config_file)
+    model, preproc = cfg["model"], get(cfg, "preprocessing", Dict{String,Any}())
+    criterion = get(model, "selection_criterion", "gcv")
+    selected_contexts = _read_selected_context(selected_summary;
+        selection_policy=String(get(model, "selection_policy", "")))
     manifest_quality = _read_manifest_quality(manifest_file)
 
     # Determine file list
     if files_opt !== nothing
         all_files = String.(strip.(files_opt))
-    elseif !isempty(selected_n)
-        all_files = sort(collect(keys(selected_n)))
+    elseif !isempty(selected_contexts)
+        all_files = sort(collect(keys(selected_contexts)))
     else
         all_files = sort([f for f in readdir(data_dir) if endswith(lowercase(f), ".sxm")])
     end
@@ -313,10 +375,13 @@ function main()
 
     println("Extracting lobe features for ", length(chunk_files), " files (chunk ", chunk_idx, "/", chunk_total, ")")
 
-    # Load config
-    cfg = TOML.parsefile(config_file)
-    model, preproc = cfg["model"], get(cfg, "preprocessing", Dict{String,Any}())
-    criterion = get(model, "selection_criterion", "gcv")
+    # Fail before any SXM read/output if selected support metadata is unusable.
+    if !isempty(selected_summary)
+        for fn in chunk_files
+            haskey(selected_contexts, fn) || error("No selected context for requested file: $fn")
+        end
+        any(fn -> selected_contexts[fn].use_rescue, chunk_files) && _selected_rescue_settings(model)
+    end
 
     mkpath(dirname(out_tsv))
 
@@ -335,25 +400,17 @@ function main()
 
             try
                 img = read_sxm(fp)
-                pcfg, ccfg, ccfg_circ = _configs(model, preproc, dirname(out_tsv))
+                pcfg, ccfg, ccfg_circ = _configs(model, preproc, dirname(out_tsv);
+                    selected_context=get(selected_contexts, fn, nothing))
                 pcfg.filepath = fp
-                if haskey(selected_n, fn)
-                    # When a batch summary supplies N_selected, this extractor is
-                    # a fixed-N refit/feature export. Avoid the full N sweep,
-                    # especially for split-width diagnostics with extra params.
-                    ccfg.n_min = selected_n[fn]
-                    ccfg.n_max = selected_n[fn]
-                    ccfg_circ.n_min = selected_n[fn]
-                    ccfg_circ.n_max = selected_n[fn]
-                end
 
                 results_circ, _, ctx = chain_gaussian_sweep(img, pcfg, ccfg_circ)
                 results_ell = _refine_circ_to_ell(results_circ, img, pcfg, ccfg, ctx)
 
                 by_ell = _best_by_n(results_ell, criterion)
                 by_circ = _best_by_n(results_circ, criterion)
-                if haskey(selected_n, fn)
-                    best_n = selected_n[fn]
+                if haskey(selected_contexts, fn)
+                    best_n = selected_contexts[fn].n
                     best_r, best_source = _best_for_n(by_ell, by_circ, best_n, criterion)
                 else
                     best_n, best_r, best_source = _effective_best(by_ell, by_circ, criterion)
@@ -413,4 +470,4 @@ function main()
     println("Done: ", Dates.format(now(), "yyyy-mm-dd HH:MM"))
 end
 
-main()
+abspath(PROGRAM_FILE) == abspath(@__FILE__) && main()
