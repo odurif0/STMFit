@@ -1434,10 +1434,66 @@ in the standalone plots. These are **base fitted-coordinate maps, not raw STM
 overlays**; colors do not encode margin magnitude. They do not establish correct
 counts, separately resolved chemical units, or chemical identity.
 
-Full146 reconstruction, external comparison and grading remain unexecuted and
-need a separate user decision. The frozen champion's accepted metrics are
-unchanged. This completes the unknown25 technical application and integrity
+Full146 reconstruction, external comparison and grading were subsequently
+approved (see below), but have not run. The frozen champion's accepted metrics
+are unchanged. This completes the unknown25 technical application and integrity
 checks, not chemical validation or milestone 1 as a whole.
+
+### Approved full146 comparison scope (2026-09-17)
+
+After reviewing the unknown25 result, the user approved full146 reconstruction,
+then external comparison and grading. The scope is one fixed configuration and
+one cluster job, bounded at 24 hours; it is not a descriptor/threshold search.
+`hpc/reconstructed_full146.sbatch` runs only this application. It reuses the
+unchanged base geometry and native templates, computes genuine split fits at
+fixed per-file N in at most four one-thread children, then runs all assignment
+stages on the full 146-file cohort. No unknown25 rerun, base/count rerun or
+benchmark label is part of the job. Comparison and grading happen locally only
+after complete outputs are fetched and checked.
+
+**The two count artifacts must not be confused.**
+
+- The approved cache is
+  `results/hierarchical_feature_extraction/9e3bcdeb83469fe0/features_merged.tsv`:
+  **900 contiguous keys / 146 files**, all elliptical base geometry. Its SHA-256
+  is `2cb1065cf5aa790dac1a5fec279d955c732cc91f7e60312103de32fddfb89484`.
+  Cached N ranges from 4 to 10 and is not fixed at six.
+- This cache comes from label-free GCV selection in the direct feature
+  extractor, not the promoted batch `support_midpoint_hybrid` selector. Its
+  archived config SHA-256 is byte-identical to current `config/chitosan.toml`.
+  The producer reads dataset/file membership, not truth, expected N or reference
+  predictions. No original selected-summary accompanies this nonadaptive cache.
+- `results/experiments/6mer_full146/pm2_confirm/summary_overlap060_hard.tsv`
+  covers the same 146 scans but has **871 selected lobes**, with **28 per-file
+  count conflicts**. Native coverage checks reject pairing it with the cache.
+  It stays separate; no count is lowered or geometry row dropped to force a
+  match. The existing counting benchmark is not rerun or replaced here.
+- Use the existing **features-only** native path. The runner writes
+  `selected_from_features.tsv` from the 900 cached keys for fixed-N split fits.
+  This is honestly derived metadata, not an alleged original counting summary.
+  The source config has no adaptive rescue; no `refined_policy` is discarded.
+  Do not generalize this to adaptive unknown25 inputs, where the original
+  summary remains mandatory.
+- All 900 cached `skew_ratio` values are one: this is not a split cache. An older
+  39-file split table also has incompatible N on four scans. Neither is passed
+  as `--split-features`; all 146 genuine split fits will be computed anew.
+
+Prepared inputs are in
+`results/reconstructed_cc_soft_v1/full146_v1_inputs/`: byte-identical
+`base_geometry_full146.tsv`, `templates_cc.tsv` and 146 valid `full146_raw/`
+symlinks. The raw names match the cache exactly. The wrapper's optional
+`STMFIT_SELECTED_SUMMARY` is used only when an explicitly supplied original
+summary matches the cache; it is unset for this run. It does not auto-discover
+a summary. `STMFIT_OUTDIR` names the direct new full146 output directory.
+
+Completion requires all 146 files / 900 keys at each required stage, preserved
+base geometry and settings, explicit invalid-component reasons where needed,
+QC/maps, and a separate keyed comparison plus full145 own-N external grade.
+Partial outputs cannot substitute for full coverage. The grade must report
+missing control positions and extra predicted lobes as well as classified
+accuracy and exact chains. Equality of scores or assignments would not prove
+recovery of the lost descriptor. This fixed-cache comparison is **not a fresh
+Julia 1.13 count benchmark or a rebuilt promoted counting-to-assignment chain**.
 
 ### Native numerical conventions
 

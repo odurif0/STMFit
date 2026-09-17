@@ -365,7 +365,7 @@ September 17, from tested source `aa422a3`: **COMPLETED, exit 0:0**. It ran on
 24 hours were requested; accounting records **eight allocated CPUs** and
 MaxRSS **3,876,696 KiB (about 3.70 GiB)**. No second allocation was started.
 **Do not repeat the submission for this completed run.** Only unknown25 ran;
-full146 and external grading remain separate, unexecuted work.
+full146 and external grading are now separately approved, but remain unexecuted.
 
 All 25 files / 222 lobe keys are present through the application. Local Julia
 1.13 integrity verification passes 179 assertions; prediction validation passes
@@ -449,3 +449,74 @@ julia -t 4 --project=. test/test_resume_reconstructed_unknown25.jl
 This tests the current script payload and actual shell dry-run/collision paths.
 It does not replace the completed-run integrity checks above or establish the
 chemical accuracy of any predictions.
+
+### Full146-only fixed-cache reconstruction
+
+The user approved this next application after unknown25 was completed and
+reviewed. Use `reconstructed_full146.sbatch`, **not** the earlier two-cohort
+script (which would rerun unknown25). The new entrypoint requests one node/task,
+four CPUs, 16,000 MB and 24 hours. It does not hardcode a partition; Viper is the
+preferred host for this multi-file fit. No job has been submitted yet: the
+initial noninteractive `oldu@viper` SSH probe was refused at authentication.
+Authenticate interactively before trying any remote copy or submission.
+
+The scientific inputs are fixed at **146 scans / 900 cached GCV lobe keys**.
+This is an assignment reconstruction at the cache's own N, not a replay of the
+promoted batch count policy. The `pm2_confirm` summary has 871 keys and conflicts
+on 28 scans; it must not be supplied alongside this base table. No compatible
+full146 split cache is available, so the native runner computes all genuine
+split fits in at most four single-thread children. Classifiers then use the
+whole cohort. No count/base rerun, unknown25 stage, comparison or grader is
+called by this entrypoint.
+
+Stage `results/reconstructed_cc_soft_v1/full146_v1_inputs/` at a new cluster
+input directory. It contains exactly:
+
+- `base_geometry_full146.tsv`: unchanged 900-row base geometry;
+- `templates_cc.tsv`: unchanged native CC templates;
+- `full146_raw/`: all 146 scans, local symlinks that must be dereferenced during
+  transfer (`rsync -aL`, after inspecting a dry-run).
+
+Keep source sync limited to tracked runtime files; do not copy agent/archive
+state, external truth or reference predictions. Do not use `--delete`, overwrite
+previous runs or alter the Manifest. Verify Julia 1.13, source/input hashes and
+raw file coverage on the target. No scientific computation runs on login nodes.
+
+`STMFIT_OUTDIR` is the **new direct full146 output directory**, with no implicit
+`/full146` suffix. `STMFIT_SELECTED_SUMMARY` is optional, explicit and empty for
+this cache; the native runner honestly derives `selected_from_features.tsv`.
+An explicitly supplied summary must be compatible; nothing is auto-discovered.
+This nonadaptive case does not waive the original-summary requirement for
+adaptive-support data.
+
+After staging and checking the environment, use the existing workflow:
+
+```bash
+# Set absolute STMFIT_PROJECT_DIR, JULIA_BIN, STMFIT_INPUT_DIR and STMFIT_OUTDIR.
+# Leave the output directory absent; create only the Slurm log parent.
+export STMFIT_SELECTED_SUMMARY=""
+bash hpc/reconstructed_full146.sbatch --dry-run
+sbatch --test-only --export=ALL hpc/reconstructed_full146.sbatch
+# One actual submission only, after successful preflight and scheduler check:
+sbatch --export=ALL hpc/reconstructed_full146.sbatch
+```
+
+Poll that new job ID, fetch its outputs/logs locally with `raw_inputs/` excluded
+at every level, and check all 146/900 keys. Failures retain outputs; do not drop
+files, change N or retry with tuned settings. Comparison and the full145 own-N
+grade run locally only after integrity validation. Neither grade nor reference
+predictions feed back into production.
+
+Focused local checks (synthetic metadata, no scientific fitting):
+
+```bash
+julia --project=. test/test_reconstructed_full146_sbatch.jl
+julia -t 4 --project=. test/test_reconstructed_pipeline.jl
+julia --project=. test/test_compare_reconstructed_champion.jl
+```
+
+The entrypoint regression passes 122 assertions (70 shell/capture, 52 native
+metadata/boundary checks). The existing pipeline and comparison fixtures pass
+19 and nine assertions. Prepared-input metadata verification passes 14 checks;
+the actual entrypoint dry-run reports 146 files and creates no output root.
+These checks do not validate SXM content, scientific fits or chemical accuracy.

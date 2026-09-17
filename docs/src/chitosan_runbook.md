@@ -410,10 +410,14 @@ Further constrained-shape and channel-disagreement diagnostics are recorded in
 
 No logged exception or Julia warning occurs. The split log for
 `260222_043.sxm` reports a coverage-floor clamp from 6 to its already selected
-fixed N=5; the five rows are retained, with no new count selection. Full146
-reconstruction/comparison/grading remain unexecuted and require a separate user
-decision. This application does not establish chemical accuracy or complete the
-milestone. No old terminal challenger status below is reopened.
+fixed N=5; the five rows are retained, with no new count selection. The user has
+now approved full146 reconstruction/comparison/grading, but it has not run. Its
+fixed-cache scope is documented in
+[Approved full146 comparison](unit_assignment.md#Approved-full146-comparison-scope-(2026-09-17)):
+retain the 900 cached GCV lobe keys, do not pair them with the distinct 871-lobe
+promoted counting summary, and run comparison/grading only outside production.
+This application does not establish chemical accuracy or complete the milestone.
+No old terminal challenger status below is reopened.
 
 
 ### Challenger terminal status (T9 closure)

@@ -34,7 +34,9 @@ local integrity checks pass and QC is reproduced exactly. The model outputs
 are flagged for review** for low mean confidence. Confidence is an uncalibrated
 vote margin; zero abstentions do not establish certainty or chemical accuracy.
 The original failed run is preserved. Full146 reconstruction, comparison and
-external grading have not run; milestone 1 is not yet complete. See
+external grading are now approved but have not run. This assignment comparison
+will retain the cached GCV geometry (146 scans / 900 lobes), not mix it with the
+separate promoted-counting summary (871 lobes). Milestone 1 remains incomplete. See
 [`docs/src/unit_assignment.md`](docs/src/unit_assignment.md#explicit-julia-reconstruction-2026-09-16)
 for the command, numerical differences and limitations.
 

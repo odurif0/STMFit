@@ -2316,10 +2316,12 @@ See `docs/src/selection.md` for the full guard specification and
     review for low mean confidence. Confidence is uncalibrated; zero `?` does
     not establish certainty. The grid and seven priority standalone maps were
     inspected, but they are fitted-coordinate maps, not raw STM overlays.
-    Both monitors are stopped and the failed run is preserved. Full146
-    reconstruction/comparison/grading require a separate user decision; no
-    benchmark-guided tuning, chemical accuracy or milestone completion is
-    claimed.
+    Both monitors are stopped and the failed run is preserved. The user has now
+    approved the fixed full146 reconstruction and external comparison/grade.
+    Preparation retains the cached GCV geometry (146 files / 900 keys), not the
+    incompatible promoted-count summary (871 keys). Full146 has not run; Viper
+    authentication is currently blocking remote staging. No benchmark-guided
+    tuning, chemical accuracy or milestone completion is claimed.
 
 0b. **Can label-free unit assignment reach the promotion bar?** → **RESOLVED
     (Aug 3)**: the label-free champion (soft vote of k-means 4-view and GMM
@@ -5992,3 +5994,118 @@ part of this continuation, no benchmark labels were read for the application,
 and the accepted frozen-champion metrics remain unchanged. The unknown25
 technical workflow is complete; chemical validation and milestone 1 as a whole
 remain unresolved.
+
+### 2026-09-17 — Full146 approved; cache lineage clarified before execution
+
+After the completed unknown25 report (`9ece7bf`), the user replied **"go"** to
+full146 reconstruction followed by external comparison and grading. The
+scientific deliverable is a complete fixed-method assignment table on all 146
+scans, then a separately generated comparison/grade with coverage, uncertainty
+and limitations. Done requires all intended file/lobe keys, unchanged inputs
+and settings, inspected outputs/QC, and external-only reporting. Scope is one
+configuration, one job capped at **24 hours**, four requested CPUs and 16,000 MB.
+No descriptor search, threshold tuning, new abstention rule, expected-N prior,
+file omission or champion-label input is authorized. Unknown25 is finished and
+must not be rerun.
+
+**Important input distinction found in preflight.** The previously prepared
+base cache,
+`results/hierarchical_feature_extraction/9e3bcdeb83469fe0/features_merged.tsv`,
+contains **900 unique contiguous lobe keys / 146 files**, all `source=ell`.
+Its SHA-256 is
+`2cb1065cf5aa790dac1a5fec279d955c732cc91f7e60312103de32fddfb89484`, matching the
+archived extraction record. Its eight-shard union preserves all source rows.
+Cached N counts are 4:2 files, 5:12, 6:106, 7:16, 8:8 and 10:2. These are own-N
+GCV geometry counts, not fixed-six inputs.
+
+The promoted counting summary
+`results/experiments/6mer_full146/pm2_confirm/summary_overlap060_hard.tsv`
+contains the same 146 files, but **871 selected keys**: 118 per-file counts agree
+and **28 conflict**. There are 866 common keys, 34 cache-only and five
+summary-only keys. Native `check_counts` rejects this combination. It would be
+wrong to attach this summary to the 900-row geometry, silently trim the cache,
+change N, or claim that the cached counts reproduce the promoted counting
+policy. No benchmark labels or grades were used to choose between them.
+
+Read-only provenance review resolves the distinction. The archived extraction
+config hash is
+`a24460ab5114bd3907c063c1f6d7b678113037e084881a7fbbb211db9eeaf2d9`, identical to
+current `config/chitosan.toml`. The archived extractor hash matches
+`37e52333034ac18979638702c68644cc0a546dea:test/extract_lobe_features.jl`.
+Its `_effective_best` chooses the lowest finite valid circular/elliptical GCV
+among fitted N. Logs for all 146 files show variable-N sweeps and the saved own
+N, not fixed-N summary handoff. The original producer consumed only dataset/file
+membership; those paths match every raw/cache file. Its intelligent sweep has
+BIC early-stopping diagnostics; the cache is not an exhaustive-count optimum.
+It is also not a fresh Julia 1.13 counting benchmark.
+
+There is **no original selected-summary for this extraction**, and its support
+configuration is nonadaptive. The already approved features-only full146
+command remains appropriate: preserve the 900-row cache and let the native
+runner derive `selected_from_features.tsv` for fixed-N split refits. This
+metadata is derived from geometry, not presented as a recovered original
+summary. The model's `support_midpoint_hybrid` config field does not retroactively
+make direct-extractor GCV counts into promoted batch-policy counts. The separate
+counting benchmark remains unchanged. For adaptive unknown25 inputs, retaining
+the original summary and `refined_policy` is still mandatory.
+
+No compatible full146 split cache was found. All 900 base `skew_ratio` values
+are one and cannot stand in for split fitting. An older genuine split table
+has 234 rows / 39 files, with incompatible N on four scans (233 common keys,
+one split-only key); it is not passed or silently subset. All **146 genuine
+split fits** will be computed at fixed cached N with the frozen split transform
+(`peak_profile=split`, `skew_ratio_max=2.0`), in at most four single-thread
+children. Whole-cohort patches, descriptor, CC/Fisher, classifiers, vote, QC and
+maps follow. Neither counting nor base fitting is rerun.
+
+Local staged inputs are now
+`results/reconstructed_cc_soft_v1/full146_v1_inputs/`: byte-identical
+`base_geometry_full146.tsv`, native `templates_cc.tsv` (unchanged SHA
+`fede623b72c0381875fb738c4c1ec128397919b33be937ba5423c80cc04478e4`), and
+`full146_raw/` with 146 valid raw symlinks. Names match the cache exactly,
+without extras or duplicate basenames. The 148 staged files total
+**308,158,485 bytes** when dereferenced (raw targets: 307,924,640 bytes).
+No promoted summary, truth, manifest label or reference prediction is staged
+as production input. Raw symlinks must be dereferenced on cluster transfer.
+
+The native local metadata check passes **14 assertions** under Julia 1.13,
+including raw/key coverage, source hashes, finite geometry, own-N consistency,
+nonadaptive config and actual runner dry-run without output creation. An initial
+parenthesis typo in the temporary verification script stopped at parsing; it
+was corrected and the first failed log was retained. No scientific program
+stage or input changed. Existing synthetic pipeline boundary/sharding tests
+pass **19 assertions**, and external-comparison fixtures pass **nine**; these
+are test fixtures, not a grade of scientific predictions.
+
+`hpc/reconstructed_full146.sbatch` is a small full146-only entrypoint, avoiding
+the older two-cohort script that would repeat unknown25. `STMFIT_OUTDIR` is its
+new direct output directory. The optional `STMFIT_SELECTED_SUMMARY` is explicit
+and empty for this cache; no summary is auto-discovered. It preserves the native
+runner's version, coverage and output-collision checks. No cluster agent,
+authority framework or persistent job controller is added. Its retained
+regression passes **122 assertions** under Julia 1.13 (70 shell/resource/capture
+checks and 52 actual native metadata/output-boundary checks). It checks
+empty/unset/explicit optional summaries, incompatible-summary rejection and no
+auto-discovery, missing inputs/env, forbidden arguments, spaces/relative paths,
+output directory/file/dangling-link collisions in both modes, exit propagation,
+and unchanged inputs/configs. No fixture launches a fit or classifier. The
+actual prepared-input entrypoint dry-run also passes in **8.75 s**, leaving the
+output root absent. Metadata checks do not parse SXM/template content or prove
+fit viability. Shell syntax, `git diff --check` and the Julia 1.13 documentation
+build pass; doc warnings remain page/search sizes and skipped deployment.
+
+**Current blocker:** the metadata-only noninteractive SSH probe to `oldu@viper`
+was refused at authentication. Viper is preferred by the repo for multi-file
+fits; the user was asked to authenticate with `ssh oldu@viper`. No remote copy,
+Slurm submission, scientific fit/classifier, full146 prediction or grade has
+occurred. The staged inputs and tested source must still be synced after
+reviewed rsync dry-runs, checked with Julia 1.13 and scheduler test-only, then
+submitted exactly once. Old Raven jobs 30271312 and 30278010 stay untouched.
+
+After fetch and complete 146/900-key verification, the external comparison may
+read the frozen champion and filter the benchmark membership for the existing
+full145 own-N grader. It must report missing control positions and extra
+predicted lobes, not hide them. Neither comparison nor grade can tune the
+production model. This is an **assignment reconstruction on cached GCV geometry**,
+not a raw rebuild of the promoted counting-to-assignment chain. Native numerical
+differences and the lost descriptor's irrecoverable identity remain limitations.
