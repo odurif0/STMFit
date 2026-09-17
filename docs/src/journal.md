@@ -5782,3 +5782,24 @@ Slurm submission or full146/comparison/grading was performed. A future job needs
 the committed repair/continuation source and prepared inputs synced to Raven,
 then a separate Slurm submission in a new output root. Old job **30271312 is not
 resubmitted**. Full-cohort assignments and milestone 1 remain pending.
+
+The committed continuation (`279555d`) also validates selected-support metadata
+before creating outputs, using the existing extractor parser/settings validator
+inside an isolated module. N-only or ambiguous adaptive metadata is rejected;
+no duplicate policy parser or new scientific default was added. The final
+actual-input dry-run passes under Julia 1.13 (9.14 s), leaving the proposed
+`raven_20260917_unknown25_resume_v1/` output root absent.
+
+The retained self-contained regression
+`julia -t 4 --project=. test/test_resume_reconstructed_unknown25.jl` passes
+**60 assertions** (46 metadata/shell boundaries, 14 fake-exporter wiring;
+61.82 s). It creates temporary synthetic fixtures and loads the current Slurm
+script payload, not a copy of its implementation. Tests include incomplete,
+extra, duplicate and gapped cached keys, missing/ambiguous adaptive policy,
+real shell dry-runs and input/output collision rejection, four one-thread
+exports, exact 204+18 merge, unchanged inputs/configs, and the complete-cohort
+native command arguments. Its exporter is replaced only within the test process;
+no scientific fit or classifier is launched. The broader transient metadata
+checks also passed (151 assertions). The shell syntax and documentation build
+pass; documentation warnings are page/search-index sizes and skipped deployment.
+No remote operation or new scientific batch occurred during verification.

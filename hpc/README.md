@@ -421,3 +421,12 @@ outputs go under `STMFIT_OUTDIR/unknown25/`, with the outer application log in
 with `squeue`/`sacct` and fetch logs/outputs locally after it ends. Coverage
 failure stops the job; do not omit files, lower N or change settings to make it
 pass. The failed job 30271312 and its artifacts remain unchanged.
+
+Local regression (synthetic fixtures and a fake exporter; no scientific fit):
+
+```bash
+julia -t 4 --project=. test/test_resume_reconstructed_unknown25.jl
+```
+
+This tests the current script payload and actual shell dry-run/collision paths;
+it does not validate the unexecuted 23-file fit or chemical predictions.
