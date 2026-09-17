@@ -4,6 +4,20 @@ include(joinpath(@__DIR__, "lib", "reconstructed_unit_assignment.jl"))
 using .ReconstructedUnitAssignment
 using Plots
 
+# At most eight full-size panels per image, in the original sorted file order.
+overview_pages(n::Integer) = [i:min(i + 7, n) for i in 1:8:n]
+
+function assignment_overview(panels, page, npages)
+    1 <= length(panels) <= 8 || error("An overview page needs 1–8 panels")
+    ncols = min(2, length(panels))
+    nrows = cld(length(panels), ncols)
+    height = 440nrows + 48
+    return plot(panels...; layout=(nrows, ncols), size=(780ncols, height),
+                plot_title="Reconstructed 0/1/? assignments — page $page/$npages",
+                plot_titlefontsize=12, plot_titlevspan=48 / height,
+                left_margin=10Plots.mm, widen=1.12)
+end
+
 function render_maps(features, predictions, outdir)
     _, geometry = lobe_table(features; required=["x_nm", "y_nm"])
     _, assigned = lobe_table(predictions; required=["predicted", "confidence"])
@@ -36,12 +50,21 @@ function render_maps(features, predictions, outdir)
         savefig(fig, joinpath(outdir, "standalone", filename))
         push!(panels, fig)
     end
-    ncols = min(4, length(panels))
-    nrows = cld(length(panels), ncols)
-    grid = plot(panels...; layout=(nrows, ncols), size=(max(780, 500ncols), 400nrows),
-                plot_title="Reconstructed 0/1/? assignments", plot_titlefontsize=12,
-                plot_titlevspan=0.10)
-    savefig(grid, joinpath(outdir, "summary_grid.png"))
+    # Keep the standalone panel footprint. A single very tall GR canvas squeezes
+    # equal-aspect plot areas and a fractional title band grows with the cohort.
+    # summary_grid.png is page 1; its title and the index make pagination explicit.
+    pages = overview_pages(length(panels))
+    open(joinpath(outdir, "summary_pages.tsv"), "w") do io
+        println(io, "page\timage\tfile")
+        for (page, indices) in enumerate(pages)
+            grid = assignment_overview(panels[indices], page, length(pages))
+            image = page == 1 ? "summary_grid.png" : "summary_grid_$(lpad(page, 3, '0')).png"
+            savefig(grid, joinpath(outdir, image))
+            for i in indices
+                println(io, page, '\t', image, '\t', files[i])
+            end
+        end
+    end
     return length(files)
 end
 

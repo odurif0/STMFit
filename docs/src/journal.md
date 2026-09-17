@@ -6192,3 +6192,69 @@ base/config preservation, genuine split rows, components/reasons, uncertainty,
 QC and figures, then run the authorized external-only comparison and full145
 own-N grade. Failed or incomplete outputs must be retained, not trimmed or
 silently retried. Existing benchmark headlines and unknown25 results are unchanged.
+
+
+### 2026-09-18 — Full146 integrity verified; assignment overview layout corrected
+
+Viper job **11786116** completed `0:0` in **11m04s**, from 00:36:57 to
+00:48:01 CEST on `vipc2162`. Accounting records eight allocated CPUs (four
+requested) and MaxRSS **3,486,576 KiB**. The monitor is stopped; no second job
+or scientific variant was run. All **184 fetched output files (26,642,815
+bytes)** and the separate Slurm log match remote SHA-256 values. The 358
+source/key-runtime identities and 148 prepared inputs remain unchanged.
+`raw_inputs/` was excluded at every level. Original outputs remain under
+`results/reconstructed_cc_soft_v1/viper_20260917_full146_v1/`.
+
+Local Julia 1.13 saved-output checks retain exactly **146 files / 900 keys**
+in all twelve lobe tables, all four genuine split chunks, unchanged base and
+configuration, valid missing-input reasons, and byte-identical descriptor,
+feature-join, vote, summary and QC replays. Native component/final validators
+pass. Final assignments are **695 zero / 198 one / 7 `?`**. The seven partial
+patch rows remain present and propagate to `unavailable_gmm`; there is no
+single-component fallback or new confidence cutoff. Full log/QC interpretation
+is saved in `full146_launch_v1/completed_log_review.txt`. This is integrity
+verification, not a chemical grade or proof that every optimizer seed converged.
+
+**Checker failure, not data corruption:** the first check stopped at 41 passes
+and one error because it expected an exact 2000×14800 summary PNG. The actual
+height is 14798. A separate blank-plot probe reproduced this raster rounding
+under Julia 1.13.0, Plots 1.41.6 and GR 0.73.24. Only the generated checker's tall
+grid assertion now allows a 0–2-pixel height rounddown; widths and standalone
+sizes remain exact. Corrected fixtures pass **48/48**, and completed-output
+checks pass **73/73**. The initial checker and failed log are retained. No
+production image, table or scientific threshold was changed to satisfy a test.
+
+**A separate real figure defect:** visual inspection of the original overview
+found a large empty title band, compressed equal-aspect plot bodies, clipped
+endpoint disks and overlapping labels. The sixteen inspected standalone maps
+were readable. A giant canvas, small panel allocation and a title band fixed at
+10% of total height caused a layout problem; reuse of rendered Plots objects
+alone is not established as the cause.
+
+`plot_reconstructed_unit_assignment.jl` now uses at most **eight panels per
+page**, two columns, the original 780×440 panel footprint, a fixed 48-pixel
+title band, and overview-only left padding/widening. Equal physical coordinate
+scales, class colors and `0/1/?` annotations are retained. `summary_grid.png`
+is explicitly **page 1**, not the full cohort; subsequent pages are numbered
+and `summary_pages.tsv` records each file once in sorted order. There are
+**19 pages** for this cohort. The standalone rendering code is unchanged.
+
+The native plot regression passes **267/267** under Julia 1.13, including
+single, three-, eight- and 146-file cases, pagination, labels/colors, physical
+aspect, rendered plot-area size, endpoint margins and input/collision checks.
+A local **plot-only** replay from saved geometry/predictions took 16.3 s.
+All 146 standalone PNGs are byte-identical to production; the overview pixel
+check finds all 900 colored markers with the correct per-panel class counts.
+All nineteen PNGs decode, and representative corrected pages/edge cases were
+visually inspected. Corrected figures are copied without overwriting the
+originals to
+`results/reconstructed_cc_soft_v1/viper_20260917_full146_v1_figures_v1/`.
+The intermediate margin probe is not the final figure set. GR raster rounding
+also affects the page canvas (1560×1808 requested, 1558×1806 exported here),
+without omitting panels or markers.
+
+These remain fitted-coordinate maps, not raw STM overlays. Colors do not encode
+confidence. The scientific inputs, counts, fits, predictors, abstention rules,
+dependencies and unknown25 outputs are unchanged. External comparison and the
+full145 own-N grade are the next separate local step; no benchmark results
+were read to choose this layout or change predictions.
