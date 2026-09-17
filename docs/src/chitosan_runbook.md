@@ -342,16 +342,36 @@ settings for both base and split refits, without changing N or any other setting
 Retain the original `--selected-summary` when resuming adaptive-support data;
 N-only cache metadata cannot identify that support and is rejected when a
 geometry refit is needed.
-The first real rescued-file check now passes on `260215_022.sxm`: base and split
-each export nine lobes on the saved 5.552874796 nm support. Native checks cover
-exact keys, finite geometry/scores, both support configs and coordinate
-consistency (76 assertions); the geometry-only overlay was inspected. Base/split
-wall times are 74.49/84.94 s on one thread each. This is not an exact parameter
-replay: base GCV is 5.63285686e-6 versus 3.18253642e-6 in the original count.
-Outputs are under `results/reconstructed_cc_soft_v1/support_handoff_260215_022_v1/`.
-No classifier or HPC job was launched. `260220_083.sxm` and complete cohort
-outputs remain unverified; neither the pilot nor this check validates chemistry.
-Do not lower N, relax physical constraints, or omit the remaining failed scan.
+Both real rescued-file checks now pass under Julia 1.13. Each scan exports nine
+base and nine split lobes, and its native geometry/support check passes 76
+assertions. The geometry-only overlays were inspected; they do not validate
+chemical assignments or prove that all fitted units are separately resolved.
+
+| Scan | Reconstructed support (nm) | Base / split time (s) | Base / split GCV |
+|---|---|---|---|
+| `260215_022.sxm` | 5.552874796122559 | 74.49 / 84.94 | 5.63285686e-6 / 1.51047396e-6 |
+| `260220_083.sxm` | 5.90756511515228 | 70.68 / 77.87 | 5.44278424e-6 / 2.55453904e-6 |
+
+Outputs are under `results/reconstructed_cc_soft_v1/support_handoff_<scan>_v1/`
+(without `.sxm` in `<scan>`). The original counting-fit GCV values were
+3.18253642e-6 and 5.44586561e-6 respectively. This is fixed-N refitting on the
+selected support, not exact parameter replay; no settings were retuned.
+
+Native preparation now merges the old 204 valid base rows with the two nine-row
+recoveries, preserving every source row. Prepared inputs are in
+`results/reconstructed_cc_soft_v1/unknown25_resume_v1_inputs/`: original counting
+summary, complete base geometry (**25 files / 222 lobes**), genuine partial split
+geometry (**2 files / 18 lobes**), fixed CC templates and 25 raw-input symlinks.
+The preparation passes 29 assertions; the old failed run is unchanged.
+
+The new `hpc/resume_reconstructed_unknown25.sbatch` is a separate application-only
+continuation. It keeps the original summary, skips the two cached split files,
+fits only the remaining **23 files / 204 lobes**, checks and merges the complete
+split table, then runs cohort-wide assignment/QC/maps. It does not repeat
+counting/base fits or run full146/grading. Its `--dry-run` checks metadata without
+reading SXM pixels, fitting or creating outputs. See `hpc/README.md` for staging
+and submission. **No new job has been submitted and cohort assignments remain
+unavailable.** Do not lower N, relax physical constraints, or omit a failure.
 No old terminal challenger status below is reopened by this bounded reconstruction.
 
 

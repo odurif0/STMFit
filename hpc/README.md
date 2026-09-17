@@ -311,9 +311,10 @@ terminating a shard. This workflow does not read benchmark labels.
 
 ## Native reconstruction job (Julia 1.13)
 
-`reconstructed_chitosan.sbatch` is the bounded application/comparison job for
-`cc_soft_reconstructed_v1`. It runs the 25 unknown chains first, then the saved
-146-file geometry cohort. Both calls use the native production CLI; neither
+`reconstructed_chitosan.sbatch` is the original fresh application/comparison job
+for `cc_soft_reconstructed_v1`. After the failure of job 30271312, use the
+unknown25 continuation below rather than repeating that fresh run. The original
+script runs the 25 unknown chains first, then the saved 146-file geometry cohort. Both calls use the native production CLI; neither
 reads benchmark labels nor invokes a grader. At most four single-thread refit
 chunks run inside the one allocation. Requested resources are four CPUs,
 16,000 MB and 24 hours (Raven's test-only accounting reports eight processors).
@@ -355,3 +356,68 @@ or persistent job controller is involved. See
 limits and cache semantics. In particular, a one-chain cohort can be too small
 for Fisher PCA10; its explicit `?` output is not a failed count or a valid
 chemical benchmark.
+
+### Unknown25 continuation after the support handoff repair
+
+`resume_reconstructed_unknown25.sbatch` is prepared and locally tested, **not yet
+submitted**. It processes the unknown25 application only; full146 and external
+grading remain separate later work. The job requests four CPUs, 16,000 MB and
+24 hours, with no concurrent second allocation under Raven's observed quota.
+
+The prepared local input directory is
+`results/reconstructed_cc_soft_v1/unknown25_resume_v1_inputs/`:
+
+- `unknown25_selected_summary.tsv`: byte-identical original fresh count summary,
+  retaining the adaptive `refined_policy`; an N-only replacement is not valid;
+- `unknown25_base_features.tsv`: all 222 base rows for the 25 selected files;
+- `unknown25_split_partial.tsv`: nine genuine split rows for each of
+  `260215_022.sxm` and `260220_083.sxm`;
+- `templates_cc.tsv`: unchanged native CC templates;
+- `unknown_raw/`: the same 25 raw SXMs, currently local symlinks.
+
+Sync committed source separately, using tracked files only. Stage the input
+directory at a new Raven input path. **Dereference the local raw symlinks** when
+copying (`rsync -aL`), so they do not point back to local `/home/...` paths on the
+cluster. Inspect an rsync dry-run first. Do not copy agent state, use `--delete`,
+overwrite the failed run, or rely on the personal launcher's default host; this
+continuation targets **Raven explicitly**.
+
+From the synced project on Raven, after checking its Julia 1.13 environment:
+
+```bash
+cd "$HOME/code/STMFit"
+export STMFIT_PROJECT_DIR="$PWD"
+export JULIA_BIN="$HOME/software/julia-1.13.0/bin/julia"
+export STMFIT_INPUT_DIR="/ptmp/$USER/stmfit/unknown25_resume_v1_inputs"
+export STMFIT_OUTDIR="results/reconstructed_cc_soft_v1/raven_20260917_unknown25_resume_v1"
+# Only the shared log parent may be created; keep STMFIT_OUTDIR absent.
+mkdir -p results/reconstructed_cc_soft_v1
+bash hpc/resume_reconstructed_unknown25.sbatch --dry-run
+sbatch --test-only --export=ALL hpc/resume_reconstructed_unknown25.sbatch
+# For the future separately submitted job, after checking those results:
+sbatch --export=ALL hpc/resume_reconstructed_unknown25.sbatch
+```
+
+The script rejects an existing output root, duplicate/gapped/extra keys,
+incomplete cached files, mismatched headers and raw-name coverage. It reuses
+the existing selected-support parser rather than inventing a policy from N.
+The metadata dry-run does not open SXM pixels, validate template numerics or fit
+anything; it creates no outputs. Its successful result is not evidence that
+remaining scientific stages succeed. Keep scientific execution inside Slurm.
+
+Normal execution excludes the two complete cached files from split extraction.
+Only the remaining 23 files / 204 lobes are fitted, using the frozen split config
+and original selected summary. At most four one-thread children run in the
+allocation. New split coverage must be complete before merging with the 18
+cached rows. The native runner then receives the complete base/split tables and
+original summary; it computes patches, descriptor, cohort-wide scores,
+assignments, QC and maps on all 25 files. No count/base refit, full146 execution
+or grader is invoked by this script.
+
+Split tables and their logs remain directly under `STMFIT_OUTDIR`; application
+outputs go under `STMFIT_OUTDIR/unknown25/`, with the outer application log in
+`STMFIT_OUTDIR/logs/unknown25.log`. Slurm writes
+`results/reconstructed_cc_soft_v1/unknown25-resume-<jobid>.log`. Poll the new job
+with `squeue`/`sacct` and fetch logs/outputs locally after it ends. Coverage
+failure stops the job; do not omit files, lower N or change settings to make it
+pass. The failed job 30271312 and its artifacts remain unchanged.

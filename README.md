@@ -29,10 +29,11 @@ is fixed before comparison; the champion is not relabeled as reproduced.
 Native component and synthetic end-to-end tests pass. The first full application
 stopped at geometry export (September 17): counting completed all 25 scans
 (222 selected lobes), but two adaptive-support refits were missing (18 lobes).
-The support handoff is corrected and a real check on `260215_022.sxm` now
-preserves all nine lobes in both base and split refits on the saved support.
-The other failed scan and cohort continuation remain to do. No cohort
-assignments or reconstructed benchmark comparison are available. See
+The support handoff is corrected: both rescued scans now preserve their nine
+selected lobes in real base and split refits. Complete base geometry (25 files /
+222 lobes) and two split caches are prepared for continuation; the remaining
+23 split fits and cohort assignments have not run. No reconstructed benchmark
+comparison is available. See
 [`docs/src/unit_assignment.md`](docs/src/unit_assignment.md#explicit-julia-reconstruction-2026-09-16)
 for the command, numerical differences and limitations.
 

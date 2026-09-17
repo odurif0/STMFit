@@ -2307,17 +2307,18 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-17. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
-0c. **Apply a reproducible native pipeline to raw 10–20mer scans** → **FIRST
-    RESCUED-FILE REFIT PASSES; COHORT PENDING (Sep 17)**: the distinctly named
-    Julia reconstruction stays fixed, without benchmark-guided tuning. The
-    support handoff repair in `98c54ae` is tested, and `260215_022.sxm` now
-    exports all nine selected lobes in both base and split fits, with support
-    5.552874796122559 nm matching the saved count (76 real-file assertions).
-    This is neither exact geometry replay nor chemical validation. The other
-    missing scan, `260220_083.sxm`, and all cohort-level downstream outputs
-    remain unverified. Failed job 30271312 and its 25-count/23-geometry artifacts
-    are preserved; monitoring remains cancelled and no new job is submitted.
-    Complete unknown25 assignments and full146 comparison/grading remain to do.
+0c. **Apply a reproducible native pipeline to raw 10–20mer scans** → **BASE
+    GEOMETRY RECOVERED; COHORT ASSIGNMENTS PENDING (Sep 17)**: the fixed Julia
+    reconstruction and support handoff repair now recover nine base and nine
+    split lobes on each rescued scan. Both real checks pass 76 assertions, with
+    support lengths matching the saved selected summary; neither is chemical
+    validation or exact parameter replay. Native merging preserves all source
+    rows and supplies 25-file/222-lobe base geometry plus two complete split
+    caches (18 lobes). The remaining 23 split files/204 lobes, full-cohort
+    assignment/QC/maps and later full146 comparison/grading remain to do.
+    A separate application-only Slurm continuation is prepared, not submitted.
+    Old job 30271312 remains failed/fetched with its artifacts unchanged;
+    monitoring stays cancelled. No benchmark-guided tuning is introduced.
 
 0b. **Can label-free unit assignment reach the promotion bar?** → **RESOLVED
     (Aug 3)**: the label-free champion (soft vote of k-means 4-view and GMM
@@ -5720,3 +5721,64 @@ or merged. The support bug is removed for this real file; **260220_083.sxm is
 still untested** after the repair. No full cohort, unit assignment, external
 comparison/grade, SSH transfer or new Slurm job was launched. Milestone 1 remains
 incomplete until the remaining geometry and cohort-wide application are done.
+
+### 2026-09-17 — Second rescued scan recovered; unknown25 continuation inputs prepared
+
+Following the user request to continue, **260220_083.sxm** was checked locally
+with the same bounded procedure as the first rescued scan. Julia **1.13.0** ran
+one base and one split extractor process in parallel, each with one Julia/BLAS
+thread and a 20-minute safety timeout. The original 25-row counting summary was
+supplied unchanged, including `refined_policy=adaptive_support_rescue` and the
+selected N=9. The split config used only the existing runner transformation
+(`peak_profile="split"`, frozen `split_skew_ratio_max=2.0`). No counting sweep,
+parameter search or class prediction was run.
+
+Both processes exit **0**, each with **nine unique, contiguous lobe keys** and
+`source=ell`:
+
+| Fit | Wall time | MaxRSS (KiB) | GCV |
+|---|---|---|---|
+| base | 70.68 s | 1,085,724 | 5.44278424e-6 |
+| split | 77.87 s | 1,074,568 | 2.55453904e-6 |
+
+The native post-check passes **76 assertions**, using the same verification code
+as the first scan. Both profiles and their circular/elliptical configs reproduce
+**5.90756511515228 nm**, exactly the saved support. The t limits are
+**[-3.0082010929434198, 2.89936402220886] nm**, with **7,693 fit-mask pixels** and
+unchanged rescue settings 1.5 / 0.75 nm. Raw input, source count/unit configs and
+original summary hashes are unchanged. The base GCV is not identical to the
+original counting GCV (5.4458656131748305e-6). Split skew spans
+**0.500034–1.999874**, close to both fixed bounds; this is recorded, not retuned.
+
+The geometry-only overlay was inspected. These fitted centers are model
+components, not independently verified chemical units; neither this image nor
+the finite GCV establishes assignment accuracy. Outputs are in
+`results/reconstructed_cc_soft_v1/support_handoff_260220_083_v1/`, including both
+feature TSVs, support checks, logs and `geometry_overlay.png`.
+
+A separate native Julia metadata operation then used the existing strict merge
+helper to combine **204 old valid base rows + 9 + 9 recovered rows**. Complete
+base geometry now has **25 files / 222 keys**. The two genuine split caches have
+**2 files / 18 keys**; the other **23 files / 204 split keys** are still missing.
+All keys derive from the saved label-free summary, not an expected chain length
+or composition. The preparation passes **29 assertions**, including complete
+per-file keys/N, exact coverage, preservation of every source row, and unchanged
+source files. Summary and CC templates are copied byte-for-byte. The raw folder
+contains only symlinks to the 25 original SXMs.
+
+Prepared inputs are in
+`results/reconstructed_cc_soft_v1/unknown25_resume_v1_inputs/`. The failed Raven
+outputs remain untouched. `hpc/resume_reconstructed_unknown25.sbatch` provides a
+separate, application-only continuation: keep the original summary and complete
+base cache, skip the two complete split caches, export the remaining split files
+with at most four single-thread children, merge/check complete split coverage,
+then run the unchanged native application on **all 25 chains**. It neither
+repeats counting/base fits nor trains classifiers on just the refit subset.
+Its resource budget remains four requested CPUs, 16,000 MB and 24 hours.
+
+The prepared-data metadata dry-run succeeds without SXM reads, optimization,
+classifiers or output creation. It is not a scientific run. No SSH transfer,
+Slurm submission or full146/comparison/grading was performed. A future job needs
+the committed repair/continuation source and prepared inputs synced to Raven,
+then a separate Slurm submission in a new output root. Old job **30271312 is not
+resubmitted**. Full-cohort assignments and milestone 1 remain pending.

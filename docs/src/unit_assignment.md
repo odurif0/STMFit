@@ -1338,8 +1338,29 @@ chemical identification.
 Artifacts are in `results/reconstructed_cc_soft_v1/support_handoff_260215_022_v1/`
 (`features_base.tsv`, `features_split.tsv`, `support_check.tsv`, logs and
 `geometry_overlay.png`). The old failed cohort outputs remain untouched.
-`260220_083.sxm` has not been refitted; no complete cohort assignments, new HPC
-job, comparison or grade was run. The frozen champion's metrics remain unchanged.
+The second check on **`260220_083.sxm`** also passes: nine base and nine split
+lobes, support **5.90756511515228 nm**, **7,693 fit-mask pixels**, and another 76
+native assertions. Its base/split wall times are 70.68 / 77.87 s, and GCV values
+are 5.44278424e-6 / 2.55453904e-6 (original counting GCV 5.44586561e-6). Split skew
+spans **0.500034–1.999874**, near both configured bounds; no bound was changed.
+Its separate `support_handoff_260220_083_v1/` directory contains the same outputs,
+and the geometry-only overlay was inspected. Neither check identifies chemical
+classes, and neither recovered fit is claimed identical to the original fit.
+
+The two base recoveries have now been merged with the original 204 valid rows
+into complete **25-file / 222-lobe** base geometry. The two genuine split caches
+provide **18 lobes / 2 files**; **204 split lobes / 23 files** remain to fit. A
+native preparation check passes 29 assertions, including exact keys, unchanged
+source rows and byte-identical copies of the original summary and templates.
+Prepared inputs are in `results/reconstructed_cc_soft_v1/unknown25_resume_v1_inputs/`.
+`hpc/resume_reconstructed_unknown25.sbatch` completes only those missing split
+files, then passes complete geometry and the original selected summary to the
+unchanged native application. The classifiers still train on the full supplied
+25-chain cohort, not isolated files or the 23-file refit subset.
+
+No complete cohort assignments, new HPC job, full146 execution, comparison or
+grade was run. The failed job is not resubmitted, and the frozen champion's
+metrics remain unchanged.
 
 ### Native numerical conventions
 
