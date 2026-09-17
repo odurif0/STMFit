@@ -359,9 +359,11 @@ chemical benchmark.
 
 ### Unknown25 continuation after the support handoff repair
 
-`resume_reconstructed_unknown25.sbatch` is prepared and locally tested, **not yet
-submitted**. It processes the unknown25 application only; full146 and external
-grading remain separate later work. The job requests four CPUs, 16,000 MB and
+`resume_reconstructed_unknown25.sbatch` was submitted once as **Raven job
+30278010** on September 17, from tested source `aa422a3`. Its initial state is
+PENDING. **Do not repeat the submission for this run.** It processes the
+unknown25 application only; full146 and external grading remain separate later
+work. The job requests four CPUs, 16,000 MB and
 24 hours, with no concurrent second allocation under Raven's observed quota.
 
 The prepared local input directory is
@@ -382,7 +384,10 @@ cluster. Inspect an rsync dry-run first. Do not copy agent state, use `--delete`
 overwrite the failed run, or rely on the personal launcher's default host; this
 continuation targets **Raven explicitly**.
 
-From the synced project on Raven, after checking its Julia 1.13 environment:
+The procedure used for this run is shown below for reproducibility. Job
+30278010 already exists; do not execute these submission commands again. Any
+later continuation needs a different unused output root. From the synced
+project on Raven, after checking its Julia 1.13 environment:
 
 ```bash
 cd "$HOME/code/STMFit"

@@ -31,9 +31,10 @@ stopped at geometry export (September 17): counting completed all 25 scans
 (222 selected lobes), but two adaptive-support refits were missing (18 lobes).
 The support handoff is corrected: both rescued scans now preserve their nine
 selected lobes in real base and split refits. Complete base geometry (25 files /
-222 lobes) and two split caches are prepared for continuation; the remaining
-23 split fits and cohort assignments have not run. No reconstructed benchmark
-comparison is available. See
+222 lobes) and two split caches are ready. Raven job **30278010** was submitted
+on September 17 to finish the remaining 23 split files and full-cohort
+assignments; its initial state is PENDING. No cohort result or reconstructed
+benchmark comparison is available yet. See
 [`docs/src/unit_assignment.md`](docs/src/unit_assignment.md#explicit-julia-reconstruction-2026-09-16)
 for the command, numerical differences and limitations.
 

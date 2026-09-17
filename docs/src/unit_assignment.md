@@ -1358,9 +1358,14 @@ files, then passes complete geometry and the original selected summary to the
 unchanged native application. The classifiers still train on the full supplied
 25-chain cohort, not isolated files or the 23-file refit subset.
 
-No complete cohort assignments, new HPC job, full146 execution, comparison or
-grade was run. The failed job is not resubmitted, and the frozen champion's
-metrics remain unchanged.
+The user subsequently approved the actual continuation. **Raven job 30278010**
+was submitted once on September 17 from tested source `aa422a3`, with a new input
+and output directory. Its initial state is PENDING. Remote metadata checks pass
+under Julia 1.13 and all 383 checked source/lock/input hashes match locally;
+this is setup verification, not completed scientific processing. No complete
+cohort assignments, full146 execution, comparison or grade is available yet.
+The failed job is not resubmitted, and the frozen champion's metrics remain
+unchanged.
 
 ### Native numerical conventions
 

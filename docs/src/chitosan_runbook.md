@@ -370,8 +370,12 @@ fits only the remaining **23 files / 204 lobes**, checks and merges the complete
 split table, then runs cohort-wide assignment/QC/maps. It does not repeat
 counting/base fits or run full146/grading. Its `--dry-run` checks metadata without
 reading SXM pixels, fitting or creating outputs. See `hpc/README.md` for staging
-and submission. **No new job has been submitted and cohort assignments remain
-unavailable.** Do not lower N, relax physical constraints, or omit a failure.
+and submission. **Job 30278010 was submitted once on Raven on September 17**
+from tested source `aa422a3`; its initial state is PENDING. The remote metadata
+dry-run and scheduler test-only passed, and all copied source/input identities
+match locally. Cohort assignments remain unavailable until the actual run
+finishes and its outputs are checked. Do not submit a duplicate, lower N, relax
+physical constraints, or omit a failure.
 No old terminal challenger status below is reopened by this bounded reconstruction.
 
 

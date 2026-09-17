@@ -2308,17 +2308,17 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0c. **Apply a reproducible native pipeline to raw 10–20mer scans** → **BASE
-    GEOMETRY RECOVERED; COHORT ASSIGNMENTS PENDING (Sep 17)**: the fixed Julia
-    reconstruction and support handoff repair now recover nine base and nine
-    split lobes on each rescued scan. Both real checks pass 76 assertions, with
-    support lengths matching the saved selected summary; neither is chemical
-    validation or exact parameter replay. Native merging preserves all source
-    rows and supplies 25-file/222-lobe base geometry plus two complete split
-    caches (18 lobes). The remaining 23 split files/204 lobes, full-cohort
-    assignment/QC/maps and later full146 comparison/grading remain to do.
-    A separate application-only Slurm continuation is prepared, not submitted.
-    Old job 30271312 remains failed/fetched with its artifacts unchanged;
-    monitoring stays cancelled. No benchmark-guided tuning is introduced.
+    GEOMETRY RECOVERED; COHORT JOB SUBMITTED (Sep 17)**: both rescued scans now
+    retain nine base and nine split lobes with the saved selected support.
+    Complete base geometry (25 files / 222 lobes) and two split caches (18 lobes)
+    are staged. After user approval, Raven job **30278010** was submitted once
+    from tested source `aa422a3` to fit the remaining 23 split files / 204 lobes
+    and run assignment/QC/maps on all 25 chains. The remote Julia 1.13 metadata
+    check and scheduler test-only pass; initial job state is PENDING. A local
+    five-minute monitor follows only this new job. Old failed job 30271312 and
+    its artifacts remain unchanged, with its monitor cancelled. Actual cohort
+    outputs, later full146 comparison/grading and milestone completion remain
+    pending. No benchmark-guided tuning or chemical validation is claimed.
 
 0b. **Can label-free unit assignment reach the promotion bar?** → **RESOLVED
     (Aug 3)**: the label-free champion (soft vote of k-means 4-view and GMM
@@ -5803,3 +5803,59 @@ no scientific fit or classifier is launched. The broader transient metadata
 checks also passed (151 assertions). The shell syntax and documentation build
 pass; documentation warnings are page/search-index sizes and skipped deployment.
 No remote operation or new scientific batch occurred during verification.
+
+### 2026-09-17 — Unknown25 continuation submitted to Raven
+
+The user approved the actual continuation with "go" after the two recovered-file
+checks and local preparation. One new job, **30278010**, was submitted through
+`ssh raven` at Slurm `SubmitTime=2026-09-17T14:20:31` (Raven time). Its first
+observed state is **PENDING**, with no allocated node/start time yet. The
+scientific source is the tested local commit **aa422a3**. This is a separate
+application-only continuation, not a requeue/resubmission of failed job 30271312.
+
+Before submission, Raven reported Julia **1.13.0** and no queued/running jobs for
+this account. Project and Manifest hashes already matched locally; the ignored
+Manifest was preserved rather than regenerated or edited. Reviewed rsync dry-runs
+preceded both copies. Only 353 tracked runtime-source files were eligible for
+code sync (five changed files were transferred); hidden/generated/agent and
+retired authority/spec trees were excluded. No `--delete` was used. The new
+input directory contains 29 regular files, **77,722,317 bytes**: 25 SXMs plus the
+original summary, complete base table, partial split table and CC templates.
+The local raw symlinks were dereferenced and no raw symlink remains remotely.
+
+All **383 source/lock/input SHA-256 values** match locally (353 runtime files,
+the existing Manifest, 29 inputs). The native remote metadata dry-run exits 0
+in 49.71 s: 25 selected files / 222 lobes, two complete split caches / 18 lobes,
+and 23 remaining split files / 204 lobes. It creates no output root and performs
+no fitting/classification on the login node. No dependency change or package
+installation was needed. `sbatch --test-only` also passes: **30277916 was only
+a test-only number**, not the submitted job. Its estimated start/allocation is
+advisory, not evidence that the actual job has begun.
+
+Actual job **30278010** requests four CPUs, 16,000 MB and 24 hours in partition
+`small`, QOS `n0001`. The pending request reports four CPUs; the scheduler's
+test-only estimate used eight processors, as seen in earlier Raven accounting.
+The allocation will be checked when the job starts. Only this one job was
+submitted; no concurrent second allocation, full146 job or external grader was
+started.
+
+Paths:
+
+- synced project: `/u/oldu/code/STMFit`;
+- Julia: `/u/oldu/software/julia-1.13.0/bin/julia`;
+- new inputs: `/ptmp/oldu/stmfit/unknown25_resume_v1_inputs`;
+- new output root: `results/reconstructed_cc_soft_v1/raven_20260917_unknown25_resume_v1`;
+- application outputs will be under its `unknown25/` subdirectory;
+- Slurm log: `results/reconstructed_cc_soft_v1/unknown25-resume-30278010.log`;
+- local transfer/preflight/submission logs:
+  `results/reconstructed_cc_soft_v1/raven_unknown25_resume_launch_v1/`.
+
+A temporary local five-minute monitor uses ordinary SSH `squeue`/`sacct` checks;
+there is no cluster agent or job controller. It will fetch the new logs/outputs
+and stop when this job terminates, without duplicate submission or unchanged
+status messages. The old monitor remains cancelled. A successful preflight or
+job submission is not application/chemical validation: actual 25-file/222-key
+predictions, uncertainty, validation/QC and figures must still be checked after
+completion. Failure will be reported with retained outputs and missing keys,
+not hidden by reducing N, omitting a scan or retuning. Full146 reconstruction
+and external comparison/grading remain separate later work.
