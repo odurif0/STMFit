@@ -324,9 +324,22 @@ Native CC/Fisher tests and the extracted-input synthetic pipeline pass. One real
 raw-input pilot (`251206_013.sxm`) also completes in 13 min 46 s: N_selected=11,
 all 11 rows retained, QC and maps produced. Its isolated cohort is too small for
 PCA10 in each Fisher half, so all assignments are explicitly `?`. This is a
-technical pilot, not chemical validation. Actual 25-chain application and rebuilt
-benchmark comparison remain pending; the pilot is not milestone completion. No old terminal
-challenger status below is reopened by this bounded reconstruction.
+technical pilot, not chemical validation; the pilot is not milestone completion.
+
+**September 17 application result:** Raven job `30271312` failed at the base
+geometry coverage check after 1 h 00 min 05 s. Fresh counting covers all 25 scans
+with 222 selected lobes (range 5–16); geometry export retains 204 lobes over 23
+files. `260215_022.sxm` and `260220_083.sxm` each lack all nine selected lobes.
+These are the two scans whose counts used adaptive support rescue; the fixed-N
+extractor reads only `N_selected` and does not replay that support context.
+The wrapper correctly stopped before assignment. `failures.tsv` preserves all
+25 intended files; no full146 run, comparison or new external grade occurred.
+Fetched artifacts are under
+`results/reconstructed_cc_soft_v1/raven_20260916_native_v1/unknown25/`.
+The internal monitor is cancelled and no job has been resubmitted. Restore the
+selected support context before any separately approved continuation; do not
+lower N, relax physical constraints, or omit the two files to make coverage pass.
+No old terminal challenger status below is reopened by this bounded reconstruction.
 
 
 ### Challenger terminal status (T9 closure)

@@ -1274,6 +1274,30 @@ cohort can change predictions; a one-file timing run is not the 25-file result.
 There is no known sequence for the 10–20mer application, so processing it cannot
 establish chemical accuracy.
 
+### First full-cohort execution: blocked at geometry export (2026-09-17)
+
+Raven job `30271312` completed fresh counting for all 25 raw unknown scans:
+all count rows have status `ok`, with 222 selected lobes and selected counts
+from 5 to 16. This is label-free processing, not validation against a known
+sequence. The base feature table contains 204 unique lobe keys across 23 files,
+with no duplicate or extra keys. All nine selected lobes are missing for each
+of `260215_022.sxm` and `260220_083.sxm`.
+
+The two missing files are exactly those selected by adaptive support rescue.
+The existing feature extractor imports only the selected N, then builds a new
+fit from the original, shorter support. It does not restore the rescued support
+context. Both fixed-N refits consequently report `No chain model fit succeeded`.
+The coverage check aborts, rather than silently discarding these 18 lobes.
+
+No cohort predictions, assignment QC/maps, full146 reconstruction, champion
+comparison or external grade were produced. `failures.tsv` lists all intended
+25 files. The failed outputs and logs were fetched to
+`results/reconstructed_cc_soft_v1/raven_20260916_native_v1/`; the Slurm log is
+`results/reconstructed_cc_soft_v1/native-30271312.log`. Monitoring is cancelled;
+no resubmission has occurred. The next repair must preserve/replay the selected
+support context, without changing N or the fixed scientific parameters. The
+frozen champion's metrics remain unchanged.
+
 ### Native numerical conventions
 
 The constant-current port retains the old first-axis-fast cube index, sampling

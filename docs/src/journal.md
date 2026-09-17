@@ -2307,16 +2307,17 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-16. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
-0c. **Apply a reproducible native pipeline to raw 10–20mer scans** → **IN
-    PROGRESS (Sep 16)**: the original `patch_u_asym` producer is irrecoverable.
-    The user approved one explicitly defined Julia reconstruction, followed by
-    comparison with the frozen champion. The new half-plane descriptor is named
-    `patch_u_asym_reconstructed`, not claimed as the lost formula. Its settings
-    are fixed before comparison; no benchmark-guided variant search is allowed.
-    Native integration, component tests and a real one-file pilot now pass.
-    Raven job 30271312 is submitted for the 25-chain application followed by
-    the fixed 146-file reconstruction cohort. Monitor/fetch that job without
-    duplicate submission; local comparison and external grading are pending.
+0c. **Apply a reproducible native pipeline to raw 10–20mer scans** → **BLOCKED
+    AT GEOMETRY EXPORT (Sep 17)**: the original `patch_u_asym` producer is
+    irrecoverable. The user approved the fixed, distinctly named Julia
+    reconstruction; no benchmark-guided variant search is allowed. Native
+    component tests and a real single-file pilot pass. Raven job 30271312 has
+    now failed the coverage check: 25 count rows / 222 selected lobes, but only
+    23 geometry files / 204 lobes. The fixed-N extractor loses the adaptive
+    support context for `260215_022.sxm` and `260220_083.sxm` (nine lobes each).
+    Artifacts are fetched, monitoring is cancelled, and no job is resubmitted.
+    Preserve the selected support in a repair before separately approved
+    continuation. Cohort assignments, full146 comparison and grading are absent.
 
 0b. **Can label-free unit assignment reach the promotion bar?** → **RESOLVED
     (Aug 3)**: the label-free champion (soft vote of k-means 4-view and GMM
@@ -5554,3 +5555,69 @@ The log is `results/reconstructed_cc_soft_v1/native-30271312.log`.
 No result or milestone completion is claimed yet. Monitor this job; do not
 resubmit it. Fetch `/ptmp`-dependent outputs locally, validate coverage, then
 compare and grade using separate local Julia scripts with unchanged settings.
+
+### 2026-09-17 — First native cohort run fails safely at rescued-support export
+
+Raven job **30271312** ran on `ravc4126` from 01:39:43 to 02:39:48 CEST under
+Julia 1.13.0 and exited **FAILED, 1:0**, after **01:00:05**. Slurm reports eight
+allocated logical CPUs and batch MaxRSS 3,758,536 KiB (~3.59 GiB). Counting and
+base-feature export ran on the compute node; no scientific work ran on the
+login node. Scientific source/config remained at `3f2e671`.
+
+The actual fresh count summary contains **25 unique files, all status `ok`,
+222 selected lobes, range 5–16**, with exactly the intended raw-file basenames.
+`features.tsv` contains **204 unique keys over 23 files**, no duplicates/extras,
+and every present file retains exactly its selected keys `1:N_selected`.
+The missing keys are all nine lobes of **260215_022.sxm** and all nine lobes of
+**260220_083.sxm**. Both extractor logs report `No chain model fit succeeded`.
+These are also the only two count rows selected by `adaptive_support_rescue`.
+The extractor reads only N from the selected summary and rebuilds the original
+support, losing the support expansion used by counting. The fit engine rejects
+an infeasible fixed-N support before optimization. This is a production wiring
+gap, not evidence for changing the descriptor or tuning against labels.
+
+The mandatory coverage check stops the pipeline at `base_features`;
+`failures.tsv` retains all 25 intended files and the explicit mismatch reason.
+**No cohort assignments, assignment QC/maps, full146 execution, champion
+comparison or new external grade exist.** Counting success is not chemical
+validation, and the milestone remains incomplete. Do not silently omit the two
+files or lower their counts to unblock the classifier.
+
+Both rsync fetches exit 0. Artifacts are saved locally under
+`results/reconstructed_cc_soft_v1/raven_20260916_native_v1/unknown25/`; raw-input
+symlinks are excluded. The main log is
+`results/reconstructed_cc_soft_v1/native-30271312.log`. The internal monitoring
+heartbeat is cancelled. **No job was resubmitted.** Next: establish the minimal
+support-context repair and focused regression test, then obtain a separate
+continuation decision. All descriptor/classifier settings and accepted
+historical benchmark metrics remain unchanged.
+
+Static diagnosis confirms the exact lost state. The accepted rescues expand
+support **2.86 -> 5.55 nm** for `260215_022.sxm` and **1.93 -> 5.91 nm** for
+`260220_083.sxm`. Nine lobes require a minimum span of **4.11585 nm** under the
+unchanged spacing/overlap constraints, so both old supports are rejected before
+optimization. `batch_full.jl` copies the already configured rescue settings
+(`support_noise_k=1.5`, `support_padding_nm=0.75`) into both chain configs;
+`extract_lobe_features.jl` instead reloads their base values (2.5, 0.25 nm).
+The image preprocessing, multistart and refinement choices do not explain this
+failure. Increasing optimizer effort cannot remove an infeasible-support guard.
+
+The minimal proposed repair is to replay the accepted support mode from
+`refined_policy` in the selected summary, in both circular and elliptical
+configs, for base and split extraction. Accepted rescue/accepted-plus-guard
+must be distinguished from keep/reject/failed policies; `selection_policy`
+alone is not sufficient because it is common to all rows. Preserve
+`N_selected` and all other settings. The raw scans plus unchanged preprocessing
+and configured rescue values allow deterministic support reconstruction; saved
+support lengths alone do not specify endpoints. Exact successful geometry
+cannot be reused: the counting output stores only score tables and PNGs, not
+per-lobe parameters or a fit context. No new counting fit or selector decision
+is needed to address this handoff.
+
+No repair or new fit has been run. The proposed focused regression is a Julia
+1.13 metadata-to-config test for accepted/guard/keep/reject/failed cases, a
+no-optimizer support-feasibility test, then an explicitly approved one-file
+rescued-scan check. Actual downstream success remains unverified. README,
+runbook, unit-assignment documentation and this open question now report the
+observed blocker. The documentation build passes (28 s; only the existing
+archive/search-size warnings and skipped deployment); `git diff --check` passes.

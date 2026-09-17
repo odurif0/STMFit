@@ -26,8 +26,10 @@ champion lacks the irrecoverable original `patch_u_asym` producer.
 **Approved native reconstruction:** `test/run_reconstructed_chitosan.jl` uses
 Julia 1.13 and the separately named `cc_soft_reconstructed_v1`. Its descriptor
 is fixed before comparison; the champion is not relabeled as reproduced.
-Native component and synthetic end-to-end tests pass. Real 25-chain application
-and reconstructed benchmark comparison remain in progress. See
+Native component and synthetic end-to-end tests pass. The first full application
+is blocked at geometry export (September 17): counting completed all 25 scans
+(222 selected lobes), but two adaptive-support refits are missing (18 lobes).
+No cohort assignments or reconstructed benchmark comparison are available. See
 [`docs/src/unit_assignment.md`](docs/src/unit_assignment.md#explicit-julia-reconstruction-2026-09-16)
 for the command, numerical differences and limitations.
 
