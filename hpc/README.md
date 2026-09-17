@@ -331,7 +331,14 @@ outputs. The input directory must contain:
 Use a verified Julia 1.13 executable, not the cluster's Julia 1.12 module. Only
 package setup/precompilation and path/key dry-runs run on the login node. For a
 fresh depot with the older root Manifest, load Pkg from the stdlib environment
-before activating the project, then verify normal production imports. Never
+before activating the project and instantiating dependencies. On Viper, the
+Julia 1.12-era dependency graph missed a new stdlib dependency on `Zstd_jll`:
+`Pkg.precompile()` could return zero while logging cache errors. A targeted
+load of `Zstd_jll`, then `Pkg`, then the production packages under the real root
+project prepared those caches. A **new normal four-thread process**, without
+those preload commands, then imported `GaussianFit2D`, `STMMolecularFit`,
+`Plots` and `Clustering` cleanly, including `Plots.FileIOExt`. Check logs and
+fresh imports, not only the bootstrap exit code. Never delete caches broadly,
 hand-edit the Manifest or fall back to a different Julia version for this job.
 
 From the remote project directory, set the ordinary job environment:
@@ -365,7 +372,8 @@ September 17, from tested source `aa422a3`: **COMPLETED, exit 0:0**. It ran on
 24 hours were requested; accounting records **eight allocated CPUs** and
 MaxRSS **3,876,696 KiB (about 3.70 GiB)**. No second allocation was started.
 **Do not repeat the submission for this completed run.** Only unknown25 ran;
-full146 and external grading are now separately approved, but remain unexecuted.
+full146 is now separately submitted as job 11786116; its external grade remains
+pending. See the full146-only section below.
 
 All 25 files / 222 lobe keys are present through the application. Local Julia
 1.13 integrity verification passes 179 assertions; prediction validation passes
@@ -456,9 +464,28 @@ The user approved this next application after unknown25 was completed and
 reviewed. Use `reconstructed_full146.sbatch`, **not** the earlier two-cohort
 script (which would rerun unknown25). The new entrypoint requests one node/task,
 four CPUs, 16,000 MB and 24 hours. It does not hardcode a partition; Viper is the
-preferred host for this multi-file fit. No job has been submitted yet: the
-initial noninteractive `oldu@viper` SSH probe was refused at authentication.
-Authenticate interactively before trying any remote copy or submission.
+host for this multi-file fit. Authentication and Julia setup are now resolved.
+**Job 11786116 was submitted once on September 18 at 00:04:54 CEST**, from
+`00528d2`. Its initial state is `PENDING (QOSGrpCpuLimit)`, requesting four CPUs
+and 16,000 MB for 24 hours in the automatically selected `small` partition.
+Test-only ID 11786052 was not a scientific job; its estimate of eight processors
+is not an actual allocation. Accounting will establish the final allocation.
+**Do not repeat the submission.** Outputs, comparison and grading are pending.
+
+The existing `/u/oldu/code/STMFit` tree was left untouched. This run uses:
+
+- project: `/u/oldu/code/STMFit_full146_v1`;
+- Julia: `/u/oldu/software/julia-1.13.0/bin/julia`;
+- inputs: `/ptmp/oldu/stmfit/full146_v1_inputs`;
+- direct output: `results/reconstructed_cc_soft_v1/viper_20260917_full146_v1`
+  under that project (the name retains the preparation date);
+- Slurm log: `results/reconstructed_cc_soft_v1/full146-11786116.log`.
+
+All 354 source/lock files and 148 inputs match their local SHA-256 values;
+four key Julia runtime files also match. Raw files are regular, not symlinks.
+The actual Julia 1.13 metadata dry-run passed without output creation. Setup
+and preflight logs are local under
+`results/reconstructed_cc_soft_v1/full146_launch_v1/`.
 
 The scientific inputs are fixed at **146 scans / 900 cached GCV lobe keys**.
 This is an assignment reconstruction at the cache's own N, not a replay of the

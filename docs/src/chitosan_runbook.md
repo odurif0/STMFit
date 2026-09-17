@@ -410,9 +410,10 @@ Further constrained-shape and channel-disagreement diagnostics are recorded in
 
 No logged exception or Julia warning occurs. The split log for
 `260222_043.sxm` reports a coverage-floor clamp from 6 to its already selected
-fixed N=5; the five rows are retained, with no new count selection. The user has
-now approved full146 reconstruction/comparison/grading, but it has not run. Its
-fixed-cache scope is documented in
+fixed N=5; the five rows are retained, with no new count selection. The authorized
+full146 reconstruction was submitted once as **Viper job 11786116** on September
+18, from `00528d2`; its initial state is pending for group CPU quota. Comparison
+and grading await complete, verified outputs. Its fixed-cache scope is documented in
 [Approved full146 comparison](unit_assignment.md#Approved-full146-comparison-scope-(2026-09-17)):
 retain the 900 cached GCV lobe keys, do not pair them with the distinct 871-lobe
 promoted counting summary, and run comparison/grading only outside production.

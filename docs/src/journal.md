@@ -2319,9 +2319,12 @@ See `docs/src/selection.md` for the full guard specification and
     Both monitors are stopped and the failed run is preserved. The user has now
     approved the fixed full146 reconstruction and external comparison/grade.
     Preparation retains the cached GCV geometry (146 files / 900 keys), not the
-    incompatible promoted-count summary (871 keys). Full146 has not run; Viper
-    authentication is currently blocking remote staging. No benchmark-guided
-    tuning, chemical accuracy or milestone completion is claimed.
+    incompatible promoted-count summary (871 keys). Full146 was submitted once
+    on Viper as **11786116 (Sep 18)** from `00528d2`, initially pending for group
+    CPU quota. Source/input hashes, Julia 1.13 imports and metadata dry-run pass;
+    the Manifest is unchanged. Complete outputs and external comparison/grade
+    remain pending. No benchmark-guided tuning, chemical accuracy or milestone
+    completion is claimed. Do not resubmit old or current jobs.
 
 0b. **Can label-free unit assignment reach the promotion bar?** → **RESOLVED
     (Aug 3)**: the label-free champion (soft vote of k-means 4-view and GMM
@@ -6094,8 +6097,8 @@ output root absent. Metadata checks do not parse SXM/template content or prove
 fit viability. Shell syntax, `git diff --check` and the Julia 1.13 documentation
 build pass; doc warnings remain page/search sizes and skipped deployment.
 
-**Current blocker:** the metadata-only noninteractive SSH probe to `oldu@viper`
-was refused at authentication. Viper is preferred by the repo for multi-file
+**Blocker at preparation (resolved in the next entry):** the metadata-only
+noninteractive SSH probe to `oldu@viper` was refused at authentication. Viper is preferred by the repo for multi-file
 fits; the user was asked to authenticate with `ssh oldu@viper`. No remote copy,
 Slurm submission, scientific fit/classifier, full146 prediction or grade has
 occurred. The staged inputs and tested source must still be synced after
@@ -6109,3 +6112,83 @@ predicted lobes, not hide them. Neither comparison nor grade can tune the
 production model. This is an **assignment reconstruction on cached GCV geometry**,
 not a raw rebuild of the promoted counting-to-assignment chain. Native numerical
 differences and the lost descriptor's irrecoverable identity remain limitations.
+
+
+### 2026-09-18 — Fixed full146 job submitted on Viper; Julia bootstrap verified
+
+After the user's **"continuer"**, Viper authentication succeeds. The scientific
+deliverable and frozen 146-file / 900-key scope are unchanged: genuine fixed-N
+split fits, whole-cohort reconstructed assignment, then external comparison and
+grading only after complete output validation. No unknown25 rerun, new descriptor,
+parameter variant, count change or benchmark-label input is introduced.
+
+**Transfer.** The old Viper `/u/oldu/code/STMFit` directory has no Git metadata,
+so it is preserved rather than overwritten. Reviewed rsync dry-runs precede
+copies to `/u/oldu/code/STMFit_full146_v1` (tested source **00528d2**) and
+`/ptmp/oldu/stmfit/full146_v1_inputs`. All **354 source/lock files** and **148
+inputs** match local SHA-256 values. The 146 raw scans are dereferenced regular
+files on Viper. No `--delete`, truth, reference predictions, agent/archive state
+or prior outputs enter the transfer. Julia 1.13.0 is copied from the accessible
+Raven installation into `/u/oldu/software/julia-1.13.0`; its executable, system
+image, libjulia and installation startup file match the local hashes. Source and
+these four runtime hashes are checked again after environment setup.
+
+**Failed setup and targeted recovery.** Initial root-project `using Pkg` fails
+in **8.61 s** while precompiling `LibCURL_jll`: its worker cannot load a
+`Zstd_jll` cache. Loading Pkg before activating the root project allows
+instantiation/precompilation to finish in **75.12 s**, without changing Project
+or Manifest, but the log still reports unavailable Pkg images for REPLExt and
+RegistryInstances. Its zero exit is not proof that every cache is usable.
+Likewise, the first production import exits zero after **234.69 s**, but logs
+Zstd errors and a failed `Plots.FileIOExt` load. These logs are retained; neither
+step is called a clean runtime check.
+
+Read-only diagnosis finds a concrete graph mismatch: the frozen Manifest's
+Julia 1.12-era LibCURL/Pkg dependency lists omit Zstd, which the installed Julia
+1.13 stdlibs now import. The loader can recover missing stdlib dependency edges,
+but precompilation schedules workers from the older manifest graph and uses
+strict cache loading. The project selects the locked external
+`Zstd_jll/YX1LN`, while the stdlib environment selects a bundled copy. This
+explains why warming stdlib Pkg need not prepare the project's Zstd dependency.
+The error's displayed cache flags are Julia defaults, not evidence of changed
+optimization flags. Exact cache rejection details were not established.
+
+A sequential load of **Zstd_jll, Pkg, then the production packages under the
+real root project** completes cleanly in **72.30 s**. A new process with normal
+production startup, four threads and **no Zstd/Pkg preload** imports
+GaussianFit2D, STMMolecularFit, Plots and Clustering cleanly in **3.75 s**;
+`Plots.FileIOExt` is loaded. The application lock remains byte-identical:
+no `Pkg.resolve()`/`Pkg.update()`, Manifest edit, cache deletion, scientific
+parameter change or Julia fallback is used.
+The login CPU reports `znver4`. This is environment verification, not a fit or
+scientific validation; all scientific work remains for the compute allocation.
+
+**Preflight and submission.** The actual remote metadata dry-run passes in
+**7.36 s** under Julia 1.13.0, identifies all 146 scans and creates no scientific
+output directory. Input coverage, unchanged Project/Manifest/config hashes and
+output absence are checked. Slurm test-only ID **11786052** is accepted and
+estimates eight processors; it is not a submitted scientific job or a measured
+allocation.
+
+The actual full146-only **job 11786116** is submitted **once**, at
+**2026-09-18 00:04:54 CEST**, with four requested CPUs, 16,000 MB and 24 hours.
+The submit filter selects `small`. Initial `squeue`, `sacct` and `scontrol`
+report **PENDING / QOSGrpCpuLimit**, four requested CPUs and no allocation yet.
+Do not resubmit, requeue or change resources/settings to bypass the queue.
+Old jobs 30271312 and 30278010 remain untouched.
+
+The direct remote output is
+`/u/oldu/code/STMFit_full146_v1/results/reconstructed_cc_soft_v1/viper_20260917_full146_v1`;
+the name retains the September 17 preparation date. The separate log is
+`results/reconstructed_cc_soft_v1/full146-11786116.log` under that project.
+Local preflight/setup logs are under
+`results/reconstructed_cc_soft_v1/full146_launch_v1/`. Bounded local monitoring
+checks queue and accounting independently, so an expired queue entry cannot
+hide the terminal accounting state. There is no cluster-side agent/controller.
+
+At this submission checkpoint, no full146 scientific outputs, comparison or
+grade are available. Next: fetch without `raw_inputs/`, verify all 146/900 keys,
+base/config preservation, genuine split rows, components/reasons, uncertainty,
+QC and figures, then run the authorized external-only comparison and full145
+own-N grade. Failed or incomplete outputs must be retained, not trimmed or
+silently retried. Existing benchmark headlines and unknown25 results are unchanged.

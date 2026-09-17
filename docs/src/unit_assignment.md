@@ -1486,6 +1486,14 @@ symlinks. The raw names match the cache exactly. The wrapper's optional
 summary matches the cache; it is unset for this run. It does not auto-discover
 a summary. `STMFIT_OUTDIR` names the direct new full146 output directory.
 
+**Submitted September 18:** Viper job **11786116**, once, from `00528d2`.
+The initial scheduler state is `PENDING (QOSGrpCpuLimit)`; no scientific result
+or external grade is available yet. Code and inputs are staged separately from
+the older Viper tree, with matching hashes. Julia 1.13 normal production imports
+and the actual metadata dry-run pass after targeted package-cache setup; the
+Manifest and scientific settings are unchanged. See `hpc/README.md` for paths
+and the journal for the setup failures and their resolution. Do not resubmit.
+
 Completion requires all 146 files / 900 keys at each required stage, preserved
 base geometry and settings, explicit invalid-component reasons where needed,
 QC/maps, and a separate keyed comparison plus full145 own-N external grade.
