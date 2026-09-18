@@ -591,3 +591,64 @@ not a recovered historical model.
 These settings were declared without benchmark outcomes. No arbitrary `n_eff`
 calibration, chemical prior, new production selection or automatic promotion is
 introduced. See the dated research journal for the bounded scope and results.
+
+
+## Masked robust background prototype (2026-09-18)
+
+`config/masked_robust_preprocessing.toml` is an opt-in, **synthetic-first**
+diagnostic config. Its empty `[model]`, `[selection]`, and `[preprocessing]`
+tables do not supply a new production preprocessing policy. The standalone
+prototype takes height values in nm, physical coordinate vectors, and an
+explicit background mask. It never reads expected N, chemical labels or votes.
+
+All controls in `[masked_robust_preprocessing]` must be supplied:
+
+| Key | Initial value | Meaning |
+|---|---:|---|
+| `huber_delta` | 1.345 | Fixed dimensionless Huber cutoff; no benchmark tuning |
+| `maxiter` | 50 | Maximum IRLS iterations; exhaustion remains nonconverged |
+| `coefficient_rtol` | 1e-8 | Relative convergence tolerance in centered/scaled plane coordinates |
+| `weight_atol` | 1e-8 | Absolute convergence tolerance for IRLS weights |
+| `scale_floor_nm` | 1e-9 | Numerical zero-scale guard in nm, not a measured noise floor |
+| `rank_rtol` | 1e-12 | Relative numerical rank tolerance for the plane design |
+| `min_background_pixels` | 200 | Minimum finite supplied-background pixels for a plane |
+| `min_background_fraction` | 0.05 | Minimum background count divided by all image pixels |
+| `min_row_background_pixels` | 20 | Minimum observed background samples for a row offset |
+
+The Huber scale is fixed to the normalized MAD of the initial background-only
+OLS residuals, with the explicit numerical floor. It is not updated during
+IRLS, not an independent noise estimate, and can be inflated by a contaminated
+OLS initializer. A nonconverged or rank-deficient plane does not yield an
+accepted corrected image. Final iteration diagnostics remain available.
+
+The prototype fits a plane, then subtracts background-only row medians so that
+usable background rows have zero median. This is sequential, not a simultaneous
+identifiable fit of y tilt and arbitrary row offsets. Unsupported rows and raw
+nonfinite pixels remain unavailable; no replacement values or smoothing are
+introduced. The supplied exclusion is not relaxed to obtain a result. The
+native reference retains its own global-median convention; comparisons must
+report and account for that constant-level difference on the same observed
+background support.
+
+This config is not connected to a production driver. No N selection, chemical
+threshold, GCV complexity, `n_eff`, physical bound or reference prediction changes.
+
+
+Focused native checks (Julia 1.13):
+
+```bash
+julia --startup-file=no --threads=1 --project=. test/test_masked_robust_preprocessing.jl
+julia --startup-file=no --threads=1 --project=. test/test_masked_preprocessing_signal.jl
+# Optional fresh output directory: full synthetic arrays, metrics and used settings.
+julia --startup-file=no --threads=1 --project=. test/test_masked_preprocessing_signal.jl \
+  --outdir results/masked_preprocessing_example
+```
+
+The signal study reads this config, not a second hidden set of controls. The
+optional output path must not exist, including as a dangling symlink. Saved
+`initial_objective_nm2`, `objective_nm2` and `stationarity_inf_nm` describe the
+plane stage on supplied finite background, before row-median subtraction; they
+are not selection scores or noise estimates. Metrics retain explicit unavailable
+anchor/support reasons and partial observed coverage. Fixed synthetic fixtures
+are evaluation inputs, not learned physical calibration. See the journal for
+verified results and adverse cases; there is no raw-data or HPC entrypoint yet.

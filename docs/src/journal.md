@@ -2307,6 +2307,17 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-18. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0e. **Can missing-value-aware background estimation reduce preprocessing bias
+    without removing molecular contrast?** → **SYNTHETIC PROTOTYPE COMPLETE;
+    NO REAL-DATA VALIDATION (Sep 18)**: the opt-in prototype passes 441 engine,
+    1,116 signal-study and 12,641 saved-arithmetic assertions. Missingness and
+    outlier examples improve, but Huber is not uniformly better than guarded
+    OLS. A correct mask protects injected contrast without proving background
+    recovery; a leaky mask attenuates it, and unsupported rows lose coverage.
+    Production remains unchanged. A four-scan diagnostic comparison is proposed
+    (one Viper job, 4 requested CPUs, 16 GB, 30 minutes), not yet authorized or
+    started. No count/classification refit, grade or parameter search is proposed.
+
 0d. **Label-free mathematical exploration: what is numerical, representational,
     or acquisition-limited?** → **BOUNDED DIAGNOSTICS COMPLETE; NO PROMOTION
     (Sep 18)**: the corrected, explicitly authorized job 11812202 completed 0:0.
@@ -6816,3 +6827,127 @@ registration correction. No universal 80% limit follows from these experiments.
 The bounded exploration is complete as diagnostics, with failures, unavailable
 values and unresolved scientific questions retained. No method is promoted;
 any new campaign, fit or parameter change needs a new user-approved scope.
+
+
+### 2026-09-18 — Start masked-background prototype, synthetic first
+
+After asking for other methods, the user replied “go; aller” to the proposed
+priority of masked robust preprocessing, followed only later by a true paired
+acquisition model. The initial deliverable is a small opt-in background
+prototype and quantitative synthetic signal-preservation checks. This first
+development pass is capped at two hours from 20:28 CEST. Completion means native
+Julia 1.13 tests, explicit retained limitations, documented controls and no
+change to production. There is no real SXM read, fit, new benchmark grade or HPC
+submission in this first step. A proposed four-case real comparison must have
+its own explicit budget before submission. Completed jobs remain closed.
+
+The motivation is measured missingness and its upstream effects, not a promised
+accuracy gain: native preprocessing imputes before fitting a plane and row
+levels; restoring raw masks later does not undo the effect on observed pixels.
+The prototype will use only finite supplied-background observations, then
+subtract background-only row medians. Neither missing observations nor
+insufficient-background rows are filled. Molecular gradients are not blindly
+removed. A mask remains an assumption, not chemical truth.
+
+Four variants are fixed before synthetic results: native unsmoothed reference,
+finite-only OLS, guarded OLS, and guarded Huber. This separates missing-value
+handling, foreground exclusion and robust plane estimation. The Huber cutoff
+is 1.345; at most 50 IRLS iterations use a fixed initial-background-residual MAD,
+with explicit numerical scale/rank/convergence guards. All settings live in
+`config/masked_robust_preprocessing.toml`, not production defaults.
+
+The study must retain leaky foreground masks and unsupported rows, report both
+own and common observed coverage, and distinguish native/global from
+background-zero level conventions. A mathematical limitation is already known:
+sequential plane then row fitting can bias x slope when row offsets correlate
+with unequal x coverage. Paired signal-present/absent invariance under a correct
+mask is not proof of an accurate absolute background. The synthetic study will
+measure both. No numerical or real-image improvement is claimed at this start.
+
+
+### 2026-09-18 — Masked background: verified synthetic benefits and failure modes
+
+The synthetic-first prototype is complete; it is not a production replacement.
+The parent reran both suites under Julia 1.13, one Julia thread and one BLAS
+thread: **441/441** engine assertions and **1,116/1,116** signal-study assertions.
+A separate **12,641/12,641** saved-table arithmetic check uses no estimator,
+fixture generator or raw reader. It replays the reported error/coverage metrics,
+exported plane/row reconstructions, final fixed-scale plane objectives and
+stationarity diagnostics.
+Nine original project/config/core locks and all 73 previous exploration outputs
+remain unchanged. No real scan, count/chemical fit, benchmark or cluster command
+ran during this prototype study.
+
+The fixed study contains five deterministic 73×97 images and four methods, each
+with and without an injected signal: 40 outcomes, 70 metric rows, 2,190 row-status
+records and 35,405 saved pixel records. Synthetic signals include compact bumps
+and a signed localized transverse component. This is a constructed mechanism
+test, not a representative noise simulation or an accuracy benchmark. Supplied
+foreground exclusions are trusted inputs; real masks are not known this well.
+The native reference calls the actual `GaussianFit2D.preprocess_channel` on
+synthetic shared SXM types, using stride 1, plane+rows and no smoothing. Native
+imputation still influences its fit, but raw missingness is restored for metrics.
+
+The table shows absolute foreground reconstruction RMSE in **pm** on the same
+observed support for every method in each row. One observable constant level,
+measured on the fixed common background corner, is removed from each image.
+Truth does not set that level; no slope, gain or extra row correction is removed
+from the reported errors. A Gaussian tail in that corner can bias the level.
+
+| Fixed synthetic case | Native | Finite-only OLS | Guarded OLS | Guarded Huber | Common observed pixels |
+|---|---:|---:|---:|---:|---:|
+| Compact signal, complete image | 0.5549 | 0.5549 | ≈0 (roundoff) | ≈0 (roundoff) | 7081 |
+| Structured missingness | 66.18 | 3.414 | 0.9288 | 1.124 | 5117 |
+| Background outlier patch | 107.8 | 107.8 | 118 | 9.843 | 7081 |
+| Leaky Gaussian exclusion | 21.51 | 21.51 | 19.62 | 14.6 | 7081 |
+| Rows without observed background | 63.42 | 3.784 | 1.015 | 1.416 | 4452 |
+
+Several distinctions prevent an overstated result:
+
+- In the compact-signal cases, a correct guarded mask makes the paired
+  signal-present minus signal-absent response accurate to about 3e-17 nm. This
+  is conditional signal non-use during background estimation, not proof of an
+  accurate absolute background. With structured missingness, guarded OLS still
+  has 0.929 pm foreground RMSE; Huber is worse at 1.124 pm. Unequal per-row x
+  support lets row offsets bias the sequentially fitted x slope.
+- With background outliers, exclusion alone worsens foreground error from
+  107.8 to 118.0 pm. Huber reduces it to 9.843 pm, not zero. Its fixed initial-OLS
+  scale rises from 0.0113862 to 0.0869708 nm under contamination; it is not an
+  independently measured STM noise scale.
+- With a leaky Gaussian exclusion, both guarded variants distort the signal.
+  The transverse-component diagnostic gives 0.0732983/0.0751164 nm versus an
+  injected 0.08 nm: 8.38%/6.10% attenuation. Robustness does not replace a correct
+  footprint, and shared image structure is not automatically removable nuisance.
+- The final case loses **206 observed foreground pixels** under either guarded
+  method. Only 4,452/4,658 observed pixels and 1,246/1,452 foreground pixels
+  remain (95.58% and 85.81%). The table compares the native reference on exactly
+  those 4,452 pixels; its own-support result is separately retained. No claim is
+  made about the unavailable foreground. Finite-only OLS retains all observed
+  pixels but reports PARTIAL because one entire raw row is missing.
+
+All ten Huber signal/null runs converge in 5–18 iterations with the predeclared
+controls unchanged. Forced-budget, missing/rank/row failures and absent metric
+anchors are separately tested and retained as unavailable. The final study reads
+and exports the actual diagnostic TOML; it does not use a hidden duplicate set
+of controls. The initial primitive test run had four failures because a Julia
+whole-array Frobenius tolerance was used where a per-pixel maximum was intended.
+The assertions now use max(abs(error)) with the same 2e-10 bound. No estimator
+or scientific control was tuned to cure that test error; the failed log remains.
+
+Authoritative final-source evidence is
+`results/masked_preprocessing_20260918/parent_validation/` (six files), with
+parent test/checker logs under `run_logs/`. Earlier worker outputs are preserved,
+not the final reference. An initial worker smoke used truth to align a constant
+level; it was explicitly superseded by the observable-only gauge before the
+reported study. The early worker message's 978-test claim was a transcription
+error; its log has 954. Final source has 1,116 and was independently rerun above.
+Source: `test/lib/masked_robust_preprocessing.jl`,
+`test/lib/masked_preprocessing_fixtures.jl`, and their two standalone test files.
+
+**Decision:** keep all four diagnostic variants; do not select Huber as a new
+default or remove the measured transverse gradient from real patches. A later
+real-data comparison is proposed on the same four scans only, with frozen saved
+geometry/support and the existing lag window: no count fitting, classifier,
+grade or parameter search. Proposed cap: one Viper job, four requested CPUs,
+16 GB, 30 minutes wall time. This is a proposal, not a submission allowance.
+No such job or real-data trial has been started; no production behavior changed.

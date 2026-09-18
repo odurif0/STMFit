@@ -233,3 +233,49 @@ likelihood. A fixed Fisher replay exports new fold weights under unchanged
 reconstruction settings and checks saved scores; it is neither chemical
 calibration nor recovery of unique historical coefficients. Raw-QC plates also
 retain and flag nonfinite samples that native preprocessing imputes.
+
+
+## Masked-background synthetic prototype (2026-09-18)
+
+The user approved starting the first alternative after the completed label-free
+exploration. The initial deliverable is an opt-in prototype and synthetic
+signal-preservation evidence, not a new production calibration or a real-data
+result. Controls are explicit in `config/masked_robust_preprocessing.toml`.
+
+Native median imputation precedes plane/row flattening. Restoring missing masks
+afterward cannot remove the imputation's influence on valid pixels. The prototype
+instead estimates the background from finite supplied-background pixels only.
+It does not remove a transverse component from each molecular patch by default.
+A correct foreground exclusion can protect an injected localized signal, but
+this conditional property does not prove that a real exclusion is correct.
+Gaussian tails, unrecognized molecules or instrumental structure can remain in
+the chosen background.
+
+Sequential plane fitting followed by row medians also has a specific limitation:
+unequal x support across rows can make row offsets bias the fitted x slope.
+Separate y tilt and arbitrary row offsets are not uniquely identifiable.
+Signal-preservation checks must therefore include absolute background error,
+not only the difference between signal-present and signal-absent images.
+
+The predeclared synthetic comparison separates four operations: native
+imputation/reference flattening; finite-only OLS without foreground exclusion;
+finite guarded OLS; and finite guarded Huber. No control is selected using
+benchmark outcomes. Coverage loss and unsupported/nonconverged cases remain
+visible alongside same-support errors. Huber's fixed initial-residual MAD and
+its numerical floor are not calibrated STM noise, and improved agreement does
+not establish chemical identity or correct counts.
+
+A possible later real-data comparison would retain the original four diagnostic
+cases and saved geometry/support. Such geometry already depends on the original
+preprocessing; freezing it makes comparisons controlled, not independent. No
+new real-data execution or cluster submission is part of this synthetic-first
+step. Registration search boundaries, GCV and production defaults stay unchanged.
+
+
+Synthetic verification is complete: 441 engine assertions, 1,116 signal-study
+assertions and 12,641 independent saved-table checks pass. No Huber control was
+retuned. The tests demonstrate conditional preservation with a correct supplied
+mask, but also sequential x-slope bias, outlier-sensitive initial scale, signal
+attenuation with a leaky exclusion and explicit loss of unsupported foreground
+coverage. Huber is not uniformly better than guarded OLS. There is no new STM
+calibration, real-data result, calibrated uncertainty or production default.

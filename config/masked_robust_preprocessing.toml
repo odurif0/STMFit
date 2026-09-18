@@ -1,0 +1,20 @@
+# Opt-in synthetic-first background diagnostic; NOT a production physical config.
+# No calibration, N selection, chemical likelihood or threshold promotion follows.
+[model]
+[selection]
+[preprocessing]
+
+[masked_robust_preprocessing]
+# Classical Huber cutoff; fixed before experiments, not benchmark-tuned.
+huber_delta = 1.345
+maxiter = 50
+coefficient_rtol = 1e-8
+weight_atol = 1e-8
+# Numerical zero-scale guard in height units (nm), NOT a calibrated noise floor.
+scale_floor_nm = 1e-9
+rank_rtol = 1e-12
+# Required OBSERVED background support; no filled pixels count toward these.
+min_background_pixels = 200
+# Denominator: all image pixels, including missing/foreground pixels.
+min_background_fraction = 0.05
+min_row_background_pixels = 20
