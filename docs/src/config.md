@@ -568,7 +568,7 @@ explicit and must not be interpreted as physical defaults.
 - `[representation]`: `identity_atol` checks signed-mass/linear identities;
   `descriptor_atol` accounts for the saved descriptor's serialization precision.
   Neither changes descriptor values or production predictions.
-- `[acquisition_noise]`: `channel`; declared `lag_x_min_px`, `lag_x_max_px`,
+- `[acquisition_noise]`: `channel`, `auxiliary_channel`; declared `lag_x_min_px`, `lag_x_max_px`,
   `lag_y_min_px`, `lag_y_max_px`, `lag_bound_basis`; registration sufficiency
   `min_registration_pixels`, `min_row_pixels`, `min_positive_correlation`,
   `ambiguity_correlation_gap`; molecular/background exclusion `footprint_sigma`,
@@ -579,6 +579,14 @@ explicit and must not be interpreted as physical defaults.
   `min_patch_pixels`. An ACF that does not cross within its measured range is
   censored, not evidence of a precisely measured correlation length. Search
   boundaries and insufficient support are reported, not silently relaxed.
+  A later resurgence in absolute ACF magnitude also leaves the length unresolved.
+  `auxiliary_channel = "Current"` adds direct scale and cross-view coupling on
+  the same Z support/lag, not a new likelihood, fit weight or nuisance projection.
+
+The separate fixed Fisher replay uses the unchanged
+`config/unit_assignment_reconstructed.toml` and the original forward17 `res`
+patches. It adds no fitted settings and exports newly fitted fold coefficients,
+not a recovered historical model.
 
 These settings were declared without benchmark outcomes. No arbitrary `n_eff`
 calibration, chemical prior, new production selection or automatic promotion is

@@ -8,10 +8,15 @@ Usage (Julia 1.13, Slurm for execution):
   julia --startup-file=no --threads=1 --project=. test/run_label_free_exploration.jl \
     --input-dir INPUT --config ORIGINAL_MOLECULE.toml \
     --settings config/label_free_exploration.toml --outdir NEW_DIR [--dry-run]
-INPUT contains raw/, selected_summary.tsv, base_geometry.tsv, candidate_counts.tsv.
+INPUT contains raw/, selected_summary.tsv, base_geometry.tsv, candidate_counts.tsv,
+and fisher/{unknown25,full146}/{patches_fwd17.tsv,fisher_cv.tsv} with the unchanged
+fisher/unit_assignment_reconstructed.toml.
 The candidate table has file,candidate_ns,source columns; counts are diagnostics,
 not expected counts. Exactly four files run as four independent one-thread tasks.
 Each task runs saved-geometry acquisition evidence then native/profile comparisons.
+After those four cases, fixed native Fisher replays run sequentially for unknown25
+then full146, using FORWARD patches/prefix res exactly as the native producer.
+Saved Fisher scores are comparison features, not benchmark or chemical labels.
 Dry-run checks paths/count metadata/settings and prints commands, reads no SXM pixels
 and creates no output. Execution requires Slurm with at least four requested CPUs.
 No original inputs, reference outputs or production methods are modified.
@@ -59,7 +64,8 @@ function prepare(args; project=dirname(@__DIR__))
     paths=(config=o.d["--config"],settings=o.d["--settings"],
         selected=joinpath(input,"selected_summary.tsv"),
         geometry=joinpath(input,"base_geometry.tsv"),
-        candidates=joinpath(input,"candidate_counts.tsv"))
+        candidates=joinpath(input,"candidate_counts.tsv"),
+        fisher_config=joinpath(input,"fisher","unit_assignment_reconstructed.toml"))
     all(isfile,values(paths)) || error("Missing required input file")
     model=TOML.parsefile(paths.config)
     all(k->haskey(model,k),("model","selection","preprocessing")) || error("Incomplete molecule config")
@@ -104,7 +110,17 @@ function prepare(args; project=dirname(@__DIR__))
             acquisition=Cmd(vcat(prefix,[joinpath(project,"test","diagnose_acquisition_noise.jl")],acq)),
             variable_projection=Cmd(vcat(prefix,[joinpath(project,"test","diagnose_counting_variable_projection.jl")],vp))))
     end
-    return (;o,paths,cases,out)
+    fisher=NamedTuple[]
+    prefix=[joinpath(Sys.BINDIR,Base.julia_exename()),"--startup-file=no","--threads=1","--project=$(abspath(project))"]
+    for cohort in ("unknown25","full146")
+        patches=joinpath(input,"fisher",cohort,"patches_fwd17.tsv")
+        saved=joinpath(input,"fisher",cohort,"fisher_cv.tsv")
+        isfile(patches) && isfile(saved) || error("Missing fixed Fisher replay inputs: $cohort")
+        args=["--patches",patches,"--prefix","res","--config",paths.fisher_config,
+              "--saved-scores",saved,"--outdir",joinpath(out,"fisher",cohort)]
+        push!(fisher,(cohort=cohort,cmd=Cmd(vcat(prefix,[joinpath(project,"test","diagnose_fisher_attribution.jl")],args))))
+    end
+    return (;o,paths,cases,fisher,out)
 end
 
 function execute(p)
@@ -114,33 +130,40 @@ function execute(p)
         for c in p.cases
             println(c.acquisition); println(c.variable_projection)
         end
-        println("DRY RUN: four files; metadata consistent; no outputs or pixels read")
+        for f in p.fisher; println(f.cmd); end
+        println("DRY RUN: four files and two fixed Fisher replays; metadata consistent; no outputs or pixels read")
         return nothing
     end
     !isempty(get(ENV,"SLURM_JOB_ID","")) || error("Execute multifile diagnostics in a Viper Slurm job")
     parse(Int,get(ENV,"SLURM_CPUS_PER_TASK","0"))>=4 || error("Four CPUs are required")
     mkdir(p.out); mkpath(joinpath(p.out,"logs"))
+    statuses=joinpath(p.out,"stages.tsv")
+    write(statuses,"case\tstage\texit_code\telapsed_s\n")
+    function run_stage(target,logstem,stage,cmd)
+        started=time_ns(); code=1
+        open(joinpath(p.out,"logs","$(logstem)_$(stage).log"),"w") do io
+            println(io,cmd); flush(io)
+            try
+                proc=run(pipeline(ignorestatus(cmd),stdout=io,stderr=io))
+                code=proc.exitcode
+            catch err
+                println(io,sprint(showerror,err)); code=1
+            end
+        end
+        row=(target,string(stage),code,(time_ns()-started)/1e9)
+        # One-thread tasks append and close each completed stage immediately.
+        # A later failure or job timeout must not erase completed-stage records.
+        open(statuses,"a") do io; println(io,join(row,'\t')); end
+        return row
+    end
     outcomes=asyncmap(p.cases;ntasks=4) do c
         mkdir(joinpath(p.out,c.stem))
-        rows=Tuple{String,String,Int,Float64}[]
-        for stage in (:acquisition,:variable_projection)
-            cmd=getproperty(c,stage); started=time_ns(); code=1
-            open(joinpath(p.out,"logs","$(c.stem)_$(stage).log"),"w") do io
-                println(io,cmd); flush(io)
-                try
-                    proc=run(pipeline(ignorestatus(cmd),stdout=io,stderr=io))
-                    code=proc.exitcode
-                catch err
-                    println(io,sprint(showerror,err)); code=1
-                end
-            end
-            push!(rows,(c.file,string(stage),code,(time_ns()-started)/1e9))
-        end
-        rows
+        [run_stage(c.file,c.stem,stage,getproperty(c,stage))
+         for stage in (:acquisition,:variable_projection)]
     end
-    open(joinpath(p.out,"stages.tsv"),"w") do io
-        println(io,"file\tstage\texit_code\telapsed_s")
-        for rows in outcomes, row in rows; println(io,join(row,'\t')); end
+    mkdir(joinpath(p.out,"fisher"))
+    for f in p.fisher
+        push!(outcomes,[run_stage(f.cohort,f.cohort,:fisher_replay,f.cmd)])
     end
     all(row[3]==0 for rows in outcomes for row in rows) || error("Some diagnostic stages failed; see preserved logs/stages.tsv")
     println("Diagnostic stages completed; numerical/scientific checks remain separate")

@@ -20,6 +20,18 @@ end
         write(config,"[model]\nn_min=2\nn_max=24\n[selection]\n[preprocessing]\n")
         settings=joinpath(dir,"settings.toml")
         cp(joinpath(@__DIR__,"..","config","label_free_exploration.toml"),settings)
+        fishroot=joinpath(input,"fisher"); mkdir(fishroot)
+        fishcfg=joinpath(fishroot,"unit_assignment_reconstructed.toml")
+        cp(joinpath(@__DIR__,"..","config","unit_assignment_reconstructed.toml"),fishcfg)
+        fishinputs=[fishcfg]
+        for cohort in ("unknown25","full146")
+            mkdir(joinpath(fishroot,cohort))
+            for name in ("patches_fwd17.tsv","fisher_cv.tsv")
+                path=joinpath(fishroot,cohort,name)
+                write(path,"synthetic dry-run input, not fitted patches")
+                push!(fishinputs,path)
+            end
+        end
         chosen=joinpath(input,"candidate_counts.tsv")
         selected=joinpath(input,"selected_summary.tsv")
         geometry=joinpath(input,"base_geometry.tsv")
@@ -33,9 +45,14 @@ end
         for file in names; write(joinpath(input,"raw",file),"not an image: dry run must not parse pixels"); end
         out=joinpath(dir,"new outputs")
         args=["--input-dir",input,"--config",config,"--settings",settings,"--outdir",out,"--dry-run"]
-        before=Dict(p=>sha256(read(p)) for p in [selected,geometry,chosen,config,settings])
+        before=Dict(p=>sha256(read(p)) for p in vcat([selected,geometry,chosen,config,settings],fishinputs))
         p=LFE.prepare(args)
         @test length(p.cases)==4
+        @test [f.cohort for f in p.fisher]==["unknown25","full146"]
+        @test all("res" in f.cmd.exec && "--prefix" in f.cmd.exec for f in p.fisher)
+        @test all(any(endswith("patches_fwd17.tsv"),f.cmd.exec) for f in p.fisher)
+        @test all(fishcfg in f.cmd.exec for f in p.fisher)
+        @test all("--threads=1" in f.cmd.exec for f in p.fisher)
         @test p.o.dry
         @test p.cases[1].file==names[1]
         @test length(p.cases[1].variable_projection.exec)==17
@@ -68,18 +85,27 @@ end
         fake_profile="j=findfirst(==(\"--outdir\"),ARGS); mkdir(ARGS[j+1]); println(\"synthetic profile\"); exit(0)"
         write(joinpath(fakeproject,"test","diagnose_acquisition_noise.jl"),fake_acquisition)
         write(joinpath(fakeproject,"test","diagnose_counting_variable_projection.jl"),fake_profile)
+        fake_fisher="j=findfirst(==(\"--outdir\"),ARGS); mkdir(ARGS[j+1]); println(\"synthetic Fisher\"); exit(occursin(\"unknown25\",ARGS[j+1]) ? 5 : 0)"
+        write(joinpath(fakeproject,"test","diagnose_fisher_attribution.jl"),fake_fisher)
         withenv("SLURM_JOB_ID"=>"synthetic", "SLURM_CPUS_PER_TASK"=>"4") do
             @test_throws ErrorException LFE.execute(LFE.prepare(nodry;project=fakeproject))
         end
-        statuses=LFE.table(joinpath(out,"stages.tsv"),["file","stage","exit_code","elapsed_s"])
-        @test length(statuses)==8
+        statuses=LFE.table(joinpath(out,"stages.tsv"),["case","stage","exit_code","elapsed_s"])
+        @test length(statuses)==10
         @test count(r->r["exit_code"]=="3",statuses)==4
-        @test count(r->r["exit_code"]=="0",statuses)==4
+        @test count(r->r["exit_code"]=="0",statuses)==5
+        @test count(r->r["exit_code"]=="5",statuses)==1
+        @test all(r["stage"]!="fisher_replay" for r in statuses[1:8])
+        @test [r["case"] for r in statuses[9:10]]==["unknown25","full146"]
+        @test all(isdir(joinpath(out,"fisher",c)) for c in ("unknown25","full146"))
         @test all(isdir(joinpath(out,splitext(n)[1],"acquisition")) for n in names)
         @test all(isdir(joinpath(out,splitext(n)[1],"variable_projection")) for n in names)
         @test all(sha256(read(k))==v for (k,v) in before)
-        @test length(readdir(joinpath(out,"logs")))==8
+        @test length(readdir(joinpath(out,"logs")))==10
         rm(out;recursive=true)
+        missing=fishinputs[2]; mv(missing,missing*".backup")
+        @test_throws ErrorException LFE.prepare(args)
+        mv(missing*".backup",missing)
         mkdir(out); @test_throws ErrorException LFE.prepare(args); rm(out)
         write(out,"occupied"); @test_throws ErrorException LFE.prepare(args); rm(out)
         symlink(joinpath(dir,"absent"),out); @test_throws ErrorException LFE.prepare(args); rm(out)

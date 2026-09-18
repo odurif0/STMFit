@@ -6445,3 +6445,104 @@ fits. Initial failures and successful logs are preserved under the new result
 root. The initial SSH probe timed out; the bounded retry and inventory succeeded
 with Julia 1.13.0 and no queued jobs. Existing remote production trees remain
 untouched.
+
+
+The native unknown25 header inventory found Z and Current in both directions
+at the same recorded bias (-0.300 V) on all scans, not a second-bias or STS
+measurement. Configured lock-in fields do not establish a recorded lock-in
+channel. The Current-weight helper in GaussianFit2D is defined but has no call
+site in the current Julia sources. The four-file acquisition diagnostic may
+therefore report the actually recorded auxiliary `Current` channel's finite
+scale and cross-view consistency, and, if implemented within the first-pass
+budget, residual structure after one declared [1,Z,dZ/dx,dZ/dy] linear nuisance
+projection. This is an acquisition/feedback diagnostic only: Current and Z are
+coupled by the feedback loop, so it is not an independent chemical likelihood,
+new fit weighting, feature search or evidence of correct assignments.
+
+
+### 2026-09-18 — First label-free diagnostics: measured representation and raw-data limits
+
+The saved-data audit retained 25/222 unknown keys and 146/900 full146 keys,
+including seven incomplete full146 patches. It produced no new classification
+or grade. The existing backward 9x9 descriptor matches the fixed `1e-12`
+arithmetic tolerance at every key (maximum unknown difference
+`2.220446049250313e-16`, full146 difference zero; reasons retained).
+A post-run checker initially demanded exact zero difference; that test-only
+mistake was corrected to the already declared tolerance without changing or
+rerunning the scientific audit.
+
+Median backward9 transverse-gradient fractions of centered patch energy are
+0.844470 (unknown25) and 0.846248 (full146). The corresponding signed numerator
+shares are 0.986613 and 0.987684; these are **not variance fractions**. Median
+saved descriptors are 0.964083/0.958684; recomputing the diagnostic after removing
+each patch's fitted transverse ramp yields 0.032991/0.030143. Forward17 has the
+opposite median sign. Within-file centering does not remove all this structure:
+the additive transverse contribution to the existing standardized descriptor
+has median within-file SD 0.976924/0.991160, versus 0.104742/0.211213 for its
+remainder. These are linear attributions, not causal identification of an
+acquisition artefact, absence of chemistry, or justification for a new feature.
+No gradient subtraction enters the predictors. Reports are under
+`results/label_free_exploration_20260918/representation/{unknown25,full146}/`.
+
+All25 raw-QC plates were rendered without fitting, with separate blind and
+indexed-center views. Final reviewed outputs are in
+`results/label_free_exploration_20260918/unknown25_raw_qc/final/`; earlier
+preview/all25 versions are preserved. Corrections made colorbars explicit,
+kept high-range tick labels readable and made nonfinite/imputed pixels visible.
+The rectangular `260220_083.sxm` retains its approximately 4x8 nm aspect.
+Saved centers follow broad structure in the reviewed examples, but do not
+independently resolve or validate each counted unit. No exact residual is
+reconstructed from the rounded decoded geometry.
+
+Two scans contain nonfinite raw Z samples in both directions:
+`260115_016.sxm` has finite fractions 0.3937378/0.3925781, and
+`260117_005.sxm` 0.7013550/0.7011719. Native preprocessing median-imputes those
+samples. All saved centers have a finite nearest raw pixel, which does not
+prove full patch coverage or remove the effect of preprocessing missing data.
+The first scan remains in the predetermined counting diagnostic; it is not
+silently removed to improve an outcome. All100 recorded channel/direction
+rows have nonconstant finite samples. Z and Current are recorded fwd/bwd in
+all25 scans at -0.300 V, with lock-in OFF. This is not spectroscopy or an
+independent chemical validation.
+
+The acquisition diagnostic implements direct auxiliary Current scales and
+cross-view/height coupling on exactly the fixed Z support and lag. It does
+**not** implement the optional [1,Z,dZ/dx,dZ/dy] nuisance projection. Imputed
+samples are not treated as independent observations. Correlation lengths use
+absolute ACF magnitude; missing lag support, censoring or later resurgence
+block length claims. Joint-likelihood and calibrated-independence claims remain
+blocked. Original geometry, not newly optimized count fits, supplies support.
+
+The first and only local real counting smoke used `260215_022.sxm`, N9, with
+its original adaptive support. All six native/fixed-profile/refined-profile
+rows are valid and numerically mapped to the original forward model. At fixed
+N, circular RSS decreases from 0.14109435 to 0.04728573, and elliptical RSS from
+0.05250398 to 0.02771763 (about 47.2% for the latter). The fixed-geometry linear
+solve alone gives elliptical RSS 0.05190226. This is extra bounded optimization
+from a native result, **not an equal-budget solver comparison**, a count check,
+a global optimum or an accuracy improvement. Full GCV parameter counts and
+all native physical bounds remain. Both outer refinements stopped at the
+800-evaluation limit and are explicitly nonconverged. Native convergence is
+not known. The prototype is version-coupled to private raw bounds, checked directly with the
+compiled native fitter at zero iterations; no production engine was edited.
+
+A separately authorized fixed Fisher replay will expose freshly fitted
+opposite-parity weights/midpoints on the same single planned Viper job. Its
+input is the **forward17 residual patches, prefix `res`**, as the actual native
+producer specifies; the initial proposed backward input was corrected before
+any real replay. The backward9 descriptor is a different input. Replay uses
+only frozen native settings and compares complete keys, six-decimal score text
+and reasons with the saved Fisher features before response attribution.
+Even exact score agreement would not recover unique historical coefficients;
+a mismatch remains a new realization, without tuning/retry. Reflection is
+physical t, not u; the actual 197-pixel disk is reflection-closed.
+
+The bounded driver now runs the four cases (13 N candidates, expected78 fit
+rows), then the two Fisher cohorts sequentially. It saves completed stage exit
+codes immediately and continues after failures. Updated native tests passed:
+variable projection2834, acquisition184, representation319, Fisher replay204,
+raw-QC112, driver55; raw output integrity305 and saved representation59+59.
+The initial prototype fixed a `nothing`-to-TOML metadata serialization error;
+synthetic near-zero and tuple-comparison test errors were corrected without
+changing science. No benchmark has been regraded, no original prediction or
+count is replaced, and no new Viper job has been submitted at this checkpoint.

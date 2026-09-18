@@ -570,3 +570,48 @@ metadata/boundary checks). The existing pipeline and comparison fixtures pass
 19 and nine assertions. Prepared-input metadata verification passes 14 checks;
 the actual entrypoint dry-run reports 146 files and creates no output root.
 These checks do not validate SXM content, scientific fits or chemical accuracy.
+
+
+## Bounded label-free diagnostic job (2026-09-18)
+
+This opt-in research pass is separate from the completed reconstruction jobs.
+Do not resubmit those jobs. `hpc/label_free_exploration.sbatch` requests four
+CPUs, 16 GB and two hours. It runs four independent one-thread acquisition/count
+cases, then two sequential fixed native Fisher replays. It does not select a
+production N, predict chemical classes, read benchmark labels or grade results.
+
+Use an isolated source tree and exclusive input/output paths. The input layout
+is `raw/` (four approved scans), `selected_summary.tsv`, `base_geometry.tsv`,
+`candidate_counts.tsv`, and
+`fisher/{unknown25,full146}/{patches_fwd17.tsv,fisher_cv.tsv}` plus
+`fisher/unit_assignment_reconstructed.toml` copied unchanged. Fisher uses
+forward residual patches/prefix `res`, not the backward descriptor patches.
+Dereference raw symlinks during transfer; do not stage truth, reference chemical
+predictions, other datasets or agent state. Never use `rsync --delete`.
+
+```bash
+# After source/input synchronization and hash checks; no fitting on login nodes:
+export STMFIT_PROJECT_DIR=/u/oldu/code/STMFit_labelfree_exploration_20260918
+export STMFIT_INPUT_DIR=/ptmp/oldu/stmfit/label_free_exploration_20260918_inputs_v1
+export STMFIT_OUTDIR=/ptmp/oldu/stmfit/label_free_exploration_20260918_run_v1
+export JULIA_BIN=/u/oldu/software/julia-1.13.0/bin/julia
+cd "$STMFIT_PROJECT_DIR"
+bash hpc/label_free_exploration.sbatch --dry-run
+sbatch --test-only hpc/label_free_exploration.sbatch
+# Submit once only within the approved scope, after reviewing these checks:
+sbatch hpc/label_free_exploration.sbatch
+```
+
+Site account/partition options must match the current Viper allocation. The
+metadata-only dry-run reads no SXM pixels, performs no Fisher refit and creates
+no result directory. For real execution the native driver requires Slurm and
+at least four requested CPUs; useful concurrency stays four even if eight CPUs
+are allocated. OpenBLAS/OMP and each Julia process use one thread.
+
+`stages.tsv` records each completed case/stage and exit code immediately.
+Per-stage logs, infeasible/failed candidate rows and incomplete outputs remain
+available. A failed stage yields a failed job after the other stages finish;
+fetch and diagnose it rather than lowering N, changing bounds or submitting a
+second job. Fisher export mismatches are scientific output, not grounds to tune
+or retry. Use independent `squeue` and `sacct` checks, then fetch the fresh output
+directory and Slurm log. No job is submitted merely by installing these scripts.

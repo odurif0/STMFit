@@ -224,3 +224,12 @@ An empirical supervised classifier score is not an information-theoretic upper
 bound on the signal. Conversely, stable label-free clusters, lower residuals,
 view agreement or reproducible votes do not prove chemical identity. Parameters
 must not be selected by repeatedly reading external benchmark grades.
+
+
+The implemented auxiliary `Current` diagnostic reports direct coupled channel
+scales/correlations only; the optional nuisance projection was not implemented.
+It does not calibrate chemistry, modify fit weights or supply an independent
+likelihood. A fixed Fisher replay exports new fold weights under unchanged
+reconstruction settings and checks saved scores; it is neither chemical
+calibration nor recovery of unique historical coefficients. Raw-QC plates also
+retain and flag nonfinite samples that native preprocessing imputes.

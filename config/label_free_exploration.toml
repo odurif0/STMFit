@@ -26,6 +26,7 @@ descriptor_atol = 1e-12
 
 [acquisition_noise]
 channel = "Z"
+auxiliary_channel = "Current"
 lag_x_min_px = -8
 lag_x_max_px = 8
 lag_y_min_px = -2
