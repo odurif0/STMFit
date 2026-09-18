@@ -279,3 +279,20 @@ mask, but also sequential x-slope bias, outlier-sensitive initial scale, signal
 attenuation with a leaky exclusion and explicit loss of unsupported foreground
 coverage. Huber is not uniformly better than guarded OLS. There is no new STM
 calibration, real-data result, calibrated uncertainty or production default.
+
+
+The authorized four-scan real-data pilot keeps the synthetic prototype's
+controls unchanged. It measures background changes, observed coverage and
+forward/backward agreement, not molecular accuracy. Comparisons use fixed common
+observed supports over the original lag grid; dropping an unavailable method or
+silently comparing different pixel populations is not allowed. A failed method
+can leave the all-method comparison unavailable while native-versus-other-method
+comparisons remain separately reportable.
+
+The level convention is one median per view on the same observable guarded
+background support, held fixed over all lags. It is not truth alignment or gain
+calibration. Better post-fit background statistics or image agreement would not
+show that molecular contrast was preserved on real images. The exclusion and
+fit support still depend on the old native preprocessing and saved geometry.
+No new count, chemical fit, noise covariance, independent-sample estimate,
+benchmark grade or production-default change is part of this pilot.

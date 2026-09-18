@@ -2314,9 +2314,10 @@ See `docs/src/selection.md` for the full guard specification and
     outlier examples improve, but Huber is not uniformly better than guarded
     OLS. A correct mask protects injected contrast without proving background
     recovery; a leaky mask attenuates it, and unsupported rows lose coverage.
-    Production remains unchanged. A four-scan diagnostic comparison is proposed
-    (one Viper job, 4 requested CPUs, 16 GB, 30 minutes), not yet authorized or
-    started. No count/classification refit, grade or parameter search is proposed.
+    Production remains unchanged. The user now authorizes the four-scan
+    diagnostic comparison (one Viper job, 4 requested CPUs, 16 GB, 30 minutes).
+    Preparation is in progress; no job has been submitted and no real result is
+    claimed. No count/classification refit, grade or parameter search is included.
 
 0d. **Label-free mathematical exploration: what is numerical, representational,
     or acquisition-limited?** → **BOUNDED DIAGNOSTICS COMPLETE; NO PROMOTION
@@ -6951,3 +6952,67 @@ geometry/support and the existing lag window: no count fitting, classifier,
 grade or parameter search. Proposed cap: one Viper job, four requested CPUs,
 16 GB, 30 minutes wall time. This is a proposal, not a submission allowance.
 No such job or real-data trial has been started; no production behavior changed.
+
+
+### 2026-09-18 — Authorize the four-scan masked-preprocessing comparison
+
+After the synthetic prototype and the explicit one-job proposal, the user
+replied “go tu as carte blanche”. The first real-data tranche is now authorized:
+compare native, finite-only OLS, guarded OLS and guarded Huber on the same four
+frozen cases (`260115_016`, `251206_013`, `260215_022`, `251206_034`). The scientific
+deliverable is a measured comparison of background changes, observed coverage
+and forward/backward agreement, with failed methods and unresolved shifts kept.
+This is not a count or chemical-accuracy experiment.
+
+Preparation is capped at two development hours from 21:18 CEST. The first
+compute tranche is one Viper job: four requested CPUs, 16 GB, 30 minutes wall
+time, four one-thread cases. Local work is synthetic testing and metadata-only
+preparation; all real image processing belongs on the compute node. No previous
+job is resumed or resubmitted. The submit command will explicitly export the
+four required variables because Viper still sets `SBATCH_EXPORT=NONE`.
+
+The original four-file sample, 25-file summary and 222-lobe base geometry remain
+byte-identical. The original selected support (including the real adaptive
+rescue) and its conservative background exclusion are frozen across methods.
+Their dependence on previous imputation/preprocessing remains a limitation.
+The lag window and all numerical controls remain unchanged. No count model,
+Fisher/classifier, benchmark grade, expected N/composition prior, parameter
+search, new noise calibration or production-default change is included.
+
+Agreement must be compared on constant observed supports: method-own,
+all-method common, and native-versus-each-variant common intersections over the
+whole lag grid. A failed method may empty the common support; its failure stays
+visible rather than being dropped. Background level alignment uses observable
+common off-footprint pixels only. A best lag is still diagnostic, not validated
+registration. The pilot will retain raw/processed arrays and masks for saved-only
+arithmetic and visual checks after retrieval. No real-data result is claimed yet.
+
+
+Preparation validation for the four-scan pilot is complete locally. The parent
+independently ran **5,438/5,438 comparison assertions** and **205/205 driver
+assertions** under Julia 1.13, with one Julia/BLAS thread. Tests include synthetic
+SXM parsing, original-support replay, missingness, blocked methods, identical
+whole-lag supports, fixed observable background medians, retained negative and
+ambiguous/boundary correlations, full saved-array/table output and CLI behavior.
+The four real inputs passed **metadata-only** checks without parsing SXM pixels
+or creating results: saved selected N is 6/11/9/9, with actual adaptive rescue
+only for `260215_022`. These values check saved geometry, not molecular truth.
+
+Test failures were retained and fixed without changing scientific controls:
+a driver assertion used Julia's one-argument `occursin` with the wrong bound
+argument; a synthetic injected view used a native string background sentinel
+where a non-native Boolean mask was required. Final serialization preserves
+integer options explicitly. Auxiliary-channel wording and its assertions now
+state what the unchanged reader does: it incidentally preprocesses Current,
+then the new comparison discards those arrays and produces no Current evidence.
+Earlier queued worker counts/hashes are not the final source: the parent tests
+and stable source hashes are authoritative. Documentation and whitespace checks
+pass. Twelve original config/core/helper files remain unchanged.
+
+All seven input files were transferred to a new Viper input directory after a
+reviewed rsync dry-run. Their byte hashes match locally; remote raw files are
+regular files, not symlinks. `/ptmp` itself is a site symlink, so the requested
+fresh result location is passed canonically as
+`/viper/ptmp1/oldu/stmfit/masked_preprocessing_20260918_run_v1`. This is the same
+scratch location, not a second run. No real-data processing or job submission
+has occurred at this source-validation point.

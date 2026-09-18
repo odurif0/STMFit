@@ -637,3 +637,40 @@ fetch and diagnose it rather than lowering N, changing bounds or submitting a
 second job. Fisher export mismatches are scientific output, not grounds to tune
 or retry. Use independent `squeue` and `sacct` checks, then fetch the fresh output
 directory and Slurm log. No job is submitted merely by installing these scripts.
+
+
+## Masked-preprocessing four-scan diagnostic
+
+The opt-in pilot uses `hpc/masked_preprocessing.sbatch`, not the previous
+exploration or reconstruction launchers. It requests one task, four CPUs,
+16000 MB and 30 minutes. Four one-thread Julia 1.13 child commands compare
+preprocessing on the same four frozen scans. No count, chemical classifier,
+feature-extraction or grading stage runs. Failures are retained in per-case logs
+and `stages.tsv`; a failed child makes the batch fail after all four attempts.
+Numerical `PARTIAL`/`NONCONVERGED` results remain scientific output, not process
+success claims.
+
+Required variables are `STMFIT_PROJECT_DIR`, `STMFIT_INPUT_DIR`, `STMFIT_OUTDIR`
+and `JULIA_BIN`. Under Viper's `SBATCH_EXPORT=NONE`, the **actual submit command**
+must include:
+
+```text
+--export=STMFIT_PROJECT_DIR,STMFIT_INPUT_DIR,STMFIT_OUTDIR,JULIA_BIN
+```
+
+Setting variables before `sbatch` or placing an export directive in the script
+is not sufficient. Run the script with `--dry-run` first; it prints the four
+commands after metadata checks and neither parses raw images nor creates
+outputs. Check each per-case CLI's metadata-only dry-run as well. Scheduler
+`--test-only` is useful but does not prove that compute-node variables arrive.
+Import/precompile checks may run on the login node; real preprocessing must run
+inside the one Slurm allocation.
+
+Use a fresh output path with an existing parent and no symlink ancestors. Viper's
+`/ptmp` is a symlink, so resolve the intended output parent first: for this pilot
+`/ptmp/oldu/stmfit/...` resolves to `/viper/ptmp1/oldu/stmfit/...`. These are the
+same scratch location, not two result directories. Keep source/input paths and
+hashes, fetch arrays/tables and Slurm logs locally, and use a separate local
+folder for saved-only checks and figures. Never overwrite failed or prior runs.
+The script does not resubmit itself. The pilot is authorized and in preparation;
+no real-data result or production promotion is claimed by this entry.

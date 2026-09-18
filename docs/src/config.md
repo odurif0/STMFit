@@ -652,3 +652,37 @@ are not selection scores or noise estimates. Metrics retain explicit unavailable
 anchor/support reasons and partial observed coverage. Fixed synthetic fixtures
 are evaluation inputs, not learned physical calibration. See the journal for
 verified results and adverse cases; there is no raw-data or HPC entrypoint yet.
+
+
+### Four-scan masked-preprocessing comparison
+
+`test/run_masked_preprocessing.jl` is a separate opt-in diagnostic driver. It
+uses `--config` for the unchanged physical support settings,
+`--acquisition-settings` for the frozen `config/label_free_exploration.toml`
+registration/exclusion controls, and `--settings` for the unchanged
+`config/masked_robust_preprocessing.toml`. There are no new numerical parameters
+and no automatic choice of preprocessing method.
+
+The four-file sample, original selected summary and base geometry are inputs,
+not labels. They freeze the native support and the guarded background exclusion;
+they do not independently validate that exclusion. The reused exclusion is the
+original conservative square dilation by eight pixels, including more y margin
+than the ±2-pixel registration window. Every method/direction remains in the
+output, including unsupported rows and nonconvergence.
+
+The comparison uses method-own, all-method common, and native-versus-each-method
+common supports. Each support is valid over the entire unchanged 85-lag grid.
+Physical level-aligned differences remove only one observable median per view
+from the same shared off-footprint background pixels. These constants are fixed
+across lags. The existing minimum background count/fraction controls determine
+whether that level alignment is available; they do not calibrate uncertainty.
+Background mean, MAD, standard deviation and changes versus native are post-fit
+descriptions, not ground-truth errors or stationary noise estimates.
+
+The per-case command `test/diagnose_masked_preprocessing_real.jl --help` documents
+its array and table outputs. `arrays.jls` contains only built-in scalar, array
+and dictionary data serialized by Julia 1.13. It retains observed raw nm arrays,
+corrected images, masks and estimator diagnostics for saved-only checks. Load
+only trusted files using Julia 1.13. No missing sample is turned into an observed
+one. The existing native reader incidentally preprocesses auxiliary Current
+arrays; the comparison discards them and computes no Current evidence.
