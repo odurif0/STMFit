@@ -2318,11 +2318,12 @@ See `docs/src/selection.md` for the full guard specification and
     Four-file count/acquisition diagnostics and two fixed forward-Fisher replays
     were prepared from source `35c7d24`, but job 11806180 failed before Julia:
     its submission omitted explicit export while Viper set `SBATCH_EXPORT=NONE`.
-    No real batch result exists; the command is corrected locally but no retry
-    is authorized or submitted. The bounded pass ends with measured local
-    findings and this blocker. No new grade, production setting or promotion
-    decision was made. Accuracy, calibrated uncertainty and unknown-chain
-    chemical identity remain unestablished.
+    The user subsequently approved one corrected submission: job 11812202,
+    with the identical scientific source/inputs and explicit environment export,
+    was submitted once at 16:38:31 CEST. Results remain pending verification;
+    no further retry or method expansion is authorized. No new grade, production
+    setting or promotion decision was made. Accuracy, calibrated uncertainty
+    and unknown-chain chemical identity remain unestablished.
 
 0c. **Apply a reproducible native pipeline to raw 10–20mer scans** → **UNKNOWN25
     OUTPUTS COMPLETE; SCIENTIFIC VALIDATION STILL LIMITED (Sep 17)**: after the
@@ -6668,3 +6669,46 @@ ceiling or accuracy improvement is established. Source code and synthetic tests
 for these blocked diagnostics are available, not empirical validation. The
 first bounded pass ends with the measured local findings and this explicit
 blocker, rather than an automatic new method campaign.
+
+
+### 2026-09-18 — One corrected submission explicitly authorized
+
+After the first-pass closeout, the user explicitly authorized one new submission
+with the same four count/acquisition cases and two forward17 Fisher replays,
+four requested CPUs, 16 GB and a two-hour limit. This permits execution of the
+previously blocked diagnostics, not further method development or an automatic
+retry. The failed job 11806180 and its local failure bundle remain unchanged.
+
+New job **11812202** was submitted exactly once at 16:38:31 CEST. The
+actual command includes
+`--export=STMFIT_PROJECT_DIR,STMFIT_INPUT_DIR,STMFIT_OUTDIR,JULIA_BIN`
+explicitly, overriding Viper's `SBATCH_EXPORT=NONE`. It reuses the unchanged
+37-file source from `35c7d247331b42ffbc074e51c9ac51bf0a9f2dfb` and 12 unchanged input files.
+No source sync or dependency change was needed. Source/input hashes, metadata
+for all ten stages and Julia 1.13.0/one-BLAS-thread readiness were checked again.
+The duplicate-job queue check was empty. Scheduler test-only 11812197 is not the
+actual job; its 18:11 estimate is not a guaranteed start time.
+
+The new exclusive remote output path is
+`/ptmp/oldu/stmfit/label_free_exploration_20260918_run_v2`;
+the new log is
+`/ptmp/oldu/stmfit/label_free_exploration_20260918_corrected_11812202.log`.
+Outputs will be fetched into
+`results/label_free_exploration_20260918/viper_diagnostics_v2/`, separate from the
+failed first bundle. Initial state was PENDING (Priority). No calculation result
+is claimed at submission. The fresh one-submission allowance is consumed:
+inspect and retain all failures, never requeue or launch a third job automatically.
+The same 13 N candidates, expected 78 fit rows, original support, physical bounds,
+full-p GCV and unchanged two Fisher cohorts remain in force. No additional
+local real fit, benchmark evaluation, feature search or promotion is authorized.
+
+
+Corrected-job outcome: independent accounting confirms **COMPLETED 0:0**,
+17:10:22–17:14:12 CEST (3 min 50 s), on `vipc2001`, with eight allocated CPUs.
+The terminal job had already expired from `squeue`; accounting was checked
+independently. All 73 scientific output files and the Slurm log were fetched
+and match remote hashes. All 37 source and 12 input hashes remain unchanged.
+All ten expected stage records exist and report exit0. The output includes all
+78 requested count-fit rows and both Fisher cohorts. No further job or fit is
+authorized; numerical/interpretive checks follow separately. No new polling
+heartbeat was created for an already terminal job.

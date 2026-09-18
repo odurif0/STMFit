@@ -612,7 +612,10 @@ options take precedence. Job 11806180 failed at the first required-path check
 because its submission omitted this flag. Julia and all scientific stages never
 started. The original source/input hashes were unchanged. No retry was submitted.
 Shell dry-runs and `sbatch --test-only` do not execute the compute-node environment.
-The corrected export command is prepared, not yet validated in a real new job.
+After explicit user approval, corrected job **11812202** used this export list
+and completed0:0 on2026-09-18 (17:10:22–17:14:12 CEST). Its73 outputs and Slurm
+log were fetched and hash-verified; scientific checks are separate. The new
+one-submission allowance is consumed. Do not automatically repeat or requeue it.
 
 Site account/partition options must match the current Viper allocation. The
 metadata-only dry-run reads no SXM pixels, performs no Fisher refit and creates
