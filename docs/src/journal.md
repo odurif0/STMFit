@@ -2316,9 +2316,13 @@ See `docs/src/selection.md` for the full guard specification and
     imputes. A single N9 smoke improves elliptical RSS by about47.2% with extra
     bounded optimization, without proving the count or equal-budget superiority.
     Four-file count/acquisition diagnostics and two fixed forward-Fisher replays
-    are prepared from scientific source `35c7d24`. No new grade, production
-    setting or promotion decision is part of the pass. Accuracy, calibrated
-    uncertainty and unknown-chain chemical identity remain unestablished.
+    were prepared from source `35c7d24`, but job 11806180 failed before Julia:
+    its submission omitted explicit export while Viper set `SBATCH_EXPORT=NONE`.
+    No real batch result exists; the command is corrected locally but no retry
+    is authorized or submitted. The bounded pass ends with measured local
+    findings and this blocker. No new grade, production setting or promotion
+    decision was made. Accuracy, calibrated uncertainty and unknown-chain
+    chemical identity remain unestablished.
 
 0c. **Apply a reproducible native pipeline to raw 10–20mer scans** → **UNKNOWN25
     OUTPUTS COMPLETE; SCIENTIFIC VALIDATION STILL LIMITED (Sep 17)**: after the
@@ -6582,3 +6586,85 @@ PENDING; the scheduler's pre-submit estimate was14:10 CEST, not a
 completion promise. The one-job cap remains in force: failure is inspected and
 reported, never a reason for automatic retry, trimming candidates or relaxing
 bounds. No new batch result or benchmark gain is claimed at submission.
+
+
+### 2026-09-18 — Bounded Viper pass blocked by omitted environment export
+
+Job **11806180** is terminal **FAILED 1:0**. It ran 13:32:51–13:32:53 CEST
+(two seconds) on `vipm2063`, with eight allocated CPUs. The fetched Slurm log
+reports the exact failure:
+
+```text
+/var/spool/slurmd/job11806180/slurm_script: line 12: STMFIT_PROJECT_DIR: required
+```
+
+The failure is the shell's first required-path check, **before Julia or any
+scientific stage**. A read-only probe confirmed
+`SBATCH_EXPORT=NONE` in Viper's submitting environment and a native `/usr/bin/sbatch`
+executable, not a wrapper. The parent submission assigned the required variables
+with `env` but omitted the explicit `sbatch --export=...` flag. This was a launch
+error, not a numerical/model failure. The earlier successful full146 actual
+submission had used an explicit export flag; copying only its resource-only
+scheduler check was not sufficient. Shell dry-run, import-only readiness and
+`sbatch --test-only` cannot establish the compute-node environment handoff.
+
+There is **no remote scientific output directory, zero of the planned 78 fit
+rows, and no real Fisher replay or acquisition diagnostic**. These are not 78
+numerically infeasible models. No substitute fit rows were manufactured.
+The failure log was fetched into the exclusive local
+`results/label_free_exploration_20260918/viper_diagnostics_v1/` bundle. Its hash
+matches remotely; all 37 staged source/lock files and 12 input files are unchanged.
+The failed remote source is preserved. The job monitor was cancelled; no retry,
+requeue, second job, local replacement batch or change to scientific settings
+was performed. The one-job allowance is exhausted even though no fitting ran.
+
+The manual commands now name
+`--export=STMFIT_PROJECT_DIR,STMFIT_INPUT_DIR,STMFIT_OUTDIR,JULIA_BIN` explicitly.
+Command-line options override `SBATCH_EXPORT`, which overrides `#SBATCH`
+directives. The batch-script comments, HPC notes and agent notes explain this
+boundary. A local regression reproduces the missing-variable early failure in
+an empty environment and checks the supplied-variable handoff with `/bin/echo`
+in place of Julia; it is **not** a Slurm emulator or a real fit. A future
+corrected scientific submission requires renewed user approval and a fresh
+output path. The correction has not been validated in a new compute job.
+The local driver suite passes 55 assertions plus 11 environment-handoff checks
+under Julia 1.13. The initial no-self-submission test also matched the new
+explanatory comment; making it inspect non-comment lines resolved that test
+fixture failure. Shell syntax and the documentation build pass; only the known
+page/search-size and deployment warnings remain. All five original project,
+manifest and physical/unit-config locks, and the other 36 staged source files,
+remain unchanged locally. Only the launcher's comments changed locally; its
+failed remote copy remains byte-identical to the submitted source.
+
+**First-pass scientific conclusion:** constrained variable projection is a
+concrete numerical avenue, supported only by the one fixed-N=9 smoke so far.
+Its additional optimization reduces elliptical RSS by 47.2%, but both outer
+searches stop at 800 evaluations and no correct-count or equal-budget advantage
+is established. The profile outer objective is raw RSS; it does not include
+the adjacent-Gaussian overlap/conditioning penalty κ used in the native global
+stage. The native local LM stage also minimizes raw RSS. This test therefore
+does not isolate a solver effect from extra optimization budget. The saved-only
+native replay passes **347/347** checks (an initial worker message said 355;
+the retained log is authoritative). It
+reconstructs model values, decoded physical parameters, finite raw bounds and
+full-p GCV, and checks recorded KKT/validity/stopping flags; it does not rerun
+the original full-image validity calculation or prove statistical calibration.
+
+The representation audit measures a dominant transverse component in normalized
+residual patches (about 85% median centered energy in both cohorts), with
+substantial within-file variation surviving predictor standardization. This
+makes acquisition, centering and residual construction important to examine,
+but does not identify a cause, quantify chemical information or justify
+subtracting that component. Two unknown scans have large unobserved raw areas;
+all 25 blind/overlay plates make them explicit. Recorded Current is nonconstant
+but feedback-coupled, and all scans use the same -0.300 V bias with lock-in OFF.
+It is not a new independent chemical measurement.
+
+Four-file numerical/N comparisons, measured registration/noise/block evidence,
+and real Fisher even/odd/offset decomposition remain **unmeasured because of
+the launch failure**. No benchmark was used to select variants or regraded, no
+new `N_selected` or chemical prediction was made, and no 80% information-theoretic
+ceiling or accuracy improvement is established. Source code and synthetic tests
+for these blocked diagnostics are available, not empirical validation. The
+first bounded pass ends with the measured local findings and this explicit
+blocker, rather than an automatic new method campaign.

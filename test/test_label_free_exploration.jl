@@ -130,6 +130,43 @@ end
     @test occursin("--mem=16000M",script)
     @test occursin("OPENBLAS_NUM_THREADS=1",script)
     @test !occursin("--watch",script)
-    @test !occursin("sbatch ",script)
+    @test !any(line -> !startswith(lstrip(line),"#") && occursin(r"\bsbatch\b",line), split(script,'\n'))
     @test !occursin("--delete",script)
+end
+
+
+@testset "Batch environment handoff is explicit, not a scheduler dry-run guarantee" begin
+    script=joinpath(@__DIR__,"..","hpc","label_free_exploration.sbatch")
+    export_flag="--export=STMFIT_PROJECT_DIR,STMFIT_INPUT_DIR,STMFIT_OUTDIR,JULIA_BIN"
+    readme=read(joinpath(@__DIR__,"..","hpc","README.md"),String)
+    @test occursin("sbatch --test-only $export_flag hpc/label_free_exploration.sbatch",readme)
+    @test occursin("sbatch $export_flag hpc/label_free_exploration.sbatch",readme)
+    @test occursin("SBATCH_EXPORT=NONE",read(script,String))
+    mktempdir() do dir
+        # Reproduce the observed missing-export failure before any Julia/fit runs.
+        cleared=Dict("PATH"=>ENV["PATH"],"HOME"=>get(ENV,"HOME",dir))
+        failedlog=joinpath(dir,"missing_environment.log")
+        proc=open(failedlog,"w") do io
+            run(pipeline(ignorestatus(setenv(`bash $script --dry-run`,cleared)),stdout=io,stderr=io))
+        end
+        @test proc.exitcode!=0
+        @test occursin("STMFIT_PROJECT_DIR: required",read(failedlog,String))
+        # Check only the batch-script handoff with supplied paths. /bin/echo is
+        # a harmless stand-in, NOT a Slurm environment emulator or real fit.
+        complete=merge(cleared,Dict("STMFIT_PROJECT_DIR"=>dirname(@__DIR__),
+            "STMFIT_INPUT_DIR"=>joinpath(dir,"inputs with spaces"),
+            "STMFIT_OUTDIR"=>joinpath(dir,"outputs with spaces"),
+            "JULIA_BIN"=>"/bin/echo"))
+        passedlog=joinpath(dir,"supplied_environment.log")
+        proc=open(passedlog,"w") do io
+            run(pipeline(ignorestatus(setenv(`bash $script --dry-run`,complete)),stdout=io,stderr=io))
+        end
+        @test proc.exitcode==0
+        msg=read(passedlog,String)
+        @test occursin("--threads=1",msg)
+        @test occursin("--input-dir "*complete["STMFIT_INPUT_DIR"],msg)
+        @test occursin("--outdir "*complete["STMFIT_OUTDIR"],msg)
+        @test endswith(strip(msg),"--dry-run")
+        @test !ispath(complete["STMFIT_OUTDIR"])
+    end
 end

@@ -110,6 +110,12 @@ changing selection logic.
 - The launcher order is sync -> instantiate on the login node -> Slurm array ->
   merge chunk TSVs -> fetch. Compute nodes have no internet; never run the STM
   batch or QE compute on login nodes.
+- Viper currently sets `SBATCH_EXPORT=NONE`. For manual jobs requiring custom
+  variables, pass an explicit command-line `sbatch --export=...` list; assigning
+  variables before `sbatch` is insufficient. Command-line options override the
+  environment, which overrides `#SBATCH` directives. Shell dry-runs and
+  `sbatch --test-only` do not validate the compute-node environment. Job 11806180
+  failed before Julia because this export was omitted; do not repeat or retry it.
 - Raven account `oldu` has an observed 8-CPU group quota. The generic launcher
   defaults (`4 chunks x 4 CPUs`) exceed it; configure at most 8 CPUs total.
   `batch_full.jl` caps useful Julia threads at four per task.

@@ -593,14 +593,26 @@ predictions, other datasets or agent state. Never use `rsync --delete`.
 # After source/input synchronization and hash checks; no fitting on login nodes:
 export STMFIT_PROJECT_DIR=/u/oldu/code/STMFit_labelfree_exploration_20260918
 export STMFIT_INPUT_DIR=/ptmp/oldu/stmfit/label_free_exploration_20260918_inputs_v1
-export STMFIT_OUTDIR=/ptmp/oldu/stmfit/label_free_exploration_20260918_run_v1
+# Placeholder for a future approved run; do not reuse the failed run's bundle.
+export STMFIT_OUTDIR=/ptmp/oldu/stmfit/label_free_exploration_20260918_NEW_RUN
 export JULIA_BIN=/u/oldu/software/julia-1.13.0/bin/julia
 cd "$STMFIT_PROJECT_DIR"
 bash hpc/label_free_exploration.sbatch --dry-run
-sbatch --test-only hpc/label_free_exploration.sbatch
-# Submit once only within the approved scope, after reviewing these checks:
-sbatch hpc/label_free_exploration.sbatch
+sbatch --test-only --export=STMFIT_PROJECT_DIR,STMFIT_INPUT_DIR,STMFIT_OUTDIR,JULIA_BIN hpc/label_free_exploration.sbatch
+# The first pass already used its one-job allowance (11806180 failed at startup).
+# A future submission needs renewed approval and a fresh output path:
+sbatch --export=STMFIT_PROJECT_DIR,STMFIT_INPUT_DIR,STMFIT_OUTDIR,JULIA_BIN hpc/label_free_exploration.sbatch
 ```
+
+Viper currently sets `SBATCH_EXPORT=NONE`. Merely assigning the four variables
+before `sbatch` does not export them to the job. The explicit command-line
+`--export=...` above overrides that default and passes only the required paths.
+A `#SBATCH --export` header alone would lose to `SBATCH_EXPORT`; command-line
+options take precedence. Job 11806180 failed at the first required-path check
+because its submission omitted this flag. Julia and all scientific stages never
+started. The original source/input hashes were unchanged. No retry was submitted.
+Shell dry-runs and `sbatch --test-only` do not execute the compute-node environment.
+The corrected export command is prepared, not yet validated in a real new job.
 
 Site account/partition options must match the current Viper allocation. The
 metadata-only dry-run reads no SXM pixels, performs no Fisher refit and creates

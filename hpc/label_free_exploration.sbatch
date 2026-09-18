@@ -8,6 +8,10 @@
 
 # Four independent one-thread cases; no fitting on login nodes.
 # Required paths are explicit and no completed run may be overwritten.
+# Viper exports SBATCH_EXPORT=NONE in the submitting environment. The caller
+# must override it on the sbatch command line (a #SBATCH directive loses to it):
+# --export=STMFIT_PROJECT_DIR,STMFIT_INPUT_DIR,STMFIT_OUTDIR,JULIA_BIN
+# A shell --dry-run or sbatch --test-only does not test compute-node export.
 set -euo pipefail
 : "${STMFIT_PROJECT_DIR:?required}"
 : "${STMFIT_INPUT_DIR:?required}"
