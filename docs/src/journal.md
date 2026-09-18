@@ -7045,3 +7045,25 @@ arrays and fixed-support metrics before scientific interpretation. The original
 counting, chemical assignments, physical settings and completed jobs stay
 unchanged. A successful Slurm exit would not itself validate registration,
 coverage, background correctness or molecular accuracy.
+
+
+During the queue wait, a saved-array-only plotting helper was checked on
+synthetic images (**14/14 assertions**, followed by direct inspection). It
+retains the all-method and all three native-pair comparisons, uses the exported
+common observed background median per view, and leaves an unavailable common
+comparison blank rather than substituting a mask or level. Separate availability
+panels distinguish raw missing pixels from newly unavailable observations.
+The fixed 99.5% absolute-value color limit is a **display rule only**, shared
+within each scope; clipped pixels are counted and numerical arrays stay intact.
+
+The first previews exposed two display bugs not caught by PNG/header tests:
+`legend=false` did not enable a colorbar, and a mask contour coupled to height
+color limits was not visible. Explicit colorbars and red discrete support-edge
+markers fixed both. Blocked panels have no invented height scale; their
+uncomputed clipping count is unavailable. Final synthetic previews show the
+intended physical axes/aspect, visible units/support, and coverage categories.
+This is not a real-image review or scientific result. Helper, tests, hashes,
+previous previews and final visual notes are retained under
+`results/masked_preprocessing_20260918/run_logs/real4_v1/`. No remote scientific
+source, settings, arrays or predictions changed. Job `11820414` remained pending
+at the 22:39:47 CEST check; the single-job monitor remains active.
