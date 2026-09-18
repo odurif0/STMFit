@@ -2307,23 +2307,21 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-18. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
-0d. **Separate numerical optimization limits from missing chemical information**
-    → **BOUNDED LABEL-FREE EXPLORATION AUTHORIZED (Sep 18)**: one half-day and at
-    most one new Viper job, not a restart of completed reconstruction jobs.
-    Saved-patch audits retain every key and show strong transverse-gradient
-    attribution, not causal proof of an artefact. All25 raw-QC plates are ready;
-    two scans have substantial nonfinite raw areas that native preprocessing
-    imputes. A single N9 smoke improves elliptical RSS by about47.2% with extra
-    bounded optimization, without proving the count or equal-budget superiority.
-    Four-file count/acquisition diagnostics and two fixed forward-Fisher replays
-    were prepared from source `35c7d24`, but job 11806180 failed before Julia:
-    its submission omitted explicit export while Viper set `SBATCH_EXPORT=NONE`.
-    The user subsequently approved one corrected submission: job 11812202,
-    with the identical scientific source/inputs and explicit environment export,
-    was submitted once at 16:38:31 CEST. Results remain pending verification;
-    no further retry or method expansion is authorized. No new grade, production
-    setting or promotion decision was made. Accuracy, calibrated uncertainty
-    and unknown-chain chemical identity remain unestablished.
+0d. **Label-free mathematical exploration: what is numerical, representational,
+    or acquisition-limited?** → **BOUNDED DIAGNOSTICS COMPLETE; NO PROMOTION
+    (Sep 18)**: the corrected, explicitly authorized job 11812202 completed 0:0.
+    All 78 rows remain; fixed-N RSS improves, but the candidate-set GCV minima
+    stay 8/12/9/9 and 25/26 refinements stop at 800 evaluations. Original selected
+    counts 6/11/9/9 are not truth and are unchanged. All four registrations are
+    boundary/ambiguous; all 16 background ACF lengths are censored at 16 pixels.
+    No new calibrated noise, independence or block-size claim is supported.
+    Current is feedback-coupled and anticorrelated across directions. Both
+    Fisher score files replay byte-identically (222/900 keys; seven NA retained),
+    without recovering unique historical weights or validating chemistry.
+    Gradient attribution and raw missingness remain limitations, not proof of
+    absent chemical information. No grade, threshold, production prediction or
+    method promotion changed. Accuracy, calibrated uncertainty and exact unknown
+    counts/chemical identities remain unresolved; no further campaign is approved.
 
 0c. **Apply a reproducible native pipeline to raw 10–20mer scans** → **UNKNOWN25
     OUTPUTS COMPLETE; SCIENTIFIC VALIDATION STILL LIMITED (Sep 17)**: after the
@@ -6712,3 +6710,109 @@ All ten expected stage records exist and report exit0. The output includes all
 78 requested count-fit rows and both Fisher cohorts. No further job or fit is
 authorized; numerical/interpretive checks follow separately. No new polling
 heartbeat was created for an already terminal job.
+
+
+### 2026-09-18 — Completed bounded mathematical diagnostics; no promotion
+
+The authorized corrected job 11812202 is now checked, not merely processed.
+All 73 output files and the Slurm log match their fetched hashes, the 37 staged
+source files and 12 inputs are unchanged, and the original five project/config
+locks remain intact. No additional fit, extraction, Fisher training, benchmark
+grade or source modification ran during saved-output verification. The two
+read-only reviewers are finished. Results are under
+`results/label_free_exploration_20260918/viper_diagnostics_v2/`; detailed checks
+are under `run_logs/corrected_submission_v2/` in the same exploration root.
+
+**Numerical fitting.** All 78 declared rows are present: 13 counts × 2 geometries
+× 3 methods. The saved-array Julia 1.13 replay passes 10,365 assertions, including
+all 3,889 parameter rows (13 warm starts), 678 decoded lobe rows across the
+candidate models, and 24,548 fit pixels. Native
+forward-model reconstruction reproduces RSS and full-p GCV exactly in this
+replay; an independently built saved-lobe basis differs by at most 8.33e-17.
+All 52 linear profile solutions pass independently calculated box-KKT checks,
+without solving a linear system. Full p remains 4N+3 circular and 5N+3 elliptical.
+Support, original `refined_policy`, finite raw bounds and physical gates remain.
+Validity is reproduced on the saved fit mask using saved noise/calibration;
+this does not independently validate raw preprocessing, fusion or noise.
+
+At every fixed N/geometry, RSS decreases native → fixed profile → refinement.
+Fixed-geometry profiling alone reduces RSS by 0.079–20.427%; total reductions
+are 4.775–69.497%. These ranges include invalid native starting rows, not just
+successful-looking cases. Four invalid rows at 260215_022/N10 (native and fixed,
+circular and elliptical; reason `residual high`) remain in the tables. Both
+N10 refinements pass the original gate. All 26 refinements are valid, but 25 stop
+at 800 evaluations without convergence; only 260115_016/N5 circular reaches FTOL
+at 787. Native convergence remains unknown. No time/evaluation cap was raised.
+
+| Case | Declared Ns | Native→refined elliptical RSS reductions | Minimum valid candidate-set GCV N, all three methods | Original selected N (not truth) |
+|---|---|---|---:|---:|
+|260115_016|5,6,7,8|8.52–17.88%|8|6|
+|251206_013|10,11,12|19.20–35.47%|12|11|
+|260215_022|8,9,10|50.94–69.50%|9|9|
+|251206_034|8,9,10|5.58–40.99%|9|9|
+
+The N9 elliptical result in this job is 0.05227166419 → 0.05171210328 →
+0.02438147059 (53.36% total reduction). It is a separate invocation from the
+one local smoke's 47.2%, not a replacement of that saved result. The candidate
+minima stay 8/12/9/9; the production selector was not rerun or replaced by these
+rankings. Two minima lie at a declared upper edge. The sample is not exhaustive.
+Extra optimization and unknown native convergence prevent equal-budget or
+accuracy claims. The native global stage penalizes adjacent-Gaussian overlap
+conditioning κ; local LM and the profile outer search use raw RSS. Saved endpoint
+κ is 3.760–7.806, below configured 10; this says nothing about the global trajectory.
+
+**Acquisition and noise.** The saved-only review passes 255 grouped checks. It
+retains 340 lag candidates, 1,165 row records, 70 local records, 408 ACF rows and 28
+auxiliary rows. All four best signed Z correlations occur at dx=−8, the fixed
+search boundary, and all are ambiguous. Zero-lag→best-grid correlations are
+0.3964→0.6479,0.4726→0.6568,0.9601→0.9928,0.7421→0.9592 in the table's case order.
+None is an accepted registration; no search window was expanded. After the
+unresolved shift, 2/6 and 7/11 local correlations remain negative in the first two
+cases. Whole-support agreement does not establish per-lobe agreement.
+
+All 16 off-footprint view/axis ACF lengths are right-censored at 16 pixels. Their
+lag 16 correlations remain at least 0.703, above the declared exp(−1) threshold.
+No usable block size, stationary noise covariance, independent sample count or
+joint likelihood is established. The saved-residual ACF is separate model/data
+structure, not a substitute for background noise; 251206_034 shows magnitude
+resurgence after an early crossing. Block zeros and insufficient-row lag zeros
+are sentinels, not measured zero scales/lags. The `n_eff = n ÷ 9` placeholder,
+GCV and all settings remain unchanged.
+
+Current is present but anticorrelated fwd/bwd on the fixed Z support: after the
+unresolved inherited lag, r=−0.5226,−0.7619,−0.4053,−0.8411. The positive-affine
+diagnostic clips gain to 0, which gives NRMSE 1; it does not silently flip the sign.
+All 20 auxiliary comparisons have complete pairs on that restricted support.
+This does not restore 260115_016's missing 60.6–60.7% of the full frame. Restoring
+raw-missing masks excludes imputed observations but cannot undo imputation's
+influence on plane/row flattening and support construction. Current remains
+feedback-coupled, single-bias evidence; its optional nuisance projection was
+not performed. No demonstrated new implementation bug was found.
+
+**Fixed Fisher replay.** Both exported score TSVs are byte-identical to the
+saved originals: 222 unknown25 and 900 full146 keys, including all seven original
+unavailable rows. A separate saved-patch/coefficient Julia 1.13 replay passes
+33,461 assertions without fitting. It reconstructs the 197-pixel disk and physical
+t-reflection, opposite-parity support, six-decimal scores, reasons and response
+components; maximum error is 1.78e-15/2.66e-15. New weights remain a fresh realization
+consistent with the exports, not unique recovered historical coefficients.
+
+For `s=e+c+abs(o)`, median even/absolute-odd/maximum responses are
+3.4315/0.5222/4.1236 (unknown25) and 4.9946/0.06045/5.0704 (full146). The even term
+is already positive for 200/222 and 874/893 finite rows; the maximum is positive
+for 209/222 and 875/893. Only 9 and 1 rows cross zero because of the odd bonus. Thus
+the mirror maximum does not alone explain the mostly positive scores. The
+shared offset is near zero (absolute max 1.31e-16); the historical centered-mid
+versus raw-input convention was not corrected. These are proxy responses, not
+chemical class counts or calibrated probabilities. No downstream prediction
+changed and no grade was run.
+
+**Conclusion.** There is measured numerical headroom, but no changed diagnostic
+minimum N in these fixed sets and no demonstrated accuracy gain. The earlier
+transverse-gradient attribution (about 85% median centered patch energy) remains
+an observation, not proof of an artefact or absent chemistry. The acquisition
+results do not yet support calibrated noise/independence or a reliable new
+registration correction. No universal 80% limit follows from these experiments.
+The bounded exploration is complete as diagnostics, with failures, unavailable
+values and unresolved scientific questions retained. No method is promoted;
+any new campaign, fit or parameter change needs a new user-approved scope.

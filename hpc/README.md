@@ -610,12 +610,19 @@ before `sbatch` does not export them to the job. The explicit command-line
 A `#SBATCH --export` header alone would lose to `SBATCH_EXPORT`; command-line
 options take precedence. Job 11806180 failed at the first required-path check
 because its submission omitted this flag. Julia and all scientific stages never
-started. The original source/input hashes were unchanged. No retry was submitted.
+started. The original source/input hashes were unchanged. No automatic retry was submitted.
 Shell dry-runs and `sbatch --test-only` do not execute the compute-node environment.
 After explicit user approval, corrected job **11812202** used this export list
-and completed0:0 on2026-09-18 (17:10:22–17:14:12 CEST). Its73 outputs and Slurm
-log were fetched and hash-verified; scientific checks are separate. The new
-one-submission allowance is consumed. Do not automatically repeat or requeue it.
+and completed 0:0 on 2026-09-18 (17:10:22–17:14:12 CEST). Its 73 outputs and Slurm
+log were fetched and hash-verified; all 37 source and 12 input hashes stayed
+unchanged. Saved-output checks pass: counting 10,365 assertions, Fisher 33,461,
+and acquisition 255 grouped checks. All 78 fit rows are retained, including four
+invalid native/fixed rows; 25/26 refinements remain evaluation-limited. Both
+Fisher score files are byte-identical to the saved originals. Acquisition
+registration/noise claims remain blocked; process success is not scientific
+validation. See the September 18 journal for measured findings and limits.
+The new one-submission allowance is consumed. Do not repeat or requeue the job;
+no further scientific work or method promotion is authorized by this pass.
 
 Site account/partition options must match the current Viper allocation. The
 metadata-only dry-run reads no SXM pixels, performs no Fisher refit and creates
