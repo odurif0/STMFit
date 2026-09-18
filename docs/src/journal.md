@@ -2308,16 +2308,21 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0e. **Can missing-value-aware background estimation reduce preprocessing bias
-    without removing molecular contrast?** → **SYNTHETIC PROTOTYPE COMPLETE;
-    NO REAL-DATA VALIDATION (Sep 18)**: the opt-in prototype passes 441 engine,
-    1,116 signal-study and 12,641 saved-arithmetic assertions. Missingness and
-    outlier examples improve, but Huber is not uniformly better than guarded
-    OLS. A correct mask protects injected contrast without proving background
-    recovery; a leaky mask attenuates it, and unsupported rows lose coverage.
-    Production remains unchanged. The authorized four-scan diagnostic was
-    submitted once as Viper job **11820414** (4 requested CPUs, 16 GB, 30 minutes).
-    It is pending a node; no real result is claimed yet. No count/classification
-    refit, grade or parameter search is included.
+    without removing molecular contrast?** → **FOUR-SCAN COMPARISON COMPLETE;
+    MOLECULAR VALIDATION UNRESOLVED (Sep 18)**: the synthetic prototype remains
+    unchanged. Approved Viper job **11820414** completed 0:0 in 55 s; 37 outputs
+    and the log were fetched and hash-verified. No new observed pixels are lost;
+    the incomplete scan remains `PARTIAL`. Guarding reduces descriptive
+    background spread, but forward/backward physical RMS changes are mixed and
+    local anticorrelations remain. All best lags remain boundary/ambiguous;
+    no shift or method is accepted. The saved-output checker retains 30,811
+    passes and 15 strict stationarity failures. Separate 118/118 arithmetic
+    checks establish export-roundoff compatibility, **not exact stationarity
+    replay**; normalized parameters were not exported. All other plane/row,
+    objective, mask, metric and native-baseline checks pass. No count/classifier
+    refit, grade, tuning, noise calibration or production promotion occurred.
+    The frozen footprint is not true background; real molecular preservation
+    is still unvalidated. No further campaign is approved.
 
 0d. **Label-free mathematical exploration: what is numerical, representational,
     or acquisition-limited?** → **BOUNDED DIAGNOSTICS COMPLETE; NO PROMOTION
@@ -7101,3 +7106,168 @@ Both implementation workers have handed back ownership and are retired.
 The latest real-job check, 22:55:20 CEST, still shows `11820414` pending under
 `QOSGrpCpuLimit`: a group CPU-quota wait, not a program failure. No further
 submission, resource change, raw-data analysis, fit or grade was launched.
+
+
+## 2026-09-18 — Four-scan masked-preprocessing results; no promotion
+
+**Deliverable completed:** measured background changes, observed coverage and
+forward/backward agreement for the four authorized frozen scans and all four
+methods. The real pilot ran only in Viper job **11820414**, from scientific
+source `cb3b2d9843eccac2612859fe8b19cfe609fdd074`, on `vipc2169` at
+23:32:39–23:33:34 CEST: **55 s, COMPLETED 0:0**. It requested four CPUs,
+16000 MB and 30 minutes; Slurm allocated eight CPUs, with four one-thread Julia
+1.13 case commands. Their elapsed times were 39.793–40.941 s. Preparation and
+synthetic checks finished in 110.4 minutes, within the 120-minute preparation
+budget. The group CPU-quota queue wait did not trigger another submission.
+
+All **37 outputs (229,592,456 bytes)** and the Slurm log were fetched once.
+Remote/local SHA256 values match, all 33 source and seven input identities are
+unchanged, and all 12 original source/config locks match. The earlier 73-file
+diagnostic tree, 184-file full146 tree and 66-file unknown25 tree plus its log
+remain byte-identical. The current job monitor is stopped. No new raw SXM
+processing occurred locally; local work used saved arrays and arithmetic only.
+No count, classifier, feature refit, grade, parameter search or production
+change was made. The native reader's incidental Current preprocessing was
+followed by discarding Current; it supplies no new Current evidence.
+
+### Coverage, fixed supports and convergence
+
+Methods are native reference (N), finite-only OLS (F), guarded OLS (G), and
+guarded fixed-scale Huber (H). Their own, all-four and native-pair supports and
+background anchors are identical within every case, including hashes:
+**3,948 / 6,279 / 9,392 / 4,929 comparison pixels**. Each is the full retained
+frozen fit support. No method loses an additional observed pixel in this pilot;
+this does not validate the inherited ROI/geometry/footprint or recover missing
+measurements. All masks, the actual adaptive rescue on `260215_022`, the 85-lag
+window and all controls remain frozen.
+
+`260115_016` has only **103,216 / 102,912 observed pixels** out of 262,144 per
+view (39.374% / 39.258%); its 158,928 / 159,232 missing pixels remain unavailable.
+All three masked methods remain `PARTIAL`: 310 / 311 unsupported rows contain
+zero observations. Their other 202 / 201 rows are available. The other three
+scans are fully observed. Of 32 view rows, eight are `REFERENCE`, 18 `OK`, six
+`PARTIAL`; there is no masked nonconvergence. H converges in 11/11, 12/13, 12/10,
+11/10 iterations (forward/backward in case order). Native convergence and
+internal estimator details remain unknown. All 16,384 row records, 112 summary
+rows, 4,760 lag candidates, 980 local rows and 112 background rows are retained.
+
+### Measured agreement and background changes
+
+Zero-lag forward/backward RMS below uses exactly one median per view on the
+same observed off-footprint background, fixed over all 85 lags. There is no
+slope, gain, truth alignment or applied registration. Units are **pm**; these
+are differences between views, not errors against true molecular signal.
+
+| Scan | Pixels | N RMS | F RMS | G RMS | H RMS |
+|---|---:|---:|---:|---:|---:|
+| 260115_016.sxm | 3948 | 51.542 | 49.177 | 51.512 | 51.547 |
+| 251206_013.sxm | 6279 | 49.039 | 49.039 | 49.266 | 49.268 |
+| 260215_022.sxm | 9392 | 12.762 | 12.762 | 12.781 | 12.782 |
+| 251206_034.sxm | 4929 | 23.254 | 23.254 | 23.026 | 23.033 |
+
+The incomplete scan's finite-only RMS drops by 2.364 pm (4.59%). Guarding
+increases its correlation more, but barely changes RMS; H is slightly worse
+than N in RMS. On `251206_013` and `260215_022`, G/H increase both correlation
+and RMS. `251206_034` improves zero-lag RMS, but worsens RMS at the diagnostic
+correlation-selected best lag (N 8.117 pm, G/H 8.454/8.460 pm). For the three
+fully observed scans, F and N agree in level-invariant metrics to roundoff.
+H has slightly lower correlation and higher RMS than G at both reported lag
+conditions in all four cases; these small differences have no calibrated
+statistical significance and do not select a winner.
+
+Shared-background normalized MAD (forward/backward, **pm**):
+
+| Scan | N | F | G | H |
+|---|---:|---:|---:|---:|
+| 260115_016.sxm | 46.856 / 42.726 | 8.258 / 3.827 | 1.170 / 1.046 | 1.136 / 1.037 |
+| 251206_013.sxm | 5.131 / 8.718 | 5.131 / 8.718 | 4.971 / 4.807 | 4.921 / 4.807 |
+| 260215_022.sxm | 3.047 / 1.796 | 3.047 / 1.796 | 1.368 / 1.322 | 1.365 / 1.321 |
+| 251206_034.sxm | 10.653 / 11.777 | 10.653 / 11.777 | 5.498 / 5.424 | 5.480 / 5.399 |
+
+The much smaller background spread on `260115_016` coexists with persistent
+foreground disagreement. H changes its level-aligned background versus N by
+46.422/43.084 pm RMS; change magnitude is not correction accuracy. These are
+post-fit descriptions on background used by the estimator, not held-out noise
+measurements. H slightly lowers MAD versus G but increases background standard
+deviation in both views of `251206_013` and `251206_034`. A single dispersion
+statistic would hide this adverse result. Neither the OLS-derived Huber scale
+nor these post-fit statistics calibrate noise, covariance, blocks or `n_eff`.
+
+Every method has best diagnostic shift **(-8,2), (-8,-2), (-8,-1), (-8,-2)**
+in case order: all are boundary-limited and ambiguous, none usable or accepted.
+Even the approximately 0.993 best correlation on `260215_022` has 15–17 near
+maxima. No shift was applied and the lag window was not expanded. Local signed
+anticorrelations remain: zero-lag negative counts are 3/6, 7/11, 0/9, and 4/9
+for N/F versus 5/9 for G/H in the last case. The additional `251206_034` patch 8
+changes from +0.0680 to -0.00363/-0.00394. Local patches overlap and their IDs
+are saved geometry, not validated counts or chemistry.
+
+### Verification limit: exported stationarity loses precision
+
+The independent full saved-output check reports **30,811 pass / 15 fail /
+30,826 total** in 43.2 s. Every failure is the same strict stationarity-scalar
+comparison; all plane/row corrections, final fixed-scale objectives, masks,
+coverage, metrics, metadata and four previous native baselines pass. The
+original checker (SHA256
+`eb4ae4dd052f3a4a94217a744c524dfba883225ac6a86694f630b1c54684b482`),
+`atol=rtol=1e-10`, code-1 result and initial log remain unchanged. **We did not
+replace its assertion with a weaker check to obtain a green full-suite result.**
+
+A separate arithmetic-only diagnosis was independently repeated by the parent:
+**118/118 checks pass**, and its three result tables are byte-identical. No
+producer import, raw reader, fit, SVD or initial OLS/MAD replay was used.
+The source computes the gradient from median-centered heights and normalized
+parameters before exporting a physical plane. Those normalized parameters are
+not saved. Here background levels are -84 to -23 nm; physical planes differ by
+only up to 2.84e-14 nm across equivalent evaluation forms, but coherent errors
+can accumulate over 49,838–262,144 pixels. Actual stationarity discrepancies
+range from 3.27e-12 to 3.75e-9 nm.
+
+A known-parameter synthetic calculation retains exactly the same internal
+gradient after a constant level shift to -64 nm, yet its physical-export
+recalculation changes from passing to failing the original tolerance. Two
+predeclared normalized intercepts can export identical coefficients and planes
+while giving gradients separated by 2.33e-10 nm, more than two 1e-10 tolerance
+intervals. This establishes an export information-loss mechanism, not the
+correctness of every real producer operation.
+
+All 24 real differences are within a separately derived export-roundoff budget;
+the conservative export-plus-accumulation bound ranges from **2.35e-9 to
+1.04e-6 nm**. It depends on operation counts, precision and saved magnitudes,
+not a tolerance fitted to the observed discrepancy. A fixed +1e-4 corruption
+is rejected in 24/24 views, but +1e-6 only in 22/24. This is **bounded
+compatibility, not exact stationarity replay or exclusion of every small
+error**. Strict 1e-10 stationarity remains unverified. Initial OLS/MAD history,
+unknown native estimator parameters and true-background correctness also
+remain outside the saved-only verification. No producer defect is established;
+no rerun, output change or scientific-control adjustment was made.
+
+### Visual review and decision
+
+Twenty saved-array PNGs and 112 panel records were produced in a separate
+folder. All four common comparisons, the incomplete-scan availability map,
+and representative native-pair comparisons were inspected directly. Their
+848 panel-metadata checks pass. Physical aspect, nm axes/colorbars, red fixed
+support edges and gray unobserved regions are visible; no extra flip or
+registration was introduced. These are corrected arrays, not raw STM images.
+The fixed 99.5% shared-within-scope display clipping is counted, never used to
+filter scientific calculations. A parent dimension check initially assumed
+all figures had width 2,000 pixels; pair figures correctly use two 500-pixel
+columns (1,000 pixels total). Correcting that assertion changed no images or
+plot helper. The eight four-method figures and twelve pair figures match the
+existing layout.
+
+**Decision:** retain this as an opt-in diagnostic. Lower background spread and
+slightly higher pooled correlations do not show preserved real molecular
+contrast, better counting/chemistry, calibrated uncertainty, or resolved
+registration. No method is selected or promoted, and no new campaign is
+started. The scientific deliverable is the measured comparison with these
+limits, not a claim that all numerical diagnostics replay exactly.
+
+Local report: `results/masked_preprocessing_20260918/real4_v1_report.md`.
+Outputs: `real4_v1/`; figures: `real4_v1_figures_v1/`; evidence under
+`run_logs/real4_v1/`, including the unchanged initial verifier/log,
+`scientific_saved_table_review.md`, `stationarity_roundoff_review/REPORT.md`
+and the separate `stationarity_roundoff_parent_check/` reproduction. These
+generated artifacts stay untracked. The completed job and all prior jobs
+remain closed; all workers and the current monitor are retired.

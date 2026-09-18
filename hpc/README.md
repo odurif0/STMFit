@@ -674,8 +674,25 @@ hashes, fetch arrays/tables and Slurm logs locally, and use a separate local
 folder for saved-only checks and figures. Never overwrite failed or prior runs.
 The script does not resubmit itself. The authorized pilot was submitted exactly
 once as job **11820414** on 2026-09-18 at 22:25:06 CEST, from scientific
-source `cb3b2d9843eccac2612859fe8b19cfe609fdd074`. It is pending a node, with no scientific result
-yet. The one-job allowance is consumed. Source/input hashes and Julia 1.13
-identity, metadata-only checks, launcher dry-run and scheduler test-only passed;
-these do not certify a future compute-node run or scientific validity. No
-production promotion is claimed.
+source `cb3b2d9843eccac2612859fe8b19cfe609fdd074`. It completed **0:0** on
+`vipc2169`, 23:32:39–23:33:34 CEST (**55 s**). Slurm allocated eight CPUs for
+four requested; useful concurrency remained four one-thread commands. All four
+stages exited zero. The 37 outputs and Slurm log were fetched once and their
+remote/local hashes match; all 33 source and seven input identities stayed
+unchanged. The monitor is stopped and the one-job allowance is consumed.
+**Never resubmit or requeue this completed pilot.**
+
+Saved-output checking retains **30,811 passes / 15 strict failures**: only the
+near-zero stationarity scalar differs after physical-coefficient export. A
+separate 118/118 arithmetic check reproduces the export-rounding mechanism and
+bounds all 24 view discrepancies; it does **not** recover exact stationarity
+replay or exclude every small error. The original checker/tolerance and failed
+log remain unchanged. All other plane/row/objective/mask/metric/native-baseline
+checks pass. Twenty saved-array figures were generated, with all four common
+comparisons inspected. Background spread decreases, but forward/backward RMS
+changes are mixed; no observed-pixel loss is added and the incomplete scan stays
+`PARTIAL`. Every diagnostic best lag is boundary-limited and ambiguous. No
+count/classifier/grade, calibrated noise claim, method selection or production
+promotion follows. See the September 18 journal and local report
+`results/masked_preprocessing_20260918/real4_v1_report.md` for the measured results
+and verification limits.
