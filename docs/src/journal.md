@@ -6358,3 +6358,52 @@ not chemical class counts. None of these observations was used for retuning.
   including the preserved failed checker and intermediate layout probe.
 
 No generated results, raw inputs or benchmark-derived reports are committed.
+
+
+### 2026-09-18 — Bounded label-free improvement exploration authorized
+
+The user approved exploring the mathematical improvement avenues discussed after
+completion of unknown25 and the fixed full146 reconstruction. The scientific
+deliverable is measured evidence separating numerical fitting limitations,
+representation/acquisition confounding, and missing independent chemical signal;
+it is not a new benchmark champion or automatic promotion.
+
+The first pass is limited to one half-day of development/analysis and at most
+one Viper job (four requested CPUs, 16 GB, two hours; allocation can be eight
+CPUs). Four opt-in diagnostics are prepared: constrained variable projection of
+Gaussian amplitudes/background at fixed candidate N; saved-patch representation
+attribution; fixed-geometry acquisition/noise evidence; and actual raw-STM
+unknown25 overlays plus an available-channel inventory. Synthetic tests and
+lightweight saved-output analysis are local under Julia 1.13. Multi-file fitting
+and heavy image diagnostics run only on Viper, after a dry-run. No experiment
+outcome or gain is claimed at this preparation checkpoint.
+
+The four raw diagnostic scans are selected **only from saved unknown25 counting
+diagnostics**, not external errors or chemical predictions: `260115_016.sxm`
+(smallest finite relative effective-GCV gap), `251206_013.sxm` (largest saved
+forward/backward NRMSE), `260215_022.sxm` (lexicographically first actual adaptive
+support rescue), and `251206_034.sxm` (median finite relative GCV gap). The
+`*_keep` policies are not rescue activations. The original selected summary
+remains necessary to restore support. Neighboring candidate counts, if fitted,
+are saved `N_selected-1`, `N_selected`, `N_selected+1`; this is a local diagnostic,
+not an exhaustive search or replacement `N_selected` policy. Infeasible and
+failed cases remain visible.
+
+All existing production configs, sources and outputs remain the reference.
+New settings belong only to `config/label_free_exploration.toml`, which delegates
+physical model/selection/preprocessing to the explicit original molecule config.
+No benchmark label, expected N, sequence, composition prior, reference prediction
+or grade may choose parameters or candidates. No label-guided feature/seed/
+threshold search, dependency update, new workflow framework, QE run, or reopening
+of the retired T3/T11–T13 campaigns is part of this pass. An additional measurement
+can be recommended, not simulated into a claim of observed chemical validation.
+
+Two mathematical corrections motivate the diagnostics. An empirical supervised
+LDA score in the historical notes is not an information-theoretic/Bayes ceiling.
+GCV remains the canonical practical per-candidate criterion, but ordinary GCV is
+not a universal guarantee under nonlinear constrained fitting or spatially
+correlated residuals. The `n_eff = n ÷ 9` placeholder is not recalibrated. Variable
+projection retains the full model parameter count in GCV; numerical elimination
+of linear variables does not remove their statistical degrees of freedom.
+Stability frequencies and component vote margins are not calibrated probabilities
+of correct molecular count or chemical identity.

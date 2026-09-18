@@ -30,7 +30,7 @@ STMFIT_DATA_DIR=/path/to/data julia -t 4 --project=. test/batch_full.jl 48 \
 | `pixel resolution` | `range_nm / width` (from the SXM header) |
 | `FWHM range [lo, hi]` | Detect peaks in the chain-axis profile (weighted PCA → bright-pixel strip), fit half-max width per peak, take [25%, 95%] quantiles (25% excludes under-resolved outliers that would starve the fit) |
 | `repeat spacing` | Median peak-to-peak distance along the chain axis |
-| `spatial correlation range` | 2D isotropic autocorrelation on the full preprocessed image; range = first lag where ρ(h) drops to 1/e |
+| `spatial correlation range` | 2D isotropic autocorrelation on the full preprocessed image; first lag where ρ(h) drops to 1/e. Descriptive image correlation, not necessarily noise-only correlation. |
 
 ### Derived from a physical/numerical principle [principled, one fixed choice]
 
@@ -44,7 +44,7 @@ STMFIT_DATA_DIR=/path/to/data julia -t 4 --project=. test/batch_full.jl 48 \
 | `max_overlap` | 0.60 (Gaussian pair-overlap floor; sets the spacing lower bound) |
 | `support_noise_k` | 2.5 (SNR threshold k·σ on the support envelope) |
 | `support_padding_nm` | `= fit_width_nm` (pad by one tube half-width to avoid edge truncation) |
-| `selection_criterion` | `gcv` (valid under strong spatial correlation — see §Effective sample size) |
+| `selection_criterion` | `gcv` (canonical practical score, with correlation/nonlinearity limits — see §Effective sample size) |
 | `flatten` | `plane+rows` (STM scan-line + plane correction) |
 
 ### Free (not objectively measurable; left to default)
@@ -77,24 +77,29 @@ deferred to a separately preregistered v3 study and do not alter v2.
 
 ## Effective sample size — why GCV is the canonical criterion
 
-The STM residual field is strongly spatially correlated (ρ ≈ 0.9–0.95 at
-lag 1; autocorrelation range 17–100 px). The fit window (~10 px) is **smaller**
-than this correlation range, so the number of independent observations inside
-the window is not meaningfully estimable: any `n_eff` (the `n÷9` heuristic, a
-Durbin–Watson AR(1) estimate, or a variogram estimate) is an arbitrary choice
-that changes the absolute scale of BIC/AICc by orders of magnitude.
+The reported STM image/residual correlations are strong (ρ ≈ 0.9–0.95 at
+lag 1; reported range 17–100 px). A narrow fit tube (~10 px across) may contain
+too little independent spatial information to estimate a correlation model
+reliably. Correlation measured over the molecular image also includes signal
+structure: it is not automatically a background-noise covariance estimate.
 
-BIC and AICc assume `n` independent observations. Because `n_eff` is undefined
-here, **their absolute values are not interpretable** as model-selection scores;
-they are retained only as shape diagnostics (how their *ranking* changes across
-N, not their magnitudes).
+The `n÷9` heuristic is a fixed placeholder, not a measured number of independent
+observations. Replacing it with another ad hoc effective sample size can greatly
+change absolute BIC/AICc values without improving the noise model. Their iid
+absolute values must therefore not be interpreted as calibrated model evidence;
+they remain secondary diagnostics/guards, not a replacement for canonical GCV.
 
-**GCV** (`RSS·n/(n−p)²`) sidesteps the issue entirely: it is the analytical
-leave-one-out cross-validation error of a linear smoother and does not require
-choosing an `n_eff`. It is therefore the canonical practical criterion for
-`N_selected`, and the selection by GCV is robust to the threshold and
-reproducible across runs. BIC/AICc remain secondary diagnostics whose absolute
-scale must not be trusted.
+**GCV** (`RSS·n/(n−p)²`) avoids inserting an arbitrary `n_eff` into the
+per-candidate score and remains the canonical practical criterion. For a linear
+smoother, generalized cross-validation approximates leave-one-out error by
+replacing individual leverage corrections with their average; it is not the
+exact leave-one-out identity in general. This code also uses a parameter-count
+approximation in a nonlinear, constrained fit. Spatial correlation, active
+bounds and model mismatch can therefore affect its predictive interpretation.
+GCV does not by itself calibrate count uncertainty or establish chemical truth.
+BIC/AICc remain secondary diagnostics/guards; the `n ÷ 9` placeholder is unchanged.
+Numerically profiling amplitudes/background must not reduce the model parameter
+count used in GCV.
 
 ## Calibrating a new molecule
 
@@ -107,10 +112,13 @@ scale must not be trusted.
 5. If a parameter looks off (e.g. FWHM under-estimated on a noisy scan), measure
    on 2–3 scans and take the median.
 
-The correlation range and noise level are **instrument + preprocessing**
-properties, not molecule properties: they are the same for any molecule on the
-same STM with the same flatten/smooth settings. Only the molecule-specific
-quantities (FWHM, spacing, n_max) need re-measurement.
+Noise scale and correlation depend on acquisition, tip/feedback state and
+preprocessing. They should not be assumed identical across sessions merely
+because the instrument and flatten/smooth settings are unchanged. Estimates
+from an image containing the molecule can also depend on its structure.
+Recheck these quantities from suitable background or independent acquisition
+evidence when transferring calibration, as well as molecule-specific FWHM,
+spacing and `n_max`. This caution does not change the current production config.
 
 ## Structured evaluator-v1 is not physical calibration (correction3 pending review)
 
@@ -193,3 +201,26 @@ not a recovered calibration or an inferred original formula. Its 9×9 grid and
 normalization are fixed before comparison. The mold/Fisher settings port the
 existing method; no benchmark labels, expected counts, or frozen predictions
 are used to calibrate these quantities. The counting calibration is unchanged.
+
+
+## Opt-in label-free exploration (2026-09-18)
+
+`config/label_free_exploration.toml` is diagnostic configuration, not a new
+molecular calibration. Its empty `[model]`, `[selection]` and `[preprocessing]`
+sections do not replace the explicit original molecule config. Native support,
+amplitude/geometry bounds, and selection settings remain fixed. Unknown adaptive
+inputs still require their original selected summary.
+
+`[counting_variable_projection]` supplies bounded optimizer budgets, linear
+solver/KKT/SVD tolerances, model-mapping tolerances and the explicit native
+elliptical iteration budget. They are numerical controls, not fitted physical
+quantities or externally graded hyperparameters. `[representation]` supplies
+arithmetic/serialization comparison tolerances only. `[acquisition_noise]`
+declares a small lag window, background exclusion, sample sufficiency checks and
+correlation/block diagnostics. These are exploratory validity rules, not
+calibrated uncertainty guarantees or replacement production thresholds.
+
+An empirical supervised classifier score is not an information-theoretic upper
+bound on the signal. Conversely, stable label-free clusters, lower residuals,
+view agreement or reproducible votes do not prove chemical identity. Parameters
+must not be selected by repeatedly reading external benchmark grades.

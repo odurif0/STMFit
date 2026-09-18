@@ -549,3 +549,37 @@ new descriptor and numerical port before benchmark comparison:
 These are fixed settings, not knobs to search against the benchmark. Invalid
 patches remain explicit missing inputs. Counting continues to use its own
 existing `[model]`, `[selection]`, and `[preprocessing]` config unchanged.
+
+
+## Opt-in diagnostic exploration settings (2026-09-18)
+
+`config/label_free_exploration.toml` is used only by standalone exploration tools;
+it is not a production config. Pass the original molecule config separately.
+Its empty `[model]`, `[selection]`, `[preprocessing]` tables make this separation
+explicit and must not be interpreted as physical defaults.
+
+- `[counting_variable_projection]`: `outer_maxeval`, `outer_maxtime_s`,
+  `outer_xtol_rel`, `outer_ftol_rel` bound the profiled optimization;
+  `linear_maxiter`, `linear_kkt_atol`, `linear_kkt_rtol`, `linear_bound_atol`,
+  `linear_svd_rtol` control the bounded linear subproblem;
+  `mapping_atol`, `mapping_rtol` check agreement with the native forward model;
+  `native_elliptical_maxiter` records the native refinement budget explicitly.
+  Full model parameter counts are retained in GCV.
+- `[representation]`: `identity_atol` checks signed-mass/linear identities;
+  `descriptor_atol` accounts for the saved descriptor's serialization precision.
+  Neither changes descriptor values or production predictions.
+- `[acquisition_noise]`: `channel`; declared `lag_x_min_px`, `lag_x_max_px`,
+  `lag_y_min_px`, `lag_y_max_px`, `lag_bound_basis`; registration sufficiency
+  `min_registration_pixels`, `min_row_pixels`, `min_positive_correlation`,
+  `ambiguity_correlation_gap`; molecular/background exclusion `footprint_sigma`,
+  `background_guard_nm`, `min_background_pixels`, `min_background_fraction`;
+  ACF reporting `acf_max_lag_px`, `min_acf_pairs`, `acf_threshold`; proposed
+  block feasibility `block_length_multiplier`, `min_usable_blocks`,
+  `block_min_occupancy`; local-view reporting `local_patch_radius_nm`,
+  `min_patch_pixels`. An ACF that does not cross within its measured range is
+  censored, not evidence of a precisely measured correlation length. Search
+  boundaries and insufficient support are reported, not silently relaxed.
+
+These settings were declared without benchmark outcomes. No arbitrary `n_eff`
+calibration, chemical prior, new production selection or automatic promotion is
+introduced. See the dated research journal for the bounded scope and results.

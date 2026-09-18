@@ -1,0 +1,49 @@
+# Bounded, opt-in label-free exploration; not a production calibration.
+# Physical model, selection and preprocessing are read unchanged from the
+# explicitly supplied molecule config, not overridden by these empty sections.
+[model]
+[selection]
+[preprocessing]
+
+[counting_variable_projection]
+outer_maxeval = 800
+outer_maxtime_s = 30.0
+outer_xtol_rel = 1e-6
+outer_ftol_rel = 1e-9
+linear_maxiter = 1000
+linear_kkt_atol = 1e-12
+linear_kkt_rtol = 1e-10
+linear_bound_atol = 1e-12
+linear_svd_rtol = 1e-12
+mapping_atol = 1e-10
+mapping_rtol = 1e-10
+native_elliptical_maxiter = 50
+
+[representation]
+identity_atol = 1e-12
+# Native descriptor uses %.17g; compare saved arithmetic at binary64 tolerance.
+descriptor_atol = 1e-12
+
+[acquisition_noise]
+channel = "Z"
+lag_x_min_px = -8
+lag_x_max_px = 8
+lag_y_min_px = -2
+lag_y_max_px = 2
+lag_bound_basis = "declared small residual-search window; boundary means blocked, not permission to expand"
+min_registration_pixels = 100
+min_row_pixels = 20
+min_positive_correlation = 0.2
+ambiguity_correlation_gap = 0.01
+footprint_sigma = 3.0
+background_guard_nm = 0.25
+min_background_pixels = 200
+min_background_fraction = 0.05
+acf_max_lag_px = 16
+min_acf_pairs = 100
+acf_threshold = 0.36787944117144233
+block_length_multiplier = 2.0
+min_usable_blocks = 4
+block_min_occupancy = 0.8
+local_patch_radius_nm = 0.4
+min_patch_pixels = 30
