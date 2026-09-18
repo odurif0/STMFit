@@ -7067,3 +7067,37 @@ previous previews and final visual notes are retained under
 `results/masked_preprocessing_20260918/run_logs/real4_v1/`. No remote scientific
 source, settings, arrays or predictions changed. Job `11820414` remained pending
 at the 22:39:47 CEST check; the single-job monitor remains active.
+
+
+The independent saved-output checker is ready before real results arrive.
+It imports only Julia standard libraries; it does not load the producer, raw
+SXM reader, estimator or solver. The parent independently passed **23,843/23,843
+synthetic assertions** (20,846 regular/prior-summary checks plus 2,997 checks of
+retained forced nonconvergence). A deliberately wrong raw-hash manifest failed
+exactly its intended assertion (2,996 pass / one intended fail, exit 1).
+The parent reviewed the equations, support intersections, mapping and failure
+handling. Earlier negative metric/plane/process/mapping probes and failed
+checker-development logs are retained. One checker-only bug reversed the
+reported difference-median convention: it must be **backward minus forward**.
+Correcting that expression did not change the producer or scientific settings.
+
+The checker reconstructs exported physical planes/rows, final fixed-scale
+objectives and stationarity, observed availability, the fixed 85-lag supports,
+all/native-pair intersections, signed metrics and background medians. It does
+not independently recover the initial OLS/MAD or iteration history, unknown
+native estimator parameters, raw parsing/preprocessing or a true background
+mask. Full-frame counts are reproducible from saved arrays here because the
+frozen production stride is one. Raw SHA claims are bound to the parent's saved
+`input_sha256.toml` without opening SXM bytes; the parent separately verifies
+actual local/remote input bytes. The four earlier acquisition summaries have
+the expected native-reference/support-hash schema, but numerical comparison
+awaits this job's actual outputs.
+
+The checker is
+`results/masked_preprocessing_20260918/run_logs/real4_v1/verify_saved_real4.jl`
+(SHA256 `eb4ae4dd052f3a4a94217a744c524dfba883225ac6a86694f630b1c54684b482`).
+These are **synthetic checker tests, not verified real-data findings**.
+Both implementation workers have handed back ownership and are retired.
+The latest real-job check, 22:55:20 CEST, still shows `11820414` pending under
+`QOSGrpCpuLimit`: a group CPU-quota wait, not a program failure. No further
+submission, resource change, raw-data analysis, fit or grade was launched.
