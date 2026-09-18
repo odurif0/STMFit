@@ -2304,8 +2304,21 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
-> Updated 2026-09-17. Questions from earlier sessions are archived in
+> Updated 2026-09-18. Questions from earlier sessions are archived in
 > `journal_archive.md`.
+
+0d. **Separate numerical optimization limits from missing chemical information**
+    → **BOUNDED LABEL-FREE EXPLORATION AUTHORIZED (Sep 18)**: one half-day and at
+    most one new Viper job, not a restart of completed reconstruction jobs.
+    Saved-patch audits retain every key and show strong transverse-gradient
+    attribution, not causal proof of an artefact. All25 raw-QC plates are ready;
+    two scans have substantial nonfinite raw areas that native preprocessing
+    imputes. A single N9 smoke improves elliptical RSS by about47.2% with extra
+    bounded optimization, without proving the count or equal-budget superiority.
+    Four-file count/acquisition diagnostics and two fixed forward-Fisher replays
+    are prepared from scientific source `35c7d24`. No new grade, production
+    setting or promotion decision is part of the pass. Accuracy, calibrated
+    uncertainty and unknown-chain chemical identity remain unestablished.
 
 0c. **Apply a reproducible native pipeline to raw 10–20mer scans** → **UNKNOWN25
     OUTPUTS COMPLETE; SCIENTIFIC VALIDATION STILL LIMITED (Sep 17)**: after the
@@ -2328,7 +2341,9 @@ See `docs/src/selection.md` for the full guard specification and
     **677/854 (79.3%), 36 exact chains**. The reconstruction is not promoted or
     called an exact historical recovery; unknown-chain chemical validation and
     milestone closure remain unresolved. No benchmark-guided tuning or new
-    method campaign follows. Do not resubmit old or current jobs.
+    method campaign automatically follows this completion. The separately
+    authorized bounded exploration is recorded in0d. Do not resubmit either
+    completed reconstruction job.
 
 0b. **Can label-free unit assignment reach the promotion bar?** → **RESOLVED
     (Aug 3)**: the label-free champion (soft vote of k-means 4-view and GMM
