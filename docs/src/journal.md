@@ -6407,3 +6407,41 @@ projection retains the full model parameter count in GCV; numerical elimination
 of linear variables does not remove their statistical degrees of freedom.
 Stability frequencies and component vote margins are not calibrated probabilities
 of correct molecular count or chemical identity.
+
+
+**Pre-run candidate completeness clarification:** the selected-N neighborhood
+is augmented by the already saved finite `N_eff` and effective runner-up. For
+`260115_016.sxm`, saved selected N is 6 but effective-GCV winner/runner-up are
+8/7; omitting 8 would omit the ambiguity that selected this scan. The final
+candidate sets, fixed before any diagnostic fit, are 5/6/7/8 for that scan,
+10/11/12 for `251206_013.sxm`, and 8/9/10 for both `260215_022.sxm` and
+`251206_034.sxm` (13 N candidates total). This derives only from the saved
+label-free counting summary, not human estimates or benchmark counts, and still
+does not constitute an exhaustive optimum or replacement selector.
+
+
+The lightweight metadata audit also separates the saved count stages: unknown25
+has 235 raw effective-GCV lobes and 222 final selected lobes; the final policy
+reduces N by one in seven files and by two in three files, leaving fifteen
+unchanged. These are **policy-stage differences, not errors against truth**.
+Only `251206_013.sxm` and `260115_016.sxm` have recorded relative effective-GCV
+gaps below the existing 0.05 ambiguity threshold. Final-policy uncertainty
+cannot be inferred from that raw-GCV gap alone.
+
+A small dedicated `hpc/label_free_exploration.sbatch` invokes the native
+`test/run_label_free_exploration.jl` driver. It runs four independent one-thread
+cases, each acquisition diagnostic followed by variable projection, records
+stage exit codes and retains failure logs. It requires Slurm for real execution
+and has a metadata-only dry-run. The driver checks the original geometry/count
+coverage and the declared candidate union, rather than accepting a hidden target
+count. Inputs are four raw scans plus unchanged original summary/base geometry
+and the explicit candidate table. No new job is submitted at this checkpoint.
+
+The first driver regression had one incorrect test-only command-token-count
+assertion (expected 19, actual 17). It was corrected after inspecting the native
+command; no scientific argument was removed. The subsequent tests also exercise
+failure propagation with small synthetic Julia subprocesses, not scientific
+fits. Initial failures and successful logs are preserved under the new result
+root. The initial SSH probe timed out; the bounded retry and inventory succeeded
+with Julia 1.13.0 and no queued jobs. Existing remote production trees remain
+untouched.
