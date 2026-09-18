@@ -672,5 +672,10 @@ Use a fresh output path with an existing parent and no symlink ancestors. Viper'
 same scratch location, not two result directories. Keep source/input paths and
 hashes, fetch arrays/tables and Slurm logs locally, and use a separate local
 folder for saved-only checks and figures. Never overwrite failed or prior runs.
-The script does not resubmit itself. The pilot is authorized and in preparation;
-no real-data result or production promotion is claimed by this entry.
+The script does not resubmit itself. The authorized pilot was submitted exactly
+once as job **11820414** on 2026-09-18 at 22:25:06 CEST, from scientific
+source `cb3b2d9843eccac2612859fe8b19cfe609fdd074`. It is pending a node, with no scientific result
+yet. The one-job allowance is consumed. Source/input hashes and Julia 1.13
+identity, metadata-only checks, launcher dry-run and scheduler test-only passed;
+these do not certify a future compute-node run or scientific validity. No
+production promotion is claimed.

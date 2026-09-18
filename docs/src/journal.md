@@ -2314,10 +2314,10 @@ See `docs/src/selection.md` for the full guard specification and
     outlier examples improve, but Huber is not uniformly better than guarded
     OLS. A correct mask protects injected contrast without proving background
     recovery; a leaky mask attenuates it, and unsupported rows lose coverage.
-    Production remains unchanged. The user now authorizes the four-scan
-    diagnostic comparison (one Viper job, 4 requested CPUs, 16 GB, 30 minutes).
-    Preparation is in progress; no job has been submitted and no real result is
-    claimed. No count/classification refit, grade or parameter search is included.
+    Production remains unchanged. The authorized four-scan diagnostic was
+    submitted once as Viper job **11820414** (4 requested CPUs, 16 GB, 30 minutes).
+    It is pending a node; no real result is claimed yet. No count/classification
+    refit, grade or parameter search is included.
 
 0d. **Label-free mathematical exploration: what is numerical, representational,
     or acquisition-limited?** → **BOUNDED DIAGNOSTICS COMPLETE; NO PROMOTION
@@ -7016,3 +7016,32 @@ fresh result location is passed canonically as
 `/viper/ptmp1/oldu/stmfit/masked_preprocessing_20260918_run_v1`. This is the same
 scratch location, not a second run. No real-data processing or job submission
 has occurred at this source-validation point.
+
+
+### 2026-09-18 — Four-scan masked-preprocessing job submitted once
+
+The authorized pilot was submitted exactly once as Viper job **11820414**
+at Slurm time **22:25:06 CEST**, from scientific source
+`cb3b2d9843eccac2612859fe8b19cfe609fdd074`. The actual command explicitly requested four CPUs,
+16000 MB and 30 minutes, with the four required variables exported on the
+`sbatch` command line. The one-job allowance is now consumed; there is no
+automatic resubmission.
+
+All 33 staged source/lock files and seven input files match their local byte
+hashes, and the Julia executable matches the local 1.13.0 binary. Login-node
+imports, four per-case metadata-only checks and the actual launcher's dry-run
+passed. No real SXM preprocessing ran on the login node. Scheduler test-only
+identifier `11820378` was not a real submission; its suggested start time is not
+a guarantee. The actual job is **PENDING**, with no node assigned, because nodes
+are unavailable/drained or reserved for higher-priority partitions. No real-data
+result is available yet.
+
+The fresh result path is
+`/viper/ptmp1/oldu/stmfit/masked_preprocessing_20260918_run_v1`; its `/ptmp` alias
+refers to the same location. The Slurm log is
+`/ptmp/oldu/stmfit/masked_preprocessing_20260918_real4_11820414.log`.
+Monitor only this new job, fetch outputs/logs when terminal, and verify saved
+arrays and fixed-support metrics before scientific interpretation. The original
+counting, chemical assignments, physical settings and completed jobs stay
+unchanged. A successful Slurm exit would not itself validate registration,
+coverage, background correctness or molecular accuracy.
