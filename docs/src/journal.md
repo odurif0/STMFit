@@ -6561,3 +6561,24 @@ The initial prototype fixed a `nothing`-to-TOML metadata serialization error;
 synthetic near-zero and tuple-comparison test errors were corrected without
 changing science. No benchmark has been regraded, no original prediction or
 count is replaced, and no new Viper job has been submitted at this checkpoint.
+
+
+### 2026-09-18 — Single bounded exploration submitted to Viper
+
+Job **11806180** was submitted exactly once at approximately12:44 CEST from
+scientific source `35c7d247331b42ffbc074e51c9ac51bf0a9f2dfb`. Its request is four CPUs,16GB,two hours;
+the scheduler may allocate eight CPUs, while scientific concurrency remains
+four one-thread cases. The complete ten-stage metadata dry-run and import-only
+Julia1.13.0/one-BLAS-thread check passed before submission. No raw fit ran on
+the login node. Scheduler test-only ID11806150 is not the scientific job.
+
+The isolated runtime at `/u/oldu/code/STMFit_labelfree_exploration_20260918` contains37 required source/lock
+files; `/ptmp/oldu/stmfit/label_free_exploration_20260918_inputs_v1` contains12 input files. Every transferred hash
+matches locally and raw symlinks were dereferenced. The new output directory
+`/ptmp/oldu/stmfit/label_free_exploration_20260918_run_v1` was absent immediately before submission. Source/inputs
+were transferred without deletion; old reconstruction trees remain untouched.
+The output/log will be fetched locally before interpretation. Initial state is
+PENDING; the scheduler's pre-submit estimate was14:10 CEST, not a
+completion promise. The one-job cap remains in force: failure is inspected and
+reported, never a reason for automatic retry, trimming candidates or relaxing
+bounds. No new batch result or benchmark gain is claimed at submission.
