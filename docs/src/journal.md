@@ -7271,3 +7271,60 @@ Outputs: `real4_v1/`; figures: `real4_v1_figures_v1/`; evidence under
 and the separate `stationarity_roundoff_parent_check/` reproduction. These
 generated artifacts stay untracked. The completed job and all prior jobs
 remain closed; all workers and the current monitor are retired.
+
+
+## 2026-09-19 — Benchmark-centered recognition: authorized saved-output first pass
+
+The user clarified that recognition quality, judged by the external benchmark,
+is the objective, then approved proceeding. Background flatness, fit RSS and
+forward/backward correlation are diagnostic proxies, not recognition gains.
+The first pass is bounded to two hours of saved-output analysis from
+13:19 CEST. Its scientific deliverable is a comparable benchmark error diagnosis
+and, where justified, at most two explicitly frozen label-free single-component
+comparisons with measured recognition outcomes. If saved outputs cannot support
+a meaningful candidate, report that limit rather than inventing a method gain.
+
+The frozen reference and reproducible reconstruction remain distinct. Correct
+units/all controls, exact chains, classification coverage, missing and extra
+lobes and class errors must accompany conditional accuracy. The 900-lobe
+assignment cache is not the 871-lobe promoted counting result. Existing grades
+are historical development evidence, not an untouched generalization test.
+New candidate definitions must be fixed before their external grades; no
+expected count, sequence, class count, position prior or benchmark label may
+enter inference, fitting, calibration, thresholds or abstention. Labels remain
+in the external audit/grader only. No supervised training is authorized.
+
+This is a new bounded analytical pass, not a restart of any completed job.
+Original sources, predictions and result trees remain immutable. No raw SXM
+processing, new fit, cluster submission, broad parameter search or production
+promotion is included in this initial saved-output scope. No new approval
+framework or runtime machinery is introduced. All earlier jobs and the
+four-scan pilot remain closed.
+
+
+Before any new candidate grade (13:28 CEST), two saved-native component
+endpoints were fixed: exact k-means decisions and exact GMM decisions, both on
+the baseline joint-validity mask. All 900 keys and seven unavailable keys remain;
+the byte-identical reconstructed soft vote is the control. No threshold, seed,
+training, feature, class mapping, count or coverage policy changes. Membership
+filtering occurs only in the existing external comparison script, leaving the
+scientific exports unfiltered. These are fusion ablations on the new explicit
+native reconstruction, not a reopened vote-weight/abstention sweep or a new
+counting run. Historical component sweeps used different realizations and remain
+negative evidence against assuming an improvement in advance.
+
+The saved vote fractions are hard seed votes, not calibrated posteriors.
+K-means additionally averages four view votes; on 893 jointly available keys
+it is exactly 0/1 on 857. Components disagree on 146 keys; the soft vote differs
+from k-means on 18 and GMM on 128. This justifies checking which component the
+fusion actually follows, but predicts no accuracy gain. Copied component
+confidence uses `max(p,1-p)` while the fused control uses `2abs(p-0.5)`;
+these scales are not directly comparable and are not evaluation thresholds.
+
+The opt-in exporter `test/export_saved_assignment_components.jl` reads only
+saved label-free predictions and uses the existing benchmark-column-rejecting
+TSV reader. It preserves copied decisions even when the printed vote rounds to
+0.5, refuses existing/dangling output paths and validates key/availability
+agreement before writing. Its Julia 1.13 synthetic checks pass 103/103; parent
+saved-output checks verify 9,002 copied fields/keys. No raw reader or estimator
+is called. Recognition results remain unmeasured at this checkpoint.
