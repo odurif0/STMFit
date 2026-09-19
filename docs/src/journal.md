@@ -2304,8 +2304,30 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
-> Updated 2026-09-18. Questions from earlier sessions are archived in
+> Updated 2026-09-19. Questions from earlier sessions are archived in
 > `journal_archive.md`.
+
+0f. **Can a bounded change improve recognition on the user's benchmark?** →
+    **SAVED-OUTPUT FIRST PASS COMPLETE; NO GAIN (Sep 19)**: the two predeclared
+    native component endpoints preserve all 900 cached keys and the same seven
+    unavailable rows. On full145, k-means gives 662/849 correct and 16 exact
+    chains; GMM gives 622/849 and 19, versus reconstructed soft vote 666/849 and
+    24, and historical reference 677/854 and 36. Correct/all870 is respectively
+    662, 622, 666 and 677; all retain 16 missing positions and 38 extra lobes.
+    Neither endpoint is promoted and no weight/threshold search follows.
+    Independent saved-row arithmetic reproduces all four physical grades and
+    their paired gains/losses. The 12 reconstruction exact-chain losses all
+    have N6; eleven involve old zero-margin decisions. Both heads share 95
+    errors on the 636 N6 positions. These diagnose existing decisions, not an
+    information ceiling or permission to restore labels. A separate source
+    finding is live asymmetric fused-fit filtering `(F + S(B))/2`; a native
+    synthetic-only probe confirms it, but its recognition effect is unknown.
+    No fix, raw reprocessing, fit, training or HPC job ran in this pass. A
+    separately scoped correction would need regenerated control and treatment
+    geometry/features, fixed inference, and external recognition grading.
+    The benchmark is reused development data; independent generalization and
+    chemical/localization causes remain unestablished. Production and all
+    previous completed jobs stay unchanged.
 
 0e. **Can missing-value-aware background estimation reduce preprocessing bias
     without removing molecular contrast?** → **FOUR-SCAN COMPARISON COMPLETE;
@@ -7328,3 +7350,162 @@ TSV reader. It preserves copied decisions even when the printed vote rounds to
 agreement before writing. Its Julia 1.13 synthetic checks pass 103/103; parent
 saved-output checks verify 9,002 copied fields/keys. No raw reader or estimator
 is called. Recognition results remain unmeasured at this checkpoint.
+
+
+## 2026-09-19 — Two frozen native recognition endpoints: negative result, no promotion
+
+**Deliverable:** use the external recognition benchmark to decide whether a
+fixed saved-head change improves assignment, rather than infer improvement from
+RSS, smoother backgrounds or registration correlation. The authorized first
+pass began at 13:19 CEST with a two-hour cap. Both candidate definitions were
+fixed at 13:28:29; the single new four-profile external grade began at 13:50:12.
+The result is negative and closes this saved-output pass. The exporter and its
+103 synthetic checks are in `800dfb4`; no production model was changed.
+
+### Measured recognition result
+
+| Profile | Correct / all 870 | Correct / classified | Classified coverage | Emitted errors | Exact chains / 145 |
+|---|---|---|---|---|---|
+| Historical reference | 677/870 (77.8%) | 677/854 (79.3%) | 98.2% | 177 | 36 |
+| Reconstructed soft vote | 666/870 (76.6%) | 666/849 (78.4%) | 97.6% | 183 | 24 |
+| K-means endpoint, same mask | 662/870 (76.1%) | 662/849 (78.0%) | 97.6% | 187 | 16 |
+| GMM endpoint, same mask | 622/870 (71.5%) | 622/849 (73.3%) | 97.6% | 227 | 19 |
+
+Each endpoint copies the exact saved head decisions on the baseline joint-valid
+mask; it does not rerun a classifier or retune any threshold, polarity, feature,
+seed, self-training step or abstention rule. Scientific exports retain all 900
+keys across 146 files and seven unavailable keys. External manifest filtering alone
+selects the common 892 keys across 145 files. Six unavailable benchmark keys remain:
+five aligned control positions and one extra. One unavailable key is among the
+eight rows of the outside-benchmark scan. The reference emits binary labels at
+all 892 keys. All profiles keep 16 missing control positions across 14 short
+scans and 38 extra lobes across 25 long scans. The 193/204/208/248 positions not
+correct include emitted errors; they are **not model abstention counts**.
+
+This is the cached **900-lobe own-N assignment lineage**, not the incompatible
+871-lobe promoted counting result. Counts and key membership within the
+scientific cohort never change. The exact historical descriptor/weights are
+still not recovered; the reference is an archival output, not an exactly
+reproduced fitting pipeline. Neither new endpoint improves either baseline.
+The historical headline remains unchanged; no automatic promotion or further
+vote/feature/seed/abstention search follows.
+
+### What failed, including the favorable cases
+
+Against reconstructed control, k-means gains correct positions on 5 scans,
+loses on 9, and ties on 131. It gains no exact chains and loses eight. GMM wins
+on 18, loses on 57, and ties on 70; it gains seven exact chains but loses 12.
+Against the reference, k-means has 14 wins, 27 losses and 104 ties and no exact
+gain and 20 losses; GMM has 14/62/69 and three exact gains and 20 losses.
+
+The class-confusion totals explain the net loss under the existing physical
+grading convention. Reference `(TN,FP,FN,TP)` is `(507,59,118,170)`;
+reconstruction `(519,43,140,147)`; k-means `(522,40,147,140)`; GMM
+`(445,117,110,177)`. K-means avoids three false positives but adds seven false
+negatives (-4 correct). GMM recovers 30 false negatives but adds 74 false
+positives (-44 correct). Higher GlcNAc sensitivity alone is not an improvement.
+These class counts are external diagnostics, never a desired composition or
+an inference prior.
+
+The grader independently chooses identity/reversal using external truth.
+Against reconstructed control, k-means changes 17 benchmark keys on 16 scans
+and changes orientation on two; its direct delta at the control alignment is
+-7, then reselection adds three, giving -4. GMM changes 128 keys on 98 scans
+and changes orientation on 13; direct -60 plus reselection of 16 gives -44.
+This is bookkeeping of the existing grade, not a new alignment optimization in
+inference or an insertion/deletion/spatial ground-truth match. The full audit
+retains all 725 pair/file rows and 4,460 pair/key rows, including adverse and
+unchanged cases and both mappings.
+
+For the 106 N6 scans, the palindromic external control makes both orientations
+tie and the grader keeps identity. Of 636 positions, 442 are correct in both
+heads, 95 wrong in both, 67 correct only in k-means, 31 only in GMM and one
+jointly unavailable. The 95 common errors occur on 65 scans (23 truth-0 and
+72 truth-1 positions). Selecting one of the two unchanged head labels cannot
+repair these particular errors. **No per-lobe best-head selector or oracle
+prediction was built.** This is not a limit on information in the raw images.
+
+### Reproduced reference/reconstruction diagnosis
+
+The initial independent saved-row audit reproduces all original physical
+per-file and position grades: 677/854 and 36 exact versus 666/849 and 24.
+Both archived per-file grade TSVs are byte-identical to the new run's baseline
+grades. No count or key changes explain the difference. All 12 exact-chain
+losses have N6, remain QC `ok`, and acquire a GlcNAc false negative `1 -> 0`.
+Eleven of those old source decisions have exactly zero stored margin; the
+twelfth is 0.0875. Across all keys, 38/39 changes `1 -> 0` start at zero margin.
+This demonstrates fragile old decisions, not permission to restore labels,
+retune ties or claim the responsible scientific stage is identified.
+
+The -11 correct-position difference comprises five formerly correct positions
+now unavailable and six net additional emitted errors. The strict missing-patch
+policy explains the abstentions; the old binary outputs do not establish
+usable raw evidence. At the reference's alignment, label changes sum to -17;
+three seven-lobe reversal reselections recover six, explaining the published
+-11. Count-matched N6 still has 113 -> 121 emitted errors. QC `ok` contains
+114/183 reconstructed errors and all 12 exact losses; it is not chemical
+validation. The 13 filename-date groups are descriptive groups, not established
+independent molecules. No learned error predictor or date-specific adjustment
+was constructed.
+
+### Source finding: actual fused-fit preprocessing is direction-asymmetric
+
+The blind source reviewer verified the actual production call path, not only
+an isolated helper formula. `GaussianFit2D.preprocess_channel` returns flattened
+unsmoothed `z` fourth and separately allocated `z_smooth` fifth. In
+`_fused_roi_data`, backward `z` is overwritten by its smoothed version. Hence
+fit data use `(F + S(B))/2`, while the ROI uses `(S(F) + S(B))/2`. The extractor,
+batch, selector and diagnostic callers pass a freshly decoded image; there is
+no hidden forward smoothing that restores symmetry. The acquisition diagnostic
+already mirrors this convention in its missing-pixel support rule.
+
+The retained Julia 1.13 probe uses generated 33x33 arrays and `flatten="none"`;
+it calls native preprocessing/ROI functions but no raw reader or fitter. Six
+assertions pass, independently repeated by the parent. Swapping directions
+changes the centered fit map by a maximum of 0.09899306394259819 in arbitrary synthetic
+amplitude units, while its ROI mask stays equal. Radius zero restores the
+symmetry. This is a verified live implementation inconsistency, traced by blame
+to May 12 (`04b66166`), not a measured real-data recognition loss or proof of
+intended filtering policy. It predates this reconstruction and does not by
+itself explain the reference/reconstruction delta.
+
+**No production fix or third candidate is included here.** A useful next test
+would fix one filtering convention prospectively and regenerate both its
+control and treatment geometry/features at the same cached label-free counts,
+fit budget and remaining settings. Comparing a newly fitted correction only
+with an old cache would confound filtering and regeneration. Such compute needs
+a separate bounded scope; neither this issue nor the negative endpoint result
+authorizes another job. It is not a reason to reopen registration, DFT, lost
+producer recovery or weight sweeps.
+
+### Verification, limits and retained outputs
+
+- Julia 1.13 only. Exporter 103/103; parent 9,002 real-copy assertions; original
+  tables, cached geometry, eight source/config locks and production defaults
+  unchanged. No Project/Manifest modification or dependency addition.
+- Initial independent audit 14,068 assertions with 12 physical-convention
+  synthetic tests. Final endpoint audit 22,065 assertions reproduces all 580
+  native per-file physical records and 24 position rows; 21 inputs hash-checked
+  before/after. Parent checks all paired aggregates, the N6 error intersection,
+  the 19+21 input pins and both unchanged historical grade TSVs (85 checks),
+  plus 44 native aggregate/confusion/coverage identities. The parent repeated
+  all 12 synthetic audit tests and the native six-assertion filtering probe.
+- Confidence values are uncalibrated and on different head/fusion scales;
+  neither confidence nor QC thresholds enter the grade. This heavily reused
+  benchmark is development evidence, not an untouched generalization test.
+  Independent molecule/date/sequence confirmation remains unestablished.
+  Wrong-N alignment and unknown localization limit causal chemical diagnosis;
+  no universal 80% ceiling follows.
+- No raw SXM decoding, optimizer, classifier training, local multi-file fit,
+  remote command, scheduler job, restart, changed inference parameter or
+  promotion occurred. All prior completed experiments remain closed.
+
+Outputs are under `results/benchmark_recognition_20260919/`: the French
+`report.md`, frozen unfiltered exports in `component_endpoints_v1/`, unchanged
+external membership filtering in `external_comparison_*/`, one four-profile
+native grade in `external_grade_endpoints_v1/`, the original error audit in
+`external_error_audit/`, the separate final replay in
+`external_error_audit/frozen_endpoint_comparison_v1/`, and the blind source
+review/probe in `label_free_candidate_review/`. `docs/src/unit_assignment.md`
+records the negative comparison and opt-in exporter; generated files remain
+ignored. The definitions and grading commands are retained in `run_logs/`.

@@ -1594,6 +1594,60 @@ comparison and grade are complete, with no label feedback into production.
 This does not recover the lost descriptor, rebuild the promoted counting chain,
 or validate the chemistry of the unknown 10–20mer application.
 
+### Saved native component endpoints (2026-09-19; no improvement)
+
+Two fusion-removal comparisons were fixed before their external grade. They
+copy the exact saved k-means or GMM decisions on the **same joint-validity
+mask** as the reconstructed soft vote. All 900 cached keys and seven unavailable
+keys remain. Neither head is retrained. Counts, features, seeds, class polarity,
+thresholds and production defaults do not change. This is not the promoted
+871-lobe counting lineage or an end-to-end counting-policy evaluation.
+
+| Profile | Correct / all 870 controls | Correct / classified | Classified coverage | Emitted errors | Exact chains / 145 |
+|---|---|---|---|---|---|
+| Historical reference | 677/870 (77.8%) | 677/854 (79.3%) | 98.2% | 177 | 36 |
+| Reconstructed soft vote | 666/870 (76.6%) | 666/849 (78.4%) | 97.6% | 183 | 24 |
+| K-means endpoint, common mask | 662/870 (76.1%) | 662/849 (78.0%) | 97.6% | 187 | 16 |
+| GMM endpoint, common mask | 622/870 (71.5%) | 622/849 (73.3%) | 97.6% | 227 | 19 |
+
+Every profile has 16 missing control positions and 38 extra predicted lobes.
+Native profiles have five unavailable aligned positions; the reference has
+none. The sixth unavailable benchmark row is an extra; the seventh is outside
+the 145-file manifest. Missing rows and emitted errors are not abstentions.
+Neither endpoint improves the reference or reconstructed control. **No promotion,
+new weight/threshold sweep, or restored historical labels follows this result.**
+This repeatedly used benchmark supplies development evidence, not untouched
+validation. Independent molecule/date/sequence confirmation remains necessary.
+
+The uncalibrated vote fractions differ from calibrated chemical probabilities.
+Head confidence is `max(p,1-p)`; fused confidence is `2abs(p-0.5)`. Their magnitudes
+and QC cutoffs are not comparable. The exporter preserves the stored head label
+even if its printed vote rounds to 0.5, and does not export amplitude for a
+second physical remapping by the grader. It uses only saved predictions:
+
+```bash
+julia --startup-file=no --threads=1 --project=. test/export_saved_assignment_components.jl \
+  results/reconstructed_cc_soft_v1/viper_20260917_full146_v1/predictions.tsv \
+  results/reconstructed_cc_soft_v1/viper_20260917_full146_v1/pred_kmeans.tsv \
+  results/reconstructed_cc_soft_v1/viper_20260917_full146_v1/pred_gmm.tsv \
+  results/new_saved_component_endpoints
+```
+
+The destination must be new. Run manifest filtering only through the external
+comparison script below, then pass the filtered endpoint TSVs to the existing
+`--full145-own-n` report. The recorded four-profile result, paired failures and
+read-only error audit are in `results/benchmark_recognition_20260919/`; the
+French synthesis is `report.md`. Exporter tests are
+`test/test_saved_assignment_components.jl` (Julia 1.13).
+
+The source review separately verified asymmetric filtering in the fused fit
+input: `(F + S(B))/2`, versus the symmetrically smoothed ROI map. This is an
+old live implementation inconsistency, not a demonstrated cause of the grade
+loss. A six-assertion synthetic native probe confirms direction-swap sensitivity;
+no raw data or fit ran. Correction needs a separate, fixed comparison with
+regenerated control and treatment geometry/features. Neither a correction nor a
+third candidate is included in this saved-output experiment.
+
 ### Native numerical conventions
 
 The constant-current port retains the old first-axis-fast cube index, sampling
