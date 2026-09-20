@@ -57,6 +57,26 @@ and the Slurm log are fetched and checksummed; the full report is
 `hpc/compare_label_free_signals.sbatch`; this completed job must not be resubmitted
 automatically. Counting and unknown25 remain unchanged.
 
+The latest bounded numerical comparison (job **11891104**, **9m04s**, exit 0:0;
+source **0d58b44**) improves **673 → 675 correct / 870** with training-mean Fisher
+centering. Classified accuracy is **675/849 (79.5%)**, with **33/145 exact chains
+unchanged**. Both changed decisions improve a scan; none loses correctness.
+Use **`config/unit_assignment_centered_fisher.toml`** for this latest opt-in
+working candidate, not a promoted champion. Historical **677/870, 36/145** still
+leads by two correct positions and three exact chains merely to equal it.
+
+The independent final-covariance Ledoit-Wolf arm gives **665/849 (78.3%),
+34/145 exact**: eight fewer correct positions despite one extra exact chain,
+so it is not retained as the working replacement. All twelve control tables
+replay exactly; all arms keep 146 scans / 900 keys, seven unavailable rows and
+849/870 classified coverage. All 590 outputs and the Slurm log are fetched and
+checksummed. The label-free numerical diagnostics improve covariance conditioning
+but do not establish recognition or calibrated confidence. The full report is
+`results/numerical_signals_20260921/report.md`; the runner is
+`hpc/compare_numerical_signals.sbatch`. This comparison is complete: no automatic
+resubmission, combination, post-grade tuning, counting or unknown25 rerun.
+The extensively reused benchmark is development evidence, not independent validation.
+
 This page is the hand-off document for reproducing the current chitosan workflow
 without relying on prior conversation context.  The goal is a label-free fitting
 and model-selection pipeline that is externally graded on the benchmark and then

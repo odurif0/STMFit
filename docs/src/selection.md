@@ -33,6 +33,14 @@ retained as the working reference; the affine-descriptor candidate remains
 673/33, below historical 677/36. These fixed-geometry, label-free-inference
 experiments change no selected N, count-selection rule or counting claim.
 
+The subsequent numerical comparison improves assignment to **675/870 correct,
+675/849 (79.5%), 33/145 exact** with training-mean Fisher centering. It is the
+latest opt-in working candidate, not a champion: historical 677/36 still leads.
+Independent final covariance shrinkage gives **665/870 and 34/145** and is not
+retained as the replacement. Coverage stays 849/870, all cached N are unchanged,
+and neither result reruns or revalidates count selection or the unknown25
+application. The benchmark is reused development data, not independent validation.
+
 How STMFit chooses the optimal number of lobes (N) from the sweep results.
 
 ## Selection Hierarchy

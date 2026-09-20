@@ -601,7 +601,7 @@ projection affects this one descriptor, not images, patches, CC/Fisher or
 k-means inputs. These two predeclared comparisons are not promoted defaults.
 Their completed full145 grades are **672/849, 28 exact** for the first moment
 and **673/849, 33 exact** for affine residuals, versus control 672/849 and 29.
-Retain `unit_assignment_affine_residual.toml` as the opt-in working candidate;
+That comparison retained `unit_assignment_affine_residual.toml` as the opt-in working candidate;
 the first moment is a recorded negative experiment. The affine candidate still
 trails historical 677/854 and 36 exact. All sixteen final changes end at the
 unchanged 0.5 vote tie, not at a newly calibrated confidence. No threshold or
@@ -628,8 +628,8 @@ These independent candidates are not combined, defaults or promoted methods.
 The completed September 21 comparison is negative for both: signed CC gives
 **668/849 (78.7%), 32 exact**, affine Fisher **672/849 (79.2%), 32 exact**, versus
 the exactly replayed **673/849, 33 exact** control. All retain 849/870 coverage
-and fixed counts. Keep `unit_assignment_affine_residual.toml` as the opt-in
-working candidate; the two new configs document rejected experiments. No sign,
+and fixed counts. It kept `unit_assignment_affine_residual.toml` as the opt-in
+working candidate at that stage; the two new configs document rejected experiments. No sign,
 threshold, seed, combined arm or other parameter is retuned after this grade.
 
 
@@ -662,7 +662,14 @@ See [Ledoit and Wolf (2004)](https://doi.org/10.1016/S0047-259X(03)00096-4).
 Dependent lobes and learned memberships preclude claiming iid optimality or
 calibrated confidence. The GMM CLI accepts `--config`; omitting it explicitly
 loads the historical reconstructed config. These candidates are not combined
-or defaults. Their bounded full-cohort comparison is pending.
+or defaults. The completed comparison gives **675/849 (79.5%), 33/145 exact**
+for training-mean centering versus control **673/849, 33 exact**. Retain
+`unit_assignment_centered_fisher.toml` as the latest opt-in working candidate,
+not a champion: historical 677/870 and 36/145 still lead. Final covariance
+shrinkage gives **665/849 (78.3%), 34 exact** and is not retained as a working
+replacement despite its better conditioning. All native arms keep 849/870
+coverage, fixed counts and seven unavailable full-cohort keys. No combined arm
+or parameter change follows grading.
 
 ## Opt-in diagnostic exploration settings (2026-09-18)
 

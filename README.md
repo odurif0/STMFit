@@ -4,6 +4,17 @@ Analysis pipeline for STM images of molecular chains (chitosan on Cu(100) and
 similar systems). Detects and fits a chain-of-Gaussians model to count the
 number of monomer units (lobes) per chain, label-free.
 
+**Latest working candidate, September 21:** training-mean Fisher centering
+improves **673 → 675 correct / 870**, with **33/145 exact chains unchanged**
+and **675/849 (79.5%)** classified accuracy. Use the opt-in
+`config/unit_assignment_centered_fisher.toml`. This is **not a new champion**:
+historical 677/870 and 36/145 still lead, with higher coverage (854 vs 849).
+Independent final-covariance shrinkage gives 665 correct / 34 exact and is not
+retained as the working replacement. All counts and unavailable keys are fixed;
+no combined arm or post-grade tuning follows. Labels are external-grading-only;
+this reused development benchmark is not independent validation. See the
+[numerical comparison](docs/src/unit_assignment.md#fisher-centering-and-final-covariance-candidates-2026-09-21-centering-gain).
+
 **Research branch, September 20:** the symmetric fused-fit correction improves
 the regenerated reconstruction from **666 to 671 correct / 870 controls** and
 **24 to 28 exact chains / 145**, at identical cached counts and coverage
@@ -31,8 +42,8 @@ See the [matched-residual result](docs/src/unit_assignment.md#matched-residual-f
 The next fixed comparison improves the descriptor to **673/870 correct,
 673/849 (79.3%), 33/145 exact chains** by computing half-plane asymmetry after
 affine projection of the same patch. The first-moment alternative gives 672/28
-and is not retained. `config/unit_assignment_affine_residual.toml` is now the
-**opt-in working candidate, not a champion**: history still leads by four correct
+and is not retained. `config/unit_assignment_affine_residual.toml` became the
+**opt-in working candidate at that stage, not a champion**: history led by four correct
 positions and three exact chains. Coverage and counts are unchanged. All sixteen
 changed decisions land at the existing vote tie (zero margin), so this modest
 development-benchmark gain is not evidence of calibrated chemical confidence.
@@ -43,7 +54,7 @@ independent changes**: signed template margins give **668/870 correct, 32/145
 exact**; affine Fisher gives **672/870, 32/145**, against the exactly replayed
 673/33 control. Counts and 849/870 coverage are unchanged. Inference uses no
 benchmark labels; the separate grade is reused development evidence, not
-independent validation. Keep the affine-descriptor candidate at **673/33**;
+independent validation. That comparison kept the affine-descriptor candidate at **673/33**;
 historical **677/36** remains the target. No combined variant or post-grade
 tuning follows. See the [signal comparison](docs/src/unit_assignment.md#signed-cc-and-affine-fisher-candidates-2026-09-21-both-negative).
 

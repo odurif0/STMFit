@@ -2308,13 +2308,20 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0l. **Can training-consistent Fisher centering or final covariance shrinkage help?** →
-    **AUTHORIZED; IN PROGRESS (Sep 21)**: two independent arms against the 673/33
-    control, one Viper job capped at 30 minutes / four requested CPUs. Geometry,
-    N, input keys, folds, seeds, voting and missing-value handling remain fixed.
-    Complete cohort outputs precede the external grade. No combined arm,
-    normalization change or post-grade tuning is authorized. Historical 677/36
-    remains the target; these numerical changes do not establish chemical
-    confidence or independent validation.
+    **COMPLETE; CENTERING GAIN, NO PROMOTION (Sep 21)**: source **0d58b44**, job
+    **11891104**, exit **0:0 in 9m04s**. Twelve control tables replay 673/33
+    exactly. Training-mean centering gives **675/870 correct, 675/849 (79.5%),
+    33/145 exact**: two scan gains, no losses or exact-chain changes. Retain
+    `unit_assignment_centered_fisher.toml` as the latest opt-in working candidate,
+    not a champion. Final Ledoit-Wolf covariance gives **665/870, 665/849 (78.3%),
+    34 exact**: five scan gains, eleven losses, two exact chains gained and one
+    lost. It is not retained as the working replacement despite much better
+    covariance conditioning. All 900 keys, seven unavailable rows and counts
+    remain; 590 outputs and the log are fetched and checksummed. Verification
+    passes 1,186 focused assertions, 76 output checks and paired-grade arithmetic.
+    Historical 677/36 remains ahead by two positions and three chains merely to
+    equal it. No combination, normalization change or post-grade tuning follows;
+    neither numerical stability nor this reused benchmark is independent validation.
 
 0k. **Can signed physical margins or affine Fisher patches improve label-free assignment?** →
     **COMPLETE; BOTH NEGATIVE (Sep 21)**: source **3c45c7c**, job **11889205**,
@@ -2359,10 +2366,11 @@ See `docs/src/selection.md` for the full guard specification and
     **OPEN; TARGET UNCHANGED (Sep 21)**: the user explicitly rejects lowering
     the target to the best runnable reconstruction. The historical 677 correct
     positions / 870 and 36 exact chains / 145 remain the comparison target;
-    affine-residual half-plane asymmetry (673 / 33, comparison 0j) is the latest
-    opt-in working candidate, not a new champion. It improves the matched-residual
-    candidate (672 / 29), following symmetric fusion (671 / 28). The remaining
-    gap is four correct positions and three exact chains merely to equal history.
+    training-mean Fisher centering (675 / 33, comparison 0l) is the latest
+    opt-in working candidate, not a new champion. It improves affine-residual
+    half-plane asymmetry (673 / 33), after matched residuals (672 / 29) and
+    symmetric fusion (671 / 28). The remaining gap is two correct positions and
+    three exact chains merely to equal history; coverage remains 849 versus 854.
     The one physical-u Fisher mirror comparison is **COMPLETE; NEGATIVE**:
     job 11879515 (2m03s, exit 0:0) replays the control byte-for-byte but the
     treatment gives **669/849 (78.8%), 27 exact**, versus 671/849 and 28.
@@ -2373,11 +2381,13 @@ See `docs/src/selection.md` for the full guard specification and
     position and one exact chain. The next user-requested comparison (0j) changes
     the descriptor alone and gains another position and four exact chains.
     The signed-CC and affine-Fisher comparison (0k) is also complete: both regress
-    to 668/32 and 672/32 respectively, so the working candidate stays 673/33. No
-    post-grade setting search follows these passes. Counts, thresholds, voting,
+    to 668/32 and 672/32 respectively, so that pass keeps 673/33. The numerical
+    comparison (0l) then gains two positions with centering, without exact-chain
+    improvement. Shrinkage loses eight positions despite one extra exact chain.
+    No post-grade setting search follows these passes. Counts, thresholds, voting,
     seeds, unavailable keys and DFT inputs are unchanged. Exceeding history remains
-    unresolved; rounded 79.3% classified accuracy is not equality on coverage or
-    the fixed 870-position denominator.
+    unresolved; even 79.5% classified accuracy does not match historical coverage
+    or correct counts on the fixed 870-position denominator.
 
 0g. **Does symmetric fit filtering improve recognition?** → **COMPLETE; MODEST
     GAIN, NO PROMOTION (Sep 20)**: source `d12283a` fits `(F+B)/2`, retaining
@@ -8392,3 +8402,114 @@ Fisher attribution 207 and representation diagnostics 319. The diagnostic's
 synthetic CLI completes with 80 keys and 120 covariance rows, preserving
 whole-scan partitions and rejecting benchmark columns before computation.
 The formulas, partitions and all settings are fixed before scientific output.
+
+## 2026-09-21 — Numerical comparison complete: centering gains two, shrinkage loses eight
+
+Source **0d58b44** is synchronized to
+`/u/oldu/code/STMFit_numerical_signals_20260921`, without benchmark truth tables
+or previous result trees. The unchanged ignored Manifest is explicitly copied;
+ten local/remote critical hashes match. Julia 1.13 dependency imports and all
+three metadata-only dry-runs pass for 146 scans. The source checksum comparison
+with itemized differences is empty, as is the post-run check. Geometry tables
+and templates retain their preceding hashes. The documentation builds before
+submission with only the existing page/search-index size warnings.
+
+The job is submitted exactly once with the required explicit five-variable
+`sbatch --export` list. Job **11891104** waits briefly under `QOSGrpCpuLimit`,
+then completes **0:0 in 9m04s** on `vipl2005`, **01:11:51–01:20:55 CEST**.
+Four CPUs are requested and eight allocated; Julia subprocesses use four threads.
+All scientific computation stays on the compute node. No queue setting changes,
+resubmission, second experiment, combined arm or parameter adjustment follows.
+
+All **590 output files and the Slurm log** are fetched into
+`results/numerical_signals_20260921/run_v1` and its parent. Itemized checksum
+comparisons show no differences; raw-image staging links are not copied.
+All **76 saved-output checks pass**. The twelve control tables are byte-identical
+to the saved 673/33 result, including prediction hash
+`4039b7bb3baaa186d0dc9cc810face2dfa1f151bc45467c81d4f639e3558aa9f`.
+Every arm retains all 146 scans / 900 keys in all twelve scientific tables and
+the same seven unavailable assignments. No failed stage or warning is found.
+
+The three patch families, local geometry, backward descriptor, forward/backward
+CC tables and k-means predictions are byte-identical across arms. Centering
+changes only the Fisher predictor feature (893 finite values), four GMM vote
+frequencies, one GMM hard decision and two final decisions. All predictor inputs
+and Fisher outputs in the shrinkage arm are byte-identical to control; only its
+GMM and final predictions change (36 frequencies, 22 hard decisions each).
+
+**Numerical diagnostics.** Original opposite-fold training means produce score
+offsets **4.5178598359** (432 even-lobe training rows) and **4.4480358561** (461
+odd-lobe training rows); both native GMM fits converge. Exported control and
+centered scores match the predicted constant-shift identity within their
+six-decimal serialization precision. After unchanged per-file standardization,
+median / maximum absolute Fisher changes are **0.0296753 / 0.380814**; expanded
+36-feature distances are **0.0707576 / 1.053445**. Most of the common origin
+offset therefore cancels; a fold-dependent effect remains.
+
+The covariance diagnostic verifies identical pre-final-score hard memberships,
+means, sample covariances and free weights between ridge and shrinkage for all
+ten seeds, both on the full cohort and each fixed whole-scan half. Full-cohort
+mixing coefficients are **0.0326768–0.0452060**, with free weights ranging
+**0.2598–0.7402**. Median covariance condition number falls **23,138.4 → 190.838**,
+maximum **83,386.4 → 300.975**. Both halves also improve conditioning. Nevertheless,
+training withdrawal changes **370/893** GMM decisions with ridge and **350/893**
+with shrinkage; mean absolute vote change decreases **0.268533 → 0.249160**.
+All seven unavailable keys remain in full/half diagnostics. This limited
+stability improvement does not establish held-out recognition, calibrated noise,
+chemical confidence or iid assumptions; the Fisher features are not retrained
+within the halves. No setting is chosen from these diagnostics.
+
+Only after all scientific outputs and checks does the external unchanged
+manifest select **145 scans / 892 predicted lobes / 870 truth positions**.
+Native coverage stays **849/870 (97.6%)**: 16 missing positions, five aligned
+abstentions and 38 extra lobes. Counting remains fixed (14 short-N, 25 extra-N
+scans); the excluded technical scan stays in scientific inference.
+
+| Version | Correct / 870 | Correct / classified | Emitted errors | Exact / 145 |
+|---|---:|---:|---:|---:|
+| Historical reference | 677 (77.8%) | 677/854 (79.3%) | 177 | 36 |
+| Affine-descriptor control | 673 (77.4%) | 673/849 (79.3%) | 176 | 33 |
+| Training-mean Fisher | 675 (77.6%) | 675/849 (79.5%) | 174 | 33 |
+| Final covariance shrinkage | 665 (76.4%) | 665/849 (78.3%) | 184 | 34 |
+
+Centering has **two scan gains, zero losses, 143 ties**. Lobe 3 of
+`240815_048.sxm` and `240817_076.sxm` changes `1→0`, with final vote margins
+**0.1** and **0.9** respectively; each scan improves 4→5 correct. No exact chain
+or grade orientation changes. Confusion `(TN,FP,FN,TP)` changes
+`(510,52,124,163) → (512,50,124,163)`. Against history, centering gives
+23 winning / 24 losing / 98 tied scans, six exact chains gained and nine lost.
+
+Shrinkage gives **five scan gains, eleven losses, 129 ties**, net **minus eight
+correct positions**. It gains exact chains `240814_011` and `240814_025` but
+loses `240818_020`, hence one more exact chain overall. Confusion becomes
+`(498,64,120,167)`. Nineteen changes are `0→1` at zero vote margin. All three
+`1→0` changes at margin **0.9** (`240311_Cu100063`, `240818_020`, `241113_086`)
+lose one correct position. Thus neither a better-conditioned covariance nor
+even large vote margins guarantee improved chemistry. Grade orientation changes
+on `240314_Cu100_026`, `240817_058`, `240817_078`; it is not a spatial monomer
+correspondence. Against history, shrinkage gives 22 winning / 30 losing / 93
+tied scans, seven exact chains gained and nine lost. Every one of the **580
+paired scan rows and 24 changed decisions**, including all losses, is retained.
+
+**Decision:** retain `config/unit_assignment_centered_fisher.toml` at **675/33**
+as the latest opt-in working candidate, **not a champion promotion**. Final
+shrinkage is not retained as the working replacement despite one extra exact
+chain: its loss of eight correct positions is contrary to the primary accuracy
+objective. The two arms are not combined. Historical **677/870 and 36/145** still
+lead by two positions and three chains merely to equal them; historical coverage
+is also greater, so **79.5% versus 79.3% classified accuracy is not a victory**.
+No threshold, seed, weight, normalization or per-file method is retuned after
+the grade. Counts, the separate frozen counting benchmark and unknown25 are not
+rerun or revalidated. This heavily reused benchmark is development evidence,
+not independent validation or evidence of unknown-chain accuracy.
+
+The complete French report, formulas, all changed decisions, numerical tables
+and replay commands are in `results/numerical_signals_20260921/report.md`.
+Verification comprises **1,186 focused Julia 1.13 assertions**, **76 saved-output
+checks**, numerical invariants in the successful job, and paired-grade arithmetic
+assertions. The initial include-guard parse error is recorded above. No scientific
+formula or configuration changed after the source commit or after grading.
+The bounded deliverable is complete; the broader historical target remains open.
+
+The final documentation build passes, with only the existing generated-page
+and search-index size warnings; deployment remains skipped outside CI.

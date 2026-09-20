@@ -276,8 +276,16 @@ noise variance. No direction, sign, composition, threshold or seed is calibrated
 from truth. Whole-scan withdrawal diagnoses sensitivity to training data, not
 held-out recognition; Fisher features are not retrained within those halves.
 Neither covariance conditioning nor stability calibrates chemical confidence.
-The two independent candidate results are pending; the working candidate and
-historical target remain 673/33 and 677/36 respectively.
+The completed comparison improves **673 → 675 correct / 870**, with unchanged
+**33/145 exact** and 849/870 coverage, using training-mean centering. This is the
+latest opt-in working candidate, still below historical 677/36. Shrinkage gives
+**665 correct / 34 exact** and is not retained as the replacement: its median
+full-cohort covariance condition number falls from about 23,138 to 191, but
+recognition loses eight correct positions. Whole-scan withdrawal changes 370/893
+GMM decisions for ridge versus 350/893 for shrinkage: substantial sensitivity
+remains despite modest improvement of that diagnostic. Better conditioning and
+stability are not a substitute for the external recognition grade. No combined
+variant, threshold, seed or parameter is tuned afterward.
 
 ## Opt-in label-free exploration (2026-09-18)
 

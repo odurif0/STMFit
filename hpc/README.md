@@ -845,4 +845,15 @@ with explicit
 Use a new output directory. Fetch and check all outputs, including exact replay
 of the twelve control tables, before the separate local external grade. No
 benchmark label, expected N or composition enters this runner. The two changes
-are never combined or tuned after grading. The current comparison is pending.
+are never combined or tuned after grading.
+
+**Completed September 21:** source **0d58b44**, job **11891104**, exit **0:0** in
+**9m04s** on `vipl2005` (four CPUs requested, eight allocated). All **590 outputs
+and the Slurm log** are fetched and checksum-identical; 76 saved-output checks
+pass and the twelve control tables reproduce 673/33 exactly. Centering gives
+**675/849 (79.5%), 33/145 exact**, retained as the latest opt-in working candidate.
+Shrinkage gives **665/849 (78.3%), 34 exact**, not retained as the replacement.
+All arms keep the same 900 keys, seven unavailable rows and 849/870 coverage.
+Historical 677/36 still leads; there is no champion promotion. The complete
+report and all losses are in `results/numerical_signals_20260921/report.md`.
+Do not resubmit this completed comparison or add a combined/post-grade arm.

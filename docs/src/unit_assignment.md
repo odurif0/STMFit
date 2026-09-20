@@ -1896,7 +1896,7 @@ checks**, plus paired-grade arithmetic assertions. All 580 paired file compariso
 34 changed decisions, formulas and replay commands are in
 `results/label_free_signals_20260920/report.md`.
 
-### Fisher centering and final covariance candidates (2026-09-21, pending)
+### Fisher centering and final covariance candidates (2026-09-21, centering gain)
 
 The authorized comparison tests two independent numerical changes against the
 673/33 affine-descriptor candidate. `unit_assignment_centered_fisher.toml`
@@ -1917,9 +1917,57 @@ complete 146-scan / 900-key arms, then runs numerical diagnostics. Two fixed
 whole-scan training halves diagnose GMM sensitivity; they are not a held-out
 recognition test and do not retrain Fisher within the halves. No normalization
 change, combined arm or setting search is included. The external grade follows
-all predictions and checks, without tuning afterward. Results are pending;
-the working candidate and historical target stay 673/33 and 677/36. This reused
-benchmark supplies development evidence, not independent validation.
+all predictions and checks, without tuning afterward. Job **11891104** completes
+**0:0 in 9m04s** on `vipl2005`, from source **0d58b44**. All **590 output files
+and the Slurm log** are fetched and checksum-identical. The twelve control
+tables replay exactly; **76 saved-output checks** pass. All arms retain 900 keys,
+146 scans and the same seven unavailable assignments. Grading alone then selects
+the unchanged 145 scans / 892 predicted lobes / 870 truth positions.
+
+| Version | Correct / 870 | Correct / classified | Exact / 145 |
+|---|---:|---:|---:|
+| Historical reference | 677 (77.8%) | 677/854 (79.3%) | 36 |
+| Affine-descriptor control | 673 (77.4%) | 673/849 (79.3%) | 33 |
+| Training-mean Fisher | 675 (77.6%) | 675/849 (79.5%) | 33 |
+| Final covariance shrinkage | 665 (76.4%) | 665/849 (78.3%) | 34 |
+
+All native arms classify 849/870, with 16 missing positions, five aligned
+abstentions and 38 extra lobes. Fisher centering changes just two final decisions:
+lobe 3 of `240815_048.sxm` and `240817_076.sxm`, both `1→0`, with final vote
+margins 0.1 and 0.9. Each scan improves 4→5 correct. There are **two scan gains,
+zero losses and 143 ties**, no exact-chain or grading-orientation change.
+
+The two training-fold offsets are **4.51785984** and **4.44803586**. They change
+all 893 finite Fisher scores, but much of their common offset disappears in
+per-file z-scoring; median absolute standardized change is **0.02968**. Four GMM
+vote frequencies and two final assignments change. This small measured gain is
+not evidence that an origin correction solves the remaining recognition problem.
+
+Shrinkage changes 22 final decisions: **five scan gains, eleven losses, 129 ties**,
+net **minus eight correct**. It gains exact chains `240814_011` and `240814_025`
+but loses `240818_020`, hence 34 exact. Nineteen changed decisions land at the
+unchanged zero-margin vote tie; all three other changes, at margin 0.9, reduce
+the scan grade. Grade orientation changes on three scans, not spatial monomer
+correspondence. Full-cohort shrinkage coefficients range **0.0327–0.0452**;
+median covariance condition number improves **23,138 → 191**, while recognition
+worsens. Final pre-score memberships/means/free weights are exactly unchanged.
+Whole-scan withdrawal changes **370/893 → 350/893** GMM decisions and mean absolute
+vote change **0.2685 → 0.2492**; considerable training sensitivity remains.
+These diagnostics do not calibrate noise or chemical confidence.
+
+**Decision: retain `unit_assignment_centered_fisher.toml` at 675/33 as the latest
+opt-in working candidate; no champion promotion.** Reject final shrinkage as the
+working replacement despite one extra exact chain. Historical 677/36 remains
+ahead by two correct positions and three exact chains merely to equal it. Its
+classified coverage is also higher, so 79.5% versus 79.3% alone is not a victory.
+No combined variant, post-grade tuning, count refit or unknown25 rerun follows.
+This reused benchmark supplies development evidence, not independent validation.
+
+Verification passes **1,186 focused Julia 1.13 assertions**, the saved-output
+checks and paired-grade arithmetic. Every one of the **580 paired scan rows and
+24 changed decisions**, including losses, is retained in
+`results/numerical_signals_20260921/report.md` and its linked tables. The bounded
+comparison is complete; the broader historical target remains open.
 
 ### Native numerical conventions
 
