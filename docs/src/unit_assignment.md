@@ -1727,6 +1727,25 @@ The opt-in config/source/tests are kept as a negative experiment. Results and
 all gains/losses: `results/fisher_mirror_comparison_20260920/report.md` and
 `paired_audit_v1/`. Focused verification totals 819 assertions on Julia 1.13.
 
+### Matched residual filtering (2026-09-20; comparison pending)
+
+Both patch extractors historically subtract an unsmoothed decoded Gaussian model
+from smoothed data: `S(data) - model`. Even an exact model image then gives the
+nonzero residual `S(model) - model`. The opt-in
+`unit_assignment_matched_residual.toml` uses `S(data - model)` with the same
+native smoother, before interpolation and median/sample-standard-deviation
+normalization. An injected shoulder remains `S(shoulder)`; this is not a general
+background-removal or noise-calibration method.
+
+The targeted comparison regenerates forward 17×17, backward 17×17 and backward
+9×9 patches for both arms from identical symmetric-fusion geometry and counts.
+It reuses split features and templates, retains the legacy Fisher mirror, and
+changes no threshold, seed, class prior, missingness policy or classifier rule.
+Matched mode rejects cached patches. The complete native cohort is processed
+before any external full145 grade. The control must reproduce 671 correct / 28
+exact; the historical target stays 677 / 36. No recognition gain is claimed
+before that comparison, and a reused benchmark is not independent validation.
+
 ### Native numerical conventions
 
 The constant-current port retains the old first-axis-fast cube index, sampling

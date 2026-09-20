@@ -735,3 +735,22 @@ outputs and Slurm log are fetched and checksum-verified under
 `results/fisher_mirror_comparison_20260920/`. The transverse candidate regresses
 671/28 → 669/27 (correct positions / exact chains); it is not retained. Do not
 resubmit the completed job. The report includes every paired gain and loss.
+
+## One matched-residual comparison (September 20)
+
+`hpc/compare_matched_residual.sbatch` requests four CPUs, 16 GB and 30 minutes.
+It runs `control/` (`S(data)-model`) and `matched/` (`S(data-model)`) sequentially.
+Both arms regenerate all three patch families from the same complete saved
+symmetric-fusion geometry; `STMFIT_CACHE_DIR` supplies only `features.tsv` and
+`features_split.tsv`. No count or geometry fit, label input or grading runs.
+
+Set absolute `STMFIT_PROJECT_DIR`, `STMFIT_CACHE_DIR`, `STMFIT_INPUT_DIR`
+(`full146_raw/`, `templates_cc.tsv`), `STMFIT_OUTDIR` (new, existing parent) and
+`JULIA_BIN` (Julia 1.13). First run
+`bash hpc/compare_matched_residual.sbatch --dry-run`, then submit with the explicit
+command-line option
+`--export=STMFIT_PROJECT_DIR,STMFIT_CACHE_DIR,STMFIT_INPUT_DIR,STMFIT_OUTDIR,JULIA_BIN`.
+This is necessary with Viper's `SBATCH_EXPORT=NONE`. Actual execution requires
+a Slurm allocation. Logs and failed outputs are preserved; either failed arm
+makes the job fail after both have been attempted. Fetch outputs and grade
+externally only after checking the regenerated control against its saved output.

@@ -3,6 +3,26 @@ include(joinpath(@__DIR__, "lib", "reconstructed_unit_assignment.jl"))
 using .ReconstructedUnitAssignment
 const CONFIG = joinpath(@__DIR__, "..", "config", "unit_assignment_reconstructed.toml")
 
+@testset "Residual policy is explicit, not silently defaulted by production" begin
+    cfg = load_config(CONFIG)
+    @test cfg["preprocessing"]["patch_residual_filter"] == "smooth_data_only"
+    matched = joinpath(@__DIR__, "..", "config", "unit_assignment_matched_residual.toml")
+    @test load_config(matched)["preprocessing"]["patch_residual_filter"] == "smooth_residual"
+    mktempdir() do dir
+        path = joinpath(dir,"invalid.toml")
+        for value in (nothing, "wrong", true)
+            changed = deepcopy(cfg)
+            if value === nothing
+                delete!(changed["preprocessing"],"patch_residual_filter")
+            else
+                changed["preprocessing"]["patch_residual_filter"] = value
+            end
+            open(io -> TOML.print(io,changed),path,"w")
+            @test_throws ErrorException load_config(path)
+        end
+    end
+end
+
 @testset "Explicit transverse half-plane descriptor" begin
     coords = collect(-4:4) .* 0.08
     p = zeros(81)

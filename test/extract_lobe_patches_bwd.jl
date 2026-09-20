@@ -19,7 +19,8 @@ include(joinpath(@__DIR__, "lib", "script_utils.jl"))
 using .ScriptUtils: _parse_f, _read_tsv
 
 include(joinpath(@__DIR__, "lib", "patch_preprocessing.jl"))
-using .PatchPreprocessing: PreprocessingSettings, load_patch_preprocessing
+using .PatchPreprocessing: PreprocessingSettings, load_patch_preprocessing,
+    load_patch_residual_filter, patch_residual
 
 const DEFAULT_FEATURES = "results/unit_separability/lobe_features_selectedN_primary.tsv"
 const DEFAULT_OUT = "results/unit_separability/lobe_patches_selectedN_primary_bwd.tsv"
@@ -31,6 +32,7 @@ struct Options
     half_nm::Float64
     step_nm::Float64
     preprocessing::PreprocessingSettings
+    residual_filter::String
 end
 
 function _parse_cli(args)
@@ -38,6 +40,7 @@ function _parse_cli(args)
     out_tsv = DEFAULT_OUT
     data_dir = get(ENV, "STMFIT_DATA_DIR", "")
     config_path::Union{Nothing,String} = nothing
+    assignment_path::Union{Nothing,String} = nothing
     half_nm = 0.32
     step_nm = 0.08
     i = 1
@@ -56,6 +59,13 @@ function _parse_cli(args)
         elseif startswith(arg, "--config=")
             config_path === nothing || error("Duplicate --config option")
             config_path = split(arg, "=", limit=2)[2]; i += 1
+        elseif arg == "--assignment-config"
+            assignment_path === nothing || error("Duplicate --assignment-config option")
+            i < length(args) && !startswith(args[i+1], "--") || error("Missing value for --assignment-config")
+            assignment_path = args[i+1]; i += 2
+        elseif startswith(arg, "--assignment-config=")
+            assignment_path === nothing || error("Duplicate --assignment-config option")
+            assignment_path = split(arg, "=", limit=2)[2]; i += 1
         elseif arg == "--half-nm"; half_nm = parse(Float64, args[i+1]); i += 2
         elseif startswith(arg, "--half-nm="); half_nm = parse(Float64, split(arg, "=", limit=2)[2]); i += 1
         elseif arg == "--step-nm"; step_nm = parse(Float64, args[i+1]); i += 2
@@ -73,6 +83,8 @@ function _parse_cli(args)
               --data-dir PATH   SXM data directory [\$STMFIT_DATA_DIR]
               --config PATH     Optional count TOML: all three [preprocessing] fields
                                 (omitted: stride=1, flatten=plane+rows, smooth_radius_px=1)
+              --assignment-config PATH  TOML with [preprocessing] patch_residual_filter
+                                        (omitted: legacy smooth_data_only)
               --half-nm FLOAT   Patch half-size [0.32]
               --step-nm FLOAT   Patch grid spacing [0.08]
             """)
@@ -85,7 +97,8 @@ function _parse_cli(args)
     isdir(data_dir) || error("Data directory not found: $data_dir")
     isfile(features) || error("Features TSV not found: $features")
     preprocessing = load_patch_preprocessing(config_path)
-    return Options(features, out_tsv, data_dir, half_nm, step_nm, preprocessing)
+    residual_filter = load_patch_residual_filter(assignment_path)
+    return Options(features, out_tsv, data_dir, half_nm, step_nm, preprocessing, residual_filter)
 end
 
 function _eval_peak(x, y, cx, cy, ax, ay, A, spar, sperp, skew_ratio)
@@ -163,7 +176,7 @@ function main(args=ARGS)
 
                 nx, ny = length(xs_f), length(ys_f)
 
-                # Build Gaussian model (same for both — fitted on forward, applied to both)
+                # Build the common decoded Gaussian model (from the supplied geometry).
                 ax = _parse_f(rs[1]["axis_x"]); ay = _parse_f(rs[1]["axis_y"])
                 b0 = haskey(rs[1], "baseline") ? _parse_f(rs[1]["baseline"]) : 0.0
                 bx = haskey(rs[1], "tilt_x") ? _parse_f(rs[1]["tilt_x"]) : 0.0
@@ -183,8 +196,8 @@ function main(args=ARGS)
                 end
 
                 # Residuals for each channel
-                res_f = z_smooth_f .- model
-                res_b = z_smooth_b .- model  # Same model, backward data
+                res_f = patch_residual(z_f, z_smooth_f, model, opt.preprocessing, opt.residual_filter)
+                res_b = patch_residual(z_b, z_smooth_b, model, opt.preprocessing, opt.residual_filter)
                 # Forward-backward difference (removes static topography)
                 diff_smooth = z_smooth_f .- z_smooth_b
                 diff_res = res_f .- res_b  # = diff_smooth (model cancels)

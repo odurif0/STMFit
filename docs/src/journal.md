@@ -2307,6 +2307,15 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-20. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0i. **Does matching the patch residual filter improve recognition?** →
+    **IN PROGRESS (Sep 20)**: user-approved one-setting comparison of
+    `S(data)-model` against `S(data-model)`, with one 30-minute four-CPU Viper job.
+    Both arms regenerate all patches at the same symmetric-fusion geometry and
+    counts; no classifier setting or threshold changes. Synthetic null-model
+    and injected-signal checks pass. Done requires the complete paired full145
+    grade, control replay and an explicit retain/reject decision against the
+    working 671/28 and historical 677/36. No chemical gain is yet established.
+
 0h. **Can a reproducible assignment exceed the lost historical champion?** →
     **OPEN; TARGET UNCHANGED (Sep 20)**: the user explicitly rejects lowering
     the target to the best runnable reconstruction. The historical 677 correct
@@ -7791,3 +7800,52 @@ no prediction or model input. Choosing/reweighting the two unchanged head
 decisions cannot repair the six common errors, but this is not a raw-information
 ceiling or justification to train on this post-hoc subset. No new method follows
 automatically from it.
+
+## 2026-09-20 — Matched patch residual filtering: one bounded comparison
+
+The user approves the next proposed source-grounded experiment. The scientific
+deliverable is a complete paired recognition comparison of `S(data)-model`
+against `S(data-model)`, at fixed geometry and selected counts. Done means tested
+extractors, a byte-reproduced control, all full146 outputs and an external
+full145 grade including every gain/loss, followed by a retain/reject decision.
+The time box is one 30-minute four-CPU / 16 GB Viper job. The working candidate
+is 671 correct / 28 exact, and the target remains exceeding historical 677 / 36.
+No threshold, weight, seed, smoothing-radius, background, mirror, count or DFT
+search is in scope; no setting is changed after grading. Unknown25 is not rerun.
+
+Both extractors currently compute `S(data)-model` using an unsmoothed decoded
+Gaussian model plus fitted plane. An image equal to that model leaves the
+deterministic residual `S(model)-model`. The opt-in candidate applies the native
+finite-window box smoother to `data-model`, before unchanged interpolation and
+patch normalization. Exact model data yield zero; an injected shoulder is
+preserved as `S(shoulder)`. This fixes filter consistency, not arbitrary gradient
+or background contamination, and does not establish chemical recognition.
+
+The assignment setting `preprocessing.patch_residual_filter` is explicit and
+validated. Existing configs now state `smooth_data_only`: their hashes change,
+but their effective behavior does not. New `unit_assignment_matched_residual.toml`
+differs from the reconstructed config only in this setting (`smooth_residual`)
+and its method name. The original Fisher layout is retained, not the negative
+physical-u variant. The pipeline passes the assignment config to each extractor
+and rejects cached patch inputs for the new mode. Standalone extractors without
+the new option keep the old arithmetic byte-for-byte.
+
+Both arms of `hpc/compare_matched_residual.sbatch` regenerate all three patch
+families from the same 900-lobe / 146-scan symmetric-fusion geometry cache, using
+the same split-width table, raw cohort and templates. The full native Fisher,
+k-means, GMM, soft vote and QC follow. Labels and historical predictions enter
+only the later external report, never the scientific job. All keys and invalid
+rows must be retained; no per-error subset or composition prior is introduced.
+This reused development benchmark cannot establish independent generalization.
+
+Pre-run Julia 1.13 checks pass: patch extraction **380/380**, assignment rules
+**37/37**, pipeline boundaries/shards **25/25**, paired runner **16/16**, and
+Fisher conventions/replay **229/229** (687 assertions).
+Synthetic checks cover a Gaussian plus tilted plane, an injected shoulder,
+radii 0/1/2, edge windows, missing support, forward/backward cancellation and
+input nonmutation. Extractor fixtures verify byte-identical explicit legacy
+output, unchanged raw columns, and independently reconstructed matched patches.
+The first independent smoothing assertion used exact equality between copied
+windows and native strided views; one radius-2 reduction differed by two ulps
+(`6.94e-18`). Its comparison now allows eight ulps at the expected signal scale;
+the production calculation and exact null-model checks were not altered.

@@ -3,6 +3,17 @@ include(joinpath(@__DIR__, "run_reconstructed_chitosan.jl"))
 const ASSIGNMENT_CONFIG = joinpath(ROOT, "config", "unit_assignment_reconstructed.toml")
 const COUNT_CONFIG = joinpath(ROOT, "config", "chitosan.toml")
 
+@testset "Matched-residual pipeline must regenerate patches" begin
+    config = joinpath(ROOT,"config","unit_assignment_matched_residual.toml")
+    mktempdir() do dir
+        for key in ("--patches-fwd","--patches-bwd","--descriptor-patches")
+            opts = Dict("--config"=>config,"--outdir"=>joinpath(dir,"not_created"),key=>"cached.tsv")
+            @test_throws ErrorException execute_pipeline(opts)
+            @test !ispath(opts["--outdir"])
+        end
+    end
+end
+
 function pipeline_fixture(dir)
     raw = joinpath(dir, "raw"); mkdir(raw)
     rng = MersenneTwister(20260916)

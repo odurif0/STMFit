@@ -1,7 +1,6 @@
-# One opt-in experiment: physical transverse Fisher reflection, not longitudinal.
-# All other settings equal unit_assignment_reconstructed.toml. No label tuning.
+# One opt-in comparison: S(data - model), with every other setting unchanged.
 [model]
-name = "cc_soft_transverse_fisher_v1"
+name = "cc_soft_matched_residual_v1"
 descriptor = "transverse_half_plane_asymmetry"
 descriptor_column = "patch_u_asym_reconstructed"
 descriptor_channel = "bwd_res"
@@ -35,7 +34,7 @@ interactions = true
 vote_threshold = 0.5
 
 [preprocessing]
-patch_residual_filter = "smooth_data_only"
+patch_residual_filter = "smooth_residual"
 descriptor_normalization = "median_sample_std"
 pixel_order = "u_outer_t_inner"
-fisher_layout = "physical_u_outer_t_inner"
+fisher_layout = "legacy_row_major"

@@ -213,6 +213,18 @@ That fixed comparison regresses to 669/870 correct and 27/145 exact, versus
 671/870 and 28/145 for the control at identical coverage; the transverse
 variant is not retained. No recalibration or threshold adjustment follows.
 
+The separate September 20 matched-residual comparison tests
+`patch_residual_filter = "smooth_residual"`: `S(data - model)` rather than
+`S(data) - model`. This makes an exact model image yield zero residual and
+retains an injected residual as `S(signal)`, not as an unsmoothed signal.
+It changes no smoothing radius, physical calibration, geometry, selected count,
+normalization, classifier setting or missing-value treatment. It removes the
+deterministic mismatch between smoothed data and unsmoothed model, not an
+arbitrary background or transverse gradient. Synthetic consistency alone does
+not establish better recognition; the full external comparison is required.
+Both older assignment configs now state `smooth_data_only` explicitly, changing
+their file hashes but not their effective settings.
+
 
 ## Opt-in label-free exploration (2026-09-18)
 

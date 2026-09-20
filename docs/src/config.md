@@ -544,7 +544,11 @@ new descriptor and numerical port before benchmark comparison:
 - `[selection]`: k-means/GMM seed counts, initial seed, GMM self-training,
   interaction features and soft-vote threshold. No composition prior.
 - `[preprocessing]`: extractor normalization, `u_outer_t_inner` descriptor pixel
-  order, and the historical Fisher array layout preserved for numerical parity.
+  order, the historical Fisher array layout, and explicit `patch_residual_filter`.
+  `smooth_data_only` preserves `S(data) - model`; `smooth_residual` computes
+  `S(data - model)` with the same native box smoother and count-config radius.
+  Production assignment configs must state this field; existing custom configs
+  need `smooth_data_only` to retain their previous behavior.
 
 These are fixed settings, not knobs to search against the benchmark. Invalid
 patches remain explicit missing inputs. Counting continues to use its own
@@ -561,6 +565,16 @@ default, parameter sweep or change to the reconstructed half-plane descriptor.
 The September 20 full145 comparison is negative (669 correct / 27 exact vs
 671 / 28 for the symmetric-fusion control); keep the original layout for the
 working candidate. The opt-in config records the unsuccessful experiment.
+
+The separate opt-in `config/unit_assignment_matched_residual.toml` changes only
+the method name (`cc_soft_matched_residual_v1`) and
+`patch_residual_filter = "smooth_residual"` relative to the reconstructed config.
+It keeps the legacy Fisher layout and every numerical setting. The pipeline
+passes `--assignment-config` to both extractors and rejects all three patch-cache
+options in matched mode, so legacy patches cannot silently be reused. Geometry,
+split-width features and templates may still be reused. Standalone extractors
+without `--assignment-config` retain legacy extraction for compatibility.
+This candidate is a bounded benchmark comparison, not a promoted default.
 
 
 ## Opt-in diagnostic exploration settings (2026-09-18)

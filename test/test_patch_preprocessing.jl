@@ -3,6 +3,8 @@
 # Synthetic SXM only. No fitting, benchmark inputs, or real scans.
 using Test
 using TOML
+using Statistics
+using STMSXMIO: _box_smooth
 
 module ForwardPatches
 include(joinpath(@__DIR__, "extract_lobe_patches.jl"))
@@ -16,6 +18,8 @@ using .PatchPreprocessing
 
 const ROOT = dirname(@__DIR__)
 const COUNT_CONFIG = joinpath(ROOT, "config", "chitosan.toml")
+const ASSIGNMENT_CONFIG = joinpath(ROOT, "config", "unit_assignment_reconstructed.toml")
+const MATCHED_CONFIG = joinpath(ROOT, "config", "unit_assignment_matched_residual.toml")
 const LEGACY = (stride=1, flatten="plane+rows", smooth_radius_px=1)
 settings_tuple(p) = (stride=p.stride, flatten=p.flatten, smooth_radius_px=p.smooth_radius_px)
 
@@ -24,6 +28,71 @@ function write_config(path, fields)
         TOML.print(io, Dict("preprocessing" => fields))
     end
     return path
+end
+
+@testset "Explicit residual policy and matched filtering" begin
+    @test load_patch_residual_filter() == "smooth_data_only"
+    @test load_patch_residual_filter(ASSIGNMENT_CONFIG) == "smooth_data_only"
+    @test load_patch_residual_filter(MATCHED_CONFIG) == "smooth_residual"
+    candidate, reference = TOML.parsefile(MATCHED_CONFIG), TOML.parsefile(ASSIGNMENT_CONFIG)
+    @test candidate["model"]["name"] == "cc_soft_matched_residual_v1"
+    candidate["model"]["name"] = reference["model"]["name"]
+    candidate["preprocessing"]["patch_residual_filter"] = reference["preprocessing"]["patch_residual_filter"]
+    @test candidate == reference # Exactly one scientific setting differs.
+    @test_throws ArgumentError load_patch_residual_filter("")
+    mktempdir() do dir
+        cfg = joinpath(dir,"assignment.toml")
+        for value in ("unknown", "", 1, true)
+            write_config(cfg, Dict("patch_residual_filter"=>value))
+            @test_throws ArgumentError load_patch_residual_filter(cfg)
+        end
+        write_config(cfg, Dict{String,String}())
+        @test_throws ArgumentError load_patch_residual_filter(cfg)
+        write(cfg, "[model]\nname = \"synthetic\"\n")
+        @test_throws ArgumentError load_patch_residual_filter(cfg)
+    end
+    xs, ys = collect(range(-1.2, 1.2; length=31)), collect(range(-0.9, 0.9; length=25))
+    model = [0.4 + 0.07x - 0.03y + 2exp(-0.5((x/.20)^2+(y/.14)^2)) for y in ys, x in xs]
+    shoulder = [.08exp(-0.5(((x-.09)/.11)^2+((y-.22)/.09)^2)) for y in ys, x in xs]
+    for radius in (0,1,2)
+        settings = PreprocessingSettings(1,"none",radius)
+        smooth = _box_smooth(model,radius)
+        null = patch_residual(model,smooth,model,settings,"smooth_residual")
+        legacy = patch_residual(model,smooth,model,settings,"smooth_data_only")
+        @test all(iszero,null)
+        @test legacy == smooth-model
+        if radius > 0
+            @test maximum(abs,legacy) > 0.01
+        else
+            @test all(iszero,legacy)
+        end
+        z = model+shoulder
+        snapshot = (copy(z),copy(model),copy(smooth))
+        matched = patch_residual(z,_box_smooth(z,radius),model,settings,"smooth_residual")
+        @test matched ≈ _box_smooth(shoulder,radius) atol=5e-16 rtol=5e-14
+        @test matched ≈ _box_smooth(z,radius)-_box_smooth(model,radius) atol=1e-15 rtol=1e-13
+        # Independent finite-window calculation, including edges/corners.
+        expected = [mean((z-model)[max(1,y-radius):min(end,y+radius),max(1,x-radius):min(end,x+radius)])
+                    for y in axes(z,1), x in axes(z,2)]
+        # A copied window and a strided view can reduce in different orders.
+        @test maximum(abs,matched-expected) <= 8eps(maximum(abs,expected))
+        @test (z,model,smooth) == snapshot
+        forward, backward = model+shoulder, model-0.4shoulder
+        rf = patch_residual(forward,_box_smooth(forward,radius),model,settings,"smooth_residual")
+        rb = patch_residual(backward,_box_smooth(backward,radius),model,settings,"smooth_residual")
+        @test rf-rb ≈ _box_smooth(forward-backward,radius) atol=5e-16
+        if radius == 0
+            @test matched == patch_residual(z,z,model,settings,"smooth_data_only")
+        end
+        bad = copy(z); bad[12,16] = NaN
+        rb = patch_residual(bad,_box_smooth(bad,radius),model,settings,"smooth_residual")
+        old = patch_residual(bad,_box_smooth(bad,radius),model,settings,"smooth_data_only")
+        @test isfinite.(rb) == isfinite.(old) # No missing-sample repair or support relaxation.
+        @test count(!isfinite,rb) == (2radius+1)^2
+    end
+    @test_throws DimensionMismatch patch_residual(model,model,zeros(2,2),PreprocessingSettings(1,"none",1),"smooth_residual")
+    @test_throws ArgumentError patch_residual(model,model,model,PreprocessingSettings(1,"none",-1),"smooth_residual")
+    @test_throws ArgumentError patch_residual(model,model,model,PreprocessingSettings(1,"none",1),"unknown")
 end
 
 function synthetic_sxm(path)
@@ -98,6 +167,14 @@ mktempdir() do dir
             output = joinpath(dir,"$name.tsv")
             args = ["--features",feature_path,"--data-dir",dir,"--out",output]
             @test settings_tuple(mod._parse_cli(args).preprocessing) == LEGACY
+            @test mod._parse_cli(args).residual_filter == "smooth_data_only"
+            for suffix in (["--assignment-config",MATCHED_CONFIG],["--assignment-config=$MATCHED_CONFIG"])
+                @test mod._parse_cli(vcat(args,suffix)).residual_filter == "smooth_residual"
+            end
+            @test_throws ErrorException mod._parse_cli(vcat(args,["--assignment-config"]))
+            @test_throws ErrorException mod._parse_cli(vcat(args,["--assignment-config","--out"]))
+            @test_throws ErrorException mod._parse_cli(vcat(args,["--assignment-config",MATCHED_CONFIG,"--assignment-config",MATCHED_CONFIG]))
+            @test_throws ArgumentError mod._parse_cli(vcat(args,["--assignment-config="]))
             for suffix in (["--config",config],["--config=$config"])
                 @test settings_tuple(mod._parse_cli(vcat(args,suffix)).preprocessing) ==
                       (stride=2,flatten="none",smooth_radius_px=0)
@@ -116,6 +193,35 @@ mktempdir() do dir
             @test length(readlines(output)) == 2
             extract_quietly(mod,vcat(args,["--config",COUNT_CONFIG]))
             @test read(output) == legacy_bytes # identical behavior on explicit old settings
+            extract_quietly(mod,vcat(args,["--config",COUNT_CONFIG,"--assignment-config",ASSIGNMENT_CONFIG]))
+            @test read(output) == legacy_bytes
+            extract_quietly(mod,vcat(args,["--config",COUNT_CONFIG,"--assignment-config",MATCHED_CONFIG]))
+            @test read(output) != legacy_bytes
+            header, actual = mod.ScriptUtils._read_tsv(output)
+            legacy_lines = split(chomp(String(copy(legacy_bytes))), '\n')
+            old = Dict(zip(split(legacy_lines[1],'\t'), split(legacy_lines[2],'\t')))
+            @test length(actual) == 1
+            for column in header
+                if startswith(column,"raw_p") || startswith(column,"bwd_raw_p") || startswith(column,"diff_raw_p")
+                    @test actual[1][column] == old[column]
+                end
+            end
+            # End-to-end extraction agrees with an independent model and S(z-M),
+            # before the existing interpolation, normalization and TSV rounding.
+            sxm = joinpath(dir,"synthetic.sxm")
+            img = mod.read_sxm(sxm)
+            direction = name == "forward" ? "fwd" : "bwd"
+            cfg = mod.PatternConfig(filepath=sxm,channel="Z",direction=direction,
+                stride=1,flatten="plane+rows",smooth_radius_px=1,output_dir=dir,no_plot=true)
+            xs, ys, _, z, _, _, _ = mod.preprocess_channel(img,mod.get_channel(img,"Z"; direction),cfg)
+            model = [.4+.17x+.08y+2exp(-.5(((x-1.2)/.2)^2+((y-1.2)/.15)^2)) for y in ys, x in xs]
+            residual = _box_smooth(z-model,1)
+            coords = collect(-.32:.08:.32)
+            values = [mod._interp(xs,ys,residual,1.2+t,1.2+u) for u in coords for t in coords]
+            expected = (values .- median(values)) ./ std(values)
+            prefix = name == "forward" ? "res_p" : "bwd_res_p"
+            measured = [parse(Float64,actual[1][prefix*lpad(string(i),3,'0')]) for i in eachindex(expected)]
+            @test maximum(abs,measured-expected) < 5e-6 # seven significant TSV digits
             for (key,value) in (("stride",2),("flatten","none"),("smooth_radius_px",0))
                 config_fields = copy(defaults); config_fields[key] = value
                 cfg = write_config(joinpath(dir,"$(name)_$(key).toml"),config_fields)

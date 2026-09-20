@@ -85,6 +85,8 @@ function load_config(path::AbstractString)
     model["descriptor_channel"] == "bwd_res" || error("Unsupported descriptor patch family")
     pre["pixel_order"] == "u_outer_t_inner" || error("Unsupported patch ordering")
     pre["descriptor_normalization"] == "median_sample_std" || error("Unsupported patch normalization")
+    get(pre, "patch_residual_filter", nothing) in ("smooth_data_only", "smooth_residual") ||
+        error("Explicit patch_residual_filter must be smooth_data_only or smooth_residual")
     model["descriptor_half_nm"] > 0 && model["descriptor_step_nm"] > 0 || error("Invalid descriptor grid")
     side = round(Int, 2model["descriptor_half_nm"] / model["descriptor_step_nm"]) + 1
     side == 9 || error("Reconstructed descriptor requires a 9x9 patch")

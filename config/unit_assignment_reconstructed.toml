@@ -35,6 +35,7 @@ interactions = true
 vote_threshold = 0.5
 
 [preprocessing]
+patch_residual_filter = "smooth_data_only" # Explicit legacy S(data) - model.
 descriptor_normalization = "median_sample_std"
 pixel_order = "u_outer_t_inner"
 fisher_layout = "legacy_row_major"

@@ -12,7 +12,8 @@ include(joinpath(@__DIR__, "lib", "script_utils.jl"))
 using .ScriptUtils: _parse_f, _read_tsv
 
 include(joinpath(@__DIR__, "lib", "patch_preprocessing.jl"))
-using .PatchPreprocessing: PreprocessingSettings, load_patch_preprocessing
+using .PatchPreprocessing: PreprocessingSettings, load_patch_preprocessing,
+    load_patch_residual_filter, patch_residual
 
 const DEFAULT_FEATURES = "results/unit_separability/lobe_features_selectedN_primary.tsv"
 const DEFAULT_OUT = "results/unit_separability/lobe_patches_selectedN_primary.tsv"
@@ -25,6 +26,7 @@ struct Options
     half_u_nm::Float64
     step_nm::Float64
     preprocessing::PreprocessingSettings
+    residual_filter::String
 end
 
 function _parse_cli(args)
@@ -32,6 +34,7 @@ function _parse_cli(args)
     out_tsv = DEFAULT_OUT
     data_dir = get(ENV, "STMFIT_DATA_DIR", "")
     config_path::Union{Nothing,String} = nothing
+    assignment_path::Union{Nothing,String} = nothing
     half_nm = 0.32
     half_u_nm = 0.32
     step_nm = 0.08
@@ -51,6 +54,13 @@ function _parse_cli(args)
         elseif startswith(arg, "--config=")
             config_path === nothing || error("Duplicate --config option")
             config_path = split(arg, "=", limit=2)[2]; i += 1
+        elseif arg == "--assignment-config"
+            assignment_path === nothing || error("Duplicate --assignment-config option")
+            i < length(args) && !startswith(args[i+1], "--") || error("Missing value for --assignment-config")
+            assignment_path = args[i+1]; i += 2
+        elseif startswith(arg, "--assignment-config=")
+            assignment_path === nothing || error("Duplicate --assignment-config option")
+            assignment_path = split(arg, "=", limit=2)[2]; i += 1
         elseif arg == "--half-nm"; half_nm = parse(Float64, args[i+1]); i += 2
         elseif startswith(arg, "--half-nm="); half_nm = parse(Float64, split(arg, "=", limit=2)[2]); i += 1
         elseif arg == "--half-u-nm"; half_u_nm = parse(Float64, args[i+1]); i += 2
@@ -67,6 +77,8 @@ function _parse_cli(args)
               --data-dir PATH   SXM data directory [\$STMFIT_DATA_DIR]
               --config PATH     Optional count TOML: all three [preprocessing] fields
                                 (omitted: stride=1, flatten=plane+rows, smooth_radius_px=1)
+              --assignment-config PATH  TOML with [preprocessing] patch_residual_filter
+                                        (omitted: legacy smooth_data_only)
               --half-nm FLOAT   Patch half-size along the chain t [0.32]
               --half-u-nm FLOAT Patch half-size transverse u [0.32]
               --step-nm FLOAT   Patch grid spacing [0.08]
@@ -80,7 +92,8 @@ function _parse_cli(args)
     isdir(data_dir) || error("Data directory not found: $data_dir")
     isfile(features) || error("Features TSV not found: $features")
     preprocessing = load_patch_preprocessing(config_path)
-    return Options(features, out_tsv, data_dir, half_nm, half_u_nm, step_nm, preprocessing)
+    residual_filter = load_patch_residual_filter(assignment_path)
+    return Options(features, out_tsv, data_dir, half_nm, half_u_nm, step_nm, preprocessing, residual_filter)
 end
 
 function _eval_peak(x, y, cx, cy, ax, ay, A, spar, sperp, skew_ratio)
@@ -162,7 +175,7 @@ function main(args=ARGS)
                         model[iy, ix] += _eval_peak(xs[ix], ys[iy], cx, cy, ax, ay, A, spar, sperp, skew)
                     end
                 end
-                residual = z_smooth .- model
+                residual = patch_residual(z, z_smooth, model, opt.preprocessing, opt.residual_filter)
 
                 for row in rs
                     cx = _parse_f(row["x_nm"]); cy = _parse_f(row["y_nm"])
