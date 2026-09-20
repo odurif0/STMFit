@@ -17,6 +17,9 @@ Historical conventions deliberately retained:
 * `legacy_row_major` reads numbered pixels as Python reshape(side, side).
   The current extractor writes u-outer/t-inner, so the legacy [:, ::-1]
   mirror reverses physical t, despite its historical name `flip_u_disk`.
+  The opt-in `physical_u_outer_t_inner` layout instead reverses physical u.
+  Both layouts keep exactly the same disk pixels, PCA and fit conventions;
+  only the reflected held-out patch changes. The legacy config is unchanged.
 * PCA fits centered training patches. The noise covariance is the sample
   covariance of ALL latent training rows, not pooled within-cluster covariance.
 * The two hard-cluster patch means are ordered by center-pixel amplitude.
@@ -67,8 +70,8 @@ struct FisherOptions
             value isa Real && !(value isa Bool) && isfinite(value) && value > 0 ||
                 throw(ArgumentError("$name must be positive and finite"))
         end
-        layout == "legacy_row_major" ||
-            throw(ArgumentError("fisher_layout must be legacy_row_major"))
+        layout in ("legacy_row_major", "physical_u_outer_t_inner") ||
+            throw(ArgumentError("unsupported fisher_layout: $layout"))
         ratio = half_nm / step_nm
         isfinite(ratio) && 1 <= ratio < (typemax(Int) - 1) / 2 ||
             throw(ArgumentError("mold_half_nm / mold_step_nm must give a finite grid"))
@@ -112,7 +115,7 @@ struct FisherGrid
     center_index::Int               # full-patch index
 end
 
-"Reproduce NumPy arange and row-major disk enumeration, not Julia vec(matrix)."
+"Keep the NumPy disk enumeration; select the explicitly configured mirror axis."
 function fisher_grid(options::FisherOptions)
     nhalf = round(Int, options.half_nm / options.step_nm)
     side = 2nhalf + 1
@@ -129,8 +132,19 @@ function fisher_grid(options::FisherOptions)
     mirror = Int[]
     for index in disk
         row, col = divrem(index - 1, side)
-        reflected = row * side + (side - col)
+        reflected = if options.layout == "legacy_row_major"
+            row * side + (side - col)              # physical t -> -t
+        else
+            (side - 1 - row) * side + col + 1       # physical u -> -u
+        end
         push!(mirror, get(positions, reflected, 0))
+    end
+    if options.layout == "physical_u_outer_t_inner"
+        # A maximum over original/reflected patches is reflection-invariant
+        # only when the disk is closed under an involutive reflection. Do not
+        # silently zero-pad a different grid in this scientific variant.
+        all(>(0), mirror) && mirror[mirror] == collect(eachindex(disk)) ||
+            throw(ArgumentError("Fisher disk is not closed under transverse reflection"))
     end
     return FisherGrid(side, coords, disk, mirror, (side^2 + 1) ÷ 2)
 end
@@ -215,7 +229,7 @@ function load_patches(path::AbstractString, prefix::AbstractString, options::Fis
     return PatchTable(keys[order], X, amplitudes[order], reasons[order], grid)
 end
 
-"Legacy [:, ::-1] mirror after zero-filling outside the disk."
+"Configured disk mirror (historical API name); legacy t or opt-in physical u."
 function flip_u_disk(x::AbstractVector, grid::FisherGrid)
     length(x) == length(grid.disk_indices) || throw(DimensionMismatch("wrong disk vector length"))
     return [index == 0 ? 0.0 : Float64(x[index]) for index in grid.mirror_indices]

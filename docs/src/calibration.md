@@ -202,6 +202,14 @@ normalization are fixed before comparison. The mold/Fisher settings port the
 existing method; no benchmark labels, expected counts, or frozen predictions
 are used to calibrate these quantities. The counting calibration is unchanged.
 
+The September 20 opt-in `unit_assignment_transverse_fisher.toml` tests physical-u
+instead of physical-t reflection when scoring the empirical Fisher mold. Its
+`fisher_layout` is a coordinate convention, not a calibrated length, noise
+estimate or fitted threshold. Patch sampling, normalization, disk support,
+Fisher training, seeds and voting remain fixed. Neither reflection symmetry nor
+a synthetic test alone establishes improved chemical recognition; the complete
+external benchmark comparison is required. The original config remains intact.
+
 
 ## Opt-in label-free exploration (2026-09-18)
 

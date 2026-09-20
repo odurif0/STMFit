@@ -714,3 +714,18 @@ count/classifier/grade, calibrated noise claim, method selection or production
 promotion follows. See the September 18 journal and local report
 `results/masked_preprocessing_20260918/real4_v1_report.md` for the measured results
 and verification limits.
+
+## One Fisher mirror comparison (September 20)
+
+`hpc/compare_fisher_mirror.sbatch` runs the native assignment pipeline twice on
+the same complete saved symmetric-fusion geometry/patches. The only changed
+scientific setting is `fisher_layout` (legacy physical-t vs physical-u mirror).
+The job requests four CPUs, 16 GB and 30 minutes, without counting or geometry
+refits. It does not accept labels or perform grading.
+
+Set absolute `STMFIT_PROJECT_DIR`, `STMFIT_CACHE_DIR`, `STMFIT_INPUT_DIR`
+(`full146_raw/`, `templates_cc.tsv`), `STMFIT_OUTDIR` (new) and `JULIA_BIN`.
+Run `bash hpc/compare_fisher_mirror.sbatch --dry-run` first, then pass all five
+variables explicitly with `sbatch --export=...`. Outputs are `control/` and
+`transverse/` plus their logs; failures are retained and the job exits nonzero.
+The existing configs/defaults and completed fusion job stay unchanged.

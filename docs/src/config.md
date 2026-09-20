@@ -550,6 +550,15 @@ These are fixed settings, not knobs to search against the benchmark. Invalid
 patches remain explicit missing inputs. Counting continues to use its own
 existing `[model]`, `[selection]`, and `[preprocessing]` config unchanged.
 
+The opt-in `config/unit_assignment_transverse_fisher.toml` differs only in the
+method name (`cc_soft_transverse_fisher_v1`) and `[preprocessing] fisher_layout`.
+`legacy_row_major` preserves the historical physical-t mirror;
+`physical_u_outer_t_inner` reverses physical u in the extractor's u-outer/t-inner
+serialization. Both keep the same 197 disk pixels and identical Fisher fitting.
+The physical-u mode requires a reflection-closed disk (otherwise it errors,
+rather than adding zero pixels). This is one scientific comparison, not a new
+default, parameter sweep or change to the reconstructed half-plane descriptor.
+
 
 ## Opt-in diagnostic exploration settings (2026-09-18)
 

@@ -169,6 +169,67 @@ end
     @test vec(sum(posterior; dims=2)) ≈ ones(4)
 end
 
+@testset "Opt-in transverse mirror: same fit, physical u symmetry" begin
+    config = TOML.parsefile(joinpath(ROOT, "config", "unit_assignment_transverse_fisher.toml"))
+    @test config["model"]["name"] == "cc_soft_transverse_fisher_v1"
+    @test config["preprocessing"]["fisher_layout"] == "physical_u_outer_t_inner"
+    options = load_fisher_config(config)
+    grid = fisher_grid(options)
+    config["model"]["name"] = CONFIG["model"]["name"]
+    config["preprocessing"]["fisher_layout"] = CONFIG["preprocessing"]["fisher_layout"]
+    @test config == CONFIG # No second scientific setting differs.
+    @test grid.coords == GRID.coords
+    @test grid.disk_indices == GRID.disk_indices
+    @test grid.center_index == GRID.center_index
+    @test all(>(0), grid.mirror_indices)
+    @test grid.mirror_indices[grid.mirror_indices] == collect(eachindex(grid.disk_indices))
+    @test grid.mirror_indices != GRID.mirror_indices
+    full = Float64[100u + t for u in 1:grid.side for t in 1:grid.side]
+    reflected = Float64[100(grid.side + 1 - u) + t for u in 1:grid.side for t in 1:grid.side]
+    disk = full[grid.disk_indices]
+    @test flip_u_disk(disk, grid) == reflected[grid.disk_indices]
+    @test flip_u_disk(flip_u_disk(disk, grid), grid) == disk
+    @test sum(abs2, flip_u_disk(disk, grid)) == sum(abs2, disk)
+
+    table, patches = fixture_table()
+    legacy_model = fit_fisher(table.X, table.amplitudes, OPTIONS)
+    model = fit_fisher(table.X, table.amplitudes, options)
+    @test model.w_p == legacy_model.w_p
+    @test model.mid == legacy_model.mid
+    @test model.gmm.assignments == legacy_model.gmm.assignments
+    @test model.gmm.weights == legacy_model.gmm.weights
+    for i in (1, 2, 47, 64)
+        x = table.X[i, :]
+        @test maxmirror_score(x, model, grid) == maxmirror_score(flip_u_disk(x, grid), model, grid)
+    end
+    # Independent asymmetric probe: legacy t symmetry is not physical u symmetry.
+    weight = zeros(length(disk))
+    slot = findfirst(i -> grid.mirror_indices[i] != i && GRID.mirror_indices[i] != i,
+                     eachindex(disk))
+    weight[slot] = 1
+    probe = FisherModel(weight, zeros(length(disk)), model.g0, model.g1,
+                        model.amplitude_means, model.gmm)
+    x = zeros(length(disk)); x[slot] = 2
+    @test maxmirror_score(x, probe, grid) == 2
+    @test maxmirror_score(flip_u_disk(x, grid), probe, grid) == 2
+    @test maxmirror_score(flip_u_disk(x, grid), probe, GRID) == 0
+
+    native = PatchTable(table.keys, table.X, table.amplitudes, table.invalid_reasons, grid)
+    scores = cv_scores(native, options)
+    for parity in (0, 1)
+        train = findall(k -> mod(k[2], 2) == parity, table.keys)
+        held = findall(k -> mod(k[2], 2) != parity, table.keys)
+        fold = fit_fisher(table.X[train, :], table.amplitudes[train], OPTIONS)
+        @test [scores[i].score for i in held] ==
+              [max(score(table.X[i, :], fold), score(flip_u_disk(table.X[i, :], grid), fold)) for i in held]
+    end
+    bad = copy(table.X); bad[2, 1] = NaN
+    invalid = cv_scores(PatchTable(table.keys, bad, table.amplitudes, table.invalid_reasons, grid), options)
+    @test length(invalid) == length(scores)
+    @test invalid[2].invalid_reason == "nonfinite_patch_input"
+    @test isnan(invalid[2].score)
+end
+
 @testset "PCA/sample-noise/Fisher algebra versus fixed-partition NumPy" begin
     rng = MersenneTwister(203)
     X = randn(rng, 40, 18)

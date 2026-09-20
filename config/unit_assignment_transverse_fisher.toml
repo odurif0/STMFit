@@ -1,0 +1,40 @@
+# One opt-in experiment: physical transverse Fisher reflection, not longitudinal.
+# All other settings equal unit_assignment_reconstructed.toml. No label tuning.
+[model]
+name = "cc_soft_transverse_fisher_v1"
+descriptor = "transverse_half_plane_asymmetry"
+descriptor_column = "patch_u_asym_reconstructed"
+descriptor_channel = "bwd_res"
+descriptor_half_nm = 0.32
+descriptor_step_nm = 0.08
+descriptor_zero_l1 = 1e-12
+split_skew_ratio_max = 2.0
+mold_half_nm = 0.32
+mold_step_nm = 0.04
+mold_target_height_nm = 0.50
+mold_z_min_nm = -0.5
+mold_z_max_nm = 2.6
+mold_z_step_nm = 0.005
+mold_isovalue_min_log10 = -5.5
+mold_isovalue_max_fraction = 0.8
+mold_isovalue_count = 80
+mold_calibration = "first_below_target"
+fisher_pca_components = 10
+fisher_noise_regularization = 0.01
+fisher_gmm_regularization = 0.001
+fisher_gmm_maxiter = 300
+fisher_gmm_tolerance = 0.001
+fisher_seed = 0
+
+[selection]
+kmeans_seeds = 20
+gmm_seeds = 10
+first_seed = 0
+gmm_selftrain = 2
+interactions = true
+vote_threshold = 0.5
+
+[preprocessing]
+descriptor_normalization = "median_sample_std"
+pixel_order = "u_outer_t_inner"
+fisher_layout = "physical_u_outer_t_inner"

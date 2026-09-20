@@ -1710,6 +1710,9 @@ mapping, sample latent covariance plus ridge, opposite even/odd-lobe folds,
 raw-patch/centered-midpoint scoring, reflection maximum and six-decimal margins.
 The old row-major last-axis reversal flips physical **t** for these serialized
 patches, despite its historical `flip_u_disk` name. This is retained explicitly.
+The opt-in `unit_assignment_transverse_fisher.toml` separately tests reflection
+of physical **u**, with unchanged disk, fitted weights and remaining settings.
+It is named `cc_soft_transverse_fisher_v1`, not a recovered historical method.
 The native initialization/RNG, Lloyd stopping and responsibility arithmetic
 differ from sklearn. Byte-identical sklearn predictions are not claimed.
 Invalid or degenerate folds retain their rows with NA and an explicit reason.

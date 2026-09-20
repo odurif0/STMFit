@@ -2307,6 +2307,18 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-20. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0h. **Can a reproducible assignment exceed the lost historical champion?** →
+    **OPEN; TARGET UNCHANGED (Sep 20)**: the user explicitly rejects lowering
+    the target to the best runnable reconstruction. The historical 677 correct
+    positions / 870 and 36 exact chains / 145 remain the comparison target;
+    symmetric fusion (671 / 28) is a working candidate, not a new champion.
+    The next bounded comparison changes only Fisher's scoring mirror from
+    physical t to physical u, using the complete symmetric-fusion cache.
+    No new count selection, half-plane descriptor, threshold, vote weight,
+    seed, composition rule, missing-patch relaxation or DFT change is included.
+    One 30-minute four-CPU Viper job will replay control and treatment, then
+    external grading will retain all 145 benchmark scans, including losses.
+
 0g. **Does symmetric fit filtering improve recognition?** → **COMPLETE; MODEST
     GAIN, NO PROMOTION (Sep 20)**: source `d12283a` fits `(F+B)/2`, retaining
     `(S(F)+S(B))/2` for ROI detection. Job **11878491** completed in 34m25s,
@@ -7652,3 +7664,50 @@ external native grades: `external_grade_v1/`; complete paired scan table:
 `paired_audit_v1/paired_files.tsv`. `summarize_pair.jl` verifies aggregate,
 coverage and confusion arithmetic against the native grade before writing the
 paired report. The job is closed and no new compute is submitted.
+
+## 2026-09-20 — Physical transverse Fisher mirror: one bounded comparison
+
+The user reaffirms that the deliverable is a reproducible pipeline exceeding
+the lost champion, not merely improving the native reconstruction, and asks
+to continue the descriptor/assignment investigation. The symmetric-fusion
+candidate remains unpromoted. External per-file comparison against history
+finds 24 winning scans, 27 losing and 94 tied; five exact chains are gained and
+13 lost. All 13 lost exact chains retain N=6. These are post-hoc diagnostics,
+not a subset to train on or a target-count rule.
+
+**This pass:** test one source-grounded representation convention, with one
+30-minute four-CPU Viper job. Done means tested implementation, complete paired
+outputs, external full145 grade against the symmetric control and historical
+reference, and an explicit retain/reject decision even if the result is worse.
+No broad feature search, weight/threshold/seed tuning, exact-producer recovery,
+missing-patch imputation, counting/QE refit or unknown25 rerun is included.
+
+The reconstructed Fisher implementation deliberately kept Python's `[:, ::-1]`
+reflection. With the actual u-outer/t-inner patch serialization this reverses
+physical t (along the chain), not u (across it). That was documented at porting;
+it is not a newly discovered regression or proof of the historical score gap.
+Testing transverse-side invariance is physically motivated without labels.
+The opt-in config `unit_assignment_transverse_fisher.toml` differs solely in
+`model.name` and `preprocessing.fisher_layout=physical_u_outer_t_inner`.
+Legacy behavior remains available and unchanged. Both paths keep the identical
+197-pixel disk, PCA/GMM training, parity folds, amplitude convention, midpoint,
+score sign/rounding and max-of-two operation. Only the reflected held-out patch
+changes. Synthetic tests independently check the actual serialized axis,
+involution, energy preservation, unchanged fitted weights and physical-u score
+invariance; a legacy t mirror fails the deliberately asymmetric u probe.
+
+`hpc/compare_fisher_mirror.sbatch` reuses the five complete saved geometry/patch
+tables from symmetric-fusion job 11878491 in both arms. It runs the existing
+whole-cohort native pipeline twice, including Fisher, GMM, k-means, vote and QC.
+There is no per-error-row selector and no label input. The control must reproduce
+the saved 671-correct / 28-exact candidate before interpreting a treatment
+difference. The model is fixed before the new grade; this pass cannot establish
+independent generalization on a benchmark already used in development.
+
+Pre-run verification passes under Julia 1.13: Fisher 229/229 (including 28
+new transverse-convention checks), paired shell runner 16/16, descriptor/vote
+32/32 and pipeline boundaries/shards 19/19: **296 assertions**. The physical-u
+variant changes no fitted synthetic Fisher weight or training partition. The
+preexisting legacy NumPy-reference and separate-process replay tests still pass.
+The sandbox initially blocked Julia's launcher lock and the SSH system-config
+check; the same read-only checks succeeded with the approved host access.
