@@ -241,6 +241,13 @@ and agreement with an independent QR projection establish the algebra only.
 All geometry, physical scales, missingness rules, classifier settings and voting
 stay fixed; only the one descriptor supplied to GMM changes. Both variants are
 declared before a single full-cohort comparison and external grade.
+The completed comparison gives **672/849, 28 exact** for the first moment and
+**673/849 (79.3%), 33 exact** for affine residuals, versus **672/849, 29 exact**
+for the replayed control. Retain the affine config as a working candidate only;
+history still has four more correct positions and three more exact chains.
+The sixteen changed decisions all end at zero vote margin, and the benchmark
+has been reused extensively. Neither this small gain nor the projection algebra
+establishes a physical background correction or calibrated chemical confidence.
 
 
 ## Opt-in label-free exploration (2026-09-18)

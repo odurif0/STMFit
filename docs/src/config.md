@@ -575,9 +575,9 @@ options in matched mode, so legacy patches cannot silently be reused. Geometry,
 split-width features and templates may still be reused. Standalone extractors
 without `--assignment-config` retain legacy extraction for compatibility.
 The completed fixed comparison gains 671/28 → **672/29** (correct positions /
-exact chains), at unchanged coverage. This is the opt-in working candidate, not
-a promoted default or a replacement for historical 677/36. No setting is tuned
-after grading; the reconstructed config still selects the explicit legacy mode.
+exact chains), at unchanged coverage. This was the working candidate before the
+descriptor comparison below, not a replacement for historical 677/36. No setting
+is tuned after grading; the reconstructed config still selects the legacy mode.
 
 Two further opt-in configs test only the descriptor on those same matched
 residuals: `unit_assignment_transverse_moment.toml` and
@@ -599,6 +599,13 @@ compatibility. The explicit method name/config identifies its definition; neithe
 candidate is asserted to recover the lost historical producer. The plane
 projection affects this one descriptor, not images, patches, CC/Fisher or
 k-means inputs. These two predeclared comparisons are not promoted defaults.
+Their completed full145 grades are **672/849, 28 exact** for the first moment
+and **673/849, 33 exact** for affine residuals, versus control 672/849 and 29.
+Retain `unit_assignment_affine_residual.toml` as the opt-in working candidate;
+the first moment is a recorded negative experiment. The affine candidate still
+trails historical 677/854 and 36 exact. All sixteen final changes end at the
+unchanged 0.5 vote tie, not at a newly calibrated confidence. No threshold or
+other setting changes after this grade.
 
 
 ## Opt-in diagnostic exploration settings (2026-09-18)

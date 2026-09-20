@@ -23,10 +23,20 @@ The subsequent matched-residual comparison (`S(data-model)` vs `S(data)-model`)
 gains **one correct position and one exact chain**: **672/870, 672/849 (79.2%),
 29/145 exact**, at unchanged counts/coverage. Both arms regenerate all patches;
 the control is byte-identical to the saved symmetric result. This opt-in variant
-is the **new working candidate, not a promoted champion**: history still leads
-by five correct positions and seven exact chains. No setting was tuned after
-grading; this reused benchmark does not establish independent generalization.
+became the **working candidate at that stage, not a promoted champion**: history
+then led by five correct positions and seven exact chains. No setting was tuned
+after grading; this reused benchmark does not establish independent generalization.
 See the [matched-residual result](docs/src/unit_assignment.md#matched-residual-filtering-2026-09-20-modest-gain).
+
+The next fixed comparison improves the descriptor to **673/870 correct,
+673/849 (79.3%), 33/145 exact chains** by computing half-plane asymmetry after
+affine projection of the same patch. The first-moment alternative gives 672/28
+and is not retained. `config/unit_assignment_affine_residual.toml` is now the
+**opt-in working candidate, not a champion**: history still leads by four correct
+positions and three exact chains. Coverage and counts are unchanged. All sixteen
+changed decisions land at the existing vote tie (zero margin), so this modest
+development-benchmark gain is not evidence of calibrated chemical confidence.
+See the [descriptor comparison](docs/src/unit_assignment.md#two-transverse-descriptor-candidates-2026-09-20-affine-gain-no-promotion).
 
 **Benchmark (6mer):** the robust-AICc guard validates at 39/39 primary 240817
 files exact (N=6), reproducible. The frozen pre-correction chitosan reference was promoted for

@@ -2308,14 +2308,17 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0j. **Can a better-defined transverse descriptor close the historical gap?** →
-    **IN PROGRESS (Sep 20)**: the user asks to continue improving results.
-    One 30-minute four-CPU comparison is declared: matched-residual control
-    (672/29), position-weighted first moment, and half-plane asymmetry after
-    affine projection of the patch. Only the descriptor and method name differ.
-    Done requires tested formulas, byte-reproduced control, complete whole-cohort
-    outputs and external full145 grades with every gain/loss and a decision.
-    No label-guided formula, radius, seed, threshold or weight tuning is allowed.
-    Neither variant is a recovered historical producer or an established gain.
+    **COMPLETE; AFFINE GAIN, NO PROMOTION (Sep 20)**: job **11888011** finishes
+    0:0 in 7m19s. All twelve control tables reproduce matched residuals at 672/29.
+    The first moment gives **672/28** and is rejected; affine-residual half-plane
+    asymmetry gives **673/870 correct, 673/849 (79.3%), 33/145 exact**, at the
+    same coverage. Eight scans gain and seven lose; five exact chains are gained
+    and one lost. All sixteen changed decisions land at the unchanged vote tie
+    (zero margin); one belongs to the already-excluded technical scan. The new
+    opt-in working candidate still trails historical 677/36 by four positions
+    and three exact chains. All 585 outputs and the log are fetched. Verification
+    passes 833 focused assertions plus 77 saved-output checks. No post-grade
+    tuning, combined variant, count refit or unknown25 rerun follows.
 
 0i. **Does matching the patch residual filter improve recognition?** →
     **COMPLETE; SMALL GAIN, NO PROMOTION (Sep 20)**: job **11883607** finishes
@@ -2333,8 +2336,10 @@ See `docs/src/selection.md` for the full guard specification and
     **OPEN; TARGET UNCHANGED (Sep 20)**: the user explicitly rejects lowering
     the target to the best runnable reconstruction. The historical 677 correct
     positions / 870 and 36 exact chains / 145 remain the comparison target;
-    matched residual filtering (672 / 29) is the latest working candidate, not
-    a new champion. It improves the prior symmetric-fusion candidate (671 / 28).
+    affine-residual half-plane asymmetry (673 / 33, comparison 0j) is the latest
+    opt-in working candidate, not a new champion. It improves the matched-residual
+    candidate (672 / 29), following symmetric fusion (671 / 28). The remaining
+    gap is four correct positions and three exact chains merely to equal history.
     The one physical-u Fisher mirror comparison is **COMPLETE; NEGATIVE**:
     job 11879515 (2m03s, exit 0:0) replays the control byte-for-byte but the
     treatment gives **669/849 (78.8%), 27 exact**, versus 671/849 and 28.
@@ -2342,9 +2347,12 @@ See `docs/src/selection.md` for the full guard specification and
     exact chain is lost. All 900 keys and seven unavailable rows remain.
     The mirror variant is not retained as the working reference. The separately
     user-approved matched-residual comparison (0i) subsequently gains one correct
-    position and one exact chain. No further setting search follows these passes.
-    Counts, half-plane descriptor formula, thresholds, voting, seeds, missingness
-    and DFT inputs are unchanged. Exceeding history remains unresolved.
+    position and one exact chain. The next user-requested comparison (0j) changes
+    the descriptor alone and gains another position and four exact chains. No
+    post-grade setting search follows these passes. Counts, thresholds, voting,
+    seeds, unavailable keys and DFT inputs are unchanged. Exceeding history remains
+    unresolved; rounded 79.3% classified accuracy is not equality on coverage or
+    the fixed 870-position denominator.
 
 0g. **Does symmetric fit filtering improve recognition?** → **COMPLETE; MODEST
     GAIN, NO PROMOTION (Sep 20)**: source `d12283a` fits `(F+B)/2`, retaining
@@ -8014,3 +8022,94 @@ All **125 descriptor assertions** pass, including both real CLI invocations.
 Existing assignment/vote tests pass **37/37**, patch extraction **380/380**,
 the three-arm shell runner **16/16**, and the complete synthetic pipeline
 **46/46**, including its figures and all three cache-rejection configurations.
+
+Fisher numerical/reference/CLI regression also passes **229/229**, for **833
+focused assertions**. The documentation builds with existing size warnings only.
+Source **252edaa** is synchronized to
+`/u/oldu/code/STMFit_transverse_descriptors_20260920`; a checksum dry-run finds
+no source differences. Eleven source/configuration/input hashes match. The
+Manifest, counting config and matched-residual control config are unchanged.
+All three metadata-only dry-runs validate 146 files and the independent plotting
+dependency import succeeds on Julia 1.13. The single job submitted is
+**11888011**, with the required five-variable command-line `--export` list,
+four CPUs, 16 GB and a 30-minute limit. No scientific work runs on the login node.
+
+### Completed three-arm comparison: modest affine gain
+
+Job **11888011** completes **0:0 in 7m19s** on `vipm2008`; Slurm allocates eight
+CPUs for the four-CPU request. Control takes 3m45s, moment 1m49s and affine 1m44s.
+All **585 regular outputs plus the Slurm log** are fetched to
+`results/transverse_descriptor_comparison_20260920/`, excluding only raw staging
+symlinks. The checksum dry-run is empty. Source/configuration and input hashes
+remain unchanged. The job is closed, with no further submission.
+
+All **77 saved-output checks** pass before grading: each of twelve scientific
+tables in each arm retains all 146 files / 900 keys; the twelve control tables
+are byte-identical to the saved matched-residual result. Eight tables (all three
+patches, local geometry, both CC margins, Fisher and k-means) are byte-identical
+across all arms. In descriptor/predictor input tables only the descriptor column
+changes, on 893 finite rows. Both candidates retain the same seven unavailable
+assignments, with no new affine-zero-mass rows. There is no scientific failure.
+
+The first moment changes 249 GMM labels and 357 vote frequencies; affine residuals
+change 264 and 354. The final vote changes six and sixteen labels respectively.
+These vote frequencies are not calibrated chemical probabilities. External
+grading is run only after the complete outputs and controls are verified:
+
+| Profile | Correct / all 870 | Correct / classified | Coverage | Emitted errors | Exact chains / 145 |
+|---|---:|---:|---:|---:|---:|
+| Historical reference | 677 (77.8%) | 677/854 (79.3%) | 98.2% | 177 | 36 |
+| Matched-residual control | 672 (77.2%) | 672/849 (79.2%) | 97.6% | 177 | 29 |
+| Transverse first moment | 672 (77.2%) | 672/849 (79.2%) | 97.6% | 177 | 28 |
+| Affine-residual half-plane asymmetry | 673 (77.4%) | 673/849 (79.3%) | 97.6% | 176 | 33 |
+
+All native arms retain **16 missing control positions, 38 extra lobes and five
+unavailable aligned positions**. The affine candidate's 197 not-correct positions
+comprise 176 emitted errors, 16 missing positions and five abstentions; they are
+not 197 abstentions. Rounding classified accuracy to 79.3% for both the affine
+candidate and history does not close the fixed-denominator or exact-chain gap.
+
+The first moment has **three winning scans, three losing, 139 tied**, with no
+exact gains and one exact loss (`241113_086`). Its six final changes are all in
+the benchmark. One N=5 scan (`240817_043`) changes external grade orientation.
+Confusion totals `(TN,FP,FN,TP)` change `(517,45,132,155)` → `(518,44,133,154)`.
+Against history there are 25 wins, 29 losses and 91 ties, five exact gains and
+thirteen losses. This candidate is not retained.
+
+Affine residuals have **eight winning scans, seven losing, 130 tied**. Five exact
+chains are gained (`240307_017`, `240310_Cu100007`, `240817_007`, `240817_044`,
+`240818_020`) and one lost (`241113_086`). All sixteen final changes are `0→1`:
+fifteen lie in the benchmark and one is lobe 7 of `240310_Cu100009.sxm`, the
+technical scan excluded by the unchanged external manifest since July 3. It
+remains in scientific inference and all full146 outputs, not selectively dropped.
+The two N=5 scans `240314_Cu100_024` and `241113_089` reverse external grade
+orientation; that convention is not a spatial monomer correspondence.
+Confusion totals change `(517,45,132,155)` → `(510,52,124,163)`: eight additional
+true positives cost seven false positives. Against history there are 23 wins,
+26 losses and 96 ties, six exact gains and nine losses, with eight orientation
+differences. All 580 candidate/reference/file pairs, including all losses and
+ties, are retained in `paired_audit_v1/paired_files.tsv`.
+
+**Important limitation:** all sixteen affine decisions land at exactly **0.5
+vote frequency and zero margin**, using the unchanged tie rule. The net gain is
+one correct position, not sixteen secure identifications. No vote threshold,
+weight, seed, hybrid or missing-value rule is changed in response to this grade.
+This outcome does not establish that the removed plane was a physical artifact.
+
+**Decision:** retain `config/unit_assignment_affine_residual.toml` as the new
+opt-in working candidate at **673 correct / 33 exact**, **without promotion**.
+The first-moment config is preserved as a negative experiment, not a default.
+The user's historical target remains unmet: **four more correct positions and
+three more exact chains are needed merely to equal 677/36**. This repeatedly
+used benchmark remains development evidence, not independent validation.
+Count selection, the separate 871-lobe counting lineage and unknown25 are not
+rerun or revalidated. The bounded comparison is complete; the broader goal is
+still open and has not been lowered.
+
+The French report, all changes, complete grades and replay commands are in
+`results/transverse_descriptor_comparison_20260920/report.md`.
+Verification remains **833 focused Julia 1.13 assertions**, plus the **77 saved
+output checks** and paired-grade arithmetic assertions. The recorded test-only
+syntax/norm failures above do not alter the production formulas or this result.
+The final documentation build passes, with only the existing generated-page and
+search-index size warnings; deployment is skipped outside CI.

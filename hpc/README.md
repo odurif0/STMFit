@@ -779,3 +779,15 @@ explicit `--export=STMFIT_PROJECT_DIR,STMFIT_CACHE_DIR,STMFIT_INPUT_DIR,STMFIT_O
 `STMFIT_OUTDIR` must be new. A failed arm is preserved; subsequent arms still
 run, and any failure makes the job exit nonzero. Fetch all outputs and verify
 the control against the saved 672/29 candidate before external grading.
+
+Completed job **11888011** (source `252edaa`) exits **0:0 in 7m19s** on `vipm2008`;
+four CPUs were requested and eight allocated. All 585 regular outputs and the
+Slurm log are fetched to `results/transverse_descriptor_comparison_20260920/`,
+with matching checksums. All twelve control tables match the saved result.
+The first moment gives **672/28** (correct positions / exact chains); affine
+residuals give **673/33**, against control **672/29**, all at unchanged coverage.
+Retain the explicit affine config as the working candidate, not a champion:
+historical 677/36 still leads. All changed affine decisions have zero vote
+margin. The report records every gain/loss; no parameter change, hybrid,
+counting run or unknown25 application follows. This job is closed; do not
+resubmit it as an automatic continuation.

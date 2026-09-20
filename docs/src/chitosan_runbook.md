@@ -19,13 +19,28 @@ recorded negative experiment. The historical 677/36 target remains unmet.
 The later matched-residual comparison (job **11883607**, 5m15s, exit 0:0)
 improves the reproduced control **671/28 → 672/29** (correct positions / exact
 chains), with unchanged **849/870 coverage** and **79.2% classified accuracy**.
-`config/unit_assignment_matched_residual.toml` is now the opt-in working
-candidate, not a production promotion: historical 677/36 still leads by five
+`config/unit_assignment_matched_residual.toml` became the opt-in working
+candidate at that stage, not a production promotion: historical 677/36 led by five
 positions and seven exact chains. Use this explicit assignment config to
 reproduce the candidate; it rejects cached patches. Counting, unknown25,
 thresholds and all other settings remain unchanged. The full paired report is
 `results/matched_residual_comparison_20260920/report.md`; see the journal and
 `hpc/compare_matched_residual.sbatch`. Do not resubmit the completed comparison.
+
+The subsequent two-descriptor job **11888011** completes in **7m19s**, exit 0:0.
+Its control reproduces all twelve saved matched-residual tables byte-for-byte.
+The first moment gives **672/28** and is rejected; affine-residual half-plane
+asymmetry gives **673/870 correct, 673/849 (79.3%), 33/145 exact**, with unchanged
+counts and coverage. Use **`config/unit_assignment_affine_residual.toml`** for
+this new opt-in working candidate; it also rejects cached patches. It is not
+promoted: historical 677/36 remains ahead by four positions and three chains.
+Eight scans gain, seven lose; five exact chains are gained and one lost. All
+sixteen changed decisions have zero vote margin (one is outside the benchmark),
+so do not interpret the gain as calibrated confidence or tune the tie rule.
+All 585 outputs and the Slurm log are fetched. The complete report is
+`results/transverse_descriptor_comparison_20260920/report.md`; the source is
+`252edaa` and the runner is `hpc/compare_transverse_descriptors.sbatch`.
+No counting or unknown25 rerun follows; do not resubmit this completed job.
 
 This page is the hand-off document for reproducing the current chitosan workflow
 without relying on prior conversation context.  The goal is a label-free fitting

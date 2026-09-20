@@ -1773,7 +1773,7 @@ unknown25 are not rerun. Verification: 696 focused Julia 1.13 assertions plus
 47 saved-output checks. Full grades, every paired gain/loss and replay scripts:
 `results/matched_residual_comparison_20260920/report.md`.
 
-### Two transverse-descriptor candidates (2026-09-20; comparison pending)
+### Two transverse-descriptor candidates (2026-09-20; affine gain, no promotion)
 
 The user asks to continue improving the results, with historical 677/36 still
 the target. One comparison is bounded to a 30-minute four-CPU Viper job: the
@@ -1793,6 +1793,45 @@ rules. The same native pipeline regenerates all patches in each arm and computes
 whole-cohort predictions before external grading. Control replay, all keys,
 coverage and every gain/loss must be checked. No radius, feature combination,
 threshold, seed or vote-weight search follows the grade.
+
+Viper job **11888011** completes in **7m19s**, exit 0:0, from source `252edaa`.
+All **585 outputs** and the Slurm log are fetched with matching checksums.
+The twelve control tables reproduce the saved matched-residual candidate
+byte-for-byte. All three arms retain 146 files / 900 keys and the same seven
+unavailable assignments. Patches, local geometry, CC, Fisher and k-means are
+byte-identical across arms; only the descriptor changes before GMM and voting.
+
+| Profile | Correct / all 870 | Correct / classified | Exact chains / 145 |
+|---|---:|---:|---:|
+| Historical reference | 677 (77.8%) | 677/854 (79.3%) | 36 |
+| Matched-residual control | 672 (77.2%) | 672/849 (79.2%) | 29 |
+| Transverse first moment | 672 (77.2%) | 672/849 (79.2%) | 28 |
+| Affine-residual half-plane asymmetry | 673 (77.4%) | 673/849 (79.3%) | 33 |
+
+All native arms have identical 849/870 coverage, 16 missing control positions,
+38 extra lobes and five unavailable aligned positions. The first moment changes
+six decisions: three scans gain, three lose, 139 tie; one exact chain is lost,
+none gained. **Do not retain that variant.**
+
+Affine residuals change sixteen decisions, all `0→1`: fifteen benchmark scans
+(eight gains, seven losses, 130 ties) and the already-excluded technical scan
+`240310_Cu100009.sxm`. Five exact chains are gained and one lost. Confusion totals
+`(TN,FP,FN,TP)` change `(517,45,132,155)` → `(510,52,124,163)`. Two short-chain
+grades reverse their orientation; this is not a spatial monomer correspondence.
+All sixteen changed predictions land at **0.5 vote frequency / zero margin**
+under the unchanged tie rule. They are not confident chemical discoveries.
+
+**Retain `config/unit_assignment_affine_residual.toml` as the opt-in working
+candidate at 673/33, without champion promotion.** History still has four more
+correct positions and three more exact chains. The rounded classified accuracy
+is 79.3% for both, but coverage and fixed-denominator correct counts differ.
+Against history the candidate wins on 23 scans, loses on 26 and ties on 96,
+with six exact gains and nine losses. This reused benchmark is development
+evidence, not independent validation; no new settings or hybrid follow the grade.
+Counting and unknown25 are unchanged. Verification: **833 focused Julia 1.13
+assertions and 77 saved-output checks**, plus paired-grade arithmetic checks.
+All 580 candidate/reference/file pairs and replay commands are in
+`results/transverse_descriptor_comparison_20260920/report.md`.
 
 ### Native numerical conventions
 

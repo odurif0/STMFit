@@ -19,6 +19,13 @@ The later matched-residual assignment comparison reaches **672/870 correct and
 historical 677/36 still leads. This patch-only change does not rerun or revalidate
 count selection, change GCV/guards, or establish unknown-chain chemical accuracy.
 
+The next fixed-geometry descriptor comparison advances the opt-in working
+candidate to **673/870 correct and 33/145 exact**, using affine-residual
+half-plane asymmetry; the first-moment alternative gives 672/28 and is rejected.
+Coverage remains 849/870 and historical 677/36 remains better. No selected N,
+physical bound, GCV rule or guard changes. This assignment-only result does not
+revalidate the separate frozen counting benchmark below.
+
 How STMFit chooses the optimal number of lobes (N) from the sweep results.
 
 ## Selection Hierarchy
