@@ -13,6 +13,12 @@ The separate physical-u Fisher-mirror experiment regresses assignment to
 671/28 for the symmetric-fusion control. It is rejected as the working
 reference and changes no count-selection parameter or benchmark claim here.
 
+The later matched-residual assignment comparison reaches **672/870 correct and
+29/145 exact**, against the replayed 671/28 control, with identical counts and
+849/870 coverage. It becomes the opt-in working candidate, not a new champion:
+historical 677/36 still leads. This patch-only change does not rerun or revalidate
+count selection, change GCV/guards, or establish unknown-chain chemical accuracy.
+
 How STMFit chooses the optimal number of lobes (N) from the sweep results.
 
 ## Selection Hierarchy

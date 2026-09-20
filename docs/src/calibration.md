@@ -208,7 +208,7 @@ instead of physical-t reflection when scoring the empirical Fisher mold. Its
 estimate or fitted threshold. Patch sampling, normalization, disk support,
 Fisher training, seeds and voting remain fixed. Neither reflection symmetry nor
 a synthetic test alone establishes improved chemical recognition; the complete
-external benchmark comparison is required. The original config remains intact.
+external benchmark comparison is required. Original numerical settings are unchanged.
 That fixed comparison regresses to 669/870 correct and 27/145 exact, versus
 671/870 and 28/145 for the control at identical coverage; the transverse
 variant is not retained. No recalibration or threshold adjustment follows.
@@ -224,6 +224,11 @@ arbitrary background or transverse gradient. Synthetic consistency alone does
 not establish better recognition; the full external comparison is required.
 Both older assignment configs now state `smooth_data_only` explicitly, changing
 their file hashes but not their effective settings.
+The completed paired grade gives **672/849 (79.2%), 29 exact**, versus
+671/849 and 28 for the control. This small development-benchmark gain supports
+keeping the opt-in candidate, not a claim of calibrated chemistry or independent
+generalization; historical 677/854 and 36 exact remains better. No threshold or
+other calibration adjustment follows.
 
 
 ## Opt-in label-free exploration (2026-09-18)

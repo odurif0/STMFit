@@ -754,3 +754,12 @@ This is necessary with Viper's `SBATCH_EXPORT=NONE`. Actual execution requires
 a Slurm allocation. Logs and failed outputs are preserved; either failed arm
 makes the job fail after both have been attempted. Fetch outputs and grade
 externally only after checking the regenerated control against its saved output.
+
+Completed job **11883607** (source **dae6395**) exited 0:0 in **5m15s** on
+`vipm2063`, with four CPUs requested and eight allocated. All 390 regular output
+files and the Slurm log are fetched and checksum-verified under
+`results/matched_residual_comparison_20260920/`; raw-input staging links are not
+duplicated. The regenerated control reproduces all twelve checked tables
+byte-for-byte. Matched filtering gains **671/28 → 672/29** at unchanged coverage;
+it is the opt-in working candidate, not a promoted champion. No new tuning or
+submission follows this completed pass. **Do not resubmit this job.**

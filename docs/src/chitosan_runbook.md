@@ -16,6 +16,17 @@ against the exactly reproduced symmetric-fusion 671/28. Keep the original
 Fisher layout in the working candidate; the opt-in transverse config is a
 recorded negative experiment. The historical 677/36 target remains unmet.
 
+The later matched-residual comparison (job **11883607**, 5m15s, exit 0:0)
+improves the reproduced control **671/28 → 672/29** (correct positions / exact
+chains), with unchanged **849/870 coverage** and **79.2% classified accuracy**.
+`config/unit_assignment_matched_residual.toml` is now the opt-in working
+candidate, not a production promotion: historical 677/36 still leads by five
+positions and seven exact chains. Use this explicit assignment config to
+reproduce the candidate; it rejects cached patches. Counting, unknown25,
+thresholds and all other settings remain unchanged. The full paired report is
+`results/matched_residual_comparison_20260920/report.md`; see the journal and
+`hpc/compare_matched_residual.sbatch`. Do not resubmit the completed comparison.
+
 This page is the hand-off document for reproducing the current chitosan workflow
 without relying on prior conversation context.  The goal is a label-free fitting
 and model-selection pipeline that is externally graded on the benchmark and then

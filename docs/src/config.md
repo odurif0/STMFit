@@ -574,7 +574,10 @@ passes `--assignment-config` to both extractors and rejects all three patch-cach
 options in matched mode, so legacy patches cannot silently be reused. Geometry,
 split-width features and templates may still be reused. Standalone extractors
 without `--assignment-config` retain legacy extraction for compatibility.
-This candidate is a bounded benchmark comparison, not a promoted default.
+The completed fixed comparison gains 671/28 → **672/29** (correct positions /
+exact chains), at unchanged coverage. This is the opt-in working candidate, not
+a promoted default or a replacement for historical 677/36. No setting is tuned
+after grading; the reconstructed config still selects the explicit legacy mode.
 
 
 ## Opt-in diagnostic exploration settings (2026-09-18)

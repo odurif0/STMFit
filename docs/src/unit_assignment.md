@@ -1727,7 +1727,7 @@ The opt-in config/source/tests are kept as a negative experiment. Results and
 all gains/losses: `results/fisher_mirror_comparison_20260920/report.md` and
 `paired_audit_v1/`. Focused verification totals 819 assertions on Julia 1.13.
 
-### Matched residual filtering (2026-09-20; comparison pending)
+### Matched residual filtering (2026-09-20; modest gain)
 
 Both patch extractors historically subtract an unsmoothed decoded Gaussian model
 from smoothed data: `S(data) - model`. Even an exact model image then gives the
@@ -1741,10 +1741,37 @@ The targeted comparison regenerates forward 17×17, backward 17×17 and backward
 9×9 patches for both arms from identical symmetric-fusion geometry and counts.
 It reuses split features and templates, retains the legacy Fisher mirror, and
 changes no threshold, seed, class prior, missingness policy or classifier rule.
-Matched mode rejects cached patches. The complete native cohort is processed
-before any external full145 grade. The control must reproduce 671 correct / 28
-exact; the historical target stays 677 / 36. No recognition gain is claimed
-before that comparison, and a reused benchmark is not independent validation.
+Matched mode rejects cached patches. Viper job **11883607** completes in
+**5m15s**, exit 0:0. All 390 output files are fetched and checksum-verified;
+all twelve inspected tables per arm retain the same 146 scans / 900 keys.
+The regenerated control's twelve tables, including all patches and predictions,
+are byte-identical to the saved symmetric-fusion outputs. Raw patch columns and
+local geometry features are unchanged between arms; all seven unavailable
+prediction keys are preserved. Labels enter only the subsequent external grade.
+
+| Profile | Correct / all 870 | Correct / classified | Exact / 145 |
+|---|---:|---:|---:|
+| Historical reference | 677 | 677/854 (79.3%) | 36 |
+| Regenerated symmetric-fusion control | 671 | 671/849 (79.0%) | 28 |
+| Matched residual | 672 | 672/849 (79.2%) | 29 |
+
+Both native arms retain 849/870 coverage, 16 missing positions, 38 extra lobes
+and five unavailable aligned positions. Only three final labels change (0→1):
+`240814_023` lobe 2 gains one correct position, `240817_005` lobe 2 gains one and
+becomes exact, while `240817_087` lobe 4 loses one. All have N=6 and unchanged
+external orientation. The complete paired tally is **two winning scans, one
+losing, 142 tied; one exact chain gained, none lost**. Confusion totals
+`(TN,FP,FN,TP)` change `(518,44,134,153)` → `(517,45,132,155)`.
+
+893 half-plane descriptors and Fisher scores change, alongside 898 scores in
+each CC direction and 252 GMM labels. The complete k-means output is unchanged;
+the much smaller final decision change is measured, not a reason to retune the
+vote. **Retain this opt-in variant as the working candidate, without promotion.**
+History still leads by five correct positions and seven exact chains. This
+reused benchmark does not establish independent generalization. Counting and
+unknown25 are not rerun. Verification: 696 focused Julia 1.13 assertions plus
+47 saved-output checks. Full grades, every paired gain/loss and replay scripts:
+`results/matched_residual_comparison_20260920/report.md`.
 
 ### Native numerical conventions
 

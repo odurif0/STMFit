@@ -2308,27 +2308,32 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0i. **Does matching the patch residual filter improve recognition?** →
-    **IN PROGRESS (Sep 20)**: user-approved one-setting comparison of
-    `S(data)-model` against `S(data-model)`, with one 30-minute four-CPU Viper job.
-    Both arms regenerate all patches at the same symmetric-fusion geometry and
-    counts; no classifier setting or threshold changes. Synthetic null-model
-    and injected-signal checks pass. Done requires the complete paired full145
-    grade, control replay and an explicit retain/reject decision against the
-    working 671/28 and historical 677/36. No chemical gain is yet established.
+    **COMPLETE; SMALL GAIN, NO PROMOTION (Sep 20)**: job **11883607** finishes
+    0:0 in 5m15s. `S(data-model)` gains **671 → 672 correct / 870** and
+    **28 → 29 exact chains / 145**, at unchanged 849/870 coverage. The twelve
+    regenerated control tables are byte-identical to the saved symmetric result.
+    Both arms preserve all 900 keys and seven unavailable assignments. Two scans
+    gain, one loses and 142 tie; one exact chain is gained, none lost. The variant
+    is retained as the opt-in working candidate, not a champion. Historical
+    677/36 still leads by five correct positions and seven exact chains. No
+    post-grade setting change, count refit, unknown25 run or independent
+    generalization claim follows. All 390 outputs and the log are fetched.
 
 0h. **Can a reproducible assignment exceed the lost historical champion?** →
     **OPEN; TARGET UNCHANGED (Sep 20)**: the user explicitly rejects lowering
     the target to the best runnable reconstruction. The historical 677 correct
     positions / 870 and 36 exact chains / 145 remain the comparison target;
-    symmetric fusion (671 / 28) is a working candidate, not a new champion.
+    matched residual filtering (672 / 29) is the latest working candidate, not
+    a new champion. It improves the prior symmetric-fusion candidate (671 / 28).
     The one physical-u Fisher mirror comparison is **COMPLETE; NEGATIVE**:
     job 11879515 (2m03s, exit 0:0) replays the control byte-for-byte but the
     treatment gives **669/849 (78.8%), 27 exact**, versus 671/849 and 28.
     Four final decisions change: one scan gains, three lose, 141 tie; one
     exact chain is lost. All 900 keys and seven unavailable rows remain.
-    The variant is not retained as the working reference; symmetric fusion
-    remains the candidate. No further setting search follows this pass.
-    Counts, half-plane descriptor, thresholds, voting, seeds, missingness
+    The mirror variant is not retained as the working reference. The separately
+    user-approved matched-residual comparison (0i) subsequently gains one correct
+    position and one exact chain. No further setting search follows these passes.
+    Counts, half-plane descriptor formula, thresholds, voting, seeds, missingness
     and DFT inputs are unchanged. Exceeding history remains unresolved.
 
 0g. **Does symmetric fit filtering improve recognition?** → **COMPLETE; MODEST
@@ -7808,12 +7813,12 @@ deliverable is a complete paired recognition comparison of `S(data)-model`
 against `S(data-model)`, at fixed geometry and selected counts. Done means tested
 extractors, a byte-reproduced control, all full146 outputs and an external
 full145 grade including every gain/loss, followed by a retain/reject decision.
-The time box is one 30-minute four-CPU / 16 GB Viper job. The working candidate
-is 671 correct / 28 exact, and the target remains exceeding historical 677 / 36.
+The time box is one 30-minute four-CPU / 16 GB Viper job. Before this comparison,
+the working candidate is 671 correct / 28 exact; the target stays above 677 / 36.
 No threshold, weight, seed, smoothing-radius, background, mirror, count or DFT
 search is in scope; no setting is changed after grading. Unknown25 is not rerun.
 
-Both extractors currently compute `S(data)-model` using an unsmoothed decoded
+Both extractors' legacy modes compute `S(data)-model` using an unsmoothed decoded
 Gaussian model plus fitted plane. An image equal to that model leaves the
 deterministic residual `S(model)-model`. The opt-in candidate applies the native
 finite-window box smoother to `data-model`, before unchanged interpolation and
@@ -7849,3 +7854,91 @@ The first independent smoothing assertion used exact equality between copied
 windows and native strided views; one radius-2 reduction differed by two ulps
 (`6.94e-18`). Its comparison now allows eight ulps at the expected signal scale;
 the production calculation and exact null-model checks were not altered.
+
+The synthetic extracted-input pipeline initially failed only at figure creation:
+Julia could not load a StatsBase precompiled image while compiling Plots. A
+sequential `using StatsBase, Plots` succeeds; a fresh end-to-end run then passes
+all nine integration checks in 1m30s, for **696 focused assertions** including
+the previously listed suites. No dependency version, cache deletion, Manifest
+edit or science-code change was needed. The documentation build also succeeds
+with its existing size warnings. Viper's independent plotting dependency import
+is clean before submission.
+
+Source **dae6395** is synced to
+`/u/oldu/code/STMFit_matched_residual_20260920`. The mandatory metadata-only
+dry-run validates both methods and all 146 input files. The Manifest, counting
+config, assignment configs, changed sources, geometry and template hashes agree
+locally/remotely. The single submitted job is **11883607**, using explicit
+command-line export of all five required variables (`SBATCH_EXPORT=NONE` must
+not drop them). No scientific computation runs on the login node.
+
+### Completed result: small gain, historical target still unmet
+
+Job **11883607** completes **0:0 in 5m15s** on `vipm2063`, from 20:53:26 to
+20:58:41 CEST (four CPUs requested, eight allocated). Control runs from 20:53:28
+to 20:57:01; treatment finishes at 20:58:41. All **390 regular output files**
+and the Slurm log are fetched from
+`/ptmp/oldu/stmfit/matched_residual_comparison_20260920_v1` to
+`results/matched_residual_comparison_20260920/run_v1/` (raw staging links are not
+duplicated). Checksum dry-runs find no source/output/log differences. Thirteen
+local/remote source, configuration and input hashes also match. No dependency
+version or Manifest change is made; there is no failed stage or scientific error.
+
+Saved-output checks pass **47/47**: twelve tables in each arm retain all
+**146 files / 900 lobe keys**. Every control table, including all three regenerated
+patch families, matches the saved symmetric-fusion table byte-for-byte. Control
+prediction SHA-256 is
+`d6e52f5a3a38915dc3e411e0a94696cd35f9f9e37771320055483745531b6299`.
+Local geometry features and every raw-patch/metadata column are unchanged between
+arms. Each patch family has 900 changed residual rows; 893 finite half-plane
+descriptors and Fisher scores change, as do 898 CC scores per direction. The
+seven unavailable descriptor/prediction keys remain unchanged. GMM changes 252
+labels and 297 vote frequencies; k-means is byte-identical. Only three final
+labels change. These vote frequencies are not calibrated probabilities.
+
+The full145 own-N grade is run only after both arms and their checks complete:
+
+| Profile | Correct / all 870 | Correct / classified | Coverage | Emitted errors | Exact chains / 145 |
+|---|---:|---:|---:|---:|---:|
+| Historical reference | 677 (77.8%) | 677/854 (79.3%) | 98.2% | 177 | 36 |
+| Regenerated symmetric-fusion control | 671 (77.1%) | 671/849 (79.0%) | 97.6% | 178 | 28 |
+| Matched patch residual | 672 (77.2%) | 672/849 (79.2%) | 97.6% | 177 | 29 |
+
+Both native arms retain **16 missing control positions, 38 extra lobes and five
+unavailable aligned positions**. Their 198/870 not-correct treatment positions
+comprise 177 emitted errors, 16 missing positions and five abstentions; these
+are not 198 abstentions. Every paired file is reported: **two gains, one loss,
+142 ties**, with **one exact chain gained and none lost**. All three final
+changes are `0→1`, on N=6 scans with unchanged grade orientation:
+
+| Scan | Lobe | Correct positions, control → treatment | Exact-chain change |
+|---|---:|---:|---|
+| `240814_023.sxm` | 2 | 3 → 4 | none |
+| `240817_005.sxm` | 2 | 5 → 6 | gained |
+| `240817_087.sxm` | 4 | 5 → 4 | none |
+
+Confusion totals `(TN,FP,FN,TP)` change `(518,44,134,153)` →
+`(517,45,132,155)`: two more GlcNAc detections cost one false positive. Against
+history, treatment wins on 23 scans, loses on 26 and ties on 96; it gains five
+exact chains and loses twelve, with six external orientation differences. This
+grade does not establish spatial correspondence of fitted lobes to monomers.
+
+**Decision:** retain the explicit matched-residual variant as the next working
+candidate at **672 correct / 29 exact**, not as a promoted champion. The source
+consistency improvement and this small benchmark gain do not reach the user's
+target: history still has **five more correct positions and seven more exact
+chains**. The original assignment config remains the legacy control; the new
+config is opt-in. No threshold, seed, weight, radius, background or second
+variant is tried after grading. Count selection and unknown25 are unchanged.
+This heavily reused benchmark is development evidence, not independent
+generalization. The bounded experiment is complete; the broader target remains
+**unmet** and has not been lowered. The job is closed with no further submission.
+
+The French report is `results/matched_residual_comparison_20260920/report.md`.
+`check_outputs.jl` replays the 47 saved-output checks; `summarize_pair.jl` checks
+grade aggregates, coverage, confusion and fixed N before writing all 290
+reference/file pairs to `paired_audit_v1/paired_files.tsv`. Full grades are in
+`external_grade_v1/`. Focused verification remains **696 Julia 1.13 assertions**,
+plus the saved-output checks; the initial local plotting-cache failure and its
+successful unchanged rerun are recorded above.
+The final documentation build also passes, with existing size warnings only.
