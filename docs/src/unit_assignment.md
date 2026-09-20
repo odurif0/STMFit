@@ -1833,11 +1833,11 @@ assertions and 77 saved-output checks**, plus paired-grade arithmetic checks.
 All 580 candidate/reference/file pairs and replay commands are in
 `results/transverse_descriptor_comparison_20260920/report.md`.
 
-### Signed CC and affine Fisher candidates (2026-09-20; comparison pending)
+### Signed CC and affine Fisher candidates (2026-09-21; both negative)
 
-The user approves these two leads with an explicit label-free requirement.
-One 30-minute four-CPU Viper job compares the saved 673/33 affine-descriptor
-candidate with two independent arms, never a combination:
+The user approved these two leads with an explicit label-free requirement.
+One Viper job, bounded to 30 minutes and four requested CPUs, compared the saved
+673/33 affine-descriptor candidate with two independent arms, never a combination:
 
 - `unit_assignment_signed_mold.toml` replaces the absolute forward/backward
   template margins with `cost_GlcN-cost_GlcNAc`. It ignores decoded mold labels
@@ -1852,9 +1852,49 @@ truth-selected sign. The physical identities of simulated templates are not
 experimental training labels. All 146 scans are processed before the separate
 full145 grade. Counts, successful descriptor, seeds, classifier/vote settings
 and missing-pixel rules remain unchanged. All patches are regenerated; the
-control must reproduce its twelve scientific tables byte-for-byte. No parameter
+control reproduces its twelve scientific tables byte-for-byte. No parameter
 search follows the grade. This benchmark comparison is development evidence,
 not independent validation or calibrated chemical confidence.
+
+Source **3c45c7c**, job **11889205**, completes with exit 0:0 in **7m05s** on
+`vipm2008` (four CPUs requested, eight allocated). All 585 outputs and the Slurm
+log are fetched with matching checksums. The full146 cohort keeps 900 keys and
+the same seven unavailable assignments in every arm. The external full145 grade
+uses 870 truth positions, 892 predicted lobes, 16 missing positions and 38 extra
+lobes; the three native arms retain **849/870 coverage**, including five aligned
+abstentions. No rows are imputed or selectively dropped.
+
+| Version | Correct / 870 | Correct / classified | Exact / 145 |
+|---|---:|---:|---:|
+| Historical reference | 677 (77.8%) | 677/854 (79.3%) | 36 |
+| Affine-descriptor control | 673 (77.4%) | 673/849 (79.3%) | 33 |
+| Signed CC margins | 668 (76.8%) | 668/849 (78.7%) | 32 |
+| Affine Fisher disk | 672 (77.2%) | 672/849 (79.2%) | 32 |
+
+Signed margins change 14 final decisions, 13 in the benchmark: **four scan gains,
+nine losses and 132 ties**, two exact chains gained and three lost. Affine Fisher
+changes 20 decisions, 19 in the benchmark: **nine gains, ten losses and 126
+ties**, three exact chains gained and four lost. Each also changes lobe 7 of
+the already-excluded technical scan `240310_Cu100009.sxm`, retained in all
+scientific outputs. The external grade reverses orientation on `240314_Cu100_024`
+for signed margins and `241113_089` for affine Fisher; these conventions are not
+spatial monomer correspondences. All gains, losses and ties are reported.
+
+The unchanged k-means component and vote rule can turn a changed GMM decision
+into either a tie or a large voting margin. Five signed changes and four Fisher
+changes end at zero margin; signed margins also make eight benchmark changes
+at margin one, of which three gain and five lose. These margins are not calibrated
+chemical confidence. No threshold, sign, seed, hybrid or per-file choice follows
+the grade.
+
+**Decision: reject both as replacements; keep the affine-descriptor candidate
+at 673/33, without promotion.** The historical target remains four correct
+positions and three exact chains ahead merely to equal it. The bounded comparison
+is complete; the broader target is still open. Counting and unknown25 are not
+rerun. Verification passes **1,518 focused Julia 1.13 assertions and 77 saved-output
+checks**, plus paired-grade arithmetic assertions. All 580 paired file comparisons,
+34 changed decisions, formulas and replay commands are in
+`results/label_free_signals_20260920/report.md`.
 
 ### Native numerical conventions
 

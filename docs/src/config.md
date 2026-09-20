@@ -625,6 +625,13 @@ marks projected zero-mass rows NA with `zero_affine_patch_mass`; all keys remain
 Existing configs explicitly choose projection `none` (the floor is inactive).
 These independent candidates are not combined, defaults or promoted methods.
 
+The completed September 21 comparison is negative for both: signed CC gives
+**668/849 (78.7%), 32 exact**, affine Fisher **672/849 (79.2%), 32 exact**, versus
+the exactly replayed **673/849, 33 exact** control. All retain 849/870 coverage
+and fixed counts. Keep `unit_assignment_affine_residual.toml` as the opt-in
+working candidate; the two new configs document rejected experiments. No sign,
+threshold, seed, combined arm or other parameter is retuned after this grade.
+
 
 ## Opt-in diagnostic exploration settings (2026-09-18)
 

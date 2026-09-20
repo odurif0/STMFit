@@ -2304,18 +2304,22 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
-> Updated 2026-09-20. Questions from earlier sessions are archived in
+> Updated 2026-09-21. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
 0k. **Can signed physical margins or affine Fisher patches improve label-free assignment?** →
-    **IN PROGRESS (Sep 20)**: the user approves both proposed leads, requiring
-    label-free inference. One 30-minute, four-CPU / 16 GB comparison is declared:
-    affine-descriptor control (673/33), signed CC margins only, and affine-disk
-    Fisher projection only. No combined arm or post-grade parameter search.
-    Done means tested mathematics/input boundaries, exact control replay,
-    complete full146 outputs and full145 external grades against control/history,
-    all paired gains/losses, and a keep/reject decision. Benchmark truth remains
-    evaluation-only; method comparison is development, not independent validation.
+    **COMPLETE; BOTH NEGATIVE (Sep 21)**: source **3c45c7c**, job **11889205**,
+    exit 0:0 in **7m05s**. The twelve control tables reproduce 673/33 exactly.
+    Signed CC margins give **668/870 correct, 668/849 (78.7%), 32/145 exact**;
+    affine Fisher gives **672/870, 672/849 (79.2%), 32/145**, all at unchanged
+    849/870 coverage. Signed margins gain on four scans and lose on nine; Fisher
+    gains on nine and loses on ten. Both are rejected as working replacements.
+    All 146 scans / 900 keys and seven unavailable assignments remain; all 585
+    outputs and the log are fetched and checksummed. Verification passes 1,518
+    focused assertions, 77 saved-output checks and paired-grade arithmetic.
+    Keep the affine-descriptor 673/33 candidate below historical 677/36. No
+    combined arm, post-grade tuning, count refit or unknown25 rerun follows.
+    Benchmark truth is evaluation-only; this is not independent validation.
 
 0j. **Can a better-defined transverse descriptor close the historical gap?** →
     **COMPLETE; AFFINE GAIN, NO PROMOTION (Sep 20)**: job **11888011** finishes
@@ -2343,7 +2347,7 @@ See `docs/src/selection.md` for the full guard specification and
     generalization claim follows. All 390 outputs and the log are fetched.
 
 0h. **Can a reproducible assignment exceed the lost historical champion?** →
-    **OPEN; TARGET UNCHANGED (Sep 20)**: the user explicitly rejects lowering
+    **OPEN; TARGET UNCHANGED (Sep 21)**: the user explicitly rejects lowering
     the target to the best runnable reconstruction. The historical 677 correct
     positions / 870 and 36 exact chains / 145 remain the comparison target;
     affine-residual half-plane asymmetry (673 / 33, comparison 0j) is the latest
@@ -2358,7 +2362,9 @@ See `docs/src/selection.md` for the full guard specification and
     The mirror variant is not retained as the working reference. The separately
     user-approved matched-residual comparison (0i) subsequently gains one correct
     position and one exact chain. The next user-requested comparison (0j) changes
-    the descriptor alone and gains another position and four exact chains. No
+    the descriptor alone and gains another position and four exact chains.
+    The signed-CC and affine-Fisher comparison (0k) is also complete: both regress
+    to 668/32 and 672/32 respectively, so the working candidate stays 673/33. No
     post-grade setting search follows these passes. Counts, thresholds, voting,
     seeds, unavailable keys and DFT inputs are unchanged. Exceeding history remains
     unresolved; rounded 79.3% classified accuracy is not equality on coverage or
@@ -8212,3 +8218,100 @@ are unchanged. Job **11889205** is then submitted exactly once with the required
 five-variable command-line `--export` list. The scientific source directory has
 no `benchmarks/` or old `results/` tree. No benchmark truth enters the command or
 scientific inputs; the external grade remains local and downstream of all arms.
+
+## 2026-09-21 — Signed CC and affine Fisher comparison complete: both regress
+
+The single approved comparison is complete. Job **11889205** first waits under
+the shared `n0001` QOS CPU limit, then runs on `vipm2008` from **00:19:33 to
+00:26:38 CEST**, completing **0:0 in 7m05s**. Four CPUs were requested and eight
+allocated; the scientific Julia subprocesses use four threads. No computation
+runs on the login node, no queue setting is changed and no job is resubmitted.
+Scientific source **3c45c7c**, all configurations, the unchanged Manifest,
+geometry tables and templates retain their pre-submission hashes.
+
+All **585 output files and the Slurm log** are fetched from
+`/ptmp/oldu/stmfit/label_free_signals_20260920_v1` into
+`results/label_free_signals_20260920/run_v1` (the log is stored alongside).
+Checksum comparisons are empty; raw-image staging links are not copied.
+All **77 saved-output checks pass** before grading. Each arm retains the same
+900 keys / 146 scans in all twelve scientific tables, with no failed stage and
+the same seven unavailable assignments. All twelve control tables are
+byte-identical to the preceding affine-descriptor result; the predictions hash
+remains `4039b7bb3baaa186d0dc9cc810face2dfa1f151bc45467c81d4f639e3558aa9f`.
+
+The three patch families, local geometry, successful backward descriptor,
+forward/backward CC cost tables and k-means outputs are byte-identical across
+arms. Signed CC changes only its two predictor features (584 forward and 585
+backward values); Fisher scores are unchanged. It changes 14 GMM labels and
+14 final decisions, with 231 final vote frequencies changed. Affine Fisher
+changes only its predictor margin (893 values), 21 GMM labels and 20 final
+decisions, with 238 final frequencies changed. No new `zero_affine_patch_mass`
+row appears in this cohort. The modeled raw disk inputs and original amplitude
+anchor remain unchanged; only the fixed projection is different in that arm.
+
+Only after these checks does the existing external manifest select 145 scans /
+892 predicted lobes for the full **870-position** grade. All three native arms
+classify **849/870 (97.6%)**, with 16 missing positions, five aligned abstentions
+and 38 extra lobes. Counts are fixed, including 14 short-N and 25 extra-N scans.
+
+| Version | Correct / 870 | Correct / classified | Emitted errors | Exact / 145 |
+|---|---:|---:|---:|---:|
+| Historical reference | 677 (77.8%) | 677/854 (79.3%) | 177 | 36 |
+| Affine-descriptor control | 673 (77.4%) | 673/849 (79.3%) | 176 | 33 |
+| Signed CC margins | 668 (76.8%) | 668/849 (78.7%) | 181 | 32 |
+| Affine Fisher disk | 672 (77.2%) | 672/849 (79.2%) | 177 | 32 |
+
+Against control, signed CC gives **four scan gains, nine losses and 132 ties**,
+net **minus five correct positions**. Two exact chains are gained (`240307_016`,
+`241113_086`) and three lost (`240310_Cu100007`, `240817_044`, `240818_020`).
+Its 14 changes comprise five `0→1` decisions at the unchanged zero-margin tie
+and nine `1→0` decisions at voting margin one. One latter change is outside
+the benchmark; of the eight graded margin-one changes, three gain and five lose.
+Thus even unanimous votes are not calibrated chemical confidence.
+
+Affine Fisher gives **nine gains, ten losses and 126 ties**, net **minus one
+correct position**. Three exact chains are gained (`240814_011`, `240817_075`,
+`241113_086`) and four lost (`240310_Cu100007`, `240817_044`, `240818_020`,
+`241114_027`). Four changes are `0→1` at zero margin; sixteen are `1→0`, fifteen
+at margin one and one at 0.75. The projection that improved backward half-plane
+asymmetry therefore does not improve this Fisher arm under the fixed settings.
+This result does not establish that affine content is a physical background or
+that signed template identity is generally useless.
+
+Each arm also reverses lobe 7 of `240310_Cu100009.sxm`, the technical scan
+excluded by the unchanged external manifest since July 3; all eight of its
+lobes remain in scientific inference. External grade orientation changes on
+`240314_Cu100_024.sxm` for signed margins and `241113_089.sxm` for affine Fisher.
+These are grading conventions, not spatial monomer correspondences. Confusions
+`(TN,FP,FN,TP)` change from `(510,52,124,163)` to `(509,53,128,159)` and
+`(515,47,130,157)` respectively. Against historical predictions, signed CC has
+22 winning / 28 losing / 95 tied scans and affine Fisher 22 / 27 / 96; each
+gains six exact chains and loses ten. Every one of the **580 paired file rows**
+and **34 changed decisions** is retained, including losses and non-benchmark
+changes, in `paired_audit_v1/` and `decision_audit_v1/`.
+
+**Decision:** reject both new arms as replacements. Keep
+`config/unit_assignment_affine_residual.toml` at **673 correct / 33 exact** as
+the opt-in working candidate, without promotion. The historical **677/36**
+target is unchanged: four correct positions and three exact chains are still
+needed merely to equal it. No combined variant, sign flip, threshold, seed,
+weight, radius, per-file method choice or missing-value rule is tried after the
+grade. Count selection, the separate 871-lobe counting lineage and unknown25
+are not rerun or revalidated. The new configs are retained as negative experiments.
+
+The label-free requirement applies to inference: no experimental truth,
+expected N, composition or benchmark manifest enters the runner. The signed
+feature uses physical simulated template identities; the projection uses disk
+coordinates. Original unsupervised amplitude naming and free mixture weights
+are untouched. External grading can inform method development, so this heavily
+reused benchmark is not independent validation. The bounded scientific
+deliverable is finished; the broader historical target remains open.
+
+The complete French report, formulas, all changed decisions and replay commands
+are in `results/label_free_signals_20260920/report.md`. Verification comprises
+**1,518 focused Julia 1.13 assertions**, **77 saved-output checks**, and the
+paired-grade arithmetic assertions. The pre-submission test-only QR tolerance
+failure and missing-Manifest staging error are recorded above; neither changed
+production mathematics or settings after grading.
+The final documentation build passes, with only the existing generated-page
+and search-index size warnings; deployment is skipped outside CI.

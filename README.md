@@ -38,6 +38,15 @@ changed decisions land at the existing vote tie (zero margin), so this modest
 development-benchmark gain is not evidence of calibrated chemical confidence.
 See the [descriptor comparison](docs/src/unit_assignment.md#two-transverse-descriptor-candidates-2026-09-20-affine-gain-no-promotion).
 
+The September 21 signed-CC / affine-Fisher comparison is **negative for both
+independent changes**: signed template margins give **668/870 correct, 32/145
+exact**; affine Fisher gives **672/870, 32/145**, against the exactly replayed
+673/33 control. Counts and 849/870 coverage are unchanged. Inference uses no
+benchmark labels; the separate grade is reused development evidence, not
+independent validation. Keep the affine-descriptor candidate at **673/33**;
+historical **677/36** remains the target. No combined variant or post-grade
+tuning follows. See the [signal comparison](docs/src/unit_assignment.md#signed-cc-and-affine-fisher-candidates-2026-09-21-both-negative).
+
 **Benchmark (6mer):** the robust-AICc guard validates at 39/39 primary 240817
 files exact (N=6), reproducible. The frozen pre-correction chitosan reference was promoted for
 the expanded 145-file external counting grade: 129/145 exact, 143/145 within one

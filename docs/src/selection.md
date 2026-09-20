@@ -26,6 +26,13 @@ Coverage remains 849/870 and historical 677/36 remains better. No selected N,
 physical bound, GCV rule or guard changes. This assignment-only result does not
 revalidate the separate frozen counting benchmark below.
 
+The September 21 signed-CC and affine-Fisher experiments both regress assignment:
+**668/870 correct, 32/145 exact** and **672/870, 32/145**, respectively, versus
+the exactly replayed **673/33** control. Coverage stays 849/870. Neither is
+retained as the working reference; the affine-descriptor candidate remains
+673/33, below historical 677/36. These fixed-geometry, label-free-inference
+experiments change no selected N, count-selection rule or counting claim.
+
 How STMFit chooses the optimal number of lobes (N) from the sweep results.
 
 ## Selection Hierarchy

@@ -42,6 +42,21 @@ All 585 outputs and the Slurm log are fetched. The complete report is
 `252edaa` and the runner is `hpc/compare_transverse_descriptors.sbatch`.
 No counting or unknown25 rerun follows; do not resubmit this completed job.
 
+The September 21 comparison of signed CC margins and affine Fisher (job
+**11889205**, **7m05s**, exit 0:0; source **3c45c7c**) is negative for both
+independent arms: **668/870 correct, 668/849 (78.7%), 32/145 exact** for signed
+margins; **672/870, 672/849 (79.2%), 32/145** for affine Fisher. All twelve
+control tables exactly reproduce the 673/33 affine-descriptor candidate. The
+three arms retain all 146 scans / 900 keys and the same seven unavailable rows;
+external grading alone selects the unchanged full145 manifest. Signed margins
+gain on four scans and lose on nine; Fisher gains on nine and loses on ten.
+Keep `config/unit_assignment_affine_residual.toml` at **673/33**, without
+promotion or post-grade tuning. Historical 677/36 remains ahead. All 585 outputs
+and the Slurm log are fetched and checksummed; the full report is
+`results/label_free_signals_20260920/report.md`. The runner is
+`hpc/compare_label_free_signals.sbatch`; this completed job must not be resubmitted
+automatically. Counting and unknown25 remain unchanged.
+
 This page is the hand-off document for reproducing the current chitosan workflow
 without relying on prior conversation context.  The goal is a label-free fitting
 and model-selection pipeline that is externally graded on the benchmark and then

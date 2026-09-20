@@ -812,3 +812,15 @@ When synchronizing tracked source with `git ls-files`, also copy the existing
 root `Manifest.toml` explicitly: it is ignored by Git, and omitting it prevents
 dependency loading in a new checkout even when the depot is already populated.
 Check its hash; do not resolve new versions to work around a missing copy.
+
+**Completed September 21:** source **3c45c7c**, job **11889205**, exit 0:0 in
+**7m05s** on `vipm2008` (four CPUs requested, eight allocated). All 585 outputs
+and the Slurm log are fetched and checksum-identical. The twelve control tables
+exactly replay 673 correct / 33 exact; all arms keep 900 keys and seven unavailable
+assignments. Signed CC gives **668/32**, affine Fisher **672/32**, at the same
+849/870 classified coverage. Both are rejected as working replacements; keep
+the affine-descriptor 673/33 candidate below historical 677/36. The full result,
+all paired gains/losses and replay commands are in
+`results/label_free_signals_20260920/report.md`. No follow-up tuning, combined
+variant, count refit or unknown25 run is part of this comparison. It is closed;
+do not resubmit it automatically.
