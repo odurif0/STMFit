@@ -1,5 +1,17 @@
 # Running STMFit on the MPCDF HPC cluster
 
+For the September 20 fixed-count filtering comparison, use
+`hpc/compare_fusion.sbatch`. It runs two separate source checkouts sequentially,
+regenerating base/split features and all patches in both, then fitting native
+assignment on each complete cohort. Its budget is four CPUs, 16 GB, two hours.
+Set the six absolute paths documented in that script and run
+`bash hpc/compare_fusion.sbatch --dry-run` first. Pass those variables explicitly
+in `sbatch --export=...` on Viper (`SBATCH_EXPORT=NONE` otherwise removes them).
+Supply the original full146 `selected_from_features.tsv`, not the promoted
+counting summary, and fetch both arms and their logs before external grading.
+No benchmark labels enter the compute job. Existing completed runs are not
+restarted.
+
 STMFit's batch pipeline (`test/batch_full.jl`) is an *embarrassingly parallel*
 sweep over STM image files: each file is fitted independently, and the script
 already shards its work list with `--chunk i/n` (round-robin) plus internal

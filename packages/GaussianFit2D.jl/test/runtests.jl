@@ -28,3 +28,5 @@ using GaussianFit2D
     @test length(feats) == 1
     @test feats[1].skew_ratio ≈ 1.0 atol=1e-12
 end
+
+include("fused_roi.jl")

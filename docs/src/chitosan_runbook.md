@@ -1,5 +1,11 @@
 # Chitosan Benchmark and 10–20mer Runbook
 
+September 20 research branch: the symmetric fused-fit correction is being
+compared with source `f2191f7` at identical cached label-free counts, with both
+geometries regenerated. The historical results below do not validate this
+corrected source. This comparison does not rerun count selection. See the
+September 20 journal entry and `hpc/compare_fusion.sbatch`.
+
 This page is the hand-off document for reproducing the current chitosan workflow
 without relying on prior conversation context.  The goal is a label-free fitting
 and model-selection pipeline that is externally graded on the benchmark and then

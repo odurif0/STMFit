@@ -423,7 +423,9 @@ function load_case(raw::AbstractString, geometry::AbstractString, physical::Abst
     stride > 0 || error("Invalid frozen stride")
     valid_f = isfinite.(fch.data[1:stride:end,1:stride:end])
     valid_b = isfinite.(bch.data[1:stride:end,1:stride:end])
-    valid_fused = valid_f .& .!STMSXMIO._dilate_mask(.!valid_b, pcfg.smooth_radius_px)
+    # The fused fit now uses both unsmoothed views; neither direction spreads
+    # an imputed sample through a smoothing kernel in the fit map.
+    valid_fused = valid_f .& valid_b
     all(isfinite, f) && all(isfinite, b) || error("No finite preprocessed views")
     xg, yg, fused, roi, x, y, z, _ = GaussianFit2D._fused_roi_data(img, pcfg)
     xs == xg && ys == yg || error("Native preprocessing grids differ")

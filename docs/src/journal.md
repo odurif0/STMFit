@@ -2304,8 +2304,18 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
-> Updated 2026-09-19. Questions from earlier sessions are archived in
+> Updated 2026-09-20. Questions from earlier sessions are archived in
 > `journal_archive.md`.
+
+0g. **Does symmetric fit filtering improve recognition?** → **PAIRED COMPARISON
+    AUTHORIZED, PREPARATION (Sep 20)**: one fixed correction uses `(F+B)/2` for
+    fitting and retains `(S(F)+S(B))/2` for ROI detection. The control is source
+    `f2191f7`; both arms regenerate base/split geometry, all patches and native
+    assignments at the same 146-file / 900-lobe cached label-free counts. One
+    Viper job is capped at two hours, four CPUs and 16 GB. External full145
+    grading follows complete outputs. No new count-selection benchmark result
+    or recognition improvement is yet established. The correction is isolated
+    on `research/symmetric-fusion-20260920`, not promoted to the reference.
 
 0f. **Can a bounded change improve recognition on the user's benchmark?** →
     **SAVED-OUTPUT FIRST PASS COMPLETE; NO GAIN (Sep 19)**: the two predeclared
@@ -7509,3 +7519,49 @@ native grade in `external_grade_endpoints_v1/`, the original error audit in
 review/probe in `label_free_candidate_review/`. `docs/src/unit_assignment.md`
 records the negative comparison and opt-in exporter; generated files remain
 ignored. The definitions and grading commands are retained in `run_logs/`.
+
+## 2026-09-20 — Symmetric fused-fit correction and matched recognition comparison
+
+The user explicitly chose the targeted filtering correction and benchmark
+comparison. **Deliverable and completion criterion:** test direction symmetry,
+regenerate control and corrected assignments under matched settings, externally
+grade both on the same benchmark, and report correct/all controls, conditional
+accuracy, coverage, exact chains, missing/extra lobes and paired gains/losses.
+Recognition benefit must be measured; correcting the inconsistency alone is
+not evidence of improved chemical assignment.
+
+The fixed correction calls the same native preprocessing helper for both
+directions, fits the mean of flattened **unsmoothed** images, and keeps the
+symmetrically smoothed ROI and existing max-of-view noise estimator. This
+matches `_robust_roi_data` and `_channel_roi_data`; no new smoothing choice,
+physical parameter, threshold or tuning sweep is introduced. The acquisition
+diagnostic's direct-observation mask is updated to exclude each direction's
+missing pixels symmetrically. Median imputation and its influence on background
+flattening remain limitations, not newly validated missing-data treatment.
+
+The unchanged control is commit `f2191f7`. Both arms use the original full146
+`selected_from_features.tsv` (146 files / 900 lobes), derived from the saved
+label-free GCV geometry, not the incompatible 871-lobe promoted counting
+summary. The counts are held fixed, while geometry, fitted support, split
+features and all three patch families are regenerated independently. Native
+CC/Fisher and classifiers use the entire 146-file cohort and identical model,
+seed, polarity and abstention settings. Benchmark membership and labels are
+used only by the external comparison/grader after prediction.
+
+The bounded computation is **one Viper job, four requested CPUs, 16000 MB,
+two hours**, running both arms sequentially with four feature shards each.
+`hpc/compare_fusion.sbatch` uses two source checkouts, rejects differing configs
+or dependency locks, and cannot run scientific work without a Slurm allocation.
+It accepts no cached geometry or patches. A metadata-only dry-run precedes
+submission; failed outputs remain visible and are not silently retried. Existing
+CC templates and raw scans are reused; no DFT, registration, new count selection,
+descriptor recovery or feature/weight search is included.
+
+Julia 1.13 checks pass: GaussianFit2D **151/151**, including 148 assertions of
+direction symmetry, unchanged ROI/noise, missing samples, all flatten modes,
+stride, smoothing radius, identical-view limit and mixed channel units;
+acquisition diagnostics **187/187**, including the corrected missing-pixel mask;
+paired job **15/15**, including exact command arguments, fresh fit inputs,
+matched configs, allocation enforcement and failure preservation. These are
+synthetic tests, not benchmark results. The branch remains an unpromoted
+scientific correction until the paired recognition results are available.

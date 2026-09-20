@@ -271,6 +271,15 @@ end
         @test case.imputed_fwd==1 && case.imputed_bwd==0
         @test isnan(case.forward[15,20])
         @test !case.fused_valid[15,20]
+        # Fit samples are unsmoothed in both directions. Missing backward
+        # observations invalidate exactly their own pixels, just like forward.
+        missing_backward=copy(a.b); missing_backward[30,25]=NaN
+        write_synthetic_sxm(a.raw,a.f,missing_backward)
+        incomplete=AD.load_case(a.raw,a.geo,a.physical,a.summary,s)
+        @test !incomplete.fused_valid[30,25]
+        @test count(.!incomplete.fused_valid)==2
+        @test all(incomplete.fused_valid[y,x] for y in 29:31,x in 24:26 if (y,x)!=(30,25))
+        write_synthetic_sxm(a.raw,a.f,a.b)
         @test count(case.fit_support)>100
         @test count(case.fit_support)<=count(case.roi)
         before=copy(case.forward)

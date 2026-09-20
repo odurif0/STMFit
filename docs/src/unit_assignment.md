@@ -1648,6 +1648,26 @@ no raw data or fit ran. Correction needs a separate, fixed comparison with
 regenerated control and treatment geometry/features. Neither a correction nor a
 third candidate is included in this saved-output experiment.
 
+### Symmetric fused-fit comparison (2026-09-20; pending)
+
+The user authorized one targeted correction and a matched benchmark comparison.
+On `research/symmetric-fusion-20260920`, the fit uses `(F+B)/2` for the flattened,
+unsmoothed directions; ROI detection still uses `(S(F)+S(B))/2`. This is the
+existing single-view/alternate-channel filtering convention. The unchanged
+control is `f2191f7`.
+
+Both arms regenerate base and split geometry, patches and native assignments
+on all 146 scans at the same 900 cached label-free counts. The original
+`selected_from_features.tsv` supplies counts only; no geometry/patch cache is
+passed to the paired runner. Physical and classifier configs, fit budgets,
+seeds and CC templates are identical. `hpc/compare_fusion.sbatch` runs the two
+arms sequentially in one four-CPU, 16 GB, two-hour Viper job, after a dry-run.
+The external full145 own-N grade follows complete prediction outputs.
+
+This is an assignment comparison at fixed counts, not revalidation of the
+promoted 871-lobe counting result. The historical reference remains archival;
+no recognition gain or method promotion is established at preparation time.
+
 ### Native numerical conventions
 
 The constant-current port retains the old first-axis-fast cube index, sampling

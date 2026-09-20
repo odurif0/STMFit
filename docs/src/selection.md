@@ -1,5 +1,10 @@
 # Model Selection
 
+On the September 20 symmetric-fusion research branch, fused fit samples use
+both unsmoothed views and ROI detection still uses both smoothed views. The
+paired assignment comparison holds cached counts fixed; it does not revalidate
+the historical counting results below for the corrected fit input.
+
 How STMFit chooses the optimal number of lobes (N) from the sweep results.
 
 ## Selection Hierarchy

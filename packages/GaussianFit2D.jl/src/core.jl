@@ -502,30 +502,14 @@ end
 
 function _fused_roi_data(img::SXMImage, cfg::PatternConfig)
     """Fuse Z fwd + Z bwd for SNR boost. The bwd scan is already flipped in read_sxm."""
-    # Preprocessing: share coordinate grid, plane fit, row flatten from fwd
+    # Fit the mean of the flattened, unsmoothed views, as in the single-view
+    # and alternate-channel paths. Smooth both views only for ROI detection.
     ch_fwd = get_channel(img, cfg.roi_channel; direction="fwd")
-    xs, ys, raw_fwd, z_fwd, zs_fwd, _unit, noise_fwd = preprocess_channel(img, ch_fwd, cfg)
-    # bwd: only extract and preprocess data, reuse same xs/ys grid
+    xs, ys, _, z_fwd, zs_fwd, _, noise_fwd = preprocess_channel(img, ch_fwd, cfg)
     ch_bwd = get_channel(img, cfg.roi_channel; direction="bwd")
-    # Minimal preprocessing on bwd: stride, scale, flatten, smooth
-    scale, _ = _value_scale(ch_bwd.unit)
-    stride = max(1, cfg.stride)
-    z_bwd = ch_bwd.data[1:stride:end, 1:stride:end] .* scale
-    # Replace NaN/Inf with median (matches preprocess_channel)
-    finite_bwd = z_bwd[isfinite.(z_bwd)]
-    if !isempty(finite_bwd); z_bwd[.!isfinite.(z_bwd)] .= median(finite_bwd); end
-    if occursin("plane", lowercase(cfg.flatten))
-        z_bwd .-= _plane_fit(xs, ys, z_bwd)
-    end
-    if occursin("rows", lowercase(cfg.flatten))
-        z_bwd = _row_median_flatten(z_bwd)
-    end
-    z_bwd = _box_smooth(z_bwd, cfg.smooth_radius_px)
-    noise_bwd = 1.4826 * median(abs.(vec(z_bwd) .- median(vec(z_bwd))))
-    noise_bwd = max(noise_bwd, std(vec(z_bwd)) * 0.1, EPS)
-    # Fuse: average preprocessed Z fwd and Z bwd
+    _, _, _, z_bwd, zs_bwd, _, noise_bwd = preprocess_channel(img, ch_bwd, cfg)
     z_fused = (z_fwd .+ z_bwd) ./ 2.0
-    zs_fused = (zs_fwd .+ z_bwd) ./ 2.0
+    zs_fused = (zs_fwd .+ zs_bwd) ./ 2.0
     noise = max(noise_fwd, noise_bwd)
     # ROI mask from fused data
     _rxs, _rys, mask = molecule_roi_mask_fused(img, cfg, zs_fused)
