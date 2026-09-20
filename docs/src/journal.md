@@ -2308,11 +2308,11 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0g. **Does symmetric fit filtering improve recognition?** → **PAIRED COMPARISON
-    AUTHORIZED, PREPARATION (Sep 20)**: one fixed correction uses `(F+B)/2` for
+    SUBMITTED, RESULTS PENDING (Sep 20)**: one fixed correction uses `(F+B)/2` for
     fitting and retains `(S(F)+S(B))/2` for ROI detection. The control is source
     `f2191f7`; both arms regenerate base/split geometry, all patches and native
     assignments at the same 146-file / 900-lobe cached label-free counts. One
-    Viper job is capped at two hours, four CPUs and 16 GB. External full145
+    Viper job **11878491** is capped at two hours, four CPUs and 16 GB. External full145
     grading follows complete outputs. No new count-selection benchmark result
     or recognition improvement is yet established. The correction is isolated
     on `research/symmetric-fusion-20260920`, not promoted to the reference.
@@ -7565,3 +7565,19 @@ paired job **15/15**, including exact command arguments, fresh fit inputs,
 matched configs, allocation enforcement and failure preservation. These are
 synthetic tests, not benchmark results. The branch remains an unpromoted
 scientific correction until the paired recognition results are available.
+
+**Submission:** source `d12283a`, control `f2191f7`. The native pipeline boundary
+and shard tests also pass **19/19**; the documentation builds under Julia 1.13
+with size warnings only. Rsync checksum dry-runs verify all 146 raw scans and
+both transferred source trees. Each remote import resolves GaussianFit2D inside
+its own checkout under Julia 1.13.0; both metadata-only dry-runs identify 146
+files and create no output. Both dependency locks retain SHA-256
+`617de8162fa4c7a814aacb106f145349bc57ead58ec9a6c332971a821b5974fe`.
+Scheduler test-only 11878486 is not a scientific job. Actual **job 11878491**
+was submitted once, with all six required path variables explicitly exported
+in `sbatch --export=ALL,...`. Its result root is
+`/ptmp/oldu/stmfit/fusion_comparison_20260920_v1`, with `control/`, `symmetric/`
+and separate arm logs; the scheduler log is
+`/ptmp/oldu/stmfit/fusion_comparison_20260920-11878491.log`. Fetch to
+`results/fusion_comparison_20260920/` and grade only complete outputs. No
+recognition result is available at submission time.
