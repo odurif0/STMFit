@@ -208,7 +208,7 @@ end
                      eachindex(disk))
     weight[slot] = 1
     probe = FisherModel(weight, zeros(length(disk)), model.g0, model.g1,
-                        model.amplitude_means, model.gmm)
+                        model.amplitude_means, model.gmm, nothing)
     x = zeros(length(disk)); x[slot] = 2
     @test maxmirror_score(x, probe, grid) == 2
     @test maxmirror_score(flip_u_disk(x, grid), probe, grid) == 2
@@ -325,7 +325,7 @@ end
     negative[GRID.mirror_indices[slot]] = -2.0
     weight = zeros(length(negative))
     weight[slot] = 1.0
-    simple = FisherModel(weight, zeros(length(weight)), one.g0, one.g1, one.amplitude_means, one.gmm)
+    simple = FisherModel(weight, zeros(length(weight)), one.g0, one.g1, one.amplitude_means, one.gmm, nothing)
     @test score(negative, simple) == -1.0
     @test score(flip_u_disk(negative, GRID), simple) == -2.0
     @test maxmirror_score(negative, simple, GRID) == -1.0

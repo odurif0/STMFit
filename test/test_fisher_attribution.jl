@@ -36,6 +36,8 @@ end
     mktempdir() do dir
         for (name,n,invalid,constant) in (("normal",36,true,false),("small",8,false,false),("constant",36,false,true))
             patches,options=synthetic_patches(joinpath(dir,name*".tsv");n,invalid,constant)
+            projected=EF.load_fisher_config(joinpath(@__DIR__,"..","config","unit_assignment_affine_fisher.toml"))
+            @test_throws ArgumentError FA.replay_folds(patches,projected)
             native=EF.cv_scores(patches,options)
             replay=FA.replay_folds(patches,options)
             @test length(replay.scores)==n

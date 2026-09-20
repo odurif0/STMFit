@@ -96,7 +96,7 @@ end
     dummy = EF.GMMFit([0.5,0.5],zeros(2,1),[ones(1,1),ones(1,1)],[1,2],true,0,0.0)
     for _ in 1:20
         x,w,mid = randn(rng,n),randn(rng,n),randn(rng,n)
-        model = EF.FisherModel(w,mid,zeros(n),ones(n),(0.,1.),dummy)
+        model = EF.FisherModel(w,mid,zeros(n),ones(n),(0.,1.),dummy,nothing)
         d = response_decomposition(x,w,mid,grid)
         @test d.direct_max ≈ EF.maxmirror_score(x,model,grid) atol=ATOL
         @test d.analytic_max ≈ d.direct_max atol=ATOL

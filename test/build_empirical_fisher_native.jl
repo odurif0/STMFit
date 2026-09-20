@@ -17,7 +17,9 @@ invalid patches and missing/degenerate opposite folds receive NA plus a reason.
 The output must not exist. No full-data model or prediction TSV is created.
 
 All four options are required. --prefix selects numbered patch columns (res_p001,
-etc.). Config supplies PCA, full-covariance GMM, regularization, seed, and layout.
+etc.). Config supplies PCA, GMM, regularization, seed, layout and patch projection.
+Affine projection, when selected, applies to training and held-out scoring, not
+to the original center amplitudes used to order the unsupervised clusters.
 Native Julia and sklearn initialization/RNG differ; byte identity is NOT claimed.
 """
 

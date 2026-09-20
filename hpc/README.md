@@ -791,3 +791,20 @@ historical 677/36 still leads. All changed affine decisions have zero vote
 margin. The report records every gain/loss; no parameter change, hybrid,
 counting run or unknown25 application follows. This job is closed; do not
 resubmit it as an automatic continuation.
+
+## Independent signed-CC and affine-Fisher comparison (September 20)
+
+`hpc/compare_label_free_signals.sbatch` requests four CPUs, 16 GB and 30 minutes.
+It runs `control/` (affine descriptor, 673/33), `signed/` (signed CC costs only)
+and `fisher/` (affine Fisher disk only). It does not combine the changes, read
+benchmark labels, change counting or search settings. Each arm regenerates
+patches; the control must match the saved affine-descriptor result exactly.
+
+Use the five absolute variables `STMFIT_PROJECT_DIR`, `STMFIT_CACHE_DIR`,
+`STMFIT_INPUT_DIR`, `STMFIT_OUTDIR` and `JULIA_BIN` as in the preceding comparisons.
+Run `bash hpc/compare_label_free_signals.sbatch --dry-run` before submitting with
+explicit `--export=STMFIT_PROJECT_DIR,STMFIT_CACHE_DIR,STMFIT_INPUT_DIR,STMFIT_OUTDIR,JULIA_BIN`.
+Output must be new. Any failed arm/log is retained, the other arms still run,
+and any failure makes the job exit nonzero. Fetch and validate all outputs
+before external grading. The raw-patch Fisher attribution diagnostic rejects
+the new projected mode rather than misattributing its legacy response identity.

@@ -607,6 +607,24 @@ trails historical 677/854 and 36 exact. All sixteen final changes end at the
 unchanged 0.5 vote tie, not at a newly calibrated confidence. No threshold or
 other setting changes after this grade.
 
+Two further independent candidates start from the 673/33 affine-descriptor
+config. `unit_assignment_signed_mold.toml` changes only the method name and
+`model.mold_margin_mode = "signed_cost_difference"`; the forward/backward
+features become `cost_GlcN-cost_GlcNAc`, not their absolute value. Positive
+means the GlcNAc physical template costs less under the existing alignment.
+No decoded template label, benchmark label or expected composition enters it.
+The explicit legacy mode, `absolute_cost_margin`, reads the saved `cost_margin`
+without recomputing its rounding.
+
+`unit_assignment_affine_fisher.toml` instead changes only the method name and
+`preprocessing.fisher_patch_projection = "affine_disk"`. A fixed QR basis on
+the configured Fisher disk removes `[1,t,u]` at training and held-out scoring,
+including both unchanged mirror orientations. Original center-pixel amplitudes
+still orient the learned groups. `model.fisher_projection_zero_l1 = 1e-12`
+marks projected zero-mass rows NA with `zero_affine_patch_mass`; all keys remain.
+Existing configs explicitly choose projection `none` (the floor is inactive).
+These independent candidates are not combined, defaults or promoted methods.
+
 
 ## Opt-in diagnostic exploration settings (2026-09-18)
 

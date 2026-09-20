@@ -3,7 +3,8 @@ module ReconstructedUnitAssignment
 using Printf, Statistics, TOML
 
 export read_table, write_table, lobe_table, require_same_keys,
-       transverse_asymmetry, transverse_descriptor, augment_descriptor, write_soft_vote, load_config
+       transverse_asymmetry, transverse_descriptor, augment_descriptor, mold_margin,
+       write_soft_vote, load_config
 
 const TRANSVERSE_DESCRIPTORS = ("transverse_half_plane_asymmetry",
     "transverse_first_moment", "affine_residual_half_plane_asymmetry")
@@ -88,6 +89,10 @@ function load_config(path::AbstractString)
     model["descriptor_channel"] == "bwd_res" || error("Unsupported descriptor patch family")
     pre["pixel_order"] == "u_outer_t_inner" || error("Unsupported patch ordering")
     pre["descriptor_normalization"] == "median_sample_std" || error("Unsupported patch normalization")
+    get(model, "mold_margin_mode", nothing) in ("absolute_cost_margin", "signed_cost_difference") ||
+        error("Explicit mold_margin_mode must be absolute_cost_margin or signed_cost_difference")
+    get(pre, "fisher_patch_projection", nothing) in ("none", "affine_disk") ||
+        error("Explicit fisher_patch_projection must be none or affine_disk")
     get(pre, "patch_residual_filter", nothing) in ("smooth_data_only", "smooth_residual") ||
         error("Explicit patch_residual_filter must be smooth_data_only or smooth_residual")
     model["descriptor_half_nm"] > 0 && model["descriptor_step_nm"] > 0 || error("Invalid descriptor grid")
@@ -104,6 +109,19 @@ function load_config(path::AbstractString)
 end
 
 _float(s) = something(tryparse(Float64, strip(String(s))), NaN)
+
+"""One fixed mold feature; experimental labels and decoded mold labels are unused.
+
+Legacy mode reads the saved absolute margin without recomputing its rounding.
+Signed mode is cost(GlcN)-cost(GlcNAc): positive favors the GlcNAc template under
+the existing label-free geometric alignment. The sign is not calibrated truth.
+"""
+function mold_margin(row::AbstractDict, mode::AbstractString)
+    mode == "absolute_cost_margin" && return _float(row["cost_margin"])
+    mode == "signed_cost_difference" || error("Unsupported mold margin mode: $mode")
+    c0, c1 = _float(row["cost_GlcN"]), _float(row["cost_GlcNAc"])
+    return isfinite(c0) && isfinite(c1) ? c0 - c1 : NaN
+end
 
 """Transverse half-plane asymmetry of an already-normalized patch.
 

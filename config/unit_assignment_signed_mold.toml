@@ -1,8 +1,8 @@
-# One descriptor comparison: half-plane asymmetry after affine patch projection.
+# One label-free feature change: signed physical mold cost differences.
 [model]
 fisher_projection_zero_l1 = 1e-12
-mold_margin_mode = "absolute_cost_margin"
-name = "cc_soft_affine_residual_v1"
+mold_margin_mode = "signed_cost_difference"
+name = "cc_soft_signed_mold_v1"
 descriptor = "affine_residual_half_plane_asymmetry"
 descriptor_column = "patch_u_asym_reconstructed"
 descriptor_channel = "bwd_res"

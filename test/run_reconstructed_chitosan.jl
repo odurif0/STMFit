@@ -174,11 +174,13 @@ function cached_or_run(opts, key, output, name, script, args, outdir; fit_files=
     return output
 end
 
-function join_predictor_features(base_path, split_path, fwd_score, bwd_score, fisher_path, out)
+function join_predictor_features(base_path, split_path, fwd_score, bwd_score, fisher_path, out;
+                                 margin_mode)
     header, base = lobe_table(base_path)
     _, splitrows = lobe_table(split_path; required=["skew_ratio"])
-    _, fwd = lobe_table(fwd_score; required=["cost_margin"])
-    _, bwd = lobe_table(bwd_score; required=["cost_margin"])
+    required = margin_mode == "absolute_cost_margin" ? ["cost_margin"] : ["cost_GlcN", "cost_GlcNAc"]
+    _, fwd = lobe_table(fwd_score; required)
+    _, bwd = lobe_table(bwd_score; required)
     _, fisher = lobe_table(fisher_path; required=["score"])
     for (name, table) in (("split", splitrows), ("forward score", fwd), ("backward score", bwd), ("Fisher", fisher))
         require_same_keys(base, table, name)
@@ -190,8 +192,8 @@ function join_predictor_features(base_path, split_path, fwd_score, bwd_score, fi
         row = copy(base[key])
         skew = something(tryparse(Float64, splitrows[key]["skew_ratio"]), NaN)
         row["split_log_skew"] = isfinite(skew) && skew > 0 ? @sprintf("%.8g", log(skew)) : "NaN"
-        for (col, value) in (("mold_cc_fwd", fwd[key]["cost_margin"]), ("mold_cc_bwd", bwd[key]["cost_margin"]))
-            p = something(tryparse(Float64, value), NaN)
+        for (col, costs) in (("mold_cc_fwd", fwd[key]), ("mold_cc_bwd", bwd[key]))
+            p = mold_margin(costs, margin_mode)
             row[col] = isfinite(p) ? @sprintf("%.8g", p) : "NaN"
         end
         f = something(tryparse(Float64, fisher[key]["score"]), NaN)
@@ -320,7 +322,8 @@ function execute_pipeline(opts)
             "--config", abspath(opts["--config"]), "--out", fisher])
         stage = "predictor_features"
         table = joinpath(outdir, "features_predictor.tsv")
-        join_predictor_features(descriptor_features, split_features, score_paths[1], score_paths[2], fisher, table)
+        join_predictor_features(descriptor_features, split_features, score_paths[1], score_paths[2], fisher, table;
+                                margin_mode=cfg["model"]["mold_margin_mode"])
         stage = "gmm"
         gmm = joinpath(outdir, "pred_gmm.tsv")
         sel = cfg["selection"]

@@ -1,8 +1,8 @@
-# One descriptor comparison: half-plane asymmetry after affine patch projection.
+# One label-free Fisher change: affine disk projection at train and score time.
 [model]
 fisher_projection_zero_l1 = 1e-12
 mold_margin_mode = "absolute_cost_margin"
-name = "cc_soft_affine_residual_v1"
+name = "cc_soft_affine_fisher_v1"
 descriptor = "affine_residual_half_plane_asymmetry"
 descriptor_column = "patch_u_asym_reconstructed"
 descriptor_channel = "bwd_res"
@@ -36,7 +36,7 @@ interactions = true
 vote_threshold = 0.5
 
 [preprocessing]
-fisher_patch_projection = "none"
+fisher_patch_projection = "affine_disk"
 patch_residual_filter = "smooth_residual"
 descriptor_normalization = "median_sample_std"
 pixel_order = "u_outer_t_inner"

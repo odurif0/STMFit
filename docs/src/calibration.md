@@ -249,6 +249,16 @@ The sixteen changed decisions all end at zero vote margin, and the benchmark
 has been reused extensively. Neither this small gain nor the projection algebra
 establishes a physical background correction or calibrated chemical confidence.
 
+The next independent signed-CC and affine-Fisher comparisons introduce no new
+molecular calibration. Signed CC uses the existing physical template cost
+ordering, not an experimental class or an oracle sign flip. Affine Fisher removes
+the geometric `[1,t,u]` subspace from its 197-pixel disk at training and scoring;
+the original unprojected center amplitude still names the learned groups.
+Its explicit `fisher_projection_zero_l1 = 1e-12` numerical floor marks a vanished
+projected signal unavailable, without missing-pixel imputation. This also removes
+affine molecular signal. Templates, physical scales, mixture composition freedom
+and count selection are unchanged; neither candidate is established as better.
+
 
 ## Opt-in label-free exploration (2026-09-18)
 

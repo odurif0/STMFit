@@ -2307,6 +2307,16 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-20. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0k. **Can signed physical margins or affine Fisher patches improve label-free assignment?** →
+    **IN PROGRESS (Sep 20)**: the user approves both proposed leads, requiring
+    label-free inference. One 30-minute, four-CPU / 16 GB comparison is declared:
+    affine-descriptor control (673/33), signed CC margins only, and affine-disk
+    Fisher projection only. No combined arm or post-grade parameter search.
+    Done means tested mathematics/input boundaries, exact control replay,
+    complete full146 outputs and full145 external grades against control/history,
+    all paired gains/losses, and a keep/reject decision. Benchmark truth remains
+    evaluation-only; method comparison is development, not independent validation.
+
 0j. **Can a better-defined transverse descriptor close the historical gap?** →
     **COMPLETE; AFFINE GAIN, NO PROMOTION (Sep 20)**: job **11888011** finishes
     0:0 in 7m19s. All twelve control tables reproduce matched residuals at 672/29.
@@ -8113,3 +8123,74 @@ output checks** and paired-grade arithmetic assertions. The recorded test-only
 syntax/norm failures above do not alter the production formulas or this result.
 The final documentation build passes, with only the existing generated-page and
 search-index size warnings; deployment is skipped outside CI.
+
+## 2026-09-20 — Signed CC margins and affine Fisher: two independent label-free leads
+
+The user approves exploring the two proposed leads while ensuring they remain
+label-free. The scientific deliverable is a complete, reproducible comparison
+against the 673-correct / 33-exact working candidate and historical 677/36.
+Done requires synthetic/CLI tests, exact control replay, all 146 scans / 900
+keys, external full145 grades with every gain/loss, and a decision. The time box
+is **one Viper job, 30 minutes, four CPUs / 16 GB**, with three independent arms.
+No combined variant, weight/threshold/seed/radius search, new DFT, count refit,
+unknown25 rerun or old-artifact overwrite is included. The archived workflow's
+Must-NOT-have list is retained; its retired process instructions are not revived.
+
+The source audit confirms that `join_predictor_features` reads each directional
+`cost_margin`, while its producer writes `abs(cost_GlcN-cost_GlcNAc)`. This loses
+the favored template's identity; it is a defined feature, not a proven bug.
+The first candidate replaces just these two features by
+`cost_GlcN-cost_GlcNAc`, positive when the existing GlcNAc template has lower
+cost. It does not use the decoded `predicted` or `physical_label` columns, change
+the label-free geometric direction/phase/mirror selection, or search a sign
+against experimental truth. Simulated chemical template identities are physical
+inputs, not the experimental benchmark labels or a composition prior. Their
+sign may be unreliable; no improved recognition is assumed.
+
+The second candidate retains the absolute CC features and projects the forward
+Fisher disk off the fixed `[1,t,u]` subspace. A QR basis uses only the original
+197 disk coordinates. The same projection is applied before PCA/GMM/Fisher
+training and to both original/reflected held-out patches at scoring. The original
+patch center amplitudes still order the two learned groups; they are NOT
+projected, replaced by expected labels, or constrained to a class count. Fold
+parity, mixture weights, PCA dimension, mirror, covariance, historical midpoint,
+regularization, seeds and voting stay unchanged. The projection removes affine
+molecular signal too and is not a calibrated acquisition/background correction.
+
+The explicit new config fields are `model.mold_margin_mode`,
+`preprocessing.fisher_patch_projection`, and `model.fisher_projection_zero_l1`.
+All existing assignment configs explicitly select `absolute_cost_margin`,
+`none`, and `1e-12`; their hashes change, not their effective legacy arithmetic.
+The zero-mass tolerance is fixed before the grade at the existing descriptor's
+numerical L1 floor, not fitted to data. Under affine Fisher, projected disk mass
+at or below it is unavailable (`zero_affine_patch_mass`), retaining its key.
+No missing pixel is imputed. Raw patches, the successful backward descriptor,
+CC templates and k-means remain unchanged in both arms. The two new configs
+differ from the control only by their name and one respective mode field.
+
+The audit distinguishes inference from evaluation: the scientific runner accepts
+no truth, expected N, control sequence, reference prediction or benchmark
+manifest. It processes the whole cohort before the external manifest selects
+the grade rows. Tests poison experimental-control columns (rejected) and decoded
+mold labels (irrelevant to the features), check free unequal mixture weights,
+original amplitude mapping, held-out-fold independence and complete invalid rows.
+Neither version chooses the top k lobes or any expected monomer positions.
+External comparison can guide subsequent development; this heavily reused
+benchmark is therefore not an independent generalization test.
+
+The first affine test run fails only on an over-tight aggregate orthogonality
+tolerance: diagonal Gram errors are at most `1.78e-15`, but their aggregate norm
+exceeds `2e-15`. The test now uses a dimension-aware `197*eps(Float64)` bound
+for dot products across the disk; independent normal-equation projection,
+idempotence, plane-invariance and score tests remain separate. No production
+formula or configured scientific tolerance changes in response to this test.
+
+All **1,518 Julia 1.13 assertions** now pass: signed-feature/input boundaries 73,
+affine Fisher 74, legacy Fisher 229, descriptor/vote 37, prior transverse
+descriptors 125, patch extraction 380, full synthetic pipeline 58, new shell
+runner 16, legacy Fisher attribution 207 and saved-representation diagnostics
+319. The raw-patch attribution program explicitly rejects the projected mode
+rather than attributing its unmodified identity to a different scoring path.
+The two candidate formulas, zero-mass rule and all settings are frozen before
+any new scientific cohort output or grade. The documentation builds with the
+existing page/search-index size warnings only.

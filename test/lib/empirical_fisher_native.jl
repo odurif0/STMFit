@@ -4,6 +4,9 @@ Native reconstruction of `empirical_fisher_mold.py` (Julia 1.13).
 Only patch pixels and lobe parity enter the calculation. PCA dimension, both
 regularizers, EM limit/tolerance, seed, and grid widths come from the config.
 The two full-covariance mixture weights are estimated, never fixed.
+Optional affine-disk projection removes the fixed [1,t,u] subspace before PCA
+and before each held-out score. Original center amplitudes still order clusters;
+the projection removes affine molecular signal as well as possible nuisance.
 
 This is NOT a byte-identical sklearn implementation. Initialization uses Julia's
 MersenneTwister, one two-center k-means++ draw, and Lloyd iterations until the
@@ -52,10 +55,12 @@ struct FisherOptions
     half_nm::Float64
     step_nm::Float64
     layout::String
+    patch_projection::String
+    projection_zero_l1::Float64
 
     function FisherOptions(pca_components, noise_regularization,
                            gmm_regularization, gmm_maxiter, gmm_tolerance,
-                           seed, half_nm, step_nm, layout)
+                           seed, half_nm, step_nm, layout, patch_projection, projection_zero_l1)
         for (name, value) in (("fisher_pca_components", pca_components),
                               ("fisher_gmm_maxiter", gmm_maxiter))
             value isa Integer && !(value isa Bool) && value > 0 ||
@@ -72,6 +77,11 @@ struct FisherOptions
         end
         layout in ("legacy_row_major", "physical_u_outer_t_inner") ||
             throw(ArgumentError("unsupported fisher_layout: $layout"))
+        patch_projection in ("none", "affine_disk") ||
+            throw(ArgumentError("unsupported fisher_patch_projection: $patch_projection"))
+        projection_zero_l1 isa Real && !(projection_zero_l1 isa Bool) &&
+            isfinite(projection_zero_l1) && projection_zero_l1 >= 0 ||
+            throw(ArgumentError("fisher_projection_zero_l1 must be finite and nonnegative"))
         ratio = half_nm / step_nm
         isfinite(ratio) && 1 <= ratio < (typemax(Int) - 1) / 2 ||
             throw(ArgumentError("mold_half_nm / mold_step_nm must give a finite grid"))
@@ -83,7 +93,8 @@ struct FisherOptions
             throw(ArgumentError("mold_half_nm squared must be positive and finite"))
         new(Int(pca_components), Float64(noise_regularization),
             Float64(gmm_regularization), Int(gmm_maxiter), Float64(gmm_tolerance),
-            Int(seed), Float64(half_nm), Float64(step_nm), String(layout))
+            Int(seed), Float64(half_nm), Float64(step_nm), String(layout), String(patch_projection),
+            Float64(projection_zero_l1))
     end
 end
 
@@ -97,9 +108,13 @@ function load_fisher_config(config::AbstractDict)
     for name in required
         haskey(model, name) || throw(ArgumentError("missing [model] $name"))
     end
-    haskey(pre, "fisher_layout") ||
-        throw(ArgumentError("missing [preprocessing] fisher_layout"))
-    options = FisherOptions((model[name] for name in required)..., pre["fisher_layout"])
+    for name in ("fisher_layout", "fisher_patch_projection")
+        haskey(pre, name) || throw(ArgumentError("missing [preprocessing] $name"))
+    end
+    haskey(model, "fisher_projection_zero_l1") ||
+        throw(ArgumentError("missing [model] fisher_projection_zero_l1"))
+    options = FisherOptions((model[name] for name in required)...,
+                            pre["fisher_layout"], pre["fisher_patch_projection"], model["fisher_projection_zero_l1"])
     grid = fisher_grid(options)
     options.pca_components <= length(grid.disk_indices) ||
         throw(ArgumentError("fisher_pca_components exceeds the number of disk pixels"))
@@ -347,7 +362,17 @@ struct FisherModel
     g1::Vector{Float64}             # centered high-amplitude patch mean
     amplitude_means::Tuple{Float64,Float64}
     gmm::GMMFit
+    projection_basis::Union{Nothing,Matrix{Float64}} # fixed disk basis, not learned from rows
 end
+
+"Orthonormal affine basis on the actual disk; no molecular pixels or labels enter."
+function _affine_disk_basis(grid::FisherGrid)
+    u = [grid.coords[div(index - 1, grid.side) + 1] for index in grid.disk_indices]
+    t = [grid.coords[mod(index - 1, grid.side) + 1] for index in grid.disk_indices]
+    return Matrix(qr(hcat(ones(length(t)), t, u)).Q)[:, 1:3]
+end
+
+_project_disk(x::AbstractVector, basis::AbstractMatrix) = x - basis * (transpose(basis) * x)
 
 # Separate the linear algebra from GMM for fixed-partition numerical tests.
 function _fisher_linear(Xc, Z, V, amplitudes, assignments, regularization)
@@ -379,6 +404,13 @@ function fit_fisher(X::AbstractMatrix{<:Real}, amplitudes::AbstractVector{<:Real
     n >= max(2, options.pca_components) || throw(FisherFitError("too_few_training_rows"))
     d >= options.pca_components || throw(FisherFitError("too_few_patch_pixels"))
     all(isfinite, X) && all(isfinite, amplitudes) || throw(FisherFitError("nonfinite_training_input"))
+    basis = options.patch_projection == "affine_disk" ? _affine_disk_basis(fisher_grid(options)) : nothing
+    if basis !== nothing
+        size(basis, 1) == d || throw(DimensionMismatch("affine projection requires the configured Fisher disk"))
+        X = Matrix{Float64}(X) - (X * basis) * transpose(basis)
+        any(row -> sum(abs, row) > options.projection_zero_l1, eachrow(X)) ||
+            throw(FisherFitError("zero_affine_patch_mass"))
+    end
     Xc = Matrix{Float64}(X) .- mean(X; dims=1)
     all(isfinite, Xc) || throw(FisherFitError("nonfinite_centered_input"))
     decomposition = try
@@ -393,11 +425,14 @@ function fit_fisher(X::AbstractMatrix{<:Real}, amplitudes::AbstractVector{<:Real
     gmm = _fit_gmm(Z, options)
     linear = _fisher_linear(Xc, Z, V, Float64.(amplitudes), gmm.assignments,
                             options.noise_regularization)
-    return FisherModel(linear.w_p, linear.mid, linear.g0, linear.g1, linear.amplitude_means, gmm)
+    return FisherModel(linear.w_p, linear.mid, linear.g0, linear.g1, linear.amplitude_means, gmm, basis)
 end
 
-"Raw-patch margin; the historical mid convention is intentionally unchanged."
-score(x::AbstractVector, model::FisherModel) = dot(x - model.mid, model.w_p)
+"Same projection at training and scoring; the historical mid convention is unchanged."
+function score(x::AbstractVector, model::FisherModel)
+    prepared = model.projection_basis === nothing ? x : _project_disk(x, model.projection_basis)
+    return dot(prepared - model.mid, model.w_p)
+end
 maxmirror_score(x::AbstractVector, model::FisherModel, grid::FisherGrid) =
     max(score(x, model), score(flip_u_disk(x, grid), model))
 
@@ -423,9 +458,13 @@ function cv_scores(patches::PatchTable, options::FisherOptions)
     grid.disk_indices == patches.grid.disk_indices && grid.coords == patches.grid.coords ||
         throw(ArgumentError("patch table grid does not match Fisher config"))
     reasons = copy(patches.invalid_reasons)
+    basis = options.patch_projection == "affine_disk" ? _affine_disk_basis(grid) : nothing
     for i in 1:n
         if isempty(reasons[i]) && !(all(isfinite, patches.X[i, :]) && isfinite(patches.amplitudes[i]))
             reasons[i] = "nonfinite_patch_input"
+        elseif isempty(reasons[i]) && basis !== nothing &&
+               sum(abs, _project_disk(patches.X[i, :], basis)) <= options.projection_zero_l1
+            reasons[i] = "zero_affine_patch_mass"
         end
     end
     margins = fill(NaN, n)

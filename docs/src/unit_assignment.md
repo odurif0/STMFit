@@ -1833,6 +1833,29 @@ assertions and 77 saved-output checks**, plus paired-grade arithmetic checks.
 All 580 candidate/reference/file pairs and replay commands are in
 `results/transverse_descriptor_comparison_20260920/report.md`.
 
+### Signed CC and affine Fisher candidates (2026-09-20; comparison pending)
+
+The user approves these two leads with an explicit label-free requirement.
+One 30-minute four-CPU Viper job compares the saved 673/33 affine-descriptor
+candidate with two independent arms, never a combination:
+
+- `unit_assignment_signed_mold.toml` replaces the absolute forward/backward
+  template margins with `cost_GlcN-cost_GlcNAc`. It ignores decoded mold labels
+  and leaves templates and their geometric alignment unchanged.
+- `unit_assignment_affine_fisher.toml` instead removes the fixed `[1,t,u]`
+  subspace from the Fisher disk before training and before scoring either mirror.
+  The original center amplitudes still orient the unsupervised groups. Pure
+  projected zero-mass rows remain present as NA at the declared `1e-12` L1 floor.
+
+Neither uses experimental labels, expected counts, class composition or a
+truth-selected sign. The physical identities of simulated templates are not
+experimental training labels. All 146 scans are processed before the separate
+full145 grade. Counts, successful descriptor, seeds, classifier/vote settings
+and missing-pixel rules remain unchanged. All patches are regenerated; the
+control must reproduce its twelve scientific tables byte-for-byte. No parameter
+search follows the grade. This benchmark comparison is development evidence,
+not independent validation or calibrated chemical confidence.
+
 ### Native numerical conventions
 
 The constant-current port retains the old first-axis-fast cube index, sampling
