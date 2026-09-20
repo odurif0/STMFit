@@ -808,3 +808,7 @@ Output must be new. Any failed arm/log is retained, the other arms still run,
 and any failure makes the job exit nonzero. Fetch and validate all outputs
 before external grading. The raw-patch Fisher attribution diagnostic rejects
 the new projected mode rather than misattributing its legacy response identity.
+When synchronizing tracked source with `git ls-files`, also copy the existing
+root `Manifest.toml` explicitly: it is ignored by Git, and omitting it prevents
+dependency loading in a new checkout even when the depot is already populated.
+Check its hash; do not resolve new versions to work around a missing copy.

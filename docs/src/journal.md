@@ -8194,3 +8194,21 @@ rather than attributing its unmodified identity to a different scoring path.
 The two candidate formulas, zero-mass rule and all settings are frozen before
 any new scientific cohort output or grade. The documentation builds with the
 existing page/search-index size warnings only.
+
+Source **3c45c7c** is synchronized to
+`/u/oldu/code/STMFit_label_free_signals_20260920`, without benchmark truth tables
+or previous result trees. The tracked-source checksum dry-run is empty. The
+first dependency precheck reports StatsBase unavailable, before any dry-run or
+job: `git ls-files` had omitted the ignored root `Manifest.toml`. Read-only
+inspection confirms its absence. Copying the unchanged existing Manifest
+(SHA-256 `617de8162fa4c7a814aacb106f145349bc57ead58ec9a6c332971a821b5974fe`)
+fixes the staging omission without Pkg resolution, version changes or source
+modification. No scientific submission or computation preceded this correction.
+
+With the unchanged Manifest present, dependency imports pass on Julia 1.13.0
+and all three metadata-only dry-runs validate 146 scans. Nine local/remote
+source/configuration hashes match, and the three geometry/template input hashes
+are unchanged. Job **11889205** is then submitted exactly once with the required
+five-variable command-line `--export` list. The scientific source directory has
+no `benchmarks/` or old `results/` tree. No benchmark truth enters the command or
+scientific inputs; the external grade remains local and downstream of all arms.
