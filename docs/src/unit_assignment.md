@@ -1648,7 +1648,7 @@ no raw data or fit ran. Correction needs a separate, fixed comparison with
 regenerated control and treatment geometry/features. Neither a correction nor a
 third candidate is included in this saved-output experiment.
 
-### Symmetric fused-fit comparison (2026-09-20; pending)
+### Symmetric fused-fit comparison (2026-09-20; modest gain, not promoted)
 
 The user authorized one targeted correction and a matched benchmark comparison.
 On `research/symmetric-fusion-20260920`, the fit uses `(F+B)/2` for the flattened,
@@ -1662,11 +1662,40 @@ on all 146 scans at the same 900 cached label-free counts. The original
 passed to the paired runner. Physical and classifier configs, fit budgets,
 seeds and CC templates are identical. `hpc/compare_fusion.sbatch` runs the two
 arms sequentially in one four-CPU, 16 GB, two-hour Viper job, after a dry-run.
-The external full145 own-N grade follows complete prediction outputs.
+Viper job **11878491** completed in **34m25s**, exit **0:0**. All 146 scans / 900
+keys survive in both arms, with the same seven unavailable keys. All 424 output
+files were fetched and checksum-verified. The control prediction TSV is
+byte-identical to the saved reconstruction, although regenerated base/split
+geometry tables are not byte-identical to their older counterparts.
+
+The external full145 own-N grade, run only after complete outputs, gives:
+
+| Profile | Correct / all 870 | Correct / classified | Coverage | Emitted errors | Exact chains / 145 |
+|---|---:|---:|---:|---:|---:|
+| Historical reference | 677 (77.8%) | 677/854 (79.3%) | 98.2% | 177 | 36 |
+| Regenerated control | 666 (76.6%) | 666/849 (78.4%) | 97.6% | 183 | 24 |
+| Symmetric fused fit | 671 (77.1%) | 671/849 (79.0%) | 97.6% | 178 | 28 |
+
+Both native arms retain 16 missing control positions, 38 extra lobes and five
+unavailable aligned positions. Across 145 scans, the correction gains correct
+positions on 19, loses on 16 and ties on 110. It gains nine exact chains and
+loses five. Confusion totals `(TN,FP,FN,TP)` change from `(519,43,140,147)` to
+`(518,44,134,153)`: six additional GlcNAc detections and one additional false
+positive, for a net five correct positions. The 106 count-matched scans improve
+514 → 518 correct out of 635 classified; the remaining 39 improve 152 → 153
+out of 214. The external grader changes orientation on four wrong-N scans;
+these grades do not establish a spatial monomer correspondence.
 
 This is an assignment comparison at fixed counts, not revalidation of the
-promoted 871-lobe counting result. The historical reference remains archival;
-no recognition gain or method promotion is established at preparation time.
+promoted 871-lobe counting result. The historical reference remains archival
+and still exceeds the corrected result by six correct positions and eight
+exact chains. **The modest gain is retained as a research result, without
+promotion or automatic follow-up tuning.** This reused benchmark does not
+establish independent generalization or unknown-chain chemistry.
+
+French report: `results/fusion_comparison_20260920/report.md`; native grades:
+`external_grade_v1/`; all paired scan outcomes: `paired_audit_v1/paired_files.tsv`.
+The generated `summarize_pair.jl` replays the external aggregate arithmetic.
 
 ### Native numerical conventions
 

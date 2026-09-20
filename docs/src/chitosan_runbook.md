@@ -1,10 +1,14 @@
 # Chitosan Benchmark and 10–20mer Runbook
 
-September 20 research branch: the symmetric fused-fit correction is being
-compared with source `f2191f7` at identical cached label-free counts, with both
-geometries regenerated. The historical results below do not validate this
-corrected source. This comparison does not rerun count selection. See the
-September 20 journal entry and `hpc/compare_fusion.sbatch`.
+September 20 research branch: the completed symmetric-fusion comparison improves
+the regenerated control from **666/870 correct and 24/145 exact chains** to
+**671/870 and 28/145**, at the same cached label-free counts and coverage
+(666/849 → 671/849 classified; 78.4% → 79.0%). The historical reference remains
+677/870 and 36/145; the correction is not promoted. Both geometries were
+regenerated in Viper job **11878491** (34m25s, exit 0:0), with control source
+`f2191f7` and corrected source `d12283a`. This comparison does not rerun count
+selection or unknown25. The counting results below remain pre-correction
+results. See the September 20 journal entry and `hpc/compare_fusion.sbatch`.
 
 This page is the hand-off document for reproducing the current chitosan workflow
 without relying on prior conversation context.  The goal is a label-free fitting

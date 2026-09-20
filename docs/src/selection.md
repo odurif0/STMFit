@@ -2,8 +2,11 @@
 
 On the September 20 symmetric-fusion research branch, fused fit samples use
 both unsmoothed views and ROI detection still uses both smoothed views. The
-paired assignment comparison holds cached counts fixed; it does not revalidate
-the historical counting results below for the corrected fit input.
+completed fixed-count assignment comparison improves 666 → 671 correct / 870
+controls and 24 → 28 exact chains / 145, with unchanged coverage. The historical
+assignment reference remains better and the correction is not promoted. This
+comparison holds cached counts fixed; it does not revalidate the historical
+counting results below for the corrected fit input.
 
 How STMFit chooses the optimal number of lobes (N) from the sweep results.
 

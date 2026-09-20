@@ -12,6 +12,12 @@ counting summary, and fetch both arms and their logs before external grading.
 No benchmark labels enter the compute job. Existing completed runs are not
 restarted.
 
+This comparison completed as job **11878491** (34m25s, exit 0:0; eight CPUs
+allocated by Viper for the four-CPU request). Both complete outputs and the
+Slurm log are local under `results/fusion_comparison_20260920/`. The fixed-count
+recognition gain is 666 → 671 correct / 870 and 24 → 28 exact chains / 145;
+the correction is not promoted. This job is closed; do not resubmit it.
+
 STMFit's batch pipeline (`test/batch_full.jl`) is an *embarrassingly parallel*
 sweep over STM image files: each file is fitted independently, and the script
 already shards its work list with `--chunk i/n` (round-robin) plus internal

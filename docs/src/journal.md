@@ -2307,15 +2307,19 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-20. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
-0g. **Does symmetric fit filtering improve recognition?** → **PAIRED COMPARISON
-    SUBMITTED, RESULTS PENDING (Sep 20)**: one fixed correction uses `(F+B)/2` for
-    fitting and retains `(S(F)+S(B))/2` for ROI detection. The control is source
-    `f2191f7`; both arms regenerate base/split geometry, all patches and native
-    assignments at the same 146-file / 900-lobe cached label-free counts. One
-    Viper job **11878491** is capped at two hours, four CPUs and 16 GB. External full145
-    grading follows complete outputs. No new count-selection benchmark result
-    or recognition improvement is yet established. The correction is isolated
-    on `research/symmetric-fusion-20260920`, not promoted to the reference.
+0g. **Does symmetric fit filtering improve recognition?** → **COMPLETE; MODEST
+    GAIN, NO PROMOTION (Sep 20)**: source `d12283a` fits `(F+B)/2`, retaining
+    `(S(F)+S(B))/2` for ROI detection. Job **11878491** completed in 34m25s,
+    exit 0:0; both arms retain all 146 files / 900 cached lobes and the same
+    seven unavailable keys. Regenerated control `f2191f7` reproduces the saved
+    prediction TSV byte-for-byte. Full145 improves **666 → 671 correct / 870**,
+    **78.4% → 79.0%** classified accuracy and **24 → 28 exact chains**. Coverage
+    stays 849/870, with 16 missing positions and 38 extra lobes. There are 19
+    winning scans, 16 losing and 110 tied; nine exact chains gained, five lost.
+    The historical 677-correct / 36-exact reference remains better. The branch
+    is not promoted; count selection and unknown25 were not rerun. Independent
+    generalization is unestablished on this reused benchmark. No further
+    filtering, weight or threshold search follows this completed comparison.
 
 0f. **Can a bounded change improve recognition on the user's benchmark?** →
     **SAVED-OUTPUT FIRST PASS COMPLETE; NO GAIN (Sep 19)**: the two predeclared
@@ -7581,3 +7585,70 @@ and separate arm logs; the scheduler log is
 `/ptmp/oldu/stmfit/fusion_comparison_20260920-11878491.log`. Fetch to
 `results/fusion_comparison_20260920/` and grade only complete outputs. No
 recognition result is available at submission time.
+
+### Completed comparison: five additional correct positions, four additional exact chains
+
+Job **11878491** ran on `vipc2169` from **16:59:30 to 17:33:55 CEST**, September
+20, and completed **0:0 in 34m25s**. Viper allocated eight CPUs for the four-CPU
+request; the runner used four one-thread fit shards per arm, sequential arms.
+The control finished at 17:17:07 and the correction at 17:33:55. Both arms
+regenerated base/split geometry and all three patch families, then ran the
+same native whole-cohort assignment, validation, maps and QC.
+
+All **424 output files** plus the Slurm log were fetched locally; an rsync
+checksum dry-run reports zero differing/missing output files. No failure TSV
+or fit error appears. Parent checks confirm identical 146-file / 900-key
+coverage in all six geometry/patch/prediction stages and preserve N in both
+geometry tables. Control labels are **695 zero / 198 one / 7 unavailable**;
+symmetric labels are **689 zero / 204 one / 7 unavailable**, with exactly the
+same unavailable keys. The correction flips 48 labels across 39 scans: 27
+`0 → 1`, 21 `1 → 0`. This full scientific cohort includes the same one scan
+outside the benchmark; membership filtering happens only in the external tool.
+
+The regenerated control's final prediction TSV is byte-identical to the
+September 18 reconstruction (SHA-256
+`58a70c56beb7d61b686e918b6f6dc4339e12545a217cf5816be6075a68f00af5`).
+The regenerated base/split geometry TSVs differ from their older caches;
+byte identity is claimed only for the final prediction table, not the fits.
+The original archive and all inputs remain unchanged.
+
+One external native four-profile grade compares the historical reference,
+saved reconstruction, regenerated control and corrected output. The saved and
+regenerated reconstruction grades agree exactly.
+
+| Profile | Correct / all 870 | Correct / classified | Coverage | Emitted errors | Exact chains / 145 |
+|---|---:|---:|---:|---:|---:|
+| Historical reference | 677 (77.8%) | 677/854 (79.3%) | 98.2% | 177 | 36 |
+| Regenerated control | 666 (76.6%) | 666/849 (78.4%) | 97.6% | 183 | 24 |
+| Symmetric fused fit | 671 (77.1%) | 671/849 (79.0%) | 97.6% | 178 | 28 |
+
+All profiles retain **16 missing control positions** and **38 extra lobes**.
+The native arms share five unavailable aligned positions; their other two
+unavailable keys are one extra lobe and one outside-benchmark lobe. The 199
+control positions not correct in the symmetric result include 178 emitted
+errors, 16 missing positions and five abstentions; they are not 199 abstentions.
+
+Paired arithmetic retains every scan: **19 wins / 16 losses / 110 ties** in
+correct positions; **nine exact chains gained and five lost**. Confusion totals
+`(TN,FP,FN,TP)` change **(519,43,140,147) → (518,44,134,153)**. Six additional
+GlcNAc detections cost one additional false positive, for the net **+5**.
+On the **106 count-matched scans**, correct/classified improves **514/635 →
+518/635**; on the other 39 scans, **152/214 → 153/214**. The external grader
+changes orientation on four wrong-N scans. These index-aligned grades do not
+establish a spatial match between fitted lobes and physical monomers.
+
+**Decision:** the targeted correction improves recognition modestly on this
+fixed-count comparison and restores the intended direction symmetry. It remains
+on the research branch, **not promoted**: the historical reference still has
+six more correct positions and eight more exact chains. No threshold, class
+prior, weight, seed or second filtering convention was tried after grading.
+The reused benchmark is development evidence, not an independent validation.
+Count selection (including the separate 871-lobe promoted counting lineage)
+and the unknown25 application were not rerun; neither gets a new accuracy claim.
+
+The scientific deliverable is complete. French synthesis:
+`results/fusion_comparison_20260920/report.md`; full outputs: `run_v1/`;
+external native grades: `external_grade_v1/`; complete paired scan table:
+`paired_audit_v1/paired_files.tsv`. `summarize_pair.jl` verifies aggregate,
+coverage and confusion arithmetic against the native grade before writing the
+paired report. The job is closed and no new compute is submitted.

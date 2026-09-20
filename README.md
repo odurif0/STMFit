@@ -4,14 +4,18 @@ Analysis pipeline for STM images of molecular chains (chitosan on Cu(100) and
 similar systems). Detects and fits a chain-of-Gaussians model to count the
 number of monomer units (lobes) per chain, label-free.
 
-**Research branch, September 20:** the symmetric fused-fit correction is under
-paired evaluation against `f2191f7`, with both arms refitted at the same cached
-counts. The benchmark numbers below describe the previous reference; counting
-and recognition performance have not yet been revalidated for this correction.
+**Research branch, September 20:** the symmetric fused-fit correction improves
+the regenerated reconstruction from **666 to 671 correct / 870 controls** and
+**24 to 28 exact chains / 145**, at identical cached counts and coverage
+(**78.4% → 79.0%** classified accuracy). Both arms were refitted; the control
+reproduces the archived predictions byte-for-byte. The historical reference
+remains better (677 correct / 36 exact), so the correction is **not promoted**.
+Count selection was not rerun; the counting numbers below describe the frozen
+pre-correction reference.
 See the [journal](docs/src/journal.md#2026-09-20--symmetric-fused-fit-correction-and-matched-recognition-comparison).
 
 **Benchmark (6mer):** the robust-AICc guard validates at 39/39 primary 240817
-files exact (N=6), reproducible. The current chitosan default is promoted for
+files exact (N=6), reproducible. The frozen pre-correction chitosan reference was promoted for
 the expanded 145-file external counting grade: 129/145 exact, 143/145 within one
 lobe. The 0/1/? unit-assignment benchmark uses the same 145 files; its external
 control sequence is NKNNKN (010010/101101 by convention) for grading only, never
