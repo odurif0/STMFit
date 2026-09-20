@@ -230,6 +230,18 @@ keeping the opt-in candidate, not a claim of calibrated chemistry or independent
 generalization; historical 677/854 and 36 exact remains better. No threshold or
 other calibration adjustment follows.
 
+The subsequent two-descriptor comparison changes neither calibration nor
+residual extraction. Its first moment uses the known transverse coordinate,
+normalized by the existing patch half-width. Its affine-residual asymmetry uses
+the orthogonal least-squares projection away from `[1,t,u]` on the full 9×9 grid.
+This removes the affine component of molecular signal too: only the orthogonal
+remainder is retained. It is not an estimated physical background, an acquisition
+correction or a guarantee of preserving chemistry. Synthetic plane invariance
+and agreement with an independent QR projection establish the algebra only.
+All geometry, physical scales, missingness rules, classifier settings and voting
+stay fixed; only the one descriptor supplied to GMM changes. Both variants are
+declared before a single full-cohort comparison and external grade.
+
 
 ## Opt-in label-free exploration (2026-09-18)
 

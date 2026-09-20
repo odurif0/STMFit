@@ -579,6 +579,27 @@ exact chains), at unchanged coverage. This is the opt-in working candidate, not
 a promoted default or a replacement for historical 677/36. No setting is tuned
 after grading; the reconstructed config still selects the explicit legacy mode.
 
+Two further opt-in configs test only the descriptor on those same matched
+residuals: `unit_assignment_transverse_moment.toml` and
+`unit_assignment_affine_residual.toml`. Each differs from the matched-residual
+control solely in `model.name` and `model.descriptor`; numerical settings,
+column schema and all other preprocessing/selection settings are identical.
+
+- `transverse_half_plane_asymmetry` remains the control: `sum(sign(u)*p)/sum(abs(p))`.
+- `transverse_first_moment` uses `sum((u/max(abs(u)))*p)/sum(abs(p))`. It distinguishes
+  transverse displacement within one half-plane and is dimensionless.
+- `affine_residual_half_plane_asymmetry` first projects the complete normalized
+  9×9 patch off `[1,t,u]` by least squares, then applies the original half-plane
+  formula, including the projected patch's L1 denominator. A projected L1 mass
+  at or below the unchanged `descriptor_zero_l1` becomes NA with
+  `zero_affine_residual_mass`; no missing pixel is imputed and no row is dropped.
+
+The storage column remains `patch_u_asym_reconstructed` for predictor-schema
+compatibility. The explicit method name/config identifies its definition; neither
+candidate is asserted to recover the lost historical producer. The plane
+projection affects this one descriptor, not images, patches, CC/Fisher or
+k-means inputs. These two predeclared comparisons are not promoted defaults.
+
 
 ## Opt-in diagnostic exploration settings (2026-09-18)
 

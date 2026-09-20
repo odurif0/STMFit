@@ -4,9 +4,10 @@ const ASSIGNMENT_CONFIG = joinpath(ROOT, "config", "unit_assignment_reconstructe
 const COUNT_CONFIG = joinpath(ROOT, "config", "chitosan.toml")
 
 @testset "Matched-residual pipeline must regenerate patches" begin
-    config = joinpath(ROOT,"config","unit_assignment_matched_residual.toml")
     mktempdir() do dir
-        for key in ("--patches-fwd","--patches-bwd","--descriptor-patches")
+        for name in ("matched_residual", "transverse_moment", "affine_residual"),
+            key in ("--patches-fwd","--patches-bwd","--descriptor-patches")
+            config = joinpath(ROOT,"config","unit_assignment_" * name * ".toml")
             opts = Dict("--config"=>config,"--outdir"=>joinpath(dir,"not_created"),key=>"cached.tsv")
             @test_throws ErrorException execute_pipeline(opts)
             @test !ispath(opts["--outdir"])

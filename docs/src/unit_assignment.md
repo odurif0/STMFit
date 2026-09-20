@@ -1773,6 +1773,27 @@ unknown25 are not rerun. Verification: 696 focused Julia 1.13 assertions plus
 47 saved-output checks. Full grades, every paired gain/loss and replay scripts:
 `results/matched_residual_comparison_20260920/report.md`.
 
+### Two transverse-descriptor candidates (2026-09-20; comparison pending)
+
+The user asks to continue improving the results, with historical 677/36 still
+the target. One comparison is bounded to a 30-minute four-CPU Viper job: the
+672/29 matched-residual control and two independently defined descriptors.
+The first replaces half-plane parity by the position-weighted transverse first
+moment. The second computes half-plane parity after projecting the normalized
+patch off the affine plane `[1,t,u]`, using the projected L1 mass. See the config
+reference for exact definitions and invalid-row behavior.
+
+The first is motivated by the older journal's first-moment description, not a
+claim of reconstructing the lost implementation. The second tests whether
+non-affine local asymmetry supplies useful information beyond the dominant ramp
+measured in the earlier audit. That audit did not prove the ramp was an artifact;
+plane projection also removes affine molecular signal. It affects only this
+descriptor, not the actual image, Gaussian fit, other features or classification
+rules. The same native pipeline regenerates all patches in each arm and computes
+whole-cohort predictions before external grading. Control replay, all keys,
+coverage and every gain/loss must be checked. No radius, feature combination,
+threshold, seed or vote-weight search follows the grade.
+
 ### Native numerical conventions
 
 The constant-current port retains the old first-axis-fast cube index, sampling

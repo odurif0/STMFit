@@ -3,7 +3,10 @@ module ReconstructedUnitAssignment
 using Printf, Statistics, TOML
 
 export read_table, write_table, lobe_table, require_same_keys,
-       transverse_asymmetry, augment_descriptor, write_soft_vote, load_config
+       transverse_asymmetry, transverse_descriptor, augment_descriptor, write_soft_vote, load_config
+
+const TRANSVERSE_DESCRIPTORS = ("transverse_half_plane_asymmetry",
+    "transverse_first_moment", "affine_residual_half_plane_asymmetry")
 
 function read_table(path::AbstractString)
     lines = filter(l -> !isempty(strip(l)) && !startswith(strip(l), '#'), readlines(path))
@@ -80,7 +83,7 @@ function load_config(path::AbstractString)
         haskey(cfg, section) || error("Missing config section [$section]")
     end
     model, pre = cfg["model"], cfg["preprocessing"]
-    model["descriptor"] == "transverse_half_plane_asymmetry" || error("Unsupported descriptor")
+    model["descriptor"] in TRANSVERSE_DESCRIPTORS || error("Unsupported descriptor")
     model["descriptor_column"] == "patch_u_asym_reconstructed" || error("Unsupported descriptor column")
     model["descriptor_channel"] == "bwd_res" || error("Unsupported descriptor patch family")
     pre["pixel_order"] == "u_outer_t_inner" || error("Unsupported patch ordering")
@@ -124,6 +127,54 @@ function transverse_asymmetry(values::AbstractVector, coords::AbstractVector; ze
     return (result / mass, "ok")
 end
 
+"""Remove the least-squares affine plane on the complete square patch grid.
+
+Only the descriptor uses this projection: raw pixels, fit geometry, CC/Fisher
+patches and the k-means features remain untouched. The affine part of any true
+molecular signal is removed too; this is not a calibrated background estimate.
+"""
+function _affine_residual_patch(values::AbstractVector, coords::AbstractVector)
+    n = length(coords)
+    length(values) == n^2 || error("Patch/grid size mismatch")
+    all(isfinite, values) && all(isfinite, coords) && issorted(coords) || error("Invalid affine patch/grid")
+    centered_coords = Float64.(coords .- mean(coords))
+    u = repeat(centered_coords; inner=n)
+    t = repeat(centered_coords; outer=n)
+    coordinate_energy = n * sum(abs2, centered_coords)
+    coordinate_energy > 0 || error("Affine patch requires a nonzero coordinate extent")
+    slope_u = sum(u .* values) / coordinate_energy
+    slope_t = sum(t .* values) / coordinate_energy
+    return values .- mean(values) .- slope_u .* u .- slope_t .* t
+end
+
+"""Explicit descriptor choice on the same normalized u-outer/t-inner patch.
+
+The first moment uses u/max(abs(u)); the affine variant applies the existing
+half-plane formula to the least-squares plane residual, including its L1 norm.
+None of these definitions recovers the unavailable historical producer.
+"""
+function transverse_descriptor(values::AbstractVector, coords::AbstractVector,
+                               kind::AbstractString; zero_l1::Real)
+    kind in TRANSVERSE_DESCRIPTORS || error("Unsupported descriptor: $kind")
+    legacy = transverse_asymmetry(values, coords; zero_l1)
+    kind == "transverse_half_plane_asymmetry" && return legacy
+    last(legacy) == "ok" || return legacy
+    if kind == "transverse_first_moment"
+        extent = maximum(abs, coords)
+        extent > 0 || error("First moment requires a nonzero coordinate extent")
+        result = 0.0
+        i = 1
+        for u in coords, _ in coords
+            result += (u / extent) * values[i]
+            i += 1
+        end
+        return (result / sum(abs, values), "ok")
+    end
+    residual = _affine_residual_patch(values, coords)
+    value, reason = transverse_asymmetry(residual, coords; zero_l1)
+    return (value, reason == "zero_patch_mass" ? "zero_affine_residual_mass" : reason)
+end
+
 function augment_descriptor(features, patches, out, config)
     cfg = load_config(config)
     model = cfg["model"]
@@ -139,8 +190,8 @@ function augment_descriptor(features, patches, out, config)
     outrows = Dict{String,String}[]
     for key in sort(collect(keys(base)))
         row = copy(base[key])
-        value, reason = transverse_asymmetry([_float(patch[key][c]) for c in pixels], coords;
-                                             zero_l1=model["descriptor_zero_l1"])
+        value, reason = transverse_descriptor([_float(patch[key][c]) for c in pixels], coords,
+                                             model["descriptor"]; zero_l1=model["descriptor_zero_l1"])
         row[col] = isfinite(value) ? @sprintf("%.17g", value) : "NA"
         row["descriptor_reason"] = reason
         push!(outrows, row)

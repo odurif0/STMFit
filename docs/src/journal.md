@@ -2307,6 +2307,16 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-20. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0j. **Can a better-defined transverse descriptor close the historical gap?** →
+    **IN PROGRESS (Sep 20)**: the user asks to continue improving results.
+    One 30-minute four-CPU comparison is declared: matched-residual control
+    (672/29), position-weighted first moment, and half-plane asymmetry after
+    affine projection of the patch. Only the descriptor and method name differ.
+    Done requires tested formulas, byte-reproduced control, complete whole-cohort
+    outputs and external full145 grades with every gain/loss and a decision.
+    No label-guided formula, radius, seed, threshold or weight tuning is allowed.
+    Neither variant is a recovered historical producer or an established gain.
+
 0i. **Does matching the patch residual filter improve recognition?** →
     **COMPLETE; SMALL GAIN, NO PROMOTION (Sep 20)**: job **11883607** finishes
     0:0 in 5m15s. `S(data-model)` gains **671 → 672 correct / 870** and
@@ -7942,3 +7952,65 @@ reference/file pairs to `paired_audit_v1/paired_files.tsv`. Full grades are in
 plus the saved-output checks; the initial local plotting-cache failure and its
 successful unchanged rerun are recorded above.
 The final documentation build also passes, with existing size warnings only.
+
+## 2026-09-20 — Two source-grounded transverse descriptors: bounded comparison
+
+The user asks to continue improving recognition with the strongest leads. The
+deliverable is a reproducible candidate comparison, not an infrastructure change
+or a promise of positive results. Done means synthetic/CLI tests, a replayed
+672-correct / 29-exact control, all 146 files / 900 keys, full145 external grades
+against the control and historical 677/36, every paired gain/loss and a decision.
+The time box is **one 30-minute, four-CPU / 16 GB Viper job** with three arms.
+The completed unknown25 application is not rerun. The archived workflow's
+Must-NOT-have constraints remain: no labels/composition prior in inference, no
+truth-selected per-file profile, no dropped uncertain rows, no user-artifact
+overwrite and no count-selection change. No new DFT, registration, background
+fit, parameter sweep or voting change is included.
+
+Source/history review rules out repeating the already rejected physical-u Fisher
+mirror or the component-only votes. The existing half-plane descriptor does not
+distinguish moving residual mass inside one transverse half-plane; the older
+journal describes an unavailable u-weighted first moment, with insufficient
+detail to claim exact recovery. Prior label-free patch audits also measured
+roughly 85% transverse-ramp energy and strong descriptor saturation, but did
+not identify that ramp as nonmolecular or justify changing the raw image.
+
+Two alternatives are therefore fixed before any new grade:
+
+1. **First moment:** `sum((u/max(abs(u)))*p)/sum(abs(p))`, on the same normalized
+   backward 9×9 matched residual. This measures transverse displacement rather
+   than only half-plane membership; its scale comes from the existing grid.
+2. **Affine-residual half-plane asymmetry:** fit `[1,t,u]` by least squares to the
+   complete patch, subtract that plane, then apply the original signed-half-plane
+   numerator and L1 denominator to the remainder. This is a different descriptor,
+   not a preprocessing correction. The projection removes affine molecular
+   signal as well as any affine nuisance. Pure planes become explicitly
+   unavailable at the existing `1e-12` L1 threshold; missing pixels remain NA.
+
+The control config is unchanged. The two new configs differ from it only in
+`model.name` and `model.descriptor`. Their shared storage column is retained for
+compatibility, not used to disguise a historical-producer recovery. The first
+moment and plane projection introduce no fitted hyperparameter or class prior.
+The native pipeline keeps the same geometry, selected N, patches, Fisher layout,
+CC templates, classifier settings, seeds and vote rule. Only this GMM input
+feature can differ. All three arms regenerate identical patches; the cached
+patch guard is retained rather than introducing a new cache-authorization layer.
+No hybrid or additional setting is chosen after inspecting the external grade.
+
+Synthetic verification checks position sensitivity, unchanged legacy arithmetic,
+u/t axis conventions, reflections, scale/sign behavior, invalid rows, independent
+QR projection, idempotence, orthogonality, energy loss and affine invariance.
+The projection test explicitly measures that some injected molecular-like signal
+is removed. A first test run stopped on an ambiguous `.5.*` numeric literal in
+the synthetic fixture; spacing and an explicit leading zero fix that test syntax,
+without changing any production formula or benchmark setting.
+
+A second test-only failure compared an 81-pixel vector's aggregate L2 error
+to a per-pixel `5e-15` bound. On the largest injected plane the measured maximum
+pixel error is `2.71e-15` (1.52 ulps of the plane scale), while the L2 error is
+`9.07e-15`. The check now states the same bound in the maximum norm; the QR,
+orthogonality, descriptor-invariance checks and production formulas are unchanged.
+All **125 descriptor assertions** pass, including both real CLI invocations.
+Existing assignment/vote tests pass **37/37**, patch extraction **380/380**,
+the three-arm shell runner **16/16**, and the complete synthetic pipeline
+**46/46**, including its figures and all three cache-rejection configurations.

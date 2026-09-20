@@ -6,7 +6,8 @@ using .ReconstructedUnitAssignment
 function main(args=ARGS)
     if "--help" in args || "-h" in args
         println("Usage: julia --project=. test/build_reconstructed_descriptor.jl --features PATH --patches PATH --config PATH --out PATH")
-        println("Adds patch_u_asym_reconstructed = sum(sign(u)*p)/sum(abs(p)) on normalized backward residual 9x9 patches.")
+        println("Adds patch_u_asym_reconstructed using the explicit config descriptor on normalized backward residual 9x9 patches.")
+        println("Choices: transverse_half_plane_asymmetry (legacy), transverse_first_moment, affine_residual_half_plane_asymmetry.")
         println("Pixel order: u outer, t inner. Invalid/zero-signal patches remain NA with descriptor_reason. No benchmark inputs.")
         return
     end

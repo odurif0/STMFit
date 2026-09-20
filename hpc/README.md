@@ -763,3 +763,19 @@ duplicated. The regenerated control reproduces all twelve checked tables
 byte-for-byte. Matched filtering gains **671/28 → 672/29** at unchanged coverage;
 it is the opt-in working candidate, not a promoted champion. No new tuning or
 submission follows this completed pass. **Do not resubmit this job.**
+
+## Two transverse-descriptor candidates (September 20)
+
+`hpc/compare_transverse_descriptors.sbatch` runs the same native pipeline in
+`control/`, `moment/` and `affine/` with four CPUs, 16 GB and a 30-minute limit.
+The control is the matched-residual candidate; the other configs change only
+its descriptor and method name. All patches are regenerated and must match
+across arms; count/base/split geometry and templates are reused, not refitted.
+The script does no grading, label reading or parameter search.
+
+Use the same five absolute variables as the matched-residual launcher and run
+`bash hpc/compare_transverse_descriptors.sbatch --dry-run` first. Submit with
+explicit `--export=STMFIT_PROJECT_DIR,STMFIT_CACHE_DIR,STMFIT_INPUT_DIR,STMFIT_OUTDIR,JULIA_BIN`.
+`STMFIT_OUTDIR` must be new. A failed arm is preserved; subsequent arms still
+run, and any failure makes the job exit nonzero. Fetch all outputs and verify
+the control against the saved 672/29 candidate before external grading.
