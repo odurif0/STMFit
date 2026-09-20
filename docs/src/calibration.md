@@ -209,6 +209,9 @@ estimate or fitted threshold. Patch sampling, normalization, disk support,
 Fisher training, seeds and voting remain fixed. Neither reflection symmetry nor
 a synthetic test alone establishes improved chemical recognition; the complete
 external benchmark comparison is required. The original config remains intact.
+That fixed comparison regresses to 669/870 correct and 27/145 exact, versus
+671/870 and 28/145 for the control at identical coverage; the transverse
+variant is not retained. No recalibration or threshold adjustment follows.
 
 
 ## Opt-in label-free exploration (2026-09-18)

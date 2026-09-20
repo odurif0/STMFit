@@ -14,6 +14,11 @@ Count selection was not rerun; the counting numbers below describe the frozen
 pre-correction reference.
 See the [journal](docs/src/journal.md#2026-09-20--symmetric-fused-fit-correction-and-matched-recognition-comparison).
 
+The subsequent fixed Fisher-mirror experiment is **negative**: physical-u
+reflection gives **669/870 correct and 27/145 exact**, versus the reproduced
+671/28 symmetric-fusion control at identical coverage. It is not retained;
+the target remains exceeding the historical 677/36, not merely the native baseline.
+
 **Benchmark (6mer):** the robust-AICc guard validates at 39/39 primary 240817
 files exact (N=6), reproducible. The frozen pre-correction chitosan reference was promoted for
 the expanded 145-file external counting grade: 129/145 exact, 143/145 within one

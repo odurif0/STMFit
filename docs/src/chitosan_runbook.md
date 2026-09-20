@@ -10,6 +10,12 @@ regenerated in Viper job **11878491** (34m25s, exit 0:0), with control source
 selection or unknown25. The counting results below remain pre-correction
 results. See the September 20 journal entry and `hpc/compare_fusion.sbatch`.
 
+The follow-up physical-u Fisher mirror comparison (job 11879515, 2m03s) is
+negative: **669/870 correct, 27/145 exact**, with unchanged 849/870 coverage,
+against the exactly reproduced symmetric-fusion 671/28. Keep the original
+Fisher layout in the working candidate; the opt-in transverse config is a
+recorded negative experiment. The historical 677/36 target remains unmet.
+
 This page is the hand-off document for reproducing the current chitosan workflow
 without relying on prior conversation context.  The goal is a label-free fitting
 and model-selection pipeline that is externally graded on the benchmark and then

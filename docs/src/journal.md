@@ -2312,12 +2312,15 @@ See `docs/src/selection.md` for the full guard specification and
     the target to the best runnable reconstruction. The historical 677 correct
     positions / 870 and 36 exact chains / 145 remain the comparison target;
     symmetric fusion (671 / 28) is a working candidate, not a new champion.
-    The next bounded comparison changes only Fisher's scoring mirror from
-    physical t to physical u, using the complete symmetric-fusion cache.
-    No new count selection, half-plane descriptor, threshold, vote weight,
-    seed, composition rule, missing-patch relaxation or DFT change is included.
-    One 30-minute four-CPU Viper job will replay control and treatment, then
-    external grading will retain all 145 benchmark scans, including losses.
+    The one physical-u Fisher mirror comparison is **COMPLETE; NEGATIVE**:
+    job 11879515 (2m03s, exit 0:0) replays the control byte-for-byte but the
+    treatment gives **669/849 (78.8%), 27 exact**, versus 671/849 and 28.
+    Four final decisions change: one scan gains, three lose, 141 tie; one
+    exact chain is lost. All 900 keys and seven unavailable rows remain.
+    The variant is not retained as the working reference; symmetric fusion
+    remains the candidate. No further setting search follows this pass.
+    Counts, half-plane descriptor, thresholds, voting, seeds, missingness
+    and DFT inputs are unchanged. Exceeding history remains unresolved.
 
 0g. **Does symmetric fit filtering improve recognition?** → **COMPLETE; MODEST
     GAIN, NO PROMOTION (Sep 20)**: source `d12283a` fits `(F+B)/2`, retaining
@@ -7711,3 +7714,80 @@ variant changes no fitted synthetic Fisher weight or training partition. The
 preexisting legacy NumPy-reference and separate-process replay tests still pass.
 The sandbox initially blocked Julia's launcher lock and the SSH system-config
 check; the same read-only checks succeeded with the approved host access.
+
+### Completed result: transverse mirror rejected
+
+Source `8bb29f4` was synced to
+`/u/oldu/code/STMFit_transverse_fisher_20260920`. The mandatory metadata-only
+dry-run checked both methods and all 146 input files. Ten local/remote hashes
+matched: the Manifest, three configs, Fisher source and five cached geometry/
+patch inputs. No Manifest change or package installation was needed. The single
+sbatch submission supplied `STMFIT_PROJECT_DIR`, `STMFIT_CACHE_DIR`,
+`STMFIT_INPUT_DIR`, `STMFIT_OUTDIR` and `JULIA_BIN` explicitly in `--export`.
+
+Viper job **11879515** completed **0:0 in 2m03s** on `vipc2488` (four CPUs
+requested; eight allocated). Control started at 18:28:18 CEST and finished at
+18:29:29; treatment finished at 18:30:19. The **358 output files** and Slurm
+log were fetched from `/ptmp/oldu/stmfit/fisher_mirror_comparison_20260920_v1`
+to `results/fisher_mirror_comparison_20260920/run_v1/`; checksum dry-runs report
+no differences. The native application retained 146 files / 900 keys in all
+nine checked tables per arm, with the same seven unavailable prediction keys.
+There is no failure TSV or logged scientific error.
+
+The control predictions are byte-identical to the saved symmetric-fusion
+candidate. Local/half-plane features, CC margins and k-means outputs are also
+byte-identical between arms. Predictor tables differ only in `emp_fisher`:
+481 scores change, as do 104 GMM stability frequencies, five GMM labels and
+four final decisions. Labels go from 689 zero / 204 one / seven unavailable
+to 691 / 202 / seven. These frequencies are not calibrated probabilities.
+
+The external full145 own-N grade, after completing all predictions, is:
+
+| Profile | Correct / all 870 | Correct / classified | Coverage | Emitted errors | Exact chains / 145 |
+|---|---:|---:|---:|---:|---:|
+| Historical reference | 677 (77.8%) | 677/854 (79.3%) | 98.2% | 177 | 36 |
+| Replayed symmetric-fusion control | 671 (77.1%) | 671/849 (79.0%) | 97.6% | 178 | 28 |
+| Transverse Fisher mirror | 669 (76.9%) | 669/849 (78.8%) | 97.6% | 180 | 27 |
+
+Both native arms have five unavailable aligned control positions, 16 missing
+positions and 38 extras. One scan gains one correct position, three lose one,
+and 141 tie; zero exact chains are gained and one is lost. All four changes
+have N=6 and unchanged external orientation: `240817_075` lobe 5 (1→0, loss),
+`240817_087` lobe 4 (0→1, loss), `241113_086` lobe 2 (1→0, exact chain lost),
+and `241113_094` lobe 4 (1→0, gain). Three begin at exactly 0.5 stored soft-vote
+frequency; this is not permission to change tie handling. Confusion totals
+`(TN,FP,FN,TP)` change `(518,44,134,153)` → `(518,44,136,151)`.
+Against history, treatment has 23 winning scans, 28 losing and 94 tied;
+five exact gains and 14 losses. No label, expected count or benchmark class
+composition entered either scientific run.
+
+**Decision:** reject this variant as the working reference; retain symmetric
+fusion at 671 correct / 28 exact. Source/config/tests remain as an explicit
+negative experiment, not a default or a claim that longitudinal reflection is
+chemically correct. This isolated coordinate change does not close the gap to
+history. No other mirror, weighting, descriptor, seed or threshold was tried
+after grading. The reused development benchmark does not establish independent
+generalization. Counting and unknown25 were not rerun. The broader user goal of
+exceeding the lost historical champion remains **unmet**, not redefined.
+
+Verification now totals **819 assertions** under Julia 1.13: Fisher 229,
+runner 16, descriptor/vote 32, pipeline boundaries/shards 19, saved representation
+319 and Fisher attribution 204. Nine archived-grade parser assertions also
+pass, and the post-hoc paired script checks aggregates, confusion, fixed N and
+coverage against the native grade before writing all 290 reference/file pairs.
+Documentation builds successfully with existing size warnings only.
+The final report is `results/fisher_mirror_comparison_20260920/report.md`;
+grades, paired tables and the small arithmetic reproduction script are alongside
+it. The job is complete and no further compute is queued by this pass.
+
+A final external-only saved-output diagnosis of the retained symmetric working
+candidate's 13 historical exact-chain losses finds 16 affected positions: six
+finite errors shared by k-means and GMM, nine finite head disagreements, and one
+unavailable assignment. There are 13 `1→0`, two `0→1` and one `0→?` changes;
+nine old stored margins are zero. Both grades retain N=6 and the same alignment
+for these files. The diagnostic is reproducible via
+`results/fisher_mirror_comparison_20260920/diagnose_lost_chains.jl`; it produces
+no prediction or model input. Choosing/reweighting the two unchanged head
+decisions cannot repair the six common errors, but this is not a raw-information
+ceiling or justification to train on this post-hoc subset. No new method follows
+automatically from it.

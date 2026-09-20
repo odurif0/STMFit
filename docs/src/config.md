@@ -558,6 +558,9 @@ serialization. Both keep the same 197 disk pixels and identical Fisher fitting.
 The physical-u mode requires a reflection-closed disk (otherwise it errors,
 rather than adding zero pixels). This is one scientific comparison, not a new
 default, parameter sweep or change to the reconstructed half-plane descriptor.
+The September 20 full145 comparison is negative (669 correct / 27 exact vs
+671 / 28 for the symmetric-fusion control); keep the original layout for the
+working candidate. The opt-in config records the unsuccessful experiment.
 
 
 ## Opt-in diagnostic exploration settings (2026-09-18)

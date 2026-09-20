@@ -8,6 +8,11 @@ assignment reference remains better and the correction is not promoted. This
 comparison holds cached counts fixed; it does not revalidate the historical
 counting results below for the corrected fit input.
 
+The separate physical-u Fisher-mirror experiment regresses assignment to
+669/870 correct and 27/145 exact at the same cached counts/coverage, versus
+671/28 for the symmetric-fusion control. It is rejected as the working
+reference and changes no count-selection parameter or benchmark claim here.
+
 How STMFit chooses the optimal number of lobes (N) from the sweep results.
 
 ## Selection Hierarchy

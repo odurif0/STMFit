@@ -729,3 +729,9 @@ Run `bash hpc/compare_fisher_mirror.sbatch --dry-run` first, then pass all five
 variables explicitly with `sbatch --export=...`. Outputs are `control/` and
 `transverse/` plus their logs; failures are retained and the job exits nonzero.
 The existing configs/defaults and completed fusion job stay unchanged.
+
+Completed job **11879515** (source `8bb29f4`) exited 0:0 in 2m03s. Its 358
+outputs and Slurm log are fetched and checksum-verified under
+`results/fisher_mirror_comparison_20260920/`. The transverse candidate regresses
+671/28 → 669/27 (correct positions / exact chains); it is not retained. Do not
+resubmit the completed job. The report includes every paired gain and loss.

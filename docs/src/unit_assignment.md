@@ -1697,6 +1697,36 @@ French report: `results/fusion_comparison_20260920/report.md`; native grades:
 `external_grade_v1/`; all paired scan outcomes: `paired_audit_v1/paired_files.tsv`.
 The generated `summarize_pair.jl` replays the external aggregate arithmetic.
 
+### Physical transverse Fisher mirror (2026-09-20; negative)
+
+One fixed source-grounded candidate changes only Fisher's mirror axis from
+physical t to physical u, keeping the 197 disk pixels, trained weights, folds,
+remaining features, seeds, voting and missingness rules. Both native pipelines
+use the same full146 symmetric-fusion geometry/patch cache. Job **11879515**
+completed in **2m03s**, exit 0:0. The control predictions reproduce the saved
+symmetric-fusion candidate byte-for-byte; all 900 keys and seven unavailable
+decisions remain in both versions. Non-Fisher features, CC and k-means outputs
+are identical between arms.
+
+| Profile | Correct / all 870 | Correct / classified | Exact / 145 |
+|---|---:|---:|---:|
+| Historical reference | 677 | 677/854 (79.3%) | 36 |
+| Symmetric-fusion control | 671 | 671/849 (79.0%) | 28 |
+| Transverse Fisher mirror | 669 | 669/849 (78.8%) | 27 |
+
+481 Fisher values change, but only four final labels change. One scan gains,
+three lose and 141 tie; no exact chain is gained and one is lost. All four
+changes have N=6 and identical grade orientation. Three start at a stored
+vote frequency of 0.5; no tie/threshold adjustment follows. The variant is
+**not retained as the working reference**. The reproducible working candidate
+remains 671/28, and the user's target remains exceeding historical 677/36.
+Synthetic symmetry does not imply better chemical recognition. Counts and
+unknown25 are unchanged; this reused benchmark is not independent validation.
+
+The opt-in config/source/tests are kept as a negative experiment. Results and
+all gains/losses: `results/fisher_mirror_comparison_20260920/report.md` and
+`paired_audit_v1/`. Focused verification totals 819 assertions on Julia 1.13.
+
 ### Native numerical conventions
 
 The constant-current port retains the old first-axis-fast cube index, sampling
