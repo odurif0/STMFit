@@ -16,11 +16,14 @@ using Statistics
 
 include(joinpath(@__DIR__, "lib", "script_utils.jl"))
 using .ScriptUtils: _ensure_parent, _read_tsv
+include(joinpath(@__DIR__, "lib", "assignment_covariance.jl"))
+using .AssignmentCovariance
 
 const DEFAULT_FEATURES = "results/unit_separability/lobe_features_selectedN_primary_local.tsv"
 const DEFAULT_SPLIT = ""
 const DEFAULT_PATCHES = ""
 const DEFAULT_OUT = "results/unit_assignment/labelfree_gmm_predictions.tsv"
+const DEFAULT_CONFIG = joinpath(dirname(@__DIR__), "config", "unit_assignment_reconstructed.toml")
 
 struct Options
     features::String
@@ -32,6 +35,8 @@ struct Options
     n_seeds::Int
     interactions::Bool
     selftrain::Int
+    covariance_mode::String
+    covariance_ridge::Float64
 end
 
 mutable struct LobeRecord
@@ -61,11 +66,16 @@ function _parse_cli(args)
     n_seeds = 20
     interactions = false
     selftrain = 0
+    config = DEFAULT_CONFIG
 
     i = 1
     while i <= length(args)
         arg = args[i]
-        if arg == "--features"
+        if arg == "--config"
+            config = _arg_value(args, i, arg); i += 2
+        elseif startswith(arg, "--config=")
+            config = split(arg, "="; limit=2)[2]; i += 1
+        elseif arg == "--features"
             features = _arg_value(args, i, arg); i += 2
         elseif startswith(arg, "--features=")
             features = split(arg, "="; limit=2)[2]; i += 1
@@ -107,6 +117,11 @@ function _parse_cli(args)
 
             Options:
               --features PATH        Main per-lobe feature TSV [$(DEFAULT_FEATURES)]
+              --config PATH          Explicit final covariance mode and ridge
+                                     [config/unit_assignment_reconstructed.toml].
+                                     Ledoit-Wolf acts only on the last hard
+                                     self-training covariance; it requires
+                                     --selftrain >= 1. No EM or vote change.
               --split-features PATH  Optional split-width feature TSV; adds split_log_skew
               --patches PATH         Optional backward patch TSV; adds bwd_neg_* descriptors
               --out PATH             Output prediction TSV [$(DEFAULT_OUT)]
@@ -142,8 +157,11 @@ function _parse_cli(args)
     isfile(features) || error("Feature TSV not found: $features")
     !isempty(split_features) && !isfile(split_features) && error("Split feature TSV not found: $split_features")
     !isempty(patches) && !isfile(patches) && error("Patch TSV not found: $patches")
+    covariance = load_covariance_config(config)
+    covariance.mode == "ledoit_wolf" && selftrain < 1 &&
+        error("Final Ledoit-Wolf covariance requires --selftrain >= 1")
     return Options(features, split_features, patches, out_tsv, view_specs,
-                   first_seed, n_seeds, interactions, selftrain)
+                   first_seed, n_seeds, interactions, selftrain, covariance.mode, covariance.ridge)
 end
 
 function _arg_value(args, i::Int, flag::String)
@@ -369,7 +387,7 @@ end
 
 # EM fit of a 2-component full-covariance GMM, k-means initialized.
 # Returns (means, covariances, weights).
-function _gmm_fit(X::Matrix{Float64}, seed::Int; max_iter::Int=200, tol::Float64=1e-6)
+function _gmm_fit(X::Matrix{Float64}, seed::Int; ridge::Float64, max_iter::Int=200, tol::Float64=1e-6)
     p, n = size(X)
     rng = MersenneTwister(seed)
     k = 2
@@ -383,7 +401,7 @@ function _gmm_fit(X::Matrix{Float64}, seed::Int; max_iter::Int=200, tol::Float64
         means[:, c] = sum(X[:, members]; dims=2) / length(members)
         centered = X[:, members] .- means[:, c]
         covs[c] = centered * centered' / length(members)
-        covs[c] += 1e-6 * I
+        covs[c] += ridge * I
     end
     prev_ll = -Inf
     for iter in 1:max_iter
@@ -415,7 +433,7 @@ function _gmm_fit(X::Matrix{Float64}, seed::Int; max_iter::Int=200, tol::Float64
             means[:, j] = X * resp[:, j] / nk
             centered = X .- means[:, j]
             covs[j] = (centered * Diagonal(resp[:, j]) * centered') / nk
-            covs[j] += 1e-6 * I
+            covs[j] += ridge * I
         end
     end
     return means, covs, weights
@@ -426,10 +444,13 @@ end
 # Repeats `iters` times. Returns updated (means, covariances, weights).
 function _mahalanobis_self_train(X::Matrix{Float64}, means::Matrix{Float64},
                                  covs::Vector{Matrix{Float64}}, weights::Vector{Float64};
-                                 iters::Int=5)
+                                 iters::Int=5, covariance_mode::String, ridge::Float64,
+                                 diagnostics=nothing)
+    covariance_mode in ("ridge", "ledoit_wolf") || error("Unknown final covariance mode")
+    covariance_mode == "ledoit_wolf" && iters < 1 && error("Final covariance requires hard memberships")
     p, n = size(X)
     k = size(means, 2)
-    for _ in 1:iters
+    for iteration in 1:iters
         d2 = zeros(n, k)
         for j in 1:k
             L = cholesky(Symmetric(covs[j]) + 1e-8 * I).L
@@ -446,13 +467,24 @@ function _mahalanobis_self_train(X::Matrix{Float64}, means::Matrix{Float64},
             weights[j] = nk / n
             means[:, j] = sum(X[:, members]; dims=2) / nk
             centered = X[:, members] .- means[:, j]
-            covs[j] = centered * centered' / nk + 1e-6 * I
+            if iteration == iters
+                estimate = final_covariance(centered; mode=covariance_mode, ridge=ridge)
+                covs[j] = estimate.covariance
+                if diagnostics !== nothing
+                    push!(diagnostics, (component=j, members=copy(members), weight=weights[j],
+                        mean=copy(means[:, j]), sample=estimate.sample, covariance=copy(covs[j]),
+                        shrinkage=estimate.shrinkage))
+                end
+            else
+                covs[j] = centered * centered' / nk + ridge * I
+            end
         end
     end
     return means, covs, weights
 end
 
-function _view_probability(records::Vector{LobeRecord}, features::Vector{String}, opt::Options)
+function _view_probability(records::Vector{LobeRecord}, features::Vector{String}, opt::Options;
+                           diagnostics=nothing)
     X, valid = _standardized_matrix(records, features; interactions=opt.interactions)
     idxs = findall(valid)
     length(idxs) >= 2 || return fill(NaN, length(records))
@@ -463,11 +495,15 @@ function _view_probability(records::Vector{LobeRecord}, features::Vector{String}
     data = permutedims(X[idxs, :])
 
     for seed in opt.first_seed:(opt.first_seed + opt.n_seeds - 1)
-        means, covs, weights = _gmm_fit(data, seed)
+        means, covs, weights = _gmm_fit(data, seed; ridge=opt.covariance_ridge)
+        seed_diagnostics = diagnostics === nothing ? nothing : []
         if opt.selftrain > 0
             means, covs, weights = _mahalanobis_self_train(data, means, covs, weights;
-                                                           iters=opt.selftrain)
+                iters=opt.selftrain, covariance_mode=opt.covariance_mode, ridge=opt.covariance_ridge,
+                diagnostics=seed_diagnostics)
         end
+        diagnostics === nothing || push!(diagnostics,
+            (seed=seed, indices=copy(idxs), clusters=seed_diagnostics))
         # Physical mapping: GlcNAc = higher-amplitude cluster.
         cluster_amp = Dict{Int,Vector{Float64}}(1 => Float64[], 2 => Float64[])
         log_resp = zeros(size(data, 2), 2)
@@ -573,4 +609,4 @@ function main(args=ARGS)
     println("  views:      ", join(first.(views), ", "))
 end
 
-main()
+abspath(PROGRAM_FILE) == abspath(@__FILE__) && main()

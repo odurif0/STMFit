@@ -2307,6 +2307,15 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-21. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0l. **Can training-consistent Fisher centering or final covariance shrinkage help?** →
+    **AUTHORIZED; IN PROGRESS (Sep 21)**: two independent arms against the 673/33
+    control, one Viper job capped at 30 minutes / four requested CPUs. Geometry,
+    N, input keys, folds, seeds, voting and missing-value handling remain fixed.
+    Complete cohort outputs precede the external grade. No combined arm,
+    normalization change or post-grade tuning is authorized. Historical 677/36
+    remains the target; these numerical changes do not establish chemical
+    confidence or independent validation.
+
 0k. **Can signed physical margins or affine Fisher patches improve label-free assignment?** →
     **COMPLETE; BOTH NEGATIVE (Sep 21)**: source **3c45c7c**, job **11889205**,
     exit 0:0 in **7m05s**. The twelve control tables reproduce 673/33 exactly.
@@ -8315,3 +8324,71 @@ failure and missing-Manifest staging error are recorded above; neither changed
 production mathematics or settings after grading.
 The final documentation build passes, with only the existing generated-page
 and search-index size warnings; deployment is skipped outside CI.
+
+## 2026-09-21 — Two independent numerical leads: approved bounded comparison
+
+The user authorizes trying the next label-free leads. The scientific deliverable
+is a reproducible comparison of training-consistent Fisher centering and final
+GMM covariance shrinkage, separately, against the runnable affine-descriptor
+candidate **673 correct / 870, 673/849 classified, 33/145 exact**. Historical
+**677/870, 677/854, 36/145** remains the target. Definition of done: synthetic
+and CLI tests, full 146-scan / 900-key control replay, both complete arms,
+numerical diagnostics, then external 145-scan / 870-position grading with all
+paired gains and losses. The budget is one Viper job, 30 minutes, four requested
+CPUs, 16 GB. No combined arm, per-chain normalization change, new count fit,
+unknown25 rerun, DFT change, seed/threshold/weight sweep or post-grade tuning.
+
+`unit_assignment_centered_fisher.toml` changes only the method name and
+`model.fisher_score_center = "training_mean"`. PCA/GMM/Fisher already train on
+mean-centered patches, but legacy scoring subtracts the near-zero mean of those
+centered patches from raw held-out patches. The new origin is the original
+opposite-fold training mean. Fisher weights, component means and populations,
+amplitude naming, parity folds, mirror and covariance are unchanged. For each
+fold it subtracts a constant `dot(training_mean-legacy_mid,w)` even after the
+unchanged max-mirror operation. A common global offset would cancel in per-file
+z-scoring; differing fold offsets can survive. The diagnostic measures the
+actual exported-score identity and standardized effect, rather than assuming
+that fixing an origin will improve recognition. This is not equal-cluster
+centering and imposes no composition prior.
+
+`unit_assignment_shrunk_gmm.toml` changes only the method name and
+`model.gmm_final_covariance = "ledoit_wolf"`. The deliberately narrow comparison
+regularizes only the final hard-cluster covariance after the two existing
+self-training iterations. EM and earlier reassignment covariance arithmetic,
+final memberships, means and free proportions remain unchanged before scoring.
+For centered p-by-n data, `S=XX'/n`, `T=tr(S)/p I`, the fixed analytical mixing
+coefficient is `clamp(max(0,(mean(norm(x_i)^4)-sum(abs2,S))/n)/sum(abs2,S-T),0,1)`;
+when `S==T` report zero. Add the unchanged `1e-6 I` floor after mixing. The
+formula matches the Ledoit-Wolf spherical-target estimator, independently
+checked against a dense outer-product reference and its official implementation.
+No coefficient is selected by recognition grade. This is numerical
+regularization: learned memberships and dependent lobes do not justify iid
+optimality, noise calibration or chemical-confidence claims.
+
+All native configs now explicitly declare `fisher_score_center`,
+`gmm_final_covariance` and `gmm_covariance_ridge`. Legacy settings remain
+`legacy_centered_mean`, `ridge`, `1e-6`. The GMM CLI receives the config from the
+pipeline; its optional default is the explicit reconstructed config, not a
+hidden scientific value. The new modes are independently opt-in, not defaults.
+
+The label-free diagnostic also compares full-cohort GMM outputs with two fixed
+complementary halves of whole scans, partitioned by alternating sorted filenames.
+All retained and unavailable keys are exported. It does not select a partition
+or setting, retrain Fisher within those halves, or score withheld scans. This is
+training-data withdrawal sensitivity, **not held-out recognition or independent
+validation**. Exact pre-final covariance memberships/means/weights are checked
+for both modes on the full cohort and each half. Condition numbers, shrinkage
+coefficients and vote/decision changes are reported without a confidence claim.
+
+The first new unit-test invocation stopped at a Julia parse error in the new
+include-safe GMM main guard (`@__FILE__` followed by `&&`). Parenthesizing the
+macro via `abspath(@__FILE__)` fixed the guard before any scientific job. All
+136 numerical-mode assertions then passed; no formula or setting was changed.
+
+Pre-submission verification passes **1,186 Julia 1.13 assertions**: numerical
+modes 136, numerical diagnostics 20, new sbatch runner 21, pipeline 70,
+legacy Fisher 229, affine Fisher 74, signal features 73, descriptor/vote 37,
+Fisher attribution 207 and representation diagnostics 319. The diagnostic's
+synthetic CLI completes with 80 keys and 120 covariance rows, preserving
+whole-scan partitions and rejecting benchmark columns before computation.
+The formulas, partitions and all settings are fixed before scientific output.

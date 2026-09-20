@@ -266,6 +266,19 @@ evidence of calibrated chemical confidence. No post-grade sign flip, threshold,
 seed or hybrid is fitted to the benchmark.
 
 
+The September 21 numerical comparison also introduces no molecular calibration.
+`fisher_score_center` explicitly chooses the historical near-zero centered mean
+or the original opposite-fold training mean; it does not impose equal cluster
+populations. `gmm_final_covariance` chooses historical `ridge` or analytical
+`ledoit_wolf` shrinkage on the final hard covariance only. The explicit
+`gmm_covariance_ridge = 1e-6` is the unchanged numerical floor, not a measured
+noise variance. No direction, sign, composition, threshold or seed is calibrated
+from truth. Whole-scan withdrawal diagnoses sensitivity to training data, not
+held-out recognition; Fisher features are not retrained within those halves.
+Neither covariance conditioning nor stability calibrates chemical confidence.
+The two independent candidate results are pending; the working candidate and
+historical target remain 673/33 and 677/36 respectively.
+
 ## Opt-in label-free exploration (2026-09-18)
 
 `config/label_free_exploration.toml` is diagnostic configuration, not a new

@@ -633,6 +633,37 @@ working candidate; the two new configs document rejected experiments. No sign,
 threshold, seed, combined arm or other parameter is retuned after this grade.
 
 
+### Independent numerical candidates (2026-09-21)
+
+Two opt-in configs copy the 673/33 affine-descriptor control and each change
+only the method name and one explicit setting. All native assignment configs
+now declare the historical settings, without changing their arithmetic:
+
+| `[model]` field | Historical value | Independent experimental value |
+|---|---|---|
+| `fisher_score_center` | `"legacy_centered_mean"` | `"training_mean"` in `unit_assignment_centered_fisher.toml` |
+| `gmm_final_covariance` | `"ridge"` | `"ledoit_wolf"` in `unit_assignment_shrunk_gmm.toml` |
+| `gmm_covariance_ridge` | `1e-6` | unchanged |
+
+Training-mean centering subtracts the opposite fold's mean patch at Fisher
+scoring. Historical mode subtracts the near-zero mean of already centered
+training patches. Neither changes the learned Fisher direction, amplitude
+anchor, parity folds or mirror. It is not the equal-weight midpoint of clusters.
+
+Ledoit-Wolf acts **only on the last hard self-training covariance**, after the
+existing two reassignment iterations. EM, earlier hard iterations, means and
+free mixture weights retain the historical ridge. `gmm_selftrain >= 1` is
+required. With centered columns `x_i`, `S = XX'/n`, `T = tr(S)/p I`, use
+`beta = max(0, (mean(norm(x_i)^4) - sum(abs2,S))/n)`,
+`lambda = clamp(beta/sum(abs2,S-T),0,1)` and
+`(1-lambda)S + lambda*T + gmm_covariance_ridge*I`.
+If `S == T`, lambda is zero. No coefficient is fitted to benchmark results.
+See [Ledoit and Wolf (2004)](https://doi.org/10.1016/S0047-259X(03)00096-4).
+Dependent lobes and learned memberships preclude claiming iid optimality or
+calibrated confidence. The GMM CLI accepts `--config`; omitting it explicitly
+loads the historical reconstructed config. These candidates are not combined
+or defaults. Their bounded full-cohort comparison is pending.
+
 ## Opt-in diagnostic exploration settings (2026-09-18)
 
 `config/label_free_exploration.toml` is used only by standalone exploration tools;

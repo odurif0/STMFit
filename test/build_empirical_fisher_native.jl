@@ -18,6 +18,7 @@ The output must not exist. No full-data model or prediction TSV is created.
 
 All four options are required. --prefix selects numbered patch columns (res_p001,
 etc.). Config supplies PCA, GMM, regularization, seed, layout and patch projection.
+The score origin is explicit: legacy centered mean or original training mean.
 Affine projection, when selected, applies to training and held-out scoring, not
 to the original center amplitudes used to order the unsupervised clusters.
 Native Julia and sklearn initialization/RNG differ; byte identity is NOT claimed.

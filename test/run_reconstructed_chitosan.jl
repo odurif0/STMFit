@@ -330,7 +330,7 @@ function execute_pipeline(opts)
         common = ["--features", table, "--first-seed", string(sel["first_seed"])]
         sel["interactions"] && push!(common, "--interactions")
         run_stage(outdir, stage, "build_labelfree_gmm_predictions.jl", vcat(common,
-            ["--out", gmm, "--view", "v_cc=$BASE4,patch_u_asym_reconstructed,mold_cc_fwd,mold_cc_bwd,emp_fisher",
+            ["--config", opts["--config"], "--out", gmm, "--view", "v_cc=$BASE4,patch_u_asym_reconstructed,mold_cc_fwd,mold_cc_bwd,emp_fisher",
              "--seeds", string(sel["gmm_seeds"]), "--selftrain", string(sel["gmm_selftrain"])]))
         stage = "kmeans"
         km = joinpath(outdir, "pred_kmeans.tsv")

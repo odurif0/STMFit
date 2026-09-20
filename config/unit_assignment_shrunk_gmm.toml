@@ -1,11 +1,11 @@
-# One label-free Fisher change: affine disk projection at train and score time.
+# One independent numerical comparison against the affine-descriptor control.
 [model]
 fisher_score_center = "legacy_centered_mean"
-gmm_final_covariance = "ridge"
+gmm_final_covariance = "ledoit_wolf"
 gmm_covariance_ridge = 1e-6
 fisher_projection_zero_l1 = 1e-12
 mold_margin_mode = "absolute_cost_margin"
-name = "cc_soft_affine_fisher_v1"
+name = "cc_soft_shrunk_gmm_v1"
 descriptor = "affine_residual_half_plane_asymmetry"
 descriptor_column = "patch_u_asym_reconstructed"
 descriptor_channel = "bwd_res"
@@ -39,7 +39,7 @@ interactions = true
 vote_threshold = 0.5
 
 [preprocessing]
-fisher_patch_projection = "affine_disk"
+fisher_patch_projection = "none"
 patch_residual_filter = "smooth_residual"
 descriptor_normalization = "median_sample_std"
 pixel_order = "u_outer_t_inner"

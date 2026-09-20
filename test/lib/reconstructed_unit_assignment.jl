@@ -87,6 +87,13 @@ function load_config(path::AbstractString)
     model["descriptor"] in TRANSVERSE_DESCRIPTORS || error("Unsupported descriptor")
     model["descriptor_column"] == "patch_u_asym_reconstructed" || error("Unsupported descriptor column")
     model["descriptor_channel"] == "bwd_res" || error("Unsupported descriptor patch family")
+    get(model, "fisher_score_center", nothing) in ("legacy_centered_mean", "training_mean") ||
+        error("Explicit fisher_score_center must be legacy_centered_mean or training_mean")
+    get(model, "gmm_final_covariance", nothing) in ("ridge", "ledoit_wolf") ||
+        error("Explicit gmm_final_covariance must be ridge or ledoit_wolf")
+    ridge = get(model, "gmm_covariance_ridge", nothing)
+    ridge isa Real && !(ridge isa Bool) && isfinite(ridge) && ridge > 0 ||
+        error("Explicit gmm_covariance_ridge must be positive and finite")
     pre["pixel_order"] == "u_outer_t_inner" || error("Unsupported patch ordering")
     pre["descriptor_normalization"] == "median_sample_std" || error("Unsupported patch normalization")
     get(model, "mold_margin_mode", nothing) in ("absolute_cost_margin", "signed_cost_difference") ||
@@ -100,6 +107,8 @@ function load_config(path::AbstractString)
     side == 9 || error("Reconstructed descriptor requires a 9x9 patch")
     isfinite(model["descriptor_zero_l1"]) && model["descriptor_zero_l1"] >= 0 || error("Invalid zero-signal tolerance")
     sel = cfg["selection"]
+    model["gmm_final_covariance"] == "ledoit_wolf" && get(sel, "gmm_selftrain", 0) < 1 &&
+        error("Final covariance shrinkage requires at least one hard self-training iteration")
     for key in ("kmeans_seeds", "gmm_seeds")
         sel[key] isa Integer && !(sel[key] isa Bool) && sel[key] > 0 || error("Invalid $key")
     end

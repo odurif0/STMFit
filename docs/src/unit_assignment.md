@@ -1896,6 +1896,31 @@ checks**, plus paired-grade arithmetic assertions. All 580 paired file compariso
 34 changed decisions, formulas and replay commands are in
 `results/label_free_signals_20260920/report.md`.
 
+### Fisher centering and final covariance candidates (2026-09-21, pending)
+
+The authorized comparison tests two independent numerical changes against the
+673/33 affine-descriptor candidate. `unit_assignment_centered_fisher.toml`
+subtracts the opposite-fold training mean at Fisher scoring, retaining exactly
+the same learned weights, folds, amplitude mapping and mirror. This corrects
+the training/scoring origin mismatch, but any common offset disappears under
+per-file z-scoring; only the actual downstream effect matters for recognition.
+
+`unit_assignment_shrunk_gmm.toml` instead applies analytical Ledoit-Wolf shrinkage
+to the final hard-cluster covariances only. Earlier EM/reassignment steps, final
+pre-score means, memberships and free proportions remain unchanged. There is
+no composition prior or class count. The explicit historical covariance floor
+stays `1e-6`. Dependent lobes prevent treating the shrinkage formula as iid noise
+calibration or treating its votes as chemical confidence.
+
+One Viper job (30 minutes, four requested CPUs) regenerates the control and both
+complete 146-scan / 900-key arms, then runs numerical diagnostics. Two fixed
+whole-scan training halves diagnose GMM sensitivity; they are not a held-out
+recognition test and do not retrain Fisher within the halves. No normalization
+change, combined arm or setting search is included. The external grade follows
+all predictions and checks, without tuning afterward. Results are pending;
+the working candidate and historical target stay 673/33 and 677/36. This reused
+benchmark supplies development evidence, not independent validation.
+
 ### Native numerical conventions
 
 The constant-current port retains the old first-axis-fast cube index, sampling

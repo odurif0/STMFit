@@ -29,6 +29,8 @@ Historical conventions deliberately retained:
   The weight points from low amplitude to high amplitude.
 * `mid` is mean(X_centered), approximately zero, NOT the original training
   mean or the midpoint of the cluster means. Scores use raw held-out patches.
+  The explicit `training_mean` alternative instead subtracts the training-patch
+  mean at scoring, with unchanged PCA, mixture, weights and amplitude mapping.
 * Scores are max(original, mirrored), with unchanged sign, rounded to six
   decimals only when written. The old negative-score => 1 rule is not applied
   here: this file produces a margin, not a chemical prediction.
@@ -57,10 +59,11 @@ struct FisherOptions
     layout::String
     patch_projection::String
     projection_zero_l1::Float64
+    score_center::String
 
     function FisherOptions(pca_components, noise_regularization,
                            gmm_regularization, gmm_maxiter, gmm_tolerance,
-                           seed, half_nm, step_nm, layout, patch_projection, projection_zero_l1)
+                           seed, half_nm, step_nm, layout, patch_projection, projection_zero_l1, score_center)
         for (name, value) in (("fisher_pca_components", pca_components),
                               ("fisher_gmm_maxiter", gmm_maxiter))
             value isa Integer && !(value isa Bool) && value > 0 ||
@@ -79,6 +82,8 @@ struct FisherOptions
             throw(ArgumentError("unsupported fisher_layout: $layout"))
         patch_projection in ("none", "affine_disk") ||
             throw(ArgumentError("unsupported fisher_patch_projection: $patch_projection"))
+        score_center in ("legacy_centered_mean", "training_mean") ||
+            throw(ArgumentError("unsupported fisher_score_center: $score_center"))
         projection_zero_l1 isa Real && !(projection_zero_l1 isa Bool) &&
             isfinite(projection_zero_l1) && projection_zero_l1 >= 0 ||
             throw(ArgumentError("fisher_projection_zero_l1 must be finite and nonnegative"))
@@ -94,7 +99,7 @@ struct FisherOptions
         new(Int(pca_components), Float64(noise_regularization),
             Float64(gmm_regularization), Int(gmm_maxiter), Float64(gmm_tolerance),
             Int(seed), Float64(half_nm), Float64(step_nm), String(layout), String(patch_projection),
-            Float64(projection_zero_l1))
+            Float64(projection_zero_l1), String(score_center))
     end
 end
 
@@ -113,8 +118,11 @@ function load_fisher_config(config::AbstractDict)
     end
     haskey(model, "fisher_projection_zero_l1") ||
         throw(ArgumentError("missing [model] fisher_projection_zero_l1"))
+    haskey(model, "fisher_score_center") ||
+        throw(ArgumentError("missing [model] fisher_score_center"))
     options = FisherOptions((model[name] for name in required)...,
-                            pre["fisher_layout"], pre["fisher_patch_projection"], model["fisher_projection_zero_l1"])
+                            pre["fisher_layout"], pre["fisher_patch_projection"], model["fisher_projection_zero_l1"],
+                            model["fisher_score_center"])
     grid = fisher_grid(options)
     options.pca_components <= length(grid.disk_indices) ||
         throw(ArgumentError("fisher_pca_components exceeds the number of disk pixels"))
@@ -425,10 +433,11 @@ function fit_fisher(X::AbstractMatrix{<:Real}, amplitudes::AbstractVector{<:Real
     gmm = _fit_gmm(Z, options)
     linear = _fisher_linear(Xc, Z, V, Float64.(amplitudes), gmm.assignments,
                             options.noise_regularization)
-    return FisherModel(linear.w_p, linear.mid, linear.g0, linear.g1, linear.amplitude_means, gmm, basis)
+    mid = options.score_center == "training_mean" ? vec(mean(X; dims=1)) : linear.mid
+    return FisherModel(linear.w_p, mid, linear.g0, linear.g1, linear.amplitude_means, gmm, basis)
 end
 
-"Same projection at training and scoring; the historical mid convention is unchanged."
+"Same projection at training and scoring, with the explicitly selected score origin."
 function score(x::AbstractVector, model::FisherModel)
     prepared = model.projection_basis === nothing ? x : _project_disk(x, model.projection_basis)
     return dot(prepared - model.mid, model.w_p)

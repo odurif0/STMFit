@@ -824,3 +824,25 @@ all paired gains/losses and replay commands are in
 `results/label_free_signals_20260920/report.md`. No follow-up tuning, combined
 variant, count refit or unknown25 run is part of this comparison. It is closed;
 do not resubmit it automatically.
+
+## Independent Fisher-centering and covariance comparison (September 21)
+
+`hpc/compare_numerical_signals.sbatch` requests four CPUs, 16 GB and 30 minutes.
+It runs `control/` (673/33 affine descriptor), `centered/` (training-mean Fisher
+origin only), and `shrunk/` (final hard-cluster Ledoit-Wolf covariance only).
+Each regenerates patches from the same 146 scans and cached geometry. If all
+arms succeed, `test/diagnose_numerical_assignment.jl` verifies fold offsets and
+final covariance invariants, and measures GMM sensitivity to two fixed whole-scan
+halves. These are numerical/training-perturbation diagnostics, not recognition
+grades or chemical confidence. Diagnostic failures preserve their log and fail
+the job. No fit runs on the login node.
+
+Set the same five absolute path variables as above; copy the unchanged ignored
+`Manifest.toml` explicitly and verify source/input hashes. Run
+`bash hpc/compare_numerical_signals.sbatch --dry-run` before the single submission
+with explicit
+`--export=STMFIT_PROJECT_DIR,STMFIT_CACHE_DIR,STMFIT_INPUT_DIR,STMFIT_OUTDIR,JULIA_BIN`.
+Use a new output directory. Fetch and check all outputs, including exact replay
+of the twelve control tables, before the separate local external grade. No
+benchmark label, expected N or composition enters this runner. The two changes
+are never combined or tuned after grading. The current comparison is pending.

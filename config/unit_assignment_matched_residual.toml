@@ -1,5 +1,8 @@
 # One opt-in comparison: S(data - model), with every other setting unchanged.
 [model]
+fisher_score_center = "legacy_centered_mean"
+gmm_final_covariance = "ridge"
+gmm_covariance_ridge = 1e-6
 fisher_projection_zero_l1 = 1e-12
 mold_margin_mode = "absolute_cost_margin"
 name = "cc_soft_matched_residual_v1"
