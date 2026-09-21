@@ -769,7 +769,12 @@ The 28 pairwise products are formed after scaling the same eight descriptors.
 This one candidate retains `all_admissible` training, including usable partial
 patches. Fisher, k-means, pixel normalization, free GMM mixture weights, seeds,
 hard updates, ridge, physical amplitude naming and voting are unchanged. The
-bounded experiment has not yet been graded; no benefit or promotion is claimed.
+completed experiment is **negative: 667/870 correct, 667/852 (78.3%), 10/145
+exact**, versus 676/34 at the same coverage. No scale fallback occurs in any of
+the 1,168 scan/feature pairs; the largest absolute expanded feature nevertheless
+rises from 5.44 to 335.47. Reject this candidate and keep the support config at
+676/34. No IQR floor, clipping, consistency factor or other post-grade adjustment
+is added. The config records a negative experiment, not a new default.
 
 ## Opt-in diagnostic exploration settings (2026-09-18)
 

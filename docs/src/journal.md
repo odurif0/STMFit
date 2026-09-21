@@ -2308,13 +2308,20 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0o. **Can robust per-scan GMM normalization improve recognition?** →
-    **SUBMITTED; RESULTS PENDING (Sep 21)**: source **77b3ce6**, job **11911253**;
-    one median/Type-7-IQR candidate
-    versus the 676/34 support control. All admissible patches remain eligible;
-    Fisher, k-means, selected N, free mixture weights and vote rules stay fixed.
-    One Viper job, four requested CPUs, 16 GB, 30 minutes, no automatic retry,
-    scan weighting, resampling, combined candidate or post-grade tuning. The
-    historical 677/36 result remains the target, not independent validation.
+    **COMPLETE; NEGATIVE (Sep 21)**: source **77b3ce6**, job **11911253**, exit
+    **0:0 in 5m55s**. Median/Type-7-IQR gives **667/870 correct, 667/852 (78.3%),
+    10/145 exact**, versus the exactly replayed 676/34 support control. Same
+    coverage, all 900 keys and four unavailable assignments; upstream signals,
+    Fisher and k-means are identical. There are 23 scan gains, 33 losses, 89
+    ties; no exact chains gained and 24 lost. No fallback occurs in 1,168
+    scan/feature pairs, but expanded feature magnitude grows 5.44→335.47.
+    Reject this variant and retain 676/34. All 392 outputs and the Slurm log
+    are fetched/checksummed; 1,900 focused assertions, 1,261 output checks and
+    paired arithmetic pass. The initial audit compared necessarily different
+    staging paths; it was corrected to check scan identities/N before grading,
+    not to alter science. No clipping, factor/quantile search, weighting,
+    resampling, extra arm, count/DFT/unknown25 rerun or post-grade tuning follows.
+    Historical 677/36 remains the target, not independent validation.
 
 0n. **Can complete-patch learning retain partial-patch predictions without their training influence?** →
     **COMPLETE; NEGATIVE (Sep 21)**: source **f7a4074**, job **11908779**,
@@ -8956,3 +8963,80 @@ Both metadata-only dry runs recognize 146 files under Julia 1.13.0. One job
 Output target: `/ptmp/oldu/stmfit/robust_normalization_20260921_v1`. The job starts
 in the queue. No duplicate submission, resource change, local fallback fit or
 external grade is performed while waiting.
+
+### Completed robust-normalization comparison and decision
+
+Job **11911253** waits **51 seconds**, then completes **0:0 in 5m55s** on
+`vipl2005`, **13:12:16–13:18:11 CEST**, with four requested/eight allocated CPUs
+and four Julia threads. The control finishes at 13:16:26, then the robust arm
+at 13:18:11. No duplicate submission, resource change, local cohort fit or
+scientific retry occurs. All **392 outputs and the Slurm log** are fetched into
+`results/robust_normalization_20260921/run_v1` and its parent; checksum comparisons
+are empty. Tracked runtime sources and the ignored Manifest remain identical
+locally and remotely. No scientific-stage warning or failure appears.
+
+All twelve control tables reproduce the saved support candidate byte-for-byte.
+Both arms retain all 146 scans / 900 keys. Patches, local/descriptor/predictor
+features, CC, Fisher, k-means and observed pixel counts are byte-identical.
+The initial audit passes 52 checks but incorrectly requires byte-identical
+`selected_from_features.tsv` staging paths: those contain `control/raw_inputs/`
+or `robust/raw_inputs/` respectively. The checker is corrected to compare unique
+scan identities and their N, also validating N against feature keys. Its failed
+log is preserved. **1,261 output checks** pass (59 outputs/counts, one key-order
+check, 1,201 arithmetic/support checks). This correction precedes grading and
+changes no scientific code, parameter, output or fit.
+
+Both modes still have **896/900 finite GMM views** and the same four unavailable
+final assignments. None of **1,168 scan/feature pairs** uses the zero/nonfinite
+IQR fallback. Independent sorted Type-7 interpolation reproduces each transformed
+feature; products are checked after scaling. The expanded maximum is indeed
+**5.44386 → 335.46532**, as observed before execution. GMM changes all 896 vote
+frequencies and **666 hard decisions**. The final vote changes **64 decisions**,
+63 graded and one on technical scan `240310_Cu100009`: **62 are 1→0, two 0→1**.
+Final raw frequencies `(0,1,?)` change `(673,223,4)→(733,163,4)`. These are
+reported outcomes, not fitted class-count constraints or composition targets.
+
+Only after these checks does the unchanged external grade select 145 scans /
+892 predicted lobes / 870 truth positions:
+
+| Version | Correct / 870 | Correct / classified | Errors emitted | Exact / 145 |
+|---|---:|---:|---:|---:|
+| Historical reference | 677 | 677/854 (79.3%) | 177 | 36 |
+| Support control | 676 | 676/852 (79.3%) | 176 | 34 |
+| Median/IQR | 667 | 667/852 (78.3%) | 185 | 10 |
+
+Against control: **23 winning scans, 33 losing, 89 ties**, net **−9 correct**;
+**zero exact chains gained, 24 lost**, eight external grading-orientation
+changes. Confusion `(TN,FP,FN,TP)` changes `(513,52,124,163)→(537,28,157,130)`:
+24 fewer false positives do not compensate for 33 more false negatives.
+Coverage stays **852/870**, with two aligned abstentions. Counts stay 16 missing
+positions, 38 extra lobes, 14 short-N and 25 extra-N scans. The candidate's 203
+non-correct positions comprise 185 errors, 16 missing and two abstentions.
+Against history: 27 wins, 41 losses, 77 ties, net −10 correct; one exact gained,
+27 lost and twelve orientation changes. Grade alignment is not a spatial
+monomer correspondence.
+
+**Decision: reject this median/IQR variant; keep the support candidate at
+676/870 and 34/145.** Historical 677/36 and 854/870 coverage remain the target
+to exceed. This rejects the specific fixed normalization, not every robust
+estimator. Tail amplification is observed, but its independent causal role in
+the grade loss has not been isolated. No clipping, consistency factor, new
+quantiles, IQR floor, scan weights, seed/threshold change, combined arm, refit
+of N, DFT change or unknown25 run follows the grade. The single authorized
+comparison is complete; the broader historical objective remains open.
+
+All **290 paired scan rows and 64 changed decisions**, including every loss and
+the excluded technical scan, are in
+`results/robust_normalization_20260921/report.md` and its linked tables. Grade
+sums, confusion, coverage and exact-chain counts agree. Inference is label-free;
+the extensively reused benchmark remains development evidence, not independent
+validation or unknown-chain accuracy. Prediction SHA-256: control
+`eb8d69b8cebcd607b0244db5c65104347e6bcd24acee06f64748cf0e6ec310e3`, robust
+`a9e0ade8156f9a740bd1e9005f9caac2db05ca2840d4907a8baa2c8474a090c9`.
+
+The final documentation build passes, with the existing large-page/search-index
+warnings and non-CI deployment skip. README, runbook, selection, assignment,
+config, calibration and HPC notes record the negative 667/10 result and retain
+676/34 as the working candidate. Runtime source is unchanged since 77b3ce6.
+Validated source and conclusions are committed; generated outputs, all losses
+and the initial failed metadata-audit log remain preserved locally and ignored.

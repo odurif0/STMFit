@@ -116,6 +116,23 @@ Full losses: `results/complete_training_20260921/report.md`. This single-job
 comparison is complete; no retry, normalization fallback, extra method, count
 refit, DFT change or unknown25 rerun follows. Historical **677/36** remains ahead.
 
+The next authorized comparison changes only per-scan GMM feature normalization
+to median/Type-7-IQR (source **77b3ce6**, job **11911253**, **5m55s**, exit
+**0:0**). It is **negative: 667/870 correct, 667/852 (78.3%), 10/145 exact**,
+versus the exactly reproduced **676/852, 34 exact**. Coverage, selected N and
+all upstream/Fisher/k-means tables remain identical. Keep
+`config/unit_assignment_patch_support.toml`, not
+`unit_assignment_robust_normalization.toml`. Against the control, 23 scans gain,
+33 lose and 89 tie; no exact chain is gained and 24 are lost. All 392 outputs
+and the Slurm log are fetched and checksummed. Verification passes 1,900 focused
+assertions, 1,261 saved-output checks and paired arithmetic. An initial audit
+compared arm-specific staging paths byte-for-byte; it was corrected to compare
+scan identities and N before grading, without touching inference. See
+`results/robust_normalization_20260921/report.md` for all losses. This comparison
+is complete: no clipping, quantile search, scale-factor adjustment, weighting,
+extra method, retry or post-grade tuning. Historical 677/36 remains the target;
+the reused benchmark is development evidence, not independent validation.
+
 This page is the hand-off document for reproducing the current chitosan workflow
 without relying on prior conversation context.  The goal is a label-free fitting
 and model-selection pipeline that is externally graded on the benchmark and then

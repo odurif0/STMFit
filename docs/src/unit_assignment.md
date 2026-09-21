@@ -2113,6 +2113,68 @@ development evidence, not independent validation. All 290 paired scan rows and
 five changed decisions, including losses and the excluded scan, are in
 `results/complete_training_20260921/report.md` and its linked tables.
 
+### Robust per-scan GMM normalization (2026-09-21): negative
+
+The next authorized comparison tests median/IQR scaling of the GMM's eight
+features within each scan, before their 28 pairwise products. The candidate
+`unit_assignment_robust_normalization.toml` differs from the 676/34 support
+control only in name and `[preprocessing] gmm_feature_normalization`:
+`mean_sample_std` becomes `median_iqr`. Type-7 Q25/Q75 define the IQR, without
+Gaussian-consistency rescaling or clipping. The explicit `gmm_scale_fallback=1.0`
+is used for a zero/nonfinite scale; a positive scale is not floored. Missing
+observations remain missing. The same finite per-feature observations are used,
+including usable partial patches; no complete-case training is reintroduced.
+Fisher, k-means, EM, hard updates, free weights, amplitude naming, seeds, ridge,
+votes, geometry and N are unchanged. No benchmark information enters inference.
+
+Source **77b3ce6**, runner `hpc/compare_robust_normalization.sbatch`; **1,900
+synthetic assertions** pass under Julia 1.13, including a three-mode pipeline.
+One Viper job **11911253**, four requested CPUs, 16 GB and a 30-minute limit,
+queues for 51 seconds and completes **0:0 in 5m55s** on `vipl2005`,
+13:12:16–13:18:11 CEST. All **392 outputs and the Slurm log** are fetched and
+checksummed. The control's twelve scientific tables replay 676/34 byte-for-byte.
+Both arms retain all 146 scans / 900 keys, the same 896 finite GMM views and
+four unavailable assignments. Patches, features, CC, Fisher and k-means are
+byte-identical across arms.
+
+An initial saved-output check incorrectly required the arm-specific staging
+paths to be byte-identical. It was corrected to compare unique scan names and N
+against the feature keys. The failed log remains; **1,261 output checks** pass
+before grading. No scientific code, configuration, prediction or fit was changed.
+
+No scale fallback occurs in **1,168 scan/feature pairs**. The maximum absolute
+base feature grows **2.62205 → 37.13789**, and after products **5.44386 →
+335.46532**. Robust location/scale estimation does not bound transformed tails.
+This is an observed mechanism, not an isolated causal explanation for the loss.
+GMM vote fractions change for all 896 usable rows, and 666 hard GMM decisions
+change. The final vote changes **64 decisions** (63 graded): 62 from 1→0 and
+two from 0→1. Raw `(0,1,?)` frequencies move `(673,223,4)→(733,163,4)`; no such
+frequency is imposed as a prior or target.
+
+| Version | Correct / 870 | Correct / classified | Exact / 145 | Classified / 870 |
+|---|---:|---:|---:|---:|
+| Historical reference | 677 | 677/854 (79.3%) | 36 | 854 |
+| Support control | 676 | 676/852 (79.3%) | 34 | 852 |
+| Median/IQR | 667 | 667/852 (78.3%) | 10 | 852 |
+
+Against the control: **23 scan gains, 33 losses, 89 ties**, net −9 correct;
+**no exact chains gained, 24 lost**, with eight external grading-orientation
+changes. Confusion `(TN,FP,FN,TP)` changes `(513,52,124,163)→(537,28,157,130)`:
+24 fewer false positives do not offset 33 additional false negatives. Emitted
+errors rise 176→185; counts remain 16 missing positions, 38 extra lobes and
+two aligned abstentions. Versus history: 27 scan gains, 41 losses, 77 ties,
+−10 correct, one exact chain gained and 27 lost, twelve orientation changes.
+Grading orientation is not a spatial monomer correspondence.
+
+**Reject this median/IQR variant and retain the 676/34 support candidate.**
+Historical 677/36 remains the objective to exceed. No quantile search, clipping,
+new scale factor, weighting, seed/threshold change, count refit, DFT change or
+unknown25 rerun follows. The reused benchmark is development evidence, not
+independent validation; this result does not reject every possible robust
+normalization. All 290 paired comparisons and 64 changed decisions, including
+losses and the ungraded technical scan, are recorded in
+`results/robust_normalization_20260921/report.md` and its linked tables.
+
 ### Native numerical conventions
 
 The constant-current port retains the old first-axis-fast cube index, sampling

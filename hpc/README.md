@@ -927,4 +927,14 @@ other method is included. First run `--dry-run` and explicitly pass absolute
 `STMFIT_PROJECT_DIR`, `STMFIT_CACHE_DIR`, `STMFIT_INPUT_DIR`, `STMFIT_OUTDIR` and
 `JULIA_BIN` through `sbatch --export=...`; bare environment assignments do not
 override Viper's `SBATCH_EXPORT=NONE`. Only compute nodes run scientific stages.
-Fetch outputs and logs before external grading. This comparison is pending.
+Fetch outputs and logs before external grading.
+
+Source **77b3ce6**, job **11911253**: submitted 13:11:25 CEST, queued 51 seconds,
+then **COMPLETED 0:0 in 5m55s**, 13:12:16–13:18:11, on `vipl2005` (eight CPUs
+allocated, four Julia threads). All 392 files and the Slurm log are fetched and
+checksum-identical. The control exactly reproduces 676/34; median/IQR gives
+**667/870 correct, 667/852 (78.3%), 10/145 exact**, with unchanged coverage.
+Reject it and retain the support candidate. The comparison is complete; do not
+resubmit it or tune a fallback after grading. Full outputs, the corrected
+metadata audit and all losses are in
+`results/robust_normalization_20260921/report.md`.

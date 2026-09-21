@@ -57,6 +57,13 @@ includes two abstentions on a scan without complete training patches. No
 normalization fallback, selected-N change, count refit or GCV/guard adjustment
 follows this grade.
 
+The median/IQR GMM-normalization follow-up is **negative: 667/870 correct,
+667/852 (78.3%), 10/145 exact**, versus 676/34 at identical coverage and selected
+N. It loses 24 exact chains and gains none. Reject this variant and retain the
+support candidate; no GCV, counting, physical bound, DFT or unknown25 change
+follows. This reused external assignment grade does not validate new counting
+behavior or independent generalization.
+
 How STMFit chooses the optimal number of lobes (N) from the sweep results.
 
 ## Selection Hierarchy

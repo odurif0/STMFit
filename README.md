@@ -23,6 +23,13 @@ an exact chain. Keep the **676/34 support candidate**, not this alternative.
 No normalization fallback or post-grade tuning is added. See the
 [complete-training result](docs/src/unit_assignment.md#complete-patch-training-2026-09-21-negative).
 
+The median/IQR GMM-normalization follow-up is also **negative: 667/870 correct,
+10/145 exact**, at unchanged **852/870 coverage**. It loses 24 exact chains
+without gaining any against the exactly replayed 676/34 control. Reject this
+variant and keep `config/unit_assignment_patch_support.toml`; historical 677/36
+remains the target. No clipping, rescaling or post-grade tuning follows. See the
+[robust-normalization result](docs/src/unit_assignment.md#robust-per-scan-gmm-normalization-2026-09-21-negative).
+
 **Research branch, September 20:** the symmetric fused-fit correction improves
 the regenerated reconstruction from **666 to 671 correct / 870 controls** and
 **24 to 28 exact chains / 145**, at identical cached counts and coverage

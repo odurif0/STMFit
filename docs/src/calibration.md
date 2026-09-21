@@ -362,7 +362,13 @@ An empty feature support stays unavailable; a zero/nonfinite IQR uses one.
 Positive small IQRs are not floored. Median/IQR resists changes in extreme
 observations when estimating moments, but does not bound their transformed
 values; short scans or interactions can therefore become less stable, not more.
-No claim of improved recognition is made before the fixed external comparison.
+The completed comparison is negative: **667/870 correct, 667/852 (78.3%),
+10/145 exact**, versus support control 676/34 at unchanged coverage. It loses
+24 exact chains and gains none. No IQR fallback occurs in 1,168 scan/feature
+pairs, but the expanded maximum grows from 5.44 to 335.47. This observed tail
+amplification does not, by itself, establish the cause of the recognition loss.
+Retain the mean/std support candidate; no clipping or alternative quantiles are
+introduced after the grade.
 
 All choices precede grading. No expected count, sequence, composition, benchmark
 label, class balancing, scan weighting or benchmark-tuned fallback enters this
