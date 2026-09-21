@@ -6,7 +6,8 @@ export read_table, write_table, lobe_table, require_same_keys,
        transverse_asymmetry, transverse_descriptor, augment_descriptor, mold_margin,
        write_soft_vote, load_config, load_training_policy, write_training_support,
        load_training_mask, validate_training_mask, load_gmm_normalization, load_gmm_weighting,
-       load_gmm_seed_aggregation, load_gmm_resampling, load_gmm_covariance_structure
+       load_gmm_seed_aggregation, load_gmm_resampling, load_gmm_covariance_structure,
+       load_fisher_cv, load_gmm_cluster_naming
 
 const TRANSVERSE_DESCRIPTORS = ("transverse_half_plane_asymmetry",
     "transverse_first_moment", "affine_residual_half_plane_asymmetry")
@@ -219,6 +220,38 @@ function load_gmm_covariance_structure(config::AbstractDict)
     return String(mode)
 end
 
+"Explicit Fisher grouping; the split seed never selects by pixels or labels."
+function load_fisher_cv(config::AbstractDict)
+    sel = get(config, "selection", Dict())
+    scheme = get(sel, "fisher_cv_scheme", nothing)
+    scheme in ("lobe_parity", "scan_hash_twofold") ||
+        throw(ArgumentError("explicit fisher_cv_scheme must be lobe_parity or scan_hash_twofold"))
+    seed = get(sel, "fisher_scan_split_seed", nothing)
+    seed isa Integer && !(seed isa Bool) && 0 <= seed <= typemax(Int) ||
+        throw(ArgumentError("explicit fisher_scan_split_seed must be a nonnegative integer"))
+    return (scheme=String(scheme), seed=Int(seed))
+end
+
+"Only name already learned GMM components; never impose their sizes."
+function load_gmm_cluster_naming(config::AbstractDict)
+    model, sel, pre = (get(config, section, Dict()) for section in ("model", "selection", "preprocessing"))
+    mode = get(sel, "gmm_cluster_naming", nothing)
+    mode in ("raw_amplitude", "within_scan_z") ||
+        throw(ArgumentError("explicit gmm_cluster_naming must be raw_amplitude or within_scan_z"))
+    if mode == "within_scan_z"
+        for (section, key, expected) in ((model, "gmm_covariance_structure", "full"),
+                (model, "gmm_final_covariance", "ridge"), (model, "gmm_final_score", "mahalanobis"),
+                (sel, "fisher_cv_scheme", "lobe_parity"), (sel, "gmm_training_weighting", "equal_lobes"),
+                (sel, "gmm_seed_aggregation", "hard_vote"), (sel, "gmm_resampling", "none"),
+                (sel, "assignment_training_support", "all_admissible"),
+                (pre, "gmm_feature_normalization", "mean_sample_std"))
+            get(section, key, nothing) == expected ||
+                throw(ArgumentError("relative naming currently requires $key=$expected"))
+        end
+    end
+    return String(mode)
+end
+
 function load_config(path::AbstractString)
     cfg = TOML.parsefile(path)
     for section in ("model", "selection", "preprocessing")
@@ -230,6 +263,8 @@ function load_config(path::AbstractString)
     load_gmm_seed_aggregation(cfg)
     load_gmm_resampling(cfg)
     load_gmm_covariance_structure(cfg)
+    load_fisher_cv(cfg)
+    load_gmm_cluster_naming(cfg)
     model["descriptor"] in TRANSVERSE_DESCRIPTORS || error("Unsupported descriptor")
     model["descriptor_column"] == "patch_u_asym_reconstructed" || error("Unsupported descriptor column")
     model["descriptor_channel"] == "bwd_res" || error("Unsupported descriptor patch family")

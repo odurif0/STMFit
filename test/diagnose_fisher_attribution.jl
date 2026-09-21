@@ -30,6 +30,8 @@ Real cohorts: approved Viper job only. Local use: synthetic tests only.
 function replay_folds(patches::EF.PatchTable, options::EF.FisherOptions)
     options.training_support == "all_admissible" ||
         throw(ArgumentError("This attribution diagnostic does not implement complete-patch training masks"))
+    options.cv_scheme == "lobe_parity" ||
+        throw(ArgumentError("This historical attribution diagnostic requires lobe_parity Fisher folds"))
     options.patch_projection == "none" ||
         throw(ArgumentError("Raw-patch attribution requires fisher_patch_projection=none"))
     n = length(patches.keys)

@@ -12,7 +12,7 @@ const USAGE = """
 Usage: julia --project=. test/build_empirical_fisher_native.jl \\
     --patches PATH --prefix res --config CONFIG --out PATH
 
-Build one even/odd cross-validated native Fisher margin TSV from forward patches.
+Build one cross-validated native Fisher margin TSV from forward patches.
 Required output columns: file, lobe, score, invalid_reason. All input keys remain;
 invalid patches and missing/degenerate opposite folds receive NA plus a reason.
 The output must not exist. No full-data model or prediction TSV is created.
@@ -20,6 +20,10 @@ The output must not exist. No full-data model or prediction TSV is created.
 All four options are required. --prefix selects numbered patch columns (res_p001,
 etc.). Config supplies PCA, GMM, regularization, seed, layout and patch projection.
 The score origin is explicit: legacy centered mean or original training mean.
+Config selects lobe_parity or scan_hash_twofold, with an explicit scan split seed.
+Scan mode assigns whole scans before invalid-row filtering; all PCA/GMM/Fisher
+learning and amplitude naming use the opposite scan group only. Split logs
+contain identities/counts, not labels or a benchmark manifest.
 With complete_patches training, --training-support PATH is required: only full
 forward squares train either parity fold; admissible partial rows are scored.
 Affine projection, when selected, applies to training and held-out scoring, not
@@ -50,7 +54,25 @@ function main(args=ARGS)
     config = load_fisher_config(options["--config"])
     patches = load_patches(options["--patches"], options["--prefix"], config)
     mask = load_training_mask(config.training_support, get(options, "--training-support", ""), patches.keys, "fisher")
-    rows = cv_scores(patches, config; training_mask=mask)
+    groups = fisher_fold_ids(patches.keys, config)
+    println("Fisher grouping: ", config.cv_scheme, " split_seed=", config.scan_split_seed)
+    if config.cv_scheme == "scan_hash_twofold"
+        mapping = Dict(key[1] => groups[i] for (i,key) in enumerate(patches.keys))
+        for file in sort(collect(keys(mapping)))
+            println("Fisher scan ", file, " group=", mapping[file])
+        end
+    end
+    diagnostics = []
+    rows = cv_scores(patches, config; training_mask=mask, diagnostics)
+    for d in diagnostics
+        train_files = Set(patches.keys[i][1] for i in d.train)
+        held_files = Set(patches.keys[i][1] for i in d.held)
+        println("Fisher fold ", d.fold, " train_rows=", length(d.train), " held_rows=", length(d.held),
+            " train_scans=", length(train_files), " held_scans=", length(held_files),
+            " overlap_scans=", length(intersect(train_files,held_files)), " status=", d.status,
+            " reason=", isempty(d.reason) ? "none" : d.reason,
+            " converged=", d.model === nothing ? "NA" : string(d.model.gmm.converged))
+    end
     mask === nothing || println("Fisher complete-square eligibility: $(count(mask))/$(length(mask)) rows before feature validity")
     write_scores(options["--out"], rows)
     invalid = count(row -> !isempty(row.invalid_reason), rows)

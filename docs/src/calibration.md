@@ -492,6 +492,32 @@ post-hoc observations do not authorize a composition prior, new naming rule or
 threshold adjustment. Reject this variant and retain **676/34**; historical
 677/36 remains the target. This reused grade is not independent validation.
 
+### Whole-scan Fisher and relative GMM naming (2026-09-22)
+
+Two independent tests retain the 676/34 support control and all physical/count
+calibration. The first changes only Fisher's cross-fitting unit: entire scans
+are kept in one of two deterministic SHA-256-ranked groups, with an explicit
+split seed zero. Every fitted transformation, center and naming operation
+uses only the opposite group. Invalid rows do not choose the grouping, and
+neither chemical labels nor a required number of lobes is used. This tests
+sensitivity to shared scan structure; it is not proof that the parity feature
+was chemically wrong or that scans are independent molecules.
+
+The second changes only the global names of the already fitted GMM components.
+`gmm_cluster_naming="within_scan_z"` centers/scales raw amplitudes within scans
+using eligible, feature-valid training rows; the higher global group mean names
+class 1. The existing explicit `gmm_scale_fallback` applies to constant or
+singleton training scans. Positive scan gains/offsets then cancel for nonzero
+scales, but no chemical accuracy or invariance under arbitrary tip changes is
+claimed. No class quota, composition prior, per-scan forced group or DFT anchor
+is introduced; the underlying higher-amplitude physical convention remains an
+assumption. GMM means, covariances, memberships and free masses stay unchanged.
+
+The two candidates are not combined. Labels belong only to the external grade
+after fixed outputs; one Viper job is capped at 30 minutes with no retry.
+Results pending; 676/34 remains the working reference and historical 677/36 the
+target. The reused benchmark does not become independent validation.
+
 ## Opt-in label-free exploration (2026-09-18)
 
 `config/label_free_exploration.toml` is diagnostic configuration, not a new

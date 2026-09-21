@@ -908,6 +908,39 @@ free. Reject this variant and retain **`unit_assignment_patch_support.toml`**,
 still below historical 677/36. No other proposed lead, combination or post-grade
 adjustment follows. See `results/tied_covariance_20260922/report.md`.
 
+### Whole-scan Fisher and relative GMM naming (2026-09-22)
+
+Three explicit `[selection]` fields preserve the seventeen earlier native
+configs: `fisher_cv_scheme="lobe_parity"`, `fisher_scan_split_seed=0`, and
+`gmm_cluster_naming="raw_amplitude"`. Two independent candidate configs copy
+the support control; each changes its name and one mode only.
+
+`unit_assignment_scan_fisher.toml` uses `fisher_cv_scheme="scan_hash_twofold"`.
+Sort all unique scan basenames by SHA-256 of decimal seed + NUL + basename
+(UTF-8), then basename for digest ties, and alternate ranks into groups 0/1.
+Do this before invalid-row/training filtering. It balances numbers of scans,
+not class proportions or lobe counts; seed zero is fixed without a search.
+Every held-out scan uses only the other group's PCA/GMM/centering/naming/Fisher
+fit. Training keys are sorted for deterministic order; missing or degenerate
+training groups yield NA/reasons, never a self-trained fallback. Reordering
+rows or reversing lobes does not change membership, but changing scan identities
+or the cohort can. This does not make the downstream transductive classifier
+or reused external benchmark independently validated.
+
+`unit_assignment_relative_naming.toml` uses `gmm_cluster_naming="within_scan_z"`.
+Only GMM group naming changes. On eligible, feature-valid training rows, raw
+amplitude is centered and sample-std scaled within each scan, with the existing
+`preprocessing.gmm_scale_fallback` for a constant or singleton scan. The global
+group with larger mean standardized amplitude receives the existing class-1
+name. Fitting, memberships, free masses, scoring, seeds and votes stay fixed;
+there is no per-scan quota, forced second group or composition prior. The
+scoped option rejects combinations outside the support-control policies.
+
+Historical representation/attribution diagnostics reject unsupported grouping
+or naming rather than silently describe the old model. Results pending for
+one three-arm, 30-minute Viper comparison. The 676/34 control remains primary;
+historical 677/36 is the target. No combined arm or post-grade tuning is included.
+
 ## Opt-in diagnostic exploration settings (2026-09-18)
 
 `config/label_free_exploration.toml` is used only by standalone exploration tools;

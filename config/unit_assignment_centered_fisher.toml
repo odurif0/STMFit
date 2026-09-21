@@ -33,6 +33,9 @@ fisher_gmm_tolerance = 0.001
 fisher_seed = 0
 
 [selection]
+fisher_cv_scheme = "lobe_parity"
+fisher_scan_split_seed = 0
+gmm_cluster_naming = "raw_amplitude"
 gmm_resampling = "none"
 gmm_bootstrap_replicates = 1
 gmm_bootstrap_seed = 0

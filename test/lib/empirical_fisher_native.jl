@@ -1,7 +1,7 @@
 """
 Native reconstruction of `empirical_fisher_mold.py` (Julia 1.13).
 
-Only patch pixels and lobe parity enter the calculation. PCA dimension, both
+Only patch pixels and configured lobe/scan grouping enter the calculation. PCA dimension, both
 regularizers, EM limit/tolerance, seed, and grid widths come from the config.
 The two full-covariance mixture weights are estimated, never fixed.
 Optional affine-disk projection removes the fixed [1,t,u] subspace before PCA
@@ -42,12 +42,13 @@ using Statistics
 using Random
 using Printf
 using TOML
+using SHA
 include(joinpath(@__DIR__, "reconstructed_unit_assignment.jl"))
-using .ReconstructedUnitAssignment: load_training_policy, validate_training_mask
+using .ReconstructedUnitAssignment: load_training_policy, validate_training_mask, load_fisher_cv
 
 export FisherOptions, FisherGrid, PatchTable, FisherModel, FisherScore,
        load_fisher_config, fisher_grid, load_patches, flip_u_disk,
-       fit_fisher, score, maxmirror_score, cv_scores, write_scores
+       fit_fisher, score, maxmirror_score, fisher_fold_ids, cv_scores, write_scores
 
 struct FisherOptions
     pca_components::Int
@@ -64,11 +65,13 @@ struct FisherOptions
     score_center::String
     patch_support::String
     training_support::String
+    cv_scheme::String
+    scan_split_seed::Int
 
     function FisherOptions(pca_components, noise_regularization,
                            gmm_regularization, gmm_maxiter, gmm_tolerance,
                            seed, half_nm, step_nm, layout, patch_projection, projection_zero_l1, score_center,
-                           patch_support, training_support)
+                           patch_support, training_support, cv_scheme, scan_split_seed)
         for (name, value) in (("fisher_pca_components", pca_components),
                               ("fisher_gmm_maxiter", gmm_maxiter))
             value isa Integer && !(value isa Bool) && value > 0 ||
@@ -76,6 +79,10 @@ struct FisherOptions
         end
         seed isa Integer && !(seed isa Bool) && seed >= 0 ||
             throw(ArgumentError("fisher_seed must be a nonnegative integer"))
+        cv_scheme in ("lobe_parity", "scan_hash_twofold") ||
+            throw(ArgumentError("unsupported fisher_cv_scheme: $cv_scheme"))
+        scan_split_seed isa Integer && !(scan_split_seed isa Bool) && 0 <= scan_split_seed <= typemax(Int) ||
+            throw(ArgumentError("fisher_scan_split_seed must be a nonnegative integer"))
         for (name, value) in (("fisher_noise_regularization", noise_regularization),
                               ("fisher_gmm_regularization", gmm_regularization),
                               ("fisher_gmm_tolerance", gmm_tolerance),
@@ -108,7 +115,8 @@ struct FisherOptions
         new(Int(pca_components), Float64(noise_regularization),
             Float64(gmm_regularization), Int(gmm_maxiter), Float64(gmm_tolerance),
             Int(seed), Float64(half_nm), Float64(step_nm), String(layout), String(patch_projection),
-            Float64(projection_zero_l1), String(score_center), String(patch_support), String(training_support))
+            Float64(projection_zero_l1), String(score_center), String(patch_support), String(training_support),
+            String(cv_scheme), Int(scan_split_seed))
     end
 end
 
@@ -129,9 +137,11 @@ function load_fisher_config(config::AbstractDict)
         throw(ArgumentError("missing [model] fisher_projection_zero_l1"))
     haskey(model, "fisher_score_center") ||
         throw(ArgumentError("missing [model] fisher_score_center"))
+    cv = load_fisher_cv(config)
     options = FisherOptions((model[name] for name in required)...,
                             pre["fisher_layout"], pre["fisher_patch_projection"], model["fisher_projection_zero_l1"],
-                            model["fisher_score_center"], pre["assignment_patch_support"], load_training_policy(config))
+                            model["fisher_score_center"], pre["assignment_patch_support"], load_training_policy(config),
+                            cv.scheme, cv.seed)
     grid = fisher_grid(options)
     options.pca_components <= length(grid.disk_indices) ||
         throw(ArgumentError("fisher_pca_components exceeds the number of disk pixels"))
@@ -468,14 +478,30 @@ struct FisherScore
     invalid_reason::String
 end
 
+"""Fixed two-fold membership from keys alone, before any validity/training filtering.
+
+Scan mode sorts unique basenames by SHA256(decimal seed, NUL, basename), then
+basename as a collision tie-breaker, and alternates ranks 0/1. Whole-scan group
+sizes differ by at most one. No global RNG, lobe number, pixels or class counts
+choose a scan's group. Adding/removing/renaming scans can change this cohort's
+partition; reordering rows or changing pixel validity cannot.
 """
-Fit even and odd lobe folds independently. Each row uses only the OTHER fold's
+function fisher_fold_ids(rowkeys, options::FisherOptions)
+    options.cv_scheme == "lobe_parity" && return [mod(k[2], 2) for k in rowkeys]
+    files = unique(basename(k[1]) for k in rowkeys)
+    ordered = sort(files; by=f -> (bytes2hex(sha256(string(options.scan_split_seed, '\0', f))), f))
+    groups = Dict(f => mod(rank - 1, 2) for (rank, f) in enumerate(ordered))
+    return [groups[basename(k[1])] for k in rowkeys]
+end
+
+"""
+Fit the two configured folds independently. Each row uses only the OTHER fold's
 PCA, GMM, amplitude mapping, covariance, and Fisher vector. No full-data fit is
 built. Missing/degenerate training folds invalidate their held-out rows without
 removing keys or inventing a cluster. Finite nonconverged EM fits are retained,
 like sklearn's max_iter behavior, with a warning rather than silent fallback.
 """
-function cv_scores(patches::PatchTable, options::FisherOptions; training_mask=nothing)
+function cv_scores(patches::PatchTable, options::FisherOptions; training_mask=nothing, diagnostics=nothing)
     n = length(patches.keys)
     eligible = validate_training_mask(options.training_support, training_mask, n)
     size(patches.X, 1) == n && length(patches.amplitudes) == n && length(patches.invalid_reasons) == n ||
@@ -495,20 +521,30 @@ function cv_scores(patches::PatchTable, options::FisherOptions; training_mask=no
     end
     margins = fill(NaN, n)
     valid = isempty.(reasons)
+    groups = fisher_fold_ids(patches.keys, options)
     for parity in (0, 1)
-        train = [i for i in 1:n if valid[i] && eligible[i] && mod(patches.keys[i][2], 2) == parity]
-        held = [i for i in 1:n if valid[i] && mod(patches.keys[i][2], 2) != parity]
-        isempty(held) && continue
-        fold = parity == 0 ? "even" : "odd"
+        train = [i for i in 1:n if valid[i] && eligible[i] && groups[i] == parity]
+        held = [i for i in 1:n if valid[i] && groups[i] != parity]
+        options.cv_scheme == "scan_hash_twofold" && sort!(train; by=i -> patches.keys[i])
+        fold = options.cv_scheme == "lobe_parity" ? (parity == 0 ? "even" : "odd") : "scan_$parity"
+        if isempty(held)
+            diagnostics === nothing || push!(diagnostics, (fold=fold, train=copy(train), held=copy(held),
+                status="no_heldout", reason="", model=nothing))
+            continue
+        end
         model = try
             fit_fisher(patches.X[train, :], patches.amplitudes[train], options)
         catch error
             error isa FisherFitError || rethrow()
+            diagnostics === nothing || push!(diagnostics, (fold=fold, train=copy(train), held=copy(held),
+                status="invalid", reason=error.reason, model=nothing))
             for i in held
                 reasons[i] = "training_$fold:" * error.reason
             end
             continue
         end
+        diagnostics === nothing || push!(diagnostics, (fold=fold, train=copy(train), held=copy(held),
+            status="fitted", reason="", model=model))
         model.gmm.converged || @warn "Fisher GMM reached configured iteration limit" fold iterations=model.gmm.iterations
         for i in held
             value = maxmirror_score(patches.X[i, :], model, grid)

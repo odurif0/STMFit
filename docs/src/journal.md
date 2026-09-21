@@ -2307,6 +2307,17 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-22. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0t. **Can scan-grouped Fisher or within-scan GMM naming improve recognition?** →
+    **PREPARING; RESULTS PENDING (Sep 22)**: the user expands the authorization
+    to two isolated candidates against the 676/34 support control. Fisher uses
+    two whole-scan groups fixed by seeded hash rank; the separate naming arm
+    names unchanged GMM groups using training-only within-scan amplitude z
+    scores. One three-arm Viper job, four requested CPUs, 16 GB, 30 minutes,
+    no combined arm or retry. Exact control replay, synthetic/non-use checks,
+    verified outputs and paired external grades define completion. Historical
+    677/36 remains the target. No paired-acquisition model, count refit, DFT,
+    unknown25 or post-grade tuning is included.
+
 0s. **Can covariance sharing throughout GMM learning improve recognition?** →
     **COMPLETE; NEGATIVE (Sep 22)**: source **becd0ce**, job **11931106**,
     **0:0 in 5m53s**, after 15 seconds queued. Sharing covariance at
@@ -9813,3 +9824,96 @@ config, calibration and HPC notes record the negative 666/6 result and retain
 before submission; reviewed conclusions are committed separately. Generated
 results, logs and diagnostic reports remain local and Git-ignored. No new
 scientific run or GitHub push follows this completed comparison.
+
+## 2026-09-22 — Two independent leads: whole-scan Fisher and relative GMM naming
+
+**Deliverable and scope.** The user first approves the next grouped-Fisher
+comparison, then explicitly permits several leads. The bounded deliverable is
+one control and two independent candidate results against **676/870 correct,
+34/145 exact, 852/870 coverage**, also compared to historical **677/870,
+36/145, 854/870**. Completion means synthetic tests, exact control replay,
+all-key/count/upstream checks, one external paired grade with every loss,
+fetched outputs and committed conclusions. One Viper job, four requested CPUs,
+16 GB, **30 minutes**, no requeue or automatic retry. No local/login-node
+real-cohort fitting. The third proposed paired-acquisition model is not included;
+reliable registration is still unestablished. The application's scientific
+Must-NOT-have constraints remain; retired orchestration is not reopened.
+
+**Fixed before any real output.** Seventeen previous native configs explicitly
+retain `[selection] fisher_cv_scheme="lobe_parity"`,
+`fisher_scan_split_seed=0` and `gmm_cluster_naming="raw_amplitude"`.
+Both candidates copy `unit_assignment_patch_support.toml`; each changes its
+name and exactly one mode, never both. The tied-covariance candidate stays
+rejected and is not a starting point for this comparison.
+
+* `unit_assignment_scan_fisher.toml` sets `fisher_cv_scheme="scan_hash_twofold"`.
+  From all supplied scan basenames, before patch validity/training filtering,
+  sort by SHA-256 of UTF-8 decimal seed, one NUL byte, then UTF-8 basename;
+  basename breaks any digest tie. Assign rank 1 to group 0, rank 2 to group 1,
+  alternating thereafter. Group sizes differ by at most one, not by class
+  proportions or lobe counts. Seed is fixed at zero, with no split search.
+  Row ordering, lobe reversal and pixel validity do not alter membership;
+  changing the cohort or renaming scans can. All PCA, GMM, mean centering,
+  amplitude ordering, covariance and Fisher weights use only the opposite
+  scan group. The native parity mode keeps its exact operations. Scan mode
+  canonically orders training keys. Missing/degenerate folds keep their rows
+  with NA/reasons, without borrowing the held-out scan. CLI logs record group
+  identities, actual training/held-out counts and scan overlap. This changes
+  one feature producer, not the downstream GMM's transductive learning policy;
+  it does not create independent end-to-end validation.
+* `unit_assignment_relative_naming.toml` sets `gmm_cluster_naming="within_scan_z"`.
+  GMM initialization, EM, hard updates, final scores, memberships and free masses
+  stay identical. For each scan, center raw amplitudes on their mean and divide
+  by sample std using only its eligible, feature-valid training rows. Constant
+  or singleton scales use the existing explicit `gmm_scale_fallback=1.0`.
+  Compare these standardized amplitudes' two group means globally; the higher
+  group retains the existing class-1 naming convention. This does not force
+  both groups within each scan, change their sizes or select top-k lobes.
+  Held-out/unavailable amplitudes cannot set training moments. The existing
+  tie policy is unchanged. New naming logs retain both means and the chosen
+  group per seed. This scoped mode rejects combinations with grouped Fisher,
+  bagging, weighting, changed covariance/scoring or changed scaling.
+
+GCV, selected N, geometry, patches, physical calibration, support, naming of
+Fisher groups, mirror axis, ridge, seeds, feature scaling/interactions, hard
+votes, final mean and `>=0.5` rule, precision and unavailable-row policy remain
+fixed except for the declared arm. No expected N, sequence, chemical class
+counts, benchmark membership or saved champion predictions enter inference.
+All 146 scans remain in science; only the later external grader selects full145.
+No post-grade adjustment or combined candidate is authorized. The benchmark
+has been reused extensively and remains development evidence, not independent
+validation or unknown-chain chemical accuracy.
+
+Implementation is on `research/scan-fisher-naming-20260922`, from **972ebd8**.
+Julia 1.13 import and the synthetic split smoke pass. The first targeted test
+passes configuration/group checks and all numerical Fisher non-use checks,
+but its attribution-guard fixture calls the wrapper module rather than its
+contained diagnostic module (UndefVarError, not a scientific failure). The
+fixture is corrected to use that module's own types; two dictionary comparisons
+are also made explicitly elementwise. The initial log is retained under
+`results/scan_fisher_naming_20260922/initial_scan_fisher_naming_failure.log`.
+No scientific setting is changed. Targeted and nine-mode pipeline tests are
+running; no real-cohort job or grade has begun.
+
+The second targeted attempt passes all 119 assertions reached, including
+the corrected diagnostic guard and relative-naming arithmetic, then exposes
+a test-fixture syntax error: `10.0f` is parsed as an invalid float literal,
+not multiplication by file index `f`. The fixture now spells `10.0*f`.
+The second failed log is retained separately; no scientific implementation or
+parameter changes to resolve this test-only error.
+
+The naming log also fingerprints every fitted mean, covariance and mixture
+weight (concatenated Float64 bytes, SHA-256) before voting. This read-only log
+will allow the real relative-naming arm to prove exact parameter identity
+with the control for each seed, not only matching scalar summaries. It does
+not change fitting, assignment or any score. The pre-run documentation build
+passes with the existing size/deployment warnings. Viper reports Julia 1.13.0,
+the same geometry/split/template hashes, fresh source/output paths and no
+queued/running user job at the metadata check; no new job has been submitted.
+
+The targeted suite now passes **291 assertions** under Julia 1.13: config
+isolation 71, deterministic whole-scan grouping 12, opposite-scan Fisher
+non-use and legacy arithmetic 26, relative-naming algebra 10, CLI/API and
+unchanged GMM fits 172. The last logging-only fingerprint addition is exercised
+by subsequent CLI/pipeline regressions. The nine-mode synthetic pipeline and
+complementary regressions continue before real submission.

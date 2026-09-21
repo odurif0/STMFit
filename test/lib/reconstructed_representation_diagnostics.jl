@@ -200,6 +200,10 @@ end
 
 function load_inputs(paths, production_config)
     cfg = load_config(production_config)
+    cfg["selection"]["fisher_cv_scheme"] == "lobe_parity" ||
+        error("This historical representation diagnostic requires lobe_parity Fisher folds")
+    cfg["selection"]["gmm_cluster_naming"] == "raw_amplitude" ||
+        error("This historical representation diagnostic requires raw-amplitude GMM naming")
     cfg["model"]["gmm_covariance_structure"] == "full" ||
         error("This historical representation diagnostic requires separate component covariances")
     cfg["selection"]["gmm_resampling"] == "none" ||

@@ -15,6 +15,7 @@ using Random
 using Statistics
 using StatsBase: Weights, sample
 using TOML
+using SHA
 
 include(joinpath(@__DIR__, "lib", "script_utils.jl"))
 using .ScriptUtils: _ensure_parent, _read_tsv
@@ -23,7 +24,7 @@ using .AssignmentCovariance
 include(joinpath(@__DIR__, "lib", "reconstructed_unit_assignment.jl"))
 using .ReconstructedUnitAssignment: load_training_policy, load_training_mask, validate_training_mask,
     load_gmm_normalization, load_gmm_weighting, load_gmm_seed_aggregation, load_gmm_resampling,
-    load_gmm_covariance_structure, write_table
+    load_gmm_covariance_structure, load_gmm_cluster_naming, write_table
 
 const DEFAULT_FEATURES = "results/unit_separability/lobe_features_selectedN_primary_local.tsv"
 const DEFAULT_SPLIT = ""
@@ -55,6 +56,7 @@ struct Options
     bootstrap_seed::Int
     bootstrap_audit::String
     covariance_structure::String
+    cluster_naming::String
 end
 
 function _load_final_score(config::AbstractDict)
@@ -162,6 +164,11 @@ function _parse_cli(args)
                                      every hard update. Means and masses stay free.
                                      Tied mode requires the unresampled ridge,
                                      hard-vote, equal-lobe support-control policies.
+                                     gmm_cluster_naming=raw_amplitude preserves the
+                                     global raw-amplitude anchor. within_scan_z uses
+                                     training-only within-scan amplitude mean/sample
+                                     std (same explicit scale fallback) to name the
+                                     unchanged groups; no composition is imposed.
                                      Also declares per-file GMM feature scaling:
                                      mean_sample_std or median_iqr (Type-7 Q75-Q25),
                                      and its degenerate-scale fallback. Scaling
@@ -232,6 +239,7 @@ function _parse_cli(args)
         error("Final Ledoit-Wolf covariance requires --selftrain >= 1")
     cfg = TOML.parsefile(config)
     covariance_structure = load_gmm_covariance_structure(cfg)
+    cluster_naming = load_gmm_cluster_naming(cfg)
     normalization = load_gmm_normalization(cfg)
     training_weighting = load_gmm_weighting(cfg)
     seed_aggregation = load_gmm_seed_aggregation(cfg)
@@ -252,7 +260,7 @@ function _parse_cli(args)
                    first_seed, n_seeds, interactions, selftrain, covariance.mode, covariance.ridge, final_score,
                    training_policy, training_support, normalization.mode, normalization.scale_fallback,
                    training_weighting, seed_aggregation, bootstrap.mode, bootstrap.replicates, bootstrap.seed,
-                   bootstrap_audit, covariance_structure)
+                   bootstrap_audit, covariance_structure, cluster_naming)
 end
 
 function _arg_value(args, i::Int, flag::String)
@@ -534,13 +542,33 @@ function _weighted_seeds(X, w, rng)
     return [first_seed, sample(rng, 1:n, Weights(costs))]
 end
 
-function _cluster_amplitude_means(records, score_idxs, assignments, eligible, observation_weights)
+function _cluster_amplitude_means(records, score_idxs, assignments, eligible, observation_weights;
+                                  mode::String="raw_amplitude", scale_fallback=nothing)
+    mode in ("raw_amplitude", "within_scan_z") || throw(ArgumentError("unknown GMM cluster naming"))
+    normalized = Dict{Int,Float64}()
+    if mode == "within_scan_z"
+        observation_weights === nothing || throw(ArgumentError("relative naming requires equal-lobe weights"))
+        scale_fallback isa Real && !(scale_fallback isa Bool) && isfinite(scale_fallback) && scale_fallback > 0 ||
+            throw(ArgumentError("relative naming requires an explicit positive finite scale fallback"))
+        training = [i for i in score_idxs if eligible[i]]
+        length(unique(training)) == length(training) || throw(ArgumentError("relative naming requires unresampled rows"))
+        for file in sort(unique(records[i].file for i in training))
+            members = [i for i in training if records[i].file == file]
+            amplitudes = [records[i].amplitude for i in members]
+            all(isfinite, amplitudes) || throw(ArgumentError("nonfinite training naming amplitude"))
+            center, scale = mean(amplitudes), std(amplitudes)
+            scale = isfinite(scale) && scale > 0 ? scale : scale_fallback
+            for i in members
+                normalized[i] = (records[i].amplitude - center) / scale
+            end
+        end
+    end
     values = Dict(1 => Float64[], 2 => Float64[])
     masses = Dict(1 => Float64[], 2 => Float64[])
     for (j, i) in enumerate(score_idxs)
         eligible[i] || continue
         c = assignments[j]
-        push!(values[c], records[i].amplitude)
+        push!(values[c], mode == "raw_amplitude" ? records[i].amplitude : normalized[i])
         observation_weights === nothing || push!(masses[c], observation_weights[i])
     end
     return Dict(c => (observation_weights === nothing ? mean(vals) : dot(vals, masses[c]) / sum(masses[c]))
@@ -778,7 +806,8 @@ function _bootstrap_view_probability(records, X, idxs, score_idxs, opt;
             # Duplicate training indices count each scan draw in physical naming,
             # while amplitudes from unsampled scans cannot rename either group.
             mean_amp = _cluster_amplitude_means(records, train_idxs,
-                assignments[position[train_idxs]], eligible, nothing)
+                assignments[position[train_idxs]], eligible, nothing;
+                mode=opt.cluster_naming, scale_fallback=opt.scale_fallback)
             high = length(mean_amp) == 2 ? first(sort(collect(keys(mean_amp)); by=c -> mean_amp[c], rev=true)) : 0
             diagnostics === nothing || push!(diagnostics, (replicate=bag, bootstrap_seed=draw_seed,
                 seed=seed, indices=copy(train_idxs), clusters=clusters, amplitude_means=copy(mean_amp),
@@ -860,12 +889,17 @@ function _view_probability(records::Vector{LobeRecord}, features::Vector{String}
             assigned = argmax(resp)
             push!(assignments, assigned)
         end
-        mean_amp = _cluster_amplitude_means(records, score_idxs, assignments, eligible, naming_weights)
+        mean_amp = _cluster_amplitude_means(records, score_idxs, assignments, eligible, naming_weights;
+            mode=opt.cluster_naming, scale_fallback=opt.scale_fallback)
         println("GMM seed ", seed, " covariance_structure=", opt.covariance_structure,
             " covariance_maxdiff=", maximum(abs.(covs[1] - covs[2])),
             " component_weights=", join(weights, ','), " named=", length(mean_amp) == 2)
-        length(mean_amp) == 2 || continue
-        high_cluster = first(sort(collect(keys(mean_amp)); by=c -> mean_amp[c], rev=true))
+        high_cluster = length(mean_amp) == 2 ? first(sort(collect(keys(mean_amp)); by=c -> mean_amp[c], rev=true)) : 0
+        println("GMM naming seed ", seed, " mode=", opt.cluster_naming,
+            " naming_means=", join((get(mean_amp,c,NaN) for c in 1:2), ','), " high_cluster=", high_cluster,
+            " fit_sha256=", bytes2hex(sha256(reinterpret(UInt8,
+                vcat(vec(means), reduce(vcat, vec.(covs)), weights)))))
+        high_cluster == 0 && continue
         for (j, i) in enumerate(score_idxs)
             m = maximum(log_resp[j, :])
             resp = exp.(log_resp[j, :] .- m)
@@ -955,6 +989,7 @@ function main(args=ARGS)
     println("  views:      ", join(first.(views), ", "))
     println("  weighting:  ", opt.training_weighting)
     println("  covariance structure: ", opt.covariance_structure)
+    println("  cluster naming: ", opt.cluster_naming)
     println("  seed aggregation: ", opt.seed_aggregation)
     println("  resampling: ", opt.resampling, " replicates=", opt.bootstrap_replicates,
         " bootstrap_seed=", opt.bootstrap_seed)

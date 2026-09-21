@@ -1070,3 +1070,20 @@ historical 677/36 remains unexceeded. Complete outputs and losses are saved in
 `results/tied_covariance_20260922/report.md`. This comparison is complete: no
 retry, other proposed lead, post-grade adjustment, count refit, DFT change or
 unknown25 rerun follows. The reused grade is not independent validation.
+
+## Whole-scan Fisher and relative naming comparison (September 22)
+
+`hpc/compare_scan_fisher_naming.sbatch` runs `control/`, `scan_fisher/` and
+`relative_naming/` sequentially. The latter two independently change Fisher
+grouping and GMM group naming; no combined arm is present. All regenerate
+patches at the same cached geometry/N. One job requests four CPUs, 16 GB and
+30 minutes, with `--no-requeue`; no automatic retry or login/local cohort fit.
+
+Set `STMFIT_PROJECT_DIR`, `STMFIT_CACHE_DIR`, `STMFIT_INPUT_DIR`, `STMFIT_OUTDIR`
+and `JULIA_BIN` to absolute paths. Sync committed code and the unchanged
+Manifest, run the metadata-only `--dry-run`, then pass all five explicitly in
+`sbatch --export=...` to override Viper's `SBATCH_EXPORT=NONE`. Fetch all results
+and logs before cleanup. Verify control replay, all keys/N/upstream tables,
+Fisher split/no-overlap logs and naming/unchanged-fit logs before external
+grading. Results pending; neither preparation nor a successful job exit is a
+recognition result. Historical 677/36 remains the objective.
