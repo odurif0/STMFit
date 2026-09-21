@@ -449,8 +449,15 @@ Fisher, CC and all upstream observations remain fixed.
 Scope is one support control and one candidate, one Viper job limited to one
 hour, four requested CPUs and 16 GB. No retry, combined variant, new naming
 rule, count refit, DFT change, unknown-chain rerun or post-grade adjustment.
-Result pending; a more stable ensemble would not itself establish chemical
-accuracy or independent validation on the reused benchmark.
+Job **11925188** completes **0:0 in 7m17s**. All 200 seed fits are accepted;
+bagging gives **665/870 correct, 665/852 (78.1%), 10/145 exact**, versus the
+exactly replayed **676/852, 34 exact** support control. Coverage is unchanged;
+24 exact chains are lost and none gained. Of 62 final 1→0 changes, 57 leave
+old GMM=1 / k-means=0 ties under the unchanged fusion. Reject the variant;
+retain the **676/34 support candidate**, still below historical 677/36. No
+post-grade change to fusion, seeds, replicate count, naming, precision or
+threshold follows. This negative result concerns this specified ensemble and
+fusion, not all bagging methods; the reused grade is not independent validation.
 
 ## Opt-in label-free exploration (2026-09-18)
 

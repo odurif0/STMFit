@@ -165,6 +165,23 @@ count refit, DFT change or unknown25 rerun follows. Historical **677/36** remain
 unexceeded; inference is label-free, not independently validated by this reused
 development benchmark.
 
+The whole-scan GMM-bagging comparison (source **da886ce**, job **11925188**,
+**7m17s**, exit **0:0**, after **29 seconds** queued) is **negative: 665/870
+correct, 665/852 (78.1%), 10/145 exact**, versus the exactly replayed **676/852,
+34 exact** support control. Keep `config/unit_assignment_patch_support.toml`;
+the twenty-replicate bootstrap is not promoted. Twenty-two scans gain,
+thirty-three lose and ninety tie; zero exact chains are gained and 24 lost.
+Of 62 final 1→0 changes, 57 leave old GMM=1 / k-means=0 ties. All 200 seed
+fits are accepted; each bag contains 88–98 distinct scans and 882–905 duplicated
+usable rows. All 146 scans / 900 keys, selected N, availability and upstream/
+Fisher/k-means tables are retained. All **393 outputs and the Slurm log** are
+fetched/checksummed; **2,471 focused assertions, 21,927 pre-grade output checks**,
+seven component-score checks and paired arithmetic pass. See
+`results/scan_bagging_20260921/report.md` for every gain and loss. No retry,
+post-grade fusion/threshold adjustment, new arm, count refit, DFT change or
+unknown25 rerun follows. Historical **677/36** remains unexceeded; inference
+is label-free, but this reused benchmark is not independent validation.
+
 This page is the hand-off document for reproducing the current chitosan workflow
 without relying on prior conversation context.  The goal is a label-free fitting
 and model-selection pipeline that is externally graded on the benchmark and then

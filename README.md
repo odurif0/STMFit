@@ -46,6 +46,14 @@ Keep the **676/34 support candidate**; no post-grade tie or precision adjustment
 follows. Historical 677/36 remains unexceeded. See the
 [continuous-vote result](docs/src/unit_assignment.md#continuous-gmm-seed-vote-2026-09-21-negative).
 
+Whole-scan GMM bagging is **negative: 665/870 correct, 10/145 exact**, at
+unchanged **852/870 coverage**, versus the exactly replayed 676/34 control.
+Twenty bootstrap replicates lose 24 exact chains and gain none. Of 62 final
+1→0 changes, 57 leave old GMM=1 / k-means=0 ties under the unchanged fusion
+rule. Reject this variant and keep the **676/34 support candidate**; historical
+677/36 remains unexceeded. No post-grade adjustment follows. See the
+[scan-bagging result](docs/src/unit_assignment.md#whole-scan-gmm-bagging-2026-09-21-negative).
+
 **Research branch, September 20:** the symmetric fused-fit correction improves
 the regenerated reconstruction from **666 to 671 correct / 870 controls** and
 **24 to 28 exact chains / 145**, at identical cached counts and coverage

@@ -2309,6 +2309,78 @@ development evidence, not independent validation. All 290 paired scan rows,
 24 changed decisions and component-score details are preserved in
 `results/continuous_vote_20260921/report.md` and its linked tables.
 
+### Whole-scan GMM bagging (2026-09-21): negative
+
+`unit_assignment_scan_bagging.toml` copies the 676/34 support control, changing
+its name and enabling `gmm_resampling="whole_scans"` with **20 replicates**.
+Each draws S scans with replacement from the S scans having usable GMM rows,
+using draw seeds 0–19. Every usable row of a drawn scan is duplicated with its
+scan's multiplicity. Natural scan lengths remain; this is neither independent
+lobe resampling nor equal-total-scan weighting. Each bag reuses the same ten
+GMM initialization seeds 0–9. EM, two hard updates, free mixture masses, ridge
+covariance and the final Mahalanobis score remain unchanged.
+
+Per-scan scaling is computed once, as before. Raw-amplitude group naming uses
+only the duplicated training rows, including their multiplicity. Unsampled
+scans retain their usual normalization and receive predictions, but do not
+train or name that bag's groups. Each bag averages its valid named binary seed
+votes; the candidate averages valid bag means equally. No best seed, bag or
+class population is selected. Unnamed fits are omitted without retry. This is
+bagging, not out-of-bag validation or probability calibration. K-means, Fisher,
+CC, patches, final two-head mean, `>=0.5`, eight-decimal precision, N and the
+unavailable-row policy stay fixed.
+
+Scientific source **da886ce** passes **2,471 assertions across 19 suites** under
+Julia 1.13. One Viper job **11925188** waits **29 seconds**, then completes
+**0:0 in 7m17s**, 20:42:41–20:49:58 CEST, on `vipm2008`. All **393 output
+files and the Slurm log** are fetched/checksummed. **21,927 saved-output checks**
+pass before grading: twelve control tables replay byte-for-byte, all **146
+scans / 900 keys**, selected N, upstream/Fisher/k-means tables, **896 usable
+GMM rows** and four unavailable predictions are retained. All twenty scan
+draws match independent reconstruction. All **200/200 initialization fits**
+are accepted; each bag has **88–98 distinct scans and 882–905 duplicated rows**.
+Only external grading selects the 145 benchmark scans.
+
+| Version | Correct / 870 | Correct / classified | Exact / 145 | Classified / 870 |
+|---|---:|---:|---:|---:|
+| Historical saved reference | 677 | 677/854 (79.3%) | 36 | 854 |
+| Replayed support control | 676 | 676/852 (79.3%) | 34 | 852 |
+| Whole-scan GMM bagging | 665 | 665/852 (78.1%) | 10 | 852 |
+
+GMM scores change on **804/896 rows** (448 increases, 356 decreases); its hard
+class changes on 38 rows, all 1→0. Final voting changes **62 decisions**, all
+1→0: 61 benchmark lobes and one technical-scan lobe. Raw `(0,1,?)` totals move
+**(673,223,4)→(735,161,4)**. These populations are outcomes, not constraints.
+Of those 62 final flips, **57 were exact control ties, GMM=1 / k-means=0**.
+Their bagged GMM score falls below 1, so the unchanged mean falls below 0.5.
+Five flips had positive control margins (0.025–0.5). The GMM hard class changes
+for 29 of the 62 flips, remaining 1 for the other 33. Bagged GMM scores on
+changed rows range **0.13–0.995**, final margins **0.005–0.87**. Exact final
+ties decrease **58→0**, before and after serialization; seven component-score
+checks pass. This is not solely a numerical rounding effect. No tie, threshold,
+precision or fusion adjustment follows the grade.
+
+Against control: **22 scan gains, 33 losses, 90 ties**, net **−11 correct**;
+**zero exact chains gained, 24 lost**, with eight grade-orientation changes.
+Confusion `(TN,FP,FN,TP)` changes `(513,52,124,163)→(537,28,159,128)`:
+24 fewer false positives but 35 more false negatives. Emitted errors increase
+**176→187**, at unchanged **852/870 coverage**, two aligned abstentions,
+16 missing truth positions and 38 extra lobes. Against history: 26 scan gains,
+41 losses, 78 ties, net −12 correct; one exact chain gained and 27 lost, with
+twelve orientation changes. Grade orientation is not an independent spatial
+monomer correspondence. All **290 paired scan rows, 62 changed decisions**,
+component scores and the full list of 24 lost exact chains are preserved in
+`results/scan_bagging_20260921/report.md` and its linked tables.
+
+**Reject whole-scan bagging and retain the 676/34 support candidate.**
+Historical 677/36 remains unexceeded. This negative result concerns the fixed
+ensemble within this unchanged fusion, not every bagging method. No replicate
+count, seed, threshold, naming, fusion or combined-variant search follows;
+counting, DFT and unknown25 are untouched. Learning and inference are label-free,
+but this reused benchmark supplies development evidence, not independent
+validation. The authorized comparison is complete; the historical objective
+remains open.
+
 ### Native numerical conventions
 
 The constant-current port retains the old first-axis-fast cube index, sampling

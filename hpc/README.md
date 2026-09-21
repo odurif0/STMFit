@@ -1015,8 +1015,7 @@ unchanged Manifest; no cohort fits run locally or on a login node.
 Fetch outputs and logs, including the candidate's `gmm_scan_bootstrap.tsv`;
 check exact control replay, all scan/lobe identities, N, unchanged upstream
 outputs and bootstrap multiplicities before external grading. No benchmark
-manifest, truth or historical predictions are inference inputs. Result pending;
-successful preparation alone is not a recognition result or promotion.
+manifest, truth or historical predictions are inference inputs.
 
 Scientific source **da886ce**, job **11925188**: submitted **20:42:12 CEST**,
 started **20:42:41** on `vipm2008` after **29 seconds** queued. Four CPUs requested,
@@ -1025,4 +1024,16 @@ checks are empty; both dry runs see 146 scans. The 222 targeted assertions,
 189 six-mode pipeline assertions, 108 continuous-vote regression assertions,
 20 runner assertions and the documentation build pass. Complementary regressions
 also pass: **2,471 assertions in 19 suites** in total, completed early during the
-control run. Follow this job; do not resubmit.
+control run. The same job completes **0:0 at 20:49:58**, **7m17s**, with MaxRSS
+**1,933,112 K** (about 1.980 GB). No retry or duplicate submission occurs.
+All **393 output files and the Slurm log** are fetched locally, excluding
+raw-input symlinks, with an empty post-fetch checksum comparison.
+**21,927 saved-output checks** pass before grading; all twelve control tables
+replay byte-for-byte, all 146 scans / 900 keys and selected N remain, and all
+twenty bags match their independently reconstructed draws. All 200 seed fits
+are accepted. External grading gives **665/870 correct, 10/145 exact** at
+852/870 coverage, versus the replayed **676/34** control. Reject bagging and
+retain the support candidate; historical 677/36 remains unexceeded. Seven
+component-score checks and paired arithmetic pass; all gains and losses are
+saved in `results/scan_bagging_20260921/report.md`. The comparison is complete;
+do not resubmit or tune fusion/thresholds after this negative grade.

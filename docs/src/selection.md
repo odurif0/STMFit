@@ -80,6 +80,15 @@ historical 677/36. This assignment-only change leaves all N, GCV/guards,
 physical calibration and counting claims fixed. No post-grade threshold or
 precision change, count refit, DFT change or unknown25 run follows.
 
+Whole-scan GMM bagging regresses to **665/870 correct, 10/145 exact**, at
+unchanged **852/870 coverage**, versus the replayed 676/34 support control.
+It loses 24 exact chains and gains none. Of 62 final 1→0 changes, 57 leave
+old vote ties. Reject the variant and retain the support candidate; historical
+677/36 remains unexceeded. All selected N, GCV/guards, physical calibration
+and counting claims stay fixed. No post-grade fusion or threshold adjustment,
+count refit, DFT change or unknown25 run follows. This assignment-only grade
+does not revalidate counting or independent generalization.
+
 How STMFit chooses the optimal number of lobes (N) from the sweep results.
 
 ## Selection Hierarchy

@@ -2308,18 +2308,20 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0r. **Can whole-scan bootstrap aggregation improve recognition?** →
-    **RUNNING; RESULT PENDING (Sep 21)**: source **da886ce**, job **11925188**,
-    one fixed 20-replicate GMM bootstrap
-    against support control 676/34; each replicate draws S usable scans with
-    replacement and keeps ten initialization seeds. Hard votes, free mixture
-    masses, physical naming rule, scaling, upstream signals, final threshold,
-    N and unavailable-row policy stay fixed. One Viper job, four requested
-    CPUs, 16 GB, one-hour ceiling; no automatic retry or local cohort fit.
-    Historical 677/36 remains the target, with no gain presumed. No combined
-    variant, naming-rule experiment, continuous score, count refit, DFT change
-    or unknown25 run is authorized by this pass.
-    All **2,471 assertions across 19 suites** and the docs build pass; the same
-    job is followed without changing its parameters.
+    **COMPLETE; NEGATIVE (Sep 21)**: source **da886ce**, job **11925188**, exit
+    **0:0 in 7m17s**, after 29 seconds queued. Twenty whole-scan bags give
+    **665/870 correct, 665/852 (78.1%), 10/145 exact**, versus the exactly
+    replayed 676/34 support control. Twenty-two scans gain, thirty-three lose,
+    ninety tie; zero exact chains are gained and 24 lost. Of 62 final 1→0
+    flips, 57 leave old GMM=1 / k-means=0 ties. All 200 seed fits are accepted;
+    no best bag/seed or class count is chosen. Retain 676/34; historical
+    677/36 remains unexceeded. All 146 scans / 900 keys, N, availability and
+    upstream/Fisher/k-means tables remain. All 393 outputs and the Slurm log
+    are fetched/checksummed; 2,471 focused assertions, 21,927 pre-grade output
+    checks, seven component-score checks and paired arithmetic pass. No retry,
+    fusion/threshold/precision adjustment, new arm, count refit, DFT change or
+    unknown25 run follows. This fixed comparison is complete, not independent
+    validation on the repeatedly reused benchmark.
 
 0q. **Can continuous per-seed GMM scores improve the final vote?** →
     **COMPLETE; NEGATIVE (Sep 21)**: source **bef315f**, job **11922389**, exit
@@ -2470,6 +2472,10 @@ See `docs/src/selection.md` for the full guard specification and
     Continuous internal GMM voting (0q) regresses to 671 / 26, at the same
     coverage; all 24 final changes leave old exact ties and switch 1→0.
     It is rejected without changing the threshold or serialization precision.
+    Whole-scan bagging (0r) regresses to 665 / 10 at the same coverage; 24
+    exact chains are lost and none gained. Of 62 final 1→0 flips, 57 leave
+    old GMM=1 / k-means=0 ties. It is rejected without post-grade adjustment
+    to fusion, seeds, replicate count or naming; 676 / 34 remains primary.
     The one physical-u Fisher mirror comparison is **COMPLETE; NEGATIVE**:
     job 11879515 (2m03s, exit 0:0) replays the control byte-for-byte but the
     treatment gives **669/849 (78.8%), 27 exact**, versus 671/849 and 28.
@@ -9514,3 +9520,97 @@ transverse descriptors 125, signal features 73, assignment 37, six-mode pipeline
 new runner is not double-counted; its final resource/requeue checks total 20.
 The failed initial TOML-inventory log remains. No scientific source/config
 changes during these checks; no external grade has run.
+
+### Completed comparison and decision
+
+The same job **11925188** completes **0:0 at 20:49:58 CEST**, **7m17s**, on
+`vipm2008`. Control runs 20:42:43–20:47:17 and bagged 20:47:17–20:49:58.
+Slurm reports MaxRSS **1,933,112 K** (about 1.980 GB). No duplicate job,
+resource change, retry or local/login-node cohort fit occurs. All **393 output
+files and the Slurm log** are fetched locally, excluding raw-input symlinks,
+with an empty post-fetch checksum comparison. Scientific source stays
+**da886ce**; **c45e440** records submission and complementary test completion.
+
+Before external grading, **21,927 saved-output assertions pass**: 59 exact
+replay/identity/N checks, 7,181 availability/vote checks, 14,686 bootstrap-draw
+checks and one check that the control has no bootstrap file. Twelve control
+tables replay the saved support result byte-for-byte. All **146 scans / 900
+keys**, selected N, upstream patches/features, CC, Fisher, k-means and training
+pixel counts remain unchanged. Both arms retain **896 usable GMM rows** and
+the same four unavailable predictions. There is no count refit or imputation.
+
+The bootstrap audit has **2,920 rows**, one per input scan per bag, including
+zero multiplicities. Independent draws from MersenneTwister seeds 0–19 reproduce
+every scan multiplicity and training-row count. Each bag draws 146 scans with
+replacement; **88–98 distinct scans and 882–905 duplicated usable rows** occur
+per bag. Each scan is drawn 10–34 times over the whole experiment. All twenty
+bags accept all ten initialization fits (**200/200**), with no retry or selection.
+These counts are observed outcomes, not desired chemical populations.
+
+GMM scores change on **804/896 usable rows**, increasing on 448 and decreasing
+on 356. Nonendpoint scores increase **242→804**. Its hard class changes on 38
+rows, all 1→0. Final voting changes **62 decisions**, all **1→0**: 61 on
+benchmark scans, one on technical `240310_Cu100009.sxm` lobe 7. Raw `(0,1,?)`
+counts move **(673,223,4)→(735,161,4)**. Of the final flips, **57 were old ties
+with GMM=1 and k-means=0**; any bagged GMM score below 1 moves their unchanged
+average below 0.5. Five changes had positive control margins (0.025–0.5).
+The GMM hard class changes for 29 of the 62 final flips, staying 1 for the
+other 33. Candidate GMM scores on changed rows range **0.13–0.995**, final
+margins **0.005–0.87**. Exact final ties fall **58→0**, before and after
+serialization. Seven saved-component-score assertions pass. This is not only
+floating-point rounding; it exposes a strong interaction with fixed fusion.
+No threshold, tie, fusion, precision or naming rule is adjusted after the grade.
+
+The unchanged external full145 own-N grade is run only after integrity checks:
+
+| Version | Correct / 870 | Correct / classified | Errors emitted | Exact / 145 |
+|---|---:|---:|---:|---:|
+| Historical saved reference | 677 | 677/854 (79.3%) | 177 | 36 |
+| Replayed support control | 676 | 676/852 (79.3%) | 176 | 34 |
+| Whole-scan GMM bagging | 665 | 665/852 (78.1%) | 187 | 10 |
+
+Against control: **22 scan gains, 33 losses, 90 ties**, net **−11 correct**;
+**zero exact chains gained, 24 lost**, with eight grade-orientation changes.
+Confusion `(TN,FP,FN,TP)` changes `(513,52,124,163)→(537,28,159,128)`:
+24 fewer false positives, outweighed by 35 more false negatives. Coverage stays
+**852/870**, with two aligned abstentions. Counts stay 892 predicted lobes on
+145 scans, 16 missing truth positions, 38 extra lobes, 14 short-N scans and
+25 extra-N scans. The 205 non-correct truth positions comprise 187 emitted
+errors, 16 missing positions and two abstentions. Against history: 26 scan
+gains, 41 losses, 78 ties, net −12 correct; one exact chain gained, 27 lost,
+with twelve orientation changes. Grade alignment is not an independent spatial
+monomer correspondence.
+
+Exactness is lost on `240307_017`, `240310_Cu100007`, `240311_Cu100061`,
+`240314_Cu100_025`, `240814_012`, `240815_072`, `240817_003`, `240817_006`,
+`240817_007`, `240817_021`, `240817_041`, `240817_044`, `240817_047`,
+`240817_048`, `240817_049`, `240817_052`, `240817_080`, `240817_081`,
+`240818_017`, `240818_020`, `240818_026`, `241113_087`, `241113_088` and
+`241114_027`. All **290 paired scan comparisons and 62 changed decisions**,
+including every loss, are preserved in `results/scan_bagging_20260921/report.md`
+and its linked tables. Paired arithmetic reproduces grade sums, confusion,
+coverage and exact-chain counts. The saved-score audit reads no labels.
+
+**Decision: reject whole-scan bagging and retain the 676/34 support candidate.**
+Historical 677/36 remains the objective to exceed. This negative result concerns
+the specified ensemble within unchanged fusion, not every bagging method.
+No replicate-count, seed, naming, threshold, fusion or combined-variant search
+follows; counting, DFT and unknown25 stay untouched. This authorized comparison
+is complete; the broader historical objective remains open. Learning/inference
+are label-free, but the repeatedly reused benchmark is development evidence,
+not independent validation or unknown-chain chemical accuracy.
+
+Prediction SHA-256: control
+`eb8d69b8cebcd607b0244db5c65104347e6bcd24acee06f64748cf0e6ec310e3`, bagged
+`16df34427f9dc82bc509e4998d36f5364aac8b75ccb4ead42d8a9b3da1a24ed7`.
+Bootstrap audit SHA-256:
+`28a4cd501b16203f35b9a042e897f53d8b414f30bbbdae1e8d3e4ceda8477a86`.
+
+The final documentation build passes with the existing large-page/search-index
+warnings and non-CI deployment skip. README, runbook, selection, assignment,
+config, calibration and HPC notes record the negative 665/10 result and retain
+676/34 as the working reference. Source and tested preparation were committed
+before submission; conclusions are committed separately after reviewing the
+saved outputs and documentation diff. Generated results, logs and the initial
+failed synthetic test remain local and Git-ignored; no cluster retry, new
+scientific run or GitHub push follows this result.

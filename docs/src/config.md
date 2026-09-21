@@ -867,9 +867,14 @@ bootstrap rather than silently describing unresampled training.
 
 Final voting, threshold, precision, unavailable-input handling, k-means, Fisher,
 CC, geometry and N stay fixed. This is bagging, not out-of-bag validation or
-probability calibration. One control and one candidate are authorized, with
-one Viper job capped at one hour. Results pending; the 676/34 support candidate
-remains the working reference, below historical 677/36.
+probability calibration. The fixed comparison completes on Viper, job
+**11925188**, **7m17s**, exit **0:0**, within its one-hour cap. All twenty bags
+accept ten initialization seeds each. The result is **negative: 665/870 correct,
+10/145 exact**, at unchanged **852/870 coverage**, versus the exactly replayed
+676/34 control. It loses 24 exact chains and gains none; 57 of 62 final 1→0
+changes leave old GMM=1 / k-means=0 ties. Retain the **676/34 support config**,
+below historical 677/36. No replicate/seed search, fusion/threshold adjustment
+or post-grade combination follows. See `results/scan_bagging_20260921/report.md`.
 
 ## Opt-in diagnostic exploration settings (2026-09-18)
 
