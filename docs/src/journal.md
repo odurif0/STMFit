@@ -2307,6 +2307,15 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-21. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0q. **Can continuous per-seed GMM scores improve the final vote?** →
+    **AUTHORIZED; PREPARING (Sep 21)**: one `mean_membership` candidate against
+    support control 676/34, one Viper allocation capped at 30 minutes. Keep the
+    fitted groups, amplitude naming, Mahalanobis scores, seeds, support, N and
+    final threshold; average each seed's existing normalized score instead of
+    its hard 0/1 decision. No temperature, calibration, scan weighting,
+    resampling, alternative naming rule, combined arm or post-grade tuning.
+    Historical 677/36 remains the target; no result is presumed.
+
 0p. **Can equal total GMM training weight per scan improve recognition?** →
     **COMPLETE; MIXED RESULT (Sep 21)**: source **5ff68e2**, job **11915029**,
     exit **0:0 in 6m01s**, after 41 minutes queued. Weighting gives **675/870
@@ -9212,3 +9221,64 @@ config, calibration and HPC notes now record the 675/36 tradeoff and retain
 676/34 as the primary working reference. Runtime source remains **5ff68e2**;
 the conclusion is committed separately. Generated outputs, logs and all paired
 losses are preserved locally and ignored by Git.
+
+## 2026-09-21 — Continuous internal GMM vote, one fixed comparison
+
+**Scientific deliverable and done condition.** The user authorizes the first
+recommended lead only: compare a continuous internal GMM vote with the retained
+676/870, 34/145 support candidate. Done means tested arithmetic and unchanged
+model learning, exact control replay, all 146 scans / 900 keys and N retained,
+upstream outputs checked, external correct/coverage/exact-chain grades and
+paired losses reported, outputs fetched and validated source/conclusions
+committed. Historical 677/870 and 36/145 remain the target. One Viper allocation:
+four requested CPUs, 16 GB and 30 minutes. No automatic retry or local cohort
+fit, scan resampling/weighting, naming-rule change, temperature, new Gaussian
+score, combined variant, N refit, DFT change or unknown25 rerun. The archived
+application plan's scientific Must-NOT-have list is retained, not its retired
+process apparatus.
+
+**Fixed change before any grade.** All fourteen earlier native configs now
+declare `selection.gmm_seed_aggregation = "hard_vote"`. New
+`unit_assignment_continuous_vote.toml` copies the support candidate, changing
+only its name and this field to `mean_membership`. The code already computes
+normalized exponentials of the two final component scores. The legacy path
+averages `argmax(resp) == high_cluster` (0 or 1); the candidate averages
+`resp[high_cluster]`. The high-amplitude group's name is still determined from
+the same hard assignments and training amplitudes before this aggregation.
+
+Every seed's EM, two hard moment updates, free masses, means, covariances,
+ridge and physical naming are unchanged. Scores remain
+`log(weight) - Mahalanobis_distance²/2`, without the covariance-volume term.
+Normalization, interactions, support, k-means, Fisher, seed integers and N are
+fixed. No temperature, fitted probability calibration or class-count prior is
+introduced. Memberships and the final vote margin are not calibrated chemical
+probabilities. The existing eight-decimal serialization and final `>=0.5`
+decision rule are retained, as are unavailable rows and abstention.
+
+This specifically tests information lost by hardening each seed's score; it is
+not another sweep of seed count, final vote weights or equality rules. Scores
+may already be saturated, and smooth aggregation need not improve chemistry.
+Historical representation diagnostics reject this mode instead of silently
+reporting hard-vote refits. Synthetic tests check the independent score/average
+formula, identical fitted parameters, free class masses, finite/invalid rows,
+legacy ties, deterministic CLI/API agreement and label/count/name independence.
+Remote cached geometry, split geometry and templates have the same SHA-256 as
+the preceding comparison; no user job is running/queued at preparation. No
+real-cohort fit or external grade has run for this candidate.
+
+The first synthetic run passes the aggregation and identical-parameter checks,
+but two assertions incorrectly require every seed to have unequal component
+masses. A free mixture may legitimately learn equal masses. The test is
+corrected to check each mass against its actual hard-membership count, plus a
+fixture check that unequal masses are also learned. The failed log is retained;
+no scientific code, score, setting or fit is changed in response. Tests also
+record the existing near-tie eight-decimal serialization without changing it.
+
+The corrected targeted suite passes **107 assertions** under Julia 1.13,
+including independent continuous-score arithmetic and identical learned
+parameters across modes. The documentation build passes with existing
+large-page/search-index warnings and the non-CI deployment skip. Weighting and
+normalization regression suites pass; the remaining focused suites and the
+five-mode synthetic end-to-end pipeline are in progress. Source is committed
+before preparing the dedicated remote directory; no scientific result is yet
+available.

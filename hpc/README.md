@@ -967,3 +967,17 @@ tradeoff, not a new champion; retain the support candidate as the primary
 working reference. Historical 677/36 remains unexceeded. The single comparison
 is complete: do not resubmit or tune after grading. Full outputs and all losses
 are preserved in `results/scan_weighting_20260921/report.md`.
+
+## Continuous GMM seed-vote comparison (September 21)
+
+`hpc/compare_continuous_vote.sbatch` runs the 676/34 support `control/` and one
+`continuous/` candidate. Both regenerate patches with identical geometry and N;
+only the aggregation of the same per-seed GMM scores changes. The job requests
+four CPUs, 16 GB and 30 minutes, with no automatic retry. Use the same five
+absolute variables as the preceding runner: `STMFIT_PROJECT_DIR`,
+`STMFIT_CACHE_DIR`, `STMFIT_INPUT_DIR`, `STMFIT_OUTDIR`, `JULIA_BIN`.
+Run `bash hpc/compare_continuous_vote.sbatch --dry-run` first, and pass all five
+through an explicit `sbatch --export=...` list. Sync committed source and the
+unchanged Manifest, submit once, fetch logs/outputs and verify the control
+replay and all identities before grading externally. No real-cohort fitting
+runs locally or on a login node. Results are pending.

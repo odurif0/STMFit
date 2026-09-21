@@ -5,7 +5,8 @@ using Printf, Statistics, TOML
 export read_table, write_table, lobe_table, require_same_keys,
        transverse_asymmetry, transverse_descriptor, augment_descriptor, mold_margin,
        write_soft_vote, load_config, load_training_policy, write_training_support,
-       load_training_mask, validate_training_mask, load_gmm_normalization, load_gmm_weighting
+       load_training_mask, validate_training_mask, load_gmm_normalization, load_gmm_weighting,
+       load_gmm_seed_aggregation
 
 const TRANSVERSE_DESCRIPTORS = ("transverse_half_plane_asymmetry",
     "transverse_first_moment", "affine_residual_half_plane_asymmetry")
@@ -167,6 +168,14 @@ function load_gmm_weighting(config::AbstractDict)
     return String(mode)
 end
 
+"Aggregation of existing per-seed scores; no change to fitting or group naming."
+function load_gmm_seed_aggregation(config::AbstractDict)
+    mode = get(get(config, "selection", Dict()), "gmm_seed_aggregation", nothing)
+    mode in ("hard_vote", "mean_membership") ||
+        throw(ArgumentError("explicit gmm_seed_aggregation must be hard_vote or mean_membership"))
+    return String(mode)
+end
+
 function load_config(path::AbstractString)
     cfg = TOML.parsefile(path)
     for section in ("model", "selection", "preprocessing")
@@ -175,6 +184,7 @@ function load_config(path::AbstractString)
     model, pre = cfg["model"], cfg["preprocessing"]
     load_gmm_normalization(cfg)
     load_gmm_weighting(cfg)
+    load_gmm_seed_aggregation(cfg)
     model["descriptor"] in TRANSVERSE_DESCRIPTORS || error("Unsupported descriptor")
     model["descriptor_column"] == "patch_u_asym_reconstructed" || error("Unsupported descriptor column")
     model["descriptor_channel"] == "bwd_res" || error("Unsupported descriptor patch family")

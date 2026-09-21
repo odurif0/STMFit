@@ -21,7 +21,8 @@ using .ScriptUtils: _ensure_parent, _read_tsv
 include(joinpath(@__DIR__, "lib", "assignment_covariance.jl"))
 using .AssignmentCovariance
 include(joinpath(@__DIR__, "lib", "reconstructed_unit_assignment.jl"))
-using .ReconstructedUnitAssignment: load_training_policy, load_training_mask, validate_training_mask, load_gmm_normalization, load_gmm_weighting
+using .ReconstructedUnitAssignment: load_training_policy, load_training_mask, validate_training_mask,
+    load_gmm_normalization, load_gmm_weighting, load_gmm_seed_aggregation
 
 const DEFAULT_FEATURES = "results/unit_separability/lobe_features_selectedN_primary_local.tsv"
 const DEFAULT_SPLIT = ""
@@ -47,6 +48,7 @@ struct Options
     normalization::String
     scale_fallback::Float64
     training_weighting::String
+    seed_aggregation::String
 end
 
 function _load_final_score(config::AbstractDict)
@@ -155,6 +157,12 @@ function _parse_cli(args)
                                      training row inversely by its scan's usable
                                      row count, in initialization, EM, hard updates
                                      and amplitude naming. Mixture weights stay free.
+                                     gmm_seed_aggregation is hard_vote (legacy) or
+                                     mean_membership: average the normalized scores
+                                     of the physically named high-amplitude group
+                                     across seeds, without hardening them to 0/1.
+                                     These are not calibrated chemical probabilities;
+                                     fitting, scores and group naming stay unchanged.
               --split-features PATH  Optional split-width feature TSV; adds split_log_skew
               --training-support PATH Observed pixel-count TSV, required only for
                                      complete_patches training. Normalization,
@@ -200,6 +208,7 @@ function _parse_cli(args)
     cfg = TOML.parsefile(config)
     normalization = load_gmm_normalization(cfg)
     training_weighting = load_gmm_weighting(cfg)
+    seed_aggregation = load_gmm_seed_aggregation(cfg)
     final_score = _load_final_score(cfg)
     training_policy = load_training_policy(cfg)
     (training_policy == "complete_patches") == !isempty(training_support) ||
@@ -209,7 +218,7 @@ function _parse_cli(args)
     return Options(features, split_features, patches, out_tsv, view_specs,
                    first_seed, n_seeds, interactions, selftrain, covariance.mode, covariance.ridge, final_score,
                    training_policy, training_support, normalization.mode, normalization.scale_fallback,
-                   training_weighting)
+                   training_weighting, seed_aggregation)
 end
 
 function _arg_value(args, i::Int, flag::String)
@@ -619,6 +628,15 @@ function _mahalanobis_self_train(X::Matrix{Float64}, means::Matrix{Float64},
     return means, covs, weights
 end
 
+"Only the contribution to the seed average changes; resp is already normalized."
+function _seed_contribution(resp, high_cluster, mode::String)
+    if mode == "hard_vote"
+        return argmax(resp) == high_cluster ? 1.0 : 0.0
+    end
+    mode == "mean_membership" || throw(ArgumentError("unknown GMM seed aggregation"))
+    return resp[high_cluster]
+end
+
 function _view_probability(records::Vector{LobeRecord}, features::Vector{String}, opt::Options;
                            diagnostics=nothing, training_mask=nothing)
     eligible = validate_training_mask(opt.training_policy, training_mask, length(records))
@@ -673,8 +691,7 @@ function _view_probability(records::Vector{LobeRecord}, features::Vector{String}
             m = maximum(log_resp[j, :])
             resp = exp.(log_resp[j, :] .- m)
             resp ./= sum(resp)
-            label = argmax(resp) == high_cluster ? 1.0 : 0.0
-            votes[i] += label
+            votes[i] += _seed_contribution(resp, high_cluster, opt.seed_aggregation)
             counts[i] += 1
         end
     end
@@ -752,6 +769,7 @@ function main(args=ARGS)
     println("  uncertain:  ", n_uncertain)
     println("  views:      ", join(first.(views), ", "))
     println("  weighting:  ", opt.training_weighting)
+    println("  seed aggregation: ", opt.seed_aggregation)
 end
 
 abspath(PROGRAM_FILE) == abspath(@__FILE__) && main()

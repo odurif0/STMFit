@@ -400,6 +400,23 @@ historical 677/36 still unexceeded. This result does not establish that short
 or noisy scans caused the loss, nor justify a new physical calibration or
 post-grade weight adjustment. The reused benchmark is development evidence.
 
+### Continuous GMM seed aggregation (2026-09-21)
+
+One authorized comparison retains the GMM's normalized per-seed scores instead
+of replacing each by an argmax decision before averaging seeds. The explicit
+`selection.gmm_seed_aggregation` modes are `hard_vote` (legacy) and
+`mean_membership` (one opt-in candidate). Only aggregation changes, not the
+learned groups, their amplitude-based physical names or the final threshold.
+There is no temperature, label-fitted probability calibration or mixture-size
+constraint. Scores may already be saturated, and smooth votes need not improve
+chemical correctness. Their confidence remains an uncalibrated vote margin.
+
+Physical calibration, selected N, missing-data handling, eight-decimal output
+precision and the two-head vote stay fixed. Scope: support control plus one
+candidate, one Viper allocation capped at 30 minutes; no scan weighting,
+resampling, new naming rule, count refit, DFT change, unknown-chain rerun or
+post-grade adjustment. Result pending; this is not a promoted configuration.
+
 ## Opt-in label-free exploration (2026-09-18)
 
 `config/label_free_exploration.toml` is diagnostic configuration, not a new

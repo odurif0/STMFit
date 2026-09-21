@@ -809,6 +809,29 @@ opt-in config records a mixed result, not a promoted default. Historical 677/36
 remains unexceeded. No weight formula, seed, threshold or other setting is
 adjusted after the grade.
 
+### Continuous GMM seed aggregation (2026-09-21)
+
+Required `[selection] gmm_seed_aggregation` is `"hard_vote"` in all fourteen
+earlier native configs. The opt-in `unit_assignment_continuous_vote.toml` copies
+the 676/34 support candidate, changing only its name and this field to
+`"mean_membership"`. Every seed fits exactly the same model and names its
+high-amplitude component from the same hard assignments. Only its contribution
+to the average changes: from `argmax(resp) == high_cluster` (0 or 1) to
+`resp[high_cluster]`, where `resp` is the already-computed normalized exponential
+of the two final scores.
+
+The candidate keeps the existing `log(weight) - Mahalanobis_distance²/2`
+scores, without adding a covariance-volume term, temperature or calibration.
+These normalized memberships are not calibrated chemical probabilities.
+EM, both hard updates, covariance ridge, free composition, raw-amplitude naming,
+mean/std scaling, equal-lobe training weights, partial-patch support, seeds,
+interactions, Fisher and the separate k-means head remain unchanged. GMM output
+keeps the existing eight-decimal serialization; the final mean-of-two-heads vote
+still uses `>=0.5`, with the same unavailable-input abstention rule.
+
+This is one authorized comparison, not a change of default or a combined
+variant. Result pending; the support candidate remains the working reference.
+
 ## Opt-in diagnostic exploration settings (2026-09-18)
 
 `config/label_free_exploration.toml` is used only by standalone exploration tools;
