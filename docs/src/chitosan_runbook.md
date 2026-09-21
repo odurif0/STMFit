@@ -77,7 +77,7 @@ but do not establish recognition or calibrated confidence. The full report is
 resubmission, combination, post-grade tuning, counting or unknown25 rerun.
 The extensively reused benchmark is development evidence, not independent validation.
 
-The latest independent support/score comparison (source **db411a2**, job
+The preceding independent support/score comparison (source **db411a2**, job
 **11906168**, **7m58s**, exit **0:0**) improves **675/33 → 676/34** with complete
 observed disks and symmetric affine-descriptor support. Use
 **`config/unit_assignment_patch_support.toml`** for the latest opt-in candidate,
@@ -97,6 +97,24 @@ and paired-grade arithmetic. Full losses and replay commands are in
 `hpc/compare_patch_support_score.sbatch`. This comparison is complete. Do not
 resubmit it, combine its variants or tune settings after the grade. Predictions
 remain label-free; reused benchmark results are not independent validation.
+
+The subsequent complete-training comparison (source **f7a4074**, job
+**11908779**, **6m42s**, exit **0:0**) is **negative**: **674/870 correct,
+674/850 (79.3%), 33/145 exact**, against the exactly replayed **676/852,
+34 exact** support control. Keep `config/unit_assignment_patch_support.toml`;
+do not promote `unit_assignment_complete_training.toml`. The fixed training
+rule uses 893 complete rows but the GMM can score only 894 rows: `240818_019`
+has no complete patch for its per-file moments, so its two partial predictions
+return to abstention. One scan improves, two regress, 142 tie; `240818_020`
+loses exactness. All 146 files / 900 keys remain, including the excluded technical
+scan in science. All 392 outputs and the Slurm log are fetched and checksummed.
+Verification passes 1,782 focused assertions, 59 saved-output checks and paired
+grade arithmetic. The initial audit's assumption that every scan has a complete
+patch was false; the audit now checks the already-specified abstention behavior,
+with the failed log retained. No scientific output or setting was changed.
+Full losses: `results/complete_training_20260921/report.md`. This single-job
+comparison is complete; no retry, normalization fallback, extra method, count
+refit, DFT change or unknown25 rerun follows. Historical **677/36** remains ahead.
 
 This page is the hand-off document for reproducing the current chitosan workflow
 without relying on prior conversation context.  The goal is a label-free fitting

@@ -338,6 +338,15 @@ still be noisy and fewer rows can destabilize learning, so improvement is a
 hypothesis, not a guarantee. The full 146-file output and all regressions must
 be checked before the separate 145-file external grade is considered.
 
+The completed test is **negative: 674/870 correct, 33/145 exact**, versus
+676/34, with coverage falling **852 → 850/870**. All four fitted lobes of
+`240818_019` have partial squares, so that file has no complete-row moments;
+the prescribed abstention loses its two previously usable predictions. Elsewhere,
+one gain is offset by one loss, including loss of exactness for `240818_020`.
+This is evidence against this complete-training variant as a replacement, not
+permission to add a benchmark-directed fallback. Keep the 676/34 support
+candidate; normalization rules, counts and the frozen application stay unchanged.
+
 ## Opt-in label-free exploration (2026-09-18)
 
 `config/label_free_exploration.toml` is diagnostic configuration, not a new

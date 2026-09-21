@@ -2046,6 +2046,73 @@ tuning, normalization/weighting change, counting or unknown25 rerun follows.
 All **580 paired scan comparisons and 24 changed decisions**, including losses,
 are retained in `results/patch_support_score_20260921/report.md` and its tables.
 
+### Complete-patch training (2026-09-21): negative
+
+The next single authorized lead separates learning eligibility from prediction
+support. `unit_assignment_complete_training.toml` copies the 676/34 support
+candidate and changes only its name and
+`[selection] assignment_training_support = "complete_patches"`. Fisher learns
+from complete forward squares in the opposite lobe-parity fold. GMM learns from
+rows with complete forward 17x17, backward 17x17 and backward 9x9 patches. Its
+per-file feature moments, EM, hard updates, free weights and high-amplitude
+group naming use complete rows only, then are frozen for partial predictions.
+Missing moments cause NA, not a partial-row or global fallback. K-means, patches,
+descriptor, CC, seeds, scores, geometry, N and votes otherwise stay unchanged.
+
+Source **f7a4074**, runner `hpc/compare_complete_training.sbatch`; one job capped
+at 30 minutes, four requested CPUs and 16 GB. **1,782 focused Julia 1.13
+assertions** pass, including independence from prediction-only rows and exact
+end-to-end equality for complete synthetic patches. Job **11908779** waits
+31m21s for Viper resources, then completes **0:0 in 6m42s** on `vipc2262`,
+12:16:37–12:23:19 CEST (eight CPUs allocated). All **392 outputs and the Slurm
+log** are fetched and checksum-identical. The twelve control tables reproduce
+676/34 byte-for-byte; every arm retains 146 files and 900 keys.
+
+There are **893 complete training rows** (432 even lobes, 461 odd). Fisher scores
+896 rows, but the GMM can score only **894**: all four patches of `240818_019`
+are partial, so this file has no complete-row normalization moments. Its lobes
+3 and 4 lose their previously available predictions, exactly as specified before
+execution. Only `241113_088` lobe 6 remains a scored prediction-only partial row.
+An initial output-audit assertion incorrectly assumed at least one complete
+row in every file; its failed log is retained. The corrected audit checks the
+already-specified abstention behavior instead. **59 output checks** then pass;
+no scientific code, parameter or output changes before or after grading.
+
+External grading alone selects 145 scans / 892 predicted lobes / 870 positions:
+
+| Version | Correct / 870 | Correct / classified | Exact / 145 | Classified / 870 |
+|---|---:|---:|---:|---:|
+| Historical reference | 677 | 677/854 (79.3%) | 36 | 854 |
+| Support control | 676 | 676/852 (79.3%) | 34 | 852 |
+| Complete training | 674 | 674/850 (79.3%) | 33 | 850 |
+
+**One scan improves, two regress, 142 tie.** `240817_076` lobe 3 changes 1→0
+and gains one correct position. `240818_019` loses two correct positions to
+abstention; `240818_020` lobe 2 changes 1→0, losing one correct position and the
+only lost exact chain. No exact chain is gained and no grading orientation
+changes against the control. The fifth changed decision is technical scan
+`240310_Cu100009` lobe 7, outside the external grade. The three 1→0 changes
+move from zero margin to 0.7; this larger margin does not establish correctness.
+Fisher changes 896 scores, GMM changes 246 vote frequencies and twelve hard
+predictions; final predictions change on five keys. Raw patches, descriptors,
+CC and k-means remain identical.
+
+Emitted errors stay 176, while aligned abstentions rise two→four. Counts remain
+16 missing positions and 38 extra lobes; the 196 non-correct positions comprise
+176 errors, 16 missing and four abstentions. Confusion `(TN,FP,FN,TP)` is
+`(512,51,125,162)`. Versus history: 23 scan gains, 25 losses, 97 ties, net −3
+correct; six exact chains gained and nine lost.
+
+**Reject this variant; keep `unit_assignment_patch_support.toml` at 676/34.**
+It neither improves the current candidate nor reaches historical 677/36.
+No normalization fallback, different completeness rule, additional arm, robust
+scaling, scan weighting, counting/DFT change or unknown25 rerun follows the grade.
+The result rejects this specific complete-training rule, not every possible
+fit/predict separation. Inference remains label-free; the reused benchmark is
+development evidence, not independent validation. All 290 paired scan rows and
+five changed decisions, including losses and the excluded scan, are in
+`results/complete_training_20260921/report.md` and its linked tables.
+
 ### Native numerical conventions
 
 The constant-current port retains the old first-axis-fast cube index, sampling

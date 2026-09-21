@@ -902,3 +902,17 @@ Fetch all outputs/logs, verify exact replay of twelve saved support-control tabl
 all 146 files / 900 keys, and both `training_support.tsv` observation counts before
 external grading. Report coverage, exact chains and every regression. No fit on
 the login node, local real-cohort fit, automatic retry or post-grade tuning.
+
+**Completed September 21:** source **f7a4074**, job **11908779**, exit **0:0**
+in **6m42s** on `vipc2262`, after 31m21s queued for resources (four CPUs requested,
+eight allocated). All **392 outputs and the Slurm log** are fetched and
+checksum-identical. Twelve control tables replay 676/34 exactly; all 900 keys
+remain. The complete-training arm gives **674/850 (79.3%), 33/145 exact** and
+is rejected. Coverage falls 852→850/870 because one scan lacks any complete
+training patch for its normalization. Keep the support candidate at 676/34.
+Verification: 1,782 focused assertions, 59 saved-output checks and paired-grade
+arithmetic; the initial audit's false per-file completeness assumption is
+documented in the report, with no change to the already-frozen abstention rule.
+All gains/losses and replay commands: `results/complete_training_20260921/report.md`.
+This comparison is complete: no resubmission, normalization fallback, additional
+method or post-grade tuning. Historical 677/36 remains the target to exceed.

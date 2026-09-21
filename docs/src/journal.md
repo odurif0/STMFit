@@ -2308,10 +2308,19 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0n. **Can complete-patch learning retain partial-patch predictions without their training influence?** →
-    **IN PROGRESS (Sep 21)**: one authorized complete-training candidate against
-    support control 676/870, 34/145; one Viper job, four requested CPUs, 30 minutes.
-    No robust scaling, scan weighting, combination, post-grade tuning, count refit,
-    DFT change or unknown25 rerun. Historical 677/36 remains the target to exceed.
+    **COMPLETE; NEGATIVE (Sep 21)**: source **f7a4074**, job **11908779**,
+    exit **0:0 in 6m42s**. Control exactly replays 676/34; complete training gives
+    **674/870 correct, 674/850 (79.3%), 33/145 exact**. Of 900 retained keys,
+    893 train and 894 can be scored by GMM. One scan has no complete patch for
+    per-file normalization: two previous predictions become abstentions. One
+    scan improves, two regress, 142 tie; `240818_020` loses exactness. Keep the
+    support candidate at **676/34**, not this alternative. All 392 outputs and
+    the Slurm log are fetched and checksummed; 1,782 focused assertions, 59 output checks and
+    paired arithmetic pass. The initial audit's false all-scans-have-training
+    assumption was corrected to check the already-frozen abstention rule, not
+    the science; its failed log remains. No fallback, robust scaling, weighting,
+    extra arm, post-grade tuning, count refit, DFT or unknown25 run follows.
+    Historical **677/36** remains the target to exceed, not independent validation.
 
 0m. **Can complete observed disks or final covariance-volume scoring help?** →
     **COMPLETE; SUPPORT GAIN, NO PROMOTION (Sep 21)**: source **db411a2**, job
@@ -8775,3 +8784,91 @@ partition `small`, account `mfk_cpu`, QOS `n0001`. Output target is
 `/ptmp/oldu/stmfit/complete_training_20260921_v1`. Slurm initially queues it for
 node availability and the global QOS CPU limit. No resource change, duplicate
 submission, local fallback fit or external grading is performed while waiting.
+
+### Completed comparison, observed missing-training case and decision
+
+Job **11908779** queues for **31m21s**, then completes **0:0 in 6m42s** on
+`vipc2262`, **12:16:37–12:23:19 CEST**. Four CPUs are requested, eight allocated;
+Julia uses four threads. The control finishes at 12:21:15, then the candidate
+runs in the same job. No resource change, duplicate submission or local fallback
+fit occurs. All **392 outputs plus the Slurm log** are fetched into
+`results/complete_training_20260921/run_v1`; itemized checksum checks are empty.
+No scientific-stage warning or failure appears in the logs.
+
+All twelve control tables exactly replay the previous support candidate, and
+both arms retain all 146 files / 900 keys. Patches, local features, descriptor,
+CC scores, k-means and the observed-count tables are byte-identical. Only the
+Fisher predictor column changes before GMM. Both masks select 893 complete rows,
+432 even and 461 odd. Fisher still scores 896 rows, but the candidate GMM can
+score only 894. File `240818_019.sxm` has four fitted lobes and no complete square:
+its forward/backward17 counts are 9, 130, 287, 287 out of 289; backward9 counts
+are 4, 37, 80, 80 out of 81. Its two admissible partial rows therefore lack
+per-file complete-training moments and become NA, exactly as frozen beforehand.
+Only `241113_088.sxm` lobe 6 remains a scored prediction-only partial row.
+
+**Audit correction, not a scientific repair:** the initial saved-output checker
+wrongly asserted that every file had at least one complete row. It passes 58
+checks and fails this one before any external grade. Inspection of observed
+pixel counts identifies the legitimate zero-training file. Replace only that
+unsupported audit assumption with the actual promised invariant: files without
+complete training rows have no valid normalized GMM view and must abstain on
+all their keys. The initial `output_checks.log` is retained; all **59 checks**
+pass in `output_checks_v2.log`. No inference is changed or rerun, and no
+partial-row/global normalization fallback is introduced. The synthetic suite
+already tests this missing-training behavior. This is an observed cost of the
+chosen rule, not grounds to silently weaken it.
+
+The candidate changes 896 Fisher scores, 246 GMM vote frequencies, twelve hard
+GMM predictions and five final predictions. Full-cohort frequencies (0,1,?)
+change from (673,223,4) to (674,220,6). Every unavailable control key stays
+unavailable; only the two extra abstentions above are added. All observations
+and checks are completed before the separate external grade reads its labels.
+
+| Version | Correct / 870 | Correct / classified | Errors emitted | Exact / 145 |
+|---|---:|---:|---:|---:|
+| Historical reference | 677 | 677/854 (79.3%) | 177 | 36 |
+| Support control | 676 | 676/852 (79.3%) | 176 | 34 |
+| Complete training | 674 | 674/850 (79.3%) | 176 | 33 |
+
+The external cohort remains 145 scans / 892 predicted lobes / 870 reference
+positions. Coverage falls 852→850/870; aligned abstentions rise two→four.
+Counts stay fixed: 16 missing positions, 38 extra lobes, 14 short-N scans and
+25 extra-N scans. The candidate's 196 non-correct positions are 176 errors,
+16 missing and four abstentions, not 196 abstentions. Rounded classified
+accuracy masks this loss on the fixed denominator.
+
+Against the control: **one winning scan, two losing, 142 ties**, net −2 correct.
+`240817_076` lobe 3 changes 1→0, improving 4→5 correct; `240818_019` lobes 3
+and 4 change 0→?, losing 2→0 correct. `240818_020` lobe 2 changes 1→0, losing
+6→5 and its exact chain. No exact chain is gained and no grading orientation
+changes. The fifth changed prediction is lobe 7 of the excluded technical scan
+`240310_Cu100009`, 1→0, ungraded. The three 1→0 changes move from zero margin
+to 0.7; this larger margin does not imply correctness. The earlier centering
+regression in `240815_048` is not recovered. Confusion (TN,FP,FN,TP) changes
+(513,52,124,163)→(512,51,125,162). Against history: 23 gains, 25 losses, 97 ties,
+−3 correct, six exact gained / nine lost, eight grading-orientation changes.
+These grading alignments are not spatial monomer correspondence.
+
+**Decision: reject this complete-training variant.** Keep
+`config/unit_assignment_patch_support.toml` at **676/870, 34/145**, still short
+of historical 677/36 and its 854/870 coverage. This test does not refute every
+possible separation of training and prediction; it rejects this particular
+complete-case/per-file-normalization rule as the working replacement. No
+fallback, threshold, new arm, robust scaling, scan weighting, count refit, DFT
+change or unknown25 rerun follows. All **290 paired scan rows and five changed
+decisions**, including losses, appear in
+`results/complete_training_20260921/report.md`. Paired arithmetic agrees with
+all headline, coverage and confusion counts. This development benchmark remains
+reused, not independent validation; the bounded comparison is complete and the
+broader historical objective remains open.
+
+Prediction SHA-256: control
+`eb8d69b8cebcd607b0244db5c65104347e6bcd24acee06f64748cf0e6ec310e3`, candidate
+`f0b711fc889c98b157bbc8bd6afb724576c3b29f04dd73e1a155d003882b4571`.
+
+The final docs build passes with the existing HTML/search-index size warnings
+and skipped non-CI deployment. README, runbook, selection, assignment, config,
+calibration and HPC notes all record the negative 674/33 result and retain
+676/34 as the working candidate. Scientific source is unchanged since f7a4074;
+validated source and conclusions are committed. Generated results remain ignored
+and are preserved locally, including the failed initial audit and all losses.

@@ -739,6 +739,15 @@ in the new mode and validate its exact key set and counts. Existing configs reje
 that extra input. Older Fisher-attribution diagnostics reject this new mode
 because they do not implement its training masks.
 
+**Completed result: negative.** Complete training gives **674/870 correct,
+674/850 (79.3%), 33/145 exact**, versus support control **676/852, 34 exact**.
+The 893 complete training rows leave one file without moments: `240818_019`
+has only partial patches, so two formerly available decisions become abstentions.
+One other chain loses exactness. Keep `unit_assignment_patch_support.toml` at
+676/34; the complete-training config remains an opt-in recorded experiment,
+not the working replacement. No partial/global normalization fallback, different
+eligibility rule or other post-grade change is introduced.
+
 ## Opt-in diagnostic exploration settings (2026-09-18)
 
 `config/label_free_exploration.toml` is used only by standalone exploration tools;

@@ -50,6 +50,13 @@ pixel and still abstains on incomplete disks. Geometry and N are fixed: none
 of these results revalidates counting, changes GCV/guards or demonstrates
 unknown-chain accuracy. No combined variant or post-grade tuning follows.
 
+The complete-patch-training follow-up regresses to **674/870 correct, 33/145
+exact**, with classified coverage **850/870** versus 852/870. It is rejected;
+the working candidate remains **676/34**, below historical 677/36. The loss
+includes two abstentions on a scan without complete training patches. No
+normalization fallback, selected-N change, count refit or GCV/guard adjustment
+follows this grade.
+
 How STMFit chooses the optimal number of lobes (N) from the sweep results.
 
 ## Selection Hierarchy

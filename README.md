@@ -16,6 +16,13 @@ no variants combined and no settings tuned after grading. Labels are used only
 by external grading; this reused development benchmark is not independent
 validation. See the [support/score comparison](docs/src/unit_assignment.md#complete-disk-support-and-final-gaussian-score-2026-09-21).
 
+The complete-patch-training follow-up is **negative**: **674/870 correct,
+33/145 exact**, with coverage falling to **850/870**. One scan has no complete
+training patch and loses two previously available predictions; another loses
+an exact chain. Keep the **676/34 support candidate**, not this alternative.
+No normalization fallback or post-grade tuning is added. See the
+[complete-training result](docs/src/unit_assignment.md#complete-patch-training-2026-09-21-negative).
+
 **Research branch, September 20:** the symmetric fused-fit correction improves
 the regenerated reconstruction from **666 to 671 correct / 870 controls** and
 **24 to 28 exact chains / 145**, at identical cached counts and coverage
