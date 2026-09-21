@@ -278,7 +278,7 @@ held-out recognition; Fisher features are not retrained within those halves.
 Neither covariance conditioning nor stability calibrates chemical confidence.
 The completed comparison improves **673 → 675 correct / 870**, with unchanged
 **33/145 exact** and 849/870 coverage, using training-mean centering. This is the
-latest opt-in working candidate, still below historical 677/36. Shrinkage gives
+opt-in working candidate at that stage, still below historical 677/36. Shrinkage gives
 **665 correct / 34 exact** and is not retained as the replacement: its median
 full-cohort covariance condition number falls from about 23,138 to 191, but
 recognition loses eight correct positions. Whole-scan withdrawal changes 370/893
@@ -307,6 +307,16 @@ learned clusters mean that neither normalized density nor vote margin establishe
 chemical confidence. No benchmark-derived sign, class ratio or threshold enters
 either candidate. These are two independent, uncombined alternatives to 675/33;
 no normalization or scan-weighting experiment is included.
+
+The completed comparison gives **676/870 correct and 34/145 exact** for support,
+versus 675/33: three recovered correct predictions are offset by two regressions
+among previously available rows. Coverage rises **849 → 852/870**, while
+classified accuracy falls **79.5% → 79.3%**. The gain on the fixed denominator,
+exact chains and coverage supports retaining it as the latest opt-in candidate,
+not as a calibrated-confidence improvement or a new champion. Historical 677/36
+still leads. The Gaussian-volume score gives **666/870 and 32/145**, with all
+19 changed final decisions at zero vote margin, and is rejected. No threshold,
+class count, per-file choice or parameter is adjusted after these results.
 
 ## Opt-in label-free exploration (2026-09-18)
 

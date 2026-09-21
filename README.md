@@ -4,16 +4,17 @@ Analysis pipeline for STM images of molecular chains (chitosan on Cu(100) and
 similar systems). Detects and fits a chain-of-Gaussians model to count the
 number of monomer units (lobes) per chain, label-free.
 
-**Latest working candidate, September 21:** training-mean Fisher centering
-improves **673 → 675 correct / 870**, with **33/145 exact chains unchanged**
-and **675/849 (79.5%)** classified accuracy. Use the opt-in
-`config/unit_assignment_centered_fisher.toml`. This is **not a new champion**:
-historical 677/870 and 36/145 still lead, with higher coverage (854 vs 849).
-Independent final-covariance shrinkage gives 665 correct / 34 exact and is not
-retained as the working replacement. All counts and unavailable keys are fixed;
-no combined arm or post-grade tuning follows. Labels are external-grading-only;
-this reused development benchmark is not independent validation. See the
-[numerical comparison](docs/src/unit_assignment.md#fisher-centering-and-final-covariance-candidates-2026-09-21-centering-gain).
+**Latest working candidate, September 21:** complete-disk support improves
+**675 → 676 correct / 870** and **33 → 34 exact chains / 145**. Use the opt-in
+`config/unit_assignment_patch_support.toml`. Coverage rises **849 → 852 / 870**;
+classified accuracy is **676/852 (79.3%)**. Three newly available predictions
+are correct, but two formerly correct decisions regress. This is **not a new
+champion**: historical 677/870 and 36/145 still lead, with higher coverage (854).
+The independent final Gaussian-score arm regresses to **666/870 and 32/145**
+and is rejected. All 900 keys and selected counts remain; no pixels are imputed,
+no variants combined and no settings tuned after grading. Labels are used only
+by external grading; this reused development benchmark is not independent
+validation. See the [support/score comparison](docs/src/unit_assignment.md#complete-disk-support-and-final-gaussian-score-2026-09-21).
 
 **Research branch, September 20:** the symmetric fused-fit correction improves
 the regenerated reconstruction from **666 to 671 correct / 870 controls** and

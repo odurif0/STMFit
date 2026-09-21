@@ -1955,8 +1955,8 @@ Whole-scan withdrawal changes **370/893 → 350/893** GMM decisions and mean abs
 vote change **0.2685 → 0.2492**; considerable training sensitivity remains.
 These diagnostics do not calibrate noise or chemical confidence.
 
-**Decision: retain `unit_assignment_centered_fisher.toml` at 675/33 as the latest
-opt-in working candidate; no champion promotion.** Reject final shrinkage as the
+**Decision at that stage: retain `unit_assignment_centered_fisher.toml` at 675/33
+as the opt-in working candidate; no champion promotion.** Reject final shrinkage as the
 working replacement despite one extra exact chain. Historical 677/36 remains
 ahead by two correct positions and three exact chains merely to equal it. Its
 classified coverage is also higher, so 79.5% versus 79.3% alone is not a victory.
@@ -1968,6 +1968,83 @@ checks and paired-grade arithmetic. Every one of the **580 paired scan rows and
 24 changed decisions**, including losses, is retained in
 `results/numerical_signals_20260921/report.md` and its linked tables. The bounded
 comparison is complete; the broader historical target remains open.
+
+### Complete-disk support and final Gaussian score (2026-09-21)
+
+Two user-authorized, independent candidates start from the 675/33 centered-Fisher
+configuration. The source is `db411a2`; Viper runner
+`hpc/compare_patch_support_score.sbatch` uses one job capped at 30 minutes,
+four requested CPUs and 16 GB. Geometry, selected N, physical templates, feature
+normalization, seeds and voting are fixed. No combined arm or scan weighting is
+included. All 146 scans / 900 keys enter science before external full145 grading.
+
+`unit_assignment_patch_support.toml` changes only
+`[preprocessing] assignment_patch_support = "complete_disk_symmetric"` and the
+method name. Fisher requires all 197 actual scoring-disk pixels instead of all
+289 square pixels; absent square corners are unused, not filled. The backward
+9x9 affine descriptor requires its complete 49-pixel integer-grid disk and keeps
+only peripheral pixels whose u/t reflection partners are also observed. Its
+least-squares plane and half-plane/L1 statistic use this observed symmetric
+support. Complete patches retain identical arithmetic; missing disk pixels stay
+unavailable. Existing CC partial-pixel handling and patch normalization are
+unchanged. Newly valid rows can affect cohort-wide learning, not only their own
+predictions. This is not a calibrated missing-data reconstruction.
+
+`unit_assignment_gaussian_score.toml` instead changes only
+`[model] gmm_final_score = "gaussian_density"` and the method name. The final
+score includes `-logdet(Sigma)/2` as well as the existing distance and free weight;
+Sigma includes the unchanged factorization guard. EM, both distance-only hard
+updates and ridge covariances are identical. Final raw-amplitude group naming
+uses newly assigned members and can change with them. Votes remain hard seed
+decisions, not calibrated probabilities. The mode requires hard self-training.
+
+Neither variant reads benchmark truth, expected N, a sequence or class counts.
+The benchmark remains reused development data, not independent validation.
+Verification passes **1,604 focused Julia 1.13 assertions**, including an
+end-to-end synthetic pipeline. Job **11906168** completes **0:0 in 7m58s** on
+`vipc2294` (four CPUs requested, eight allocated). All **585 outputs and the
+Slurm log** are fetched and checksum-identical. **76 output checks** pass;
+the twelve control tables reproduce 675/33 byte-for-byte, and every arm retains
+all 900 keys. External grading alone then selects 145 scans / 892 predicted
+lobes / 870 truth positions.
+
+| Version | Correct / 870 | Correct / classified | Exact / 145 | Classified / 870 |
+|---|---:|---:|---:|---:|
+| Historical reference | 677 | 677/854 (79.3%) | 36 | 854 |
+| Centered-Fisher control | 675 | 675/849 (79.5%) | 33 | 849 |
+| Complete-disk support | 676 | 676/852 (79.3%) | 34 | 852 |
+| Final Gaussian score | 666 | 666/849 (78.4%) | 32 | 849 |
+
+Support makes three previously unavailable decisions: lobes 3 and 4 of
+`240818_019.sxm` and lobe 6 of `241113_088.sxm`, all `?→0`. Their complete Fisher
+disks have 197 observed pixels; their backward symmetric supports retain 77, 77
+and 65 pixels respectively. The remaining four incomplete disks stay unavailable,
+including the excluded technical scan. At fixed grade orientation those scans
+gain two and one correct positions; `241113_088` becomes exact. However, lobe 3
+of both `240815_048` and `240817_076` changes `0→1` at zero vote margin, losing
+the two previous centering gains. Thus there are **two winning scans, two losing,
+141 tied**, net **+1 correct**, one exact gained and none lost. Cohort-wide
+learning is affected: 896 Fisher scores and 246 GMM vote frequencies change.
+No per-file restoration or tie-rule change is applied after observing the losses.
+
+The volume score changes no input feature, patch, Fisher score or k-means vote.
+Its **19 final changes are all `0→1` at zero vote margin**. Four scans gain, twelve
+lose and 129 tie, net **−9 correct**. Exact chain `240817_045` is gained, but
+`240817_021` and `241113_087` are lost. Grading orientation changes on
+`240314_Cu100_026` and `240817_078`; this is not spatial monomer correspondence.
+
+Counts stay fixed: 16 missing truth positions, 38 extra lobes, 14 short-N and
+25 extra-N scans. Support leaves two aligned abstentions instead of five, but
+emitted errors rise 174→176. Its 194 non-correct truth positions comprise
+176 errors, 16 missing positions and two abstentions, not 194 abstentions.
+
+**Decision: retain `unit_assignment_patch_support.toml` at 676/34 as the latest
+opt-in working candidate, not a new champion.** Reject the final Gaussian score.
+Historical 677/36 still leads by one correct position and two exact chains merely
+to equal it, with two more classified positions. No combined arm, post-grade
+tuning, normalization/weighting change, counting or unknown25 rerun follows.
+All **580 paired scan comparisons and 24 changed decisions**, including losses,
+are retained in `results/patch_support_score_20260921/report.md` and its tables.
 
 ### Native numerical conventions
 

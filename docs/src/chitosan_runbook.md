@@ -57,11 +57,11 @@ and the Slurm log are fetched and checksummed; the full report is
 `hpc/compare_label_free_signals.sbatch`; this completed job must not be resubmitted
 automatically. Counting and unknown25 remain unchanged.
 
-The latest bounded numerical comparison (job **11891104**, **9m04s**, exit 0:0;
+The bounded numerical comparison (job **11891104**, **9m04s**, exit 0:0;
 source **0d58b44**) improves **673 → 675 correct / 870** with training-mean Fisher
 centering. Classified accuracy is **675/849 (79.5%)**, with **33/145 exact chains
 unchanged**. Both changed decisions improve a scan; none loses correctness.
-Use **`config/unit_assignment_centered_fisher.toml`** for this latest opt-in
+Use **`config/unit_assignment_centered_fisher.toml`** to replay that opt-in
 working candidate, not a promoted champion. Historical **677/870, 36/145** still
 leads by two correct positions and three exact chains merely to equal it.
 
@@ -76,6 +76,27 @@ but do not establish recognition or calibrated confidence. The full report is
 `hpc/compare_numerical_signals.sbatch`. This comparison is complete: no automatic
 resubmission, combination, post-grade tuning, counting or unknown25 rerun.
 The extensively reused benchmark is development evidence, not independent validation.
+
+The latest independent support/score comparison (source **db411a2**, job
+**11906168**, **7m58s**, exit **0:0**) improves **675/33 → 676/34** with complete
+observed disks and symmetric affine-descriptor support. Use
+**`config/unit_assignment_patch_support.toml`** for the latest opt-in candidate,
+not a promoted champion. Classified coverage rises **849 → 852/870**; accuracy
+is **676/852 (79.3%)**. Three newly usable predictions are correct, but two older
+decisions regress: two scan gains, two losses, 141 ties, one exact chain gained
+and none lost. Historical 677/870 and 36/145 still lead by one position and two
+chains merely to equal them; historical coverage is 854/870.
+
+The separate final Gaussian-density score gives **666/849 (78.4%), 32/145 exact**
+and is rejected. All 146 scans / 900 keys remain; no imputation, normalization,
+scan weighting, count refit or unknown25 rerun is included. The twelve control
+tables replay 675/33 byte-for-byte; all 585 outputs and the Slurm log are fetched
+and checksummed. Verification passes 1,604 focused assertions, 76 output checks
+and paired-grade arithmetic. Full losses and replay commands are in
+`results/patch_support_score_20260921/report.md`; the runner is
+`hpc/compare_patch_support_score.sbatch`. This comparison is complete. Do not
+resubmit it, combine its variants or tune settings after the grade. Predictions
+remain label-free; reused benchmark results are not independent validation.
 
 This page is the hand-off document for reproducing the current chitosan workflow
 without relying on prior conversation context.  The goal is a label-free fitting

@@ -2308,23 +2308,28 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0m. **Can complete observed disks or final covariance-volume scoring help?** →
-    **AUTHORIZED; IN PROGRESS (Sep 21)**: two independent changes against the
-    675/33 centered-Fisher candidate, one Viper job bounded to 30 minutes and
-    four requested CPUs. Partial patches require a complete central disk;
-    backward affine support is reflection-closed and never imputed. The other
-    arm adds the Gaussian volume term only at final scoring, leaving hard
-    self-training and ridge covariances unchanged. Full146/900 inference precedes
-    external full145 grading; require twelve-table control replay and all keys.
-    No combined arm, normalization/weighting change, count refit, unknown25 run,
-    DFT change or post-grade parameter search is in scope. Historical 677/36
-    remains the target, not an input or composition prior.
+    **COMPLETE; SUPPORT GAIN, NO PROMOTION (Sep 21)**: source **db411a2**, job
+    **11906168**, exit **0:0 in 7m58s**. All twelve control tables replay 675/33
+    byte-for-byte. Complete-disk symmetric support gives **676/870 correct,
+    676/852 (79.3%), 34/145 exact**, with coverage 849→852/870. Three newly
+    available predictions are correct, but two older decisions regress: two
+    scan gains, two losses, 141 ties, one exact gained and none lost. Retain
+    `unit_assignment_patch_support.toml` as the latest opt-in candidate, not a
+    champion. Final Gaussian scoring gives **666/849 (78.4%), 32 exact** and
+    is rejected: four scan gains, twelve losses, 129 ties. All 900 keys remain;
+    support leaves four unavailable keys versus seven in the other arms. All
+    585 outputs and the Slurm log are fetched and checksummed; 1,604 focused assertions,
+    76 output checks and paired-grade arithmetic pass. No imputation, combined
+    arm, normalization/weighting change, count refit, unknown25 run, DFT change
+    or post-grade tuning follows. Historical 677/36 still leads by one position
+    and two exact chains merely to equal it; this is not independent validation.
 
 0l. **Can training-consistent Fisher centering or final covariance shrinkage help?** →
     **COMPLETE; CENTERING GAIN, NO PROMOTION (Sep 21)**: source **0d58b44**, job
     **11891104**, exit **0:0 in 9m04s**. Twelve control tables replay 673/33
     exactly. Training-mean centering gives **675/870 correct, 675/849 (79.5%),
     33/145 exact**: two scan gains, no losses or exact-chain changes. Retain
-    `unit_assignment_centered_fisher.toml` as the latest opt-in working candidate,
+    `unit_assignment_centered_fisher.toml` as the opt-in working candidate at that stage,
     not a champion. Final Ledoit-Wolf covariance gives **665/870, 665/849 (78.3%),
     34 exact**: five scan gains, eleven losses, two exact chains gained and one
     lost. It is not retained as the working replacement despite much better
@@ -2378,11 +2383,11 @@ See `docs/src/selection.md` for the full guard specification and
     **OPEN; TARGET UNCHANGED (Sep 21)**: the user explicitly rejects lowering
     the target to the best runnable reconstruction. The historical 677 correct
     positions / 870 and 36 exact chains / 145 remain the comparison target;
-    training-mean Fisher centering (675 / 33, comparison 0l) is the latest
-    opt-in working candidate, not a new champion. It improves affine-residual
-    half-plane asymmetry (673 / 33), after matched residuals (672 / 29) and
-    symmetric fusion (671 / 28). The remaining gap is two correct positions and
-    three exact chains merely to equal history; coverage remains 849 versus 854.
+    complete-disk support (676 / 34, comparison 0m) is the latest opt-in working
+    candidate, not a new champion. It improves training-mean Fisher (675 / 33),
+    after affine-residual half-plane asymmetry (673 / 33), matched residuals
+    (672 / 29) and symmetric fusion (671 / 28). The remaining gap is one correct
+    position and two exact chains merely to equal history; coverage is 852 versus 854.
     The one physical-u Fisher mirror comparison is **COMPLETE; NEGATIVE**:
     job 11879515 (2m03s, exit 0:0) replays the control byte-for-byte but the
     treatment gives **669/849 (78.8%), 27 exact**, versus 671/849 and 28.
@@ -2396,10 +2401,13 @@ See `docs/src/selection.md` for the full guard specification and
     to 668/32 and 672/32 respectively, so that pass keeps 673/33. The numerical
     comparison (0l) then gains two positions with centering, without exact-chain
     improvement. Shrinkage loses eight positions despite one extra exact chain.
-    No post-grade setting search follows these passes. Counts, thresholds, voting,
-    seeds, unavailable keys and DFT inputs are unchanged. Exceeding history remains
-    unresolved; even 79.5% classified accuracy does not match historical coverage
-    or correct counts on the fixed 870-position denominator.
+    Complete-disk support (0m) then recovers three correct predictions but loses
+    the two centering gains, net +1 correct and +1 exact chain. Final Gaussian
+    scoring regresses to 666/32 and is rejected. No post-grade setting search
+    follows these passes. Counts, thresholds, voting, seeds and DFT inputs remain
+    unchanged; support reduces unavailable keys from seven to four without
+    imputation. Exceeding history remains unresolved on the fixed 870-position
+    denominator and the exact-chain criterion.
 
 0g. **Does symmetric fit filtering improve recognition?** → **COMPLETE; MODEST
     GAIN, NO PROMOTION (Sep 20)**: source `d12283a` fits `(F+B)/2`, retaining
@@ -8504,7 +8512,7 @@ tied scans, seven exact chains gained and nine lost. Every one of the **580
 paired scan rows and 24 changed decisions**, including all losses, is retained.
 
 **Decision:** retain `config/unit_assignment_centered_fisher.toml` at **675/33**
-as the latest opt-in working candidate, **not a champion promotion**. Final
+as the opt-in working candidate at that stage, **not a champion promotion**. Final
 shrinkage is not retained as the working replacement despite one extra exact
 chain: its loss of eight correct positions is contrary to the primary accuracy
 objective. The two arms are not combined. Historical **677/870 and 36/145** still
@@ -8593,3 +8601,101 @@ build passes with only the existing page/search-index size warnings and skipped
 non-CI deployment. No real multi-file scientific fit was run locally. The count
 config and Manifest hashes match the preceding comparison. Viper input hashes
 also match, and no competing job is queued or running before submission.
+
+### Completed comparison and decision
+
+Validated scientific source is committed as **db411a2** on
+`research/patch-support-gmm-volume-20260921`. The new Viper source directory is
+`/u/oldu/code/STMFit_patch_support_score_20260921`; the unchanged ignored Manifest
+is copied explicitly, with no dependency resolution. Tracked-source checksum
+comparison (`rsync -anci`) is empty. All three dry runs recognize 146 files under
+Julia 1.13.0. Job **11906168** waits briefly on the global `n0001` CPU quota, then
+completes **0:0 in 7m58s** on `vipc2294`, **10:36:38–10:44:36 CEST** on September
+21. Four CPUs are requested, eight allocated, four Julia threads. No QOS/resource
+change, resubmission or scientific fit on the login node occurs.
+
+All **585 files and the Slurm log** are fetched from
+`/ptmp/oldu/stmfit/patch_support_score_20260921_v1` into
+`results/patch_support_score_20260921/run_v1`; raw staging symlinks are excluded.
+Itemized checksum comparisons for outputs/log are empty. No stage failure or
+warning appears in the logs. **76 output checks** pass before external grading:
+twelve control tables exactly replay the preceding centered-Fisher candidate;
+all three arms retain the same 146 files and 900 keys. Patches, local features,
+CC scores and k-means predictions are identical. Complete backward descriptors
+stay byte-identical. The volume arm changes no input feature or Fisher score.
+
+Support makes these three previously invalid rows available without imputation:
+
+| Key | Forward observed / 289 | Fisher disk / 197 | Backward observed / 81 | Symmetric retained | New prediction / margin |
+|---|---:|---:|---:|---:|---|
+| `240818_019.sxm`, lobe 3 | 287 | 197 | 80 | 77 | 0 / 0.8 |
+| `240818_019.sxm`, lobe 4 | 287 | 197 | 80 | 77 | 0 / 0.8 |
+| `241113_088.sxm`, lobe 6 | 277 | 197 | 77 | 65 | 0 / 1.0 |
+
+Four incomplete-disk keys remain unavailable: `240310_Cu100009` lobe 8,
+`240818_015` lobe 1 and `240818_019` lobes 1–2. The first is excluded only by
+external grading, never by science. The support arm changes 896 Fisher scores,
+246 GMM vote frequencies, eleven hard GMM predictions and five final predictions.
+Thus accepting three rows also changes learning on the rest of the cohort.
+Final full-cohort frequencies `(0,1,?)` are control `(672,221,7)`, support
+`(673,223,4)`, volume `(653,240,7)`; these are outputs, never composition inputs.
+Volume changes 25 GMM vote frequencies, 21 hard GMM predictions and 19 final
+decisions. All nineteen final changes are `0→1` at the unchanged zero-margin tie.
+
+Only after complete output validation does the unchanged external manifest select
+**145 scans / 892 predicted lobes / 870 truth positions**. All arms have the same
+16 missing positions, 38 extra lobes, 14 short-N scans and 25 extra-N scans.
+Support classifies 852/870 (97.9%), leaving two aligned abstentions; control and
+volume classify 849/870 (97.6%), leaving five. Historical coverage is 854/870.
+
+| Version | Correct / 870 | Correct / classified | Emitted errors | Exact / 145 |
+|---|---:|---:|---:|---:|
+| Historical reference | 677 (77.8%) | 677/854 (79.3%) | 177 | 36 |
+| Centered-Fisher control | 675 (77.6%) | 675/849 (79.5%) | 174 | 33 |
+| Complete-disk support | 676 (77.7%) | 676/852 (79.3%) | 176 | 34 |
+| Final Gaussian score | 666 (76.6%) | 666/849 (78.4%) | 183 | 32 |
+
+Support gives **two scan gains, two losses, 141 ties**, net **+1 correct**.
+`240818_019` improves 0→2 correct and `241113_088` improves 5→6, gaining the
+only new exact chain. But lobe 3 of both `240815_048` and `240817_076` changes
+`0→1` at zero margin, each losing one correct position: the two centering gains
+from the previous comparison disappear. No grade orientation or exact chain is
+lost. Confusion `(TN,FP,FN,TP)` becomes `(513,52,124,163)` from `(512,50,124,163)`.
+Three recovered correct decisions minus two regressions explain the gain; the
+194 non-correct positions comprise 176 errors, 16 missing and two abstentions.
+Against history: 23 winning / 25 losing / 97 tied scans, six exact gained and
+eight lost. No per-file restoration or tie threshold is chosen from these labels.
+
+Volume gives **four scan gains, twelve losses, 129 ties**, net **−9 correct**.
+Exact chain `240817_045` is gained; `240817_021` and `241113_087` are lost.
+Confusion is `(498,64,119,168)`. Grade orientations change for `240314_Cu100_026`
+and `240817_078`; they are evaluation alignments, not spatial correspondence.
+Against history: 20 winning / 30 losing / 95 tied scans, six exact gained and
+ten lost. Normalized Gaussian density does not improve chemistry in this test.
+
+**Decision:** retain **`config/unit_assignment_patch_support.toml` at 676/34**
+as the latest opt-in working candidate, **not a champion promotion**. It improves
+fixed-denominator correct count, exact chains and coverage despite lower
+classified accuracy and two extra emitted errors. Reject the independent final
+Gaussian score. Historical 677/36 remains ahead by one correct position and two
+exact chains merely to equal it, with two additional classified positions.
+No combination, post-grade parameter tuning, per-file choice, normalization,
+scan weighting, count refit, new DFT or unknown25 run follows. Predictions are
+label-free; this extensively reused development benchmark is not independent
+validation or evidence of unknown-chain accuracy.
+
+All **580 paired scan rows and 24 changed decisions**, including all losses,
+pixel support details, formulas and replay commands are in
+`results/patch_support_score_20260921/report.md` and its linked tables. Paired
+arithmetic checks agree with every headline, coverage and confusion count. The
+bounded comparison is complete; the broader historical objective remains open.
+Prediction SHA-256: control `2a4e386ed21c324b1fb0fa73fa0b2cb031cf2908d2d6fec646befd2a13a9cb26`,
+support `eb8d69b8cebcd607b0244db5c65104347e6bcd24acee06f64748cf0e6ec310e3`,
+volume `a465521eb546d13241a27a2a23a4954e926076d972a7c38d9ae73394313749b1`.
+
+The final documentation build passes with only the existing page/search-index
+size warnings and skipped non-CI deployment. All current README, runbook,
+selection, assignment, config and calibration headlines reflect 676/34; dated
+earlier experiments retain their own results. No scientific file changed after
+the source commit. Results remain ignored; validated source and documentation
+are committed, not left as uncommitted workspace state.

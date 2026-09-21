@@ -664,7 +664,7 @@ calibrated confidence. The GMM CLI accepts `--config`; omitting it explicitly
 loads the historical reconstructed config. These candidates are not combined
 or defaults. The completed comparison gives **675/849 (79.5%), 33/145 exact**
 for training-mean centering versus control **673/849, 33 exact**. Retain
-`unit_assignment_centered_fisher.toml` as the latest opt-in working candidate,
+`unit_assignment_centered_fisher.toml` as the opt-in working candidate at that stage,
 not a champion: historical 677/870 and 36/145 still lead. Final covariance
 shrinkage gives **665/849 (78.3%), 34 exact** and is not retained as a working
 replacement despite its better conditioning. All native arms keep 849/870
@@ -700,6 +700,14 @@ ridge covariances, free weights and feature scaling are unchanged. Cluster namin
 still uses mean raw amplitude of final assigned members, so that naming can
 change when final assignments change. Votes remain hard seed votes, not calibrated
 Gaussian probabilities. Neither new mode reads labels or imposes composition.
+
+The completed independent comparison retains **`unit_assignment_patch_support.toml`**
+at **676/870 correct, 676/852 (79.3%), 34/145 exact** as the latest opt-in working
+candidate. Three missing predictions become usable, but two existing decisions
+regress: net +1 correct and +1 exact chain against 675/33. Historical 677/36 and
+854/870 coverage still lead. The Gaussian-score arm gives **666/849 (78.4%),
+32 exact** and is rejected. No mode combination or post-grade tuning follows;
+defaults, selected N and the separate counting/application claims are unchanged.
 
 ## Opt-in diagnostic exploration settings (2026-09-18)
 

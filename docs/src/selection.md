@@ -35,11 +35,20 @@ experiments change no selected N, count-selection rule or counting claim.
 
 The subsequent numerical comparison improves assignment to **675/870 correct,
 675/849 (79.5%), 33/145 exact** with training-mean Fisher centering. It is the
-latest opt-in working candidate, not a champion: historical 677/36 still leads.
+opt-in working candidate at that stage, not a champion: historical 677/36 still leads.
 Independent final covariance shrinkage gives **665/870 and 34/145** and is not
 retained as the replacement. Coverage stays 849/870, all cached N are unchanged,
 and neither result reruns or revalidates count selection or the unknown25
 application. The benchmark is reused development data, not independent validation.
+
+The subsequent complete-disk support comparison reaches **676/870 correct,
+676/852 (79.3%), 34/145 exact**, with coverage rising from 849 to 852/870.
+`unit_assignment_patch_support.toml` is the latest opt-in working candidate;
+historical 677/36 remains ahead. The separate final Gaussian-score arm gives
+**666/870 and 32/145** and is rejected. Support retains every key, imputes no
+pixel and still abstains on incomplete disks. Geometry and N are fixed: none
+of these results revalidates counting, changes GCV/guards or demonstrates
+unknown-chain accuracy. No combined variant or post-grade tuning follows.
 
 How STMFit chooses the optimal number of lobes (N) from the sweep results.
 

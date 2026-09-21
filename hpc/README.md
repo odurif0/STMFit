@@ -851,7 +851,7 @@ are never combined or tuned after grading.
 **9m04s** on `vipl2005` (four CPUs requested, eight allocated). All **590 outputs
 and the Slurm log** are fetched and checksum-identical; 76 saved-output checks
 pass and the twelve control tables reproduce 673/33 exactly. Centering gives
-**675/849 (79.5%), 33/145 exact**, retained as the latest opt-in working candidate.
+**675/849 (79.5%), 33/145 exact**, retained as the opt-in working candidate at that stage.
 Shrinkage gives **665/849 (78.3%), 34 exact**, not retained as the replacement.
 All arms keep the same 900 keys, seven unavailable rows and 849/870 coverage.
 Historical 677/36 still leads; there is no champion promotion. The complete
@@ -875,3 +875,14 @@ byte-identical replay of the twelve saved 675/33 control tables, and retain all
 900 keys before external grading. Missing disk pixels remain unavailable; changes
 in coverage must be reported alongside all gains and losses. Do not resubmit or
 alter a setting in response to a grade.
+
+**Completed September 21:** source **db411a2**, job **11906168**, exit **0:0** in
+**7m58s** on `vipc2294` (four CPUs requested, eight allocated). All **585 outputs
+and the Slurm log** are fetched and checksum-identical. The twelve control tables
+reproduce 675/33 exactly; 76 output checks pass. Support gives **676/852 (79.3%),
+34/145 exact**, with coverage rising 849→852/870 and four unavailable keys instead
+of seven. It is the latest opt-in candidate, still below historical 677/36.
+The Gaussian-score arm gives **666/849 (78.4%), 32 exact** and is rejected.
+The full comparison, including every loss, is in
+`results/patch_support_score_20260921/report.md`. No automatic resubmission,
+combined arm, post-grade tuning, count refit or unknown25 run follows.
