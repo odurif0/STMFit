@@ -937,9 +937,15 @@ there is no per-scan quota, forced second group or composition prior. The
 scoped option rejects combinations outside the support-control policies.
 
 Historical representation/attribution diagnostics reject unsupported grouping
-or naming rather than silently describe the old model. Results pending for
-one three-arm, 30-minute Viper comparison. The 676/34 control remains primary;
-historical 677/36 is the target. No combined arm or post-grade tuning is included.
+or naming rather than silently describe the old model. The completed three-arm
+comparison gives **668/870 correct, 34/145 exact** for whole-scan Fisher and
+**676/870, 34/145** for relative naming, at unchanged **852/870 coverage**.
+Both Fisher fits converge on disjoint 73-scan groups. Relative naming selects
+the same high group for all ten seeds, with byte-identical fitted-parameter
+hashes and GMM output; final scores/decisions stay unchanged (only the model
+name differs). Neither config replaces **`unit_assignment_patch_support.toml`**
+at 676/34; historical 677/36 remains the target. No combined arm, partition
+search or post-grade tuning follows. See `results/scan_fisher_naming_20260922/report.md`.
 
 ## Opt-in diagnostic exploration settings (2026-09-18)
 

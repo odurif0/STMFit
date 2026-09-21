@@ -515,8 +515,17 @@ assumption. GMM means, covariances, memberships and free masses stay unchanged.
 
 The two candidates are not combined. Labels belong only to the external grade
 after fixed outputs; one Viper job is capped at 30 minutes with no retry.
-Results pending; 676/34 remains the working reference and historical 677/36 the
-target. The reused benchmark does not become independent validation.
+The completed comparison gives **668/870 correct, 668/852 (78.4%), 34/145 exact**
+for whole-scan Fisher: eight fewer correct positions than the replayed support
+control, with four exact chains gained and four lost. Both disjoint 73-scan
+fits converge. All 26 final flips enter existing zero-margin vote ties; no
+threshold or split-seed adjustment follows. Relative naming gives **676/870,
+676/852 (79.3%), 34/145**, with unchanged fitted parameters, component names,
+scores and decisions across all ten seeds. These naming conventions agree on
+this cohort, not necessarily under other acquisition conditions. Retain
+**676/34**; historical 677/36 remains the target. This negative recognition
+result does not establish that parity cross-fitting is independent validation,
+and the reused benchmark remains development evidence.
 
 ## Opt-in label-free exploration (2026-09-18)
 

@@ -199,6 +199,27 @@ No retry, other proposed lead, post-grade setting change, count refit, DFT
 change or unknown25 rerun follows. This reused benchmark is development
 evidence, not independent validation.
 
+The next independent whole-scan Fisher / relative GMM-naming comparison
+(source **43f8993**, job **11931478**, **8m30s**, exit **0:0**, after **3m01s**
+queued) brings **no improvement**. Fisher gives **668/870 correct, 668/852
+(78.4%), 34/145 exact**; relative naming gives **676/870, 676/852 (79.3%),
+34/145**, identical to the exactly replayed support control. Fisher gains
+on eight scans, loses on fifteen and ties on 122; four exact chains are
+gained and four lost. All 26 final flips enter zero-margin GMM=1 / k-means=0
+ties. Its two 73-scan groups are disjoint and both fits converge. Relative
+naming preserves all ten fitted-parameter hashes and chooses the same group
+names for every seed, leaving scores and decisions unchanged.
+
+All **588 outputs and the Slurm log** are fetched/checksummed. Verification
+passes **3,035 focused assertions**, **10,987 pre-grade output checks**, eight
+saved-component checks and all 580 paired scan comparisons. All 146 scans /
+900 keys, selected N, availability and common upstream/k-means outputs stay
+fixed. Keep `config/unit_assignment_patch_support.toml`; historical **677/36**
+remains unexceeded. Full gains/losses: `results/scan_fisher_naming_20260922/report.md`.
+This two-candidate comparison is complete: no retry, combined candidate,
+post-grade setting change, count refit, DFT change or unknown25 rerun follows.
+Inference remains label-free; the reused grade is not independent validation.
+
 This page is the hand-off document for reproducing the current chitosan workflow
 without relying on prior conversation context.  The goal is a label-free fitting
 and model-selection pipeline that is externally graded on the benchmark and then

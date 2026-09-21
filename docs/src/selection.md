@@ -98,6 +98,14 @@ No post-grade fusion, naming or threshold adjustment, count refit, DFT change
 or unknown25 run follows. This assignment-only comparison does not revalidate
 counting or independent generalization.
 
+The independent whole-scan Fisher and relative GMM-naming comparison brings
+no assignment improvement: **668/870 correct, 34/145 exact** for grouped
+Fisher; **676/870, 34/145**, with unchanged decisions, for relative naming.
+Both retain **852/870 coverage**. Keep the 676/34 support candidate, below
+historical 677/36. All selected N, geometry, GCV/guards and physical calibration
+stay fixed; no count refit, DFT change or unknown25 rerun follows. This reused
+assignment benchmark does not revalidate counting or independent generalization.
+
 How STMFit chooses the optimal number of lobes (N) from the sweep results.
 
 ## Selection Hierarchy

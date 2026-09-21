@@ -1085,5 +1085,14 @@ Manifest, run the metadata-only `--dry-run`, then pass all five explicitly in
 `sbatch --export=...` to override Viper's `SBATCH_EXPORT=NONE`. Fetch all results
 and logs before cleanup. Verify control replay, all keys/N/upstream tables,
 Fisher split/no-overlap logs and naming/unchanged-fit logs before external
-grading. Results pending; neither preparation nor a successful job exit is a
-recognition result. Historical 677/36 remains the objective.
+grading. Source **43f8993**, job **11931478**, completes **0:0 in 8m30s** after
+**3m01s** queued (four CPUs requested, eight allocated, 16 GB requested).
+All **588 outputs and the Slurm log** are fetched/checksummed. The 19 suites /
+3,035 assertions, 10,987 pre-grade output checks, eight component checks and
+paired-grade arithmetic pass. Whole-scan Fisher gives **668/870 correct,
+34/145 exact**; relative naming gives **676/870, 34/145**, with unchanged
+decisions, at the same **852/870 coverage** as the exactly replayed control.
+Keep the **676/34 support candidate**, below historical 677/36. This comparison
+is complete; do not automatically resubmit or combine its candidates.
+No post-grade tuning, count refit, DFT change or unknown25 rerun follows.
+Full gains/losses: `results/scan_fisher_naming_20260922/report.md`.

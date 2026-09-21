@@ -2308,16 +2308,20 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0t. **Can scan-grouped Fisher or within-scan GMM naming improve recognition?** →
-    **SUBMITTED; RESULTS PENDING (Sep 22)**: the user expands the authorization
-    to two isolated candidates against the 676/34 support control. Fisher uses
-    two whole-scan groups fixed by seeded hash rank; the separate naming arm
-    names unchanged GMM groups using training-only within-scan amplitude z
-    scores. One three-arm Viper job, four requested CPUs, 16 GB, 30 minutes,
-    no combined arm or retry. Exact control replay, synthetic/non-use checks,
-    verified outputs and paired external grades define completion. Historical
-    677/36 remains the target. No paired-acquisition model, count refit, DFT,
-    unknown25 or post-grade tuning is included. Source **43f8993**, job
-    **11931478**, submitted after **3,035 assertions across 19 suites** pass.
+    **COMPLETE; NEGATIVE / NULL (Sep 22)**: source **43f8993**, job **11931478**,
+    **0:0 in 8m30s**, after 3m01s queued. Whole-scan Fisher gives **668/870
+    correct, 34/145 exact**, at unchanged **852/870 coverage**, versus the
+    exactly replayed 676/34 support control. Eight scans gain, fifteen lose,
+    122 tie; four exact chains are gained and four lost. Both disjoint 73-scan
+    fits converge. All 26 final flips enter existing zero-margin vote ties.
+    Within-scan amplitude naming chooses the same group for every unchanged
+    GMM fit, so all scores/decisions remain identical at **676/34**. All keys,
+    N and availability remain. The **588 outputs plus Slurm log** are fetched
+    and checksummed; 3,035 focused assertions, 10,987 pre-grade checks, eight
+    component checks and 580 paired scan comparisons pass. Retain the
+    **676/34 support candidate**, below historical 677/36. No split search,
+    combined candidate, retry, post-grade tuning, count refit, DFT change or
+    unknown25 rerun follows. The reused grade is not independent validation.
 
 0s. **Can covariance sharing throughout GMM learning improve recognition?** →
     **COMPLETE; NEGATIVE (Sep 22)**: source **becd0ce**, job **11931106**,
@@ -9940,3 +9944,80 @@ and no requeue. Outputs are reserved at
 `/ptmp/oldu/stmfit/scan_fisher_naming_20260922_v1`. No grade has been read and
 no scientific output/result is claimed yet. Full local logs are under
 `results/scan_fisher_naming_20260922/`.
+
+**Completed result.** Job **11931478** waits **3m01s**, starts at 01:30:44 CEST
+and completes **0:0 in 8m30s** at 01:39:14 CEST. Slurm allocates eight CPUs for
+the four-CPU request, with 16 GB requested and about 2.35 GB reported peak
+memory. The three arms complete without failures. All **588 regular output
+files and the Slurm log** are fetched locally; the output checksum comparison
+is empty. No retry or second job is submitted.
+
+Before grading, **10,987 saved-output assertions** pass. The twelve control
+tables are byte-identical to the saved support run; its prediction SHA-256 is
+`eb8d69b8cebcd607b0244db5c65104347e6bcd24acee06f64748cf0e6ec310e3`.
+All arms retain 146 scans / 900 keys, all selected N, nine common upstream,
+k-means and training-support tables, and the same four unavailable keys.
+Grouped Fisher changes only the Fisher column in the predictor table, with
+896 changed valid margins. The independent hash-rank check reproduces both
+73-scan groups. Actual training/held-out sets contain 449/447 and 447/449
+valid rows, zero overlapping scans, and two converged Fisher fits.
+
+All ten relative-naming fits have exactly the control's full-parameter hashes
+and choose the same high component under both naming rules. Relative means
+range from approximately -0.6513 to -0.3380 in the lower groups and 0.6091
+to 1.0324 in the higher groups; raw naming also selects those high groups.
+The GMM TSV is byte-identical. Final decisions, scores, margins and reasons
+are unchanged; only the model-name field makes the final TSV bytes differ.
+This is a null result on this cohort, not failure to activate the new rule.
+
+The unchanged external full145-own-N grade is run only after these checks:
+
+| Profile | Correct / 870 | Classified accuracy | Exact / 145 | Coverage / 870 |
+|---|---:|---:|---:|---:|
+| Historical saved reference | 677 | 677/854 (79.3%) | 36 | 854 |
+| Replayed support control | 676 | 676/852 (79.3%) | 34 | 852 |
+| Whole-scan Fisher | 668 | 668/852 (78.4%) | 34 | 852 |
+| Within-scan GMM naming | 676 | 676/852 (79.3%) | 34 | 852 |
+
+Fisher versus control: **8 scan gains, 15 losses, 122 ties; four exact chains
+gained and four lost**. Against history: 23 gains, 30 losses, 92 ties; seven
+exact chains gained, nine lost. Control → Fisher confusion `(TN,FP,FN,TP)`
+is `(513,52,124,163)` → `(496,69,115,172)`: nine fewer false negatives do not
+offset seventeen more false positives. Counts stay 892 benchmark predictions,
+16 missing positions, 38 extras, 14 short-N and 25 extra-N files. The same
+two aligned abstentions leave 852 classified positions; Fisher emits 184
+errors versus control's 176. Relative naming ties control on every scan.
+
+Saved-component arithmetic passes **eight checks** across the two arms.
+Fisher changes 242 GMM/final scores and 26 final decisions, all **0→1 into
+GMM=1 / k-means=0 exact ties**, with zero final margin. Twenty-one also change
+the GMM hard decision; five already had a class-1 GMM vote of 0.8. Across
+896 usable rows, GMM scores decrease for 209, increase for 33 and are unchanged
+for 654; GMM hard decisions change 0→1 for 22 rows and 1→0 for one. Final
+ties increase 58→84, both before and after serialization. Raw `(0,1,?)`
+frequencies change `(673,223,4)`→`(647,249,4)`. Relative naming changes none
+of these quantities. No threshold/precision adjustment is made.
+
+Exact chains gained versus control: `240307_016.sxm`, `240814_011.sxm`,
+`240817_045.sxm`, `241114_028.sxm`. Lost: `240817_021.sxm`, `240818_020.sxm`,
+`241113_087.sxm`, `241113_088.sxm`. Four grade-orientation changes occur
+versus control, eight versus history; the grade is not independent spatial
+correspondence. The **580 paired scan rows**, every changed decision, all
+losses and replay commands are in `results/scan_fisher_naming_20260922/report.md`
+and linked tables. No scientific setting is changed after reading the grade.
+
+**Decision: reject whole-scan Fisher as the replacement; relative naming gives
+no gain. Retain the support candidate at 676/34.** These exact candidates do
+not exceed historical 677/36. The null naming result does not establish
+invariance under other acquisition conditions; the negative Fisher result
+does not prove parity cross-fitting or downstream transductive training is
+independent validation. The reused benchmark remains development evidence,
+not unknown-chain accuracy. This authorized two-candidate comparison is complete;
+the historical objective remains open. No further arm, combination, split/seed
+search, retry, count refit, DFT change or unknown25 rerun follows.
+
+The final documentation build passes under Julia 1.13, with existing large-page
+and search-index warnings and the expected non-CI deployment skip. README,
+runbook, selection, assignment, config, calibration and HPC documentation are
+updated consistently. Scientific source and all settings remain unchanged
+from **43f8993** through grading; generated results remain ignored.

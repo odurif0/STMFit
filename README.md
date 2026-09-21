@@ -62,6 +62,15 @@ historical 677/36 remains the target to exceed. No other method or post-grade
 adjustment is added. See the
 [tied-covariance result](docs/src/unit_assignment.md#tied-gmm-covariance-throughout-learning-2026-09-22-negative).
 
+The two subsequent independent tests bring **no improvement**: whole-scan
+Fisher cross-fitting gives **668/870 correct, 34/145 exact**; within-scan GMM
+naming gives **676/870, 34/145**, with unchanged predictions. Both retain
+**852/870 coverage**. Fisher gains four exact chains but loses four; all 26
+changed decisions enter zero-margin vote ties. Relative naming agrees with
+the old names for all ten unchanged GMM fits. Keep the **676/34 support
+candidate**, below historical 677/36. No combination or post-grade tuning
+follows. See the [Fisher/naming comparison](docs/src/unit_assignment.md#whole-scan-fisher-and-relative-gmm-naming-2026-09-22-no-improvement).
+
 **Research branch, September 20:** the symmetric fused-fit correction improves
 the regenerated reconstruction from **666 to 671 correct / 870 controls** and
 **24 to 28 exact chains / 145**, at identical cached counts and coverage
