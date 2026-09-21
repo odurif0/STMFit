@@ -2175,6 +2175,73 @@ normalization. All 290 paired comparisons and 64 changed decisions, including
 losses and the ungraded technical scan, are recorded in
 `results/robust_normalization_20260921/report.md` and its linked tables.
 
+### Equal-scan GMM weighting (2026-09-21): exact-chain gain, unit loss
+
+`unit_assignment_scan_weighting.toml` copies the 676/34 support control, changing
+only the method name and `[selection] gmm_training_weighting` from `equal_lobes`
+to `equal_scans`. Each usable training row from scan s receives `n/(S*m_s)`,
+where m_s is the observed usable-row count, n the total and S the number of
+represented scans. This gives equal total training weight per scan, with mean
+row weight one. No expected N, class count, benchmark label or composition
+constraint enters learning or assignment.
+
+Weights enter GMM initialization, weighted k-means, EM sufficient statistics,
+both hard updates, free mixture masses and physical raw-amplitude naming.
+Per-lobe classification scores are not multiplied by the row weight. Mean/std
+normalization, support, interactions, ridge, Mahalanobis scoring, seed integers,
+independent Fisher/k-means heads, final vote, cached geometry and N stay fixed.
+Weighted initial draws may choose different centers under the same RNG seed.
+
+Scientific source **5ff68e2** passes **2,057 assertions** under Julia 1.13,
+including weighted arithmetic and a four-mode synthetic pipeline. One Viper
+job **11915029** waits **41m00s**, then completes **0:0 in 6m01s** on `vipc2294`,
+15:36:07–15:42:08 CEST. All **392 output files and the Slurm log** are fetched
+and checksummed. The twelve control scientific tables replay byte-for-byte;
+**360 output checks** pass before external grading, followed by paired-grade
+arithmetic. All **146 scans / 900 keys**, including the technical scan, are
+retained in inference. Upstream/Fisher/k-means tables and selected N are unchanged.
+
+Both arms have **896 usable GMM rows from 146 scans** and the same four
+unavailable final predictions. Actual usable counts range 2–10; row weights
+range **0.61369863–3.06849315** and each scan totals **6.13698630**. GMM vote
+fractions change for 42 rows, with one hard GMM decision changing. The final
+vote changes seven hard decisions, all 0→1; raw `(0,1,?)` totals move
+`(673,223,4)→(666,230,4)`. These counts are outcomes, not imposed class targets.
+
+| Version | Correct / 870 | Correct / classified | Exact / 145 | Classified / 870 |
+|---|---:|---:|---:|---:|
+| Historical saved reference | 677 | 677/854 (79.3%) | 36 | 854 |
+| Replayed support control | 676 | 676/852 (79.3%) | 34 | 852 |
+| Equal-scan GMM weighting | 675 | 675/852 (79.2%) | 36 | 852 |
+
+Against control: **3 scan gains, 4 losses, 138 ties**, net **−1 correct**;
+**2 exact chains gained, none lost**, without any grading-orientation change.
+Exact chains are gained on `240307_016` and `240814_011`; `240817_017` gains
+one correct truth position but still has an extra predicted lobe. Losses occur
+on `240817_058`, `240817_059`, `241114_011` and `241114_022`. All seven changed
+decisions land exactly at the existing vote tie (`probability_1=0.5`, zero
+margin), emitted as 1 by the unchanged `>=0.5` rule. This is not evidence of
+calibrated chemical confidence, and no tie or abstention rule is adjusted.
+
+Confusion `(TN,FP,FN,TP)` changes `(513,52,124,163)→(509,56,121,166)`:
+three fewer false negatives but four more false positives. Coverage stays
+852/870; emitted errors rise 176→177. Counts remain 16 missing positions,
+38 extra lobes and two aligned abstentions. Against history: 23 scan gains,
+24 losses, 98 ties, net −2 correct; six exact chains gained and six lost,
+with eight grading-orientation changes. Grade alignment is not an independently
+established spatial monomer correspondence.
+
+**Retain the 676/34 support candidate as the primary working reference.**
+Weighting gives a tradeoff, not a uniformly better result: neither arm dominates
+on both correct-position and exact-chain counts. Historical 677/36 is still
+unexceeded, with two more correct and classified positions than this variant.
+The weighted config remains a documented experiment, not a promoted champion.
+No weight, seed, threshold, naming-rule or combined-variant search follows;
+counting, DFT and unknown25 remain untouched. Learning and inference are
+label-free, but this reused benchmark is development evidence, not independent
+validation. All 290 paired scan rows and seven changed decisions are preserved
+in `results/scan_weighting_20260921/report.md` and its linked tables.
+
 ### Native numerical conventions
 
 The constant-current port retains the old first-axis-fast cube index, sampling

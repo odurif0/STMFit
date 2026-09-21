@@ -2308,13 +2308,18 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0p. **Can equal total GMM training weight per scan improve recognition?** →
-    **SUBMITTED; RESULTS PENDING (Sep 21)**: source **5ff68e2**, job **11915029**,
-    one control at 676/34 and one `equal_scans` candidate, unchanged mean/std
-    normalization and selected N, one 30-minute Viper allocation. All **2,057
-    synthetic assertions** and docs pass. The 896 usable rows span 146 scans;
-    usable counts range 2–10 and weights 0.614–3.068. Usable rows alone determine
+    **COMPLETE; MIXED RESULT (Sep 21)**: source **5ff68e2**, job **11915029**,
+    exit **0:0 in 6m01s**, after 41 minutes queued. Weighting gives **675/870
+    correct, 675/852 (79.2%), 36/145 exact**, versus the exactly replayed 676/34
+    support control. Three scans gain, four lose and 138 tie; two exact chains
+    are gained and none lost. All seven changed decisions end at the existing
+    zero-margin vote tie. Retain **676/34 as the primary working reference**;
+    record weighting as a tradeoff, not a champion. Coverage, N, all 146 scans /
+    900 keys and upstream/Fisher/k-means tables are unchanged. All 392 outputs
+    and the Slurm log are fetched/checksummed; 2,057 pre-run assertions, 360
+    output checks and paired arithmetic pass. Usable rows alone determine
     weights; chemical populations remain free. No bagging, robust scaling,
-    additional arm or post-grade tuning. Historical 677/36 remains the target.
+    additional arm or post-grade tuning. Historical 677/36 remains unexceeded.
 
 0o. **Can robust per-scan GMM normalization improve recognition?** →
     **COMPLETE; NEGATIVE (Sep 21)**: source **77b3ce6**, job **11911253**, exit
@@ -2428,6 +2433,10 @@ See `docs/src/selection.md` for the full guard specification and
     after affine-residual half-plane asymmetry (673 / 33), matched residuals
     (672 / 29) and symmetric fusion (671 / 28). The remaining gap is one correct
     position and two exact chains merely to equal history; coverage is 852 versus 854.
+    Equal-scan weighting (0p) gives 675 / 36 at the same coverage: two exact
+    chains gained against the support control but one correct position lost.
+    It matches the historical exact-chain total without exceeding history or
+    replacing the 676 / 34 primary working reference.
     The one physical-u Fisher mirror comparison is **COMPLETE; NEGATIVE**:
     job 11879515 (2m03s, exit 0:0) replays the control byte-for-byte but the
     treatment gives **669/849 (78.8%), 27 exact**, versus 671/849 and 28.
@@ -9047,6 +9056,8 @@ The final documentation build passes, with the existing large-page/search-index
 warnings and non-CI deployment skip. README, runbook, selection, assignment,
 config, calibration and HPC notes record the negative 667/10 result and retain
 676/34 as the working candidate. Runtime source is unchanged since 77b3ce6.
+Validated source and conclusions are committed; generated outputs, all losses
+and the initial failed metadata-audit log remain preserved locally and ignored.
 
 ## 2026-09-21 — Equal total scan influence in GMM learning, one fixed comparison
 
@@ -9126,5 +9137,78 @@ account `mfk_cpu`, QOS `n0001`, with all five absolute inputs explicitly exporte
 Output target: `/ptmp/oldu/stmfit/scan_weighting_20260921_v1`. Its initial state
 is pending, reason `QOSGrpCpuLimit`; no duplicate, resource change or local fit
 is attempted. External grading has not run.
-Validated source and conclusions are committed; generated outputs, all losses
-and the initial failed metadata-audit log remain preserved locally and ignored.
+
+**Completed follow-through, as requested by the user.** The existing job starts
+at **15:36:07 CEST** after **41m00s** queued under the shared CPU quota and
+finishes at **15:42:08**, **COMPLETED, exit 0:0, elapsed 6m01s**, on `vipc2294`.
+The control runs 15:36:08–15:40:09, then weighting 15:40:09–15:42:08. Slurm
+allocates eight CPUs for the four-CPU request; Julia uses four threads. Peak
+memory is 2.915767 GB per node. No duplicate job, resource change, retry or local
+cohort fit is used. All **392 regular output files and the Slurm log** are
+fetched from the job directory, excluding raw-input staging symlinks; the
+checksum comparison is empty. Runtime source/config and Manifest also match.
+
+Before grading, **360 saved-output assertions pass**: 59 output/key/count
+checks and 301 weighting/support checks. All twelve control scientific tables
+replay the retained support candidate byte-for-byte. Both arms retain all
+146 scans / 900 keys, the same 896 valid GMM rows and the same four unavailable
+assignments. Patches, local/descriptor/predictor features, CC, Fisher, separate
+k-means and pixel counts are identical. N agrees by scan identity and feature
+keys; staging paths are arm-specific. Training weights reproduce the previously
+fixed inverse-usable-count formula, mean one and equal total 896/146 per scan.
+
+GMM vote fractions change on **42 rows**, with **one hard GMM decision** changing.
+The final vote changes **seven decisions**, all 0→1, all on benchmark scans.
+Each lands exactly at the unchanged vote tie (`probability_1=0.5`, confidence
+zero); the existing `>=0.5` rule emits 1. Raw `(0,1,?)` totals change
+`(673,223,4)→(666,230,4)`. These are outcomes, not composition targets. Zero vote
+margin is not calibrated chemical confidence; no tie or abstention rule changes.
+
+Only after integrity checks does the unchanged external grade select 145 scans /
+892 prediction lobes / 870 truth positions:
+
+| Version | Correct / 870 | Correct / classified | Errors emitted | Exact / 145 |
+|---|---:|---:|---:|---:|
+| Historical saved reference | 677 | 677/854 (79.3%) | 177 | 36 |
+| Replayed support control | 676 | 676/852 (79.3%) | 176 | 34 |
+| Equal-scan weighting | 675 | 675/852 (79.2%) | 177 | 36 |
+
+Against control: **3 scan gains, 4 losses, 138 ties**, net **−1 correct**;
+**two exact chains gained, none lost**, no external grading-orientation changes.
+`240307_016` and `240814_011` gain exactness; `240817_017` gains one correct
+position but still has an extra lobe. Losses are `240817_058`, `240817_059`,
+`241114_011` and `241114_022`. Confusion `(TN,FP,FN,TP)` changes
+`(513,52,124,163)→(509,56,121,166)`: three fewer false negatives, four more false
+positives. Coverage stays **852/870**, with two aligned abstentions. Counts stay
+16 missing positions, 38 extra lobes, 14 short-N and 25 extra-N scans. Weighted
+non-correct positions total 195: 177 errors, 16 missing and two abstentions.
+Against history: 23 gains, 24 losses, 98 ties, net −2 correct; six exact chains
+gained and six lost, with eight grading-orientation changes. Equal exact-chain
+totals do not mean recovering the same exact chains. Grade alignment is not
+an independently established spatial monomer correspondence.
+
+**Decision: retain the 676/34 support candidate as the primary working
+reference; record 675/36 as a mixed result, not a new champion.** Neither arm
+dominates on both correct-position and exact-chain counts. The historical
+677/36 remains unexceeded, with two more correct and classified positions than
+weighting. This experiment does not isolate which weighted learning/naming
+stage caused a flip or establish a general failure of equal scan influence.
+No weight formula, seed, threshold, naming rule, combined arm, refit of N,
+DFT change or unknown25 run follows the grade. This authorized comparison is
+complete; the broader historical objective remains open.
+
+All **290 paired scan rows and seven changed decisions**, including every loss,
+are in `results/scan_weighting_20260921/report.md` and its linked tables. Paired
+arithmetic reproduces grade sums, confusion, coverage and exact-chain counts.
+Inference is label-free; the repeatedly reused benchmark is development
+evidence, not independent validation or unknown-chain accuracy. Prediction
+SHA-256: control
+`eb8d69b8cebcd607b0244db5c65104347e6bcd24acee06f64748cf0e6ec310e3`, weighted
+`102467b38804841827eb29375aaa14d8ef60ce1559a47c2f1f6097593c0df687`.
+
+The documentation build passes with the existing large-page/search-index
+warnings and non-CI deployment skip. README, runbook, selection, assignment,
+config, calibration and HPC notes now record the 675/36 tradeoff and retain
+676/34 as the primary working reference. Runtime source remains **5ff68e2**;
+the conclusion is committed separately. Generated outputs, logs and all paired
+losses are preserved locally and ignored by Git.

@@ -388,9 +388,17 @@ heads or final vote. Within-scan finite feature moments stay unchanged.
 This is not class balancing, an expected-N prior, or an effective-sample-size
 estimate. Both chemical populations remain free. A scan with few usable lobes
 can gain influence even if noisy; equal influence is a hypothesis, not a
-guarantee of correct chemistry. The only proposed comparison is one control
+guarantee of correct chemistry. The fixed comparison is one control
 and one variant on Viper with a 30-minute ceiling. No count refit, bootstrap,
 DFT change, unknown-chain rerun or post-grade adjustment is included.
+
+The completed result is mixed: **675/870 correct, 675/852 (79.2%), 36/145 exact**,
+versus the replayed support control **676/852, 34 exact**. It gains two exact
+chains but loses one correct position; all seven changed decisions end at zero
+vote margin. Retain the 676/34 support candidate as the primary reference, with
+historical 677/36 still unexceeded. This result does not establish that short
+or noisy scans caused the loss, nor justify a new physical calibration or
+post-grade weight adjustment. The reused benchmark is development evidence.
 
 ## Opt-in label-free exploration (2026-09-18)
 

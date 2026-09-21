@@ -133,6 +133,21 @@ is complete: no clipping, quantile search, scale-factor adjustment, weighting,
 extra method, retry or post-grade tuning. Historical 677/36 remains the target;
 the reused benchmark is development evidence, not independent validation.
 
+The equal-scan GMM-weighting comparison (source **5ff68e2**, job **11915029**,
+**6m01s**, exit **0:0**, after 41 minutes queued) gives a **tradeoff: 675/870
+correct, 675/852 (79.2%), 36/145 exact**, versus the exactly replayed **676/852,
+34 exact** support control. Retain `config/unit_assignment_patch_support.toml`
+as the primary working reference; the weighting config is not promoted.
+There are three scan gains, four losses and 138 ties; two exact chains are
+gained and none lost. All seven changed decisions land at the existing vote
+tie, with zero margin. All 146 scans / 900 keys, N and upstream/Fisher/k-means
+tables remain unchanged. All 392 outputs and the Slurm log are fetched and
+checksummed; 2,057 pre-run assertions, 360 output checks and paired arithmetic
+pass. See `results/scan_weighting_20260921/report.md` for every gain and loss.
+This fixed comparison is complete: no retry, additional arm, threshold change,
+count refit, DFT change or unknown25 rerun follows. Historical **677/36** remains
+unexceeded; the reused benchmark is not independent validation.
+
 This page is the hand-off document for reproducing the current chitosan workflow
 without relying on prior conversation context.  The goal is a label-free fitting
 and model-selection pipeline that is externally graded on the benchmark and then

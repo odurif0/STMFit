@@ -30,6 +30,14 @@ variant and keep `config/unit_assignment_patch_support.toml`; historical 677/36
 remains the target. No clipping, rescaling or post-grade tuning follows. See the
 [robust-normalization result](docs/src/unit_assignment.md#robust-per-scan-gmm-normalization-2026-09-21-negative).
 
+Equal-scan GMM weighting gives a **tradeoff: 675/870 correct, 36/145 exact**,
+at unchanged **852/870 coverage**, versus the replayed 676/34 support control.
+It gains two exact chains but loses one correct position; all seven changed
+decisions land at the existing zero-margin vote tie. Keep the **676/34 support
+candidate** as the primary working reference. The weighted variant is not
+promoted and does not exceed historical 677/36. No post-grade tuning follows.
+See the [scan-weighting result](docs/src/unit_assignment.md#equal-scan-gmm-weighting-2026-09-21-exact-chain-gain-unit-loss).
+
 **Research branch, September 20:** the symmetric fused-fit correction improves
 the regenerated reconstruction from **666 to 671 correct / 870 controls** and
 **24 to 28 exact chains / 145**, at identical cached counts and coverage

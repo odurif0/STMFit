@@ -64,6 +64,14 @@ support candidate; no GCV, counting, physical bound, DFT or unknown25 change
 follows. This reused external assignment grade does not validate new counting
 behavior or independent generalization.
 
+Equal-scan GMM weighting gives **675/870 correct, 36/145 exact**, at unchanged
+**852/870 coverage**, versus the replayed 676/34 support control. This is a
+tradeoff (one fewer correct position, two more exact chains), not a new champion;
+retain the support candidate as the primary reference. Historical 677/36 remains
+unexceeded. All N are fixed; no GCV/guard, count refit, physical calibration,
+DFT or unknown25 change follows, and this assignment result does not revalidate
+counting or independent generalization.
+
 How STMFit chooses the optimal number of lobes (N) from the sweep results.
 
 ## Selection Hierarchy

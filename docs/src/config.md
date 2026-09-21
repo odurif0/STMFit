@@ -801,7 +801,13 @@ partial-patch eligibility, interactions, Fisher, the separate k-means head,
 ridge, iteration budgets, seed integers, Mahalanobis scoring and final soft vote
 stay fixed. The weighted draws can select different initial centers with the
 same RNG seeds. No scan resampling or robust scaling is part of this comparison.
-Result pending; no promotion before replay, integrity checks and external grade.
+The completed comparison gives a **tradeoff: 675/870 correct, 675/852 (79.2%),
+36/145 exact**, versus the exactly replayed 676/34 support control at identical
+coverage. All seven changed decisions land at the existing zero-margin vote tie.
+Retain the `equal_lobes` support config as the primary working reference; this
+opt-in config records a mixed result, not a promoted default. Historical 677/36
+remains unexceeded. No weight formula, seed, threshold or other setting is
+adjusted after the grade.
 
 ## Opt-in diagnostic exploration settings (2026-09-18)
 

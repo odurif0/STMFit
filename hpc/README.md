@@ -950,4 +950,20 @@ Use the five absolute variables `STMFIT_PROJECT_DIR`, `STMFIT_CACHE_DIR`,
 `--dry-run`, then pass all five explicitly through `sbatch --export=...`.
 Sync committed source and the unchanged Manifest, submit once, fetch all outputs
 and logs, then check exact control replay and all keys before external grading.
-There is no fit on a login node or local real-cohort fit. Results are pending.
+There is no fit on a login node or local real-cohort fit.
+
+Completed job **11915029** (source **5ff68e2**) waited **41m00s** for the shared
+CPU quota, then ran **15:36:07–15:42:08 CEST**, **6m01s**, exit **0:0**, on
+`vipc2294`. Four CPUs were requested and eight allocated; Julia used four
+threads. All **392 output files and the Slurm log** are fetched/checksummed.
+The twelve control tables replay exactly; 360 output assertions and paired
+grade arithmetic pass after 2,057 pre-run assertions. Both arms retain all
+146 scans / 900 keys, unchanged N and upstream/Fisher/k-means tables.
+
+External result: **675/870 correct, 675/852 (79.2%), 36/145 exact**, versus
+control **676/852, 34 exact**. It gains two exact chains but loses one correct
+position, with all seven final flips ending at zero vote margin. This is a
+tradeoff, not a new champion; retain the support candidate as the primary
+working reference. Historical 677/36 remains unexceeded. The single comparison
+is complete: do not resubmit or tune after grading. Full outputs and all losses
+are preserved in `results/scan_weighting_20260921/report.md`.
