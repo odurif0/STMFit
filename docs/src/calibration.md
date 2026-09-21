@@ -287,6 +287,27 @@ remains despite modest improvement of that diagnostic. Better conditioning and
 stability are not a substitute for the external recognition grade. No combined
 variant, threshold, seed or parameter is tuned afterward.
 
+### Patch support and covariance-volume score (2026-09-21)
+
+`assignment_patch_support = "complete_disk_symmetric"` changes availability, not
+the finite-pixel median/sample-standard-deviation patch normalization. The Fisher
+disk must be completely observed. The affine backward descriptor additionally
+uses reflection-closed observed support around a complete central disk; discarded
+corner partners are not estimated or filled. Complete patches retain identical
+arithmetic. Newly usable rows can change learned Fisher/GMM features throughout
+the cohort, so this is a full-cohort experiment, not a local repair of only the
+previously missing predictions. Missing disk pixels still require abstention.
+
+`gmm_final_score = "gaussian_density"` adds the covariance-volume normalization
+only at final assignment. It does not refit means, covariances or mixture weights,
+nor change the two distance-based hard self-training iterations. The raw-amplitude
+cluster naming convention and hard seed-vote aggregation remain, but their
+resulting assignments may change. Dependent lobes, per-file standardization and
+learned clusters mean that neither normalized density nor vote margin establishes
+chemical confidence. No benchmark-derived sign, class ratio or threshold enters
+either candidate. These are two independent, uncombined alternatives to 675/33;
+no normalization or scan-weighting experiment is included.
+
 ## Opt-in label-free exploration (2026-09-18)
 
 `config/label_free_exploration.toml` is diagnostic configuration, not a new

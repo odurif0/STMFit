@@ -2,6 +2,7 @@
 # All other settings equal unit_assignment_reconstructed.toml. No label tuning.
 [model]
 fisher_score_center = "legacy_centered_mean"
+gmm_final_score = "mahalanobis"
 gmm_final_covariance = "ridge"
 gmm_covariance_ridge = 1e-6
 fisher_projection_zero_l1 = 1e-12
@@ -40,6 +41,7 @@ interactions = true
 vote_threshold = 0.5
 
 [preprocessing]
+assignment_patch_support = "full_square"
 fisher_patch_projection = "none"
 patch_residual_filter = "smooth_data_only"
 descriptor_normalization = "median_sample_std"

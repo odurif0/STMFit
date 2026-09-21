@@ -91,6 +91,8 @@ function load_config(path::AbstractString)
         error("Explicit fisher_score_center must be legacy_centered_mean or training_mean")
     get(model, "gmm_final_covariance", nothing) in ("ridge", "ledoit_wolf") ||
         error("Explicit gmm_final_covariance must be ridge or ledoit_wolf")
+    get(model, "gmm_final_score", nothing) in ("mahalanobis", "gaussian_density") ||
+        error("Explicit gmm_final_score must be mahalanobis or gaussian_density")
     ridge = get(model, "gmm_covariance_ridge", nothing)
     ridge isa Real && !(ridge isa Bool) && isfinite(ridge) && ridge > 0 ||
         error("Explicit gmm_covariance_ridge must be positive and finite")
@@ -102,6 +104,11 @@ function load_config(path::AbstractString)
         error("Explicit fisher_patch_projection must be none or affine_disk")
     get(pre, "patch_residual_filter", nothing) in ("smooth_data_only", "smooth_residual") ||
         error("Explicit patch_residual_filter must be smooth_data_only or smooth_residual")
+    get(pre, "assignment_patch_support", nothing) in ("full_square", "complete_disk_symmetric") ||
+        error("Explicit assignment_patch_support must be full_square or complete_disk_symmetric")
+    pre["assignment_patch_support"] == "complete_disk_symmetric" &&
+        model["descriptor"] != "affine_residual_half_plane_asymmetry" &&
+        error("Partial patch support is defined only for the affine residual descriptor")
     model["descriptor_half_nm"] > 0 && model["descriptor_step_nm"] > 0 || error("Invalid descriptor grid")
     side = round(Int, 2model["descriptor_half_nm"] / model["descriptor_step_nm"]) + 1
     side == 9 || error("Reconstructed descriptor requires a 9x9 patch")
@@ -109,6 +116,8 @@ function load_config(path::AbstractString)
     sel = cfg["selection"]
     model["gmm_final_covariance"] == "ledoit_wolf" && get(sel, "gmm_selftrain", 0) < 1 &&
         error("Final covariance shrinkage requires at least one hard self-training iteration")
+    model["gmm_final_score"] == "gaussian_density" && get(sel, "gmm_selftrain", 0) < 1 &&
+        error("Explicit final Gaussian score requires at least one hard self-training iteration")
     for key in ("kmeans_seeds", "gmm_seeds")
         sel[key] isa Integer && !(sel[key] isa Bool) && sel[key] > 0 || error("Invalid $key")
     end
@@ -174,6 +183,48 @@ function _affine_residual_patch(values::AbstractVector, coords::AbstractVector)
     return values .- mean(values) .- slope_u .* u .- slope_t .* t
 end
 
+"""Observed support closed under both grid reflections, with a complete disk.
+
+The disk is defined on integer grid coordinates, not a fitted coverage fraction.
+If any disk pixel is missing the patch remains unavailable. Outside the disk,
+keep an observed pixel only if its entire (u,t) reflection orbit is observed.
+No value is imputed. The retained design has full rank and no one-sided mask.
+"""
+function _symmetric_patch_support(values::AbstractVector, coords::AbstractVector)
+    n = length(coords)
+    n >= 3 && isodd(n) && length(values) == n^2 || error("Odd square patch required")
+    half = n ÷ 2
+    step = coords[half+2]
+    step > 0 && coords == collect(-half:half) .* step || error("Symmetric uniform grid required")
+    observed = isfinite.(values)
+    for u in -half:half, t in -half:half
+        u*u + t*t <= half^2 && !observed[(u+half)*n+t+half+1] &&
+            return falses(n^2), "incomplete_descriptor_disk"
+    end
+    keep = copy(observed)
+    for row in 1:n, col in 1:n
+        keep[(row-1)*n+col] = observed[(row-1)*n+col] && observed[(n-row)*n+col] &&
+            observed[(row-1)*n+n+1-col] && observed[(n-row)*n+n+1-col]
+    end
+    return keep, "ok_masked_symmetric"
+end
+
+function _masked_affine_descriptor(values, coords; zero_l1)
+    keep, reason = _symmetric_patch_support(values, coords)
+    reason == "ok_masked_symmetric" || return (NaN, reason)
+    observed = values[keep]
+    sum(abs, observed) > zero_l1 || return (NaN, "zero_patch_mass")
+    n = length(coords)
+    u, t = repeat(coords; inner=n)[keep], repeat(coords; outer=n)[keep]
+    # Reflection closure makes [1,u,t] orthogonal on the observed support.
+    residual = observed .- mean(observed) .-
+        (sum(u .* observed) / sum(abs2, u)) .* u .-
+        (sum(t .* observed) / sum(abs2, t)) .* t
+    mass = sum(abs, residual)
+    mass > zero_l1 || return (NaN, "zero_affine_residual_mass")
+    return (sum(sign.(u) .* residual) / mass, reason)
+end
+
 """Explicit descriptor choice on the same normalized u-outer/t-inner patch.
 
 The first moment uses u/max(abs(u)); the affine variant applies the existing
@@ -181,9 +232,15 @@ half-plane formula to the least-squares plane residual, including its L1 norm.
 None of these definitions recovers the unavailable historical producer.
 """
 function transverse_descriptor(values::AbstractVector, coords::AbstractVector,
-                               kind::AbstractString; zero_l1::Real)
+                               kind::AbstractString; zero_l1::Real, patch_support::AbstractString="full_square")
     kind in TRANSVERSE_DESCRIPTORS || error("Unsupported descriptor: $kind")
+    patch_support in ("full_square", "complete_disk_symmetric") || error("Unsupported patch support")
+    patch_support == "complete_disk_symmetric" && kind != "affine_residual_half_plane_asymmetry" &&
+        error("Partial support requires the affine residual descriptor")
     legacy = transverse_asymmetry(values, coords; zero_l1)
+    if patch_support == "complete_disk_symmetric" && last(legacy) == "nonfinite_patch"
+        return _masked_affine_descriptor(values, coords; zero_l1)
+    end
     kind == "transverse_half_plane_asymmetry" && return legacy
     last(legacy) == "ok" || return legacy
     if kind == "transverse_first_moment"
@@ -218,7 +275,8 @@ function augment_descriptor(features, patches, out, config)
     for key in sort(collect(keys(base)))
         row = copy(base[key])
         value, reason = transverse_descriptor([_float(patch[key][c]) for c in pixels], coords,
-                                             model["descriptor"]; zero_l1=model["descriptor_zero_l1"])
+            model["descriptor"]; zero_l1=model["descriptor_zero_l1"],
+            patch_support=cfg["preprocessing"]["assignment_patch_support"])
         row[col] = isfinite(value) ? @sprintf("%.17g", value) : "NA"
         row["descriptor_reason"] = reason
         push!(outrows, row)

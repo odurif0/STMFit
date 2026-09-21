@@ -671,6 +671,36 @@ replacement despite its better conditioning. All native arms keep 849/870
 coverage, fixed counts and seven unavailable full-cohort keys. No combined arm
 or parameter change follows grading.
 
+### Independent patch-support and final-score candidates (2026-09-21)
+
+Both configs copy the centered-Fisher candidate (675 correct / 33 exact), changing
+only the method name and one explicit setting. They are not combined or defaults.
+
+| Section / field | Existing value | Independent candidate |
+|---|---|---|
+| `[preprocessing] assignment_patch_support` | `"full_square"` | `"complete_disk_symmetric"` in `unit_assignment_patch_support.toml` |
+| `[model] gmm_final_score` | `"mahalanobis"` | `"gaussian_density"` in `unit_assignment_gaussian_score.toml` |
+
+All nine existing native assignment configs explicitly retain the old values.
+Missing/unknown settings fail validation. The support mode leaves complete
+patches unchanged. Fisher accepts a partial square only when its actual 197-pixel
+scoring disk is complete; invalid values outside that disk are unused. Missing
+schema columns still invalidate the row. The affine 9x9 backward descriptor
+requires all 49 integer-grid disk pixels (`u_index^2+t_index^2 <= 4^2`). Outside
+that disk it keeps only observed pixels with all their u/t reflection partners.
+It fits `[1,u,t]` and computes the same half-plane/L1 statistic on this symmetric
+observed support. No filling, coverage threshold or second normalization is
+introduced. An incomplete central disk remains unavailable. This mode is defined
+only for the affine-residual descriptor; existing CC pixel handling is untouched.
+
+The final Gaussian score is `log(weight) - 0.5*(d^2 + logdet(Sigma) + p*log(2pi))`,
+with the existing `1e-8*I` factorization guard included in Sigma. It acts only
+after hard self-training and requires `gmm_selftrain >= 1`. EM, both hard updates,
+ridge covariances, free weights and feature scaling are unchanged. Cluster naming
+still uses mean raw amplitude of final assigned members, so that naming can
+change when final assignments change. Votes remain hard seed votes, not calibrated
+Gaussian probabilities. Neither new mode reads labels or imposes composition.
+
 ## Opt-in diagnostic exploration settings (2026-09-18)
 
 `config/label_free_exploration.toml` is used only by standalone exploration tools;

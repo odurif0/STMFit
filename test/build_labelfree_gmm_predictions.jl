@@ -13,6 +13,7 @@ using LinearAlgebra
 using Printf
 using Random
 using Statistics
+using TOML
 
 include(joinpath(@__DIR__, "lib", "script_utils.jl"))
 using .ScriptUtils: _ensure_parent, _read_tsv
@@ -37,6 +38,14 @@ struct Options
     selftrain::Int
     covariance_mode::String
     covariance_ridge::Float64
+    final_score::String
+end
+
+function _load_final_score(config::AbstractDict)
+    mode = get(get(config, "model", Dict()), "gmm_final_score", nothing)
+    mode in ("mahalanobis", "gaussian_density") ||
+        throw(ArgumentError("explicit gmm_final_score must be mahalanobis or gaussian_density"))
+    return String(mode)
 end
 
 mutable struct LobeRecord
@@ -117,11 +126,14 @@ function _parse_cli(args)
 
             Options:
               --features PATH        Main per-lobe feature TSV [$(DEFAULT_FEATURES)]
-              --config PATH          Explicit final covariance mode and ridge
+              --config PATH          Explicit final covariance, ridge and score
                                      [config/unit_assignment_reconstructed.toml].
                                      Ledoit-Wolf acts only on the last hard
                                      self-training covariance; it requires
-                                     --selftrain >= 1. No EM or vote change.
+                                     --selftrain >= 1. gaussian_density adds
+                                     the covariance-volume term only to final
+                                     scoring after self-training (>= 1).
+                                     Neither option changes EM or vote weights.
               --split-features PATH  Optional split-width feature TSV; adds split_log_skew
               --patches PATH         Optional backward patch TSV; adds bwd_neg_* descriptors
               --out PATH             Output prediction TSV [$(DEFAULT_OUT)]
@@ -160,8 +172,11 @@ function _parse_cli(args)
     covariance = load_covariance_config(config)
     covariance.mode == "ledoit_wolf" && selftrain < 1 &&
         error("Final Ledoit-Wolf covariance requires --selftrain >= 1")
+    final_score = _load_final_score(TOML.parsefile(config))
+    final_score == "gaussian_density" && selftrain < 1 &&
+        error("Explicit final Gaussian score requires --selftrain >= 1")
     return Options(features, split_features, patches, out_tsv, view_specs,
-                   first_seed, n_seeds, interactions, selftrain, covariance.mode, covariance.ridge)
+                   first_seed, n_seeds, interactions, selftrain, covariance.mode, covariance.ridge, final_score)
 end
 
 function _arg_value(args, i::Int, flag::String)
@@ -385,6 +400,16 @@ function _gmm_log_density(x::AbstractVector, mu::AbstractVector, Sigma::Abstract
     return -0.5 * (p * log(2π) + 2 * sum(log.(diag(L))) + dot(z, z))
 end
 
+"Final hard-cluster scoring only: same fitted means, covariances and weights."
+function _final_component_score(x, mu, covariance, weight, opt::Options)
+    if opt.selftrain > 0 && opt.final_score == "mahalanobis"
+        L = cholesky(Symmetric(covariance) + 1e-8 * I).L
+        z = L \ (x .- mu)
+        return log(weight) - 0.5 * dot(z, z)
+    end
+    return log(weight) + _gmm_log_density(x, mu, covariance)
+end
+
 # EM fit of a 2-component full-covariance GMM, k-means initialized.
 # Returns (means, covariances, weights).
 function _gmm_fit(X::Matrix{Float64}, seed::Int; ridge::Float64, max_iter::Int=200, tol::Float64=1e-6)
@@ -509,15 +534,7 @@ function _view_probability(records::Vector{LobeRecord}, features::Vector{String}
         log_resp = zeros(size(data, 2), 2)
         for (j, i) in enumerate(idxs)
             for c in 1:2
-                if opt.selftrain > 0
-                    # After self-training, score by Mahalanobis distance instead
-                    # of the GMM responsibility.
-                    L = cholesky(Symmetric(covs[c]) + 1e-8 * I).L
-                    z = L \ (data[:, j] .- means[:, c])
-                    log_resp[j, c] = log(weights[c]) - 0.5 * dot(z, z)
-                else
-                    log_resp[j, c] = log(weights[c]) + _gmm_log_density(data[:, j], means[:, c], covs[c])
-                end
+                log_resp[j, c] = _final_component_score(data[:, j], means[:, c], covs[c], weights[c], opt)
             end
             m = maximum(log_resp[j, :])
             resp = exp.(log_resp[j, :] .- m)

@@ -857,3 +857,21 @@ All arms keep the same 900 keys, seven unavailable rows and 849/870 coverage.
 Historical 677/36 still leads; there is no champion promotion. The complete
 report and all losses are in `results/numerical_signals_20260921/report.md`.
 Do not resubmit this completed comparison or add a combined/post-grade arm.
+
+## Independent patch-support and final-score comparison (September 21)
+
+`hpc/compare_patch_support_score.sbatch` requests four CPUs, 16 GB and 30 minutes.
+Its three independent arms are `control/` (675/33 centered Fisher), `support/`
+(complete central disks, symmetric observed descriptor support), and `volume/`
+(final Gaussian-density score on unchanged ridge covariances). It regenerates
+patches and assignments for all 146 scans with cached geometry and fixed N.
+There is no combined arm, parameter sweep, new normalization or scan weighting.
+
+Use the same five absolute environment variables and explicit `sbatch --export`
+list as above. Sync committed source plus the unchanged ignored root Manifest;
+run `bash hpc/compare_patch_support_score.sbatch --dry-run` before one submission.
+No fit runs on the login node. Fetch and checksum every arm and log, require
+byte-identical replay of the twelve saved 675/33 control tables, and retain all
+900 keys before external grading. Missing disk pixels remain unavailable; changes
+in coverage must be reported alongside all gains and losses. Do not resubmit or
+alter a setting in response to a grade.

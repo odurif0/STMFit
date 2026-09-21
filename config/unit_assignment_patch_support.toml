@@ -1,12 +1,12 @@
-# One independent numerical comparison against the affine-descriptor control.
+# One independent support/score comparison against the centered-Fisher candidate.
 [model]
-fisher_score_center = "legacy_centered_mean"
+fisher_score_center = "training_mean"
 gmm_final_score = "mahalanobis"
-gmm_final_covariance = "ledoit_wolf"
+gmm_final_covariance = "ridge"
 gmm_covariance_ridge = 1e-6
 fisher_projection_zero_l1 = 1e-12
 mold_margin_mode = "absolute_cost_margin"
-name = "cc_soft_shrunk_gmm_v1"
+name = "cc_soft_patch_support_v1"
 descriptor = "affine_residual_half_plane_asymmetry"
 descriptor_column = "patch_u_asym_reconstructed"
 descriptor_channel = "bwd_res"
@@ -40,7 +40,7 @@ interactions = true
 vote_threshold = 0.5
 
 [preprocessing]
-assignment_patch_support = "full_square"
+assignment_patch_support = "complete_disk_symmetric"
 fisher_patch_projection = "none"
 patch_residual_filter = "smooth_residual"
 descriptor_normalization = "median_sample_std"

@@ -60,10 +60,12 @@ struct FisherOptions
     patch_projection::String
     projection_zero_l1::Float64
     score_center::String
+    patch_support::String
 
     function FisherOptions(pca_components, noise_regularization,
                            gmm_regularization, gmm_maxiter, gmm_tolerance,
-                           seed, half_nm, step_nm, layout, patch_projection, projection_zero_l1, score_center)
+                           seed, half_nm, step_nm, layout, patch_projection, projection_zero_l1, score_center,
+                           patch_support)
         for (name, value) in (("fisher_pca_components", pca_components),
                               ("fisher_gmm_maxiter", gmm_maxiter))
             value isa Integer && !(value isa Bool) && value > 0 ||
@@ -84,6 +86,8 @@ struct FisherOptions
             throw(ArgumentError("unsupported fisher_patch_projection: $patch_projection"))
         score_center in ("legacy_centered_mean", "training_mean") ||
             throw(ArgumentError("unsupported fisher_score_center: $score_center"))
+        patch_support in ("full_square", "complete_disk_symmetric") ||
+            throw(ArgumentError("unsupported assignment_patch_support: $patch_support"))
         projection_zero_l1 isa Real && !(projection_zero_l1 isa Bool) &&
             isfinite(projection_zero_l1) && projection_zero_l1 >= 0 ||
             throw(ArgumentError("fisher_projection_zero_l1 must be finite and nonnegative"))
@@ -99,7 +103,7 @@ struct FisherOptions
         new(Int(pca_components), Float64(noise_regularization),
             Float64(gmm_regularization), Int(gmm_maxiter), Float64(gmm_tolerance),
             Int(seed), Float64(half_nm), Float64(step_nm), String(layout), String(patch_projection),
-            Float64(projection_zero_l1), String(score_center))
+            Float64(projection_zero_l1), String(score_center), String(patch_support))
     end
 end
 
@@ -113,7 +117,7 @@ function load_fisher_config(config::AbstractDict)
     for name in required
         haskey(model, name) || throw(ArgumentError("missing [model] $name"))
     end
-    for name in ("fisher_layout", "fisher_patch_projection")
+    for name in ("fisher_layout", "fisher_patch_projection", "assignment_patch_support")
         haskey(pre, name) || throw(ArgumentError("missing [preprocessing] $name"))
     end
     haskey(model, "fisher_projection_zero_l1") ||
@@ -122,7 +126,7 @@ function load_fisher_config(config::AbstractDict)
         throw(ArgumentError("missing [model] fisher_score_center"))
     options = FisherOptions((model[name] for name in required)...,
                             pre["fisher_layout"], pre["fisher_patch_projection"], model["fisher_projection_zero_l1"],
-                            model["fisher_score_center"])
+                            model["fisher_score_center"], pre["assignment_patch_support"])
     grid = fisher_grid(options)
     options.pca_components <= length(grid.disk_indices) ||
         throw(ArgumentError("fisher_pca_components exceeds the number of disk pixels"))
@@ -186,11 +190,15 @@ end
 Keep every unique (basename(file), positive lobe) key, including incomplete and
 nonfinite patches. Bad keys and duplicate keys are fatal schema errors. Missing
 pixel columns and bad pixel values invalidate rows, not their keys. All full-
-patch pixels must be finite, including those outside the disk.
+patch pixels must be finite in full_square mode. The complete_disk_symmetric
+mode requires only the actual scoring disk to be finite (including its center).
+Nonfinite/nonnumeric values outside it are ignored, never imputed. Missing schema
+columns remain invalid in both modes.
 """
 function load_patches(path::AbstractString, prefix::AbstractString, options::FisherOptions)
     isempty(prefix) && throw(ArgumentError("patch prefix must not be empty"))
     grid = fisher_grid(options)
+    required_pixels = options.patch_support == "full_square" ? Set(1:grid.side^2) : Set(grid.disk_indices)
     pixels = [@sprintf("%s_p%03d", prefix, i) for i in 1:grid.side^2]
     keys = Tuple{String,Int}[]
     data = Vector{Float64}[]
@@ -229,6 +237,9 @@ function load_patches(path::AbstractString, prefix::AbstractString, options::Fis
                 end
                 text = strip(value(name))
                 number = tryparse(Float64, text)
+                if !(i in required_pixels)
+                    continue
+                end
                 if number === nothing
                     reason = "invalid_patch_value:$name"
                     break

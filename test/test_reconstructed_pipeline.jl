@@ -5,7 +5,7 @@ const COUNT_CONFIG = joinpath(ROOT, "config", "chitosan.toml")
 
 @testset "Matched-residual pipeline must regenerate patches" begin
     mktempdir() do dir
-        for name in ("matched_residual", "transverse_moment", "affine_residual", "signed_mold", "affine_fisher", "centered_fisher", "shrunk_gmm"),
+        for name in ("matched_residual", "transverse_moment", "affine_residual", "signed_mold", "affine_fisher", "centered_fisher", "shrunk_gmm", "patch_support", "gaussian_score"),
             key in ("--patches-fwd","--patches-bwd","--descriptor-patches")
             config = joinpath(ROOT,"config","unit_assignment_" * name * ".toml")
             opts = Dict("--config"=>config,"--outdir"=>joinpath(dir,"not_created"),key=>"cached.tsv")

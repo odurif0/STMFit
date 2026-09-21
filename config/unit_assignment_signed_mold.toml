@@ -1,6 +1,7 @@
 # One label-free feature change: signed physical mold cost differences.
 [model]
 fisher_score_center = "legacy_centered_mean"
+gmm_final_score = "mahalanobis"
 gmm_final_covariance = "ridge"
 gmm_covariance_ridge = 1e-6
 fisher_projection_zero_l1 = 1e-12
@@ -39,6 +40,7 @@ interactions = true
 vote_threshold = 0.5
 
 [preprocessing]
+assignment_patch_support = "full_square"
 fisher_patch_projection = "none"
 patch_residual_filter = "smooth_residual"
 descriptor_normalization = "median_sample_std"

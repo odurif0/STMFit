@@ -2307,6 +2307,18 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-21. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0m. **Can complete observed disks or final covariance-volume scoring help?** →
+    **AUTHORIZED; IN PROGRESS (Sep 21)**: two independent changes against the
+    675/33 centered-Fisher candidate, one Viper job bounded to 30 minutes and
+    four requested CPUs. Partial patches require a complete central disk;
+    backward affine support is reflection-closed and never imputed. The other
+    arm adds the Gaussian volume term only at final scoring, leaving hard
+    self-training and ridge covariances unchanged. Full146/900 inference precedes
+    external full145 grading; require twelve-table control replay and all keys.
+    No combined arm, normalization/weighting change, count refit, unknown25 run,
+    DFT change or post-grade parameter search is in scope. Historical 677/36
+    remains the target, not an input or composition prior.
+
 0l. **Can training-consistent Fisher centering or final covariance shrinkage help?** →
     **COMPLETE; CENTERING GAIN, NO PROMOTION (Sep 21)**: source **0d58b44**, job
     **11891104**, exit **0:0 in 9m04s**. Twelve control tables replay 673/33
@@ -8513,3 +8525,71 @@ The bounded deliverable is complete; the broader historical target remains open.
 
 The final documentation build passes, with only the existing generated-page
 and search-index size warnings; deployment remains skipped outside CI.
+
+## 2026-09-21 — Complete patch support and final Gaussian score: bounded comparison
+
+The user authorizes trying the first two proposed leads after the centered-Fisher
+675/33 result. Scientific deliverable: a complete independent comparison of
+support handling and covariance-volume scoring, with all gains/losses, coverage
+and exact chains. Done means synthetic/CLI regressions pass, one bounded Viper
+job returns all three arms, twelve control tables exactly replay the saved
+675/33 candidate, all 900 keys survive, and external full145 grading is reported
+only after scientific outputs are fixed. The target remains historical 677/870
+correct and 36/145 exact. One job is limited to 30 minutes, four requested CPUs
+and 16 GB. No automatic retry, combined variant, post-grade tuning, normalization,
+scan weighting, count refit, new DFT or unknown25 application is included.
+
+**Support hypothesis.** Existing Fisher validity requires all 289 square pixels
+although only its 197-pixel disk and center enter learning/scoring. The new
+explicit `assignment_patch_support = "complete_disk_symmetric"` permits invalid
+values outside that unchanged disk, but no missing disk pixel or missing schema
+column. No pixel value is imputed. The backward affine descriptor independently
+requires the complete 49-pixel integer-grid disk inside its 9x9 square. Remaining
+observed peripheral pixels are retained only when all u/t reflection partners
+are present. This avoids a one-sided observation mask generating apparent
+transverse contrast. Fit the affine plane by least squares on this observed
+symmetric support and apply the same half-plane numerator and residual L1 norm.
+This discards observed corner partners too; it is not recovery of their unknown
+counterparts. Complete patches take the byte-identical original path; missing
+central disks remain NA. CC's existing pairwise-finite treatment is untouched.
+No new minimum fraction, noise model or normalization is introduced. Availability
+changes can alter Fisher/GMM learning globally, requiring a full-cohort comparison.
+
+**Volume hypothesis.** `gmm_final_score = "gaussian_density"` replaces the final
+`log(weight)-d^2/2` score with full Gaussian log density, adding `-logdet(Sigma)/2`
+and the shared dimension constant. It uses the existing `1e-8 I` Cholesky guard.
+The EM initialization and fit, two distance-only hard self-training updates,
+last ridge covariances and free mixture weights are unchanged. Final chemical
+group naming remains mean raw amplitude of assigned members; naming can therefore
+change with assignments even though fitted parameters do not. Votes remain hard
+seed decisions, not calibrated density probabilities. The mode requires at least
+one hard self-training iteration. No shrinkage or support change accompanies it.
+
+Both candidates copy `unit_assignment_centered_fisher.toml` and change only name
+and their own setting. All nine older native configs explicitly retain
+`full_square` / `mahalanobis`. Physical and selection parameters stay in TOML.
+No expected N, sequence, truth class or composition enters scientific code.
+The science cohort includes the externally excluded technical scan; only the
+separate grader may use the confirmed benchmark manifest. Synthetic tests cover
+independent least-squares/density formulas, reflection/affine invariances,
+discarded-pixel independence, all mandatory disk positions, unchanged complete
+patches and fitted GMM parameters, invalid-key retention, strict configuration,
+CLI/API agreement and the three-arm shell runner. Results follow after execution.
+
+An initial synthetic density assertion failed on one random covariance with
+condition number **7.0243e6**: LU versus Cholesky differs by **9.053e-7 absolute /
+7.201e-11 relative**, just above the test's fixed `5e-11` relative tolerance.
+The test now bounds this independent-solver comparison by
+`max(5e-11, 8eps(Float64)*cond(Sigma))`, and adds strict `5e-13` comparisons for
+well-conditioned versions of every matrix. This changes test error accounting
+only; no scientific ridge, formula, data or candidate setting is changed.
+
+Pre-run verification now passes **1,604 assertions** under Julia 1.13: new
+support/score tests 286, numerical assignment 136, numerical diagnostics 20,
+native Fisher 229, affine Fisher 74, Fisher attribution 207, representation
+diagnostics 319, transverse descriptors 125, signal features 73, reconstructed
+assignment 37, full synthetic pipeline 82, and new shell runner 16. The docs
+build passes with only the existing page/search-index size warnings and skipped
+non-CI deployment. No real multi-file scientific fit was run locally. The count
+config and Manifest hashes match the preceding comparison. Viper input hashes
+also match, and no competing job is queued or running before submission.
