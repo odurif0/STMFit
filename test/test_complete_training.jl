@@ -167,7 +167,8 @@ end
         @test_throws ArgumentError GMM._view_probability(records,names,opt)
         @test isequal(GMM._view_probability(records,names,old),
                       GMM._view_probability(records,names,opt;training_mask=trues(80)))
-        Z,valid=GMM._standardized_matrix(records,names;training_mask=mask)
+        Z,valid=GMM._standardized_matrix(records,names;training_mask=mask,
+            normalization=opt.normalization,scale_fallback=opt.scale_fallback)
         @test all(valid)
         for file in unique(r.file for r in records), j in 1:4
             idxs=findall(r->r.file==file,records); train=filter(i->mask[i],idxs)
@@ -187,14 +188,16 @@ end
         @test da==db && length(da)==2
         @test all(d->d.indices==findall(mask),da)
         @test all(d->length(d.clusters)==2 && d.clusters[1].weight != d.clusters[2].weight,da)
-        z,_=GMM._standardized_matrix(changed,names;training_mask=mask)
+        z,_=GMM._standardized_matrix(changed,names;training_mask=mask,
+            normalization=opt.normalization,scale_fallback=opt.scale_fallback)
         @test z[mask,:]==Z[mask,:]
         extra=GMM.LobeRecord("new_partial_file.sxm",1,1e99,Dict(f=>1e10 for f in names))
         extended=vcat(records,[extra]); dc=[]
         c=GMM._view_probability(extended,names,opt;training_mask=vcat(mask,false),diagnostics=dc)
         @test isequal(c[1:80],a) && isnan(c[81]) && dc==da
         nofile=copy(mask); nofile[1:10].=false
-        _,finite=GMM._standardized_matrix(records,names;training_mask=nofile)
+        _,finite=GMM._standardized_matrix(records,names;training_mask=nofile,
+            normalization=opt.normalization,scale_fallback=opt.scale_fallback)
         @test !any(finite[1:10]) && all(finite[11:80])
         @test all(isnan,GMM._view_probability(records,names,opt;training_mask=falses(80)))
         invalid=deepcopy(records); invalid[10].features["f2"]=NaN

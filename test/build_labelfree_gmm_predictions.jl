@@ -20,7 +20,7 @@ using .ScriptUtils: _ensure_parent, _read_tsv
 include(joinpath(@__DIR__, "lib", "assignment_covariance.jl"))
 using .AssignmentCovariance
 include(joinpath(@__DIR__, "lib", "reconstructed_unit_assignment.jl"))
-using .ReconstructedUnitAssignment: load_training_policy, load_training_mask, validate_training_mask
+using .ReconstructedUnitAssignment: load_training_policy, load_training_mask, validate_training_mask, load_gmm_normalization
 
 const DEFAULT_FEATURES = "results/unit_separability/lobe_features_selectedN_primary_local.tsv"
 const DEFAULT_SPLIT = ""
@@ -43,6 +43,8 @@ struct Options
     final_score::String
     training_policy::String
     training_support::String
+    normalization::String
+    scale_fallback::Float64
 end
 
 function _load_final_score(config::AbstractDict)
@@ -141,6 +143,11 @@ function _parse_cli(args)
                                      the covariance-volume term only to final
                                      scoring after self-training (>= 1).
                                      Neither option changes EM or vote weights.
+                                     Also declares per-file GMM feature scaling:
+                                     mean_sample_std or median_iqr (Type-7 Q75-Q25),
+                                     and its degenerate-scale fallback. Scaling
+                                     uses finite observations before interactions;
+                                     it neither clips nor imputes observations.
               --split-features PATH  Optional split-width feature TSV; adds split_log_skew
               --training-support PATH Observed pixel-count TSV, required only for
                                      complete_patches training. Normalization,
@@ -154,7 +161,7 @@ function _parse_cli(args)
               --first-seed INT       First k-means seed [0]
               --seeds INT            Number of k-means seeds [20]
               --interactions         Append pairwise products within each view after
-                                     per-file z-scoring.
+                                     configured per-file scaling.
               --no-interactions      Disable the pairwise-product expansion (overrides
                                      an earlier --interactions; keeps views low-dim).
               --selftrain INT        After each seed's EM fit, run INT hard
@@ -184,6 +191,7 @@ function _parse_cli(args)
     covariance.mode == "ledoit_wolf" && selftrain < 1 &&
         error("Final Ledoit-Wolf covariance requires --selftrain >= 1")
     cfg = TOML.parsefile(config)
+    normalization = load_gmm_normalization(cfg)
     final_score = _load_final_score(cfg)
     training_policy = load_training_policy(cfg)
     (training_policy == "complete_patches") == !isempty(training_support) ||
@@ -192,7 +200,7 @@ function _parse_cli(args)
         error("Explicit final Gaussian score requires --selftrain >= 1")
     return Options(features, split_features, patches, out_tsv, view_specs,
                    first_seed, n_seeds, interactions, selftrain, covariance.mode, covariance.ridge, final_score,
-                   training_policy, training_support)
+                   training_policy, training_support, normalization.mode, normalization.scale_fallback)
 end
 
 function _arg_value(args, i::Int, flag::String)
@@ -360,7 +368,10 @@ function _default_views(records::Vector{LobeRecord})
 end
 
 function _standardized_matrix(records::Vector{LobeRecord}, features::Vector{String}; interactions::Bool=false,
-                              training_mask=nothing)
+                              training_mask=nothing, normalization::String, scale_fallback::Real)
+    normalization in ("mean_sample_std", "median_iqr") || throw(ArgumentError("unknown GMM normalization"))
+    !(scale_fallback isa Bool) && isfinite(scale_fallback) && scale_fallback > 0 ||
+        throw(ArgumentError("scale fallback must be positive and finite"))
     n = length(records)
     training_mask === nothing || (training_mask isa AbstractVector{Bool} && length(training_mask) == n) ||
         throw(ArgumentError("normalization training mask must match rows"))
@@ -386,9 +397,17 @@ function _standardized_matrix(records::Vector{LobeRecord}, features::Vector{Stri
             if isempty(good)
                 z[idxs, j] .= NaN
             else
-                μ = mean(good)
-                σ = std(good)
-                σ = σ > 0 ? σ : 1.0
+                if normalization == "mean_sample_std"
+                    # Preserve the original operations exactly for the control.
+                    μ = mean(good)
+                    σ = std(good)
+                    σ = σ > 0 ? σ : scale_fallback
+                else
+                    μ = median(good)
+                    q = quantile(good, [0.25, 0.75]; alpha=1, beta=1)
+                    σ = q[2] - q[1]
+                    σ = isfinite(σ) && σ > 0 ? σ : scale_fallback
+                end
                 for i in idxs
                     z[i, j] = isfinite(raw[i, j]) ? (raw[i, j] - μ) / σ : NaN
                 end
@@ -531,7 +550,8 @@ end
 function _view_probability(records::Vector{LobeRecord}, features::Vector{String}, opt::Options;
                            diagnostics=nothing, training_mask=nothing)
     eligible = validate_training_mask(opt.training_policy, training_mask, length(records))
-    X, valid = _standardized_matrix(records, features; interactions=opt.interactions, training_mask)
+    X, valid = _standardized_matrix(records, features; interactions=opt.interactions, training_mask,
+        normalization=opt.normalization, scale_fallback=opt.scale_fallback)
     idxs = findall(valid .& eligible)
     score_idxs = findall(valid)
     length(idxs) >= 2 || return fill(NaN, length(records))

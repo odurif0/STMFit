@@ -2307,6 +2307,14 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-21. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0o. **Can robust per-scan GMM normalization improve recognition?** →
+    **AUTHORIZED; COMPARISON PENDING (Sep 21)**: one median/Type-7-IQR candidate
+    versus the 676/34 support control. All admissible patches remain eligible;
+    Fisher, k-means, selected N, free mixture weights and vote rules stay fixed.
+    One Viper job, four requested CPUs, 16 GB, 30 minutes, no automatic retry,
+    scan weighting, resampling, combined candidate or post-grade tuning. The
+    historical 677/36 result remains the target, not independent validation.
+
 0n. **Can complete-patch learning retain partial-patch predictions without their training influence?** →
     **COMPLETE; NEGATIVE (Sep 21)**: source **f7a4074**, job **11908779**,
     exit **0:0 in 6m42s**. Control exactly replays 676/34; complete training gives
@@ -8872,3 +8880,50 @@ calibration and HPC notes all record the negative 674/33 result and retain
 676/34 as the working candidate. Scientific source is unchanged since f7a4074;
 validated source and conclusions are committed. Generated results remain ignored
 and are preserved locally, including the failed initial audit and all losses.
+
+## 2026-09-21 — Robust per-scan GMM normalization, one fixed comparison
+
+**Scientific deliverable and done condition.** The user authorizes the recommended
+first lead: compare median/IQR scaling with the current 676/870, 34/145 support
+candidate. Done means synthetic tests, an exact control replay, all input keys
+retained, checked upstream identity and numerical support, one external grade
+with paired gains/losses and coverage, fetched outputs and committed conclusions.
+Historical 677/870, 36/145 and 854/870 coverage remain the goal to exceed. This
+is one 30-minute Viper allocation, four requested CPUs and 16 GB, not an open
+campaign. No automatic retry, weighting, scan resampling, complete-case training,
+combined variant, count refit, DFT change, unknown25 rerun or post-grade tuning.
+
+**Fixed scientific change.** `unit_assignment_robust_normalization.toml` copies
+`unit_assignment_patch_support.toml`, changing only the method name and explicit
+`[preprocessing] gmm_feature_normalization` from `mean_sample_std` to `median_iqr`.
+All twelve previous native configs explicitly retain the original mode. The
+existing degenerate-scale guard is exposed as `gmm_scale_fallback = 1.0`.
+Moments are computed independently for each feature/file on the same finite
+observations as before, including eligible partial rows. The robust expression
+is `(x - median(x))/(Q75-Q25)` with Type-7 quantiles (`alpha=beta=1`). A zero or
+nonfinite IQR uses one; positive IQRs are not floored. Empty support remains NA.
+Pairwise products follow scaling; no clipping, imputation, global moments or
+Gaussian-consistency factor is introduced. No benchmark information participates.
+
+Only the GMM input transformation changes. Fisher, patch extraction, CC,
+descriptor, k-means, GMM seeds, EM, two hard updates, ridge, free component
+weights, amplitude-based component naming and final soft vote remain fixed.
+Robust moments need not improve recognition: a small IQR can magnify outliers
+and their products, and few lobes can make quantiles unstable. This is a testable
+hypothesis, not a promised improvement or calibrated confidence mechanism.
+
+The synthetic test is first run before implementation and fails on the missing
+candidate, as expected. Tests cover the exact formulas, legacy arithmetic,
+singleton/constant/zero-IQR/empty/nonfinite support, no positive-IQR floor,
+per-file isolation, row/name invariance, masked training isolation, products
+after scaling, free weights, deterministic CLI/API identity and forbidden label
+inputs. Full-cohort scientific fits remain on Viper. Results follow after the
+unchanged external grade; the reused benchmark is development evidence only.
+
+Initial verification passes **99 normalization assertions** and **154 existing
+complete-training assertions** under Julia 1.13. The documentation build passes
+with the pre-existing HTML/search-index size warnings and non-CI deployment
+skip. Further regression/pipeline suites continue before submission. The old
+representation diagnostic now rejects median/IQR configs explicitly, rather
+than silently reporting mean/std arithmetic for a different model. The source
+is committed early; neither real-cohort fitting nor external grading has run.

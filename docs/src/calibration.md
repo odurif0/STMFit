@@ -347,6 +347,27 @@ This is evidence against this complete-training variant as a replacement, not
 permission to add a benchmark-directed fallback. Keep the 676/34 support
 candidate; normalization rules, counts and the frozen application stay unchanged.
 
+### Robust GMM feature normalization (2026-09-21)
+
+The newly authorized comparison changes only GMM per-file feature moments from
+mean/sample-std to median/IQR, before pairwise products. This is not physical
+pixel calibration and does not affect Fisher or k-means. The support candidate
+at 676/34 is the control; complete-case training is not reused. All finite
+admissible values remain eligible, including usable partial patches.
+
+`[preprocessing] gmm_feature_normalization` selects the explicit formula, and
+`gmm_scale_fallback = 1.0` records the degenerate-scale guard in every native
+config. Q25/Q75 use Type 7 interpolation, with no normal-consistency rescaling.
+An empty feature support stays unavailable; a zero/nonfinite IQR uses one.
+Positive small IQRs are not floored. Median/IQR resists changes in extreme
+observations when estimating moments, but does not bound their transformed
+values; short scans or interactions can therefore become less stable, not more.
+No claim of improved recognition is made before the fixed external comparison.
+
+All choices precede grading. No expected count, sequence, composition, benchmark
+label, class balancing, scan weighting or benchmark-tuned fallback enters this
+experiment. Counting, DFT and the frozen unknown-chain application are untouched.
+
 ## Opt-in label-free exploration (2026-09-18)
 
 `config/label_free_exploration.toml` is diagnostic configuration, not a new

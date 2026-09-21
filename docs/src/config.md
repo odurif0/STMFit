@@ -748,6 +748,29 @@ One other chain loses exactness. Keep `unit_assignment_patch_support.toml` at
 not the working replacement. No partial/global normalization fallback, different
 eligibility rule or other post-grade change is introduced.
 
+### Robust per-scan GMM normalization (2026-09-21)
+
+Two explicit `[preprocessing]` fields now describe native GMM feature scaling:
+
+- `gmm_feature_normalization = "mean_sample_std"` preserves all twelve earlier
+  configs. The new `unit_assignment_robust_normalization.toml` copies the 676/34
+  support candidate and changes only its name and this field to `"median_iqr"`.
+- `gmm_scale_fallback = 1.0` exposes the existing degenerate-scale guard.
+  Both fields are required; the fallback must be finite and strictly positive.
+
+Each feature is centered/scaled separately within its file, using the same finite
+values and training eligibility as before. The robust formula is
+`(x - median(x)) / (Q75(x) - Q25(x))`, with Hyndman-Fan Type 7 quantiles
+(`alpha=beta=1`). A zero or nonfinite IQR uses the declared fallback; a positive
+IQR is not floored, even if small. Empty support remains NA. There is no clipping,
+imputation, global fallback, Gaussian-consistency factor or quantile sweep.
+The 28 pairwise products are formed after scaling the same eight descriptors.
+
+This one candidate retains `all_admissible` training, including usable partial
+patches. Fisher, k-means, pixel normalization, free GMM mixture weights, seeds,
+hard updates, ridge, physical amplitude naming and voting are unchanged. The
+bounded experiment has not yet been graded; no benefit or promotion is claimed.
+
 ## Opt-in diagnostic exploration settings (2026-09-18)
 
 `config/label_free_exploration.toml` is used only by standalone exploration tools;

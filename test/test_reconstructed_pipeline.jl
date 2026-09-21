@@ -5,7 +5,7 @@ const COUNT_CONFIG = joinpath(ROOT, "config", "chitosan.toml")
 
 @testset "Matched-residual pipeline must regenerate patches" begin
     mktempdir() do dir
-        for name in ("matched_residual", "transverse_moment", "affine_residual", "signed_mold", "affine_fisher", "centered_fisher", "shrunk_gmm", "patch_support", "gaussian_score", "complete_training"),
+        for name in ("matched_residual", "transverse_moment", "affine_residual", "signed_mold", "affine_fisher", "centered_fisher", "shrunk_gmm", "patch_support", "gaussian_score", "complete_training", "robust_normalization"),
             key in ("--patches-fwd","--patches-bwd","--descriptor-patches")
             config = joinpath(ROOT,"config","unit_assignment_" * name * ".toml")
             opts = Dict("--config"=>config,"--outdir"=>joinpath(dir,"not_created"),key=>"cached.tsv")
@@ -105,13 +105,17 @@ end
 if "--e2e" in ARGS
     @testset "Native extracted-input pipeline end to end" begin
         saved = Dict{String,Vector{UInt8}}()
-        for complete_training in (false, true)
+        for variant in ("control", "complete_training", "robust_normalization")
             mktempdir() do dir
                 opts = pipeline_fixture(dir)
-                if complete_training
+                if variant != "control"
                     cfg = TOML.parsefile(ASSIGNMENT_CONFIG)
-                    cfg["selection"]["assignment_training_support"] = "complete_patches"
-                    path = joinpath(dir,"complete_training.toml")
+                    if variant == "complete_training"
+                        cfg["selection"]["assignment_training_support"] = "complete_patches"
+                    else
+                        cfg["preprocessing"]["gmm_feature_normalization"] = "median_iqr"
+                    end
+                    path = joinpath(dir,variant*".toml")
                     open(io -> TOML.print(io,cfg),path,"w")
                     opts["--config"] = path
                 end
@@ -138,8 +142,10 @@ if "--e2e" in ARGS
                 @test !isfile(joinpath(out, "failures.tsv"))
                 for table in ("training_support","fisher_cv","features_predictor","pred_gmm","pred_kmeans","predictions")
                     bytes = read(joinpath(out,table*".tsv"))
-                    if complete_training
+                    if variant == "complete_training"
                         @test bytes == saved[table] # All synthetic patches are complete.
+                    elseif variant == "robust_normalization"
+                        table in ("pred_gmm","predictions") || @test bytes == saved[table]
                     else
                         saved[table] = bytes
                     end

@@ -99,8 +99,12 @@ function run_diagnostics(control, centered, shrunk, outdir)
     records = GMM._load_records(joinpath(control,"features_predictor.tsv"))
     crecords = GMM._load_records(joinpath(centered,"features_predictor.tsv"))
     key.(records) == key.(crecords) || error("Predictor order differs")
-    X, valid = GMM._standardized_matrix(records,FEATURES;interactions=true)
-    C, cvalid = GMM._standardized_matrix(crecords,FEATURES;interactions=true)
+    base_scaling = load_gmm_normalization(load_config(baseconfig))
+    center_scaling = load_gmm_normalization(load_config(centerconfig))
+    X, valid = GMM._standardized_matrix(records,FEATURES;interactions=true,
+        normalization=base_scaling.mode,scale_fallback=base_scaling.scale_fallback)
+    C, cvalid = GMM._standardized_matrix(crecords,FEATURES;interactions=true,
+        normalization=center_scaling.mode,scale_fallback=center_scaling.scale_fallback)
     valid == cvalid || error("Standardization validity changed")
     zrows = [Dict("file"=>r.file,"lobe"=>r.lobe,"valid"=>valid[i],
         "fisher_z_control"=>X[i,8],"fisher_z_centered"=>C[i,8],

@@ -173,8 +173,10 @@ for script in ("build_labelfree_gmm_predictions.jl", "build_labelfree_unit_predi
         files = ["a","a","a","b","b","c"]
         features = ["f1","f2","f3"]
         records = [NativePreprocessingFixture.LobeRecord(files[i],Dict(features[j]=>raw[i,j] for j in 1:3)) for i in 1:6]
+        scaling = script == "build_labelfree_gmm_predictions.jl" ?
+            (normalization="mean_sample_std", scale_fallback=1.0) : (;)
         for interactions in (false,true)
-            native, valid = NativePreprocessingFixture._standardized_matrix(records,features;interactions)
+            native, valid = NativePreprocessingFixture._standardized_matrix(records,features;interactions,scaling...)
             result=standardize_columns(raw,files;interactions)
             @test isequal(native,result.expanded)
             @test valid == result.valid

@@ -41,6 +41,8 @@ interactions = true
 vote_threshold = 0.5
 
 [preprocessing]
+gmm_feature_normalization = "mean_sample_std"
+gmm_scale_fallback = 1.0
 assignment_patch_support = "full_square"
 fisher_patch_projection = "affine_disk"
 patch_residual_filter = "smooth_residual"

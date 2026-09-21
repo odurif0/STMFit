@@ -200,6 +200,9 @@ end
 
 function load_inputs(paths, production_config)
     cfg = load_config(production_config)
+    cfg["preprocessing"]["gmm_feature_normalization"] == "mean_sample_std" &&
+        cfg["preprocessing"]["gmm_scale_fallback"] == 1.0 ||
+        error("This historical representation diagnostic requires mean_sample_std with scale fallback 1")
     inputs = Dict{String,Any}()
     for name in ("patches-bwd9", "patches-bwd17", "patches-fwd17", "descriptor", "predictor", "fisher")
         header, rows = lobe_table(paths[name])

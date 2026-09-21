@@ -916,3 +916,15 @@ documented in the report, with no change to the already-frozen abstention rule.
 All gains/losses and replay commands: `results/complete_training_20260921/report.md`.
 This comparison is complete: no resubmission, normalization fallback, additional
 method or post-grade tuning. Historical 677/36 remains the target to exceed.
+
+## Robust per-scan GMM normalization comparison (September 21)
+
+`hpc/compare_robust_normalization.sbatch` runs the 676/34 support `control/` and
+one `robust/` candidate using median/Type-7-IQR GMM feature scaling. All admissible
+patches remain eligible; upstream signals, k-means and selected N are unchanged.
+It requests four CPUs, 16 GB and 30 minutes for one job. No automatic retry or
+other method is included. First run `--dry-run` and explicitly pass absolute
+`STMFIT_PROJECT_DIR`, `STMFIT_CACHE_DIR`, `STMFIT_INPUT_DIR`, `STMFIT_OUTDIR` and
+`JULIA_BIN` through `sbatch --export=...`; bare environment assignments do not
+override Viper's `SBATCH_EXPORT=NONE`. Only compute nodes run scientific stages.
+Fetch outputs and logs before external grading. This comparison is pending.

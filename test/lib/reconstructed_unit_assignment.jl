@@ -5,7 +5,7 @@ using Printf, Statistics, TOML
 export read_table, write_table, lobe_table, require_same_keys,
        transverse_asymmetry, transverse_descriptor, augment_descriptor, mold_margin,
        write_soft_vote, load_config, load_training_policy, write_training_support,
-       load_training_mask, validate_training_mask
+       load_training_mask, validate_training_mask, load_gmm_normalization
 
 const TRANSVERSE_DESCRIPTORS = ("transverse_half_plane_asymmetry",
     "transverse_first_moment", "affine_residual_half_plane_asymmetry")
@@ -145,12 +145,25 @@ function validate_training_mask(policy, mask, n)
     return mask
 end
 
+"Explicit per-file GMM feature scaling, independent of pixel normalization."
+function load_gmm_normalization(config::AbstractDict)
+    pre = get(config, "preprocessing", Dict())
+    mode = get(pre, "gmm_feature_normalization", nothing)
+    mode in ("mean_sample_std", "median_iqr") ||
+        throw(ArgumentError("explicit gmm_feature_normalization must be mean_sample_std or median_iqr"))
+    fallback = get(pre, "gmm_scale_fallback", nothing)
+    fallback isa Real && !(fallback isa Bool) && isfinite(fallback) && fallback > 0 ||
+        throw(ArgumentError("explicit gmm_scale_fallback must be positive and finite"))
+    return (mode=String(mode), scale_fallback=Float64(fallback))
+end
+
 function load_config(path::AbstractString)
     cfg = TOML.parsefile(path)
     for section in ("model", "selection", "preprocessing")
         haskey(cfg, section) || error("Missing config section [$section]")
     end
     model, pre = cfg["model"], cfg["preprocessing"]
+    load_gmm_normalization(cfg)
     model["descriptor"] in TRANSVERSE_DESCRIPTORS || error("Unsupported descriptor")
     model["descriptor_column"] == "patch_u_asym_reconstructed" || error("Unsupported descriptor column")
     model["descriptor_channel"] == "bwd_res" || error("Unsupported descriptor patch family")
