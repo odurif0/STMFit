@@ -2308,7 +2308,8 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0r. **Can whole-scan bootstrap aggregation improve recognition?** →
-    **AUTHORIZED; PREPARING (Sep 21)**: one fixed 20-replicate GMM bootstrap
+    **RUNNING; RESULT PENDING (Sep 21)**: source **da886ce**, job **11925188**,
+    one fixed 20-replicate GMM bootstrap
     against support control 676/34; each replicate draws S usable scans with
     replacement and keeps ten initialization seeds. Hard votes, free mixture
     masses, physical naming rule, scaling, upstream signals, final threshold,
@@ -2317,6 +2318,8 @@ See `docs/src/selection.md` for the full guard specification and
     Historical 677/36 remains the target, with no gain presumed. No combined
     variant, naming-rule experiment, continuous score, count refit, DFT change
     or unknown25 run is authorized by this pass.
+    All **2,471 assertions across 19 suites** and the docs build pass; the same
+    job is followed without changing its parameters.
 
 0q. **Can continuous per-seed GMM scores improve the final vote?** →
     **COMPLETE; NEGATIVE (Sep 21)**: source **bef315f**, job **11922389**, exit
@@ -9480,3 +9483,34 @@ The continuous-vote regression also passes (**108 assertions** with the added
 config inventory entry). The Slurm runner now explicitly declares `--no-requeue`
 as well as the one-hour limit. The six-mode synthetic pipeline and complementary
 regressions are running before scientific submission; the result remains unknown.
+
+The six-mode synthetic end-to-end pipeline passes **189 assertions**, including
+the new bootstrap audit and unchanged upstream/Fisher/k-means tables. Source
+**da886ce** is synced to `/u/oldu/code/STMFit_scan_bagging_20260921` using only
+tracked config/HPC/packages/test/root-project files and the unchanged Manifest.
+Source/Manifest checksums match; login-node instantiation succeeds under Julia
+1.13.0 with the existing 1.12.6-Manifest warning. Geometry, split geometry and
+templates retain the previous SHA-256 values. Both metadata-only dry runs see
+146 scans. The runner passes **20 assertions**, including resource limits and
+`--no-requeue`; `sbatch --test-only` accepts the request, not the compute-node
+environment. No raw data, benchmark tables, outputs or agent state are synced.
+
+One actual job **11925188** is submitted at **20:42:12 CEST**, with all five
+absolute variables explicitly exported. It starts at **20:42:41**, after
+**29 seconds** queued, on **vipm2008**. Four CPUs are requested, eight allocated;
+Julia uses four threads and BLAS one. `Requeue=0`, `Restarts=0`, one-hour limit.
+Output: `/ptmp/oldu/stmfit/scan_bagging_20260921_v1`. No duplicate submission,
+resource change or local/login-node cohort fit is attempted. Complementary
+legacy regressions continue; they must pass before interpreting the external
+grade. No scientific result is yet available, and settings remain frozen.
+
+All complementary regressions finish successfully while the control starts:
+**2,471 assertions across 19 suites**. Counts: bootstrap 222, continuous vote
+108, scan weighting 138, robust normalization 99, complete training 154,
+support/score 286, numerical assignment 136, numerical diagnostics 20, native
+Fisher 229, affine Fisher 74, Fisher attribution 210, representation 319,
+transverse descriptors 125, signal features 73, assignment 37, six-mode pipeline
+189 and three Slurm runners 20/16/16. The first 16-assertion repetition of the
+new runner is not double-counted; its final resource/requeue checks total 20.
+The failed initial TOML-inventory log remains. No scientific source/config
+changes during these checks; no external grade has run.

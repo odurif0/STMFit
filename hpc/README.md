@@ -1017,3 +1017,12 @@ check exact control replay, all scan/lobe identities, N, unchanged upstream
 outputs and bootstrap multiplicities before external grading. No benchmark
 manifest, truth or historical predictions are inference inputs. Result pending;
 successful preparation alone is not a recognition result or promotion.
+
+Scientific source **da886ce**, job **11925188**: submitted **20:42:12 CEST**,
+started **20:42:41** on `vipm2008` after **29 seconds** queued. Four CPUs requested,
+eight allocated, four Julia threads, `Requeue=0`. Source and Manifest checksum
+checks are empty; both dry runs see 146 scans. The 222 targeted assertions,
+189 six-mode pipeline assertions, 108 continuous-vote regression assertions,
+20 runner assertions and the documentation build pass. Complementary regressions
+also pass: **2,471 assertions in 19 suites** in total, completed early during the
+control run. Follow this job; do not resubmit.
