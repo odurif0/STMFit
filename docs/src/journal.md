@@ -8765,3 +8765,13 @@ partial rows remain prediction-only by the fixed rule. Viper input hashes,
 root Manifest and count config match the previous comparison; no other user job
 is queued or running before submission. No scientific rule is changed after
 inspecting these observation counts.
+
+Scientific source **f7a4074** is committed before submission. The dedicated Viper
+checkout `/u/oldu/code/STMFit_complete_training_20260921` is checksum-identical
+to the tracked source; the ignored Manifest is copied unchanged. Both dry runs
+recognize 146 inputs under Julia 1.13.0. Single job **11908779** is submitted at
+**11:45:16 CEST** with the five absolute input variables explicitly exported,
+partition `small`, account `mfk_cpu`, QOS `n0001`. Output target is
+`/ptmp/oldu/stmfit/complete_training_20260921_v1`. Slurm initially queues it for
+node availability and the global QOS CPU limit. No resource change, duplicate
+submission, local fallback fit or external grading is performed while waiting.
