@@ -482,7 +482,15 @@ automatic retry. Exact control replay and all-key/N/upstream/vote checks precede
 external grading. Labels, expected N, benchmark membership and historical
 predictions are not learning or inference inputs. No naming, grouped-Fisher,
 fusion, threshold, resampling or post-grade search accompanies this test.
-Result pending; historical 677/36 remains the comparison target.
+The completed result is **negative: 666/870 correct, 666/852 (78.2%), 6/145
+exact**, versus the exactly replayed 676/34 support control at the same
+coverage. No exact chain is gained and 28 are lost. Reducing covariance freedom
+does not improve recognition in this fixed representation/fusion. Learned
+smaller-component masses are about 13.2–14.4%, not an imposed class proportion;
+final class-1 emissions decrease from 223 to 156 across all 900 rows. These
+post-hoc observations do not authorize a composition prior, new naming rule or
+threshold adjustment. Reject this variant and retain **676/34**; historical
+677/36 remains the target. This reused grade is not independent validation.
 
 ## Opt-in label-free exploration (2026-09-18)
 

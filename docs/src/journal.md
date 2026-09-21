@@ -2308,16 +2308,22 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0s. **Can covariance sharing throughout GMM learning improve recognition?** →
-    **RUNNING; RESULT PENDING (Sep 22)**: one tied-covariance candidate
-    against the 676/34 support control, with the covariance pooled at
-    initialization, every EM M-step and both hard updates. Means and masses
-    remain free; scaling, seeds, naming, vote, upstream features and N are
-    unchanged. One Viper job, four requested CPUs, 16 GB, 30-minute ceiling,
-    no retry. Tests, exact control replay, checked outputs and paired external
-    grades define completion; historical 677/36 remains the target. No other
-    proposed lead, combined arm or post-grade adjustment is included. Source
-    **becd0ce**, 2,716 assertions passed; single job **11931106** started on
-    vipc2227 at 00:37 CEST after 18 seconds queued.
+    **COMPLETE; NEGATIVE (Sep 22)**: source **becd0ce**, job **11931106**,
+    **0:0 in 5m53s**, after 15 seconds queued. Sharing covariance at
+    initialization, every EM M-step and both hard updates gives **666/870
+    correct, 666/852 (78.2%), 6/145 exact**, versus the exactly replayed
+    676/34 support control. Twenty-five scans gain, thirty-five lose and
+    eighty-five tie; zero exact chains are gained and 28 lost. Of 69 final
+    changes, 68 switch 1→0 and one 0→1; 55 leave old GMM=1 / k-means=0 ties.
+    All ten tied fits are named, with identical component covariances and
+    free unequal masses. All 146 scans / 900 keys, N, availability and
+    upstream/Fisher/k-means tables remain. All 392 outputs and the Slurm log
+    are fetched/checksummed; 2,716 focused assertions, 7,338 pre-grade output
+    checks, five saved-component checks and paired arithmetic pass. Reject
+    this variant and retain 676/34; historical 677/36 remains unexceeded.
+    No retry, other proposed lead, post-grade adjustment, count refit, DFT
+    change or unknown25 rerun follows. This fixed comparison is complete,
+    not independent validation on the repeatedly reused benchmark.
 
 0r. **Can whole-scan bootstrap aggregation improve recognition?** →
     **COMPLETE; NEGATIVE (Sep 21)**: source **da886ce**, job **11925188**, exit
@@ -2469,7 +2475,7 @@ See `docs/src/selection.md` for the full guard specification and
     generalization claim follows. All 390 outputs and the log are fetched.
 
 0h. **Can a reproducible assignment exceed the lost historical champion?** →
-    **OPEN; TARGET UNCHANGED (Sep 21)**: the user explicitly rejects lowering
+    **OPEN; TARGET UNCHANGED (Sep 22)**: the user explicitly rejects lowering
     the target to the best runnable reconstruction. The historical 677 correct
     positions / 870 and 36 exact chains / 145 remain the comparison target;
     complete-disk support (676 / 34, comparison 0m) is the latest opt-in working
@@ -2488,6 +2494,10 @@ See `docs/src/selection.md` for the full guard specification and
     exact chains are lost and none gained. Of 62 final 1→0 flips, 57 leave
     old GMM=1 / k-means=0 ties. It is rejected without post-grade adjustment
     to fusion, seeds, replicate count or naming; 676 / 34 remains primary.
+    Sharing covariance throughout GMM learning (0s) regresses to 666 / 6,
+    at unchanged coverage; zero exact chains are gained and 28 lost against
+    the support control. It is rejected without trying other proposed leads
+    or post-grade adjustments. The historical objective is not achieved.
     The one physical-u Fisher mirror comparison is **COMPLETE; NEGATIVE**:
     job 11879515 (2m03s, exit 0:0) replays the control byte-for-byte but the
     treatment gives **669/849 (78.8%), 27 exact**, versus 671/849 and 28.
@@ -9716,4 +9726,90 @@ limit and all five explicit exported paths. Scientific source remains
 **becd0ce**; these later commits are documentation only. External grading
 has not begun; this task continues through output verification and the result.
 
-The job starts on **vipc2227 at 00:37:00 CEST**, after 18 seconds queued.
+The control script starts on **vipc2227 at 00:37:00 CEST**, 18 seconds after
+submission. Final Slurm accounting subsequently establishes the allocation
+start at **00:36:57**, hence **15 seconds queued**, followed by script setup.
+
+### Completed result: reject this variant, retain 676/34
+
+Job **11931106** completes at **00:42:50 CEST**, **5m53s**, exit **0:0**,
+without retry (`Requeue=0`, `Restarts=0`). Four CPUs were requested and eight
+allocated, with the fixed 16-GB/30-minute limits; batch MaxRSS is **2,779,148 K**.
+The control finishes all 146 scans at 00:41:02 and the tied arm at 00:42:50.
+All **392 regular outputs plus the Slurm log** are fetched, excluding raw-input
+links. Both checksum dry-runs are empty. No scientific source or parameter changes occur
+after the scientific source freeze in **becd0ce**.
+
+Before grading, **7,338 saved-output assertions** pass. All twelve control
+scientific tables are byte-identical to the saved 676/34 support result.
+Both arms retain all 146 scans / 900 keys, the same selected counts, eleven
+upstream/Fisher/k-means/support tables, four unavailable rows and the specified
+serialized vote arithmetic. All ten candidate seed fits have valid physical
+naming and exactly identical component covariances; the smaller freely learned
+component has **118 or 129 of 896** hard-training members, not a preset class
+count. The four unavailable keys remain `240310_Cu100009.sxm` lobe 8,
+`240818_015.sxm` lobe 1, and `240818_019.sxm` lobes 1–2.
+
+The one external full145 own-N grade is:
+
+| Profile | Correct / 870 | Classified accuracy | Exact / 145 | Coverage / 870 |
+|---|---:|---:|---:|---:|
+| Historical saved reference | 677 | 677/854 (79.3%) | 36 | 854 |
+| Exactly replayed support control | 676 | 676/852 (79.3%) | 34 | 852 |
+| Covariance shared throughout GMM | 666 | 666/852 (78.2%) | 6 | 852 |
+
+Against control, **25 scans gain, 35 lose, 85 tie**, with **zero exact chains
+gained and 28 lost**. Against history, 29 gain, 43 lose and 73 tie, with one
+exact chain gained and 31 lost. Selected counts remain 892 benchmark predictions
+for 870 controls, with 16 missing positions and 38 extras; the same two aligned
+abstentions give coverage 852/870. Confusion `(TN,FP,FN,TP)` changes from
+`(513,52,124,163)` to `(540,25,161,126)`. The decrease in false positives does
+not offset the increase in false negatives. This is a negative recognition
+result despite the smaller covariance parameterization.
+
+Five saved-component checks pass without labels or fitting. Of **69 final
+changes**, **68 switch 1→0 and one 0→1**; one change is outside the benchmark.
+Fifty-five leave old GMM=1 / k-means=0 ties. The sole 0→1 change,
+`240814_025.sxm` lobe 2, enters such a tie; that scan remains at 5/6 correct.
+All 69 final flips also change GMM hard class. Across 896 usable rows, GMM
+scores decrease on 104, increase on 323 and stay identical on 469; GMM hard
+classes change 1→0 on 100 rows and 0→1 on one. Raw final `(0,1,?)` frequencies
+change `(673,223,4)` → `(740,156,4)`. Exact final ties decrease **58 → 3**,
+identically before and after serialization; 652 candidate GMM scores are
+nonendpoint versus 242 for control. No threshold, rounding, naming or class
+proportion is adjusted in response.
+
+Grade orientation changes on nine scans versus control, thirteen versus history;
+it is not independent spatial monomer correspondence. The 28 exact chains lost
+against control are `240307_017`, `240310_Cu100007`, `240311_Cu100061`,
+`240314_Cu100_025`, `240814_012`, `240815_072`, `240817_003`, `240817_004`,
+`240817_005`, `240817_006`, `240817_007`, `240817_021`, `240817_041`,
+`240817_044`, `240817_047`, `240817_048`, `240817_049`, `240817_052`,
+`240817_053`, `240817_055`, `240817_080`, `240817_081`, `240818_017`,
+`240818_020`, `240818_026`, `241113_087`, `241113_088`, and `241114_027`.
+All **290 paired scan comparisons and 69 changed decisions**, including every
+loss, are preserved in `results/tied_covariance_20260922/report.md` and its
+linked tables. Paired arithmetic reproduces grade sums, confusion, coverage,
+selected counts and exact-chain totals.
+
+**Decision: reject this tied-covariance variant and retain the 676/34 support
+candidate.** Historical 677/36 remains the target to exceed. This result concerns
+the specified covariance sharing inside the unchanged representation/fusion,
+not every form of covariance regularization. No other proposed lead, combined
+arm or post-grade search follows; counting, DFT and unknown25 remain untouched.
+This authorized comparison is complete; the broader historical objective is
+still open. Learning/inference are label-free, but this repeatedly reused
+benchmark is development evidence, not independent validation or unknown-chain
+chemical accuracy.
+
+Prediction SHA-256: control
+`eb8d69b8cebcd607b0244db5c65104347e6bcd24acee06f64748cf0e6ec310e3`, tied
+`566e5228bb4baeb9735bbd23a730f4b0fa201dbd5aa416b8b454705fd9689ec6`.
+
+The final documentation build passes with the existing large-page/search-index
+warnings and non-CI deployment skip. README, runbook, selection, assignment,
+config, calibration and HPC notes record the negative 666/6 result and retain
+676/34 as the working reference. Source and passing preparation were committed
+before submission; reviewed conclusions are committed separately. Generated
+results, logs and diagnostic reports remain local and Git-ignored. No new
+scientific run or GitHub push follows this completed comparison.

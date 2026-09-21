@@ -4,7 +4,7 @@ Analysis pipeline for STM images of molecular chains (chitosan on Cu(100) and
 similar systems). Detects and fits a chain-of-Gaussians model to count the
 number of monomer units (lobes) per chain, label-free.
 
-**Latest working candidate, September 21:** complete-disk support improves
+**Latest working candidate, September 22:** complete-disk support improves
 **675 → 676 correct / 870** and **33 → 34 exact chains / 145**. Use the opt-in
 `config/unit_assignment_patch_support.toml`. Coverage rises **849 → 852 / 870**;
 classified accuracy is **676/852 (79.3%)**. Three newly available predictions
@@ -53,6 +53,14 @@ Twenty bootstrap replicates lose 24 exact chains and gain none. Of 62 final
 rule. Reject this variant and keep the **676/34 support candidate**; historical
 677/36 remains unexceeded. No post-grade adjustment follows. See the
 [scan-bagging result](docs/src/unit_assignment.md#whole-scan-gmm-bagging-2026-09-21-negative).
+
+Sharing covariance throughout GMM learning is **negative: 666/870 correct,
+6/145 exact**, at unchanged **852/870 coverage**. It loses 28 exact chains
+and gains none against the exactly replayed 676/34 support control. Reject
+this variant and retain **`config/unit_assignment_patch_support.toml`**;
+historical 677/36 remains the target to exceed. No other method or post-grade
+adjustment is added. See the
+[tied-covariance result](docs/src/unit_assignment.md#tied-gmm-covariance-throughout-learning-2026-09-22-negative).
 
 **Research branch, September 20:** the symmetric fused-fit correction improves
 the regenerated reconstruction from **666 to 671 correct / 870 controls** and

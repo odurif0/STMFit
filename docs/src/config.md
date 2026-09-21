@@ -900,8 +900,13 @@ vote threshold, precision, missing-row policy, upstream signals and N are
 unchanged. Historical representation diagnostics reject tied mode rather than
 silently reporting the old model. One control and one candidate are authorized
 on Viper, with four requested CPUs, 16 GB, a 30-minute limit and no requeue.
-Result pending; the 676/34 support candidate remains the working reference,
-below historical 677/36. No other proposed lead is included.
+The completed result is **negative: 666/870 correct, 666/852 (78.2%), 6/145
+exact**, versus the exactly replayed 676/34 support control at unchanged
+coverage. It gains no exact chain and loses 28. All ten candidate seed fits
+have identical component covariances and valid physical naming; masses remain
+free. Reject this variant and retain **`unit_assignment_patch_support.toml`**,
+still below historical 677/36. No other proposed lead, combination or post-grade
+adjustment follows. See `results/tied_covariance_20260922/report.md`.
 
 ## Opt-in diagnostic exploration settings (2026-09-18)
 

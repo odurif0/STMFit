@@ -2381,6 +2381,77 @@ but this reused benchmark supplies development evidence, not independent
 validation. The authorized comparison is complete; the historical objective
 remains open.
 
+### Tied GMM covariance throughout learning (2026-09-22): negative
+
+`unit_assignment_tied_covariance.toml` copies the 676/34 support control,
+changing only its name and `[model] gmm_covariance_structure` from `"full"`
+to `"tied"`. The two components share the pooled within-component covariance
+at k-means initialization, every EM M-step and both hard self-training updates.
+Scatter is weighted by responsibilities (membership indicators at initialization
+and hard updates), divided by the number of usable observations and given the
+same `1e-6` ridge. Means and mixture masses remain free; no composition prior
+is imposed. The 36-dimensional representation has 666 independent covariance
+entries instead of 1,332 across two matrices. This differs from the previously
+rejected final-only covariance shrinkage and final Gaussian-volume score.
+
+All features/interactions, per-scan mean/sample-std scaling, seeds 0–9, two
+hard updates, factorization guard, Mahalanobis final scoring, amplitude naming,
+hard seed votes, final k-means/GMM mean, `>=0.5` decision, eight-decimal output
+and unavailable-row policy stay fixed. No other proposed lead is included.
+Inference sees all 146 scans without benchmark membership or labels; only
+the separate grader selects the full145 cohort after frozen output checks.
+
+Source **becd0ce** runs in the single Viper job **11931106**, **COMPLETED 0:0
+in 5m53s**, after 15 seconds queued. Four CPUs were requested, eight allocated,
+with 16 GB and a 30-minute limit; no retry occurred. All **392 outputs and the
+Slurm log** are fetched/checksummed. The control's twelve scientific tables
+replay the saved support result byte-for-byte. Both arms retain all 900 keys,
+N, eleven upstream/Fisher/k-means/support tables and the same four unavailable
+rows. All ten tied fits have zero inter-component covariance difference and
+valid physical naming; learned component masses are unequal and unconstrained.
+Verification passes **2,716 focused assertions**, **7,338 pre-grade output
+checks**, five saved-component checks and paired-grade arithmetic.
+
+| Profile | Correct / 870 | Classified accuracy | Exact / 145 | Coverage / 870 |
+|---|---:|---:|---:|---:|
+| Historical saved reference | 677 | 677/854 (79.3%) | 36 | 854 |
+| Exactly replayed support control | 676 | 676/852 (79.3%) | 34 | 852 |
+| Covariance shared throughout GMM | 666 | 666/852 (78.2%) | 6 | 852 |
+
+Against the control, **25 scans gain, 35 lose, 85 tie**; **zero exact chains
+are gained and 28 lost**. Against history, 29 gain, 43 lose and 73 tie, with
+one exact chain gained and 31 lost. Selected counts stay at 892 benchmark
+predictions for 870 controls, with 16 missing positions and 38 extras; the
+same two aligned abstentions leave 852 classified positions in both arms.
+Control → tied confusion `(TN,FP,FN,TP)` is `(513,52,124,163)` →
+`(540,25,161,126)`: fewer false positives do not offset more false negatives.
+
+The saved-score diagnosis reads no labels or fits. Of **69 final changes**,
+68 switch 1→0 and one switches 0→1; one changed row is outside the benchmark.
+Fifty-five leave old GMM=1 / k-means=0 ties. The sole 0→1 change at
+`240814_025.sxm` lobe 2 enters such a tie and leaves that scan's grade at 5/6.
+All 69 final flips also change the GMM hard class. Across 896 usable rows,
+GMM scores decrease for 104, increase for 323 and stay identical for 469;
+the GMM hard decisions change 1→0 for 100 rows and 0→1 for one. Final exact
+ties decrease from 58 to 3, identically before and after serialization.
+Raw final `(0,1,?)` counts change `(673,223,4)` → `(740,156,4)`.
+This is not a reason to retune composition, naming or the tie rule.
+
+There are nine grade-orientation changes versus control, thirteen versus
+history; grade orientation is not independent spatial monomer correspondence.
+All **290 paired scan comparisons, 69 changed decisions, component scores and
+28 lost exact chains** are retained in `results/tied_covariance_20260922/report.md`
+and its linked tables.
+
+**Reject this tied-covariance variant and retain the 676/34 support candidate.**
+Historical 677/36 remains the target to exceed. This tests the specified shared
+covariance inside the unchanged representation and fusion, not every form of
+covariance regularization. No other method, combination or post-grade tuning
+follows; counting, DFT and unknown25 remain untouched. Learning and inference
+are label-free, but the repeatedly reused benchmark is development evidence,
+not independent validation. This authorized comparison is complete; the
+historical objective remains open.
+
 ### Native numerical conventions
 
 The constant-current port retains the old first-axis-fast cube index, sampling

@@ -182,6 +182,23 @@ post-grade fusion/threshold adjustment, new arm, count refit, DFT change or
 unknown25 rerun follows. Historical **677/36** remains unexceeded; inference
 is label-free, but this reused benchmark is not independent validation.
 
+The tied-covariance comparison (source **becd0ce**, job **11931106**, **5m53s**,
+exit **0:0**, after 15 seconds queued) is **negative: 666/870 correct,
+666/852 (78.2%), 6/145 exact**, versus the exactly replayed **676/852,
+34 exact** support control. Twenty-five scans gain, thirty-five lose and
+eighty-five tie; zero exact chains are gained and 28 lost. Of 69 final changes,
+68 switch 1→0 and one switches 0→1; 55 leave old GMM=1 / k-means=0 ties.
+All ten candidate seed fits are named and have identical component covariances,
+with freely learned masses. All 146 scans / 900 keys, selected N, availability
+and upstream/Fisher/k-means tables remain. All **392 outputs and the Slurm log**
+are fetched/checksummed; **2,716 focused assertions, 7,338 pre-grade output
+checks**, five component-score checks and paired arithmetic pass. Keep
+`config/unit_assignment_patch_support.toml`; historical **677/36** remains
+unexceeded. Full gains/losses: `results/tied_covariance_20260922/report.md`.
+No retry, other proposed lead, post-grade setting change, count refit, DFT
+change or unknown25 rerun follows. This reused benchmark is development
+evidence, not independent validation.
+
 This page is the hand-off document for reproducing the current chitosan workflow
 without relying on prior conversation context.  The goal is a label-free fitting
 and model-selection pipeline that is externally graded on the benchmark and then

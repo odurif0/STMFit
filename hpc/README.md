@@ -1053,5 +1053,20 @@ No cohort fitting on login nodes or locally, and no duplicate/automatic retry.
 Fetch logs and outputs; verify exact control replay, keys, N, unchanged upstream
 tables, covariance-mode logs and final vote arithmetic before external grading.
 Inference never receives labels, a benchmark manifest or saved reference
-predictions. Result pending; preparation is not recognition progress, and the
-historical 677/36 remains unexceeded by the retained 676/34 support candidate.
+predictions.
+
+Completed source **becd0ce**, Viper job **11931106**, **0:0 in 5m53s**, after
+15 seconds queued. Slurm allocated eight CPUs for four requested, with
+`Requeue=0`, `Restarts=0`; all five variables were explicitly exported. Both
+arms finish all 146 scans. All **392 outputs and the Slurm log** are fetched
+and checksum-identical; twelve control tables replay the support result exactly.
+The **2,716 focused assertions**, **7,338 pre-grade output checks**, five
+component-score checks and paired-grade arithmetic pass. All ten tied seed
+fits have identical component covariances and freely learned masses.
+
+External grading gives **666/870 correct, 6/145 exact**, versus the replayed
+**676/34** control at the same 852/870 coverage. Reject the tied variant;
+historical 677/36 remains unexceeded. Complete outputs and losses are saved in
+`results/tied_covariance_20260922/report.md`. This comparison is complete: no
+retry, other proposed lead, post-grade adjustment, count refit, DFT change or
+unknown25 rerun follows. The reused grade is not independent validation.
