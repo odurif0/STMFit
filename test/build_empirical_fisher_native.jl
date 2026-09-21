@@ -6,6 +6,7 @@ module NativeFisherCLI
 
 include(joinpath(@__DIR__, "lib", "empirical_fisher_native.jl"))
 using .EmpiricalFisherNative
+using .EmpiricalFisherNative.ReconstructedUnitAssignment: load_training_mask
 
 const USAGE = """
 Usage: julia --project=. test/build_empirical_fisher_native.jl \\
@@ -19,6 +20,8 @@ The output must not exist. No full-data model or prediction TSV is created.
 All four options are required. --prefix selects numbered patch columns (res_p001,
 etc.). Config supplies PCA, GMM, regularization, seed, layout and patch projection.
 The score origin is explicit: legacy centered mean or original training mean.
+With complete_patches training, --training-support PATH is required: only full
+forward squares train either parity fold; admissible partial rows are scored.
 Affine projection, when selected, applies to training and held-out scoring, not
 to the original center amplitudes used to order the unsupervised clusters.
 Native Julia and sklearn initialization/RNG differ; byte identity is NOT claimed.
@@ -29,7 +32,8 @@ function main(args=ARGS)
         print(USAGE)
         return 0
     end
-    allowed = ("--patches", "--prefix", "--config", "--out")
+    required = ("--patches", "--prefix", "--config", "--out")
+    allowed = (required..., "--training-support")
     options = Dict{String,String}()
     iseven(length(args)) || throw(ArgumentError("expected option/value pairs; use --help"))
     for i in 1:2:length(args)
@@ -39,13 +43,15 @@ function main(args=ARGS)
         isempty(value) && throw(ArgumentError("empty value for $name"))
         options[name] = value
     end
-    for name in allowed
+    for name in required
         haskey(options, name) || throw(ArgumentError("missing $name; use --help"))
     end
     ispath(options["--out"]) && throw(ArgumentError("output already exists: $(options["--out"])"))
     config = load_fisher_config(options["--config"])
     patches = load_patches(options["--patches"], options["--prefix"], config)
-    rows = cv_scores(patches, config)
+    mask = load_training_mask(config.training_support, get(options, "--training-support", ""), patches.keys, "fisher")
+    rows = cv_scores(patches, config; training_mask=mask)
+    mask === nothing || println("Fisher complete-square eligibility: $(count(mask))/$(length(mask)) rows before feature validity")
     write_scores(options["--out"], rows)
     invalid = count(row -> !isempty(row.invalid_reason), rows)
     println("Fisher CV: $(options["--out"]) ($(length(rows)) rows, $invalid invalid)")

@@ -299,6 +299,11 @@ function execute_pipeline(opts)
             require_same_keys(basekeys, patchkeys, name)
             paths[key] = path
         end
+        stage = "training_support"
+        support = joinpath(outdir, "training_support.tsv")
+        write_training_support(paths["--patches-fwd"], paths["--patches-bwd"], paths["--descriptor-patches"], support)
+        training_args = cfg["selection"]["assignment_training_support"] == "complete_patches" ?
+            ["--training-support", support] : String[]
         stage = "descriptor"
         descriptor_features = joinpath(outdir, "features_descriptor.tsv")
         augment_descriptor(local_features, paths["--descriptor-patches"], descriptor_features, opts["--config"])
@@ -318,8 +323,8 @@ function execute_pipeline(opts)
         end
         stage = "fisher"
         fisher = joinpath(outdir, "fisher_cv.tsv")
-        run_stage(outdir, stage, "build_empirical_fisher_native.jl", ["--patches", paths["--patches-fwd"], "--prefix", "res",
-            "--config", abspath(opts["--config"]), "--out", fisher])
+        run_stage(outdir, stage, "build_empirical_fisher_native.jl", vcat(["--patches", paths["--patches-fwd"], "--prefix", "res",
+            "--config", abspath(opts["--config"]), "--out", fisher], training_args))
         stage = "predictor_features"
         table = joinpath(outdir, "features_predictor.tsv")
         join_predictor_features(descriptor_features, split_features, score_paths[1], score_paths[2], fisher, table;
@@ -329,7 +334,7 @@ function execute_pipeline(opts)
         sel = cfg["selection"]
         common = ["--features", table, "--first-seed", string(sel["first_seed"])]
         sel["interactions"] && push!(common, "--interactions")
-        run_stage(outdir, stage, "build_labelfree_gmm_predictions.jl", vcat(common,
+        run_stage(outdir, stage, "build_labelfree_gmm_predictions.jl", vcat(common, training_args,
             ["--config", opts["--config"], "--out", gmm, "--view", "v_cc=$BASE4,patch_u_asym_reconstructed,mold_cc_fwd,mold_cc_bwd,emp_fisher",
              "--seeds", string(sel["gmm_seeds"]), "--selftrain", string(sel["gmm_selftrain"])]))
         stage = "kmeans"

@@ -42,6 +42,8 @@ using Statistics
 using Random
 using Printf
 using TOML
+include(joinpath(@__DIR__, "reconstructed_unit_assignment.jl"))
+using .ReconstructedUnitAssignment: load_training_policy, validate_training_mask
 
 export FisherOptions, FisherGrid, PatchTable, FisherModel, FisherScore,
        load_fisher_config, fisher_grid, load_patches, flip_u_disk,
@@ -61,11 +63,12 @@ struct FisherOptions
     projection_zero_l1::Float64
     score_center::String
     patch_support::String
+    training_support::String
 
     function FisherOptions(pca_components, noise_regularization,
                            gmm_regularization, gmm_maxiter, gmm_tolerance,
                            seed, half_nm, step_nm, layout, patch_projection, projection_zero_l1, score_center,
-                           patch_support)
+                           patch_support, training_support)
         for (name, value) in (("fisher_pca_components", pca_components),
                               ("fisher_gmm_maxiter", gmm_maxiter))
             value isa Integer && !(value isa Bool) && value > 0 ||
@@ -88,6 +91,8 @@ struct FisherOptions
             throw(ArgumentError("unsupported fisher_score_center: $score_center"))
         patch_support in ("full_square", "complete_disk_symmetric") ||
             throw(ArgumentError("unsupported assignment_patch_support: $patch_support"))
+        training_support in ("all_admissible", "complete_patches") ||
+            throw(ArgumentError("unsupported assignment_training_support: $training_support"))
         projection_zero_l1 isa Real && !(projection_zero_l1 isa Bool) &&
             isfinite(projection_zero_l1) && projection_zero_l1 >= 0 ||
             throw(ArgumentError("fisher_projection_zero_l1 must be finite and nonnegative"))
@@ -103,7 +108,7 @@ struct FisherOptions
         new(Int(pca_components), Float64(noise_regularization),
             Float64(gmm_regularization), Int(gmm_maxiter), Float64(gmm_tolerance),
             Int(seed), Float64(half_nm), Float64(step_nm), String(layout), String(patch_projection),
-            Float64(projection_zero_l1), String(score_center), String(patch_support))
+            Float64(projection_zero_l1), String(score_center), String(patch_support), String(training_support))
     end
 end
 
@@ -126,7 +131,7 @@ function load_fisher_config(config::AbstractDict)
         throw(ArgumentError("missing [model] fisher_score_center"))
     options = FisherOptions((model[name] for name in required)...,
                             pre["fisher_layout"], pre["fisher_patch_projection"], model["fisher_projection_zero_l1"],
-                            model["fisher_score_center"], pre["assignment_patch_support"])
+                            model["fisher_score_center"], pre["assignment_patch_support"], load_training_policy(config))
     grid = fisher_grid(options)
     options.pca_components <= length(grid.disk_indices) ||
         throw(ArgumentError("fisher_pca_components exceeds the number of disk pixels"))
@@ -470,8 +475,9 @@ built. Missing/degenerate training folds invalidate their held-out rows without
 removing keys or inventing a cluster. Finite nonconverged EM fits are retained,
 like sklearn's max_iter behavior, with a warning rather than silent fallback.
 """
-function cv_scores(patches::PatchTable, options::FisherOptions)
+function cv_scores(patches::PatchTable, options::FisherOptions; training_mask=nothing)
     n = length(patches.keys)
+    eligible = validate_training_mask(options.training_support, training_mask, n)
     size(patches.X, 1) == n && length(patches.amplitudes) == n && length(patches.invalid_reasons) == n ||
         throw(DimensionMismatch("patch table rows must match keys"))
     grid = fisher_grid(options)
@@ -490,7 +496,7 @@ function cv_scores(patches::PatchTable, options::FisherOptions)
     margins = fill(NaN, n)
     valid = isempty.(reasons)
     for parity in (0, 1)
-        train = [i for i in 1:n if valid[i] && mod(patches.keys[i][2], 2) == parity]
+        train = [i for i in 1:n if valid[i] && eligible[i] && mod(patches.keys[i][2], 2) == parity]
         held = [i for i in 1:n if valid[i] && mod(patches.keys[i][2], 2) != parity]
         isempty(held) && continue
         fold = parity == 0 ? "even" : "odd"

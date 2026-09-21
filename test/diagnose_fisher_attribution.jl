@@ -28,6 +28,8 @@ Real cohorts: approved Viper job only. Local use: synthetic tests only.
 
 "Native cv_scores loop with models retained, no changed fitting/scoring arithmetic."
 function replay_folds(patches::EF.PatchTable, options::EF.FisherOptions)
+    options.training_support == "all_admissible" ||
+        throw(ArgumentError("This attribution diagnostic does not implement complete-patch training masks"))
     options.patch_projection == "none" ||
         throw(ArgumentError("Raw-patch attribution requires fisher_patch_projection=none"))
     n = length(patches.keys)

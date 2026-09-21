@@ -886,3 +886,19 @@ The Gaussian-score arm gives **666/849 (78.4%), 32 exact** and is rejected.
 The full comparison, including every loss, is in
 `results/patch_support_score_20260921/report.md`. No automatic resubmission,
 combined arm, post-grade tuning, count refit or unknown25 run follows.
+
+## Complete-patch training comparison (September 21)
+
+`hpc/compare_complete_training.sbatch` runs two arms: `control/` replays the
+676/34 patch-support candidate; `complete/` fits Fisher/GMM on complete patches
+but scores all admissible patches. Four requested CPUs, 16 GB, 30 minutes, one
+job. Selected N, geometry, patches, CC, descriptor and k-means stay fixed.
+Robust feature scaling, scan weighting and any additional arm are out of scope.
+
+Use the same five absolute environment variables and explicit command-line
+`sbatch --export` list. Sync committed source and the unchanged ignored Manifest,
+run `bash hpc/compare_complete_training.sbatch --dry-run`, then submit once.
+Fetch all outputs/logs, verify exact replay of twelve saved support-control tables,
+all 146 files / 900 keys, and both `training_support.tsv` observation counts before
+external grading. Report coverage, exact chains and every regression. No fit on
+the login node, local real-cohort fit, automatic retry or post-grade tuning.

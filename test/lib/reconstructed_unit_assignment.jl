@@ -4,7 +4,8 @@ using Printf, Statistics, TOML
 
 export read_table, write_table, lobe_table, require_same_keys,
        transverse_asymmetry, transverse_descriptor, augment_descriptor, mold_margin,
-       write_soft_vote, load_config
+       write_soft_vote, load_config, load_training_policy, write_training_support,
+       load_training_mask, validate_training_mask
 
 const TRANSVERSE_DESCRIPTORS = ("transverse_half_plane_asymmetry",
     "transverse_first_moment", "affine_residual_half_plane_asymmetry")
@@ -78,6 +79,72 @@ function require_same_keys(reference, other, label)
     return nothing
 end
 
+"Explicit fitting eligibility, independent of scoring support and benchmark labels."
+function load_training_policy(config::AbstractDict)
+    policy = get(get(config, "selection", Dict()), "assignment_training_support", nothing)
+    policy in ("all_admissible", "complete_patches") ||
+        throw(ArgumentError("explicit assignment_training_support must be all_admissible or complete_patches"))
+    return String(policy)
+end
+
+const TRAINING_PATCH_FAMILIES = (("fwd17", "res_p", 17), ("bwd17", "bwd_res_p", 17),
+                               ("bwd9", "bwd_res_p", 9))
+
+"Record observed pixel counts only; never impute pixels or select by a prediction."
+function write_training_support(fwd17, bwd17, bwd9, output)
+    tables = []
+    for (path, (_, prefix, side)) in zip((fwd17, bwd17, bwd9), TRAINING_PATCH_FAMILIES)
+        _, table = lobe_table(path; required=[prefix * lpad(string(i), 3, '0') for i in 1:side^2])
+        isempty(tables) || require_same_keys(first(tables), table, "training patch support")
+        push!(tables, table)
+    end
+    rows = Dict{String,String}[]
+    for key in sort(collect(keys(first(tables))))
+        row = Dict("file" => key[1], "lobe" => string(key[2]))
+        for (table, (name, prefix, side)) in zip(tables, TRAINING_PATCH_FAMILIES)
+            row[name * "_observed"] = string(count(i -> isfinite(_float(table[key][prefix * lpad(string(i), 3, '0')])), 1:side^2))
+        end
+        push!(rows, row)
+    end
+    return write_table(output, vcat(["file", "lobe"], [name * "_observed" for (name, _, _) in TRAINING_PATCH_FAMILIES]), rows)
+end
+
+function load_training_mask(policy, path, rowkeys, stage)
+    stage in ("fisher", "gmm") || throw(ArgumentError("unknown training stage"))
+    if policy == "all_admissible"
+        isempty(path) || throw(ArgumentError("training support is only used with complete_patches"))
+        return nothing
+    end
+    policy == "complete_patches" || throw(ArgumentError("unknown training policy"))
+    isempty(path) && throw(ArgumentError("complete_patches requires --training-support"))
+    columns = [name * "_observed" for (name, _, _) in TRAINING_PATCH_FAMILIES]
+    _, table = lobe_table(path; required=columns, contiguous=false)
+    length(unique(rowkeys)) == length(rowkeys) || error("Duplicate prediction keys")
+    require_same_keys(Dict(k => nothing for k in rowkeys), table, "training support")
+    mask = trues(length(rowkeys))
+    for (i, key) in enumerate(rowkeys)
+        complete = Bool[]
+        for (name, _, side) in TRAINING_PATCH_FAMILIES
+            observed = tryparse(Int, table[key][name * "_observed"])
+            observed !== nothing && 0 <= observed <= side^2 || error("Invalid observed pixel count: $key, $name")
+            push!(complete, observed == side^2)
+        end
+        mask[i] = stage == "fisher" ? first(complete) : all(complete)
+    end
+    return mask
+end
+
+function validate_training_mask(policy, mask, n)
+    if policy == "all_admissible"
+        mask === nothing || throw(ArgumentError("all_admissible must not filter training rows"))
+        return trues(n)
+    end
+    policy == "complete_patches" || throw(ArgumentError("unknown training policy"))
+    mask isa AbstractVector{Bool} && length(mask) == n ||
+        throw(ArgumentError("complete_patches requires one Boolean training flag per row"))
+    return mask
+end
+
 function load_config(path::AbstractString)
     cfg = TOML.parsefile(path)
     for section in ("model", "selection", "preprocessing")
@@ -114,6 +181,7 @@ function load_config(path::AbstractString)
     side == 9 || error("Reconstructed descriptor requires a 9x9 patch")
     isfinite(model["descriptor_zero_l1"]) && model["descriptor_zero_l1"] >= 0 || error("Invalid zero-signal tolerance")
     sel = cfg["selection"]
+    load_training_policy(cfg)
     model["gmm_final_covariance"] == "ledoit_wolf" && get(sel, "gmm_selftrain", 0) < 1 &&
         error("Final covariance shrinkage requires at least one hard self-training iteration")
     model["gmm_final_score"] == "gaussian_density" && get(sel, "gmm_selftrain", 0) < 1 &&

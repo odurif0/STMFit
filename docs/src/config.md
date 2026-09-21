@@ -709,6 +709,36 @@ regress: net +1 correct and +1 exact chain against 675/33. Historical 677/36 and
 32 exact** and is rejected. No mode combination or post-grade tuning follows;
 defaults, selected N and the separate counting/application claims are unchanged.
 
+### Complete-patch training, admissible-patch prediction (2026-09-21)
+
+`[selection] assignment_training_support` is required in every native assignment
+config: `"all_admissible"` preserves the existing calculation; `"complete_patches"`
+is the sole change (besides name) in `unit_assignment_complete_training.toml`,
+copied from the current 676/34 patch-support candidate. This is one bounded
+experiment, not a default or champion promotion.
+
+Fisher fits each lobe-parity fold only on finite full forward 17x17 squares,
+then scores every admissible opposite-fold disk. GMM fitting requires complete
+forward 17x17, backward 17x17 and backward 9x9 patches, plus its usual finite-view
+checks. Per-file feature mean/sample-standard-deviation moments use only finite
+values from these complete-patch rows; the same frozen moments transform all
+rows before unchanged pairwise products. A file without finite training values
+has no usable transformed view; it does not borrow partial-row or global moments.
+The existing zero/undefined-standard-deviation numerical guard remains one.
+
+GMM EM, hard updates and free weights use training rows only. The high-raw-amplitude
+group name also uses only assigned training members and is frozen before scoring
+partial rows. Partial predictions can therefore neither move nor rename a group.
+Insufficient training or inadmissible scoring retains keys with NA, without
+imputation. K-means and its normalization are unchanged. There is no equal-class
+prior, robust scaling, scan weighting, new threshold or post-grade tuning.
+
+The runner writes `training_support.tsv` with observed-pixel counts, from the
+three extracted patch tables. Fisher/GMM require `--training-support PATH` only
+in the new mode and validate its exact key set and counts. Existing configs reject
+that extra input. Older Fisher-attribution diagnostics reject this new mode
+because they do not implement its training masks.
+
 ## Opt-in diagnostic exploration settings (2026-09-18)
 
 `config/label_free_exploration.toml` is used only by standalone exploration tools;

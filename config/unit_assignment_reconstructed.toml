@@ -33,6 +33,7 @@ fisher_gmm_tolerance = 0.001
 fisher_seed = 0
 
 [selection]
+assignment_training_support = "all_admissible"
 kmeans_seeds = 20
 gmm_seeds = 10
 first_seed = 0

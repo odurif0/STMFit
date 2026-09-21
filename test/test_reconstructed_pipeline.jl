@@ -5,7 +5,7 @@ const COUNT_CONFIG = joinpath(ROOT, "config", "chitosan.toml")
 
 @testset "Matched-residual pipeline must regenerate patches" begin
     mktempdir() do dir
-        for name in ("matched_residual", "transverse_moment", "affine_residual", "signed_mold", "affine_fisher", "centered_fisher", "shrunk_gmm", "patch_support", "gaussian_score"),
+        for name in ("matched_residual", "transverse_moment", "affine_residual", "signed_mold", "affine_fisher", "centered_fisher", "shrunk_gmm", "patch_support", "gaussian_score", "complete_training"),
             key in ("--patches-fwd","--patches-bwd","--descriptor-patches")
             config = joinpath(ROOT,"config","unit_assignment_" * name * ".toml")
             opts = Dict("--config"=>config,"--outdir"=>joinpath(dir,"not_created"),key=>"cached.tsv")
@@ -104,29 +104,47 @@ end
 
 if "--e2e" in ARGS
     @testset "Native extracted-input pipeline end to end" begin
-        mktempdir() do dir
-            opts = pipeline_fixture(dir)
-            try
-                execute_pipeline(opts)
-            catch
-                for (root, _, files) in walkdir(opts["--outdir"]), file in files
-                    endswith(file, ".log") || continue
-                    log = read(joinpath(root, file), String)
-                    println("\n--- ", file, " ---\n", last(log, 4000))
+        saved = Dict{String,Vector{UInt8}}()
+        for complete_training in (false, true)
+            mktempdir() do dir
+                opts = pipeline_fixture(dir)
+                if complete_training
+                    cfg = TOML.parsefile(ASSIGNMENT_CONFIG)
+                    cfg["selection"]["assignment_training_support"] = "complete_patches"
+                    path = joinpath(dir,"complete_training.toml")
+                    open(io -> TOML.print(io,cfg),path,"w")
+                    opts["--config"] = path
                 end
-                rethrow()
+                try
+                    execute_pipeline(opts)
+                catch
+                    for (root, _, files) in walkdir(opts["--outdir"]), file in files
+                        endswith(file, ".log") || continue
+                        log = read(joinpath(root, file), String)
+                        println("\n--- ", file, " ---\n", last(log, 4000))
+                    end
+                    rethrow()
+                end
+                out = opts["--outdir"]
+                _, pred = lobe_table(joinpath(out, "predictions.tsv"))
+                @test length(pred) == 40
+                @test all(r["predicted"] in ("0", "1", "?") for r in values(pred))
+                @test any(r["predicted"] != "?" for r in values(pred))
+                @test all(r["model"] == "cc_soft_reconstructed_v1" for r in values(pred))
+                @test isfile(joinpath(out, "summary.tsv"))
+                @test isfile(joinpath(out, "review_queue.tsv"))
+                @test filesize(joinpath(out, "plots", "summary_grid.png")) > 0
+                @test length(readdir(joinpath(out, "plots", "standalone"))) == 5
+                @test !isfile(joinpath(out, "failures.tsv"))
+                for table in ("training_support","fisher_cv","features_predictor","pred_gmm","pred_kmeans","predictions")
+                    bytes = read(joinpath(out,table*".tsv"))
+                    if complete_training
+                        @test bytes == saved[table] # All synthetic patches are complete.
+                    else
+                        saved[table] = bytes
+                    end
+                end
             end
-            out = opts["--outdir"]
-            _, pred = lobe_table(joinpath(out, "predictions.tsv"))
-            @test length(pred) == 40
-            @test all(r["predicted"] in ("0", "1", "?") for r in values(pred))
-            @test any(r["predicted"] != "?" for r in values(pred))
-            @test all(r["model"] == "cc_soft_reconstructed_v1" for r in values(pred))
-            @test isfile(joinpath(out, "summary.tsv"))
-            @test isfile(joinpath(out, "review_queue.tsv"))
-            @test filesize(joinpath(out, "plots", "summary_grid.png")) > 0
-            @test length(readdir(joinpath(out, "plots", "standalone"))) == 5
-            @test !isfile(joinpath(out, "failures.tsv"))
         end
     end
 end

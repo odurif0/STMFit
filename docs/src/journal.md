@@ -2307,6 +2307,12 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-21. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0n. **Can complete-patch learning retain partial-patch predictions without their training influence?** →
+    **IN PROGRESS (Sep 21)**: one authorized complete-training candidate against
+    support control 676/870, 34/145; one Viper job, four requested CPUs, 30 minutes.
+    No robust scaling, scan weighting, combination, post-grade tuning, count refit,
+    DFT change or unknown25 rerun. Historical 677/36 remains the target to exceed.
+
 0m. **Can complete observed disks or final covariance-volume scoring help?** →
     **COMPLETE; SUPPORT GAIN, NO PROMOTION (Sep 21)**: source **db411a2**, job
     **11906168**, exit **0:0 in 7m58s**. All twelve control tables replay 675/33
@@ -8699,3 +8705,63 @@ selection, assignment, config and calibration headlines reflect 676/34; dated
 earlier experiments retain their own results. No scientific file changed after
 the source commit. Results remain ignored; validated source and documentation
 are committed, not left as uncommitted workspace state.
+
+## 2026-09-21 — Complete-patch training versus admissible partial-patch scoring
+
+**Scientific deliverable and done condition.** The user authorizes the first of
+three proposed leads: one complete-training candidate versus the latest support
+candidate (676/870 correct, 34/145 exact), at unchanged selected N and geometry.
+Done means an exact control replay, all 146 files / 900 keys retained, inspected
+training eligibility and coverage, external grades and every paired regression,
+fetched results and committed source/docs. Historical 677/870, 36/145 and 854/870
+coverage remain the objective to exceed, not merely the current runnable result.
+One Viper Slurm job requests four CPUs, 16 GB and 30 minutes; no automatic retry,
+local multi-file fit, robust scaling, equal scan weighting, combined candidate,
+post-grade parameter adjustment, new DFT, count refit or unknown25 rerun.
+
+**Hypothesis fixed before execution.** Admitting partial patches improved coverage
+but also changed cohort learning. Separate learning eligibility from prediction
+eligibility. New explicit `selection.assignment_training_support` accepts
+`all_admissible` (eleven existing native configs) or `complete_patches` (one new
+copy of `unit_assignment_patch_support.toml`, changing only name and this field).
+A geometry-only table records the observed counts in forward 17x17, backward
+17x17 and backward 9x9 patches. Fisher requires only its own complete forward
+square for training; GMM requires all three families it consumes. There is no
+new tuned completeness fraction. Scoring retains the previously frozen complete-
+disk / reflection-symmetric rule; no pixel is filled or inferred.
+
+Fisher fits only eligible opposite-lobe-parity rows. GMM per-file feature moments
+use finite values of complete-patch rows, then transform all admissible rows;
+interactions follow this same frozen scaling. Missing training moments cause NA,
+not a partial-row/global fallback; the existing zero/undefined-std guard is one.
+EM, two hard updates, final covariances, free component weights and physical group
+naming use training members only. The high-raw-amplitude group name is frozen
+before partial predictions. K-means did not change in the preceding support
+experiment and stays unchanged here, including its normalization and four views.
+Existing score centering, ridge, seeds, final Mahalanobis score and soft vote
+remain fixed. Complete-case learning might remove useful observations or worsen
+conditioning; the outcome is not presumed positive.
+
+Tests exercise mask/key/schema validation, no benchmark columns, complete-data
+identity, opposite-fold scoring, no feedback through normalization/fits/group
+naming, unequal free weights, missing-training abstention, all-key retention and
+CLI/API identity. The old raw Fisher-attribution diagnostic explicitly rejects
+the new policy rather than silently rebuilding the wrong training folds. The
+new two-arm Slurm runner requires explicit absolute exported inputs, a dry-run
+and an allocation. Results will be appended after validation and external grading.
+
+Pre-run verification passes **1,782 assertions** under Julia 1.13: complete-
+training tests 154, prior support/score 286, numerical assignment 136, numerical
+diagnostics 20, native Fisher 229, affine Fisher 74, Fisher attribution 210,
+representation diagnostics 319, transverse descriptors 125, signal features 73,
+reconstructed assignment 37, dual-policy synthetic pipeline 103 and shell runner
+16. Both synthetic end-to-end policies produce byte-identical outputs with
+complete patches. The documentation build passes with the existing HTML/search
+size warnings and non-CI deployment skip. No real-cohort fit runs locally.
+
+Read-only inspection of saved patch pixels finds **893/900 complete rows** for
+each training stage, with the same seven exclusions. The three newly scoreable
+partial rows remain prediction-only by the fixed rule. Viper input hashes,
+root Manifest and count config match the previous comparison; no other user job
+is queued or running before submission. No scientific rule is changed after
+inspecting these observation counts.

@@ -19,6 +19,8 @@ include(joinpath(@__DIR__, "lib", "script_utils.jl"))
 using .ScriptUtils: _ensure_parent, _read_tsv
 include(joinpath(@__DIR__, "lib", "assignment_covariance.jl"))
 using .AssignmentCovariance
+include(joinpath(@__DIR__, "lib", "reconstructed_unit_assignment.jl"))
+using .ReconstructedUnitAssignment: load_training_policy, load_training_mask, validate_training_mask
 
 const DEFAULT_FEATURES = "results/unit_separability/lobe_features_selectedN_primary_local.tsv"
 const DEFAULT_SPLIT = ""
@@ -39,6 +41,8 @@ struct Options
     covariance_mode::String
     covariance_ridge::Float64
     final_score::String
+    training_policy::String
+    training_support::String
 end
 
 function _load_final_score(config::AbstractDict)
@@ -76,11 +80,14 @@ function _parse_cli(args)
     interactions = false
     selftrain = 0
     config = DEFAULT_CONFIG
+    training_support = ""
 
     i = 1
     while i <= length(args)
         arg = args[i]
-        if arg == "--config"
+        if arg == "--training-support"
+            training_support = _arg_value(args, i, arg); i += 2
+        elseif arg == "--config"
             config = _arg_value(args, i, arg); i += 2
         elseif startswith(arg, "--config=")
             config = split(arg, "="; limit=2)[2]; i += 1
@@ -135,6 +142,10 @@ function _parse_cli(args)
                                      scoring after self-training (>= 1).
                                      Neither option changes EM or vote weights.
               --split-features PATH  Optional split-width feature TSV; adds split_log_skew
+              --training-support PATH Observed pixel-count TSV, required only for
+                                     complete_patches training. Normalization,
+                                     fits and amplitude naming use complete rows;
+                                     admissible partial rows are prediction-only.
               --patches PATH         Optional backward patch TSV; adds bwd_neg_* descriptors
               --out PATH             Output prediction TSV [$(DEFAULT_OUT)]
               --view NAME=LIST       Feature view to cluster. Repeatable. If omitted,
@@ -172,11 +183,16 @@ function _parse_cli(args)
     covariance = load_covariance_config(config)
     covariance.mode == "ledoit_wolf" && selftrain < 1 &&
         error("Final Ledoit-Wolf covariance requires --selftrain >= 1")
-    final_score = _load_final_score(TOML.parsefile(config))
+    cfg = TOML.parsefile(config)
+    final_score = _load_final_score(cfg)
+    training_policy = load_training_policy(cfg)
+    (training_policy == "complete_patches") == !isempty(training_support) ||
+        error("--training-support is required only with complete_patches")
     final_score == "gaussian_density" && selftrain < 1 &&
         error("Explicit final Gaussian score requires --selftrain >= 1")
     return Options(features, split_features, patches, out_tsv, view_specs,
-                   first_seed, n_seeds, interactions, selftrain, covariance.mode, covariance.ridge, final_score)
+                   first_seed, n_seeds, interactions, selftrain, covariance.mode, covariance.ridge, final_score,
+                   training_policy, training_support)
 end
 
 function _arg_value(args, i::Int, flag::String)
@@ -343,8 +359,11 @@ function _default_views(records::Vector{LobeRecord})
     return views
 end
 
-function _standardized_matrix(records::Vector{LobeRecord}, features::Vector{String}; interactions::Bool=false)
+function _standardized_matrix(records::Vector{LobeRecord}, features::Vector{String}; interactions::Bool=false,
+                              training_mask=nothing)
     n = length(records)
+    training_mask === nothing || (training_mask isa AbstractVector{Bool} && length(training_mask) == n) ||
+        throw(ArgumentError("normalization training mask must match rows"))
     p = length(features)
     raw = fill(NaN, n, p)
     valid = trues(n)
@@ -360,8 +379,9 @@ function _standardized_matrix(records::Vector{LobeRecord}, features::Vector{Stri
     files = sort(unique(rec.file for rec in records))
     for file in files
         idxs = findall(i -> records[i].file == file, 1:n)
+        fit_idxs = training_mask === nothing ? idxs : filter(i -> training_mask[i], idxs)
         for j in 1:p
-            vals = raw[idxs, j]
+            vals = raw[fit_idxs, j]
             good = filter(isfinite, vals)
             if isempty(good)
                 z[idxs, j] .= NaN
@@ -509,15 +529,18 @@ function _mahalanobis_self_train(X::Matrix{Float64}, means::Matrix{Float64},
 end
 
 function _view_probability(records::Vector{LobeRecord}, features::Vector{String}, opt::Options;
-                           diagnostics=nothing)
-    X, valid = _standardized_matrix(records, features; interactions=opt.interactions)
-    idxs = findall(valid)
+                           diagnostics=nothing, training_mask=nothing)
+    eligible = validate_training_mask(opt.training_policy, training_mask, length(records))
+    X, valid = _standardized_matrix(records, features; interactions=opt.interactions, training_mask)
+    idxs = findall(valid .& eligible)
+    score_idxs = findall(valid)
     length(idxs) >= 2 || return fill(NaN, length(records))
 
     probs = fill(NaN, length(records))
     votes = zeros(Float64, length(records))
     counts = zeros(Int, length(records))
     data = permutedims(X[idxs, :])
+    scoring_data = permutedims(X[score_idxs, :])
 
     for seed in opt.first_seed:(opt.first_seed + opt.n_seeds - 1)
         means, covs, weights = _gmm_fit(data, seed; ridge=opt.covariance_ridge)
@@ -529,23 +552,23 @@ function _view_probability(records::Vector{LobeRecord}, features::Vector{String}
         end
         diagnostics === nothing || push!(diagnostics,
             (seed=seed, indices=copy(idxs), clusters=seed_diagnostics))
-        # Physical mapping: GlcNAc = higher-amplitude cluster.
+        # Physical mapping is fitted on training members only, then frozen.
         cluster_amp = Dict{Int,Vector{Float64}}(1 => Float64[], 2 => Float64[])
-        log_resp = zeros(size(data, 2), 2)
-        for (j, i) in enumerate(idxs)
+        log_resp = zeros(size(scoring_data, 2), 2)
+        for (j, i) in enumerate(score_idxs)
             for c in 1:2
-                log_resp[j, c] = _final_component_score(data[:, j], means[:, c], covs[c], weights[c], opt)
+                log_resp[j, c] = _final_component_score(scoring_data[:, j], means[:, c], covs[c], weights[c], opt)
             end
             m = maximum(log_resp[j, :])
             resp = exp.(log_resp[j, :] .- m)
             resp ./= sum(resp)
             assigned = argmax(resp)
-            push!(cluster_amp[assigned], records[i].amplitude)
+            eligible[i] && push!(cluster_amp[assigned], records[i].amplitude)
         end
         mean_amp = Dict(c => mean(vals) for (c, vals) in cluster_amp if !isempty(vals))
         length(mean_amp) == 2 || continue
         high_cluster = first(sort(collect(keys(mean_amp)); by=c -> mean_amp[c], rev=true))
-        for (j, i) in enumerate(idxs)
+        for (j, i) in enumerate(score_idxs)
             m = maximum(log_resp[j, :])
             resp = exp.(log_resp[j, :] .- m)
             resp ./= sum(resp)
@@ -593,6 +616,9 @@ function main(args=ARGS)
     records = _load_records(opt.features)
     _merge_split!(records, opt.split_features)
     _merge_patches!(records, opt.patches)
+    training_mask = load_training_mask(opt.training_policy, opt.training_support,
+                                      [(r.file, r.lobe) for r in records], "gmm")
+    training_mask === nothing || println("GMM complete-patch eligibility: $(count(training_mask))/$(length(records)) rows before feature validity")
     views = isempty(opt.view_specs) ? _default_views(records) : opt.view_specs
 
     p_sum = zeros(Float64, length(records))
@@ -600,7 +626,7 @@ function main(args=ARGS)
     for (name, features) in views
         missing = [fn for fn in features if !(fn in _available_features(records))]
         isempty(missing) || error("View $name uses unavailable features: $(join(missing, ", "))")
-        probs = _view_probability(records, features, opt)
+        probs = _view_probability(records, features, opt; training_mask)
         usable = count(isfinite, probs)
         @printf("view %-24s rows=%d/%d features=%s\n", name, usable, length(records), join(features, ","))
         for i in eachindex(records)

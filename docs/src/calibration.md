@@ -318,6 +318,26 @@ still leads. The Gaussian-volume score gives **666/870 and 32/145**, with all
 19 changed final decisions at zero vote margin, and is rejected. No threshold,
 class count, per-file choice or parameter is adjusted after these results.
 
+### Separate complete training from partial prediction (2026-09-21)
+
+The sole new `[selection] assignment_training_support = "complete_patches"`
+mode restricts Fisher/GMM learning by observed patch completeness, never by
+predicted type or external correctness. Fisher requires its full forward square;
+GMM requires all three patch families it consumes. The support candidate's
+disk/symmetry rule still governs whether partial patches can be scored. This
+does not change extraction, patch normalization, physical calibration, selected
+N, DFT molds, vote thresholds or k-means.
+
+The GMM's per-file feature-normalization moments, fits, weights and raw-amplitude
+group naming are estimated from complete rows only, then frozen. Moments still
+use finite values separately per feature; there is no robust estimator, global
+fallback or scan reweighting. A file with no finite complete training value for
+a feature cannot provide that view. Opposite-lobe-parity Fisher scoring remains;
+this is not a new held-out-scan validation design. Complete training rows can
+still be noisy and fewer rows can destabilize learning, so improvement is a
+hypothesis, not a guarantee. The full 146-file output and all regressions must
+be checked before the separate 145-file external grade is considered.
+
 ## Opt-in label-free exploration (2026-09-18)
 
 `config/label_free_exploration.toml` is diagnostic configuration, not a new
