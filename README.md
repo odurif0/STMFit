@@ -38,6 +38,14 @@ candidate** as the primary working reference. The weighted variant is not
 promoted and does not exceed historical 677/36. No post-grade tuning follows.
 See the [scan-weighting result](docs/src/unit_assignment.md#equal-scan-gmm-weighting-2026-09-21-exact-chain-gain-unit-loss).
 
+Continuous internal GMM voting is **negative: 671/870 correct, 26/145 exact**,
+at unchanged **852/870 coverage**, versus the replayed 676/34 control. It gains
+one exact chain but loses nine. All 24 final changes leave old zero-margin ties
+and switch 1→0; the learned groups, naming and final threshold stay fixed.
+Keep the **676/34 support candidate**; no post-grade tie or precision adjustment
+follows. Historical 677/36 remains unexceeded. See the
+[continuous-vote result](docs/src/unit_assignment.md#continuous-gmm-seed-vote-2026-09-21-negative).
+
 **Research branch, September 20:** the symmetric fused-fit correction improves
 the regenerated reconstruction from **666 to 671 correct / 870 controls** and
 **24 to 28 exact chains / 145**, at identical cached counts and coverage

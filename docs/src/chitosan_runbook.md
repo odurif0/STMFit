@@ -148,6 +148,23 @@ This fixed comparison is complete: no retry, additional arm, threshold change,
 count refit, DFT change or unknown25 rerun follows. Historical **677/36** remains
 unexceeded; the reused benchmark is not independent validation.
 
+The continuous GMM seed-vote comparison (source **bef315f**, job **11922389**,
+**7m19s**, exit **0:0**, after **36m23s** queued) is **negative: 671/870 correct,
+671/852 (78.8%), 26/145 exact**, versus the exactly replayed **676/852,
+34 exact** support control. Keep `config/unit_assignment_patch_support.toml`;
+do not promote `unit_assignment_continuous_vote.toml`. Eight scans gain,
+thirteen lose and 124 tie; one exact chain is gained and nine lost. All 24
+changed decisions are 1→0 from old exact ties (GMM=1, k-means=0); only GMM
+aggregation changes, not learning, naming, the final threshold or precision.
+All 146 scans / 900 keys, N, availability and upstream/Fisher/k-means tables
+are retained. All 392 outputs and the Slurm log are fetched/checksummed;
+2,199 pre-run assertions, 7,240 output checks and paired arithmetic pass.
+See `results/continuous_vote_20260921/report.md` for all gains and losses.
+This comparison is complete: no retry, post-grade tie adjustment, new arm,
+count refit, DFT change or unknown25 rerun follows. Historical **677/36** remains
+unexceeded; inference is label-free, not independently validated by this reused
+development benchmark.
+
 This page is the hand-off document for reproducing the current chitosan workflow
 without relying on prior conversation context.  The goal is a label-free fitting
 and model-selection pipeline that is externally graded on the benchmark and then

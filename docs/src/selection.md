@@ -72,6 +72,14 @@ unexceeded. All N are fixed; no GCV/guard, count refit, physical calibration,
 DFT or unknown25 change follows, and this assignment result does not revalidate
 counting or independent generalization.
 
+Continuous GMM seed aggregation regresses to **671/870 correct, 26/145 exact**,
+at unchanged **852/870 coverage**, versus the replayed 676/34 support control.
+It loses nine exact chains and gains one; all 24 final flips leave old vote
+ties. Reject this variant and retain the support candidate, still below
+historical 677/36. This assignment-only change leaves all N, GCV/guards,
+physical calibration and counting claims fixed. No post-grade threshold or
+precision change, count refit, DFT change or unknown25 run follows.
+
 How STMFit chooses the optimal number of lobes (N) from the sweep results.
 
 ## Selection Hierarchy

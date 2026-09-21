@@ -830,7 +830,13 @@ keeps the existing eight-decimal serialization; the final mean-of-two-heads vote
 still uses `>=0.5`, with the same unavailable-input abstention rule.
 
 This is one authorized comparison, not a change of default or a combined
-variant. Result pending; the support candidate remains the working reference.
+variant. Its completed result is **negative: 671/870 correct, 671/852 (78.8%),
+26/145 exact**, versus the exactly replayed 676/34 control at identical coverage.
+All 24 final decision changes are 1→0 from old exact ties: GMM=1 and k-means=0
+become GMM<1 and k-means=0. One exact chain is gained, nine lost. Retain the
+`hard_vote` support config as the working reference; the new config records a
+failed experiment, not a promoted default. No precision, threshold, temperature
+or naming adjustment follows. Historical 677/36 remains unexceeded.
 
 ## Opt-in diagnostic exploration settings (2026-09-18)
 

@@ -2308,16 +2308,20 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0q. **Can continuous per-seed GMM scores improve the final vote?** →
-    **SUBMITTED; RESULTS PENDING (Sep 21)**: source **bef315f**, job **11922389**,
-    one `mean_membership` candidate against support control 676/34, one Viper
-    allocation capped at 30 minutes. Keep the
-    fitted groups, amplitude naming, Mahalanobis scores, seeds, support, N and
-    final threshold; average each seed's existing normalized score instead of
-    its hard 0/1 decision. No temperature, calibration, scan weighting,
-    resampling, alternative naming rule, combined arm or post-grade tuning.
-    All **2,199 focused assertions** and the documentation build pass while
-    the job remains queued. Historical 677/36 remains the target; no result
-    is presumed.
+    **COMPLETE; NEGATIVE (Sep 21)**: source **bef315f**, job **11922389**, exit
+    **0:0 in 7m19s**, after 36m23s queued. Continuous memberships give
+    **671/870 correct, 671/852 (78.8%), 26/145 exact**, versus the exactly
+    replayed 676/34 support control at identical coverage. Eight scans gain,
+    thirteen lose, 124 tie; one exact chain is gained, nine lost. All 24 final
+    flips are 1→0 from old exact ties (GMM=1, k-means=0). Learning, group naming,
+    threshold and precision remain unchanged. Reject this variant and retain
+    676/34; historical 677/36 remains unexceeded. All 146 scans / 900 keys, N,
+    upstream/Fisher/k-means tables and four unavailable rows are retained.
+    All 392 outputs and the Slurm log are fetched/checksummed; 2,199 pre-run
+    assertions, 7,240 output checks and paired arithmetic pass. No temperature,
+    calibration, scan weighting, resampling, naming-rule change, combined arm,
+    post-grade tie adjustment, count refit, DFT change or unknown25 run follows.
+    Reused benchmark evidence is not independent validation.
 
 0p. **Can equal total GMM training weight per scan improve recognition?** →
     **COMPLETE; MIXED RESULT (Sep 21)**: source **5ff68e2**, job **11915029**,
@@ -2449,6 +2453,9 @@ See `docs/src/selection.md` for the full guard specification and
     chains gained against the support control but one correct position lost.
     It matches the historical exact-chain total without exceeding history or
     replacing the 676 / 34 primary working reference.
+    Continuous internal GMM voting (0q) regresses to 671 / 26, at the same
+    coverage; all 24 final changes leave old exact ties and switch 1→0.
+    It is rejected without changing the threshold or serialization precision.
     The one physical-u Fisher mirror comparison is **COMPLETE; NEGATIVE**:
     job 11879515 (2m03s, exit 0:0) replays the control byte-for-byte but the
     treatment gives **669/849 (78.8%), 27 exact**, versus 671/849 and 28.
@@ -9320,3 +9327,84 @@ two Slurm runners 16 each. The earlier standalone runner repetition is not
 double-counted. The initial failed synthetic assertion log is retained alongside
 the corrected passing run. No source or configuration changed during this
 verification; the comparison is still waiting for the shared CPU quota.
+
+### Completed comparison and decision
+
+The same job **11922389** starts at **19:25:55 CEST**, after **36m23s** queued,
+and completes **0:0 at 19:33:14**, **7m19s**, on `vipc2034`. Control runs
+19:25:56–19:31:18, then continuous 19:31:18–19:33:14. Four CPUs are requested,
+eight allocated; Julia uses four threads and BLAS one. Slurm reports MaxRSS
+**2,417,063 K** (about 2.475 GB). No duplicate job, resource change, retry or
+local/login-node cohort fit occurs. All **392 output files and the Slurm log**
+are fetched locally, excluding raw-input symlinks, with an empty post-fetch
+checksum comparison. Scientific source remains **bef315f**.
+
+Before external grading, **7,240 saved-output assertions pass**: 59 replay/key/N
+checks and 7,181 availability/score/vote checks. All twelve control tables
+reproduce the saved support candidate byte-for-byte. Both arms retain all
+146 scans / 900 keys, the same 896 usable GMM rows and four unavailable
+predictions. Patches, local/descriptor/predictor features, CC, Fisher, k-means,
+training pixel counts and selected N are unchanged. N is compared by scan
+identity, not arm-specific staging paths. Final vote arithmetic is reconstructed
+from the serialized component scores without reading labels or performing fits.
+
+GMM scores change on **129 rows** and its hard class changes on one. Nonendpoint
+scores increase **242→315** out of 896 usable rows. The final vote changes
+**24 decisions**, all **1→0**, all on benchmark scans; raw `(0,1,?)` counts move
+**(673,223,4)→(697,199,4)**. These are outcomes, not imposed chemical populations.
+Every changed final decision was a control tie, with **GMM=1 and k-means=0**.
+Continuous GMM scores become **0.75154286–0.99999999**, still class 1 within the
+GMM, but their mean with k-means zero falls below 0.5. Final margins range
+**0.00000001–0.24845714**. Exact final ties decrease **58→34** before and after
+serialization; no displayed tie emits class 0 in this run. Thus this change
+acts through fusion of the continuous and unchanged k-means heads; it does not
+change the learned groups or missing-data handling. No tie rule, output
+precision or score calibration is adjusted after seeing this result.
+
+Only after integrity checks does the unchanged external grade select 145 scans /
+892 predicted lobes / 870 truth positions:
+
+| Version | Correct / 870 | Correct / classified | Errors emitted | Exact / 145 |
+|---|---:|---:|---:|---:|
+| Historical saved reference | 677 | 677/854 (79.3%) | 177 | 36 |
+| Replayed support control | 676 | 676/852 (79.3%) | 176 | 34 |
+| Continuous GMM seed vote | 671 | 671/852 (78.8%) | 181 | 26 |
+
+Against control: **8 scan gains, 13 losses, 124 ties**, net **−5 correct**;
+**one exact chain gained, nine lost**, net **−8**, with three grade-orientation
+changes. `241113_086` gains exactness. Exactness is lost on `240307_017`,
+`240310_Cu100007`, `240817_007`, `240817_021`, `240817_044`, `240817_048`,
+`240817_081`, `240818_017` and `240818_020`. Confusion `(TN,FP,FN,TP)` changes
+`(513,52,124,163)→(522,43,138,149)`: nine fewer false positives, fourteen more
+false negatives. Coverage remains **852/870** with two aligned abstentions;
+N audit remains 16 missing positions, 38 extra lobes, 14 short-N and 25 extra-N
+scans. The 199 non-correct truth positions comprise 181 emitted errors,
+16 missing positions and two abstentions. Against history: **20 scan gains,
+29 losses, 96 ties**, net −6 correct; three exact chains gained and thirteen
+lost, with nine grade-orientation changes. Grading orientation does not establish
+an independent spatial correspondence between fitted lobes and monomers.
+
+**Decision: reject continuous GMM seed aggregation and retain the 676/34 support
+candidate.** Historical 677/36 remains the objective to exceed. This negative
+result concerns the fixed uncalibrated membership score within the unchanged
+two-head vote, not every continuous-score method. No threshold, precision,
+temperature, seed, naming, combined-arm or post-grade search follows. Counting,
+DFT and unknown25 are untouched. This authorized comparison is complete; the
+broader historical objective remains open.
+
+All **290 paired scan rows and 24 changed decisions**, including every loss,
+are preserved in `results/continuous_vote_20260921/report.md` and its linked
+tables, with a saved-component-score tie audit. Paired arithmetic reproduces
+grade sums, confusion, coverage and exact-chain counts. Inference is label-free;
+the repeatedly reused benchmark is development evidence, not independent
+validation or accuracy on unknown chains. Prediction SHA-256: control
+`eb8d69b8cebcd607b0244db5c65104347e6bcd24acee06f64748cf0e6ec310e3`, continuous
+`f8ac7664700bb3c71d3f0bd214365149fb1c095ae6e2ed4e76cc262827226e36`.
+
+The final documentation build passes with the existing large-page/search-index
+warnings and non-CI deployment skip. README, runbook, selection, assignment,
+config, calibration and HPC notes record the 671/26 negative result and retain
+676/34 as the working reference. Source and tested preparation were committed
+before submission; the final conclusion is committed separately. Outputs, logs,
+the initial failed synthetic test and every paired loss remain local and
+Git-ignored. No validated scientific source is left uncommitted.

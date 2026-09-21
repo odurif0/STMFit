@@ -415,7 +415,18 @@ Physical calibration, selected N, missing-data handling, eight-decimal output
 precision and the two-head vote stay fixed. Scope: support control plus one
 candidate, one Viper allocation capped at 30 minutes; no scan weighting,
 resampling, new naming rule, count refit, DFT change, unknown-chain rerun or
-post-grade adjustment. Result pending; this is not a promoted configuration.
+post-grade adjustment.
+
+The completed result is **negative: 671/870 correct, 671/852 (78.8%), 26/145
+exact**, versus the exactly replayed 676/34 support control at the same coverage.
+All 24 changed decisions leave old exact ties (GMM=1, k-means=0) and become 0
+as the continuous GMM score drops below 1. The GMM still emits class 1 for these
+24 rows; the loss arises in the unchanged final mean-of-two-heads decision.
+One exact chain is gained and nine lost. Reject this variant, retain the 676/34
+support config and leave calibration, precision and thresholds unchanged.
+Historical 677/36 remains the target. This is evidence about this specific
+uncalibrated fusion, not a general rejection of continuous scores or independent
+validation on unknown chains.
 
 ## Opt-in label-free exploration (2026-09-18)
 

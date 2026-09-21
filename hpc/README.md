@@ -980,10 +980,21 @@ Run `bash hpc/compare_continuous_vote.sbatch --dry-run` first, and pass all five
 through an explicit `sbatch --export=...` list. Sync committed source and the
 unchanged Manifest, submit once, fetch logs/outputs and verify the control
 replay and all identities before grading externally. No real-cohort fitting
-runs locally or on a login node. Results are pending.
+runs locally or on a login node.
 
 Scientific source **bef315f**, job **11922389**, submitted at **18:49:32 CEST**
 on September 21 with the explicit export list. The source/Manifest checksums and
-both 146-scan metadata dry runs match. All **2,199 focused assertions** and
-the docs build pass while the job waits under `QOSGrpCpuLimit`. No scientific
-result or promotion is implied by successful preparation; follow the same job.
+both 146-scan metadata dry runs match. After **36m23s** under `QOSGrpCpuLimit`,
+it runs **19:25:55–19:33:14 CEST**, **7m19s**, and finishes **COMPLETED, 0:0**
+on `vipc2034`. Four CPUs were requested, eight allocated; Julia uses four
+threads. All **392 output files and the Slurm log** are fetched/checksummed.
+All **2,199 pre-run assertions**, **7,240 output checks** and paired-grade
+arithmetic pass; the control replays all twelve saved tables byte-for-byte.
+
+External result: **671/870 correct, 671/852 (78.8%), 26/145 exact**, versus
+control **676/852, 34 exact** at identical coverage. Reject the continuous
+variant and retain the support candidate: one exact chain gained, nine lost.
+All 24 final flips are 1→0 from old exact ties. The comparison is complete;
+do not resubmit or adjust thresholds/precision after grading. Historical 677/36
+remains unexceeded. All outputs, component-score details and paired losses are
+preserved in `results/continuous_vote_20260921/report.md`.
