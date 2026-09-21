@@ -5,7 +5,7 @@ const COUNT_CONFIG = joinpath(ROOT, "config", "chitosan.toml")
 
 @testset "Matched-residual pipeline must regenerate patches" begin
     mktempdir() do dir
-        for name in ("matched_residual", "transverse_moment", "affine_residual", "signed_mold", "affine_fisher", "centered_fisher", "shrunk_gmm", "patch_support", "gaussian_score", "complete_training", "robust_normalization"),
+        for name in ("matched_residual", "transverse_moment", "affine_residual", "signed_mold", "affine_fisher", "centered_fisher", "shrunk_gmm", "patch_support", "gaussian_score", "complete_training", "robust_normalization", "scan_weighting"),
             key in ("--patches-fwd","--patches-bwd","--descriptor-patches")
             config = joinpath(ROOT,"config","unit_assignment_" * name * ".toml")
             opts = Dict("--config"=>config,"--outdir"=>joinpath(dir,"not_created"),key=>"cached.tsv")
@@ -105,13 +105,15 @@ end
 if "--e2e" in ARGS
     @testset "Native extracted-input pipeline end to end" begin
         saved = Dict{String,Vector{UInt8}}()
-        for variant in ("control", "complete_training", "robust_normalization")
+        for variant in ("control", "complete_training", "robust_normalization", "scan_weighting")
             mktempdir() do dir
                 opts = pipeline_fixture(dir)
                 if variant != "control"
                     cfg = TOML.parsefile(ASSIGNMENT_CONFIG)
                     if variant == "complete_training"
                         cfg["selection"]["assignment_training_support"] = "complete_patches"
+                    elseif variant == "scan_weighting"
+                        cfg["selection"]["gmm_training_weighting"] = "equal_scans"
                     else
                         cfg["preprocessing"]["gmm_feature_normalization"] = "median_iqr"
                     end
@@ -144,7 +146,7 @@ if "--e2e" in ARGS
                     bytes = read(joinpath(out,table*".tsv"))
                     if variant == "complete_training"
                         @test bytes == saved[table] # All synthetic patches are complete.
-                    elseif variant == "robust_normalization"
+                    elseif variant in ("robust_normalization", "scan_weighting")
                         table in ("pred_gmm","predictions") || @test bytes == saved[table]
                     else
                         saved[table] = bytes

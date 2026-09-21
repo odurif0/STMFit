@@ -374,6 +374,24 @@ All choices precede grading. No expected count, sequence, composition, benchmark
 label, class balancing, scan weighting or benchmark-tuned fallback enters this
 experiment. Counting, DFT and the frozen unknown-chain application are untouched.
 
+### Equal-scan GMM weighting (2026-09-21)
+
+The next authorized comparison leaves physical calibration and normalization
+unchanged. It tests whether giving each scan equal total training influence
+helps the 676/34 support candidate. `[selection] gmm_training_weighting` selects
+`equal_lobes` (existing behavior) or `equal_scans` (one opt-in candidate).
+Weights are proportional to inverse usable training-row count, normalized to
+mean one to retain the objective's numerical scale. They affect GMM learning
+and physical amplitude naming consistently, not the separate Fisher/k-means
+heads or final vote. Within-scan finite feature moments stay unchanged.
+
+This is not class balancing, an expected-N prior, or an effective-sample-size
+estimate. Both chemical populations remain free. A scan with few usable lobes
+can gain influence even if noisy; equal influence is a hypothesis, not a
+guarantee of correct chemistry. The only proposed comparison is one control
+and one variant on Viper with a 30-minute ceiling. No count refit, bootstrap,
+DFT change, unknown-chain rerun or post-grade adjustment is included.
+
 ## Opt-in label-free exploration (2026-09-18)
 
 `config/label_free_exploration.toml` is diagnostic configuration, not a new

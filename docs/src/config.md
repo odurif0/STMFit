@@ -776,6 +776,33 @@ rises from 5.44 to 335.47. Reject this candidate and keep the support config at
 676/34. No IQR floor, clipping, consistency factor or other post-grade adjustment
 is added. The config records a negative experiment, not a new default.
 
+### Equal-scan GMM training weights (2026-09-21)
+
+Required `[selection] gmm_training_weighting` is `"equal_lobes"` in all thirteen
+earlier native configs. The opt-in `unit_assignment_scan_weighting.toml` copies
+the 676/34 support candidate, changing only its name and this field to
+`"equal_scans"`. For each view, count `m_s` usable training rows per represented
+scan after eligibility and finite-feature checks. With `n` rows and `S` scans,
+the observation weight is `n/(S*m_s)`: mean one overall, equal total `n/S` per
+scan. This is proportional to `1/m_s`; no expected count or class frequency is
+used. An unavailable scan contributes nothing and retains its output keys.
+
+Weights enter the two-component k-means++ draws, k-means centroids/objective,
+initial means/covariances, EM objective/responsibilities, both hard moment updates
+and raw-amplitude group naming. EM responsibilities and scoring are conditional
+on a lobe, so weights multiply their training contribution, not their individual
+classification score. Mixture weights are estimated freely from weighted mass;
+the initial 1/2 values are not a composition constraint. The final ridge
+covariance divides by weighted mass (maximum likelihood), not a degrees-of-
+freedom correction. Weighted Ledoit-Wolf is not implemented and is rejected.
+
+Per-file mean/sample-std scaling, finite per-feature normalization support,
+partial-patch eligibility, interactions, Fisher, the separate k-means head,
+ridge, iteration budgets, seed integers, Mahalanobis scoring and final soft vote
+stay fixed. The weighted draws can select different initial centers with the
+same RNG seeds. No scan resampling or robust scaling is part of this comparison.
+Result pending; no promotion before replay, integrity checks and external grade.
+
 ## Opt-in diagnostic exploration settings (2026-09-18)
 
 `config/label_free_exploration.toml` is used only by standalone exploration tools;

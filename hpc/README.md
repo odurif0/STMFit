@@ -938,3 +938,16 @@ Reject it and retain the support candidate. The comparison is complete; do not
 resubmit it or tune a fallback after grading. Full outputs, the corrected
 metadata audit and all losses are in
 `results/robust_normalization_20260921/report.md`.
+
+## Equal-scan GMM weighting comparison (September 21)
+
+`hpc/compare_scan_weighting.sbatch` runs the 676/34 support `control/` and one
+`weighted/` candidate. Only GMM training/naming observation weights change;
+mean/std scaling, upstream signals, independent Fisher/k-means heads and N stay
+fixed. One job requests four CPUs, 16 GB and 30 minutes; no automatic retry.
+Use the five absolute variables `STMFIT_PROJECT_DIR`, `STMFIT_CACHE_DIR`,
+`STMFIT_INPUT_DIR`, `STMFIT_OUTDIR`, `JULIA_BIN`, run the metadata-only
+`--dry-run`, then pass all five explicitly through `sbatch --export=...`.
+Sync committed source and the unchanged Manifest, submit once, fetch all outputs
+and logs, then check exact control replay and all keys before external grading.
+There is no fit on a login node or local real-cohort fit. Results are pending.

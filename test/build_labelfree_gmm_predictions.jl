@@ -13,6 +13,7 @@ using LinearAlgebra
 using Printf
 using Random
 using Statistics
+using StatsBase: Weights, sample
 using TOML
 
 include(joinpath(@__DIR__, "lib", "script_utils.jl"))
@@ -20,7 +21,7 @@ using .ScriptUtils: _ensure_parent, _read_tsv
 include(joinpath(@__DIR__, "lib", "assignment_covariance.jl"))
 using .AssignmentCovariance
 include(joinpath(@__DIR__, "lib", "reconstructed_unit_assignment.jl"))
-using .ReconstructedUnitAssignment: load_training_policy, load_training_mask, validate_training_mask, load_gmm_normalization
+using .ReconstructedUnitAssignment: load_training_policy, load_training_mask, validate_training_mask, load_gmm_normalization, load_gmm_weighting
 
 const DEFAULT_FEATURES = "results/unit_separability/lobe_features_selectedN_primary_local.tsv"
 const DEFAULT_SPLIT = ""
@@ -45,6 +46,7 @@ struct Options
     training_support::String
     normalization::String
     scale_fallback::Float64
+    training_weighting::String
 end
 
 function _load_final_score(config::AbstractDict)
@@ -148,6 +150,11 @@ function _parse_cli(args)
                                      and its degenerate-scale fallback. Scaling
                                      uses finite observations before interactions;
                                      it neither clips nor imputes observations.
+                                     gmm_training_weighting is equal_lobes or
+                                     equal_scans: the latter weights each usable
+                                     training row inversely by its scan's usable
+                                     row count, in initialization, EM, hard updates
+                                     and amplitude naming. Mixture weights stay free.
               --split-features PATH  Optional split-width feature TSV; adds split_log_skew
               --training-support PATH Observed pixel-count TSV, required only for
                                      complete_patches training. Normalization,
@@ -192,6 +199,7 @@ function _parse_cli(args)
         error("Final Ledoit-Wolf covariance requires --selftrain >= 1")
     cfg = TOML.parsefile(config)
     normalization = load_gmm_normalization(cfg)
+    training_weighting = load_gmm_weighting(cfg)
     final_score = _load_final_score(cfg)
     training_policy = load_training_policy(cfg)
     (training_policy == "complete_patches") == !isempty(training_support) ||
@@ -200,7 +208,8 @@ function _parse_cli(args)
         error("Explicit final Gaussian score requires --selftrain >= 1")
     return Options(features, split_features, patches, out_tsv, view_specs,
                    first_seed, n_seeds, interactions, selftrain, covariance.mode, covariance.ridge, final_score,
-                   training_policy, training_support, normalization.mode, normalization.scale_fallback)
+                   training_policy, training_support, normalization.mode, normalization.scale_fallback,
+                   training_weighting)
 end
 
 function _arg_value(args, i::Int, flag::String)
@@ -449,22 +458,74 @@ function _final_component_score(x, mu, covariance, weight, opt::Options)
     return log(weight) + _gmm_log_density(x, mu, covariance)
 end
 
+"Mean-one weights; each represented scan has total n / number_of_scans."
+function _observation_weights(records, idxs, mode::String)
+    mode == "equal_lobes" && return nothing # Preserve legacy floating-point operations.
+    mode == "equal_scans" || throw(ArgumentError("unknown GMM training weighting"))
+    isempty(idxs) && return Float64[]
+    counts = Dict{String,Int}()
+    for i in idxs
+        counts[records[i].file] = get(counts, records[i].file, 0) + 1
+    end
+    mass = length(idxs) / length(counts)
+    return [mass / counts[records[i].file] for i in idxs]
+end
+
+function _check_observation_weights(w, n)
+    w === nothing && return nothing
+    w isa AbstractVector{<:Real} && length(w) == n &&
+        all(x -> !(x isa Bool) && isfinite(x) && x > 0, w) && isfinite(sum(w)) ||
+        throw(ArgumentError("observation weights must be positive finite values matching training rows"))
+    return Float64.(w)
+end
+
+"Weighted k-means++ for the two GMM components, without a composition constraint."
+function _weighted_seeds(X, w, rng)
+    n = size(X, 2)
+    first_seed = sample(rng, 1:n, Weights(w))
+    costs = [w[i] * sum(abs2, X[:, i] .- X[:, first_seed]) for i in 1:n]
+    if sum(costs) == 0
+        costs = copy(w)
+        costs[first_seed] = 0.0
+    end
+    return [first_seed, sample(rng, 1:n, Weights(costs))]
+end
+
+function _cluster_amplitude_means(records, score_idxs, assignments, eligible, observation_weights)
+    values = Dict(1 => Float64[], 2 => Float64[])
+    masses = Dict(1 => Float64[], 2 => Float64[])
+    for (j, i) in enumerate(score_idxs)
+        eligible[i] || continue
+        c = assignments[j]
+        push!(values[c], records[i].amplitude)
+        observation_weights === nothing || push!(masses[c], observation_weights[i])
+    end
+    return Dict(c => (observation_weights === nothing ? mean(vals) : dot(vals, masses[c]) / sum(masses[c]))
+                for (c, vals) in values if !isempty(vals))
+end
+
 # EM fit of a 2-component full-covariance GMM, k-means initialized.
 # Returns (means, covariances, weights).
-function _gmm_fit(X::Matrix{Float64}, seed::Int; ridge::Float64, max_iter::Int=200, tol::Float64=1e-6)
+function _gmm_fit(X::Matrix{Float64}, seed::Int; ridge::Float64, max_iter::Int=200, tol::Float64=1e-6,
+                  observation_weights=nothing)
     p, n = size(X)
+    w = _check_observation_weights(observation_weights, n)
+    total = w === nothing ? n : sum(w)
     rng = MersenneTwister(seed)
     k = 2
-    km = kmeans(X, k; maxiter=100, rng=rng, display=:none)
+    km = w === nothing ? kmeans(X, k; maxiter=100, rng=rng, display=:none) :
+        kmeans(X, k; weights=w, init=_weighted_seeds(X, w, rng), maxiter=100, rng=rng, display=:none)
     means = zeros(p, k)
     covs = [Matrix{Float64}(I, p, p) for _ in 1:k]
     weights = fill(1.0 / k, k)
     for c in 1:k
         members = findall(km.assignments .== c)
         isempty(members) && continue
-        means[:, c] = sum(X[:, members]; dims=2) / length(members)
+        mass = w === nothing ? length(members) : sum(w[members])
+        means[:, c] = w === nothing ? sum(X[:, members]; dims=2) / length(members) : X[:, members] * w[members] / mass
         centered = X[:, members] .- means[:, c]
-        covs[c] = centered * centered' / length(members)
+        covs[c] = w === nothing ? centered * centered' / length(members) :
+            centered * Diagonal(w[members]) * centered' / mass
         covs[c] += ridge * I
     end
     prev_ll = -Inf
@@ -479,7 +540,8 @@ function _gmm_fit(X::Matrix{Float64}, seed::Int; ridge::Float64, max_iter::Int=2
         ll = 0.0
         for i in 1:n
             m = maximum(log_resp[i, :])
-            ll += m + log(sum(exp.(log_resp[i, :] .- m)))
+            term = m + log(sum(exp.(log_resp[i, :] .- m)))
+            ll += w === nothing ? term : w[i] * term
         end
         abs(ll - prev_ll) < tol * (1 + abs(prev_ll)) && break
         prev_ll = ll
@@ -489,11 +551,12 @@ function _gmm_fit(X::Matrix{Float64}, seed::Int; ridge::Float64, max_iter::Int=2
             log_resp[i, :] .-= log(sum(exp.(log_resp[i, :])))
         end
         resp = exp.(log_resp)
+        w === nothing || (resp .*= w)
         # M-step
         for j in 1:k
             nk = sum(resp[:, j])
             nk > 1e-12 || continue
-            weights[j] = nk / n
+            weights[j] = nk / total
             means[:, j] = X * resp[:, j] / nk
             centered = X .- means[:, j]
             covs[j] = (centered * Diagonal(resp[:, j]) * centered') / nk
@@ -509,10 +572,13 @@ end
 function _mahalanobis_self_train(X::Matrix{Float64}, means::Matrix{Float64},
                                  covs::Vector{Matrix{Float64}}, weights::Vector{Float64};
                                  iters::Int=5, covariance_mode::String, ridge::Float64,
-                                 diagnostics=nothing)
+                                 diagnostics=nothing, observation_weights=nothing)
     covariance_mode in ("ridge", "ledoit_wolf") || error("Unknown final covariance mode")
     covariance_mode == "ledoit_wolf" && iters < 1 && error("Final covariance requires hard memberships")
     p, n = size(X)
+    w = _check_observation_weights(observation_weights, n)
+    w !== nothing && covariance_mode != "ridge" && error("Weighted hard updates require ridge covariance")
+    total = w === nothing ? n : sum(w)
     k = size(means, 2)
     for iteration in 1:iters
         d2 = zeros(n, k)
@@ -527,12 +593,17 @@ function _mahalanobis_self_train(X::Matrix{Float64}, means::Matrix{Float64},
         for j in 1:k
             members = findall(==(j), assign)
             isempty(members) && continue
-            nk = length(members)
-            weights[j] = nk / n
-            means[:, j] = sum(X[:, members]; dims=2) / nk
+            nk = w === nothing ? length(members) : sum(w[members])
+            weights[j] = nk / total
+            means[:, j] = w === nothing ? sum(X[:, members]; dims=2) / nk : X[:, members] * w[members] / nk
             centered = X[:, members] .- means[:, j]
             if iteration == iters
-                estimate = final_covariance(centered; mode=covariance_mode, ridge=ridge)
+                estimate = if w === nothing
+                    final_covariance(centered; mode=covariance_mode, ridge=ridge)
+                else
+                    covariance = centered * Diagonal(w[members]) * centered' / nk
+                    (sample=covariance, covariance=covariance + ridge * I, shrinkage=0.0)
+                end
                 covs[j] = estimate.covariance
                 if diagnostics !== nothing
                     push!(diagnostics, (component=j, members=copy(members), weight=weights[j],
@@ -540,7 +611,8 @@ function _mahalanobis_self_train(X::Matrix{Float64}, means::Matrix{Float64},
                         shrinkage=estimate.shrinkage))
                 end
             else
-                covs[j] = centered * centered' / nk + ridge * I
+                covs[j] = (w === nothing ? centered * centered' / nk :
+                    centered * Diagonal(w[members]) * centered' / nk) + ridge * I
             end
         end
     end
@@ -561,19 +633,28 @@ function _view_probability(records::Vector{LobeRecord}, features::Vector{String}
     counts = zeros(Int, length(records))
     data = permutedims(X[idxs, :])
     scoring_data = permutedims(X[score_idxs, :])
+    observation_weights = _observation_weights(records, idxs, opt.training_weighting)
+    naming_weights = if observation_weights === nothing
+        nothing
+    else
+        w = zeros(length(records))
+        w[idxs] = observation_weights
+        w
+    end
 
     for seed in opt.first_seed:(opt.first_seed + opt.n_seeds - 1)
-        means, covs, weights = _gmm_fit(data, seed; ridge=opt.covariance_ridge)
+        means, covs, weights = _gmm_fit(data, seed; ridge=opt.covariance_ridge, observation_weights)
         seed_diagnostics = diagnostics === nothing ? nothing : []
         if opt.selftrain > 0
             means, covs, weights = _mahalanobis_self_train(data, means, covs, weights;
                 iters=opt.selftrain, covariance_mode=opt.covariance_mode, ridge=opt.covariance_ridge,
-                diagnostics=seed_diagnostics)
+                diagnostics=seed_diagnostics, observation_weights)
         end
         diagnostics === nothing || push!(diagnostics,
-            (seed=seed, indices=copy(idxs), clusters=seed_diagnostics))
+            (seed=seed, indices=copy(idxs), clusters=seed_diagnostics,
+             observation_weights=observation_weights === nothing ? nothing : copy(observation_weights)))
         # Physical mapping is fitted on training members only, then frozen.
-        cluster_amp = Dict{Int,Vector{Float64}}(1 => Float64[], 2 => Float64[])
+        assignments = Int[]
         log_resp = zeros(size(scoring_data, 2), 2)
         for (j, i) in enumerate(score_idxs)
             for c in 1:2
@@ -583,9 +664,9 @@ function _view_probability(records::Vector{LobeRecord}, features::Vector{String}
             resp = exp.(log_resp[j, :] .- m)
             resp ./= sum(resp)
             assigned = argmax(resp)
-            eligible[i] && push!(cluster_amp[assigned], records[i].amplitude)
+            push!(assignments, assigned)
         end
-        mean_amp = Dict(c => mean(vals) for (c, vals) in cluster_amp if !isempty(vals))
+        mean_amp = _cluster_amplitude_means(records, score_idxs, assignments, eligible, naming_weights)
         length(mean_amp) == 2 || continue
         high_cluster = first(sort(collect(keys(mean_amp)); by=c -> mean_amp[c], rev=true))
         for (j, i) in enumerate(score_idxs)
@@ -670,6 +751,7 @@ function main(args=ARGS)
     println("  predicted:  ", n_forced)
     println("  uncertain:  ", n_uncertain)
     println("  views:      ", join(first.(views), ", "))
+    println("  weighting:  ", opt.training_weighting)
 end
 
 abspath(PROGRAM_FILE) == abspath(@__FILE__) && main()

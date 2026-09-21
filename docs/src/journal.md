@@ -2307,6 +2307,13 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-21. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0p. **Can equal total GMM training weight per scan improve recognition?** →
+    **AUTHORIZED; IMPLEMENTED, VERIFICATION IN PROGRESS (Sep 21)**: one control
+    at 676/34 and one `equal_scans` candidate, unchanged mean/std normalization
+    and selected N, one 30-minute Viper job. Usable training rows alone determine
+    weights; chemical populations remain free. No bagging, robust scaling,
+    additional arm or post-grade tuning. Historical 677/36 remains the target.
+
 0o. **Can robust per-scan GMM normalization improve recognition?** →
     **COMPLETE; NEGATIVE (Sep 21)**: source **77b3ce6**, job **11911253**, exit
     **0:0 in 5m55s**. Median/Type-7-IQR gives **667/870 correct, 667/852 (78.3%),
@@ -9038,5 +9045,60 @@ The final documentation build passes, with the existing large-page/search-index
 warnings and non-CI deployment skip. README, runbook, selection, assignment,
 config, calibration and HPC notes record the negative 667/10 result and retain
 676/34 as the working candidate. Runtime source is unchanged since 77b3ce6.
+
+## 2026-09-21 — Equal total scan influence in GMM learning, one fixed comparison
+
+**Scientific deliverable and done condition.** The user authorizes the first
+recommended lead: compare equal-scan observation weights with the retained
+676/870, 34/145 support candidate. Done means tested weighted arithmetic and
+label-free boundaries, an exact control replay, all 146 scans / 900 keys and
+upstream signals checked, external correct/coverage/exact-chain grades and every
+paired regression, fetched outputs and committed source/conclusions. Historical
+677/870, 36/145 and 854/870 coverage remain the objective, not merely an
+improvement over the current runnable reconstruction. One Viper allocation:
+four requested CPUs, 16 GB, 30 minutes. No automatic retry, local cohort fit,
+scan resampling, robust scaling, complete-case filtering, alternative physical
+naming rule, combined variant, N refit, DFT change or unknown25 application.
+The archived plan's scientific Must-NOT-have list is retained, not its retired
+process apparatus. No labels or composition counts enter fitting or attribution.
+
+**Fixed change before grading.** All thirteen earlier native configs now state
+`selection.gmm_training_weighting = "equal_lobes"`, preserving legacy arithmetic.
+New `unit_assignment_scan_weighting.toml` copies the support control, changing
+only method name and this field to `equal_scans`. For a view with `n` usable
+training rows from `S` represented scans, a row from scan `s` gets weight
+`n/(S*m_s)`, where `m_s` is that scan's usable training count, never its expected
+N. Thus each scan totals `n/S` and the overall mean weight is one. Empty scans
+do not enter training; their output rows and ordinary abstentions remain.
+Finite per-feature mean/std normalization still uses its original admissible
+support before complete-view validity is checked. No observation is imputed.
+
+The installed Clustering implementation accepts observation weights for Lloyd
+updates but not k-means++ draws. The opt-in branch therefore supplies two
+weighted k-means++ seeds (first proportional to weight, second to weight times
+squared distance) to the existing weighted k-means implementation. Its centroid
+objective, initial GMM means/covariances, weighted EM objective and sufficient
+statistics, both hard updates, free mixture weights and raw-amplitude naming
+all use the same fixed row weights. Per-lobe classification remains conditional
+and is not multiplied by row weight. Initial component weights remain 1/2,
+then are learned without any equal-class constraint. Ridge remains 1e-6;
+weighted Ledoit-Wolf is rejected rather than silently using an unweighted
+estimator. Normalization, interactions, support, Fisher, independent k-means
+head, seed integers, iteration budgets, final score and vote stay fixed.
+
+Equal influence may reduce domination by scans with more detected lobes, but
+may also overemphasize short/noisy scans. Recognition benefit is unproven.
+Synthetic tests check explicit weighted initialization/EM/hard-update formulas,
+free masses, amplitude naming, invalid-row exclusion, scan-total equality,
+label/count/name independence and deterministic CLI/API agreement. Historical
+representation diagnostics reject the new weighting, since their unweighted
+refits would not represent this candidate. No external grade has yet run.
+
+The first **138 synthetic assertions pass** under Julia 1.13; the documentation
+build passes with its existing page/search size warnings and non-CI deployment
+skip. Full regression and four-mode synthetic pipeline checks are in progress.
+Remote geometry, split geometry, template and Manifest hashes match the preceding
+experiment, and no user job is queued/running at this inspection. Source is
+committed before any real-cohort execution; no scientific result is presumed.
 Validated source and conclusions are committed; generated outputs, all losses
 and the initial failed metadata-audit log remain preserved locally and ignored.

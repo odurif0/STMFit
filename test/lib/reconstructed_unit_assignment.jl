@@ -5,7 +5,7 @@ using Printf, Statistics, TOML
 export read_table, write_table, lobe_table, require_same_keys,
        transverse_asymmetry, transverse_descriptor, augment_descriptor, mold_margin,
        write_soft_vote, load_config, load_training_policy, write_training_support,
-       load_training_mask, validate_training_mask, load_gmm_normalization
+       load_training_mask, validate_training_mask, load_gmm_normalization, load_gmm_weighting
 
 const TRANSVERSE_DESCRIPTORS = ("transverse_half_plane_asymmetry",
     "transverse_first_moment", "affine_residual_half_plane_asymmetry")
@@ -157,6 +157,16 @@ function load_gmm_normalization(config::AbstractDict)
     return (mode=String(mode), scale_fallback=Float64(fallback))
 end
 
+"Observation weights depend only on the number of usable training rows per scan."
+function load_gmm_weighting(config::AbstractDict)
+    mode = get(get(config, "selection", Dict()), "gmm_training_weighting", nothing)
+    mode in ("equal_lobes", "equal_scans") ||
+        throw(ArgumentError("explicit gmm_training_weighting must be equal_lobes or equal_scans"))
+    mode == "equal_scans" && get(get(config, "model", Dict()), "gmm_final_covariance", nothing) != "ridge" &&
+        throw(ArgumentError("equal_scans requires ridge; weighted shrinkage is not implemented"))
+    return String(mode)
+end
+
 function load_config(path::AbstractString)
     cfg = TOML.parsefile(path)
     for section in ("model", "selection", "preprocessing")
@@ -164,6 +174,7 @@ function load_config(path::AbstractString)
     end
     model, pre = cfg["model"], cfg["preprocessing"]
     load_gmm_normalization(cfg)
+    load_gmm_weighting(cfg)
     model["descriptor"] in TRANSVERSE_DESCRIPTORS || error("Unsupported descriptor")
     model["descriptor_column"] == "patch_u_asym_reconstructed" || error("Unsupported descriptor column")
     model["descriptor_channel"] == "bwd_res" || error("Unsupported descriptor patch family")

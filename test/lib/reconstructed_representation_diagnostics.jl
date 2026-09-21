@@ -200,6 +200,8 @@ end
 
 function load_inputs(paths, production_config)
     cfg = load_config(production_config)
+    cfg["selection"]["gmm_training_weighting"] == "equal_lobes" ||
+        error("This historical representation diagnostic requires equal-lobe GMM weighting")
     cfg["preprocessing"]["gmm_feature_normalization"] == "mean_sample_std" &&
         cfg["preprocessing"]["gmm_scale_fallback"] == 1.0 ||
         error("This historical representation diagnostic requires mean_sample_std with scale fallback 1")
