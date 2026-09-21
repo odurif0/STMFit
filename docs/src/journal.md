@@ -2308,8 +2308,9 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0q. **Can continuous per-seed GMM scores improve the final vote?** →
-    **AUTHORIZED; PREPARING (Sep 21)**: one `mean_membership` candidate against
-    support control 676/34, one Viper allocation capped at 30 minutes. Keep the
+    **SUBMITTED; RESULTS PENDING (Sep 21)**: source **bef315f**, job **11922389**,
+    one `mean_membership` candidate against support control 676/34, one Viper
+    allocation capped at 30 minutes. Keep the
     fitted groups, amplitude naming, Mahalanobis scores, seeds, support, N and
     final threshold; average each seed's existing normalized score instead of
     its hard 0/1 decision. No temperature, calibration, scan weighting,
@@ -9282,3 +9283,27 @@ normalization regression suites pass; the remaining focused suites and the
 five-mode synthetic end-to-end pipeline are in progress. Source is committed
 before preparing the dedicated remote directory; no scientific result is yet
 available.
+
+The five-mode synthetic end-to-end suite completes successfully (**160
+assertions** including boundaries/chunking); the new Slurm runner passes **16
+assertions** before submission. The 107 targeted assertions and the weighting,
+normalization, complete-training and support/score regressions also pass.
+Complementary legacy-diagnostic regressions continue in parallel; their final
+status is required before interpreting the external result.
+
+Source **bef315f** is synced to `/u/oldu/code/STMFit_continuous_vote_20260921`.
+The whitelist contains tracked `config/`, `hpc/`, `packages/`, `test/` and root
+`Project.toml`, not benchmark tables, prior results, raw data or agent state.
+The unchanged Manifest is copied explicitly. Login-node `Pkg.instantiate()`
+with automatic precompilation disabled succeeds (retaining the documented
+1.12.6-Manifest/1.13-runtime warning); subsequent source and Manifest checksum
+comparisons are empty. Both metadata-only dry runs see **146 scans** under
+Julia 1.13.0. `sbatch --test-only` accepts the resources; it does not validate
+the compute-node environment.
+
+One job **11922389** is submitted at **18:49:32 CEST**, partition `small`,
+account `mfk_cpu`, QOS `n0001`, with all five absolute variables explicitly
+exported. Output target: `/ptmp/oldu/stmfit/continuous_vote_20260921_v1`.
+Its initial state is **PENDING, QOSGrpCpuLimit**. No duplicate submission,
+resource change or local real-cohort fit is attempted. External grading has
+not run; source remains frozen while this job and the regressions are followed.
