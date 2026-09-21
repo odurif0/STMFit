@@ -2307,6 +2307,17 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-21. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0r. **Can whole-scan bootstrap aggregation improve recognition?** →
+    **AUTHORIZED; PREPARING (Sep 21)**: one fixed 20-replicate GMM bootstrap
+    against support control 676/34; each replicate draws S usable scans with
+    replacement and keeps ten initialization seeds. Hard votes, free mixture
+    masses, physical naming rule, scaling, upstream signals, final threshold,
+    N and unavailable-row policy stay fixed. One Viper job, four requested
+    CPUs, 16 GB, one-hour ceiling; no automatic retry or local cohort fit.
+    Historical 677/36 remains the target, with no gain presumed. No combined
+    variant, naming-rule experiment, continuous score, count refit, DFT change
+    or unknown25 run is authorized by this pass.
+
 0q. **Can continuous per-seed GMM scores improve the final vote?** →
     **COMPLETE; NEGATIVE (Sep 21)**: source **bef315f**, job **11922389**, exit
     **0:0 in 7m19s**, after 36m23s queued. Continuous memberships give
@@ -9408,3 +9419,64 @@ config, calibration and HPC notes record the 671/26 negative result and retain
 before submission; the final conclusion is committed separately. Outputs, logs,
 the initial failed synthetic test and every paired loss remain local and
 Git-ignored. No validated scientific source is left uncommitted.
+
+## 2026-09-21 — Whole-scan GMM bootstrap, one fixed comparison
+
+**Scientific deliverable and done condition.** The user authorizes the first
+recommended follow-up: compare whole-scan GMM bagging with the retained support
+candidate (676/870 correct, 34/145 exact). Done means deterministic tested
+resampling and training-only naming, exact control replay, all keys and N
+retained, checked outputs and paired external grades against control and saved
+history, fetched results and committed conclusions. Historical 677/870 and
+36/145 remain the objective, not a presumed ceiling or a claimed gain. Scope:
+one control and one variant, one Viper job, four requested CPUs, 16 GB and a
+one-hour execution limit. No automatic retry, local/login-node cohort fit,
+combined variant, new naming rule, continuous vote, covariance change, count
+refit, DFT change or unknown25 rerun. The archived application's scientific
+Must-NOT-have list remains in force; its retired process apparatus is not used.
+
+**Fixed method before grading.** Fifteen earlier native configs explicitly
+declare `gmm_resampling="none"`, `gmm_bootstrap_replicates=1` and
+`gmm_bootstrap_seed=0`. `unit_assignment_scan_bagging.toml` copies the support
+config, changing its name and resampling to `whole_scans`, with **20 replicates**.
+For each feature view, the pool is the S scans with at least one usable row.
+Replicate b uses MersenneTwister seed b−1 to draw S scan indices uniformly with
+replacement. Every usable row of a drawn scan is copied once per draw, preserving
+within-scan dependence and natural scan lengths. This is not the rejected
+equal-total-weight-per-scan method. The raw scan identities are grouping keys,
+never dates, quality grades, known chemical classes or benchmark membership.
+
+Per-scan mean/sample-std normalization and the 28 interactions of eight original
+features are computed once, unchanged. An unsampled scan still uses its own
+observations for its usual per-scan transform; its rows do not train the GMM
+or name its groups. This is not an out-of-bag validation claim. Every replicate
+uses the same ten initialization seeds 0–9, existing EM, two hard updates,
+ridge, Mahalanobis scoring and freely learned mixture masses. Physical naming
+uses only the duplicated training rows' raw amplitudes, counting multiplicity.
+All valid rows, including unsampled scans, are then predicted. Each replicate
+averages the named binary seed decisions; the candidate averages these replicate
+means equally. The existing unnamed-seed exclusion is retained, without retries;
+an entirely unnamed replicate contributes nothing and all-invalid results stay
+unavailable. No best seed, best replicate or composition is selected.
+
+The unchanged final GMM/k-means mean, `>=0.5` tie rule, eight-decimal output,
+Fisher, CC, raw patch extraction, support, geometry and N are retained. Bootstrap
+draws and accepted-seed counts are exported as `gmm_scan_bootstrap.tsv`, including
+zero multiplicities and scans with no usable rows. Frequencies are uncalibrated
+votes, not chemical probabilities. Inference treats all 146 scans; labels and
+the full145 manifest remain external grading inputs only. No post-grade tuning
+or independent-validation claim is allowed on this reused development benchmark.
+
+The first targeted test stops before any resampling because its config inventory
+tries to parse `chitosan_exclude.txt` as TOML. The test is corrected to enumerate
+only `unit_assignment_*.toml`; no scientific setting, score or output is changed.
+The failed log is retained. No real-cohort calculation or external grade has
+yet run for this candidate.
+
+The corrected targeted suite passes **222 assertions** under Julia 1.13,
+including independent bag arithmetic, literal repeated-row fit identity,
+training-only amplitude naming, unchanged invalid rows and CLI/API byte identity.
+The continuous-vote regression also passes (**108 assertions** with the added
+config inventory entry). The Slurm runner now explicitly declares `--no-requeue`
+as well as the one-hour limit. The six-mode synthetic pipeline and complementary
+regressions are running before scientific submission; the result remains unknown.

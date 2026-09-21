@@ -838,6 +838,39 @@ become GMM<1 and k-means=0. One exact chain is gained, nine lost. Retain the
 failed experiment, not a promoted default. No precision, threshold, temperature
 or naming adjustment follows. Historical 677/36 remains unexceeded.
 
+### Whole-scan GMM bootstrap (2026-09-21)
+
+Required `[selection]` fields `gmm_resampling`, `gmm_bootstrap_replicates` and
+`gmm_bootstrap_seed` explicitly preserve `"none"`, `1`, `0` in the fifteen
+earlier native configs. The opt-in `unit_assignment_scan_bagging.toml` copies
+the 676/34 support control, changing its name, mode to `"whole_scans"` and
+replicate count to **20**. Seeds for resampling are 0–19; each replicate keeps
+the existing ten GMM initialization seeds 0–9. There is no seed search.
+
+For each view, draw S scans uniformly with replacement from the S scans with
+usable rows. Copy all usable rows of each drawn scan with its multiplicity;
+natural row counts are retained, not equalized. Per-scan scaling is computed
+once before resampling; an unsampled scan uses only its own usual normalization
+for prediction. EM, hard updates and mean-amplitude physical naming use the
+duplicated training rows only. Predict all valid rows, including unsampled scans.
+Average each replicate's valid binary seed votes, then average valid replicate
+means equally. Unnamed seeds/replicates are omitted without retry; a row with
+no valid result stays unavailable. No chemical class population is imposed.
+
+This mode currently requires `equal_lobes`, `hard_vote`, `all_admissible`,
+`mean_sample_std` and ridge covariance. The root pipeline writes
+`gmm_scan_bootstrap.tsv` (view, replicate, draw seed, scan identity, usable rows,
+multiplicity, training rows and valid/total seed counts). Direct GMM CLI use
+requires `--bootstrap-audit NEW_PATH`; it rejects an existing audit and a path
+equal to the prediction output. The historical representation diagnostic rejects
+bootstrap rather than silently describing unresampled training.
+
+Final voting, threshold, precision, unavailable-input handling, k-means, Fisher,
+CC, geometry and N stay fixed. This is bagging, not out-of-bag validation or
+probability calibration. One control and one candidate are authorized, with
+one Viper job capped at one hour. Results pending; the 676/34 support candidate
+remains the working reference, below historical 677/36.
+
 ## Opt-in diagnostic exploration settings (2026-09-18)
 
 `config/label_free_exploration.toml` is used only by standalone exploration tools;

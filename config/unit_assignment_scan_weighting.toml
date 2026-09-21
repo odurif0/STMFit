@@ -32,6 +32,9 @@ fisher_gmm_tolerance = 0.001
 fisher_seed = 0
 
 [selection]
+gmm_resampling = "none"
+gmm_bootstrap_replicates = 1
+gmm_bootstrap_seed = 0
 gmm_seed_aggregation = "hard_vote"
 gmm_training_weighting = "equal_scans"
 assignment_training_support = "all_admissible"

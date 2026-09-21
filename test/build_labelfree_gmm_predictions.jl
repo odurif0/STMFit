@@ -22,7 +22,7 @@ include(joinpath(@__DIR__, "lib", "assignment_covariance.jl"))
 using .AssignmentCovariance
 include(joinpath(@__DIR__, "lib", "reconstructed_unit_assignment.jl"))
 using .ReconstructedUnitAssignment: load_training_policy, load_training_mask, validate_training_mask,
-    load_gmm_normalization, load_gmm_weighting, load_gmm_seed_aggregation
+    load_gmm_normalization, load_gmm_weighting, load_gmm_seed_aggregation, load_gmm_resampling, write_table
 
 const DEFAULT_FEATURES = "results/unit_separability/lobe_features_selectedN_primary_local.tsv"
 const DEFAULT_SPLIT = ""
@@ -49,6 +49,10 @@ struct Options
     scale_fallback::Float64
     training_weighting::String
     seed_aggregation::String
+    resampling::String
+    bootstrap_replicates::Int
+    bootstrap_seed::Int
+    bootstrap_audit::String
 end
 
 function _load_final_score(config::AbstractDict)
@@ -87,11 +91,14 @@ function _parse_cli(args)
     selftrain = 0
     config = DEFAULT_CONFIG
     training_support = ""
+    bootstrap_audit = ""
 
     i = 1
     while i <= length(args)
         arg = args[i]
-        if arg == "--training-support"
+        if arg == "--bootstrap-audit"
+            bootstrap_audit = _arg_value(args, i, arg); i += 2
+        elseif arg == "--training-support"
             training_support = _arg_value(args, i, arg); i += 2
         elseif arg == "--config"
             config = _arg_value(args, i, arg); i += 2
@@ -163,6 +170,16 @@ function _parse_cli(args)
                                      across seeds, without hardening them to 0/1.
                                      These are not calibrated chemical probabilities;
                                      fitting, scores and group naming stay unchanged.
+                                     gmm_resampling=whole_scans draws whole usable
+                                     scans with replacement, once per configured
+                                     bootstrap replicate. Each uses the same seed
+                                     range and hard votes. Per-scan scaling is fixed;
+                                     learning and amplitude naming use sampled rows
+                                     with their multiplicities. All valid rows are
+                                     predicted, including out-of-bag scans. This is
+                                     bagging, not held-out validation or calibration.
+              --bootstrap-audit PATH Required new TSV for whole_scans; records all
+                                     scan multiplicities and valid seed counts.
               --split-features PATH  Optional split-width feature TSV; adds split_log_skew
               --training-support PATH Observed pixel-count TSV, required only for
                                      complete_patches training. Normalization,
@@ -209,6 +226,13 @@ function _parse_cli(args)
     normalization = load_gmm_normalization(cfg)
     training_weighting = load_gmm_weighting(cfg)
     seed_aggregation = load_gmm_seed_aggregation(cfg)
+    bootstrap = load_gmm_resampling(cfg)
+    (bootstrap.mode == "whole_scans") == !isempty(bootstrap_audit) ||
+        error("--bootstrap-audit is required only with whole_scans")
+    if !isempty(bootstrap_audit)
+        (ispath(bootstrap_audit) || islink(bootstrap_audit)) && error("Bootstrap audit already exists")
+        abspath(bootstrap_audit) != abspath(out_tsv) || error("Bootstrap audit must differ from prediction output")
+    end
     final_score = _load_final_score(cfg)
     training_policy = load_training_policy(cfg)
     (training_policy == "complete_patches") == !isempty(training_support) ||
@@ -218,7 +242,7 @@ function _parse_cli(args)
     return Options(features, split_features, patches, out_tsv, view_specs,
                    first_seed, n_seeds, interactions, selftrain, covariance.mode, covariance.ridge, final_score,
                    training_policy, training_support, normalization.mode, normalization.scale_fallback,
-                   training_weighting, seed_aggregation)
+                   training_weighting, seed_aggregation, bootstrap.mode, bootstrap.replicates, bootstrap.seed, bootstrap_audit)
 end
 
 function _arg_value(args, i::Int, flag::String)
@@ -637,14 +661,100 @@ function _seed_contribution(resp, high_cluster, mode::String)
     return resp[high_cluster]
 end
 
+"Draw S whole usable scans with replacement, preserving every usable row per draw."
+function _scan_bootstrap_sample(records, idxs, seed)
+    groups = Vector{Int}[]
+    locations = Dict{String,Int}()
+    for i in idxs
+        f = records[i].file
+        if !haskey(locations, f)
+            locations[f] = length(groups) + 1
+            push!(groups, Int[])
+        end
+        push!(groups[locations[f]], i)
+    end
+    isempty(groups) && return Int[]
+    rng = MersenneTwister(seed)
+    draws = rand(rng, 1:length(groups), length(groups))
+    return reduce(vcat, (groups[j] for j in draws))
+end
+
+function _bootstrap_view_probability(records, X, idxs, score_idxs, opt;
+                                     diagnostics=nothing, audit=nothing, view_name="")
+    probabilities = fill(NaN, length(records))
+    score_data = permutedims(X[score_idxs, :])
+    position = zeros(Int, length(records))
+    position[score_idxs] = eachindex(score_idxs)
+    total = zeros(length(score_idxs))
+    usable_bags = 0
+    files = unique(r.file for r in records)
+    usable = Dict(f => count(i -> records[i].file == f, idxs) for f in files)
+    eligible = trues(length(records)) # train_idxs below already contains only eligible valid rows.
+    for bag in 1:opt.bootstrap_replicates
+        draw_seed = opt.bootstrap_seed + bag - 1
+        train_idxs = _scan_bootstrap_sample(records, idxs, draw_seed)
+        data = permutedims(X[train_idxs, :])
+        votes = zeros(length(score_idxs))
+        accepted = 0
+        for seed in opt.first_seed:(opt.first_seed + opt.n_seeds - 1)
+            means, covs, weights = _gmm_fit(data, seed; ridge=opt.covariance_ridge)
+            clusters = diagnostics === nothing ? nothing : []
+            if opt.selftrain > 0
+                means, covs, weights = _mahalanobis_self_train(data, means, covs, weights;
+                    iters=opt.selftrain, covariance_mode=opt.covariance_mode, ridge=opt.covariance_ridge,
+                    diagnostics=clusters)
+            end
+            assignments = Int[]
+            for j in axes(score_data, 2)
+                scores = [_final_component_score(score_data[:,j], means[:,c], covs[c], weights[c], opt) for c in 1:2]
+                resp = exp.(scores .- maximum(scores)); resp ./= sum(resp)
+                push!(assignments, argmax(resp))
+            end
+            # Duplicate training indices count each scan draw in physical naming,
+            # while amplitudes from unsampled scans cannot rename either group.
+            mean_amp = _cluster_amplitude_means(records, train_idxs,
+                assignments[position[train_idxs]], eligible, nothing)
+            high = length(mean_amp) == 2 ? first(sort(collect(keys(mean_amp)); by=c -> mean_amp[c], rev=true)) : 0
+            diagnostics === nothing || push!(diagnostics, (replicate=bag, bootstrap_seed=draw_seed,
+                seed=seed, indices=copy(train_idxs), clusters=clusters, amplitude_means=copy(mean_amp),
+                high_cluster=high, means=copy(means), covariances=deepcopy(covs), weights=copy(weights)))
+            high == 0 && continue # Same missing-group rule as the unresampled head; no retry.
+            votes .+= assignments .== high
+            accepted += 1
+        end
+        if accepted > 0
+            total .+= votes ./ accepted
+            usable_bags += 1
+        end
+        println("bootstrap replicate ", bag, "/", opt.bootstrap_replicates,
+            " draw_seed=", draw_seed, " training_rows=", length(train_idxs),
+            " unique_scans=", length(unique(records[i].file for i in train_idxs)),
+            " valid_seeds=", accepted, "/", opt.n_seeds)
+        if audit !== nothing
+            for f in files
+                rows = count(i -> records[i].file == f, train_idxs)
+                push!(audit, Dict("view"=>view_name, "replicate"=>string(bag),
+                    "bootstrap_seed"=>string(draw_seed), "file"=>f, "usable_rows"=>string(usable[f]),
+                    "multiplicity"=>string(usable[f] == 0 ? 0 : rows ÷ usable[f]),
+                    "training_rows"=>string(rows), "valid_seeds"=>string(accepted), "total_seeds"=>string(opt.n_seeds)))
+            end
+        end
+    end
+    usable_bags > 0 && (probabilities[score_idxs] = total / usable_bags)
+    return probabilities
+end
+
 function _view_probability(records::Vector{LobeRecord}, features::Vector{String}, opt::Options;
-                           diagnostics=nothing, training_mask=nothing)
+                           diagnostics=nothing, training_mask=nothing, audit=nothing, view_name="")
     eligible = validate_training_mask(opt.training_policy, training_mask, length(records))
     X, valid = _standardized_matrix(records, features; interactions=opt.interactions, training_mask,
         normalization=opt.normalization, scale_fallback=opt.scale_fallback)
     idxs = findall(valid .& eligible)
     score_idxs = findall(valid)
     length(idxs) >= 2 || return fill(NaN, length(records))
+    if opt.resampling == "whole_scans"
+        return _bootstrap_view_probability(records, X, idxs, score_idxs, opt; diagnostics, audit, view_name)
+    end
 
     probs = fill(NaN, length(records))
     votes = zeros(Float64, length(records))
@@ -741,10 +851,12 @@ function main(args=ARGS)
 
     p_sum = zeros(Float64, length(records))
     p_count = zeros(Int, length(records))
+    bootstrap_audit = Dict{String,String}[]
     for (name, features) in views
         missing = [fn for fn in features if !(fn in _available_features(records))]
         isempty(missing) || error("View $name uses unavailable features: $(join(missing, ", "))")
-        probs = _view_probability(records, features, opt; training_mask)
+        probs = _view_probability(records, features, opt; training_mask,
+            audit=isempty(opt.bootstrap_audit) ? nothing : bootstrap_audit, view_name=name)
         usable = count(isfinite, probs)
         @printf("view %-24s rows=%d/%d features=%s\n", name, usable, length(records), join(features, ","))
         for i in eachindex(records)
@@ -757,6 +869,10 @@ function main(args=ARGS)
 
     probs = [p_count[i] > 0 ? p_sum[i] / p_count[i] : NaN for i in eachindex(records)]
     n_forced, n_uncertain = _write_predictions(opt.out_tsv, records, probs, p_count)
+    if !isempty(opt.bootstrap_audit)
+        write_table(opt.bootstrap_audit, ["view", "replicate", "bootstrap_seed", "file", "usable_rows",
+            "multiplicity", "training_rows", "valid_seeds", "total_seeds"], bootstrap_audit)
+    end
     files = length(unique(rec.file for rec in records))
     println("\nLabel-free unit predictions")
     println("  features:   ", opt.features)
@@ -770,6 +886,8 @@ function main(args=ARGS)
     println("  views:      ", join(first.(views), ", "))
     println("  weighting:  ", opt.training_weighting)
     println("  seed aggregation: ", opt.seed_aggregation)
+    println("  resampling: ", opt.resampling, " replicates=", opt.bootstrap_replicates,
+        " bootstrap_seed=", opt.bootstrap_seed)
 end
 
 abspath(PROGRAM_FILE) == abspath(@__FILE__) && main()

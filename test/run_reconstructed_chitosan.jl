@@ -333,8 +333,10 @@ function execute_pipeline(opts)
         gmm = joinpath(outdir, "pred_gmm.tsv")
         sel = cfg["selection"]
         common = ["--features", table, "--first-seed", string(sel["first_seed"])]
+        bootstrap_args = load_gmm_resampling(cfg).mode == "whole_scans" ?
+            ["--bootstrap-audit", joinpath(outdir, "gmm_scan_bootstrap.tsv")] : String[]
         sel["interactions"] && push!(common, "--interactions")
-        run_stage(outdir, stage, "build_labelfree_gmm_predictions.jl", vcat(common, training_args,
+        run_stage(outdir, stage, "build_labelfree_gmm_predictions.jl", vcat(common, training_args, bootstrap_args,
             ["--config", opts["--config"], "--out", gmm, "--view", "v_cc=$BASE4,patch_u_asym_reconstructed,mold_cc_fwd,mold_cc_bwd,emp_fisher",
              "--seeds", string(sel["gmm_seeds"]), "--selftrain", string(sel["gmm_selftrain"])]))
         stage = "kmeans"

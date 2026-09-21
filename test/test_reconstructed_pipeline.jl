@@ -5,7 +5,7 @@ const COUNT_CONFIG = joinpath(ROOT, "config", "chitosan.toml")
 
 @testset "Matched-residual pipeline must regenerate patches" begin
     mktempdir() do dir
-        for name in ("matched_residual", "transverse_moment", "affine_residual", "signed_mold", "affine_fisher", "centered_fisher", "shrunk_gmm", "patch_support", "gaussian_score", "complete_training", "robust_normalization", "scan_weighting", "continuous_vote"),
+        for name in ("matched_residual", "transverse_moment", "affine_residual", "signed_mold", "affine_fisher", "centered_fisher", "shrunk_gmm", "patch_support", "gaussian_score", "complete_training", "robust_normalization", "scan_weighting", "continuous_vote", "scan_bagging"),
             key in ("--patches-fwd","--patches-bwd","--descriptor-patches")
             config = joinpath(ROOT,"config","unit_assignment_" * name * ".toml")
             opts = Dict("--config"=>config,"--outdir"=>joinpath(dir,"not_created"),key=>"cached.tsv")
@@ -105,7 +105,7 @@ end
 if "--e2e" in ARGS
     @testset "Native extracted-input pipeline end to end" begin
         saved = Dict{String,Vector{UInt8}}()
-        for variant in ("control", "complete_training", "robust_normalization", "scan_weighting", "continuous_vote")
+        for variant in ("control", "complete_training", "robust_normalization", "scan_weighting", "continuous_vote", "scan_bagging")
             mktempdir() do dir
                 opts = pipeline_fixture(dir)
                 if variant != "control"
@@ -116,6 +116,9 @@ if "--e2e" in ARGS
                         cfg["selection"]["gmm_training_weighting"] = "equal_scans"
                     elseif variant == "continuous_vote"
                         cfg["selection"]["gmm_seed_aggregation"] = "mean_membership"
+                    elseif variant == "scan_bagging"
+                        cfg["selection"]["gmm_resampling"] = "whole_scans"
+                        cfg["selection"]["gmm_bootstrap_replicates"] = 2 # Synthetic pipeline only.
                     else
                         cfg["preprocessing"]["gmm_feature_normalization"] = "median_iqr"
                     end
@@ -148,11 +151,22 @@ if "--e2e" in ARGS
                     bytes = read(joinpath(out,table*".tsv"))
                     if variant == "complete_training"
                         @test bytes == saved[table] # All synthetic patches are complete.
-                    elseif variant in ("robust_normalization", "scan_weighting", "continuous_vote")
+                    elseif variant in ("robust_normalization", "scan_weighting", "continuous_vote", "scan_bagging")
                         table in ("pred_gmm","predictions") || @test bytes == saved[table]
                     else
                         saved[table] = bytes
                     end
+                end
+                if variant == "scan_bagging"
+                    _, audit = read_table(joinpath(out, "gmm_scan_bootstrap.tsv"))
+                    @test length(audit) == 10
+                    for bag in 1:2
+                        rows = filter(r -> r["replicate"] == string(bag), audit)
+                        @test sum(parse(Int, r["multiplicity"]) for r in rows) == 5
+                        @test all(parse(Int,r["training_rows"]) == 8parse(Int,r["multiplicity"]) for r in rows)
+                    end
+                else
+                    @test !isfile(joinpath(out, "gmm_scan_bootstrap.tsv"))
                 end
             end
         end

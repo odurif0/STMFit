@@ -6,7 +6,7 @@ export read_table, write_table, lobe_table, require_same_keys,
        transverse_asymmetry, transverse_descriptor, augment_descriptor, mold_margin,
        write_soft_vote, load_config, load_training_policy, write_training_support,
        load_training_mask, validate_training_mask, load_gmm_normalization, load_gmm_weighting,
-       load_gmm_seed_aggregation
+       load_gmm_seed_aggregation, load_gmm_resampling
 
 const TRANSVERSE_DESCRIPTORS = ("transverse_half_plane_asymmetry",
     "transverse_first_moment", "affine_residual_half_plane_asymmetry")
@@ -176,6 +176,29 @@ function load_gmm_seed_aggregation(config::AbstractDict)
     return String(mode)
 end
 
+"Whole-scan bootstrap settings; no per-lobe or class-stratified sampling."
+function load_gmm_resampling(config::AbstractDict)
+    sel = get(config, "selection", Dict())
+    mode = get(sel, "gmm_resampling", nothing)
+    mode in ("none", "whole_scans") || throw(ArgumentError("explicit gmm_resampling must be none or whole_scans"))
+    bags = get(sel, "gmm_bootstrap_replicates", nothing)
+    seed = get(sel, "gmm_bootstrap_seed", nothing)
+    bags isa Integer && !(bags isa Bool) && 1 <= bags <= typemax(Int) ||
+        throw(ArgumentError("explicit gmm_bootstrap_replicates must be a positive integer"))
+    seed isa Integer && !(seed isa Bool) && 0 <= seed <= typemax(Int) - (bags - 1) ||
+        throw(ArgumentError("explicit gmm_bootstrap_seed must be nonnegative without overflow"))
+    mode == "none" && bags != 1 && throw(ArgumentError("none requires one unresampled replicate"))
+    if mode == "whole_scans"
+        load_gmm_weighting(config) == "equal_lobes" || throw(ArgumentError("bootstrap requires equal_lobes"))
+        load_gmm_seed_aggregation(config) == "hard_vote" || throw(ArgumentError("bootstrap requires hard_vote"))
+        load_training_policy(config) == "all_admissible" || throw(ArgumentError("bootstrap requires all_admissible"))
+        load_gmm_normalization(config).mode == "mean_sample_std" || throw(ArgumentError("bootstrap requires mean_sample_std"))
+        get(get(config, "model", Dict()), "gmm_final_covariance", nothing) == "ridge" ||
+            throw(ArgumentError("bootstrap requires ridge covariance"))
+    end
+    return (mode=String(mode), replicates=Int(bags), seed=Int(seed))
+end
+
 function load_config(path::AbstractString)
     cfg = TOML.parsefile(path)
     for section in ("model", "selection", "preprocessing")
@@ -185,6 +208,7 @@ function load_config(path::AbstractString)
     load_gmm_normalization(cfg)
     load_gmm_weighting(cfg)
     load_gmm_seed_aggregation(cfg)
+    load_gmm_resampling(cfg)
     model["descriptor"] in TRANSVERSE_DESCRIPTORS || error("Unsupported descriptor")
     model["descriptor_column"] == "patch_u_asym_reconstructed" || error("Unsupported descriptor column")
     model["descriptor_channel"] == "bwd_res" || error("Unsupported descriptor patch family")

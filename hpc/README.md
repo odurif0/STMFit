@@ -998,3 +998,22 @@ All 24 final flips are 1→0 from old exact ties. The comparison is complete;
 do not resubmit or adjust thresholds/precision after grading. Historical 677/36
 remains unexceeded. All outputs, component-score details and paired losses are
 preserved in `results/continuous_vote_20260921/report.md`.
+
+## Whole-scan GMM bagging comparison (September 21)
+
+`hpc/compare_scan_bagging.sbatch` runs the 676/34 support `control/` and one
+`bagged/` candidate with twenty whole-scan bootstrap replicates. Geometry, N,
+patch generation, Fisher, CC and the independent k-means head stay fixed; each
+replicate uses the same ten GMM initialization seeds and binary votes.
+One job requests four CPUs, 16 GB and **one hour**, with no automatic retry.
+Use five absolute variables: `STMFIT_PROJECT_DIR`, `STMFIT_CACHE_DIR`,
+`STMFIT_INPUT_DIR`, `STMFIT_OUTDIR`, `JULIA_BIN`. Run the metadata-only
+`--dry-run` first, then pass all five via an explicit `sbatch --export=...`
+list to override Viper's `SBATCH_EXPORT=NONE`. Sync committed source and the
+unchanged Manifest; no cohort fits run locally or on a login node.
+
+Fetch outputs and logs, including the candidate's `gmm_scan_bootstrap.tsv`;
+check exact control replay, all scan/lobe identities, N, unchanged upstream
+outputs and bootstrap multiplicities before external grading. No benchmark
+manifest, truth or historical predictions are inference inputs. Result pending;
+successful preparation alone is not a recognition result or promotion.

@@ -428,6 +428,30 @@ Historical 677/36 remains the target. This is evidence about this specific
 uncalibrated fusion, not a general rejection of continuous scores or independent
 validation on unknown chains.
 
+### Whole-scan GMM bootstrap (2026-09-21)
+
+One fixed comparison resamples **whole scans**, not individual lobes or chemical
+classes. Twenty replicates each draw S usable scans with replacement, using
+seeds 0–19; all admissible rows of a drawn scan travel together. The ten existing
+initialization seeds are reused within each replicate. Row multiplicity enters
+learning and the unchanged raw-amplitude naming rule, not an imposed class prior.
+Per-scan scaling and physical calibration remain unchanged. Unsampled scans
+still receive predictions, so this is not held-out validation.
+
+The explicit settings are `selection.gmm_resampling="whole_scans"`,
+`gmm_bootstrap_replicates=20` and `gmm_bootstrap_seed=0` in the separately named
+opt-in config. Earlier configs retain `none`, `1`, `0`. The candidate averages
+hard seed votes within each replicate and then valid replicate means equally;
+it does not select a best seed or tune confidence. Scores remain uncalibrated
+frequencies. Final threshold, precision, N, unavailable-row handling, k-means,
+Fisher, CC and all upstream observations remain fixed.
+
+Scope is one support control and one candidate, one Viper job limited to one
+hour, four requested CPUs and 16 GB. No retry, combined variant, new naming
+rule, count refit, DFT change, unknown-chain rerun or post-grade adjustment.
+Result pending; a more stable ensemble would not itself establish chemical
+accuracy or independent validation on the reused benchmark.
+
 ## Opt-in label-free exploration (2026-09-18)
 
 `config/label_free_exploration.toml` is diagnostic configuration, not a new
