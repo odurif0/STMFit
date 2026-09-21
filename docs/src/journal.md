@@ -2308,9 +2308,11 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0p. **Can equal total GMM training weight per scan improve recognition?** →
-    **AUTHORIZED; IMPLEMENTED, VERIFICATION IN PROGRESS (Sep 21)**: one control
-    at 676/34 and one `equal_scans` candidate, unchanged mean/std normalization
-    and selected N, one 30-minute Viper job. Usable training rows alone determine
+    **SUBMITTED; RESULTS PENDING (Sep 21)**: source **5ff68e2**, job **11915029**,
+    one control at 676/34 and one `equal_scans` candidate, unchanged mean/std
+    normalization and selected N, one 30-minute Viper allocation. All **2,057
+    synthetic assertions** and docs pass. The 896 usable rows span 146 scans;
+    usable counts range 2–10 and weights 0.614–3.068. Usable rows alone determine
     weights; chemical populations remain free. No bagging, robust scaling,
     additional arm or post-grade tuning. Historical 677/36 remains the target.
 
@@ -9100,5 +9102,29 @@ skip. Full regression and four-mode synthetic pipeline checks are in progress.
 Remote geometry, split geometry, template and Manifest hashes match the preceding
 experiment, and no user job is queued/running at this inspection. Source is
 committed before any real-cohort execution; no scientific result is presumed.
+
+Pre-submission verification finishes with **2,057 passing assertions**: weighting
+138, normalization 99, complete training 154, support/score 286, numerical
+assignment 136, numerical diagnostics 20, native Fisher 229, affine Fisher 74,
+Fisher attribution 210, representation 319, transverse descriptors 125, signal
+features 73, assignment 37, four-mode synthetic pipeline 141 and Slurm runner 16.
+The pipeline confirms unchanged upstream/Fisher/k-means outputs. Saved-feature
+arithmetic, without any cohort fit, finds **896 usable rows from all 146 scans**.
+Their usable-count frequencies are 2:1, 4:1, 5:12, 6:107, 7:16, 8:7, 10:2 scans.
+Weights range **0.61369863–3.06849315** and each scan totals **6.13698630**.
+No rule is adjusted after inspecting these observed counts.
+
+Committed scientific source **5ff68e2** is checksum-identical to the dedicated
+Viper checkout `/u/oldu/code/STMFit_scan_weighting_20260921`; Manifest is copied
+unchanged. The transfer dry-run initially includes tracked benchmark tables;
+filtering those paths out of the Git file list removes them before any real
+transfer. No benchmark, prior results or agent state is copied. Both metadata-
+only pipeline dry runs identify all 146 files under Julia 1.13.0. `sbatch
+--test-only` accepts the fixed resources but is not compute-node validation.
+Single job **11915029** is submitted at **14:55:07 CEST**, partition `small`,
+account `mfk_cpu`, QOS `n0001`, with all five absolute inputs explicitly exported.
+Output target: `/ptmp/oldu/stmfit/scan_weighting_20260921_v1`. Its initial state
+is pending, reason `QOSGrpCpuLimit`; no duplicate, resource change or local fit
+is attempted. External grading has not run.
 Validated source and conclusions are committed; generated outputs, all losses
 and the initial failed metadata-audit log remain preserved locally and ignored.
