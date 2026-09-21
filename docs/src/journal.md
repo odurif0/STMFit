@@ -2308,14 +2308,16 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0s. **Can covariance sharing throughout GMM learning improve recognition?** →
-    **PREPARING; RESULT PENDING (Sep 22)**: one tied-covariance candidate
+    **RUNNING; RESULT PENDING (Sep 22)**: one tied-covariance candidate
     against the 676/34 support control, with the covariance pooled at
     initialization, every EM M-step and both hard updates. Means and masses
     remain free; scaling, seeds, naming, vote, upstream features and N are
     unchanged. One Viper job, four requested CPUs, 16 GB, 30-minute ceiling,
     no retry. Tests, exact control replay, checked outputs and paired external
     grades define completion; historical 677/36 remains the target. No other
-    proposed lead, combined arm or post-grade adjustment is included.
+    proposed lead, combined arm or post-grade adjustment is included. Source
+    **becd0ce**, 2,716 assertions passed; single job **11931106** started on
+    vipc2227 at 00:37 CEST after 18 seconds queued.
 
 0r. **Can whole-scan bootstrap aggregation improve recognition?** →
     **COMPLETE; NEGATIVE (Sep 21)**: source **da886ce**, job **11925188**, exit
@@ -9706,3 +9708,12 @@ Fisher attribution 210, representation diagnostics 319, transverse descriptors
 20/20/16. The documentation builds successfully with the existing large-page
 and search-index warnings and non-CI deployment skip. No test failure or
 scientific input change precedes submission.
+
+Passing checks are committed in **123801d** before the single Viper submission
+**11931106** at **00:36:42 CEST**. The 00:36:51 inspection finds it pending,
+with `Requeue=0`, `Restarts=0`, four requested CPUs, 16,000 MB, a 30-minute
+limit and all five explicit exported paths. Scientific source remains
+**becd0ce**; these later commits are documentation only. External grading
+has not begun; this task continues through output verification and the result.
+
+The job starts on **vipc2227 at 00:37:00 CEST**, after 18 seconds queued.
