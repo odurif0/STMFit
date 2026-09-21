@@ -9689,3 +9689,20 @@ predictions. The seven-mode synthetic pipeline and complementary regressions
 continue. Viper reports Julia 1.13.0, all existing geometry/raw/template inputs
 present, fresh source/output paths, and no queued/running user job at inspection.
 No scientific job has been submitted.
+
+Scientific source is frozen in **becd0ce**. The tracked source whitelist and
+unchanged Manifest are synchronized to Viper; both checksum dry-runs are empty.
+Login-node `Pkg.instantiate()` succeeds with Julia 1.13.0 (the existing
+Manifest's 1.12.6 warning is retained). The two metadata-only runner dry-runs
+each discover **146 scans**, and Slurm `--test-only` accepts the four-CPU,
+16-GB, 30-minute request with the five explicit exported paths. Its estimated
+job ID is not a submission. The seven-mode synthetic pipeline passes **216
+assertions**. All **2,716 assertions across 20 suites** now pass: tied covariance
+212, pipeline 216, numerical assignment/diagnostics 136/20, scan weighting 138,
+continuous votes 109, scan bagging 223, robust normalization 99, patch support
+and score 286, complete training 154, native Fisher 229, affine Fisher 74,
+Fisher attribution 210, representation diagnostics 319, transverse descriptors
+125, signal features 73, assignment 37, and tied/bagging/continuous runners
+20/20/16. The documentation builds successfully with the existing large-page
+and search-index warnings and non-CI deployment skip. No test failure or
+scientific input change precedes submission.
