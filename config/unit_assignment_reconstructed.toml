@@ -1,6 +1,7 @@
 # Explicit reconstruction, not the lost patch_u_asym implementation.
 # Frozen before comparing any reconstructed predictions with the old champion.
 [model]
+gmm_covariance_structure = "full"
 fisher_score_center = "legacy_centered_mean"
 gmm_final_score = "mahalanobis"
 gmm_final_covariance = "ridge"

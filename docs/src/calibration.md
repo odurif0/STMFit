@@ -459,6 +459,31 @@ post-grade change to fusion, seeds, replicate count, naming, precision or
 threshold follows. This negative result concerns this specified ensemble and
 fusion, not all bagging methods; the reused grade is not independent validation.
 
+### Tied GMM covariance throughout learning (2026-09-22)
+
+The user authorizes one comparison of the 676/34 support control with a GMM
+whose two components share covariance throughout learning. This is not the
+previously rejected final-only Ledoit-Wolf estimate or final Gaussian-volume
+score. The same features, per-scan scaling, interactions, ten seeds, two hard
+updates, physical group-naming rule and final vote stay fixed. N, Fisher, CC,
+support, acquisition preprocessing and unknown25 are not changed.
+
+`model.gmm_covariance_structure="tied"` pools within-component scatter using
+the learned responsibilities in every EM update and hard indicators during
+initialization/self-training; divide by the number of usable rows and add the
+unchanged ridge. Means and mixture masses stay free, with no class-count prior.
+The covariance has 666 independent entries in the 36-dimensional view instead
+of 1,332 across two separate matrices. This reduces model freedom, not a claim
+of calibrated noise or chemical certainty. Better numerical conditioning alone
+would not establish better recognition.
+
+One Viper job is capped at 30 minutes, four requested CPUs and 16 GB, without
+automatic retry. Exact control replay and all-key/N/upstream/vote checks precede
+external grading. Labels, expected N, benchmark membership and historical
+predictions are not learning or inference inputs. No naming, grouped-Fisher,
+fusion, threshold, resampling or post-grade search accompanies this test.
+Result pending; historical 677/36 remains the comparison target.
+
 ## Opt-in label-free exploration (2026-09-18)
 
 `config/label_free_exploration.toml` is diagnostic configuration, not a new

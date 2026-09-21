@@ -1,5 +1,6 @@
 # One independent numerical comparison against the affine-descriptor control.
 [model]
+gmm_covariance_structure = "full"
 fisher_score_center = "legacy_centered_mean"
 gmm_final_score = "mahalanobis"
 gmm_final_covariance = "ledoit_wolf"

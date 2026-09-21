@@ -200,6 +200,8 @@ end
 
 function load_inputs(paths, production_config)
     cfg = load_config(production_config)
+    cfg["model"]["gmm_covariance_structure"] == "full" ||
+        error("This historical representation diagnostic requires separate component covariances")
     cfg["selection"]["gmm_resampling"] == "none" ||
         error("This historical representation diagnostic requires unresampled GMM training")
     cfg["selection"]["gmm_seed_aggregation"] == "hard_vote" ||

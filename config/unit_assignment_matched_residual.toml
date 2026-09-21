@@ -1,5 +1,6 @@
 # One opt-in comparison: S(data - model), with every other setting unchanged.
 [model]
+gmm_covariance_structure = "full"
 fisher_score_center = "legacy_centered_mean"
 gmm_final_score = "mahalanobis"
 gmm_final_covariance = "ridge"

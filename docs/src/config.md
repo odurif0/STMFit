@@ -876,6 +876,33 @@ changes leave old GMM=1 / k-means=0 ties. Retain the **676/34 support config**,
 below historical 677/36. No replicate/seed search, fusion/threshold adjustment
 or post-grade combination follows. See `results/scan_bagging_20260921/report.md`.
 
+### Tied GMM covariance throughout learning (2026-09-22)
+
+Required `[model] gmm_covariance_structure` is `"full"` in all sixteen earlier
+native configs. The opt-in `unit_assignment_tied_covariance.toml` copies the
+676/34 support control, changing only its name and this field to `"tied"`.
+It is distinct from `gmm_final_covariance`, which remains `"ridge"`.
+
+Tied mode shares one within-component covariance at k-means initialization,
+every EM M-step and each of the two hard self-training updates. For n usable
+training rows, covariance is the sum over rows and components of responsibility
+times the outer product about that component's updated mean, divided by n,
+plus the unchanged `1e-6` ridge. Initialization/hard updates use indicator
+responsibilities. This pools scatter by observation mass, not equal component
+weights and not the global covariance including between-component separation.
+Initial mixture weights stay 1/2 as before; subsequent masses and both means
+are learned freely. Two components do not impose a chemical composition.
+
+This scoped mode requires `ridge`, `mahalanobis`, `equal_lobes`, `hard_vote`,
+`none` resampling, `all_admissible` training and `mean_sample_std` scaling.
+Final score arithmetic, naming by mean raw amplitude, seeds, interactions,
+vote threshold, precision, missing-row policy, upstream signals and N are
+unchanged. Historical representation diagnostics reject tied mode rather than
+silently reporting the old model. One control and one candidate are authorized
+on Viper, with four requested CPUs, 16 GB, a 30-minute limit and no requeue.
+Result pending; the 676/34 support candidate remains the working reference,
+below historical 677/36. No other proposed lead is included.
+
 ## Opt-in diagnostic exploration settings (2026-09-18)
 
 `config/label_free_exploration.toml` is used only by standalone exploration tools;

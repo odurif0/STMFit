@@ -1037,3 +1037,21 @@ retain the support candidate; historical 677/36 remains unexceeded. Seven
 component-score checks and paired arithmetic pass; all gains and losses are
 saved in `results/scan_bagging_20260921/report.md`. The comparison is complete;
 do not resubmit or tune fusion/thresholds after this negative grade.
+
+## Tied-covariance GMM comparison (September 22)
+
+`hpc/compare_tied_covariance.sbatch` runs the 676/34 support `control/` and one
+`tied/` candidate. Only covariance sharing throughout GMM learning changes;
+both arms regenerate patches at the same cached geometry and selected N.
+One job requests four CPUs, 16 GB and **30 minutes**, with `--no-requeue`.
+Set five absolute variables: `STMFIT_PROJECT_DIR`, `STMFIT_CACHE_DIR`,
+`STMFIT_INPUT_DIR`, `STMFIT_OUTDIR`, `JULIA_BIN`. Sync committed code and the
+unchanged Manifest, run the metadata-only `--dry-run`, then pass all five in
+an explicit `sbatch --export=...` list overriding `SBATCH_EXPORT=NONE`.
+No cohort fitting on login nodes or locally, and no duplicate/automatic retry.
+
+Fetch logs and outputs; verify exact control replay, keys, N, unchanged upstream
+tables, covariance-mode logs and final vote arithmetic before external grading.
+Inference never receives labels, a benchmark manifest or saved reference
+predictions. Result pending; preparation is not recognition progress, and the
+historical 677/36 remains unexceeded by the retained 676/34 support candidate.

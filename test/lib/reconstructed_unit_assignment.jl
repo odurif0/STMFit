@@ -6,7 +6,7 @@ export read_table, write_table, lobe_table, require_same_keys,
        transverse_asymmetry, transverse_descriptor, augment_descriptor, mold_margin,
        write_soft_vote, load_config, load_training_policy, write_training_support,
        load_training_mask, validate_training_mask, load_gmm_normalization, load_gmm_weighting,
-       load_gmm_seed_aggregation, load_gmm_resampling
+       load_gmm_seed_aggregation, load_gmm_resampling, load_gmm_covariance_structure
 
 const TRANSVERSE_DESCRIPTORS = ("transverse_half_plane_asymmetry",
     "transverse_first_moment", "affine_residual_half_plane_asymmetry")
@@ -199,6 +199,26 @@ function load_gmm_resampling(config::AbstractDict)
     return (mode=String(mode), replicates=Int(bags), seed=Int(seed))
 end
 
+"Covariance sharing throughout GMM learning, separate from final shrinkage."
+function load_gmm_covariance_structure(config::AbstractDict)
+    model, sel, pre = (get(config, section, Dict()) for section in ("model", "selection", "preprocessing"))
+    mode = get(model, "gmm_covariance_structure", nothing)
+    mode in ("full", "tied") || throw(ArgumentError("explicit gmm_covariance_structure must be full or tied"))
+    if mode == "tied"
+        for (section, key, expected) in ((model, "gmm_final_covariance", "ridge"),
+                (model, "gmm_final_score", "mahalanobis"),
+                (sel, "gmm_training_weighting", "equal_lobes"),
+                (sel, "gmm_seed_aggregation", "hard_vote"),
+                (sel, "gmm_resampling", "none"),
+                (sel, "assignment_training_support", "all_admissible"),
+                (pre, "gmm_feature_normalization", "mean_sample_std"))
+            get(section, key, nothing) == expected ||
+                throw(ArgumentError("tied covariance currently requires $key=$expected"))
+        end
+    end
+    return String(mode)
+end
+
 function load_config(path::AbstractString)
     cfg = TOML.parsefile(path)
     for section in ("model", "selection", "preprocessing")
@@ -209,6 +229,7 @@ function load_config(path::AbstractString)
     load_gmm_weighting(cfg)
     load_gmm_seed_aggregation(cfg)
     load_gmm_resampling(cfg)
+    load_gmm_covariance_structure(cfg)
     model["descriptor"] in TRANSVERSE_DESCRIPTORS || error("Unsupported descriptor")
     model["descriptor_column"] == "patch_u_asym_reconstructed" || error("Unsupported descriptor column")
     model["descriptor_channel"] == "bwd_res" || error("Unsupported descriptor patch family")

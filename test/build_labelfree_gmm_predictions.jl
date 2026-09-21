@@ -1,6 +1,6 @@
 #!/usr/bin/env julia
 
-# Build label-free 0/1/? unit-assignment predictions via GMM (2-component full-covariance EM).
+# Build label-free 0/1/? predictions via two-component full or tied-covariance EM.
 #
 # This script is deliberately prediction-only: it never reads benchmark truth,
 # expected sequences, or composition priors. Cluster labels are mapped by the
@@ -22,7 +22,8 @@ include(joinpath(@__DIR__, "lib", "assignment_covariance.jl"))
 using .AssignmentCovariance
 include(joinpath(@__DIR__, "lib", "reconstructed_unit_assignment.jl"))
 using .ReconstructedUnitAssignment: load_training_policy, load_training_mask, validate_training_mask,
-    load_gmm_normalization, load_gmm_weighting, load_gmm_seed_aggregation, load_gmm_resampling, write_table
+    load_gmm_normalization, load_gmm_weighting, load_gmm_seed_aggregation, load_gmm_resampling,
+    load_gmm_covariance_structure, write_table
 
 const DEFAULT_FEATURES = "results/unit_separability/lobe_features_selectedN_primary_local.tsv"
 const DEFAULT_SPLIT = ""
@@ -53,6 +54,7 @@ struct Options
     bootstrap_replicates::Int
     bootstrap_seed::Int
     bootstrap_audit::String
+    covariance_structure::String
 end
 
 function _load_final_score(config::AbstractDict)
@@ -146,7 +148,7 @@ function _parse_cli(args)
 
             Options:
               --features PATH        Main per-lobe feature TSV [$(DEFAULT_FEATURES)]
-              --config PATH          Explicit final covariance, ridge and score
+              --config PATH          Explicit covariance structure, ridge and score
                                      [config/unit_assignment_reconstructed.toml].
                                      Ledoit-Wolf acts only on the last hard
                                      self-training covariance; it requires
@@ -154,6 +156,12 @@ function _parse_cli(args)
                                      the covariance-volume term only to final
                                      scoring after self-training (>= 1).
                                      Neither option changes EM or vote weights.
+                                     gmm_covariance_structure=full preserves separate
+                                     component covariances; tied pools within-group
+                                     scatter at initialization, every EM M-step and
+                                     every hard update. Means and masses stay free.
+                                     Tied mode requires the unresampled ridge,
+                                     hard-vote, equal-lobe support-control policies.
                                      Also declares per-file GMM feature scaling:
                                      mean_sample_std or median_iqr (Type-7 Q75-Q25),
                                      and its degenerate-scale fallback. Scaling
@@ -223,6 +231,7 @@ function _parse_cli(args)
     covariance.mode == "ledoit_wolf" && selftrain < 1 &&
         error("Final Ledoit-Wolf covariance requires --selftrain >= 1")
     cfg = TOML.parsefile(config)
+    covariance_structure = load_gmm_covariance_structure(cfg)
     normalization = load_gmm_normalization(cfg)
     training_weighting = load_gmm_weighting(cfg)
     seed_aggregation = load_gmm_seed_aggregation(cfg)
@@ -242,7 +251,8 @@ function _parse_cli(args)
     return Options(features, split_features, patches, out_tsv, view_specs,
                    first_seed, n_seeds, interactions, selftrain, covariance.mode, covariance.ridge, final_score,
                    training_policy, training_support, normalization.mode, normalization.scale_fallback,
-                   training_weighting, seed_aggregation, bootstrap.mode, bootstrap.replicates, bootstrap.seed, bootstrap_audit)
+                   training_weighting, seed_aggregation, bootstrap.mode, bootstrap.replicates, bootstrap.seed,
+                   bootstrap_audit, covariance_structure)
 end
 
 function _arg_value(args, i::Int, flag::String)
@@ -537,10 +547,34 @@ function _cluster_amplitude_means(records, score_idxs, assignments, eligible, ob
                 for (c, vals) in values if !isempty(vals))
 end
 
-# EM fit of a 2-component full-covariance GMM, k-means initialized.
+"Shared within-component ML covariance; responsibilities have one unit of mass per row."
+function _tied_covariance(X::AbstractMatrix, means::AbstractMatrix, resp::AbstractMatrix; ridge::Real)
+    p, n = size(X)
+    n > 0 && p > 0 && size(means, 1) == p && size(resp) == (n, size(means, 2)) ||
+        throw(ArgumentError("invalid tied covariance dimensions"))
+    all(isfinite, X) && all(isfinite, means) && all(isfinite, resp) && all(>=(0), resp) ||
+        throw(ArgumentError("invalid tied covariance observations or responsibilities"))
+    all(s -> isapprox(s, 1; atol=1e-12, rtol=1e-12), vec(sum(resp; dims=2))) ||
+        throw(ArgumentError("tied responsibilities must sum to one per row"))
+    !(ridge isa Bool) && isfinite(ridge) && ridge > 0 || throw(ArgumentError("positive finite ridge required"))
+    scatter = zeros(p, p)
+    for c in axes(means, 2)
+        centered = X .- means[:, c]
+        scatter .+= centered * Diagonal(resp[:, c]) * centered'
+    end
+    sample = scatter / n
+    all(isfinite, sample) || throw(ArgumentError("tied covariance overflow"))
+    return (sample=sample, covariance=sample + ridge * I)
+end
+
+# EM fit of a 2-component GMM, k-means initialized. The legacy full route
+# retains its exact operations; production always passes the explicit config mode.
 # Returns (means, covariances, weights).
 function _gmm_fit(X::Matrix{Float64}, seed::Int; ridge::Float64, max_iter::Int=200, tol::Float64=1e-6,
-                  observation_weights=nothing)
+                  observation_weights=nothing, covariance_structure::String="full")
+    covariance_structure in ("full", "tied") || throw(ArgumentError("unknown covariance structure"))
+    covariance_structure == "tied" && observation_weights !== nothing &&
+        throw(ArgumentError("tied covariance requires equal-lobe training"))
     p, n = size(X)
     w = _check_observation_weights(observation_weights, n)
     total = w === nothing ? n : sum(w)
@@ -560,6 +594,13 @@ function _gmm_fit(X::Matrix{Float64}, seed::Int; ridge::Float64, max_iter::Int=2
         covs[c] = w === nothing ? centered * centered' / length(members) :
             centered * Diagonal(w[members]) * centered' / mass
         covs[c] += ridge * I
+    end
+    if covariance_structure == "tied"
+        resp = Float64.([a == c for a in km.assignments, c in 1:k])
+        shared = _tied_covariance(X, means, resp; ridge).covariance
+        for c in 1:k
+            covs[c] = copy(shared)
+        end
     end
     prev_ll = -Inf
     for iter in 1:max_iter
@@ -595,6 +636,12 @@ function _gmm_fit(X::Matrix{Float64}, seed::Int; ridge::Float64, max_iter::Int=2
             covs[j] = (centered * Diagonal(resp[:, j]) * centered') / nk
             covs[j] += ridge * I
         end
+        if covariance_structure == "tied"
+            shared = _tied_covariance(X, means, resp; ridge).covariance
+            for j in 1:k
+                covs[j] = copy(shared)
+            end
+        end
     end
     return means, covs, weights
 end
@@ -605,7 +652,11 @@ end
 function _mahalanobis_self_train(X::Matrix{Float64}, means::Matrix{Float64},
                                  covs::Vector{Matrix{Float64}}, weights::Vector{Float64};
                                  iters::Int=5, covariance_mode::String, ridge::Float64,
-                                 diagnostics=nothing, observation_weights=nothing)
+                                 diagnostics=nothing, observation_weights=nothing,
+                                 covariance_structure::String="full")
+    covariance_structure in ("full", "tied") || throw(ArgumentError("unknown covariance structure"))
+    covariance_structure == "tied" && (covariance_mode != "ridge" || observation_weights !== nothing) &&
+        throw(ArgumentError("tied hard updates require ridge and equal-lobe training"))
     covariance_mode in ("ridge", "ledoit_wolf") || error("Unknown final covariance mode")
     covariance_mode == "ledoit_wolf" && iters < 1 && error("Final covariance requires hard memberships")
     p, n = size(X)
@@ -638,7 +689,7 @@ function _mahalanobis_self_train(X::Matrix{Float64}, means::Matrix{Float64},
                     (sample=covariance, covariance=covariance + ridge * I, shrinkage=0.0)
                 end
                 covs[j] = estimate.covariance
-                if diagnostics !== nothing
+                if diagnostics !== nothing && covariance_structure == "full"
                     push!(diagnostics, (component=j, members=copy(members), weight=weights[j],
                         mean=copy(means[:, j]), sample=estimate.sample, covariance=copy(covs[j]),
                         shrinkage=estimate.shrinkage))
@@ -646,6 +697,19 @@ function _mahalanobis_self_train(X::Matrix{Float64}, means::Matrix{Float64},
             else
                 covs[j] = (w === nothing ? centered * centered' / nk :
                     centered * Diagonal(w[members]) * centered' / nk) + ridge * I
+            end
+        end
+        if covariance_structure == "tied"
+            resp = Float64.([a == c for a in assign, c in 1:k])
+            shared = _tied_covariance(X, means, resp; ridge)
+            for j in 1:k
+                covs[j] = copy(shared.covariance)
+                members = findall(==(j), assign)
+                if diagnostics !== nothing && iteration == iters && !isempty(members)
+                    push!(diagnostics, (component=j, members=copy(members), weight=weights[j],
+                        mean=copy(means[:, j]), sample=copy(shared.sample), covariance=copy(covs[j]),
+                        shrinkage=0.0))
+                end
             end
         end
     end
@@ -697,12 +761,13 @@ function _bootstrap_view_probability(records, X, idxs, score_idxs, opt;
         votes = zeros(length(score_idxs))
         accepted = 0
         for seed in opt.first_seed:(opt.first_seed + opt.n_seeds - 1)
-            means, covs, weights = _gmm_fit(data, seed; ridge=opt.covariance_ridge)
+            means, covs, weights = _gmm_fit(data, seed; ridge=opt.covariance_ridge,
+                covariance_structure=opt.covariance_structure)
             clusters = diagnostics === nothing ? nothing : []
             if opt.selftrain > 0
                 means, covs, weights = _mahalanobis_self_train(data, means, covs, weights;
                     iters=opt.selftrain, covariance_mode=opt.covariance_mode, ridge=opt.covariance_ridge,
-                    diagnostics=clusters)
+                    diagnostics=clusters, covariance_structure=opt.covariance_structure)
             end
             assignments = Int[]
             for j in axes(score_data, 2)
@@ -771,12 +836,13 @@ function _view_probability(records::Vector{LobeRecord}, features::Vector{String}
     end
 
     for seed in opt.first_seed:(opt.first_seed + opt.n_seeds - 1)
-        means, covs, weights = _gmm_fit(data, seed; ridge=opt.covariance_ridge, observation_weights)
+        means, covs, weights = _gmm_fit(data, seed; ridge=opt.covariance_ridge, observation_weights,
+            covariance_structure=opt.covariance_structure)
         seed_diagnostics = diagnostics === nothing ? nothing : []
         if opt.selftrain > 0
             means, covs, weights = _mahalanobis_self_train(data, means, covs, weights;
                 iters=opt.selftrain, covariance_mode=opt.covariance_mode, ridge=opt.covariance_ridge,
-                diagnostics=seed_diagnostics, observation_weights)
+                diagnostics=seed_diagnostics, observation_weights, covariance_structure=opt.covariance_structure)
         end
         diagnostics === nothing || push!(diagnostics,
             (seed=seed, indices=copy(idxs), clusters=seed_diagnostics,
@@ -795,6 +861,9 @@ function _view_probability(records::Vector{LobeRecord}, features::Vector{String}
             push!(assignments, assigned)
         end
         mean_amp = _cluster_amplitude_means(records, score_idxs, assignments, eligible, naming_weights)
+        println("GMM seed ", seed, " covariance_structure=", opt.covariance_structure,
+            " covariance_maxdiff=", maximum(abs.(covs[1] - covs[2])),
+            " component_weights=", join(weights, ','), " named=", length(mean_amp) == 2)
         length(mean_amp) == 2 || continue
         high_cluster = first(sort(collect(keys(mean_amp)); by=c -> mean_amp[c], rev=true))
         for (j, i) in enumerate(score_idxs)
@@ -885,6 +954,7 @@ function main(args=ARGS)
     println("  uncertain:  ", n_uncertain)
     println("  views:      ", join(first.(views), ", "))
     println("  weighting:  ", opt.training_weighting)
+    println("  covariance structure: ", opt.covariance_structure)
     println("  seed aggregation: ", opt.seed_aggregation)
     println("  resampling: ", opt.resampling, " replicates=", opt.bootstrap_replicates,
         " bootstrap_seed=", opt.bootstrap_seed)

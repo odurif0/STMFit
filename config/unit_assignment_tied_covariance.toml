@@ -1,13 +1,13 @@
-# One descriptor comparison: half-plane asymmetry after affine patch projection.
+# One tied-covariance learning comparison against the fixed support control.
 [model]
-gmm_covariance_structure = "full"
-fisher_score_center = "legacy_centered_mean"
+gmm_covariance_structure = "tied"
+fisher_score_center = "training_mean"
 gmm_final_score = "mahalanobis"
 gmm_final_covariance = "ridge"
 gmm_covariance_ridge = 1e-6
 fisher_projection_zero_l1 = 1e-12
 mold_margin_mode = "absolute_cost_margin"
-name = "cc_soft_affine_residual_v1"
+name = "cc_soft_tied_covariance_v1"
 descriptor = "affine_residual_half_plane_asymmetry"
 descriptor_column = "patch_u_asym_reconstructed"
 descriptor_channel = "bwd_res"
@@ -49,7 +49,7 @@ vote_threshold = 0.5
 [preprocessing]
 gmm_feature_normalization = "mean_sample_std"
 gmm_scale_fallback = 1.0
-assignment_patch_support = "full_square"
+assignment_patch_support = "complete_disk_symmetric"
 fisher_patch_projection = "none"
 patch_residual_filter = "smooth_residual"
 descriptor_normalization = "median_sample_std"

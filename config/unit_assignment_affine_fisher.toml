@@ -1,5 +1,6 @@
 # One label-free Fisher change: affine disk projection at train and score time.
 [model]
+gmm_covariance_structure = "full"
 fisher_score_center = "legacy_centered_mean"
 gmm_final_score = "mahalanobis"
 gmm_final_covariance = "ridge"

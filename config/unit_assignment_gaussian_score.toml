@@ -1,5 +1,6 @@
 # One independent support/score comparison against the centered-Fisher candidate.
 [model]
+gmm_covariance_structure = "full"
 fisher_score_center = "training_mean"
 gmm_final_score = "gaussian_density"
 gmm_final_covariance = "ridge"

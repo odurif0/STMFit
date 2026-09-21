@@ -2304,8 +2304,18 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
-> Updated 2026-09-21. Questions from earlier sessions are archived in
+> Updated 2026-09-22. Questions from earlier sessions are archived in
 > `journal_archive.md`.
+
+0s. **Can covariance sharing throughout GMM learning improve recognition?** →
+    **PREPARING; RESULT PENDING (Sep 22)**: one tied-covariance candidate
+    against the 676/34 support control, with the covariance pooled at
+    initialization, every EM M-step and both hard updates. Means and masses
+    remain free; scaling, seeds, naming, vote, upstream features and N are
+    unchanged. One Viper job, four requested CPUs, 16 GB, 30-minute ceiling,
+    no retry. Tests, exact control replay, checked outputs and paired external
+    grades define completion; historical 677/36 remains the target. No other
+    proposed lead, combined arm or post-grade adjustment is included.
 
 0r. **Can whole-scan bootstrap aggregation improve recognition?** →
     **COMPLETE; NEGATIVE (Sep 21)**: source **da886ce**, job **11925188**, exit
@@ -9614,3 +9624,68 @@ before submission; conclusions are committed separately after reviewing the
 saved outputs and documentation diff. Generated results, logs and the initial
 failed synthetic test remain local and Git-ignored; no cluster retry, new
 scientific run or GitHub push follows this result.
+
+## 2026-09-22 — Tied covariance throughout GMM learning, one fixed comparison
+
+**Scientific deliverable and done condition.** The user approves the first
+recommended next lead: measure whether a common covariance learned throughout
+the GMM improves recognition against the retained support candidate, **676/870
+correct, 34/145 exact, 852/870 coverage**, and historical **677/870, 36/145,
+854/870**. Done means independent numerical/synthetic checks, exact control
+replay, verified complete outputs, external paired grades, fetched results and
+committed conclusions. Historical performance is a target to exceed, not an
+assumed ceiling. One control and one candidate, one Viper job, four requested
+CPUs, 16 GB and **30 minutes**, no automatic retry or local/login-node cohort
+fit. The archived application's scientific Must-NOT-have list remains in force;
+its retired process apparatus is not used. No new naming rule, grouped Fisher,
+fusion, threshold, bagging, weighting, DFT, count refit or unknown25 rerun.
+
+**Fixed method before grading.** Sixteen earlier native configs explicitly
+declare `[model] gmm_covariance_structure="full"`. The new
+`unit_assignment_tied_covariance.toml` changes only the support config's name
+and that field to `"tied"`. It pools the within-component scatter at k-means
+initialization, every EM M-step and both Mahalanobis hard updates. If x_i is
+one of n usable rows, r_ic its responsibility and mu_c the updated mean,
+the common covariance is `sum(r_ic * (x_i-mu_c)*(x_i-mu_c)')/n + ridge*I`.
+Initialization and hard updates use membership indicators. This is not an
+unweighted average of component covariances, nor the global covariance with
+between-group separation. Each covariance copy contains the same matrix;
+component means and masses remain freely learned. The existing 1/2 initial
+weights are starting values only, not a chemical-composition constraint.
+
+Ridge stays **1e-6**, factorization guard **1e-8**, ten seeds **0–9**, two
+hard updates, full eight-feature/28-interaction representation and per-scan
+mean/sample-std scaling. Hard reassignment still uses only distance as before;
+final scoring retains log free weight minus half Mahalanobis distance. With a
+common covariance, a Gaussian log-volume term would cancel between components;
+the score mode is not changed. Physical naming still uses mean raw amplitude
+of assigned training members. Seed votes remain hard and the final k-means/GMM
+mean, `>=0.5` rule, eight-decimal output and unavailable-row policy stay fixed.
+No GCV, guard, calibration, geometry or selected-N change is made.
+
+This candidate tests reduced covariance freedom during group formation, unlike
+the failed final-only shrinkage and final-score experiments. Its 36-dimensional
+covariance has 666 independent entries instead of 1,332 across two components.
+That is motivation, not evidence of better chemistry or calibrated uncertainty.
+The new mode rejects combinations outside the support-control policies, and
+historical representation diagnostics reject it rather than describe an
+unrelated fit. Inference sees all 146 scans, no benchmark membership, sequence,
+expected counts or saved champion predictions. External full145 grading follows
+frozen outputs and integrity checks; no post-grade tuning is allowed. This
+reused benchmark supplies development evidence, not independent validation.
+
+Independent synthetic arithmetic and the seven-mode pipeline checks are running.
+The first unprivileged `julia --version` cannot create juliaup's lockfile under
+the read-only home sandbox; authorized test processes use Julia 1.13 through
+the existing release installation. No scientific run or grade has started.
+
+The targeted suite passes **212 assertions** under Julia 1.13: explicit config
+isolation, independent pooled-scatter equations, initialization and three EM
+updates, both hard updates, free unequal masses, unchanged legacy arithmetic,
+invalid-row retention, physical naming and deterministic CLI/API predictions.
+The GMM log now records covariance structure, final inter-component covariance
+difference, free weights and naming availability per seed, without changing
+predictions. The seven-mode synthetic pipeline and complementary regressions
+continue. Viper reports Julia 1.13.0, all existing geometry/raw/template inputs
+present, fresh source/output paths, and no queued/running user job at inspection.
+No scientific job has been submitted.
