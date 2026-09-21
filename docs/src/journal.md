@@ -2308,7 +2308,7 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0t. **Can scan-grouped Fisher or within-scan GMM naming improve recognition?** →
-    **PREPARING; RESULTS PENDING (Sep 22)**: the user expands the authorization
+    **SUBMITTED; RESULTS PENDING (Sep 22)**: the user expands the authorization
     to two isolated candidates against the 676/34 support control. Fisher uses
     two whole-scan groups fixed by seeded hash rank; the separate naming arm
     names unchanged GMM groups using training-only within-scan amplitude z
@@ -2316,7 +2316,8 @@ See `docs/src/selection.md` for the full guard specification and
     no combined arm or retry. Exact control replay, synthetic/non-use checks,
     verified outputs and paired external grades define completion. Historical
     677/36 remains the target. No paired-acquisition model, count refit, DFT,
-    unknown25 or post-grade tuning is included.
+    unknown25 or post-grade tuning is included. Source **43f8993**, job
+    **11931478**, submitted after **3,035 assertions across 19 suites** pass.
 
 0s. **Can covariance sharing throughout GMM learning improve recognition?** →
     **COMPLETE; NEGATIVE (Sep 22)**: source **becd0ce**, job **11931106**,
@@ -9917,3 +9918,25 @@ non-use and legacy arithmetic 26, relative-naming algebra 10, CLI/API and
 unchanged GMM fits 172. The last logging-only fingerprint addition is exercised
 by subsequent CLI/pipeline regressions. The nine-mode synthetic pipeline and
 complementary regressions continue before real submission.
+
+All **19 suites / 3,035 assertions** now pass under Julia 1.13. The pipeline
+has 274 assertions, including 153 for nine end-to-end synthetic variants;
+targeted whole-scan/naming tests have 291. The complementary suites cover
+native Fisher 229, affine Fisher 74, numerical assignment 136, complete
+training 154, Fisher attribution 210, representation diagnostics 319,
+numerical diagnostics 20, runner 20, scan weighting 138, continuous vote 111,
+scan bagging 225, tied covariance 214, robust normalization 99, patch support
+286, label-free signals 73, transverse descriptors 125 and assignment 37.
+The later GMM CLI regressions exercise the full-parameter fingerprint log.
+
+Scientific source **43f8993** and the unchanged Manifest are synchronized to
+`/u/oldu/code/STMFit_scan_fisher_naming_20260922`; both checksum comparisons
+are empty. Login-node instantiate (without automatic precompilation) succeeds
+with Julia 1.13.0 and preserves the Manifest. The three-arm metadata dry-run
+and scheduler `--test-only` pass. The latter's speculative identifier is not
+a submitted job. Actual job **11931478** is submitted once with all five
+variables explicitly exported, four requested CPUs, 16 GB, a 30-minute limit
+and no requeue. Outputs are reserved at
+`/ptmp/oldu/stmfit/scan_fisher_naming_20260922_v1`. No grade has been read and
+no scientific output/result is claimed yet. Full local logs are under
+`results/scan_fisher_naming_20260922/`.
