@@ -2308,7 +2308,8 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0o. **Can robust per-scan GMM normalization improve recognition?** →
-    **AUTHORIZED; COMPARISON PENDING (Sep 21)**: one median/Type-7-IQR candidate
+    **SUBMITTED; RESULTS PENDING (Sep 21)**: source **77b3ce6**, job **11911253**;
+    one median/Type-7-IQR candidate
     versus the 676/34 support control. All admissible patches remain eligible;
     Fisher, k-means, selected N, free mixture weights and vote rules stay fixed.
     One Viper job, four requested CPUs, 16 GB, 30 minutes, no automatic retry,
@@ -8927,3 +8928,31 @@ skip. Further regression/pipeline suites continue before submission. The old
 representation diagnostic now rejects median/IQR configs explicitly, rather
 than silently reporting mean/std arithmetic for a different model. The source
 is committed early; neither real-cohort fitting nor external grading has run.
+
+Pre-submission verification finishes with **1,900 assertions**: normalization
+99, complete training 154, support/score 286, numerical assignment 136,
+numerical diagnostics 20, native Fisher 229, affine Fisher 74, Fisher attribution
+210, representation 319, transverse descriptors 125, signal features 73,
+assignment 37, three-mode synthetic pipeline 122 and Slurm runner 16. A shell
+test list used the nonexistent name `test_label_free_signals`; the actual
+`test_label_free_signal_features` suite and remaining interface/pipeline suites
+were already executed separately and passed. No test or scientific rule is
+weakened. The synthetic pipeline preserves upstream/Fisher/k-means tables under
+the robust change and complete-data identity under complete training.
+
+Saved-feature arithmetic (no local cohort fit) finds the same **896/900 finite
+views** in both modes. Maximum absolute base descriptor grows **2.62205 →
+37.13789**, and the expanded maximum **5.44386 → 335.46532**. This illustrates
+the predeclared risk of amplifying tails; no clipping, scale factor or threshold
+is added after observing it.
+
+Scientific source **77b3ce6** is checksum-identical to the dedicated Viper tree
+`/u/oldu/code/STMFit_robust_normalization_20260921`. The ignored Manifest is copied
+unchanged. Geometry, split geometry, templates and count config retain their
+preceding SHA-256 values; no benchmark tables or past result trees are synced.
+Both metadata-only dry runs recognize 146 files under Julia 1.13.0. One job
+**11911253** is submitted at **13:11:25 CEST**, partition `small`, account
+`mfk_cpu`, QOS `n0001`, with all five absolute inputs explicitly exported.
+Output target: `/ptmp/oldu/stmfit/robust_normalization_20260921_v1`. The job starts
+in the queue. No duplicate submission, resource change, local fallback fit or
+external grade is performed while waiting.
