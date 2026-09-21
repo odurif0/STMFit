@@ -2315,7 +2315,9 @@ See `docs/src/selection.md` for the full guard specification and
     final threshold; average each seed's existing normalized score instead of
     its hard 0/1 decision. No temperature, calibration, scan weighting,
     resampling, alternative naming rule, combined arm or post-grade tuning.
-    Historical 677/36 remains the target; no result is presumed.
+    All **2,199 focused assertions** and the documentation build pass while
+    the job remains queued. Historical 677/36 remains the target; no result
+    is presumed.
 
 0p. **Can equal total GMM training weight per scan improve recognition?** →
     **COMPLETE; MIXED RESULT (Sep 21)**: source **5ff68e2**, job **11915029**,
@@ -9307,3 +9309,14 @@ exported. Output target: `/ptmp/oldu/stmfit/continuous_vote_20260921_v1`.
 Its initial state is **PENDING, QOSGrpCpuLimit**. No duplicate submission,
 resource change or local real-cohort fit is attempted. External grading has
 not run; source remains frozen while this job and the regressions are followed.
+
+All complementary regressions finish successfully while the job remains queued:
+**2,199 assertions across 17 suites**. Counts are continuous aggregation 107,
+scan weighting 138, robust normalization 99, complete training 154, support/score
+286, numerical assignment 136, numerical diagnostics 20, native Fisher 229,
+affine Fisher 74, Fisher attribution 210, representation 319, transverse
+descriptors 125, signal features 73, assignment 37, five-mode pipeline 160 and
+two Slurm runners 16 each. The earlier standalone runner repetition is not
+double-counted. The initial failed synthetic assertion log is retained alongside
+the corrected passing run. No source or configuration changed during this
+verification; the comparison is still waiting for the shared CPU quota.

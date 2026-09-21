@@ -981,3 +981,9 @@ through an explicit `sbatch --export=...` list. Sync committed source and the
 unchanged Manifest, submit once, fetch logs/outputs and verify the control
 replay and all identities before grading externally. No real-cohort fitting
 runs locally or on a login node. Results are pending.
+
+Scientific source **bef315f**, job **11922389**, submitted at **18:49:32 CEST**
+on September 21 with the explicit export list. The source/Manifest checksums and
+both 146-scan metadata dry runs match. All **2,199 focused assertions** and
+the docs build pass while the job waits under `QOSGrpCpuLimit`. No scientific
+result or promotion is implied by successful preparation; follow the same job.
