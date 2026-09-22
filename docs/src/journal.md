@@ -11931,3 +11931,18 @@ paired model passes **85 tests**. The production engine remains unchanged;
 the only shared helper addition is opt-in diagnostic exports/native optimizer
 keyword forwarding. Preparation and synthetic evidence are not a scientific
 result; the real outcome is recorded below after fetching the one job.
+
+Source **92b6f15** is committed before sync. Local and remote metadata-only
+dry-runs pass under Julia **1.13.0**; remote dependency instantiation leaves
+the Manifest SHA256 unchanged. After `sbatch --test-only`, the sole real job
+**11943523** is submitted at **00:14:57 CEST**, with explicit command-line
+exports and `--no-requeue`; it initially waits for `QOSGrpCpuLimit`.
+
+The saved-output verifier independently evaluates peaks/acquisition planes,
+objective, residual maps, full-parameter GCV, bounds, checkpoint RSS, trace
+prefixes, final finite-difference gradients and selection completeness. Its
+synthetic end-to-end coverage raises the new suite to **17,492 assertions**;
+the **85 paired-model**, **103 native-workflow** and **151 core-2D** checks also
+pass (**17,831 total**). No real optimization occurs in the verifier. Fetched
+data, logs and the French report belong in the ignored
+`results/paired_convergence_20260923/` directory.

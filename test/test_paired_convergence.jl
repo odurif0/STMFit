@@ -3,6 +3,7 @@ include(joinpath(@__DIR__,"diagnose_paired_convergence.jl"))
 module Merger
 include(joinpath(@__DIR__,"merge_paired_convergence.jl"))
 end
+include(joinpath(@__DIR__,"verify_paired_convergence.jl"))
 const D=PairedConvergenceDiagnostic
 const C=D.C
 const P=D.P
@@ -121,11 +122,18 @@ end
             for file in ("input_hashes.tsv","settings.toml","model_settings.toml")
                 cp(joinpath(dir,"out",file),joinpath(shard,file))
             end
+            for case in D.CASES[i:4:end]
+                prefix="$(case.profile).$(case.family).$(case.mode)."
+                for file in filter(f->startswith(f,prefix),readdir(joinpath(dir,"out")))
+                    cp(joinpath(dir,"out",file),joinpath(shard,file))
+                end
+            end
         end
         Merger.main([merged])
         @test length(D.table(joinpath(merged,"fits.tsv")))==16
         @test length(D.table(joinpath(merged,"eligibility.tsv")))==8
         @test_throws Exception Merger.main([merged])
+        VerifyPairedConvergence.verify(native,reference,merged)
         launcher=joinpath(ROOT,"hpc","diagnose_paired_convergence.sbatch")
         @test success(`bash -n $launcher`)
         @test occursin("SLURM_JOB_ID:?",read(launcher,String))
