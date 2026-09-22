@@ -10498,3 +10498,16 @@ retention, CLI exclusions and Slurm/dry-run arguments. An initial fixture reused
 a TSV path rejected by the existing no-overwrite writer; unique fixture paths
 fix that test-only collision, and its log is retained. Package, selected-support
 and assignment regressions are still running; no real fit or grade has run.
+
+All eight complementary suites now pass **1,604 assertions**, for **1,658 total**
+including the new suite. The Julia 1.13 documentation build passes with existing
+size/search-index warnings. Source is committed as **853ad38**. Local and remote
+metadata-only dry-runs both validate 146 files. Initial remote preparation
+omitted the ignored Manifest from the tracked-file transfer, so Pkg generated a
+different lock. No fit ran with it: preserve that generated lock separately,
+transfer the original Manifest explicitly, and instantiate again. Its before /
+after SHA-256 is unchanged (`617de8162fa4c7a814aacb106f145349bc57ead58ec9a6c332971a821b5974fe`). Configs,
+templates and original counts retain their saved hashes. Raw-content verification
+dereferences local staging links; symlink targets and directory timestamps are
+not scientific content differences. Slurm test-only **11936531** is a speculative
+identifier, not a submitted job. No real job has been submitted at this point.
