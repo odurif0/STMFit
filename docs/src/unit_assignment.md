@@ -2454,6 +2454,55 @@ Full method, losses and limitations: [journal](journal.md),
 decimal-rounded, not the unsaved full-precision fit. Labels remain external;
 this reused development benchmark does not establish independent validation.
 
+### Matched geometric variable projection (2026-09-22): negative
+
+The Gaussian geometry is locally refined at saved N, comparing joint native
+optimization with variable projection of bounded amplitudes and tilted
+background. Both start from **one shared full-precision native fit per scan**,
+whose circular/elliptical family is chosen by valid GCV at that N. The two
+local arms keep N, family, axis, support and data fixed, use **LN_BOBYQA**, the
+same native **κ-penalized RSS** and validity checks, and ceilings of **800
+evaluations / 30 seconds**. Full-parameter GCV remains diagnostic. The split
+cache and classifier settings stay unchanged; all geometry-derived features,
+patches and heads are regenerated. No labels or composition enter inference.
+
+| Profile | Correct / 870 | Exact / 145 | Coverage / 870 | Emitted errors |
+|---|---:|---:|---:|---:|
+| Historical saved reference | 677 | 36 | 854 | 177 |
+| Exactly replayed support | 676 | 34 | 852 | 176 |
+| Same-start joint optimization | 676 | 34 | 852 | 176 |
+| Geometric variable projection | 632 | 20 | 852 | 220 |
+
+Against joint: **18 scan gains, 44 losses, 83 ties; two exact gains,
+sixteen losses**. Against saved support: **17/44/84**, same exact gains/losses.
+Both comparisons lose **44 correct positions**, with eight grade-orientation
+changes. False positives rise **52→84**, false negatives **124→136**.
+N, 892 benchmark predictions, 16 missing positions, 38 extra lobes and the
+four unavailable keys remain unchanged. All 146 scans/900 keys are retained.
+
+The profiled objective improves over joint on **146/146 scans**, yet recognition
+worsens. Median RSS reduction from the common start is **6.601%**, versus
+**0.0623%** joint. Profiled stops are **103 evaluation limits, 35 XTOL, eight
+FTOL**; joint gives 132 XTOL and 14 FTOL. There is no time-limit stop or proof
+of global optimality. Equal ceilings do **not** mean equal cost: summed local
+search times are **402.97 s profiled versus 9.24 s joint**, excluding common
+initialization and separate callback setup. The 103 capped searches are not
+called converged. All final linear subproblems satisfy KKT.
+
+Source **7c5fb6c**, job **11940220**, **0:0 in 15m17s**, after 3m07s queued.
+All **782 outputs and Slurm log** are fetched/checksummed; **5,047 tests,
+20,138 pre-grade checks and 41 aggregate checks** pass, with 435 paired rows.
+Thirteen reference tables replay exactly. Only joint/profiled share an identical
+start; the fresh initialization differs slightly from the saved cache.
+
+**Reject geometric profiling; retain saved support 676/34**, below historical
+677/36. Do not replace the saved geometry, tune the optimizer after this grade,
+or infer that every profiling method fails. This reused development benchmark
+does not provide independent validation or unknown-chain chemical accuracy.
+Full method, timings, confusion and losses: [journal](journal.md),
+`results/geometry_profile_20260922/report.md`. No other proposed direction,
+counting, DFT or unknown25 change follows this completed comparison.
+
 ### Native numerical conventions
 
 The constant-current port retains the old first-axis-fast cube index, sampling

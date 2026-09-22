@@ -1,5 +1,18 @@
 # Model Selection
 
+The September 22 matched **geometric variable-projection** comparison is
+**negative: 632/870 correct, 20/145 exact**, against same-start joint
+optimization **676/34** and exactly replayed saved support **676/34**.
+Coverage stays **852/870**. The Gaussian geometry is refined at saved N;
+valid GCV chooses only the shared initial model family at that N. Both local
+arms use the same κ-penalized RSS, physical validity checks and optimizer
+ceilings, with full-parameter GCV diagnostic afterward. N and family remain
+fixed during refinement. All 146 profiled objectives improve over joint, but
+recognition worsens; 103 searches hit the evaluation limit. The **106/145
+exact counts**, 16 missing positions and 38 extra lobes are unchanged, not
+revalidated. Retain saved support; source **7c5fb6c**, job **11940220**, report
+`results/geometry_profile_20260922/report.md`. No post-grade tuning follows.
+
 The September 22 frozen-geometry amplitude comparison is **negative**:
 **675/870 correct, 32/145 exact**, versus exactly replayed support **676/34**,
 at unchanged **852/870 coverage**. All saved N and geometric fields remain

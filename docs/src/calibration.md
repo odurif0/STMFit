@@ -649,9 +649,13 @@ saved N. Both use the native κ-penalized RSS and native validity checks, unlike
 the old raw-RSS-only prototype. Equal evaluation/time ceilings are not equal
 computational cost and do not prove convergence; actual stops and costs are
 saved. Split skew remains cached. No new noise covariance, effective sample
-size, composition prior or class threshold is introduced. This authorized
-comparison is in preparation; any recognition claim requires complete external
-grading. Its explicit numerical settings live in `geometry_profile_comparison.toml`.
+size, composition prior or class threshold is introduced. The completed external
+comparison is **negative: 632/870 correct, 20/145 exact**, versus joint and saved
+support **676/34**, at unchanged **852/870 coverage**. All 146 profiled pixel
+objectives improve but recognition worsens; 103 searches are evaluation-capped.
+Do not replace the saved support geometry or retune calibration from this result.
+Settings remain in `geometry_profile_comparison.toml`; full report:
+`results/geometry_profile_20260922/report.md`.
 
 The authorized September 22 fixed-geometry amplitude comparison changes no
 physical calibration. It solves only the Gaussian amplitudes and tilted plane

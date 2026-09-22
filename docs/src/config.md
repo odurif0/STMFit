@@ -1062,8 +1062,12 @@ counts in the 800 but is timed separately from the NLopt search. `[geometry_refi
 requires `algorithm="LN_BOBYQA"` and `objective="native_kappa_rss"`; no hidden
 alternative optimizer or loss is selected. Joint and profiled arms share the
 same native bounds, penalty, validity checks, starting fit and ceilings. These
-are diagnostic numerical settings, not new production calibration. Preparation
-does not establish a recognition gain; see the dated [journal](journal.md).
+are diagnostic numerical settings, not new production calibration. The completed
+comparison is **negative: 632/870 correct, 20/145 exact**, versus joint and saved
+support **676/34**, at unchanged **852/870 coverage**. All 146 profiled objectives
+improve; 103 searches hit 800 evaluations. No settings are tuned after grading.
+Retain saved support; see the [journal](journal.md) and
+`results/geometry_profile_20260922/report.md`.
 
 The September 22 frozen-amplitude comparison reuses this file's existing
 `[counting_variable_projection]` settings for **linear box least squares only**;

@@ -1,5 +1,18 @@
 # Chitosan Benchmark and 10–20mer Runbook
 
+Latest September 22 comparison: **geometric variable projection is rejected**.
+At fixed cached N and unchanged support-assignment settings, it gives
+**632/870 correct, 20/145 exact**, versus **676/34** for both the same-start
+joint optimizer and byte-identical saved support replay. Coverage remains
+**852/870**. Against joint: 18 scan gains, 44 losses, 83 ties; two exact
+chains gained, sixteen lost. Better pixel fit is not better recognition here.
+Keep the **saved 676/34 support candidate**, below historical 677/36; the
+new geometric outputs are not a replacement cache. Source **7c5fb6c**, job
+**11940220**, **0:0 in 15m17s**; all **782 outputs and Slurm log** are fetched
+and checksummed. Full comparison: `results/geometry_profile_20260922/report.md`.
+The bounded experiment is complete. No retry, new method, production promotion,
+counting or unknown25 rerun is authorized by this result.
+
 September 20 research branch: the completed symmetric-fusion comparison improves
 the regenerated control from **666/870 correct and 24/145 exact chains** to
 **671/870 and 28/145**, at the same cached label-free counts and coverage

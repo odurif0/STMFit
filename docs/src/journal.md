@@ -2308,17 +2308,17 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0y. **Does full geometric variable projection improve recognition at fixed N?**
-    → **RUNNING (Sep 22)**: source **7c5fb6c**, one Viper job **11940220**,
-    submitted **17:24:09 CEST**, capped at four hours, four requested CPUs /
-    16 GB, no retry. Started **17:27:16 CEST** on `vipc2400` after 3m07s
-    waiting on `QOSGrpCpuLimit`; eight CPUs allocated, four workers used.
-    Compare joint and profiled local optimization from an identical fresh
-    native initialization, using the same objective, physical validity checks,
-    optimizer and evaluation/time ceilings. Replay saved support separately.
-    N, split-skew cache, classifier settings, thresholds and preprocessing
-    remain fixed. Done requires complete fetched/checked outputs and external
-    correct/870, exact/145, coverage, errors and paired gains/losses. The other
-    suggested directions and unknown25 are not part of this authorization.
+    → **COMPLETE; NEGATIVE (Sep 22)**: source **7c5fb6c**, job **11940220**,
+    **0:0 in 15m17s**, after 3m07s queued. Profiled gives **632/870 correct,
+    20/145 exact**, against same-start joint and replayed support **676/34**,
+    unchanged **852/870 coverage**. Against joint: 18 scan gains, 44 losses,
+    83 ties; two exact gains, sixteen losses. All 146 profiled objectives
+    improve, but 103 searches hit 800 evaluations; better RSS is not better
+    recognition. N, split cache, classifier and physical settings stay fixed.
+    All **782 outputs and Slurm log** are fetched/checksummed; **5,047 tests,
+    20,138 pre-grade checks and 41 aggregate checks**, with 435 paired rows.
+    Retain saved support, below historical 677/36. No retry, post-grade tuning,
+    other suggested direction or unknown25 rerun follows.
 
 0x. **Does bounded amplitude/background profiling improve assignment with
     saved N and geometry fixed?** → **COMPLETE; NEGATIVE (Sep 22)**:
@@ -10952,3 +10952,107 @@ most four workers. The compute log confirms the explicit runtime paths and
 starts the saved-reference pipeline before the paired geometric shards.
 Documentation builds successfully after condensation; existing warnings and
 limits are unchanged. Completion and external scores remain pending.
+
+### Completed result and decision
+
+Job **11940220** completes **COMPLETED, 0:0**, **17:27:16–17:42:33 CEST**,
+**15m17s** elapsed, after **3m07s** queued. Four CPUs / 16 GB were requested;
+Viper allocated eight CPUs, with four one-thread geometric workers as declared.
+All **146 scans / 900 lobes** finish without initialization, profiling or
+assignment failures. The **782 regular output files and Slurm log** are fetched
+locally with matching SHA256 values. No job retry or second real local scan occurs.
+The scientific code remains unchanged from **7c5fb6c**.
+
+**20,138 pre-grade checks pass** (8,151 cohort/reference/vote checks and 11,987
+geometry checks). Thirteen scientific reference tables replay saved support
+byte-for-byte. Checks reconstruct Gaussian values independently from decoded
+full-precision parameters and saved fit pixels, verifying RSS, overlap, κ
+objective, full-parameter GCV, coefficient bounds/KKT, exported features,
+shared starts, best valid trace points, actual evaluations and termination
+flags. All final linear subproblems and recorded inner solves satisfy KKT.
+No labels are read until these complete checks and checksum verification pass.
+
+The common native RSS sum is **20.5570980004**; joint gives **20.5343660301**;
+profiled gives **19.3301659145**. All **146/146** profiled objectives improve
+over joint. Median RSS reductions from the common start are **0.0623% joint**
+and **6.6009% profiled**; profiled reductions range **0.0521–43.2951%**.
+The final κ penalty is inactive on this real cohort; its active branch remains
+tested synthetically. Joint stops are **132 XTOL / 14 FTOL**; profiled stops
+are **35 XTOL / eight FTOL / 103 MAXEVAL**. No time ceiling is reached.
+The 103 capped searches are not converged; XTOL/FTOL are optimizer stops,
+not proof of global optimality. Evaluation min/median/max is **67/87/127**
+joint and **61/800/800** profiled. Rejected invalid evaluations total **2,168**
+joint and **109** profiled. These are rejected points, not excluded scans.
+
+Equal ceilings do not produce equal cost: sums of local optimization time
+are **9.24 seconds joint / 402.97 seconds profiled**, with separately reported
+callback setup **0.374 / 0.533 seconds**. These omit shared initialization and
+downstream assignment, and must not be presented as full pipeline runtimes.
+Native family matches the saved cache on every scan, but 14 initial centers
+differ at export precision, up to **0.0002465 nm**. Joint/profiled still share
+exactly the same fresh start. Profiling changes 891 centers; over all 900 lobes,
+displacement from the common start has median **0.03925 nm**, maximum
+**0.52143 nm**. Amplitude changes range **−64.13% to +178.44%**, median
+**+1.95%**, within unchanged native bounds. Lower RSS does not establish
+geometrically or chemically truer parameters.
+
+Separate `compare_reconstructed_champion.jl` and
+`report_unit_assignment_benchmark.jl --full145-own-n` produce the complete
+external grade. **41 aggregate checks** and **435 paired scan rows** confirm:
+
+| Profile | Correct / 870 | Exact / 145 | Coverage / 870 | Emitted errors |
+|---|---:|---:|---:|---:|
+| Historical saved reference | 677 | 36 | 854 | 177 |
+| Exactly replayed saved support | 676 | 34 | 852 | 176 |
+| Same-start joint optimization | 676 | 34 | 852 | 176 |
+| Geometric variable projection | 632 | 20 | 852 | 220 |
+
+Profiled classified accuracy is **632/852 (74.2%)**; full-denominator accuracy
+is **632/870 (72.6%)**. Counts stay **106/145 exact**, **892 predictions**,
+**16 missing truth positions / 38 extra lobes**, 14 short and 25 long scans.
+The same four raw keys are unavailable in all new arms; two align to benchmark
+truth. No exclusion or new abstention explains the drop.
+
+Against joint: **18 scan gains, 44 losses, 83 ties**, net **−44 correct**;
+**two exact gains, sixteen losses**. Against saved support: **17/44/84**,
+same net and exact gains/losses. Eight external grade orientations change
+in each contrast. Exact gains are `240307_016.sxm` and `240815_048.sxm`;
+all sixteen losses are preserved in the paired report. Against history:
+**27/57/61**, net **−45 correct**, six exact gains and 22 losses, with fourteen
+orientation changes. Grade orientation is not measured spatial registration.
+Confusion `(TN,FP,FN,TP)` goes **(513,52,124,163) → (481,84,136,151)** against
+both controls: **32 additional false positives and twelve false negatives**.
+
+Profiled changes **110 final decisions on 67 scans** against saved support,
+**67 from 0→1, 43 from 1→0**; twenty leave old exact vote ties. Raw populations
+go **(673,223,4) → (649,247,4)** for `(0,1,?)`. Joint changes two decisions
+but leaves these populations and the external aggregates unchanged. Against
+joint, profiled changes 110 decisions across 68 scans. The whole-cohort heads
+couple scans; this is not a per-scan independent classifier experiment.
+
+**Reject this geometric-profile version and retain saved support 676/34.**
+Historical 677/36 remains unexceeded. Better optimization of this Gaussian
+objective at fixed N worsens this recognition pipeline. Absorption of useful
+contrast by the movable base geometry is a possible explanation, not a causal
+finding established here. This does not reject all variable-projection methods,
+and no post-grade optimizer, threshold, geometry, vote or parameter adjustment
+is made. Inference remains label-free; repeated benchmark reuse provides
+development evidence, not independent validation or unknown-chain chemistry.
+The authorized deliverable is complete; the broader historical objective is not.
+No other direction, acquisition model, missing-head vote, count sweep, DFT
+change or unknown25 run follows.
+
+Full methods, diagnostics, hashes, tests, confusion and paired losses are in
+`results/geometry_profile_20260922/report.md`. README, runbook, selection,
+assignment, configuration, calibration and HPC documentation are updated to
+this outcome; the assignment page retains the existing 200 KiB limit.
+
+The first final documentation render reports **200.01 KiB** for the assignment
+page, just above its unchanged 200 KiB limit. The new summary is shortened,
+leaving displacement details in this journal and the full report; no threshold
+or scientific result is changed.
+
+The final Julia 1.13 documentation build passes with the existing size/search
+warnings. The assignment page is **199.81 KiB**, below the unchanged limit.
+Source remains **7c5fb6c**, with no post-grade scientific changes. The completed
+negative comparison is handed off with saved support retained and no new job.

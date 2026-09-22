@@ -16,13 +16,22 @@ no variants combined and no settings tuned after grading. Labels are used only
 by external grading; this reused development benchmark is not independent
 validation. See the [support/score comparison](docs/src/unit_assignment.md#complete-disk-support-and-final-gaussian-score-2026-09-21).
 
+The matched **geometric variable-projection** comparison is negative:
+**632/870 correct, 20/145 exact**, versus **676/34** for both saved support
+and the same-start joint optimizer, with unchanged **852/870 coverage**.
+The profiled fit lowers RSS on all 146 scans but adds **44 classification
+errors**; against the joint control, two exact chains are gained and sixteen
+lost. N and classifier settings stay fixed. Retain saved support, below
+historical 677/36; no promotion or post-grade tuning. See the
+[geometric-profile result](docs/src/unit_assignment.md#matched-geometric-variable-projection-2026-09-22-negative).
+
 Reprofiling Gaussian amplitudes and background at **identical saved N and
 geometry** is also negative: **675/870 correct, 32/145 exact**, versus the
 byte-identical support control **676/34**, at unchanged **852/870 coverage**.
 All 146 linear fits satisfy KKT and reduce RSS (median **0.681%**), but four
 scans gain and five lose correct positions; two exact chains are lost and
-none gained. Retain saved support, below historical 677/36. No nonlinear refit,
-selection, threshold adjustment or unknown25 rerun follows. See the
+none gained. Retain saved support, below historical 677/36. That experiment
+included no nonlinear refit, selection, threshold adjustment or unknown25 rerun. See the
 [frozen-amplitude result](docs/src/unit_assignment.md#frozen-geometry-amplitude-profiling-2026-09-22-negative).
 
 Fresh raw-GCV count selection after symmetric filtering is **negative**:

@@ -11,9 +11,13 @@ joint/profiled refinements. The job also regenerates the cached support referenc
 and both unchanged assignment pipelines. Fetch all numerical traces and outputs
 before external grading. Source **7c5fb6c**, job **11940220** submitted
 **17:24:09 CEST**, starts **17:27:16 CEST** on `vipc2400` after **3m07s**
-queued on `QOSGrpCpuLimit`. Eight CPUs allocated; four workers used. Remote dry-run,
-`sbatch --test-only`, source/input checksums and Julia 1.13 instantiation pass;
-the runtime result is still pending. No retry is authorized. Do not resubmit
+queued on `QOSGrpCpuLimit`, completes **0:0 in 15m17s**. Eight CPUs allocated;
+four workers used. All **782 outputs and Slurm log** are fetched/checksummed.
+The comparison is **negative: 632/870 correct, 20/145 exact**, versus same-start
+joint and saved support **676/34**, at unchanged **852/870 coverage**. All 146
+profiled objectives improve, but 103 searches hit the evaluation limit and
+recognition worsens. Retain saved support; no promotion, tuning or retry.
+Full report: `results/geometry_profile_20260922/report.md`. The job is closed. Do not resubmit
 `/ptmp/oldu/stmfit/geometry_profile_20260922_v1`.
 
 The authorized September 22 fixed-geometry amplitude comparison uses
