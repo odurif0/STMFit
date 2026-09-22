@@ -1096,3 +1096,27 @@ Keep the **676/34 support candidate**, below historical 677/36. This comparison
 is complete; do not automatically resubmit or combine its candidates.
 No post-grade tuning, count refit, DFT change or unknown25 rerun follows.
 Full gains/losses: `results/scan_fisher_naming_20260922/report.md`.
+
+## Factor-analyzer and Student learning comparison (September 22)
+
+`hpc/compare_factor_student_mixtures.sbatch` runs `control/`,
+`factor_analyzer/` and `student_t/` sequentially at the same cached geometry
+and selected N. The two learning families are independent candidates with
+fixed rank four / df five; no combined arm or parameter search. Patches are
+regenerated in each arm. One job requests four CPUs, 16 GB and **one hour**,
+with `--no-requeue`; do not compute on login nodes or rerun automatically.
+
+Sync committed source and the unchanged Manifest to
+`/u/oldu/code/STMFit_factor_student_mixtures_20260922`. Set the five absolute
+variables documented in the runner, use its metadata-only `--dry-run`, and
+pass all five explicitly through `sbatch --export=...`. Geometry is
+`/ptmp/oldu/stmfit/fusion_comparison_20260920_v1/symmetric`, raw/template input
+is `/ptmp/oldu/stmfit/full146_v1_inputs`, Julia is
+`/u/oldu/software/julia-1.13.0/bin/julia`, and the new output target is
+`/ptmp/oldu/stmfit/factor_student_mixtures_20260922_v1`.
+
+Fetch all outputs/logs locally to `results/factor_student_mixtures_20260922/`.
+Before external grading, check exact control replay, all keys/N, unchanged
+upstream/Fisher/k-means tables, actual family/seed/convergence logs and final
+vote arithmetic. Invalid seeds and unavailable rows must remain visible.
+No labels, grade manifest or saved champion predictions enter the job.

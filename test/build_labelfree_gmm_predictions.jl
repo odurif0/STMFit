@@ -1,6 +1,6 @@
 #!/usr/bin/env julia
 
-# Build label-free 0/1/? predictions via two-component full or tied-covariance EM.
+# Build label-free 0/1/? predictions via explicitly configured two-component learning.
 #
 # This script is deliberately prediction-only: it never reads benchmark truth,
 # expected sequences, or composition priors. Cluster labels are mapped by the
@@ -21,10 +21,12 @@ include(joinpath(@__DIR__, "lib", "script_utils.jl"))
 using .ScriptUtils: _ensure_parent, _read_tsv
 include(joinpath(@__DIR__, "lib", "assignment_covariance.jl"))
 using .AssignmentCovariance
+include(joinpath(@__DIR__, "lib", "assignment_mixtures.jl"))
+using .AssignmentMixtures
 include(joinpath(@__DIR__, "lib", "reconstructed_unit_assignment.jl"))
 using .ReconstructedUnitAssignment: load_training_policy, load_training_mask, validate_training_mask,
     load_gmm_normalization, load_gmm_weighting, load_gmm_seed_aggregation, load_gmm_resampling,
-    load_gmm_covariance_structure, load_gmm_cluster_naming, write_table
+    load_gmm_covariance_structure, load_gmm_cluster_naming, load_gmm_learning, write_table
 
 const DEFAULT_FEATURES = "results/unit_separability/lobe_features_selectedN_primary_local.tsv"
 const DEFAULT_SPLIT = ""
@@ -57,6 +59,7 @@ struct Options
     bootstrap_audit::String
     covariance_structure::String
     cluster_naming::String
+    learning::NamedTuple
 end
 
 function _load_final_score(config::AbstractDict)
@@ -152,6 +155,14 @@ function _parse_cli(args)
               --features PATH        Main per-lobe feature TSV [$(DEFAULT_FEATURES)]
               --config PATH          Explicit covariance structure, ridge and score
                                      [config/unit_assignment_reconstructed.toml].
+                                     gmm_learning_family=gaussian preserves legacy
+                                     learning. factor_analyzer and student_t change
+                                     EM and the hard parameter updates, retaining
+                                     the final Mahalanobis score and free masses.
+                                     Their rank/df and iteration settings are fixed
+                                     in config; no automatic family selection.
+                                     They require selftrain >= 1 and the uncombined
+                                     equal-lobe, raw-naming, hard-vote policies.
                                      Ledoit-Wolf acts only on the last hard
                                      self-training covariance; it requires
                                      --selftrain >= 1. gaussian_density adds
@@ -240,6 +251,9 @@ function _parse_cli(args)
     cfg = TOML.parsefile(config)
     covariance_structure = load_gmm_covariance_structure(cfg)
     cluster_naming = load_gmm_cluster_naming(cfg)
+    learning = load_gmm_learning(cfg)
+    learning.family != "gaussian" && selftrain < 1 &&
+        error("Alternative learning requires --selftrain >= 1 to preserve the final Mahalanobis score")
     normalization = load_gmm_normalization(cfg)
     training_weighting = load_gmm_weighting(cfg)
     seed_aggregation = load_gmm_seed_aggregation(cfg)
@@ -260,7 +274,7 @@ function _parse_cli(args)
                    first_seed, n_seeds, interactions, selftrain, covariance.mode, covariance.ridge, final_score,
                    training_policy, training_support, normalization.mode, normalization.scale_fallback,
                    training_weighting, seed_aggregation, bootstrap.mode, bootstrap.replicates, bootstrap.seed,
-                   bootstrap_audit, covariance_structure, cluster_naming)
+                   bootstrap_audit, covariance_structure, cluster_naming, learning)
 end
 
 function _arg_value(args, i::Int, flag::String)
@@ -865,13 +879,35 @@ function _view_probability(records::Vector{LobeRecord}, features::Vector{String}
     end
 
     for seed in opt.first_seed:(opt.first_seed + opt.n_seeds - 1)
-        means, covs, weights = _gmm_fit(data, seed; ridge=opt.covariance_ridge, observation_weights,
-            covariance_structure=opt.covariance_structure)
         seed_diagnostics = diagnostics === nothing ? nothing : []
-        if opt.selftrain > 0
-            means, covs, weights = _mahalanobis_self_train(data, means, covs, weights;
-                iters=opt.selftrain, covariance_mode=opt.covariance_mode, ridge=opt.covariance_ridge,
-                diagnostics=seed_diagnostics, observation_weights, covariance_structure=opt.covariance_structure)
+        if opt.learning.family == "gaussian"
+            means, covs, weights = _gmm_fit(data, seed; ridge=opt.covariance_ridge, observation_weights,
+                covariance_structure=opt.covariance_structure)
+            if opt.selftrain > 0
+                means, covs, weights = _mahalanobis_self_train(data, means, covs, weights;
+                    iters=opt.selftrain, covariance_mode=opt.covariance_mode, ridge=opt.covariance_ridge,
+                    diagnostics=seed_diagnostics, observation_weights, covariance_structure=opt.covariance_structure)
+            end
+        else
+            initial = _gmm_fit(data, seed; ridge=opt.covariance_ridge, max_iter=0)
+            result = try
+                fit_mixture(data, initial, opt.learning; ridge=opt.covariance_ridge,
+                    hard_iterations=opt.selftrain, trace=seed_diagnostics)
+            catch err
+                err isa MixtureFitError || rethrow()
+                println("Mixture fit seed ", seed, " family=", opt.learning.family, " status=unavailable reason=", err.reason)
+                continue
+            end
+            means, covs, weights = result.state.means, result.state.covs, result.state.weights
+            noise_min = isempty(result.state.noise) ? NaN : minimum(minimum, result.state.noise)
+            factor_error = isempty(result.state.noise) ? NaN : maximum(maximum(abs.(covs[c] -
+                result.state.loadings[c] * result.state.loadings[c]' - Diagonal(result.state.noise[c]))) for c in 1:2)
+            println("Mixture fit seed ", seed, " family=", opt.learning.family,
+                " status=ok em_updates=", result.updates, " converged=", result.converged,
+                " hard_updates=", opt.selftrain, " rank=", opt.learning.factor_rank, " df=", opt.learning.student_df,
+                " noise_min=", noise_min, " factor_error=", factor_error,
+                " precision_min=", result.precision_range[1], " precision_max=", result.precision_range[2],
+                " log_kernel_sum=", result.log_kernel_sum)
         end
         diagnostics === nothing || push!(diagnostics,
             (seed=seed, indices=copy(idxs), clusters=seed_diagnostics,
@@ -989,6 +1025,7 @@ function main(args=ARGS)
     println("  views:      ", join(first.(views), ", "))
     println("  weighting:  ", opt.training_weighting)
     println("  covariance structure: ", opt.covariance_structure)
+    println("  learning family: ", opt.learning.family)
     println("  cluster naming: ", opt.cluster_naming)
     println("  seed aggregation: ", opt.seed_aggregation)
     println("  resampling: ", opt.resampling, " replicates=", opt.bootstrap_replicates,

@@ -206,6 +206,8 @@ function load_inputs(paths, production_config)
         error("This historical representation diagnostic requires raw-amplitude GMM naming")
     cfg["model"]["gmm_covariance_structure"] == "full" ||
         error("This historical representation diagnostic requires separate component covariances")
+    cfg["model"]["gmm_learning_family"] == "gaussian" ||
+        error("This historical representation diagnostic requires Gaussian learning")
     cfg["selection"]["gmm_resampling"] == "none" ||
         error("This historical representation diagnostic requires unresampled GMM training")
     cfg["selection"]["gmm_seed_aggregation"] == "hard_vote" ||

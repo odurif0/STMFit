@@ -527,6 +527,38 @@ this cohort, not necessarily under other acquisition conditions. Retain
 result does not establish that parity cross-fitting is independent validation,
 and the reused benchmark remains development evidence.
 
+### Fixed alternative mixture learning (2026-09-22)
+
+Two independently tested profiles retain the support control's 8 features,
+28 pairwise products, per-scan scaling, amplitude naming, seeds, selected N,
+Fisher and final vote. Rank four (`gmm_factor_rank`) and Student df five
+(`gmm_student_df`) are fixed before real inference, with no benchmark-driven
+choice. The iteration, tolerance, minimum-mass and numerical-guard parameters
+are explicit in the [configuration reference](config.md); Gaussian learning
+is unchanged. Neither alternative estimates a chemical class proportion.
+
+The factor-analyzer model initializes each component spectrally, using the
+mean of the bottom `p-rank` covariance eigenvalues for isotropic residual
+noise. EM jointly updates the component center and loadings using augmented
+latent moments; separate diagonal noise is floored at the existing ridge.
+This follows [Ghahramani and Hinton's MFA equations](https://www.cs.toronto.edu/~hinton/absps/tr-96-1.pdf),
+including their component-specific-noise option. The two pure-Mahalanobis
+hard steps each retain one such conditional parameter update.
+
+For Student learning, latent precisions are `(df+p)/(df+distance²)`.
+Centers use responsibility-times-precision weights, while each scale scatter
+is divided by the **responsibility mass**, not the precision-weighted mass;
+the existing ridge is then added. See
+[Peel and McLachlan](https://people.smp.uq.edu.au/GeoffMcLachlan/pm_sc00.pdf).
+The same update is retained during hard reassignment. The stored scale is
+not multiplied by `df/(df-2)`. Final scoring deliberately remains the
+control's log-mass minus half squared distance, not a Student density.
+Thus neither scores nor seed votes are calibrated chemical probabilities.
+
+No preprocessing, DFT calibration, count selection, abstention threshold or
+unknown-chain claim changes. The repeatedly reused benchmark can compare
+these frozen choices, but cannot provide independent validation.
+
 ## Opt-in label-free exploration (2026-09-18)
 
 `config/label_free_exploration.toml` is diagnostic configuration, not a new

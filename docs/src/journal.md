@@ -2307,6 +2307,16 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-22. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0u. **Can lower-rank or heavy-tailed mixture learning improve recognition?** →
+    **IN PROGRESS (Sep 22)**: user authorizes several leads. Compare two
+    fixed independent candidates, rank-four factor analyzers and df-five
+    Student components, against 676/34 support control. Three hours maximum
+    preparation/tests, then one three-arm Viper job capped at one hour.
+    No combined arm, rank/df/seed search, post-grade tuning, count refit,
+    forward/backward joint model, DFT change or unknown25 rerun. Done means
+    fetched outputs, pre-grade integrity checks, external grade and paired
+    scan gains/losses, recorded decision and committed tested source/docs.
+
 0t. **Can scan-grouped Fisher or within-scan GMM naming improve recognition?** →
     **COMPLETE; NEGATIVE / NULL (Sep 22)**: source **43f8993**, job **11931478**,
     **0:0 in 8m30s**, after 3m01s queued. Whole-scan Fisher gives **668/870
@@ -10021,3 +10031,72 @@ and search-index warnings and the expected non-CI deployment skip. README,
 runbook, selection, assignment, config, calibration and HPC documentation are
 updated consistently. Scientific source and all settings remain unchanged
 from **43f8993** through grading; generated results remain ignored.
+
+## 2026-09-22 — Fixed factor-analyzer and Student learning: two independent comparisons
+
+The user authorizes “tu peux tester plusieurs pistes”. Scientific deliverable:
+one complete control replay and two independent candidate grades against
+**676/870 correct, 34/145 exact, 852/870 coverage**, with historical **677/36,
+854/870 coverage** still the target. Done means tested numerical updates,
+unchanged upstream behavior, all outputs fetched and checked before external
+full145-own-N grading, per-scan gains/losses, a documented decision and commits.
+Budget: **three hours preparation/tests from 10:03 CEST**, then **one Viper
+job capped at one hour**. No combined model, rank/df/seed search, post-grade
+adjustment, N refit, DFT update or unknown25 rerun. The proposed paired-view
+acquisition model is explicitly deferred; no registration claim is made.
+
+The support representation remains eight inputs plus 28 pairwise products.
+`unit_assignment_factor_analyzer.toml` fixes rank **4** in each component;
+`unit_assignment_student_t.toml` fixes df **5.0** in both. These choices are
+frozen before real inference, not selected from benchmark labels. Only the
+learning family and output name differ from control. Independent component
+centers and masses remain free; neither initialization nor naming imposes
+composition. The original k-means initialization is reused without Gaussian
+EM for the alternatives; each initially has mass 0.5, then learned masses.
+
+Factor initialization subtracts the existing ridge from empirical scatter,
+uses bottom-spectrum mean noise and the four leading signal eigenvectors.
+EM jointly estimates means/loadings by augmented latent moments, with a
+separate diagonal residual variance per component. The two hard assignments
+remain pure Mahalanobis, each followed by one family-preserving conditional
+update. The Student alternative retains its precision-weighted mean/scale
+updates through both hard steps; scale denominator is responsibility mass.
+Methods and primary references are in `calibration.md`. Neither alternative
+silently returns to full-Gaussian hard covariance estimation.
+
+New explicit config settings fix alternative EM at 200 updates, relative
+log-kernel tolerance 1e-6, minimum mass 1e-12 and numerical guard 1e-8. The
+existing ridge 1e-6 is the factor noise floor / Student scale regularizer.
+Common density constants are omitted from learning kernels, so their sums
+are not used to compare families. Finite capped fits are kept and explicitly
+logged as nonconverged, with no retry. Collapsed/nonfinite/nonpositive fits
+are unavailable seeds; no Gaussian fallback and no silent row removal.
+All seeds unusable means `?`/`no_valid_view`. Final log-mass/Mahalanobis score,
+amplitude naming, ten-seed hard vote, k-means head, final fusion, thresholds,
+normalization, interactions, Fisher and N are unchanged. Alternative-family
+combination with earlier candidates is rejected, not implicitly supported.
+
+The first synthetic smoke completes both models. An independent-equation
+test initially rejects 18 Student matrices because Julia's bare `isposdef`
+also demands exact floating-point symmetry, while weighted products differ
+between triangles at about 1e-16. All moment comparisons pass. The test is
+corrected to check approximate symmetry and positive definiteness of the
+same `Symmetric` matrix used by production; no scientific setting changes.
+Extended numerical and end-to-end regressions continue before submission.
+
+The next targeted run passes all numerical assertions; three CLI byte-replay
+checks fail in both alternatives **and control** because the synthetic
+`missing.sxm` row is last in the in-memory fixture but first in the CLI's
+alphabetically sorted records. Renaming that synthetic missing row to
+`unavailable.sxm` aligns the two orderings; neither production sorting nor
+any prediction rule changes. Both initial failure logs are retained locally.
+
+All **514 targeted mixture assertions** now pass: explicit isolated policies,
+independent E/M and hard-update equations, covariance reconstruction and
+positivity, Student outlier influence/scale denominator/Gaussian limit,
+deterministic API/CLI votes, renamed keys, forbidden truth arguments and
+unavailable-seed row retention. The three-arm runner passes **20 assertions**;
+the whole-scan/naming regression passes **295**. The documentation build
+passes under Julia 1.13. Source is committed before remote preparation;
+the extended synthetic pipeline and complementary regressions are still
+running, so no complete-suite or real-output claim is made at this point.

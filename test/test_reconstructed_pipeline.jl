@@ -5,7 +5,7 @@ const COUNT_CONFIG = joinpath(ROOT, "config", "chitosan.toml")
 
 @testset "Matched-residual pipeline must regenerate patches" begin
     mktempdir() do dir
-        for name in ("matched_residual", "transverse_moment", "affine_residual", "signed_mold", "affine_fisher", "centered_fisher", "shrunk_gmm", "patch_support", "gaussian_score", "complete_training", "robust_normalization", "scan_weighting", "continuous_vote", "scan_bagging", "tied_covariance", "scan_fisher", "relative_naming"),
+        for name in ("matched_residual", "transverse_moment", "affine_residual", "signed_mold", "affine_fisher", "centered_fisher", "shrunk_gmm", "patch_support", "gaussian_score", "complete_training", "robust_normalization", "scan_weighting", "continuous_vote", "scan_bagging", "tied_covariance", "scan_fisher", "relative_naming", "factor_analyzer", "student_t"),
             key in ("--patches-fwd","--patches-bwd","--descriptor-patches")
             config = joinpath(ROOT,"config","unit_assignment_" * name * ".toml")
             opts = Dict("--config"=>config,"--outdir"=>joinpath(dir,"not_created"),key=>"cached.tsv")
@@ -105,7 +105,7 @@ end
 if "--e2e" in ARGS
     @testset "Native extracted-input pipeline end to end" begin
         saved = Dict{String,Vector{UInt8}}()
-        for variant in ("control", "complete_training", "robust_normalization", "scan_weighting", "continuous_vote", "scan_bagging", "tied_covariance", "scan_fisher", "relative_naming")
+        for variant in ("control", "complete_training", "robust_normalization", "scan_weighting", "continuous_vote", "scan_bagging", "tied_covariance", "scan_fisher", "relative_naming", "factor_analyzer", "student_t")
             mktempdir() do dir
                 opts = pipeline_fixture(dir)
                 if variant != "control"
@@ -123,6 +123,8 @@ if "--e2e" in ARGS
                         cfg["model"]["gmm_covariance_structure"] = "tied"
                     elseif variant == "scan_fisher"
                         cfg["selection"]["fisher_cv_scheme"] = "scan_hash_twofold"
+                    elseif variant in ("factor_analyzer", "student_t")
+                        cfg["model"]["gmm_learning_family"] = variant
                     elseif variant == "relative_naming"
                         cfg["selection"]["gmm_cluster_naming"] = "within_scan_z"
                     else
@@ -157,7 +159,7 @@ if "--e2e" in ARGS
                     bytes = read(joinpath(out,table*".tsv"))
                     if variant == "complete_training"
                         @test bytes == saved[table] # All synthetic patches are complete.
-                    elseif variant in ("robust_normalization", "scan_weighting", "continuous_vote", "scan_bagging", "tied_covariance", "relative_naming")
+                    elseif variant in ("robust_normalization", "scan_weighting", "continuous_vote", "scan_bagging", "tied_covariance", "relative_naming", "factor_analyzer", "student_t")
                         table in ("pred_gmm","predictions") || @test bytes == saved[table]
                     elseif variant == "scan_fisher"
                         table in ("training_support","pred_kmeans") && @test bytes == saved[table]
@@ -179,6 +181,8 @@ if "--e2e" in ARGS
                 @test occursin("covariance structure: " * (variant == "tied_covariance" ? "tied" : "full"),
                     read(joinpath(out, "logs", "gmm.log"), String))
                 @test occursin("cluster naming: " * (variant == "relative_naming" ? "within_scan_z" : "raw_amplitude"),
+                    read(joinpath(out, "logs", "gmm.log"), String))
+                @test occursin("learning family: " * (variant in ("factor_analyzer", "student_t") ? variant : "gaussian"),
                     read(joinpath(out, "logs", "gmm.log"), String))
                 @test occursin("Fisher grouping: " * (variant == "scan_fisher" ? "scan_hash_twofold" : "lobe_parity"),
                     read(joinpath(out, "logs", "fisher.log"), String))

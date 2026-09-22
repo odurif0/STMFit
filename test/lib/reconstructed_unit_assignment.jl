@@ -7,7 +7,7 @@ export read_table, write_table, lobe_table, require_same_keys,
        write_soft_vote, load_config, load_training_policy, write_training_support,
        load_training_mask, validate_training_mask, load_gmm_normalization, load_gmm_weighting,
        load_gmm_seed_aggregation, load_gmm_resampling, load_gmm_covariance_structure,
-       load_fisher_cv, load_gmm_cluster_naming
+       load_fisher_cv, load_gmm_cluster_naming, load_gmm_learning
 
 const TRANSVERSE_DESCRIPTORS = ("transverse_half_plane_asymmetry",
     "transverse_first_moment", "affine_residual_half_plane_asymmetry")
@@ -220,6 +220,39 @@ function load_gmm_covariance_structure(config::AbstractDict)
     return String(mode)
 end
 
+"Fixed alternative learning families; no rank, df, seed or model selection by grade."
+function load_gmm_learning(config::AbstractDict)
+    model, sel, pre = (get(config, section, Dict()) for section in ("model", "selection", "preprocessing"))
+    family = get(model, "gmm_learning_family", nothing)
+    family in ("gaussian", "factor_analyzer", "student_t") || throw(ArgumentError("explicit gmm_learning_family required"))
+    for key in ("gmm_factor_rank", "gmm_learning_maxiter")
+        value = get(model, key, nothing)
+        value isa Integer && !(value isa Bool) && 1 <= value <= typemax(Int) ||
+            throw(ArgumentError("$key must be a positive integer"))
+    end
+    for key in ("gmm_student_df", "gmm_learning_tolerance", "gmm_learning_min_mass", "gmm_learning_cholesky_guard")
+        value = get(model, key, nothing)
+        value isa Real && !(value isa Bool) && isfinite(value) && value > 0 ||
+            throw(ArgumentError("$key must be positive and finite"))
+    end
+    if family != "gaussian"
+        for (section, key, expected) in ((model, "gmm_covariance_structure", "full"),
+                (model, "gmm_final_covariance", "ridge"), (model, "gmm_final_score", "mahalanobis"),
+                (sel, "fisher_cv_scheme", "lobe_parity"), (sel, "gmm_cluster_naming", "raw_amplitude"),
+                (sel, "gmm_training_weighting", "equal_lobes"), (sel, "gmm_seed_aggregation", "hard_vote"),
+                (sel, "gmm_resampling", "none"), (sel, "assignment_training_support", "all_admissible"),
+                (pre, "gmm_feature_normalization", "mean_sample_std"))
+            get(section, key, nothing) == expected || throw(ArgumentError("$family requires $key=$expected"))
+        end
+        model["gmm_learning_cholesky_guard"] == 1e-8 ||
+            throw(ArgumentError("alternative learning guard must match the unchanged 1e-8 final-score guard"))
+    end
+    return (family=String(family), factor_rank=Int(model["gmm_factor_rank"]),
+        student_df=Float64(model["gmm_student_df"]), maxiter=Int(model["gmm_learning_maxiter"]),
+        tolerance=Float64(model["gmm_learning_tolerance"]), min_mass=Float64(model["gmm_learning_min_mass"]),
+        cholesky_guard=Float64(model["gmm_learning_cholesky_guard"]))
+end
+
 "Explicit Fisher grouping; the split seed never selects by pixels or labels."
 function load_fisher_cv(config::AbstractDict)
     sel = get(config, "selection", Dict())
@@ -265,6 +298,7 @@ function load_config(path::AbstractString)
     load_gmm_covariance_structure(cfg)
     load_fisher_cv(cfg)
     load_gmm_cluster_naming(cfg)
+    load_gmm_learning(cfg)
     model["descriptor"] in TRANSVERSE_DESCRIPTORS || error("Unsupported descriptor")
     model["descriptor_column"] == "patch_u_asym_reconstructed" || error("Unsupported descriptor column")
     model["descriptor_channel"] == "bwd_res" || error("Unsupported descriptor patch family")

@@ -947,6 +947,43 @@ name differs). Neither config replaces **`unit_assignment_patch_support.toml`**
 at 676/34; historical 677/36 remains the target. No combined arm, partition
 search or post-grade tuning follows. See `results/scan_fisher_naming_20260922/report.md`.
 
+### Fixed factor-analyzer and Student learning candidates (2026-09-22)
+
+`unit_assignment_factor_analyzer.toml` and `unit_assignment_student_t.toml`
+change only `[model] gmm_learning_family` (and the output model name) relative
+to the support control. All native profiles now explicitly declare:
+
+| Key in `[model]` | Fixed value / meaning |
+|---|---|
+| `gmm_learning_family` | `gaussian`, `factor_analyzer` or `student_t` |
+| `gmm_factor_rank` | 4 latent factors per component; strictly below feature dimension |
+| `gmm_student_df` | 5.0, shared fixed degrees of freedom, not fitted or searched |
+| `gmm_learning_maxiter` | 200 alternative-family EM updates maximum |
+| `gmm_learning_tolerance` | 1e-6 relative change of summed mixture log kernels |
+| `gmm_learning_min_mass` | 1e-12 minimum component/precision mass; otherwise unavailable seed |
+| `gmm_learning_cholesky_guard` | 1e-8, required to match the unchanged final-score guard |
+
+These numerical settings govern the alternative families only; the Gaussian
+route keeps its existing operations exactly. The family is retained through
+the configured two hard updates. Both alternatives require separate component
+matrices, ridge regularization, Mahalanobis final scores, parity Fisher,
+raw-amplitude naming, equal-lobe weights, hard seed votes, no resampling,
+all-admissible training and mean/sample-standard-deviation scaling. No
+combination, rank selection, df estimation, new threshold or class-count prior
+is implemented. The standalone builder requires `--selftrain >= 1`.
+
+MFA stores `L*L' + Diagonal(psi)` with a separate positive noise diagonal for
+each component, floored at the existing `gmm_covariance_ridge=1e-6`.
+Student stores its **scale**, not its df-dependent covariance. Both use the
+unchanged final `log(weight) - Mahalanobis²/2` vote; this is a learning-only
+comparison, not Student posterior classification or chemical calibration.
+Common density constants are omitted only inside alternative-family learning;
+`log_kernel_sum` is not an across-family selection criterion. A finite fit
+at the iteration cap is reported as nonconverged, not retried. Invalid seeds
+are logged and excluded from the fixed-seed average; no usable seed means
+`?`/`no_valid_view`, without dropping rows or falling back to Gaussian learning.
+The historical representation diagnostic rejects both alternative families.
+
 ## Opt-in diagnostic exploration settings (2026-09-18)
 
 `config/label_free_exploration.toml` is used only by standalone exploration tools;
