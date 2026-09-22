@@ -2308,11 +2308,13 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0aa. **Does refitting both shape models after accepted registration improve recognition?**
-    → **AUTHORIZED; IN PREPARATION (Sep 22)**: saved N, unchanged registration
+    → **SUBMITTED; PENDING QUOTA (Sep 22)**: source **c7836f9**, job **11942091**.
+    Saved N, unchanged registration
     gates and assignment settings. Compare saved support, fresh zero-shift
     refits, and registered refits of both Gaussian base and split shape. Native
     GCV chooses the family at fixed N. Four-hour preparation window from
-    **20:12 CEST**, one two-hour Viper job, no retry. No score yet; retain 676/34.
+    **20:12 CEST**, submitted **20:39:57**, one two-hour Viper job, no retry.
+    Initial state `QOSGrpCpuLimit`; no score yet, retain 676/34.
 
 0z. **Can identifiable acquisition translation improve fixed-geometry recognition?**
     → **COMPLETE; NEGATIVE (Sep 22)**: source **9961973**, job **11941278**,
