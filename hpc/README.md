@@ -9,9 +9,15 @@ Viper requires an explicit command-line `sbatch --export=...` with all five.
 The job regenerates support control, profiles Gaussian amplitudes/background
 in four one-thread shards without changing geometry/N, then regenerates the
 candidate assignment. Fetch all diagnostics/outputs before separate grading.
-Actual **job 11938782** is submitted once, source **567cdde**, output
-`/ptmp/oldu/stmfit/frozen_amplitudes_20260922_v1`. No result is available yet;
-monitor this instance, with no automatic retry.
+Actual **job 11938782** completed **0:0 in 6m17s**, after **5m29s** queued,
+source **567cdde**. Four CPUs were requested and eight allocated. All **561
+outputs and Slurm log** are fetched/checksummed under
+`results/frozen_amplitude_profile_20260922/`. All 146 profiles satisfy KKT;
+the control replays saved support exactly. The outcome is negative:
+**675/870 correct, 32/145 exact**, versus support **676/34**, with unchanged
+**852/870 coverage**, N and geometry. Keep saved support; no promotion or
+retry. The job is closed; do not resubmit
+`/ptmp/oldu/stmfit/frozen_amplitudes_20260922_v1`.
 
 The authorized September 22 raw-GCV reselection uses
 `hpc/compare_gcv_reselection.sbatch`: one four-hour, four-CPU / 16 GB job.

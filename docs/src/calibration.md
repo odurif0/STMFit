@@ -648,8 +648,13 @@ inside their native finite bounds, using the existing linear-profile solver.
 The literal saved decimal geometry and N stay fixed; the split shape is reused.
 GCV keeps every original model parameter and is diagnostic only. A lower RSS
 or satisfied KKT condition does not establish better chemical recognition.
-The exact support control and external grade are still required; there is no
-new score yet. See the dated [journal](journal.md) for scope and failure handling.
+The completed comparison demonstrates that distinction: RSS decreases on all
+146 scans (median **0.681%**), but recognition falls to **675/870 correct,
+32/145 exact**, versus exactly replayed support **676/34**, at unchanged
+**852/870 coverage**. N and every geometric field remain identical. Reject
+this variant without retuning any bound, calibration, threshold or vote rule;
+historical 677/36 remains unexceeded. See the dated [journal](journal.md) and
+`results/frozen_amplitude_profile_20260922/report.md` for full diagnostics.
 
 `config/label_free_exploration.toml` is diagnostic configuration, not a new
 molecular calibration. Its empty `[model]`, `[selection]` and `[preprocessing]`

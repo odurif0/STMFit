@@ -2308,14 +2308,17 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0x. **Does bounded amplitude/background profiling improve assignment with
-    saved N and geometry fixed?** → **SUBMITTED (Sep 22), JOB 11938782**:
-    one support control and one Gaussian-base linear-profile arm, no nonlinear
-    refit or count selection. The split geometry stays unchanged because only
-    its shape enters this assignment. Existing physical bounds and diagnostic
-    solver settings are reused without tuning. Four-hour preparation limit from
-    15:28 CEST and one Viper job capped at two hours, four requested CPUs / 16 GB.
-    Require an exact saved-support replay and full-cohort checks before external
-    grading. No other proposed direction or unknown25 rerun is authorized.
+    saved N and geometry fixed?** → **COMPLETE; NEGATIVE (Sep 22)**:
+    source **567cdde**, job **11938782**, **0:0 in 6m17s**, after **5m29s**
+    queued. The profile gives **675/870 correct, 32/145 exact**, versus
+    exactly replayed support **676/34**, at unchanged **852/870 coverage**.
+    All 146 profiles satisfy KKT and reduce RSS (median **0.681%**); all N,
+    geometric fields and split cache remain fixed. Against control: 4 scan
+    gains, 5 losses, 136 ties; zero exact gains, two losses. All **561 outputs
+    and Slurm log** are fetched/checksummed; **4,936 tests, 22,912 pre-grade
+    checks and 31 aggregate checks**, with 290 paired scan rows. Retain saved
+    support, below historical 677/36. No nonlinear refit, parameter tuning,
+    new direction or unknown25 rerun follows.
 
 0w. **Does fresh raw-GCV selection with corrected fused input improve the full
     recognition pipeline?** → **COMPLETE; NEGATIVE (Sep 22), JOB 11936561**:
@@ -10718,5 +10721,94 @@ explicit five-variable export. Source remains **567cdde**, preparation record
 **19b3921**. Slurm test-only identifier **11938774** was speculative, not a real
 job. Preparation took about twenty minutes, within the four-hour bound. Remote
 output is `/ptmp/oldu/stmfit/frozen_amplitudes_20260922_v1`; local fetch/report root
-will be `results/frozen_amplitude_profile_20260922/`. No new benchmark result is
-available; monitor this job rather than submitting another instance.
+is `results/frozen_amplitude_profile_20260922/`. At submission no benchmark
+result was available; the completed result follows.
+
+### Completed numerical checks and recognition result
+
+The job starts **15:53:51 CEST**, after **5m29s queued**, and finishes
+**16:00:08**, **COMPLETED, 0:0 in 6m17s**, on `vipc2109`. Viper allocates
+eight CPUs for the four-CPU request. Both arms finish **146 scans / 900 lobes**
+with 146 individual plots each; all four profile shards succeed. The single
+job stays within the two-hour limit, with no retry or requeue. All **561
+regular output files and the Slurm log** are fetched locally and match their
+remote SHA-256 hashes. Manifest and all three configuration hashes stay unchanged.
+
+Before external grading, **22,912 independent saved-output assertions** pass:
+60 cohort/control checks, 5,384 vote/availability checks and 17,468 basis/profile
+checks. Thirteen control scientific tables are byte-identical to saved support,
+including prediction SHA-256
+**eb8d69b8cebcd607b0244db5c65104347e6bcd24acee06f64748cf0e6ec310e3**.
+The candidate hash is
+**4c6eee74bb5b777b6d3009229845c7e531abd94810f3fd98211432737a38769d**.
+N, every nonmutable base field, split geometry and observed raw patch pixels
+remain identical. No failure table or lost row is hidden. The four unavailable
+keys remain `240310_Cu100009.sxm:8`, `240818_015.sxm:1` and
+`240818_019.sxm:1,2`; only two align with external control positions.
+
+The checker independently reconstructs each Gaussian basis from the frozen
+decimal table and saved fit coordinates, then verifies native bounds, exported
+coefficients, gradients, RSS, full-parameter GCV and KKT conditions. All
+**146 profiles converge in 1–3 iterations** and lower RSS. Relative reductions
+are **0.0137–12.1647%, median 0.6814%**; summed RSS changes
+**20.5570966504 → 20.3671925622**. Forty-three scans touch at least one
+coefficient bound, with 41 lower and 13 upper coefficients. Twenty-four scans
+need initial endpoint rounding correction, at most **3.43e-10**, within the
+documented half-decimal-unit limit; no bound widens. Amplitude changes range
+**−10.94% to +14.23%, median +0.384%**. The first checker's displayed
+"median" used the lower middle observation for an even sample size; this
+report-only display is corrected to the mean of both central observations and
+the identical checks are rerun. The original log is retained; scientific
+outputs, checks and grades are unaffected.
+
+Only external scripts then read benchmark membership and labels. Full-own-N
+grading covers all 145 benchmark scans with denominator 870; **31 independent
+aggregate checks** pass and **290 paired scan rows** compare candidate to
+support and history.
+
+| Profile | Correct / 870 | Correct / classified | Exact / 145 | Coverage / 870 | Errors |
+|---|---:|---:|---:|---:|---:|
+| Historical saved reference | 677 | 677/854 (79.3%) | 36 | 854 | 177 |
+| Exactly replayed support | 676 | 676/852 (79.3%) | 34 | 852 | 176 |
+| Frozen-geometry linear profile | 675 | 675/852 (79.2%) | 32 | 852 | 177 |
+
+Relative to all positions, the candidate gives **675/870 (77.6%)**, not 79.2%.
+All N are unchanged: **106/145 exact counts**, 892 benchmark predictions,
+16 missing positions, 38 extra lobes, 14 short and 25 long scans. Against
+support: **4 scan gains, 5 losses, 136 ties**, net −1 correct; **zero exact
+gains and two losses**, `240310_Cu100007.sxm` and `240818_020.sxm`.
+Grade orientation never changes against support. Confusion `(TN,FP,FN,TP)`
+changes **(513,52,124,163) → (516,49,128,159)**: three fewer false positives
+but four more false negatives. Against history: **23/28/94**, net −2 correct,
+**six exact gains and ten losses**, with eight orientation changes. Full
+paired lists are in the local report; grade orientation is not independent
+spatial monomer correspondence.
+
+Three additional component checks pass. GMM/k-means saved probabilities change
+on **30/27 rows**, hard classes on **16/6**. Final decisions change on **ten
+lobes of ten scans**, nine 1→0 and one 0→1. Eight changes leave old exact
+vote ties and one enters a tie; the other changes 0.9 → 0.45. Final ties fall
+58 → 46. Raw `(0,1,?)` populations move **(673,223,4) → (681,215,4)**;
+these are unconstrained outcomes. No tie, precision, classifier, bound or
+threshold adjustment follows this observation.
+
+**Reject this version and retain saved support 676/34.** Historical 677/36
+remains unexceeded. The lower pixel residual is real for these fixed decimal
+bases but does not improve this recognition comparison. This is not a verdict
+on every profiling method or the unsaved full-precision geometry. Whole-cohort
+learning couples scans. Learning/inference remain label-free; repeated external
+benchmark reuse is development evidence, not independent generalization or
+unknown-chain chemical validation. The authorized deliverable is complete,
+not the broader historical objective. No other proposed direction, nonlinear
+fit, count sweep, registration/noise model, DFT change or unknown25 rerun occurs.
+
+Full report, tests, diagnostics, hashes and losses are under
+`results/frozen_amplitude_profile_20260922/report.md`. Cited documentation
+headlines are updated consistently. The older whole-scan bagging section is
+condensed on the assignment page, retaining its method, outcome and full
+journal/report pointers, to keep the existing HTML size limit; no limit is raised.
+
+The final Julia 1.13 documentation build passes with the existing size/search
+warnings; the assignment page is **198.83 KiB**, below its unchanged 200 KiB
+limit. Scientific source remains unchanged from **567cdde**. The completed
+comparison is handed off without another compute submission.

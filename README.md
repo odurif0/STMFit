@@ -16,6 +16,15 @@ no variants combined and no settings tuned after grading. Labels are used only
 by external grading; this reused development benchmark is not independent
 validation. See the [support/score comparison](docs/src/unit_assignment.md#complete-disk-support-and-final-gaussian-score-2026-09-21).
 
+Reprofiling Gaussian amplitudes and background at **identical saved N and
+geometry** is also negative: **675/870 correct, 32/145 exact**, versus the
+byte-identical support control **676/34**, at unchanged **852/870 coverage**.
+All 146 linear fits satisfy KKT and reduce RSS (median **0.681%**), but four
+scans gain and five lose correct positions; two exact chains are lost and
+none gained. Retain saved support, below historical 677/36. No nonlinear refit,
+selection, threshold adjustment or unknown25 rerun follows. See the
+[frozen-amplitude result](docs/src/unit_assignment.md#frozen-geometry-amplitude-profiling-2026-09-22-negative).
+
 Fresh raw-GCV count selection after symmetric filtering is **negative**:
 **661/870 correct, 32/145 exact**, versus **675/34 for a freshly refitted
 fixed-N control** and **676/34 for saved support**. Exact counts fall

@@ -281,6 +281,23 @@ support, below historical **677/36**; no tuning, retry or unknown25 rerun follow
 Full evidence: `results/gcv_reselection_20260922/report.md`. This reused grade
 does not establish independent generalization or unknown-chain chemical accuracy.
 
+The fixed-geometry amplitude/background comparison (source **567cdde**, job
+**11938782**, **0:0 in 6m17s**, after **5m29s** queued) is **negative**:
+**675/870 correct, 675/852 (79.2%), 32/145 exact**, versus exactly replayed
+support **676/34**. Coverage stays **852/870**; all N, centers, widths, axes
+and split geometry remain identical. Against control: **4 scan gains,
+5 losses, 136 ties; zero exact gains, two losses**. Errors rise **176→177**.
+
+All **146 bounded linear profiles** satisfy KKT in one to three iterations;
+RSS decreases by a median **0.681%**. This numerical improvement does not
+translate into recognition gain. All **561 outputs and Slurm log** are
+fetched/checksummed; **4,936 tests, 22,912 pre-grade checks and 31 external
+aggregate checks** pass, with 290 paired scan rows. Thirteen control tables
+replay byte-for-byte. Retain saved support, below historical **677/36**;
+no nonlinear refit, selection, threshold change, retry or unknown25 rerun.
+Full evidence: `results/frozen_amplitude_profile_20260922/report.md`.
+The reused benchmark remains development evidence, not independent validation.
+
 This page is the hand-off document for reproducing the current chitosan workflow
 without relying on prior conversation context.  The goal is a label-free fitting
 and model-selection pipeline that is externally graded on the benchmark and then

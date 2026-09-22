@@ -1,5 +1,16 @@
 # Model Selection
 
+The September 22 frozen-geometry amplitude comparison is **negative**:
+**675/870 correct, 32/145 exact**, versus exactly replayed support **676/34**,
+at unchanged **852/870 coverage**. All saved N and geometric fields remain
+identical, including **106/145 exact counts**, 16 missing positions and 38
+extra lobes. Only Gaussian amplitudes/background are solved under native
+bounds. GCV retains the full original parameter count, serves as a diagnostic
+and selects nothing; lower RSS on all 146 scans does not improve recognition.
+Retain saved support, below historical 677/36. This neither reruns nor
+revalidates count selection. Source **567cdde**, job **11938782**, full report
+`results/frozen_amplitude_profile_20260922/report.md`; no post-grade tuning.
+
 The September 22 raw-GCV reselection is **complete and negative**: exact counts
 fall **106 → 101/145**; assignment gives **661/870 correct, 32/145 exact**,
 versus **675/34 for the freshly refitted control** and **676/34 for saved

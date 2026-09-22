@@ -2313,73 +2313,27 @@ development evidence, not independent validation. All 290 paired scan rows,
 
 `unit_assignment_scan_bagging.toml` copies the 676/34 support control, changing
 its name and enabling `gmm_resampling="whole_scans"` with **20 replicates**.
-Each draws S scans with replacement from the S scans having usable GMM rows,
-using draw seeds 0–19. Every usable row of a drawn scan is duplicated with its
-scan's multiplicity. Natural scan lengths remain; this is neither independent
-lobe resampling nor equal-total-scan weighting. Each bag reuses the same ten
-GMM initialization seeds 0–9. EM, two hard updates, free mixture masses, ridge
-covariance and the final Mahalanobis score remain unchanged.
+Draw seeds 0–19 resample entire usable scans with replacement, preserving their
+natural lengths; each bag uses the ten original initialization seeds. Naming
+uses duplicated training amplitudes. The candidate equally averages bag means
+of valid binary seed votes. There is no best-bag selection, out-of-bag validation,
+composition constraint or change to normalization, other heads, N or final fusion.
 
-Per-scan scaling is computed once, as before. Raw-amplitude group naming uses
-only the duplicated training rows, including their multiplicity. Unsampled
-scans retain their usual normalization and receive predictions, but do not
-train or name that bag's groups. Each bag averages its valid named binary seed
-votes; the candidate averages valid bag means equally. No best seed, bag or
-class population is selected. Unnamed fits are omitted without retry. This is
-bagging, not out-of-bag validation or probability calibration. K-means, Fisher,
-CC, patches, final two-head mean, `>=0.5`, eight-decimal precision, N and the
-unavailable-row policy stay fixed.
+The result is **665/870 correct, 665/852 (78.1%), 10/145 exact**, versus
+exactly replayed support **676/34**, at unchanged **852/870 coverage**.
+Against control: **22 scan gains, 33 losses, 90 ties; zero exact gains,
+24 losses**. Of 62 final changes, all 1→0, 57 leave old GMM=1/k-means=0
+vote ties. Errors rise **176→187**; lower false positives do not offset higher
+false negatives. No tie-rule or threshold adjustment follows.
 
-Scientific source **da886ce** passes **2,471 assertions across 19 suites** under
-Julia 1.13. One Viper job **11925188** waits **29 seconds**, then completes
-**0:0 in 7m17s**, 20:42:41–20:49:58 CEST, on `vipm2008`. All **393 output
-files and the Slurm log** are fetched/checksummed. **21,927 saved-output checks**
-pass before grading: twelve control tables replay byte-for-byte, all **146
-scans / 900 keys**, selected N, upstream/Fisher/k-means tables, **896 usable
-GMM rows** and four unavailable predictions are retained. All twenty scan
-draws match independent reconstruction. All **200/200 initialization fits**
-are accepted; each bag has **88–98 distinct scans and 882–905 duplicated rows**.
-Only external grading selects the 145 benchmark scans.
-
-| Version | Correct / 870 | Correct / classified | Exact / 145 | Classified / 870 |
-|---|---:|---:|---:|---:|
-| Historical saved reference | 677 | 677/854 (79.3%) | 36 | 854 |
-| Replayed support control | 676 | 676/852 (79.3%) | 34 | 852 |
-| Whole-scan GMM bagging | 665 | 665/852 (78.1%) | 10 | 852 |
-
-GMM scores change on **804/896 rows** (448 increases, 356 decreases); its hard
-class changes on 38 rows, all 1→0. Final voting changes **62 decisions**, all
-1→0: 61 benchmark lobes and one technical-scan lobe. Raw `(0,1,?)` totals move
-**(673,223,4)→(735,161,4)**. These populations are outcomes, not constraints.
-Of those 62 final flips, **57 were exact control ties, GMM=1 / k-means=0**.
-Their bagged GMM score falls below 1, so the unchanged mean falls below 0.5.
-Five flips had positive control margins (0.025–0.5). The GMM hard class changes
-for 29 of the 62 flips, remaining 1 for the other 33. Bagged GMM scores on
-changed rows range **0.13–0.995**, final margins **0.005–0.87**. Exact final
-ties decrease **58→0**, before and after serialization; seven component-score
-checks pass. This is not solely a numerical rounding effect. No tie, threshold,
-precision or fusion adjustment follows the grade.
-
-Against control: **22 scan gains, 33 losses, 90 ties**, net **−11 correct**;
-**zero exact chains gained, 24 lost**, with eight grade-orientation changes.
-Confusion `(TN,FP,FN,TP)` changes `(513,52,124,163)→(537,28,159,128)`:
-24 fewer false positives but 35 more false negatives. Emitted errors increase
-**176→187**, at unchanged **852/870 coverage**, two aligned abstentions,
-16 missing truth positions and 38 extra lobes. Against history: 26 scan gains,
-41 losses, 78 ties, net −12 correct; one exact chain gained and 27 lost, with
-twelve orientation changes. Grade orientation is not an independent spatial
-monomer correspondence. All **290 paired scan rows, 62 changed decisions**,
-component scores and the full list of 24 lost exact chains are preserved in
-`results/scan_bagging_20260921/report.md` and its linked tables.
-
-**Reject whole-scan bagging and retain the 676/34 support candidate.**
-Historical 677/36 remains unexceeded. This negative result concerns the fixed
-ensemble within this unchanged fusion, not every bagging method. No replicate
-count, seed, threshold, naming, fusion or combined-variant search follows;
-counting, DFT and unknown25 are untouched. Learning and inference are label-free,
-but this reused benchmark supplies development evidence, not independent
-validation. The authorized comparison is complete; the historical objective
-remains open.
+Source **da886ce**, job **11925188**, **0:0 in 7m17s**, after 29s queued.
+All **393 outputs and Slurm log** are fetched/checksummed; **2,471 tests,
+21,927 pre-grade checks**, seven component checks and 290 paired rows pass.
+All **200/200 fits** are accepted; all 146 scans/900 keys and four unavailable
+rows remain. **Reject this variant; retain support 676/34**, below historical
+677/36. Full method, draws, confusion and losses: [journal](journal.md),
+`results/scan_bagging_20260921/report.md`. This reused benchmark supplies
+development evidence, not independent validation or a verdict on all bagging.
 
 ### Tied GMM covariance throughout learning (2026-09-22): negative
 
@@ -2500,6 +2454,43 @@ No tuning, retry, new noise model or unknown25 run follows. Full evidence:
 [journal](journal.md), `results/gcv_reselection_20260922/report.md`.
 Labels appear only in external grading; this reused benchmark is not
 independent validation or evidence of unknown-chain chemical accuracy.
+
+### Frozen-geometry amplitude profiling (2026-09-22): negative
+
+The Gaussian base amplitudes and tilted background are jointly re-estimated
+by bounded linear least squares at identical saved N, centers, widths and axes.
+The original symmetric-fusion cache is used, not either fresh GCV-refit arm.
+Native coefficient bounds and the existing linear solver settings stay fixed;
+no nonlinear search, selection or new hyperparameter is involved. The split
+cache stays byte-identical. Both arms regenerate all derived features,
+patches and assignment stages with unchanged support configuration.
+
+| Profile | Correct / 870 | Exact / 145 | Coverage / 870 | Emitted errors |
+|---|---:|---:|---:|---:|
+| Historical saved reference | 677 | 36 | 854 | 177 |
+| Exactly replayed support control | 676 | 34 | 852 | 176 |
+| Frozen-geometry linear profile | 675 | 32 | 852 | 177 |
+
+Against control: **4 scan gains, 5 losses, 136 ties; zero exact gains,
+two losses** (`240310_Cu100007.sxm`, `240818_020.sxm`), without changed
+grade orientation. All 146 profiles satisfy KKT in one to three iterations;
+RSS decreases **0.0137–12.1647%, median 0.6814%**. Ten final decisions change,
+nine 1→0 and one 0→1; eight leave old vote ties and one enters a tie.
+Four unavailable keys, 892 benchmark predictions, 16 missing positions,
+38 extra lobes and 106 exact counts remain. Better pixel fit is not better
+chemical recognition.
+
+Source **567cdde**, job **11938782**, **0:0 in 6m17s**, after 5m29s queued.
+All **561 outputs and Slurm log** are fetched/checksummed; **4,936 tests,
+22,912 pre-grade checks and 31 aggregate checks** pass, with 290 paired rows.
+Thirteen control tables replay exactly; an independent basis reconstruction
+checks coefficients, bounds, gradients, KKT, RSS and full-parameter GCV.
+**Reject this version; retain support 676/34**, below historical 677/36.
+No post-grade bound, threshold, vote, counting or unknown25 change follows.
+Full method, losses and limitations: [journal](journal.md),
+`results/frozen_amplitude_profile_20260922/report.md`. The saved geometry is
+decimal-rounded, not the unsaved full-precision fit. Labels remain external;
+this reused development benchmark does not establish independent validation.
 
 ### Native numerical conventions
 

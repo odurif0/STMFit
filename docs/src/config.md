@@ -1060,8 +1060,13 @@ the unchanged native model. `profile_frozen_amplitudes.jl` accepts a Gaussian
 base cache and changes only amplitudes/background and their derived diagnostics.
 The split cache, N and every geometric field stay fixed. Decimal endpoint
 roundoff is derived from the input serialization, not a fitted tolerance.
-No new configuration parameter or default is introduced. The comparison is in
-preparation; it has no new benchmark result. See the dated [journal](journal.md).
+No new configuration parameter or default is introduced. The completed
+comparison gives **675/870 correct, 32/145 exact**, versus
+exactly replayed support **676/34**, at unchanged **852/870 coverage**.
+All 146 profiles satisfy KKT and reduce RSS, but this version is rejected.
+Retain the support settings and saved features; no solver, physical bound,
+classifier or threshold is retuned after grading. See the dated
+[journal](journal.md) and `results/frozen_amplitude_profile_20260922/report.md`.
 
 `config/label_free_exploration.toml` is used only by standalone exploration tools;
 it is not a production config. Pass the original molecule config separately.
