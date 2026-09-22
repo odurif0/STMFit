@@ -18,7 +18,7 @@ function registered_refit_comparison(args=ARGS;runner=run_stage,estimator=estima
     all(haskey(opts,k) for k in REFIT_OPTIONS) || error("All comparison inputs required")
     parse_options(filtered)
     EstimateAcquisitionShifts.AcquisitionRegistration.load_settings(opts["--settings"])
-    RegisteredRefit.settings(opts["--refit-settings"])
+    refit_options=RegisteredRefit.settings(opts["--refit-settings"])
     load_config(opts["--config"])
     _,base=lobe_table(opts["--features"];required=RegisteredRefit.F.REQUIRED)
     _,splitrows=lobe_table(opts["--split-features"])
@@ -30,13 +30,14 @@ function registered_refit_comparison(args=ARGS;runner=run_stage,estimator=estima
         RegisteredRefit.F.validate_chain([base[k] for k in sort(collect(keys(base))) if first(k)==f])
     end
     all(parse(Int,r["N"])==counts[first(k)] for (k,r) in splitrows) || error("Split count differs")
-    haskey(opts,"--dry-run") && return println("Dry run: $(length(files)) files / $(length(base)) keys; native Gaussian/split refits, saved N, unchanged assignment; no pixels/output.")
+    haskey(opts,"--dry-run") && return println("Dry run: $(length(files)) files / $(length(base)) keys; native Gaussian/split refits, saved N, original_support=$(refit_options.original_support), unchanged assignment; no pixels/output.")
     out=abspath(opts["--outdir"]); mkpath(joinpath(out,"logs")); stage="inputs"
     try
         write_table(joinpath(out,"input_hashes.tsv"),["input","sha256"],
             [Dict("input"=>k,"sha256"=>bytes2hex(sha256(read(opts[k])))) for k in sort(collect(REFIT_OPTIONS)) if isfile(opts[k])])
         basepath=joinpath(out,"cached_features.tsv"); splitpath=joinpath(out,"cached_split.tsv")
         cp(opts["--features"],basepath); cp(opts["--split-features"],splitpath)
+        cp(opts["--refit-settings"],joinpath(out,"refit_settings.toml"))
         common=["--data-dir",abspath(opts["--data-dir"]),"--count-config",abspath(opts["--count-config"]),
             "--config",abspath(opts["--config"]),"--templates",abspath(opts["--templates"])]
         stage="registration"; estimator(out,opts,base;runner)

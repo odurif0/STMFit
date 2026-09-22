@@ -1,5 +1,17 @@
 # Running STMFit on the MPCDF HPC cluster
 
+The newly authorized original-support follow-up uses
+`hpc/compare_registered_refit_original_support.sbatch` and
+`config/registered_refit_original_support.toml`: one two-hour Viper job,
+four requested CPUs / 16 GB, four one-thread workers, no automatic retry.
+It retains the original unregistered geometric support in both refit arms,
+without filling objective pixels or changing N. Use the same five explicit
+path exports and `--no-requeue` as below, with a **new** output directory.
+First run `bash hpc/compare_registered_refit_original_support.sbatch --dry-run`;
+never compute on the login node. This is not a retry of the completed failed
+job below. The deliverable includes fetched outputs, saved-only verification
+and a complete external grade, or an explicitly inconclusive diagnostic.
+
 The completed September 22 **registered native refit** uses
 `hpc/compare_registered_refit.sbatch`: one two-hour job, four requested CPUs /
 16 GB, four one-thread shards, no retry. It reuses the acquisition estimator,

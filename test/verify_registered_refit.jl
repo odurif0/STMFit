@@ -1,7 +1,7 @@
 #!/usr/bin/env julia
 # Saved-only checks; no SXM pixels, optimizer, benchmark truth or external grade.
 module RegisteredRefitVerification
-using Test, TOML, SHA, Statistics
+using Test, TOML, SHA, Statistics, Printf
 include(joinpath(@__DIR__,"refit_registered_geometry.jl"))
 using .RegisteredRefit: lobe_table, read_table
 const RR=RegisteredRefit
@@ -20,7 +20,9 @@ function geometry(root,cache,shiftpath; complete=true)
     paths=sort(unique([chop(p;tail=length(suffix)) for p in readdir(root;join=true)
         for suffix in (".fits.tsv",".failures.tsv") if endswith(p,suffix)]))
     combinations=[(a,p) for a in RR.ARMS for p in RR.PROFILES]
-    completed_before_failure=Dict("load"=>0,"control_support"=>0,"control_gaussian"=>0,"control_split"=>1,
+    settings_path=joinpath(root,"refit_settings.toml")
+    frozen=isfile(settings_path) && RR.settings(settings_path).original_support
+    completed_before_failure=Dict("load"=>0,"original_support"=>0,"control_support"=>0,"control_gaussian"=>0,"control_split"=>1,
         "registered_support"=>2,"registered_gaussian"=>2,"registered_split"=>3)
     optional_table(path)=isfile(path) ? last(read_table(path)) : Dict{String,String}[]
     @testset "Observed native refits: parameters, independent RSS/GCV, family choice and zero-shift reuse" begin
@@ -28,6 +30,8 @@ function geometry(root,cache,shiftpath; complete=true)
         for prefix in paths
             audits=optional_table(prefix*".fits.tsv"); parameters=optional_table(prefix*".parameters.tsv"); bootstrap=optional_table(prefix*".bootstrap.tsv")
             failures=optional_table(prefix*".failures.tsv")
+            supports=Dict(r["file"]=>r for r in optional_table(prefix*".support.tsv"))
+            frozen || @test isempty(supports)
             complete && @test isempty(failures)
             failed=Dict(r["file"]=>r for r in failures)
             @test length(failed)==length(failures)
@@ -41,6 +45,35 @@ function geometry(root,cache,shiftpath; complete=true)
                 expected_slots=haskey(failed,f) ? combinations[1:completed_before_failure[failed[f]["stage"]]] : combinations
                 actual=[(r["arm"],r["profile"]) for r in audits if r["file"]==f]
                 @test actual==expected_slots
+                if frozen && !isempty(actual)
+                    @test haskey(supports,f)
+                    support=supports[f]
+                    original=last(read_table(joinpath(prefix*".fit_data",f*".original.tsv")))
+                    ox=num.(original,"x_nm"); oy=num.(original,"y_nm"); oz=num.(original,"z_native_nm")
+                    _,cfg,_=RR.F.Extractor._configs(raw["model"],raw["preprocessing"],"unused")
+                    full=G._weighted_roi_axis(ox,oy,oz)
+                    _,_,_,axis,keep,meta=G._chain_fit_data(ox,oy,oz,full,cfg)
+                    @test keep==[r["in_fit"]=="true" for r in original]
+                    @test count(keep)==int(support,"fit_pixels") && length(original)==int(support,"roi_pixels")
+                    @test meta.support_method==support["support_method"]
+                    for (key,value) in (("axis_x",axis.axis[1]),("axis_y",axis.axis[2]),
+                            ("origin_x_nm",axis.origin[1]),("origin_y_nm",axis.origin[2]),
+                            ("support_tmin",axis.tmin),("support_tmax",axis.tmax))
+                        @test close(num(support,key),value)
+                        @test all(a[key]==support[key] for a in audits if a["file"]==f)
+                    end
+                    RR.check_original_frame((axis=axis,),base[(f,1)])
+                    original_pixels=Dict((int(r,"row"),int(r,"column"))=>r for r in original if r["in_fit"]=="true")
+                    for arm in RR.ARMS
+                        path=joinpath(prefix*".fit_data",f*".$arm.tsv")
+                        isfile(path) || continue
+                        data=last(read_table(path))
+                        @test length(data)<=length(original_pixels)
+                        @test all(haskey(original_pixels,(int(r,"row"),int(r,"column"))) for r in data)
+                        @test all(r["x_nm"]==original_pixels[(int(r,"row"),int(r,"column"))]["x_nm"] &&
+                            r["y_nm"]==original_pixels[(int(r,"row"),int(r,"column"))]["y_nm"] for r in data)
+                    end
+                end
             end
             @test isempty(intersect(seen,files)); union!(seen,files)
             for table in values(tables)
@@ -152,15 +185,55 @@ function cohort(run,saved,previous)
             end
         end
         _,hashes=read_table(joinpath(run,"input_hashes.tsv"))
-        paths=Dict("--settings"=>"config/acquisition_registration.toml","--refit-settings"=>"config/registered_refit.toml",
+        settings_path=joinpath(run,"refit_settings.toml")
+        frozen=isfile(settings_path) && RR.settings(settings_path).original_support
+        paths=Dict("--settings"=>"config/acquisition_registration.toml",
+            "--refit-settings"=>(frozen ? "config/registered_refit_original_support.toml" : "config/registered_refit.toml"),
             "--config"=>"config/unit_assignment_patch_support.toml","--count-config"=>"config/chitosan.toml",
             "--features"=>"results/fusion_comparison_20260920/run_v1/symmetric/features.tsv",
             "--split-features"=>"results/fusion_comparison_20260920/run_v1/symmetric/features_split.tsv",
             "--templates"=>"results/reconstructed_cc_soft_v1/full146_v1_inputs/templates_cc.tsv")
         @test Set(r["input"] for r in hashes)==Set(keys(paths))
         for r in hashes; @test r["sha256"]==bytes2hex(sha256(read(joinpath(ROOT,paths[r["input"]])))); end
+        isfile(settings_path) && @test read(settings_path)==read(joinpath(ROOT,paths["--refit-settings"]))
     end
     geometry(run,joinpath(run,"cached_features.tsv"),joinpath(run,"shifts.tsv"))
+end
+
+"The original geometric support must also match the earlier complete native replay, not merely both new arms."
+function original_reference(run, native)
+    @test RR.settings(joinpath(run,"refit_settings.toml")).original_support
+    prior=Dict{String,Dict{String,String}}(); prior_pixels=Dict{String,String}()
+    for path in readdir(native;join=true)
+        endswith(path,".fits.tsv") || continue
+        prefix=chop(path;tail=length(".fits.tsv"))
+        for r in last(read_table(path))
+            r["method"]=="native" || continue
+            haskey(prior,r["file"]) && error("Repeated native reference")
+            prior[r["file"]]=r
+            prior_pixels[r["file"]]=joinpath(prefix*".fit_data",r["file"]*".tsv")
+        end
+    end
+    seen=Set{String}()
+    @testset "Frozen support exactly replays the earlier native geometric context" begin
+        for path in readdir(run;join=true)
+            endswith(path,".support.tsv") || continue
+            prefix=chop(path;tail=length(".support.tsv"))
+            for r in last(read_table(path))
+                f=r["file"]; @test !(f in seen); push!(seen,f)
+                @test haskey(prior,f)
+                for key in ("axis_x","axis_y","origin_x_nm","origin_y_nm","support_tmin","support_tmax")
+                    @test r[key]==prior[f][key]
+                end
+                @test int(r,"fit_pixels")==int(prior[f],"n_data")
+                original=filter(r->r["in_fit"]=="true",last(read_table(joinpath(prefix*".fit_data",f*".original.tsv"))))
+                old=last(read_table(prior_pixels[f]))
+                @test length(original)==length(old)
+                @test all(a["x_nm"]==b["x_nm"] && a["y_nm"]==b["y_nm"] && a["z_native_nm"]==b["z_nm"] for (a,b) in zip(original,old))
+            end
+        end
+        @test seen==Set(keys(prior))
+    end
 end
 
 "Verify recorded failures and every completed fit without turning them into a benchmark."
@@ -187,10 +260,14 @@ function recorded_failures(run,saved,previous)
 end
 
 function main(args=ARGS)
+    if length(args)==5 && first(args)=="--original-support"
+        cohort(args[2:4]...)
+        return original_reference(args[2],args[5])
+    end
     if length(args)==4 && first(args)=="--recorded-failures"
         return recorded_failures(args[2:end]...)
     end
-    length(args) in (1,3) || error("Usage: verify_registered_refit.jl SMOKE_DIR OR [--recorded-failures] RUN_DIR SAVED_SUPPORT_DIR PREVIOUS_REGISTRATION_RUN")
+    length(args) in (1,3) || error("Usage: verify_registered_refit.jl SMOKE_DIR OR [--recorded-failures] RUN_DIR SAVED_SUPPORT_DIR PREVIOUS_REGISTRATION_RUN OR --original-support RUN_DIR SAVED_SUPPORT_DIR PREVIOUS_REGISTRATION_RUN NATIVE_GEOMETRY_RUN")
     length(args)==1 ? geometry(args[1],joinpath(args[1],"features.tsv"),joinpath(args[1],"shifts.tsv")) : cohort(args...)
 end
 end

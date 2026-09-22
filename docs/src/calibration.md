@@ -642,6 +642,15 @@ of N or independent validation. See `results/gcv_reselection_20260922/report.md`
 
 ## Opt-in label-free exploration (2026-09-18)
 
+The newly authorized `registered_refit_original_support.toml` follow-up freezes
+the original unregistered native ROI, axis/origin, tube and axial bounds for
+both refit arms. It changes no physical constant and does not expand support
+to accommodate saved N. The legacy preprocessing's imputation influence remains
+in this original support; only actually observed samples enter either new
+objective. The offset is estimated on the observed original ROI. Frame/cache
+consistency is checked, with a saved-only replay against prior native geometry
+before grading. No new N, noise estimate or independence claim; result pending.
+
 The authorized September 22 registered-refit follow-up keeps physical bounds,
 registration gates, selected N and assignment settings unchanged. It refits
 both Gaussian and split profiles with native optimizers, selecting their

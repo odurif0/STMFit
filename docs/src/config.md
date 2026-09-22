@@ -1053,6 +1053,15 @@ unknown25 change follows; see `results/gcv_reselection_20260922/report.md`.
 
 ## Opt-in diagnostic exploration settings (2026-09-18)
 
+The authorized original-support follow-up uses
+`registered_refit_original_support.toml`. Only `[preprocessing].roi` changes to
+`original_native_roi_intersect_observed_mask`, with the explicit `geometry =
+"freeze_original_axis_tube_and_bounds"` policy. Native unregistered ROI, axis,
+tube and bounds are replayed once and verified against the saved frame, then
+held fixed for both arms. Objective pixels must still be observed in both views;
+the offset uses the observed original ROI. No bound expands for N. All remaining
+registered-refit settings below stay identical. Result pending; no promotion.
+
 The authorized September 22 **registered native refit** adds
 `registered_refit.toml`, without changing molecule calibration or assignment.
 `[model]` declares native circular-to-elliptical fitting of both Gaussian and

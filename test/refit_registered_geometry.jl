@@ -6,7 +6,7 @@ include(joinpath(@__DIR__, "lib", "patch_acquisition.jl"))
 using .FixedNGeometryRefinement: G, VP
 using .FixedNGeometryRefinement.FrozenAmplitudeProfile.ReconstructedUnitAssignment: lobe_table, read_table, write_table
 using .PatchAcquisition
-using TOML, Statistics, LinearAlgebra
+using TOML, Statistics, LinearAlgebra, Printf
 const R = FixedNGeometryRefinement
 const F = R.F
 const OPTIONS = Set(["--features", "--data-dir", "--config", "--assignment-config", "--settings", "--shifts", "--out"])
@@ -22,8 +22,12 @@ function settings(path)
             "zero_shift_policy"=>"reuse_control_fit_exactly", "failure_policy"=>"report_and_stop_no_partial_grade"),
         "preprocessing" => Dict("fusion"=>"mean_unsmoothed_observed_views", "roi"=>"native_finite_statistics_and_observed_mask",
             "seed_missing"=>"nearest_observed_initialization_only", "reference_frame"=>"forward"))
-    s == expected || error("Only the declared registered-refit experiment is supported")
-    return (native_elliptical_maxiter=Int(s["model"]["native_elliptical_maxiter"]),)
+    frozen = deepcopy(expected)
+    frozen["preprocessing"]["roi"] = "original_native_roi_intersect_observed_mask"
+    frozen["preprocessing"]["geometry"] = "freeze_original_axis_tube_and_bounds"
+    s in (expected, frozen) || error("Only the declared registered-refit experiments are supported")
+    return (native_elliptical_maxiter=Int(s["model"]["native_elliptical_maxiter"]),
+        original_support=s==frozen)
 end
 
 function parse_cli(args)
@@ -39,7 +43,7 @@ function parse_cli(args)
     VERSION.major==1 && VERSION.minor==13 || error("Julia 1.13 required")
     isdir(opts["--data-dir"]) || error("Raw directory missing")
     for k in setdiff(OPTIONS,Set(["--data-dir","--out"])); isfile(opts[k]) || error("Missing input $k"); end
-    for suffix in vcat(["", ".fits.tsv", ".parameters.tsv", ".bootstrap.tsv", ".failures.tsv", ".fit_data"],
+    for suffix in vcat(["", ".fits.tsv", ".parameters.tsv", ".bootstrap.tsv", ".support.tsv", ".failures.tsv", ".fit_data"],
             [".$a.$p.tsv" for a in ARMS for p in PROFILES])
         (ispath(opts["--out"]*suffix) || islink(opts["--out"]*suffix)) && error("Refit output exists")
     end
@@ -59,24 +63,58 @@ function load_views(img, pcfg)
     return (;xs,ys,zf,zb,cf,cb,noise=max(nf,nb,G.EPS))
 end
 
+"Replay native unregistered ROI/axis/tube/bounds, before restoring observation masks. No fit."
+function original_support(img, pcfg, cfg)
+    xs,ys,zimg,mask,x,y,z,noise=G._fused_roi_data(img,pcfg)
+    full=G._weighted_roi_axis(x,y,z)
+    _,_,_,axis,keep,support=G._chain_fit_data(x,y,z,full,cfg)
+    indices=[CartesianIndex(iy,ix) for iy in eachindex(ys) for ix in eachindex(xs) if mask[iy,ix]]
+    length(indices)==length(keep)==length(z) || error("Original support indexing mismatch")
+    fitmask=falses(size(mask)); fitmask[indices[keep]].=true
+    return (;xs,ys,zimg,mask,x,y,z,axis,keep,support,indices,fitmask,noise)
+end
+
+"Check the replayed frame at the original cache's serialization precision, not a fitted tolerance."
+function check_original_frame(original, row)
+    a=original.axis
+    for (key,value,precision) in (("axis_x",a.axis[1],8),("axis_y",a.axis[2],8),
+            ("origin_x_nm",a.origin[1],6),("origin_y_nm",a.origin[2],6))
+        formatted=precision==8 ? @sprintf("%.8f",value) : @sprintf("%.6f",value)
+        formatted==row[key] || error("Original support/cache frame mismatch: $key")
+    end
+end
+
 "Observed unsmoothed mean for fitting; the native smoothed mean locates the ROI."
-function fused_data(img, pcfg, cfg, v, dx)
+function fused_data(img, pcfg, cfg, v, dx; original=nothing)
     f,sf=observed_shift(v.zf,v.cf,pcfg,0)
     b,sb=observed_shift(v.zb,v.cb,pcfg,dx)
     z=(f.+b)./2; zs=(sf.+sb)./2
     observed=isfinite.(z); count(observed)>0 || error("Empty common observed view support")
-    _,_,mask=G.molecule_roi_mask_fused(img,pcfg,zs;observed_only=true)
-    mask .&= observed
-    count(mask)==0 && (mask=observed .& isfinite.(zs))
+    if original===nothing
+        _,_,mask=G.molecule_roi_mask_fused(img,pcfg,zs;observed_only=true)
+        mask .&= observed
+        count(mask)==0 && (mask=observed .& isfinite.(zs))
+    else
+        original.xs==v.xs && original.ys==v.ys || error("Original support grid differs")
+        mask=original.mask .& observed
+    end
     count(mask)>0 || error("No observed ROI pixels")
     offset=quantile(z[mask],0.05)
     zimg=z.-offset
     x,y,zfull=G._flatten_roi(zimg,mask,v.xs,v.ys)
-    axisfull=G._weighted_roi_axis(x,y,zfull)
-    xf,yf,zf,axis,keep,support=G._chain_fit_data(x,y,zfull,axisfull,cfg)
+    roi_indices=[CartesianIndex(iy,ix) for iy in eachindex(v.ys) for ix in eachindex(v.xs) if mask[iy,ix]]
+    if original===nothing
+        axisfull=G._weighted_roi_axis(x,y,zfull)
+        xf,yf,zf,axis,keep,support=G._chain_fit_data(x,y,zfull,axisfull,cfg)
+    else
+        keep=original.fitmask[roi_indices]
+        count(keep)>0 || error("No observed pixels in original fit support")
+        xf,yf,zf=x[keep],y[keep],zfull[keep]
+        axis,support=original.axis,original.support
+    end
     all(isfinite,zf) || error("Unobserved fit pixel")
     # _flatten_roi uses y outer / x inner order, unlike Julia's vec.
-    indices=[CartesianIndex(iy,ix) for iy in eachindex(v.ys) for ix in eachindex(v.xs) if mask[iy,ix]][keep]
+    indices=roi_indices[keep]
     data=(xs=v.xs,ys=v.ys,zimg=zimg,x=xf,y=yf,z=zf,zfull=zfull,noise=v.noise,axisctx=axis)
     return (;data,mask,observed,indices,f,b,offset,support)
 end
@@ -114,22 +152,42 @@ function execute(opts; reader=G.read_sxm)
     for f in files
         F.validate_chain(chains[f]); isfile(joinpath(opts["--data-dir"],f)) || error("Missing raw $f")
     end
-    haskey(opts,"--dry-run") && return println("Registered refit: $(length(files)) files, native Gaussian/split at saved N; metadata only.")
+    haskey(opts,"--dry-run") && return println("Registered refit: $(length(files)) files, native Gaussian/split at saved N; original_support=$(options.original_support); metadata only.")
     out=opts["--out"]; mkpath(out*".fit_data")
     outputs=Dict((a,p)=>Dict{String,String}[] for a in ARMS for p in PROFILES)
     audits=Dict{String,String}[]; parameters=Dict{String,String}[]; bootstrap=Dict{String,String}[]; failures=Dict{String,String}[]
+    supports=Dict{String,String}[]
     for (i,file) in enumerate(files)
         stage="load"
         try
             n=length(chains[file]); pcfg,ell,_=F.Extractor._configs(model,raw["preprocessing"],dirname(out))
             pcfg.filepath=joinpath(opts["--data-dir"],file)
             img=reader(pcfg.filepath); views=load_views(img,pcfg)
+            original=nothing
+            if options.original_support
+                stage="original_support"
+                original=original_support(img,pcfg,ell)
+                check_original_frame(original,chains[file][1])
+                a=original.axis
+                push!(supports,Dict("file"=>file,"axis_x"=>F.fmt(a.axis[1]),"axis_y"=>F.fmt(a.axis[2]),
+                    "origin_x_nm"=>F.fmt(a.origin[1]),"origin_y_nm"=>F.fmt(a.origin[2]),
+                    "support_tmin"=>F.fmt(a.tmin),"support_tmax"=>F.fmt(a.tmax),
+                    "roi_pixels"=>string(count(original.mask)),"fit_pixels"=>string(count(original.fitmask)),
+                    "support_method"=>original.support.support_method))
+                open(joinpath(out*".fit_data",file*".original.tsv"),"w") do io
+                    println(io,"x_nm\ty_nm\tz_native_nm\trow\tcolumn\tin_fit")
+                    for j in eachindex(original.z)
+                        I=original.indices[j]
+                        println(io,join((F.fmt(original.x[j]),F.fmt(original.y[j]),F.fmt(original.z[j]),I[1],I[2],original.keep[j]),'\t'))
+                    end
+                end
+            end
             control_bundle=nothing; control_fits=Dict()
             for arm in ARMS
                 stage=arm*"_support"
                 reused=arm=="registered" && shifts[file]==0
                 dx=arm=="control" ? 0 : shifts[file]
-                bundle=reused ? control_bundle : fused_data(img,pcfg,ell,views,dx)
+                bundle=reused ? control_bundle : fused_data(img,pcfg,ell,views,dx;original)
                 arm=="control" && (control_bundle=bundle)
                 d=bundle.data
                 open(joinpath(out*".fit_data",file*".$arm.tsv"),"w") do io
@@ -178,7 +236,7 @@ function execute(opts; reader=G.read_sxm)
             println(stderr,"FAILED $file $stage: $reason"); flush(stderr)
         end
     end
-    for (suffix,rows) in ((".fits.tsv",audits),(".parameters.tsv",parameters),(".bootstrap.tsv",bootstrap),(".failures.tsv",failures))
+    for (suffix,rows) in ((".fits.tsv",audits),(".parameters.tsv",parameters),(".bootstrap.tsv",bootstrap),(".support.tsv",supports),(".failures.tsv",failures))
         isempty(rows) || write_table(out*suffix,sort(collect(keys(first(rows)))),rows)
     end
     isempty(failures) || error("$(length(failures)) files failed; no incomplete refit arm emitted")

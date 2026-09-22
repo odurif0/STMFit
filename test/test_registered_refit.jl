@@ -6,6 +6,7 @@ const G=RR.G
 const PHYS=TOML.parsefile(joinpath(ROOT,"config","chitosan.toml"))
 const ASSIGN=TOML.parsefile(joinpath(ROOT,"config","unit_assignment_patch_support.toml"))
 const REFIT_SETTINGS=joinpath(ROOT,"config","registered_refit.toml")
+const ORIGINAL_SETTINGS=joinpath(ROOT,"config","registered_refit_original_support.toml")
 const ACQ_SETTINGS=joinpath(ROOT,"config","acquisition_registration.toml")
 BLAS.set_num_threads(1)
 
@@ -15,6 +16,7 @@ function example_image(f,b)
 end
 
 @testset "Zero-shift execution shares both real fit results exactly" begin
+    for setting in (REFIT_SETTINGS,ORIGINAL_SETTINGS)
     mktempdir() do dir
         f=[.01+.12sum(exp(-((x-c)/5)^2-((y-21)/6)^2) for c in (22,32,42))+.0001sin(x+3y) for y in 1:41,x in 1:65]
         f[end,:].=NaN
@@ -25,7 +27,9 @@ end
         rawcfg["preprocessing"]["flatten"]="none"; rawcfg["preprocessing"]["smooth_radius_px"]=0
         cfgpath=joinpath(dir,"count.toml"); open(io->TOML.print(io,rawcfg),cfgpath,"w")
         _,cfg,_=RR.F.Extractor._configs(rawcfg["model"],rawcfg["preprocessing"],"unused")
-        axis=(origin=(0.,0.),axis=[1.,0.],perp=[0.,1.],tmin=-1.5,tmax=1.5)
+        pcfg,_,_=RR.F.Extractor._configs(rawcfg["model"],rawcfg["preprocessing"],"unused")
+        original=RR.original_support(img,pcfg,cfg)
+        axis=original.axis
         p=zeros(G._chain_nparams(3,cfg)); p[1]=.01
         r=G.ChainModelResult(n=3,params=p,amp_min=.03,amp_range=.07,gcv=.1)
         rows=RR.R.feature_rows("a.sxm",r,(axisctx=axis,),cfg,"ell")
@@ -33,7 +37,7 @@ end
         shifts=joinpath(dir,"shifts.tsv"); write_table(shifts,["file","bwd_sample_dx_px"],[Dict("file"=>"a.sxm","bwd_sample_dx_px"=>"0")])
         touch(joinpath(dir,"a.sxm")); out=joinpath(dir,"fit.tsv")
         opts=RR.parse_cli(["--features",base,"--data-dir",dir,"--config",cfgpath,"--assignment-config",joinpath(ROOT,"config","unit_assignment_patch_support.toml"),
-            "--settings",REFIT_SETTINGS,"--shifts",shifts,"--out",out])
+            "--settings",setting,"--shifts",shifts,"--out",out])
         RR.execute(opts;reader=path->img)
         for profile in RR.PROFILES
             @test read(out*".control.$profile.tsv")==read(out*".registered.$profile.tsv")
@@ -43,8 +47,16 @@ end
         @test length(audits)==4
         @test all(r["reused_zero_shift"]=="true" && r["elapsed_s"]=="0" for r in audits if r["arm"]=="registered")
         @test all(r["valid"]=="true" for r in audits)
+        @test isfile(out*".support.tsv")==RR.settings(setting).original_support
+        if RR.settings(setting).original_support
+            _,supports=read_table(out*".support.tsv")
+            @test length(supports)==1
+            @test all(r["support_tmin"]==supports[1]["support_tmin"] && r["support_tmax"]==supports[1]["support_tmax"] for r in audits)
+            @test isfile(joinpath(out*".fit_data","a.sxm.original.tsv"))
+        end
         @test_throws ErrorException RR.parse_cli(["--features",base,"--data-dir",dir,"--config",cfgpath,"--assignment-config",joinpath(ROOT,"config","unit_assignment_patch_support.toml"),
             "--settings",REFIT_SETTINGS,"--shifts",shifts,"--out",out])
+    end
     end
 end
 
@@ -57,6 +69,53 @@ function seed_fixture(;profile="gaussian",circular=false)
     z=reshape(G._chain_model_values(repeat(xs;inner=length(ys)),repeat(ys;outer=length(xs)),p,3,axis,cfg;
         amp_min=.03,amp_range=.07),length(ys),length(xs))
     return xs,ys,z,axis,cfg,p
+end
+
+@testset "Frozen native support stays original while objectives use only observed pixels" begin
+    f=[.01+.12sum(exp(-((x-c)/5)^2-((y-21)/6)^2) for c in (22,32,42))+.0001sin(x+3y) for y in 1:41,x in 1:65]
+    for dx in (-5,0,4), masked in (false,true)
+        b=copy(f); fm=copy(f)
+        masked && (fm[end,:].=NaN; fm[20,32]=NaN; b[22,35]=NaN)
+        img=example_image(fm,b)
+        pcfg=G.PatternConfig(flatten="none",smooth_radius_px=1,no_plot=true)
+        _,cfg,_=RR.F.Extractor._configs(PHYS["model"],PHYS["preprocessing"],"unused")
+        v=RR.load_views(img,pcfg); original=RR.original_support(img,pcfg,cfg)
+        before=deepcopy(original)
+        bundle=RR.fused_data(img,pcfg,cfg,v,dx;original)
+        @test isequal(original,before)
+        @test bundle.data.axisctx===original.axis
+        @test bundle.support===original.support
+        @test bundle.mask==original.mask .& bundle.observed
+        expected=[I for I in original.indices if original.fitmask[I] && bundle.observed[I]]
+        @test bundle.indices==expected
+        @test all(isfinite,bundle.data.z)
+        @test all(bundle.data.z[j]==(v.zf[I[1],I[2]]+v.zb[I[1],I[2]+dx])/2-bundle.offset for (j,I) in enumerate(expected))
+        @test length(bundle.data.z)<=count(original.fitmask)
+        if dx==0 && !masked
+            @test bundle.data.z==original.z[original.keep]
+            @test bundle.data.zfull==original.z
+        end
+        row=Dict("axis_x"=>RR.@sprintf("%.8f",original.axis.axis[1]),"axis_y"=>RR.@sprintf("%.8f",original.axis.axis[2]),
+            "origin_x_nm"=>RR.@sprintf("%.6f",original.axis.origin[1]),"origin_y_nm"=>RR.@sprintf("%.6f",original.axis.origin[2]))
+        @test RR.check_original_frame(original,row)===nothing
+        row["axis_x"]="0.00000000"
+        @test_throws ErrorException RR.check_original_frame(original,row)
+        @test_throws ErrorException RR.fused_data(img,pcfg,cfg,v,65;original)
+    end
+    @test RR.settings(ORIGINAL_SETTINGS).original_support
+    @test !RR.settings(REFIT_SETTINGS).original_support
+    mktempdir() do dir
+        s=TOML.parsefile(ORIGINAL_SETTINGS); path=joinpath(dir,"invalid.toml")
+        for (section,key,value) in (("preprocessing","geometry","extend_for_N"),("selection","expected_N",6),
+                ("selection","count_policy","reselect"),("preprocessing","roi","native_finite_statistics_and_observed_mask"))
+            bad=deepcopy(s); bad[section][key]=value
+            open(io->TOML.print(io,bad),path,"w")
+            @test_throws ErrorException RR.settings(path)
+        end
+    end
+    launcher=joinpath(ROOT,"hpc","compare_registered_refit_original_support.sbatch")
+    @test success(`bash -n $launcher`)
+    @test occursin("config/registered_refit_original_support.toml",read(launcher,String))
 end
 
 @testset "Observed opt-in preserves fully observed native ROI and seeds" begin

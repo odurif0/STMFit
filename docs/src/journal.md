@@ -2307,6 +2307,15 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-22. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0ab. **Can original unregistered geometric support make the registered refit complete?**
+    → **AUTHORIZED; PREPARING (Sep 22, 21:26 CEST)**: preserve the original
+    native ROI, axis, tube and axial bounds, while fitting only observed pixels
+    in matched zero-shift and registered arms. Saved N, physical constraints,
+    registration and assignment settings remain unchanged. Four-hour preparation
+    window, one two-hour Viper job / four requested CPUs / 16 GB, no retry.
+    No support expansion for N or partial grade. Support 676/34 stays pending
+    the fetched, verified complete comparison; historical objective 677/36 remains.
+
 0aa. **Does refitting both shape models after accepted registration improve recognition?**
     → **DIAGNOSTIC COMPLETE; RECOGNITION INDETERMINATE (Sep 22)**: source
     **c7836f9**, job **11942091**, **FAILED 1:0 in 26m57s**, after 2m18s queued.
@@ -11477,3 +11486,76 @@ The final documentation build succeeds under Julia **1.13.0**, without
 deployment. The assignment page is approximately **199.6 KiB**, below the unchanged
 200 KiB limit; existing page-size/search-index warnings remain. The final
 wording distinguishes 549 regular output files from the additional Slurm log.
+
+### 2026-09-22 — Authorized registered refit with original geometric support
+
+The user authorizes the proposed follow-up: retain the original geometric
+support instead of re-estimating it on each masked/registered acquisition.
+Preparation begins **21:26 CEST**, limited to four hours; one Viper job is
+limited to two hours, four requested CPUs / 16 GB, with no automatic retry.
+Done means all 146 scans / 900 saved keys, reference replay plus matched fresh
+zero-shift/registered Gaussian and split fits, fetched outputs and independent
+saved-output checks, then the full external grade and paired gains/losses. If
+any required fit fails, the diagnostic is explicitly inconclusive; no partial
+classifier or grade, deleted scan, saved-prediction fallback or new abstention.
+This is a new scoped experiment, not a resubmission of job 11942091.
+
+`registered_refit_original_support.toml` keeps all previous fit, registration,
+assignment and selected-N settings. Its sole methodological change is the
+support policy: replay the **unregistered native ROI, weighted axis/origin,
+fit tube and axial bounds once**, before restoring observation masks, then
+freeze them for both profiles and both arms. The frame must reproduce the
+saved Gaussian cache at its original serialization precision. No bound is
+extended to accommodate N; no N sweep or physical parameter adjustment occurs.
+The original support is therefore label-free but retains the legacy native
+preprocessing's imputation influence. It is not a new observation-only support
+estimator or a claim of physically correct geometry.
+
+Each objective uses only the original fit mask intersected with actual finite
+forward/backward observations after the arm's translation. The offset remains
+the fifth percentile on that arm's observed portion of the original ROI.
+No imputed sample enters the new objective or patches. The original native ROI
+values and fit membership are saved solely to verify the support calculation;
+the native noise rule, initialization-only nearest observed sample, optimizers,
+GCV family choice, full parameter penalty and `n_eff` formula stay unchanged.
+Exactly zero shifts reuse the control fits. Arm-specific finite masks, offsets,
+families and fits can still differ; RSS is not a same-target improvement metric.
+
+The previous failed registered scan `240814_025.sxm` is the single planned real
+local smoke: it tests both zero-shift and accepted −30-pixel registration at its
+saved N=6, without reading labels. All other real fits stay on Viper. Synthetic
+tests check frozen support, frame mismatch rejection, raw holes, both profiles,
+zero-shift reuse, strict configurations and unchanged legacy mode. Complete
+support replay will be checked against the earlier saved native-geometry run,
+including all original fit pixels, before any external grade.
+
+The completed unknown25 application is not rerun. Existing scientific
+Must-NOT-have constraints remain: no label/composition prior in inference,
+truth-selected per-file variant, uncertain-row exclusion, overwritten user
+artifact or N selection change. No new DFT, missing-head rule, registration
+gate search, classifier tuning, combined hypothesis, post-grade search or
+retired orchestration is included. Saved support **676/870, 34/145** is retained
+until evidence supports a decision; historical **677/870, 36/145** is not a
+selection input. Repeated development-benchmark reuse is not independent validation.
+
+Preflight passes under Julia **1.13.0**: 4,387 registered-refit assertions,
+9,221 unchanged-registration assertions, 111 geometric comparison assertions
+and 133 pipeline assertions (**13,852** total), plus 175 saved-only legacy
+smoke checks. The single real smoke `240814_025.sxm` completes all four fits
+at saved N=6, including the formerly failing −30-pixel registered arm. Its
+support is exactly the earlier native **3.6720726859651593 nm**, not an expanded
+or fitted bound. Seventeen smoke checks, 188 independent saved-fit checks and
+306 saved-support/reference/feasibility checks pass. The last group reads no
+new raw image: all 146 previously saved original supports pass the unchanged
+minimum-span rule for both native families. This does not promise that every
+new fit will be valid or improve recognition.
+
+Smoke RSS is **0.4235117496 / 0.3998868007** for control Gaussian/split and
+**0.4664677406 / 0.4537206868** after registration; the observations differ, so
+these are not a chemical score or common-target improvement. The metadata-only
+launcher dry-run accounts for all **146 files / 900 keys**, with
+`original_support=true`. Local and Viper base/split/template SHA256s match;
+remote Julia is 1.13.0. No new real local file or fit retry is used.
+Documentation builds successfully, without deployment; existing size/search
+warnings remain. The Manifest is unchanged (SHA256
+`617de8162fa4c7a814aacb106f145349bc57ead58ec9a6c332971a821b5974fe`).
