@@ -11579,3 +11579,20 @@ No scientific source/settings change or second submission follows. Continue
 through fetching, saved-output verification and external grade, not merely
 submission. The assignment page's older amplitude-profile summary is condensed
 to leave documentation space, preserving its result and full journal/report links.
+
+During execution, the reference's fifteen scientific tables replay exactly.
+The three previous failures now complete all four fits on Viper, including
+both N=10 zero-shift cases and registered `240814_025.sxm`. A different file,
+**240817_006.sxm**, then fails at **registered Gaussian, saved N=6**: both
+circular and elliptical families are rejected for **`residual high`**.
+This is the existing maximum-absolute-residual/noise validity guard (native
+threshold 3.5), not a support-span failure. The failed parameter vectors and
+individual residual values are not exported by the existing initializer;
+no numerical excess, convergence claim or chemical interpretation is inferred.
+Its registered split stage is not attempted after the Gaussian failure.
+The complete traversal continues unchanged, but this failure prevents a
+complete candidate grade. No new threshold, N, optimizer budget or fallback
+is introduced to rescue it. Final failure/cohort accounting awaits completion.
+
+The condensed documentation rebuild passes; assignment HTML is 197.86 KiB,
+below the unchanged 200 KiB limit, with existing warnings and no deployment.
