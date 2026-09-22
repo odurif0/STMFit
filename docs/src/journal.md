@@ -2307,6 +2307,13 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-22. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0aa. **Does refitting both shape models after accepted registration improve recognition?**
+    → **AUTHORIZED; IN PREPARATION (Sep 22)**: saved N, unchanged registration
+    gates and assignment settings. Compare saved support, fresh zero-shift
+    refits, and registered refits of both Gaussian base and split shape. Native
+    GCV chooses the family at fixed N. Four-hour preparation window from
+    **20:12 CEST**, one two-hour Viper job, no retry. No score yet; retain 676/34.
+
 0z. **Can identifiable acquisition translation improve fixed-geometry recognition?**
     → **COMPLETE; NEGATIVE (Sep 22)**: source **9961973**, job **11941278**,
     **0:0 in 6m52s**, after 6m04s queued. Registration is accepted on
@@ -11246,3 +11253,98 @@ command-approval review times out; the single retry only rebuilds local docs,
 not inference or Slurm. Scientific source remains **9961973**, with no
 post-grade parameter changes. The completed negative experiment is handed off
 with saved support retained; no required scientific work remains in this scope.
+
+### 2026-09-22 — Authorized native refit after acquisition registration
+
+The user authorizes the first proposed follow-up only: refit the model on the
+registered acquisitions, with a matched unregistered refit. Preparation begins
+**20:12 CEST**, capped at four hours, then **one Viper job capped at two hours**,
+four requested CPUs / 16 GB, without automatic retry. The deliverable is the
+complete fetched, verified recognition comparison against saved support
+**676/870 correct, 34/145 exact** and historical **677/870, 36/145**, or an
+explicit indeterminate result if a full valid comparison cannot be produced.
+No other suggested direction, count sweep, class/composition prior, missing-head
+fallback, DFT change, unknown25 rerun or post-grade search is included. The
+completed application and archived plan's scientific Must-NOT-have constraints
+remain in force; no retired process apparatus is revived.
+
+The prior registration experiment left geometry fitted to the original fused
+image unchanged. Its negative recognition result does not establish the cause;
+this experiment tests the coupling between acquisition alignment and refitting,
+not a promised gain. Three arms use the same raw/cache cohort: saved reference
+replay, observed-mask zero-shift refit, and accepted-registration refit. The
+registration estimator and every gate in `acquisition_registration.toml` remain
+unchanged. Rejected shifts remain zero; scans are not removed.
+
+Both the **Gaussian base and asymmetric split shape** are freshly fitted, so
+the classifier's split-skew feature is not left tied to the unregistered image.
+Their selected N is copied from the saved label-free geometry, never expected
+counts. Each profile uses the existing native circular initialization followed
+by circular-to-elliptical refinement; valid minimum **full-parameter GCV**
+chooses its family at that N. Physical boxes, overlap, κ penalty and native
+global/local optimizers stay unchanged: `chitosan.toml` provides the global
+10-second / 10,000-iteration limit, 300 circular local iterations, one start;
+the existing 50-iteration elliptical step is explicit in `registered_refit.toml`.
+No extra BOBYQA or variable projection is applied. Native optimizer convergence
+is not exposed, so it is reported unknown; equal ceilings do not guarantee
+identical wall-clock-limited search trajectories or convergence.
+
+Native flattening is applied before the integer-x backward translation, with
+forward coordinates as reference. Actual raw masks are restored, no second
+backward reversal occurs, and outside-image samples remain NaN. The fit uses
+the **unsmoothed observed mean**, with the native ROI detector's statistics
+computed only on finite smoothed pixels. Its existing thresholds, dilation,
+5th-percentile reference, axis and tube/support rules are unchanged; the ROI is
+intersected with observed samples. Both arms follow these same rules, although
+their data-dependent ROI, axis, support, family and full parameter vector may
+differ. Their RSS values therefore are not a same-target optimization contest.
+Noise retains the conservative native maximum of the two view estimates;
+there is no independence claim or division by sqrt(2), no new covariance or
+change to `n_eff`.
+
+Core gains an **opt-in `observed_only` path**, off by default, for ROI/seed
+statistics. If an initializer samples a missing pixel, it takes the physically
+nearest actually observed value **only to initialize that amplitude**. No image
+pixel, objective sample or downstream patch is filled. Missing masks cannot
+undo the influence of earlier native imputation on plane/row flattening.
+All seeds still use only 2D data, never the diagnostic 1D fit. Fully observed
+ROI and seed results are tested against the unchanged default path. At zero
+accepted shift, the control's two fits are reused exactly, avoiding artificial
+differences from a second time-limited optimization.
+
+Each shard saves both profiles, full parameter vectors and bounds, bootstrap
+family GCV/validity, axis/support, offset, fit pixels with both original view
+values, timing and failures. Any failed scan prevents incomplete assignment or
+grading; it is not dropped or silently replaced by cached geometry. All
+patches, CC/Fisher descriptors and both cohort-wide learning heads are rebuilt
+using the unchanged support config and seeds; learned parameters are not frozen.
+Labels remain solely in the subsequent external grade. Reusing this development
+benchmark repeatedly does not make the outcome independent validation.
+
+Initial sandbox-only Julia/SSH checks cannot access the usual launcher lock
+and SSH configuration; normal approved execution resolves those environment
+restrictions. The first real SSH handshake times out; a read-only connection
+check then succeeds through the existing master. No job has been submitted at
+this preparation checkpoint.
+
+Preflight passes under Julia **1.13.0**: **14,591 assertions** across the new
+registered-refit suite (4,299), unchanged acquisition suite (9,221), core 2D
+suite (151), prior geometric suite (111), pipeline (133), patch preprocessing
+(390) and support/score suite (286). Tests include genuine zero-shift fit reuse,
+both shape profiles, observed masks, opt-in/default finite equivalence and
+forbidden inputs. The full146 metadata-only dry-run finds 146 files / 900 keys.
+
+The only real local scan is the lexicographically first cached file,
+`240307_015.sxm`, saved **N=7**, with the prior unchanged −52-pixel translation.
+Both zero-shift and registered Gaussian/split fits are valid and preserve all
+seven keys. RSS is **0.06344984 / 0.06044526** for control Gaussian/split,
+**0.10306913 / 0.06098382** after registration; these use different data/support,
+so they are not a matched-target improvement metric or a chemical grade.
+The smoke has **10** cohort assertions; **169** saved-only independent checks
+reassemble both peak shapes and verify parameters, bounds, actual view pixels,
+RSS, full GCV, family choice and feature serialization. The saved-output
+verifier initially has a dotted-number Julia parse error; correcting its
+syntax and rerunning that verifier requires no second fit or setting change.
+No external labels are read. Remote/local base, split and template SHA256s
+match; the ignored Manifest remains unchanged. Documentation rendering is
+still in progress at this checkpoint.

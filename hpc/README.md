@@ -1,6 +1,17 @@
 # Running STMFit on the MPCDF HPC cluster
 
-The authorized September 22 acquisition experiment uses
+The authorized September 22 **registered native refit** uses
+`hpc/compare_registered_refit.sbatch`: one two-hour job, four requested CPUs /
+16 GB, four one-thread shards, no retry. It reuses the acquisition estimator,
+then compares saved support with fresh zero-shift and registered Gaussian/split
+fits at saved N. Set the same five absolute-path variables documented below;
+run `bash hpc/compare_registered_refit.sbatch --dry-run` before submission and
+pass them explicitly through `sbatch --export=ALL,... --no-requeue`.
+Sync committed code and the existing Manifest, instantiate on the login node,
+compute only in Slurm, then fetch/check all outputs. No new job has been
+submitted at this preparation checkpoint; no benchmark improvement is claimed.
+
+The completed September 22 acquisition experiment uses
 `hpc/compare_acquisition_registration.sbatch`: **one two-hour job, four CPUs /
 16 GB, no retry**. Explicitly export `STMFIT_PROJECT_DIR`, `STMFIT_CACHE_DIR`
 (saved symmetric base/split tables), `STMFIT_INPUT_DIR` (raw scans/templates),

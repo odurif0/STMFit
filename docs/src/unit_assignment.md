@@ -2456,28 +2456,16 @@ this reused development benchmark does not establish independent validation.
 
 ### Matched geometric variable projection (2026-09-22): negative
 
-At saved N, joint and profiled geometry optimization share one full-precision
-native start, its GCV-selected family, κ-penalized RSS, validity checks and
-LN_BOBYQA ceilings (**800 evaluations / 30 seconds**). Split geometry and
-classifier settings stay fixed; derived features and patches are regenerated.
-GCV remains diagnostic during refinement; no labels or composition enter inference.
-
-| Profile | Correct / 870 | Exact / 145 | Coverage / 870 | Emitted errors |
-|---|---:|---:|---:|---:|
-| Historical saved reference | 677 | 36 | 854 | 177 |
-| Exactly replayed support | 676 | 34 | 852 | 176 |
-| Same-start joint optimization | 676 | 34 | 852 | 176 |
-| Geometric variable projection | 632 | 20 | 852 | 220 |
-
-Against joint: **18 scan gains, 44 losses, 83 ties; two exact gains, sixteen
-losses**. All 146 scans/900 keys and counts remain; thirteen reference tables
-replay exactly. Profiled RSS improves on every scan, but recognition worsens;
-**103/146 searches hit the evaluation cap**. Equal ceilings are not equal cost
+At saved N, joint/profiled optimization shares a native start, GCV-selected
+family, κ-penalized RSS, validity checks and LN_BOBYQA limits (800 evaluations /
+30 seconds). Split and assignment settings stay fixed. Profiled gives
+**632/870 correct, 20/145 exact**, versus joint and saved support **676/34**,
+all at **852/870 coverage**. Against joint: 18 scan gains, 44 losses, 83 ties;
+two exact gains, sixteen losses. All 146 scans/900 keys remain. RSS improves
+on every scan, but 103 searches hit the cap; equal limits are not equal cost
 or proof of convergence. Source **7c5fb6c**, job **11940220**, **0:0 in 15m17s**;
-all 782 outputs/log are fetched and checked. **Reject this version; retain
-saved support 676/34**, below historical 677/36, without post-grade tuning or
-unknown-chain accuracy claims. Full method, timings, checks, confusion and
-losses remain in the [journal](journal.md) and
+782 outputs/log fetched and checked. **Reject; retain support**, below
+historical 677/36, without post-grade tuning. Full evidence: [journal](journal.md),
 `results/geometry_profile_20260922/report.md`.
 
 ### Fixed-geometry acquisition registration (2026-09-22): negative

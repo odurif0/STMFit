@@ -1053,6 +1053,19 @@ unknown25 change follows; see `results/gcv_reselection_20260922/report.md`.
 
 ## Opt-in diagnostic exploration settings (2026-09-18)
 
+The authorized September 22 **registered native refit** adds
+`registered_refit.toml`, without changing molecule calibration or assignment.
+`[model]` declares native circular-to-elliptical fitting of both Gaussian and
+split profiles, 50 elliptical iterations, and no 1D initialization.
+`[selection]` fixes saved N, valid minimum full-parameter GCV family selection,
+exact control-fit reuse at zero shift, and explicit failure without partial
+grading. `[preprocessing]` declares the observed unsmoothed mean, native
+finite-statistic ROI, forward reference and nearest observed initialization
+sample only. No objective or patch pixel is filled. Other native optimizer
+budgets stay in `chitosan.toml`; all registration gates stay in
+`acquisition_registration.toml`. This is a bounded experiment, not a promoted
+configuration; the saved support reference remains 676/34 pending its result.
+
 The September 22 acquisition experiment is separately configured by
 `acquisition_registration.toml`. `[model]` fixes signed row-centered integer-x
 translation and the forward reference frame. `[preprocessing]` sets the search

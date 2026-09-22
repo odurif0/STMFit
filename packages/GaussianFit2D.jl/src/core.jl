@@ -580,19 +580,23 @@ function _current_evidence_weights(img::SXMImage, cfg::PatternConfig, z_mask::Bi
     return w
 end
 
-function molecule_roi_mask_fused(img, cfg::PatternConfig, z_smooth)
+function molecule_roi_mask_fused(img, cfg::PatternConfig, z_smooth; observed_only::Bool=false)
     """ROI mask from fused (or single-view) preprocessed data."""
-    signal = z_smooth .- minimum(z_smooth)
-    maxsig = maximum(signal)
+    values = observed_only ? filter(isfinite, vec(z_smooth)) : vec(z_smooth)
+    isempty(values) && error("No observed pixels for fused ROI")
+    signal = z_smooth .- minimum(values)
+    maxsig = maximum(values) - minimum(values)
     if maxsig <= EPS
-        return nothing, nothing, trues(size(z_smooth))
+        return nothing, nothing, observed_only ? isfinite.(z_smooth) : trues(size(z_smooth))
     end
-    noise = 1.4826 * median(abs.(vec(z_smooth) .- median(vec(z_smooth))))
-    noise = max(noise, std(vec(z_smooth))*0.1, EPS)
-    threshold = _adaptive_roi_threshold(signal, noise, cfg.roi_threshold_fraction, 2.5)
+    noise = 1.4826 * median(abs.(values .- median(values)))
+    noise = max(noise, std(values)*0.1, EPS)
+    threshold_signal = observed_only ? reshape(values .- minimum(values), :, 1) : signal
+    threshold = _adaptive_roi_threshold(threshold_signal, noise, cfg.roi_threshold_fraction, 2.5)
     mask = signal .>= threshold
     mask = _largest_component(mask)
     mask = _dilate_mask(mask, max(0, cfg.roi_dilate_px ÷ max(1, cfg.stride)))
+    observed_only && (mask .&= isfinite.(z_smooth))
     size_z = size(z_smooth)
     # Compute xs, ys from img
     stride = max(1, cfg.stride)
@@ -915,17 +919,26 @@ function _chain_model_values(x, y, p, n::Int, axisctx, ccfg::ChainSweepConfig;
     return pred
 end
 
-function _nearest_values_on_grid(xs, ys, zimg, feats::Vector{MolecularFeature})
+function _nearest_values_on_grid(xs, ys, zimg, feats::Vector{MolecularFeature}; observed_only::Bool=false)
     vals = Float64[]
     for f in feats
         ix = clamp(searchsortedfirst(xs, f.x_nm), 1, length(xs))
         iy = clamp(searchsortedfirst(ys, f.y_nm), 1, length(ys))
-        push!(vals, max(zimg[iy, ix], EPS))
+        value = zimg[iy, ix]
+        if observed_only && !isfinite(value)
+            # Initialization only: use an actual nearest observation, never
+            # fill the image or add a fabricated sample to the fit objective.
+            indices = findall(isfinite, zimg)
+            isempty(indices) && error("No observed pixels for chain initialization")
+            nearest = argmin(I -> (xs[I[2]]-f.x_nm)^2 + (ys[I[1]]-f.y_nm)^2, indices)
+            value = zimg[nearest]
+        end
+        push!(vals, max(value, EPS))
     end
     return vals
 end
 
-function _axis_profile_from_grid(xs, ys, zimg, axisctx, ccfg::ChainSweepConfig)
+function _axis_profile_from_grid(xs, ys, zimg, axisctx, ccfg::ChainSweepConfig; observed_only::Bool=false)
     nb = max(20, min(200, Int(ceil(_chain_support_length(axisctx) / max(0.02, ccfg.spacing_min_nm / 8)))))
     prof = zeros(nb); counts = zeros(Int, nb)
     tlo, thi = axisctx.tmin, axisctx.tmax
@@ -943,7 +956,7 @@ function _axis_profile_from_grid(xs, ys, zimg, axisctx, ccfg::ChainSweepConfig)
     end
     prof ./= max.(counts, 1)
     valid = prof[counts .> 0]
-    baseline = isempty(valid) ? quantile(vec(zimg), ccfg.support_baseline_quantile) : quantile(valid, ccfg.support_baseline_quantile)
+    baseline = isempty(valid) ? quantile(observed_only ? filter(isfinite, vec(zimg)) : vec(zimg), ccfg.support_baseline_quantile) : quantile(valid, ccfg.support_baseline_quantile)
     return prof, counts, baseline, tlo, thi
 end
 
@@ -1019,15 +1032,15 @@ function _edge_aware_ts(prof, counts, baseline, tlo, thi, uniform_ts::Vector{Flo
     return sort(ts)
 end
 
-function _score_seed_ts(xs, ys, zimg, ts::Vector{Float64}, axisctx, ccfg::ChainSweepConfig)
+function _score_seed_ts(xs, ys, zimg, ts::Vector{Float64}, axisctx, ccfg::ChainSweepConfig; observed_only::Bool=false)
     ox, oy = axisctx.origin; ax, ay = axisctx.axis
     feats = [MolecularFeature(1.0, ox + t*ax, oy + t*ay, 0.2, 0.2, 1.0) for t in ts]
-    vals = _nearest_values_on_grid(xs, ys, zimg, feats)
+    vals = _nearest_values_on_grid(xs, ys, zimg, feats; observed_only)
     spacing_penalty = length(ts) <= 2 ? 0.0 : std(diff(ts))
-    return sum(vals) - 0.05 * spacing_penalty * max(maximum(zimg), EPS)
+    return sum(vals) - 0.05 * spacing_penalty * max(maximum(observed_only ? filter(isfinite, vec(zimg)) : zimg), EPS)
 end
 
-function _deterministic_chain_seed_candidates(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConfig, spacing0::Float64)
+function _deterministic_chain_seed_candidates(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConfig, spacing0::Float64; observed_only::Bool=false)
     support_len = _chain_support_length(axisctx)
     total = spacing0 * max(n - 1, 0)
     t0 = axisctx.tmin + 0.5 * max(support_len - total, 0.0)
@@ -1035,7 +1048,7 @@ function _deterministic_chain_seed_candidates(xs, ys, zimg, n::Int, axisctx, ccf
     # The circular fit is the autonomous 2D initializer.  It uses only raw binned
     # 2D signal along the fitted axis; no 1D bootstrap and no smoothing.
     ccfg.chain_circular_sigmas || return [uniform_ts]
-    prof, counts, baseline, tlo, thi = _axis_profile_from_grid(xs, ys, zimg, axisctx, ccfg)
+    prof, counts, baseline, tlo, thi = _axis_profile_from_grid(xs, ys, zimg, axisctx, ccfg; observed_only)
     spacing_min_eff = _effective_spacing_min_nm(ccfg)
     candidates = Vector{Vector{Float64}}()
     push!(candidates, uniform_ts)
@@ -1054,12 +1067,12 @@ function _deterministic_chain_seed_candidates(xs, ys, zimg, n::Int, axisctx, ccf
     return unique_candidates
 end
 
-function _deterministic_chain_seed(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConfig, spacing0::Float64)
-    candidates = _deterministic_chain_seed_candidates(xs, ys, zimg, n, axisctx, ccfg, spacing0)
-    return sort(argmax(ts -> _score_seed_ts(xs, ys, zimg, ts, axisctx, ccfg), candidates))
+function _deterministic_chain_seed(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConfig, spacing0::Float64; observed_only::Bool=false)
+    candidates = _deterministic_chain_seed_candidates(xs, ys, zimg, n, axisctx, ccfg, spacing0; observed_only)
+    return sort(argmax(ts -> _score_seed_ts(xs, ys, zimg, ts, axisctx, ccfg; observed_only), candidates))
 end
 
-function _pack_chain_initial(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConfig; seed_ts::Union{Nothing,Vector{Float64}}=nothing)
+function _pack_chain_initial(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConfig; seed_ts::Union{Nothing,Vector{Float64}}=nothing, observed_only::Bool=false)
     have_1d_init = length(ccfg.init_centers_t) >= n && length(ccfg.init_amplitudes) >= n
     spacing_min_eff = _effective_spacing_min_nm(ccfg)
     support_len = _chain_support_length(axisctx)
@@ -1067,7 +1080,9 @@ function _pack_chain_initial(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConf
         error(@sprintf("N=%d cannot fit support %.4f nm with effective min spacing %.4f nm", n, support_len, spacing_min_eff))
     end
 
-    p = Float64[quantile(vec(zimg), 0.05)]
+    image_values = observed_only ? filter(isfinite, vec(zimg)) : vec(zimg)
+    isempty(image_values) && error("No observed pixels for chain initialization")
+    p = Float64[quantile(image_values, 0.05)]
     # Tilted baseline: init bx=0, by=0 (no tilt)
     if ccfg.chain_tilted_baseline
         push!(p, 0.0); push!(p, 0.0)
@@ -1081,11 +1096,11 @@ function _pack_chain_initial(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConf
         raw_deltas0 = n > 1 ? diff(centers_t) : Float64[]
     else
         spacing0 = n > 1 ? clamp(support_len / max(n - 1, 1), spacing_min_eff, ccfg.spacing_max_nm) : spacing_min_eff
-        ts0 = seed_ts === nothing ? _deterministic_chain_seed(xs, ys, zimg, n, axisctx, ccfg, spacing0) : seed_ts
+        ts0 = seed_ts === nothing ? _deterministic_chain_seed(xs, ys, zimg, n, axisctx, ccfg, spacing0; observed_only) : seed_ts
         t0 = first(ts0)
         ox, oy = axisctx.origin; ax, ay = axisctx.axis
         feats0 = [MolecularFeature(1.0, ox + t*ax, oy + t*ay, 0.2, 0.2, 1.0) for t in ts0]
-        amps = _nearest_values_on_grid(xs, ys, zimg, feats0)
+        amps = _nearest_values_on_grid(xs, ys, zimg, feats0; observed_only)
         medamp = max(median(amps), EPS)
         raw_deltas0 = n > 1 ? diff(ts0) : Float64[]
     end
@@ -1108,7 +1123,7 @@ function _pack_chain_initial(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConf
     t0_hi = axisctx.tmax - total
     t0 = clamp(t0, axisctx.tmin, t0_hi)
 
-    amp_max_data = max(maximum(zimg), EPS)
+    amp_max_data = max(maximum(image_values), EPS)
     amp_min_val = ccfg.min_amplitude_fraction * amp_max_data
     amp_range_val = max(amp_max_data - amp_min_val, EPS)
     for a in amps
@@ -1196,7 +1211,7 @@ function _pack_chain_initial(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConf
 end
 
 function _fit_chain_n(xs, ys, zimg, x, y, z, noise, n::Int, axisctx, ccfg::ChainSweepConfig; starts::Int=ccfg.multistart,
-                     warm_start::Union{Vector{Float64},Nothing}=nothing)
+                     warm_start::Union{Vector{Float64},Nothing}=nothing, observed_only::Bool=false)
     n == 0 && return ChainModelResult(n=0, params=[median(z)], success=true)
     if !_chain_can_fit_support(n, axisctx, ccfg)
         return ChainModelResult(n=n, success=false, valid=false,
@@ -1290,14 +1305,14 @@ function _fit_chain_n(xs, ys, zimg, x, y, z, noise, n::Int, axisctx, ccfg::Chain
     for s in 1:effective_starts
         if warm_start !== nothing
             p_start = warm_start
-            amp_max_data = max(maximum(zimg), EPS)
+            amp_max_data = max(maximum(observed_only ? filter(isfinite, vec(zimg)) : zimg), EPS)
             amp_min = ccfg.min_amplitude_fraction * amp_max_data
             amp_range = max(amp_max_data - amp_min, EPS)
         elseif s == 1
-            p_start, amp_min, amp_range = _pack_chain_initial(xs, ys, zimg, n, axisctx, ccfg)
+            p_start, amp_min, amp_range = _pack_chain_initial(xs, ys, zimg, n, axisctx, ccfg; observed_only)
         else
             # Random perturbation around the standard init for diversity
-            p_start, amp_min, amp_range = _pack_chain_initial(xs, ys, zimg, n, axisctx, ccfg)
+            p_start, amp_min, amp_range = _pack_chain_initial(xs, ys, zimg, n, axisctx, ccfg; observed_only)
             # Add noise to deltas (spacing variation) and sigmas
             # Param order: b0, [bx,by if tilted], amps(n), t0, deltas(n-1), us(n), [spars(n)], [sperps(n)]
             delta_start = n + 3 + (ccfg.chain_tilted_baseline ? 2 : 0)  # 1-based index of first spacing param after t0

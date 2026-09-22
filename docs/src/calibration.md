@@ -642,6 +642,19 @@ of N or independent validation. See `results/gcv_reselection_20260922/report.md`
 
 ## Opt-in label-free exploration (2026-09-18)
 
+The authorized September 22 registered-refit follow-up keeps physical bounds,
+registration gates, selected N and assignment settings unchanged. It refits
+both Gaussian and split profiles with native optimizers, selecting their
+family by GCV at the saved N; it does not reselect N. The observed unsmoothed
+mean supplies the fit, with native finite-only ROI statistics and no fabricated
+fit pixels. Nearest-observed sampling is initialization-only. Masks cannot undo
+earlier native flattening's imputation influence. The zero-shift arm follows
+the identical rules and its fits are reused exactly when registration is zero.
+ROIs/axes/support may differ for nonzero shifts; lower RSS across these arms is
+not itself an improvement in a common objective. Native noise estimates and
+the `n_eff` placeholder are unchanged; no independence or convergence claim is
+made. Settings: `registered_refit.toml`; result pending, support 676/34 retained.
+
 The September 22 acquisition-translation experiment changes neither molecular
 calibration nor cached N/geometry. `acquisition_registration.toml` declares all
 search and acceptance settings: up to 2 nm / one quarter width in x, four
