@@ -23,11 +23,12 @@ original supports replay exactly. No partial classifier or grade is produced.
 Keep saved support **676/870 correct, 34/145 exact**, below historical **677/36**.
 See the [original-support follow-up](docs/src/unit_assignment.md#original-support-registered-refit-2026-09-22-inconclusive).
 
-The subsequent **paired-acquisition feasibility check** still cannot produce
-a valid Gaussian fit on that scan: mean maximum residual/noise **3.518 > 3.5**,
-despite separate view gains/backgrounds. All matched continuations hit their
-iteration cap. No full-cohort run or new grade follows; see the
-[one-file diagnosis](docs/src/unit_assignment.md#paired-acquisition-feasibility-2026-09-22-inconclusive).
+The **September 23 convergence follow-up** extends the paired-acquisition test
+from 300 to 10,000 iterations. All eight long fits remain nonconverged and
+nonstationary. Paired Gaussian mean maximum/noise improves **3.518 → 3.491**,
+but view maxima **4.349/3.575** still fail 3.5; no fully valid family is added.
+No new benchmark grade or promotion follows. See the
+[budget-only diagnosis](docs/src/unit_assignment.md#budget-only-convergence-2026-09-23-no-complete-validity).
 
 The preceding **registered native refit** is **inconclusive**, not a new
 benchmark result. At saved N, three scans fail the unchanged support-span

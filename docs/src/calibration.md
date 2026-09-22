@@ -654,6 +654,11 @@ chemistry. Neither a native small-step stop nor a stationary point proves a
 global optimum. No physical calibration or recognition claim follows merely
 from reduced residuals; this experiment does not grade the benchmark.
 
+All eight long fits hit 10,000 iterations and remain nonstationary. Although
+paired Gaussian mean validity now passes (**3.491 < 3.5**), forward/backward
+maxima **4.349/3.575** still fail. No complete comparison or calibration change
+follows; see `results/paired_convergence_20260923/report.md`.
+
 The September 22 paired-acquisition feasibility experiment preserves the native
 Gaussian/split mean shape and all molecular bounds at saved N. It adds
 equal/opposite view gain and background-plane terms, fixing mean gain to one

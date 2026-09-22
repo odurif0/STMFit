@@ -2448,51 +2448,50 @@ validation claim. Method, acceptance, losses and checks: [journal](journal.md),
 
 ### Registered native refit (2026-09-22): inconclusive
 
-Gaussian and split profiles are refitted after accepted registration, with a
-matched zero-shift refit and exact saved reference replay. N, physical bounds,
-registration gates and assignment settings stay fixed. **143/146 scans**
-complete all four fits; three fail the native span constraint, two already in
-the zero-shift control. Of 584 planned fits, **574 are valid, three fail and
-seven are not attempted after failure**. No partial classifier or benchmark
-grade is emitted. This is not evidence of worse chemical recognition.
-
-Retain **support 676/34**, below historical **677/36**. Fifteen reference tables
-replay exactly. Source **c7836f9**, job **11942091**, **FAILED 1:0 in 26m57s**;
-549 outputs plus the Slurm log fetched and checked, **22,742 final checks** pass. No rescue,
-retry, new N or other campaign follows. Full method and failure evidence:
+At fixed N, bounds and settings, matched registered/zero-shift Gaussian and
+split refits complete **143/146 scans**. Three fail native span constraints,
+two already in control: **574 valid, three failed, seven skipped** stages.
+No partial grade or rescue; retain **676/34**, below **677/36**. Fifteen
+reference tables replay exactly. Source **c7836f9**, job **11942091**,
+**FAILED 1:0 in 26m57s**; 549 outputs plus log fetched/checked, **22,742 checks**
+pass. Method and failure evidence:
 [journal](journal.md), `results/registered_refit_20260922/report.md`.
 
 ### Original-support registered refit (2026-09-22): inconclusive
 
 The original native ROI/axis/tube/bounds are held fixed across the zero-shift
 and registered refits; only observed pixels enter their objectives. All 146
-supports replay the earlier native context exactly. The three previous span
-failures disappear, but `240817_006.sxm` fails the registered Gaussian residual
-guard at saved N=6; its registered split is not attempted. **145/146 scans**
-complete all four fits (**582 valid, one failed, one skipped**). No partial
-classifier, exclusion, threshold relaxation or candidate grade follows.
-
-Keep exactly replayed support **676/34**, below historical **677/36**; this is
-not a measured recognition gain or loss. Source **98d664d**, job **11942393**,
-**FAILED 1:0 in 28m10s**; 706 outputs plus Slurm log fetched and checksummed.
-Full evidence: [journal](journal.md),
+supports replay exactly. The three span failures disappear, but
+`240817_006.sxm` fails the registered Gaussian residual guard; its split is
+skipped. **145/146 scans** complete all fits (**582 valid, one failed, one
+skipped**). No partial grade or rescue; retain **676/34**, below **677/36**.
+Source **98d664d**, job **11942393**, **FAILED 1:0 in 28m10s**; 706 outputs
+plus log fetched/checked. Evidence: [journal](journal.md),
 `results/registered_original_support_20260922/report.md`.
 
 ### Paired-acquisition feasibility (2026-09-22): inconclusive
 
-Instrumenting `240817_006.sxm` reveals a registered Gaussian elliptical maximum
-residual/noise of **3.609**, above 3.5 on three adjacent pixels. All eight native
-LM fits hit their iteration caps. Matched 300-iteration continuations from the
-same family starts give maxima **3.651 fused / 3.518 paired**. The paired model
-shares molecular geometry with mean gain fixed to one and separate view gain/
-plane differences; its forward maximum is **4.642**. Neither Gaussian arm is
-valid. Paired split passes mean validity but fails the view guard. All eight
-continuations remain nonconverged, so model inadequacy is not established.
-
-No full146 fit, Viper job, classifier or partial grade follows. Counts, bounds
-and thresholds stay fixed; retain **676/34**, below historical **677/36**.
-Sources **69ea44b / 5a1008c**; full evidence and initial writer failure:
+On `240817_006.sxm`, matched 300-iteration continuations give Gaussian
+elliptical mean maxima/noise **3.651 fused / 3.518 paired**, both above 3.5.
+The paired model fixes mean gain to one with opposite view gain/plane terms;
+its forward maximum is **4.642**. All eight continuations remain nonconverged.
+No full146 fit or grade; retain **676/34**, below **677/36**. Sources
+**69ea44b / 5a1008c**; native diagnosis and initial writer failure:
 `results/paired_acquisition_20260922/report.md`, [journal](journal.md).
+
+### Budget-only convergence (2026-09-23): no complete validity
+
+All eight matched 10,000-iteration fits remain nonconverged and fail independent
+box stationarity. Paired Gaussian elliptical mean improves **3.518 → 3.491**,
+but view maxima **4.349/3.575** fail 3.5. Only fused split elliptical remains
+fully valid. Short runs exactly replay previous parameters; the largest
+remaining gradients concern interior background-plane coefficients, motivating
+a numerical-solver investigation without relaxing physics.
+
+Source **92b6f15**, job **11943523**, **0:0 in 8m35s**; 97 outputs plus log
+fetched/checked, **742,804 numerical checks** pass. No new grade or promotion;
+retain **676/34**, below **677/36**. [Journal](journal.md),
+`results/paired_convergence_20260923/report.md`.
 
 ### Native numerical conventions
 

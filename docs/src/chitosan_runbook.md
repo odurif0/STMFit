@@ -1,12 +1,15 @@
 # Chitosan Benchmark and 10–20mer Runbook
 
-Latest September 22 diagnostic: **paired-acquisition feasibility is inconclusive
-for recognition**. On the sole failed scan, matched 300-iteration continuations
-give Gaussian elliptical mean maxima/noise **3.651 fused / 3.518 paired**, both
-above 3.5; paired forward maximum is 4.642. All eight continuations hit their
-cap without declared convergence. No Viper job, full146 fit, classifier or new
-grade is launched. Keep **676/870 correct, 34/145 exact**, below historical
-**677/36**. Full evidence: `results/paired_acquisition_20260922/report.md`.
+Latest September 23 diagnostic: **extending LM from 300 to 10,000 iterations
+does not unblock the paired-acquisition comparison**. All eight long fits
+remain nonconverged and fail independent stationarity. Paired Gaussian
+elliptical mean maximum/noise improves **3.518 → 3.491**, but view maxima
+**4.349/3.575** still fail 3.5. Only fused split elliptical is fully valid.
+Source **92b6f15**, Viper job **11943523**, **0:0 in 8m35s**; all 97 outputs
+plus log fetched/checksummed and **742,804 saved-output checks** pass. No new
+solver, threshold, full146 fit, classifier or grade. Keep **676/870 correct,
+34/145 exact**, below historical **677/36**. Evidence:
+`results/paired_convergence_20260923/report.md`.
 
 Earlier September 22 diagnostic: **original-support registered refit remains
 inconclusive**. All three prior span failures are resolved, with every original

@@ -1067,6 +1067,12 @@ reporting; `[preprocessing]` reuses verified saved pixels, frame, bounds and
 noise. The paired model settings below remain unchanged. No seed, threshold,
 optimizer method or benchmark-grade sweep is authorized by this diagnostic.
 
+The completed extension reaches 10,000 iterations in all eight cases without
+native convergence or independent stationarity. Paired Gaussian elliptical
+mean maximum/noise falls to **3.491**, but view maxima **4.349/3.575** fail 3.5;
+no fully valid family is added. No setting is adjusted after this result, and
+no grade follows. See `results/paired_convergence_20260923/report.md`.
+
 `paired_acquisition.toml` declares the September 22 shared-geometry feasibility
 experiment. Its mean gain is fixed to one; a differential gain, intercept and
 two tilts distinguish forward/backward views without changing the native mean

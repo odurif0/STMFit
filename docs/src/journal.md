@@ -2308,14 +2308,17 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0ad. **Does a larger native LM budget resolve the registered one-file rejection?**
-    → **AUTHORIZED, BOUNDED CONVERGENCE DIAGNOSTIC (Sep 23)**: replay the same
-    saved pixels, N, frame, physical bounds and native starts on `240817_006.sxm`.
-    Compare fresh 300/10,000-iteration fused/paired continuations for all four
-    shape families; keep native stopping tolerances and validity unchanged.
-    Report trace-prefix identity and independently recomputed box stationarity,
-    without treating a local stop as global optimality. Two-hour preparation,
-    one one-hour Viper job, no retry, classifier, partial grade or new seed.
-    Keep support **676/34**; recognition comparison is a separate task.
+    → **COMPLETE; 10,000 ITERATIONS STILL DO NOT CONVERGE (Sep 23)**: all eight
+    long fits hit their cap, fail independent box stationarity and add no fully
+    valid family. Paired Gaussian elliptical mean improves **3.518 → 3.491**,
+    but view maxima **4.349/3.575** fail 3.5. Only fused split elliptical remains
+    valid. Short runs reproduce previous parameters exactly; long prefixes
+    match. Interior background-plane coefficients dominate remaining gradients,
+    suggesting a numerical-solver follow-up, not relaxed physical bounds.
+    Source **92b6f15**, job **11943523**, **0:0 in 8m35s**; 97 outputs plus log
+    fetched/checked, **742,804 saved-output checks** pass. No retry, new method,
+    classifier or grade. Keep support **676/34**, below historical **677/36**;
+    `results/paired_convergence_20260923/report.md`.
 
 0ac. **Can a shared-geometry model of the two acquisition directions improve recognition?**
     → **ONE-FILE FEASIBILITY COMPLETE; RECOGNITION INDETERMINATE (Sep 22)**:
@@ -11946,3 +11949,75 @@ the **85 paired-model**, **103 native-workflow** and **151 core-2D** checks also
 pass (**17,831 total**). No real optimization occurs in the verifier. Fetched
 data, logs and the French report belong in the ignored
 `results/paired_convergence_20260923/` directory.
+
+### Completed budget comparison: local progress, no convergence or complete validity
+
+Job **11943523** finishes **COMPLETED 0:0 in 8m35s**, after **2m53s** queued,
+on `vipc2400`. Slurm allocates eight CPUs for four requested; the script still
+uses four single-thread subprocesses. Maximum reported memory is **2.977 GB**.
+All sixteen fits finish normally: eight short fits hit 300 iterations and
+eight long fits hit **10,000**, with no native convergence, exceptions or
+600-second timer stops. Long-fit elapsed times range **117.3–256.5 s**.
+
+All eight short-run parameter vectors and RSS values reproduce the previous
+local 300-iteration results **exactly** on Viper. Every short/long trace prefix
+matches; checkpoints reconstruct their objective values. All final two-step
+independent gradients agree. Nevertheless, the long-run projected-gradient
+norms remain **0.4996–0.5428**, far above the fixed `1e-6` diagnostic tolerance:
+these endpoints are not numerically stationary under the declared audit.
+
+Maximum absolute residual / unchanged native noise, from 300 to 10,000 steps:
+
+| Shape/family | Fused mean | Paired mean | Paired forward/backward at 10,000 |
+|---|---:|---:|---:|
+| Gaussian circular | 4.196838 → 4.182173 | 4.127342 → 4.094680 | 5.029650 / 4.023756 |
+| Gaussian elliptical | 3.651233 → 3.614500 | 3.518354 → 3.490705 | 4.349427 / 3.575066 |
+| Split circular | 4.002019 → 3.843275 | 3.923763 → 3.768876 | 4.633188 / 3.774546 |
+| Split elliptical | 3.357234 → 3.353815 | 3.230708 → 3.277893 | 4.218214 / 3.273617 |
+
+The paired Gaussian elliptical candidate now passes **native mean validity**,
+but fails the fixed residual guard in both acquisition directions. The paired
+split still fails its forward view. The fused Gaussian still fails the native
+mean guard. Thus **only fused split elliptical is fully valid**, at either
+budget; this does not complete the registered assignment comparison. All eight
+objectives decrease, but paired split mean maximum gets worse, again separating
+least squares from the maximum guard. Paired Gaussian elliptical RSS falls
+**0.873776 → 0.811075**; its mean RSS becomes **0.166490**, versus fused
+Gaussian elliptical **0.166369**. Different objective targets are not ranked
+against each other by their GCV values.
+
+The trace narrows the numerical question. About half the 10,000 trial steps
+are accepted (**5,000–5,008**). In the last eleven paired Gaussian elliptical
+iterations, rejected steps of norm about **0.0761** alternate with accepted
+steps about **2.06e-5**, while recorded damping alternates between **1 and 0.1**.
+The three largest absolute unit-box-scaled gradient components belong to the
+**mean background intercept/tilts in all eight endpoints**, and none of these
+three coefficients is on a bound. Thus the failure of stationarity is not
+merely an outward gradient on active molecular bounds. Box-scaled Jacobians
+have full numerical column rank at `rtol=1e-10`, but condition numbers range
+about **2.15e5–6.40e7**. These observations motivate testing a better
+box-constrained numerical solve at fixed physics; they do not establish the
+cause of every rejected step, physical model inadequacy or global optimality.
+No alternate solver, analytic profiling, restart or extra iteration run is
+performed in this budget-only experiment.
+
+All **97 output files plus the Slurm log** are fetched and SHA256 checked.
+Verifier source **2cfe9f3** passes **742,804 saved-output assertions** without
+optimization or labels. No full146 calculation, classifier, partial grade,
+threshold adjustment or unknown25 change follows. **Retain 676/870 correct,
+34/145 exact**, below historical **677/870, 36/145**: no recognition improvement
+has been measured. This closes the authorized budget extension; the numerical
+endpoint is still nonstationary, not a proof that more iterations could never
+help or that the shared-geometry model is impossible.
+
+The first final documentation build exceeds the unchanged assignment-page
+limit (**200.14 KiB / 200 KiB**). Older registered-refit summaries are condensed
+while preserving their negative/inconclusive outcomes and full-evidence links;
+the size limit is not raised. This is a documentation-only correction.
+
+The final documentation build passes under Julia **1.13.0**, without
+deployment; assignment HTML is **199.78 KiB** under the unchanged 200 KiB
+limit. Existing size/search-index warnings remain. The Manifest SHA256 stays
+**617de8162fa4c7a814aacb106f145349bc57ead58ec9a6c332971a821b5974fe**.
+All validated source, tests and documentation are committed; generated data
+remain in the ignored local results directory. No further job is submitted.
