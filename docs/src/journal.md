@@ -10701,3 +10701,14 @@ by benchmark error. The full146 local metadata-only dry-run passes. The native
 max-image amplitude scale is also saved with the per-scan diagnostics, so the
 mapped coefficient endpoints can be independently checked. No cohort fit or
 grade runs locally; no Slurm job has been submitted yet.
+
+All nine complementary suites pass **4,438 assertions**, including the original
+box/profile solver suite, for **4,936 assertions across ten suites** with the new
+checks. The Julia 1.13 docs build passes (existing size/search warnings only).
+Scientific source is committed as **567cdde**. The dedicated remote checkout
+imports the correct local fit engine under Julia 1.13.0; instantiate leaves
+the original Manifest SHA-256 **617de8162fa4c7a814aacb106f145349bc57ead58ec9a6c332971a821b5974fe** unchanged.
+Both cached geometries and templates match local hashes. Itemized source and
+dereferenced raw-content comparisons are empty. Local and remote dry-runs both
+validate all 146 files without reading pixels. Slurm test-only passes with all
+five variables explicitly exported; it does not validate compute-node execution.
