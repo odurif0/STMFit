@@ -1,6 +1,7 @@
 using Test, TOML, LinearAlgebra
 using STMSXMIO: SXMImage, SXMChannel
 include(joinpath(@__DIR__,"diagnose_registered_fit_failure.jl"))
+include(joinpath(@__DIR__,"diagnose_paired_acquisition.jl"))
 const D=RegisteredFailureDiagnostic
 const G=D.G
 const ROOT=dirname(@__DIR__)
@@ -73,6 +74,24 @@ end
         @test_throws ErrorException D.parse_cli(["--file","synthetic.sxm","--features",base,"--shifts",shifts,"--data-dir",dir,
             "--config",cfgpath,"--assignment-config",joinpath(ROOT,"config","unit_assignment_patch_support.toml"),
             "--settings",joinpath(ROOT,"config","registered_refit_original_support.toml"),"--outdir",joinpath(dir,"out")])
+        args=String[]
+        for k in sort(collect(keys(opts))); append!(args,[k,k=="--outdir" ? joinpath(dir,"paired") : opts[k]]); end
+        append!(args,["--native-diagnostic",joinpath(dir,"out"),"--paired-settings",joinpath(ROOT,"config","paired_acquisition.toml")])
+        paired=PairedAcquisitionDiagnostic.parse_cli(args)
+        PairedAcquisitionDiagnostic.execute(paired;reader=path->img)
+        _,pairedfits=D.read_table(joinpath(dir,"paired","fits.tsv"))
+        _,eligible=D.read_table(joinpath(dir,"paired","eligibility.tsv"))
+        @test length(pairedfits)==8 && length(eligible)==4
+        @test !isfile(joinpath(dir,"paired","failures.tsv"))
+        @test all(r["N"]=="3" for r in pairedfits)
+        @test all(parse(Int,r["iterations"])<=300 for r in pairedfits)
+        for profile in ("gaussian","split"),family in ("circ","ell"),mode in ("fused","paired")
+            @test isfile(joinpath(dir,"paired","$profile.$family.$mode.fit.tsv"))
+            @test isfile(joinpath(dir,"paired","$profile.$family.$mode.parameters.tsv"))
+            @test isfile(joinpath(dir,"paired","$profile.$family.$mode.residuals.tsv"))
+        end
+        @test_throws ErrorException PairedAcquisitionDiagnostic.parse_cli(args)
+        @test_throws ErrorException PairedAcquisitionDiagnostic.parse_cli(["--expected-n","6"])
     end
 end
 
