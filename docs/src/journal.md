@@ -10307,3 +10307,30 @@ large-page/search-index warnings and the expected non-CI deployment skip.
 Source is committed before remote preparation. The thirteen-variant synthetic
 pipeline and complementary regressions are still running; their completion is
 not yet claimed. No benchmark outcomes have been read for the new methods.
+
+All **21 suites / 4,277 assertions** now pass under Julia 1.13. The pipeline
+has **393 assertions**, including **260 across thirteen end-to-end synthetic
+variants**; the new modes retain identical upstream tables. Targeted equations
+and CLI tests contribute 585, previous mixtures 516, runner 20, covariance
+sharing 218, scan weighting 138, continuous votes 115, bagging 229, robust
+normalization 99, scan-Fisher/naming 299, numerical assignment 136, complete
+training 154, native Fisher 229, affine Fisher 74, Fisher attribution 210,
+representation diagnostics 321, numerical diagnostics 20, patch support 286,
+signal features 73, transverse descriptors 125 and base assignment 37.
+
+Scientific source **bb6943b** and the unchanged Manifest are synchronized to
+`/u/oldu/code/STMFit_em_shrinkage_student_density_20260922`; source and both
+pre/post-instantiate Manifest checksum checks are empty. Login-node instantiate
+without precompilation succeeds under Julia 1.13.0, retaining the expected
+warning about the Manifest's 1.12.6 origin. All three metadata dry-runs confirm
+146 files. Scheduler `--test-only` succeeds; **11936070 is only its speculative
+identifier, not a submitted job**.
+
+Actual job **11936229** is submitted once, after the full test suite passes,
+with all five variables explicitly exported, four requested CPUs, 16 GB,
+one hour and no requeue. Its output path is
+`/ptmp/oldu/stmfit/em_shrinkage_student_density_20260922_v1`; local logs and
+saved-output report scripts are under
+`results/em_shrinkage_student_density_20260922/`. The preparation takes about
+41 minutes, within the declared three-hour limit. No real result or grade is
+claimed at submission; scientific settings remain frozen at **bb6943b**.
