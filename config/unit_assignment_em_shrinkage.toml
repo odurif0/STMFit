@@ -1,7 +1,7 @@
-# One opt-in comparison: S(data - model), with every other setting unchanged.
+# Fixed covariance regularization at initialization, every EM update and both hard updates.
 [model]
 gmm_learning_family = "gaussian"
-gmm_covariance_scope = "final_only"
+gmm_covariance_scope = "all_updates"
 gmm_hard_assignment = "mahalanobis"
 gmm_factor_rank = 4
 gmm_student_df = 5.0
@@ -10,14 +10,14 @@ gmm_learning_tolerance = 1e-6
 gmm_learning_min_mass = 1e-12
 gmm_learning_cholesky_guard = 1e-8
 gmm_covariance_structure = "full"
-fisher_score_center = "legacy_centered_mean"
+fisher_score_center = "training_mean"
 gmm_final_score = "mahalanobis"
-gmm_final_covariance = "ridge"
+gmm_final_covariance = "ledoit_wolf"
 gmm_covariance_ridge = 1e-6
 fisher_projection_zero_l1 = 1e-12
 mold_margin_mode = "absolute_cost_margin"
-name = "cc_soft_matched_residual_v1"
-descriptor = "transverse_half_plane_asymmetry"
+name = "cc_soft_em_shrinkage_v1"
+descriptor = "affine_residual_half_plane_asymmetry"
 descriptor_column = "patch_u_asym_reconstructed"
 descriptor_channel = "bwd_res"
 descriptor_half_nm = 0.32
@@ -61,7 +61,7 @@ vote_threshold = 0.5
 [preprocessing]
 gmm_feature_normalization = "mean_sample_std"
 gmm_scale_fallback = 1.0
-assignment_patch_support = "full_square"
+assignment_patch_support = "complete_disk_symmetric"
 fisher_patch_projection = "none"
 patch_residual_filter = "smooth_residual"
 descriptor_normalization = "median_sample_std"

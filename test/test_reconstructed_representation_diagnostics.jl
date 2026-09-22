@@ -247,6 +247,8 @@ end
 @testset "Saved-table end-to-end, support, CLI, collision and source immutability" begin
     mktempdir() do dir
         paths=fixture(dir)
+        @test_throws ErrorException RD.load_inputs(paths,joinpath(dirname(@__DIR__),"config","unit_assignment_em_shrinkage.toml"))
+        @test_throws ErrorException RD.load_inputs(paths,joinpath(dirname(@__DIR__),"config","unit_assignment_student_density.toml"))
         hashes=Dict(k=>bytes2hex(sha256(read(v))) for (k,v) in paths)
         out=joinpath(dir,"audit")
         result=run_audit(paths;production_config=CONFIG,outdir=out,identity_atol=ATOL,descriptor_atol=ATOL)

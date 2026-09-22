@@ -1132,3 +1132,23 @@ All Student fits converge; factors reach the fixed 200-update cap. Retain
 support, below historical 677/36. This job/comparison is complete: no retry,
 cap/rank/df/seed search, combined arm, post-grade fusion tuning or application
 rerun follows. Details: `results/factor_student_mixtures_20260922/report.md`.
+
+### All-update shrinkage / coherent Student comparison (2026-09-22)
+
+`hpc/compare_em_shrinkage_student_density.sbatch` runs the unchanged support
+control and two independent profiles, `em_shrinkage` and `student_density`.
+It reuses saved symmetric geometry and regenerates patches, Fisher and the
+two assignment heads for each arm. One job, four requested CPUs, 16 GB,
+one hour, no requeue; no parameter sweep, combined arm or count refit.
+
+Set absolute `STMFIT_PROJECT_DIR`, `STMFIT_CACHE_DIR`, `STMFIT_INPUT_DIR`,
+`STMFIT_OUTDIR` (new) and `JULIA_BIN` (1.13), then run the script with
+`--dry-run` before submission. Supply all five through the actual command's
+`sbatch --export=...` list; Viper's `SBATCH_EXPORT=NONE` otherwise drops them.
+Use the existing source sync, login-node instantiate, one sbatch, squeue and
+fetch workflow. Only compute nodes run the scientific stages. Before grading,
+check control byte replay, all 146 scans / 900 keys, unchanged selected N and
+upstream tables, seed availability, covariance intensities, convergence and
+unchanged vote arithmetic. Nonmonotone ordinary likelihood under shrinkage
+is logged without seed selection. Outputs and Slurm logs must be fetched
+locally. No scientific result has been produced for this comparison yet.

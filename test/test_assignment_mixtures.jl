@@ -33,7 +33,7 @@ settings(family) = RU.load_gmm_learning(RU.load_config(config(family)))
         cfg = TOML.parsefile(file)
         haskey(get(cfg,"model",Dict()),"gmm_final_covariance") || continue
         @test RU.load_gmm_learning(cfg).family == (file == config("factor_analyzer") ? "factor_analyzer" :
-            file == config("student_t") ? "student_t" : "gaussian")
+            file in (config("student_t"), config("student_density")) ? "student_t" : "gaussian")
     end
     for key in ("gmm_factor_rank", "gmm_learning_maxiter", "gmm_student_df", "gmm_learning_tolerance",
                 "gmm_learning_min_mass", "gmm_learning_cholesky_guard"), bad in (nothing, 0, -1, true, Inf, NaN, "5")

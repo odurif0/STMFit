@@ -1,4 +1,4 @@
-"""Final hard-cluster covariance only; no experimental labels or composition prior.
+"""Explicit hard-cluster and responsibility-weighted covariance regularizers.
 
 Ledoit-Wolf shrinkage uses centered p-by-n observations, the maximum-likelihood
 sample covariance S, and the spherical target tr(S)/p I. The closed-form mixing
@@ -9,7 +9,7 @@ lobes from a scan are dependent and cluster memberships are learned from data.
 module AssignmentCovariance
 
 using LinearAlgebra, TOML
-export load_covariance_config, final_covariance
+export load_covariance_config, final_covariance, responsibility_covariance
 
 function load_covariance_config(config::AbstractDict)
     model = get(config, "model", Dict())
@@ -48,6 +48,37 @@ function final_covariance(centered::AbstractMatrix; mode::AbstractString, ridge:
     end
     covariance = selected + ridge * I
     return (covariance=covariance, sample=sample, shrinkage=shrinkage)
+end
+
+"""Spherical shrinkage with fixed normalized responsibility weights.
+
+For a_i = r_i/sum(r), use S = sum(a_i*x_i*x_i') and the plug-in numerator
+sum(a_i^2 * ||x_i*x_i' - S||_F^2). This reduces to the existing Ledoit-Wolf
+formula for hard memberships. Responsibilities are learned and lobes correlated:
+this is a declared numerical extension, NOT an iid-optimal RGMM estimator,
+noise calibration, or an estimate of an independent sample count.
+"""
+function responsibility_covariance(centered::AbstractMatrix, responsibilities::AbstractVector; ridge::Real)
+    p, n = size(centered)
+    p > 0 && n > 0 && length(responsibilities) == n ||
+        throw(ArgumentError("nonempty matching covariance observations and responsibilities required"))
+    all(isfinite, centered) && all(isfinite, responsibilities) && all(>=(0), responsibilities) ||
+        throw(ArgumentError("finite covariance inputs and nonnegative responsibilities required"))
+    mass = sum(responsibilities)
+    isfinite(mass) && mass > 0 || throw(ArgumentError("positive finite responsibility mass required"))
+    !(ridge isa Bool) && isfinite(ridge) && ridge > 0 || throw(ArgumentError("positive finite ridge required"))
+    a = responsibilities / mass
+    sample = (centered .* reshape(a, 1, :)) * centered'
+    target = (tr(sample) / p) * Matrix{Float64}(I, p, p)
+    dispersion = sum(abs2, sample - target)
+    norms = vec(sum(abs2, centered; dims=1))
+    quadratic = vec(sum(centered .* (sample * centered); dims=1))
+    variance = max(0.0, sum(abs2.(a) .* (norms.^2 .- 2 .* quadratic .+ sum(abs2, sample))))
+    all(isfinite, sample) && isfinite(dispersion) && isfinite(variance) ||
+        throw(ArgumentError("responsibility covariance overflow"))
+    shrinkage = dispersion > 0 ? clamp(variance / dispersion, 0.0, 1.0) : 0.0
+    covariance = (1 - shrinkage) * sample + shrinkage * target + ridge * I
+    return (; covariance, sample, shrinkage)
 end
 
 end # module

@@ -7,7 +7,7 @@ export read_table, write_table, lobe_table, require_same_keys,
        write_soft_vote, load_config, load_training_policy, write_training_support,
        load_training_mask, validate_training_mask, load_gmm_normalization, load_gmm_weighting,
        load_gmm_seed_aggregation, load_gmm_resampling, load_gmm_covariance_structure,
-       load_fisher_cv, load_gmm_cluster_naming, load_gmm_learning
+       load_fisher_cv, load_gmm_cluster_naming, load_gmm_learning, load_gmm_covariance_scope
 
 const TRANSVERSE_DESCRIPTORS = ("transverse_half_plane_asymmetry",
     "transverse_first_moment", "affine_residual_half_plane_asymmetry")
@@ -220,11 +220,37 @@ function load_gmm_covariance_structure(config::AbstractDict)
     return String(mode)
 end
 
+"Apply shrinkage at every covariance update, separately from all other alternatives."
+function load_gmm_covariance_scope(config::AbstractDict)
+    model, sel, pre = (get(config, section, Dict()) for section in ("model", "selection", "preprocessing"))
+    scope = get(model, "gmm_covariance_scope", nothing)
+    scope in ("final_only", "all_updates") || throw(ArgumentError("explicit gmm_covariance_scope required"))
+    if scope == "all_updates"
+        for (section, key, expected) in ((model, "gmm_learning_family", "gaussian"),
+                (model, "gmm_covariance_structure", "full"), (model, "gmm_final_covariance", "ledoit_wolf"),
+                (model, "gmm_final_score", "mahalanobis"), (model, "gmm_hard_assignment", "mahalanobis"),
+                (sel, "fisher_cv_scheme", "lobe_parity"), (sel, "gmm_cluster_naming", "raw_amplitude"),
+                (sel, "gmm_training_weighting", "equal_lobes"), (sel, "gmm_seed_aggregation", "hard_vote"),
+                (sel, "gmm_resampling", "none"), (sel, "assignment_training_support", "all_admissible"),
+                (pre, "gmm_feature_normalization", "mean_sample_std"))
+            get(section, key, nothing) == expected || throw(ArgumentError("all-updates shrinkage requires $key=$expected"))
+        end
+    end
+    return String(scope)
+end
+
 "Fixed alternative learning families; no rank, df, seed or model selection by grade."
 function load_gmm_learning(config::AbstractDict)
     model, sel, pre = (get(config, section, Dict()) for section in ("model", "selection", "preprocessing"))
     family = get(model, "gmm_learning_family", nothing)
     family in ("gaussian", "factor_analyzer", "student_t") || throw(ArgumentError("explicit gmm_learning_family required"))
+    hard = get(model, "gmm_hard_assignment", nothing)
+    hard in ("mahalanobis", "student_density") || throw(ArgumentError("explicit gmm_hard_assignment required"))
+    final = get(model, "gmm_final_score", nothing)
+    if hard == "student_density" || final == "student_density"
+        family == "student_t" && hard == final == "student_density" ||
+            throw(ArgumentError("Student density requires student_t learning and matching hard/final rules"))
+    end
     for key in ("gmm_factor_rank", "gmm_learning_maxiter")
         value = get(model, key, nothing)
         value isa Integer && !(value isa Bool) && 1 <= value <= typemax(Int) ||
@@ -237,7 +263,8 @@ function load_gmm_learning(config::AbstractDict)
     end
     if family != "gaussian"
         for (section, key, expected) in ((model, "gmm_covariance_structure", "full"),
-                (model, "gmm_final_covariance", "ridge"), (model, "gmm_final_score", "mahalanobis"),
+                (model, "gmm_covariance_scope", "final_only"),
+                (model, "gmm_final_covariance", "ridge"), (model, "gmm_final_score", hard),
                 (sel, "fisher_cv_scheme", "lobe_parity"), (sel, "gmm_cluster_naming", "raw_amplitude"),
                 (sel, "gmm_training_weighting", "equal_lobes"), (sel, "gmm_seed_aggregation", "hard_vote"),
                 (sel, "gmm_resampling", "none"), (sel, "assignment_training_support", "all_admissible"),
@@ -247,7 +274,7 @@ function load_gmm_learning(config::AbstractDict)
         model["gmm_learning_cholesky_guard"] == 1e-8 ||
             throw(ArgumentError("alternative learning guard must match the unchanged 1e-8 final-score guard"))
     end
-    return (family=String(family), factor_rank=Int(model["gmm_factor_rank"]),
+    return (family=String(family), hard_assignment=String(hard), factor_rank=Int(model["gmm_factor_rank"]),
         student_df=Float64(model["gmm_student_df"]), maxiter=Int(model["gmm_learning_maxiter"]),
         tolerance=Float64(model["gmm_learning_tolerance"]), min_mass=Float64(model["gmm_learning_min_mass"]),
         cholesky_guard=Float64(model["gmm_learning_cholesky_guard"]))
@@ -299,6 +326,7 @@ function load_config(path::AbstractString)
     load_fisher_cv(cfg)
     load_gmm_cluster_naming(cfg)
     load_gmm_learning(cfg)
+    load_gmm_covariance_scope(cfg)
     model["descriptor"] in TRANSVERSE_DESCRIPTORS || error("Unsupported descriptor")
     model["descriptor_column"] == "patch_u_asym_reconstructed" || error("Unsupported descriptor column")
     model["descriptor_channel"] == "bwd_res" || error("Unsupported descriptor patch family")
@@ -306,8 +334,8 @@ function load_config(path::AbstractString)
         error("Explicit fisher_score_center must be legacy_centered_mean or training_mean")
     get(model, "gmm_final_covariance", nothing) in ("ridge", "ledoit_wolf") ||
         error("Explicit gmm_final_covariance must be ridge or ledoit_wolf")
-    get(model, "gmm_final_score", nothing) in ("mahalanobis", "gaussian_density") ||
-        error("Explicit gmm_final_score must be mahalanobis or gaussian_density")
+    get(model, "gmm_final_score", nothing) in ("mahalanobis", "gaussian_density", "student_density") ||
+        error("Explicit gmm_final_score must be mahalanobis, gaussian_density or student_density")
     ridge = get(model, "gmm_covariance_ridge", nothing)
     ridge isa Real && !(ridge isa Bool) && isfinite(ridge) && ridge > 0 ||
         error("Explicit gmm_covariance_ridge must be positive and finite")

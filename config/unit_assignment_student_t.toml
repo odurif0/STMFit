@@ -1,6 +1,8 @@
 # Fixed learning-only candidate; features, naming, final score and vote match support control.
 [model]
 gmm_learning_family = "student_t"
+gmm_covariance_scope = "final_only"
+gmm_hard_assignment = "mahalanobis"
 gmm_factor_rank = 4
 gmm_student_df = 5.0
 gmm_learning_maxiter = 200

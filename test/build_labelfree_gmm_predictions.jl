@@ -26,7 +26,7 @@ using .AssignmentMixtures
 include(joinpath(@__DIR__, "lib", "reconstructed_unit_assignment.jl"))
 using .ReconstructedUnitAssignment: load_training_policy, load_training_mask, validate_training_mask,
     load_gmm_normalization, load_gmm_weighting, load_gmm_seed_aggregation, load_gmm_resampling,
-    load_gmm_covariance_structure, load_gmm_cluster_naming, load_gmm_learning, write_table
+    load_gmm_covariance_structure, load_gmm_cluster_naming, load_gmm_learning, load_gmm_covariance_scope, write_table
 
 const DEFAULT_FEATURES = "results/unit_separability/lobe_features_selectedN_primary_local.tsv"
 const DEFAULT_SPLIT = ""
@@ -45,6 +45,7 @@ struct Options
     interactions::Bool
     selftrain::Int
     covariance_mode::String
+    covariance_scope::String
     covariance_ridge::Float64
     final_score::String
     training_policy::String
@@ -64,8 +65,8 @@ end
 
 function _load_final_score(config::AbstractDict)
     mode = get(get(config, "model", Dict()), "gmm_final_score", nothing)
-    mode in ("mahalanobis", "gaussian_density") ||
-        throw(ArgumentError("explicit gmm_final_score must be mahalanobis or gaussian_density"))
+    mode in ("mahalanobis", "gaussian_density", "student_density") ||
+        throw(ArgumentError("explicit gmm_final_score must be mahalanobis, gaussian_density or student_density"))
     return String(mode)
 end
 
@@ -157,18 +158,25 @@ function _parse_cli(args)
                                      [config/unit_assignment_reconstructed.toml].
                                      gmm_learning_family=gaussian preserves legacy
                                      learning. factor_analyzer and student_t change
-                                     EM and the hard parameter updates, retaining
-                                     the final Mahalanobis score and free masses.
+                                     EM and the hard parameter updates. Free masses
+                                     remain unconstrained. gmm_hard_assignment and
+                                     gmm_final_score both set to student_density
+                                     retain Student density through hard assignment
+                                     and final scoring; otherwise the learning-only
+                                     alternatives keep Mahalanobis decisions.
                                      Their rank/df and iteration settings are fixed
                                      in config; no automatic family selection.
                                      They require selftrain >= 1 and the uncombined
                                      equal-lobe, raw-naming, hard-vote policies.
+                                     With gmm_covariance_scope=final_only,
                                      Ledoit-Wolf acts only on the last hard
-                                     self-training covariance; it requires
+                                     self-training covariance. all_updates also
+                                     regularizes initialization, every Gaussian EM
+                                     M-step and earlier hard updates. It requires
                                      --selftrain >= 1. gaussian_density adds
                                      the covariance-volume term only to final
                                      scoring after self-training (>= 1).
-                                     Neither option changes EM or vote weights.
+                                     Neither final-score option changes vote weights.
                                      gmm_covariance_structure=full preserves separate
                                      component covariances; tied pools within-group
                                      scatter at initialization, every EM M-step and
@@ -252,8 +260,9 @@ function _parse_cli(args)
     covariance_structure = load_gmm_covariance_structure(cfg)
     cluster_naming = load_gmm_cluster_naming(cfg)
     learning = load_gmm_learning(cfg)
+    covariance_scope = load_gmm_covariance_scope(cfg)
     learning.family != "gaussian" && selftrain < 1 &&
-        error("Alternative learning requires --selftrain >= 1 to preserve the final Mahalanobis score")
+        error("Alternative learning requires --selftrain >= 1 for the configured hard updates")
     normalization = load_gmm_normalization(cfg)
     training_weighting = load_gmm_weighting(cfg)
     seed_aggregation = load_gmm_seed_aggregation(cfg)
@@ -271,7 +280,7 @@ function _parse_cli(args)
     final_score == "gaussian_density" && selftrain < 1 &&
         error("Explicit final Gaussian score requires --selftrain >= 1")
     return Options(features, split_features, patches, out_tsv, view_specs,
-                   first_seed, n_seeds, interactions, selftrain, covariance.mode, covariance.ridge, final_score,
+                   first_seed, n_seeds, interactions, selftrain, covariance.mode, covariance_scope, covariance.ridge, final_score,
                    training_policy, training_support, normalization.mode, normalization.scale_fallback,
                    training_weighting, seed_aggregation, bootstrap.mode, bootstrap.replicates, bootstrap.seed,
                    bootstrap_audit, covariance_structure, cluster_naming, learning)
@@ -515,6 +524,10 @@ end
 
 "Final hard-cluster scoring only: same fitted means, covariances and weights."
 function _final_component_score(x, mu, covariance, weight, opt::Options)
+    if opt.final_score == "student_density"
+        return student_component_score(x, mu, covariance, weight;
+            df=opt.learning.student_df, guard=opt.learning.cholesky_guard)
+    end
     if opt.selftrain > 0 && opt.final_score == "mahalanobis"
         L = cholesky(Symmetric(covariance) + 1e-8 * I).L
         z = L \ (x .- mu)
@@ -613,7 +626,13 @@ end
 # retains its exact operations; production always passes the explicit config mode.
 # Returns (means, covariances, weights).
 function _gmm_fit(X::Matrix{Float64}, seed::Int; ridge::Float64, max_iter::Int=200, tol::Float64=1e-6,
-                  observation_weights=nothing, covariance_structure::String="full")
+                  observation_weights=nothing, covariance_structure::String="full",
+                  covariance_scope::String="final_only", min_mass::Float64=1e-12, trace=nothing)
+    covariance_scope in ("final_only", "all_updates") || throw(ArgumentError("unknown covariance scope"))
+    regularized = covariance_scope == "all_updates"
+    isfinite(min_mass) && min_mass > 0 || throw(ArgumentError("positive finite component mass floor required"))
+    regularized && (covariance_structure != "full" || observation_weights !== nothing) &&
+        throw(ArgumentError("all-updates shrinkage requires full covariance and equal-lobe training"))
     covariance_structure in ("full", "tied") || throw(ArgumentError("unknown covariance structure"))
     covariance_structure == "tied" && observation_weights !== nothing &&
         throw(ArgumentError("tied covariance requires equal-lobe training"))
@@ -627,15 +646,21 @@ function _gmm_fit(X::Matrix{Float64}, seed::Int; ridge::Float64, max_iter::Int=2
     means = zeros(p, k)
     covs = [Matrix{Float64}(I, p, p) for _ in 1:k]
     weights = fill(1.0 / k, k)
+    shrinkages = zeros(k)
+    all_shrinkages = Float64[]
     for c in 1:k
         members = findall(km.assignments .== c)
-        isempty(members) && continue
+        isempty(members) && (regularized ? throw(MixtureFitError("empty_initial_cluster")) : continue)
         mass = w === nothing ? length(members) : sum(w[members])
         means[:, c] = w === nothing ? sum(X[:, members]; dims=2) / length(members) : X[:, members] * w[members] / mass
         centered = X[:, members] .- means[:, c]
         covs[c] = w === nothing ? centered * centered' / length(members) :
             centered * Diagonal(w[members]) * centered' / mass
         covs[c] += ridge * I
+        if regularized
+            estimate = final_covariance(centered; mode="ledoit_wolf", ridge)
+            covs[c], shrinkages[c] = estimate.covariance, estimate.shrinkage
+        end
     end
     if covariance_structure == "tied"
         resp = Float64.([a == c for a in km.assignments, c in 1:k])
@@ -644,7 +669,15 @@ function _gmm_fit(X::Matrix{Float64}, seed::Int; ridge::Float64, max_iter::Int=2
             covs[c] = copy(shared)
         end
     end
+    if regularized
+        append!(all_shrinkages, shrinkages)
+        trace === nothing || push!(trace, (stage="initial", iteration=0, means=copy(means), covs=deepcopy(covs),
+            weights=copy(weights), responsibilities=Float64.([a == c for a in km.assignments, c in 1:k]),
+            shrinkages=copy(shrinkages)))
+    end
     prev_ll = -Inf
+    converged, updates = false, 0
+    ll_decreases, max_ll_drop = 0, 0.0
     for iter in 1:max_iter
         # E-step in log space
         log_resp = zeros(n, k)
@@ -659,7 +692,14 @@ function _gmm_fit(X::Matrix{Float64}, seed::Int; ridge::Float64, max_iter::Int=2
             term = m + log(sum(exp.(log_resp[i, :] .- m)))
             ll += w === nothing ? term : w[i] * term
         end
-        abs(ll - prev_ll) < tol * (1 + abs(prev_ll)) && break
+        if regularized && isfinite(prev_ll) && ll < prev_ll
+            ll_decreases += 1
+            max_ll_drop = max(max_ll_drop, prev_ll - ll)
+        end
+        if abs(ll - prev_ll) < tol * (1 + abs(prev_ll))
+            converged = true
+            break
+        end
         prev_ll = ll
         for i in 1:n
             m = maximum(log_resp[i, :])
@@ -671,12 +711,16 @@ function _gmm_fit(X::Matrix{Float64}, seed::Int; ridge::Float64, max_iter::Int=2
         # M-step
         for j in 1:k
             nk = sum(resp[:, j])
-            nk > 1e-12 || continue
+            nk > min_mass || (regularized ? throw(MixtureFitError("collapsed_component")) : continue)
             weights[j] = nk / total
             means[:, j] = X * resp[:, j] / nk
             centered = X .- means[:, j]
             covs[j] = (centered * Diagonal(resp[:, j]) * centered') / nk
             covs[j] += ridge * I
+            if regularized
+                estimate = responsibility_covariance(centered, resp[:, j]; ridge)
+                covs[j], shrinkages[j] = estimate.covariance, estimate.shrinkage
+            end
         end
         if covariance_structure == "tied"
             shared = _tied_covariance(X, means, resp; ridge).covariance
@@ -684,7 +728,17 @@ function _gmm_fit(X::Matrix{Float64}, seed::Int; ridge::Float64, max_iter::Int=2
                 covs[j] = copy(shared)
             end
         end
+        updates += 1
+        if regularized
+            append!(all_shrinkages, shrinkages)
+            trace === nothing || push!(trace, (stage="em", iteration=iter, means=copy(means), covs=deepcopy(covs),
+                weights=copy(weights), responsibilities=copy(resp), shrinkages=copy(shrinkages)))
+        end
     end
+    regularized && println("GMM shrinkage seed ", seed, " scope=all_updates em_updates=", updates,
+        " converged=", converged, " shrinkage_min=", minimum(all_shrinkages),
+        " shrinkage_max=", maximum(all_shrinkages), " likelihood_decreases=", ll_decreases,
+        " max_likelihood_drop=", max_ll_drop)
     return means, covs, weights
 end
 
@@ -695,7 +749,13 @@ function _mahalanobis_self_train(X::Matrix{Float64}, means::Matrix{Float64},
                                  covs::Vector{Matrix{Float64}}, weights::Vector{Float64};
                                  iters::Int=5, covariance_mode::String, ridge::Float64,
                                  diagnostics=nothing, observation_weights=nothing,
-                                 covariance_structure::String="full")
+                                 covariance_structure::String="full", covariance_scope::String="final_only",
+                                 min_mass::Float64=1e-12, trace=nothing)
+    covariance_scope in ("final_only", "all_updates") || throw(ArgumentError("unknown covariance scope"))
+    regularized = covariance_scope == "all_updates"
+    isfinite(min_mass) && min_mass > 0 || throw(ArgumentError("positive finite component mass floor required"))
+    regularized && (covariance_mode != "ledoit_wolf" || covariance_structure != "full" || observation_weights !== nothing) &&
+        throw(ArgumentError("all-updates hard shrinkage requires full Ledoit-Wolf and equal-lobe training"))
     covariance_structure in ("full", "tied") || throw(ArgumentError("unknown covariance structure"))
     covariance_structure == "tied" && (covariance_mode != "ridge" || observation_weights !== nothing) &&
         throw(ArgumentError("tied hard updates require ridge and equal-lobe training"))
@@ -707,6 +767,7 @@ function _mahalanobis_self_train(X::Matrix{Float64}, means::Matrix{Float64},
     total = w === nothing ? n : sum(w)
     k = size(means, 2)
     for iteration in 1:iters
+        shrinkages = zeros(k)
         d2 = zeros(n, k)
         for j in 1:k
             L = cholesky(Symmetric(covs[j]) + 1e-8 * I).L
@@ -718,12 +779,13 @@ function _mahalanobis_self_train(X::Matrix{Float64}, means::Matrix{Float64},
         assign = [argmin(d2[i, :]) for i in 1:n]
         for j in 1:k
             members = findall(==(j), assign)
-            isempty(members) && continue
+            isempty(members) && (regularized ? throw(MixtureFitError("empty_hard_cluster")) : continue)
             nk = w === nothing ? length(members) : sum(w[members])
+            regularized && nk <= min_mass && throw(MixtureFitError("collapsed_hard_component"))
             weights[j] = nk / total
             means[:, j] = w === nothing ? sum(X[:, members]; dims=2) / nk : X[:, members] * w[members] / nk
             centered = X[:, members] .- means[:, j]
-            if iteration == iters
+            if iteration == iters || regularized
                 estimate = if w === nothing
                     final_covariance(centered; mode=covariance_mode, ridge=ridge)
                 else
@@ -731,7 +793,8 @@ function _mahalanobis_self_train(X::Matrix{Float64}, means::Matrix{Float64},
                     (sample=covariance, covariance=covariance + ridge * I, shrinkage=0.0)
                 end
                 covs[j] = estimate.covariance
-                if diagnostics !== nothing && covariance_structure == "full"
+                shrinkages[j] = estimate.shrinkage
+                if diagnostics !== nothing && covariance_structure == "full" && iteration == iters
                     push!(diagnostics, (component=j, members=copy(members), weight=weights[j],
                         mean=copy(means[:, j]), sample=estimate.sample, covariance=copy(covs[j]),
                         shrinkage=estimate.shrinkage))
@@ -740,6 +803,12 @@ function _mahalanobis_self_train(X::Matrix{Float64}, means::Matrix{Float64},
                 covs[j] = (w === nothing ? centered * centered' / nk :
                     centered * Diagonal(w[members]) * centered' / nk) + ridge * I
             end
+        end
+        if regularized
+            println("GMM hard shrinkage iteration=", iteration, " shrinkages=", join(shrinkages, ','))
+            trace === nothing || push!(trace, (stage="hard", iteration, means=copy(means), covs=deepcopy(covs),
+                weights=copy(weights), responsibilities=Float64.([a == c for a in assign, c in 1:k]),
+                shrinkages=copy(shrinkages)))
         end
         if covariance_structure == "tied"
             resp = Float64.([a == c for a in assign, c in 1:k])
@@ -880,13 +949,23 @@ function _view_probability(records::Vector{LobeRecord}, features::Vector{String}
 
     for seed in opt.first_seed:(opt.first_seed + opt.n_seeds - 1)
         seed_diagnostics = diagnostics === nothing ? nothing : []
+        update_trace = diagnostics === nothing ? nothing : []
         if opt.learning.family == "gaussian"
-            means, covs, weights = _gmm_fit(data, seed; ridge=opt.covariance_ridge, observation_weights,
-                covariance_structure=opt.covariance_structure)
-            if opt.selftrain > 0
-                means, covs, weights = _mahalanobis_self_train(data, means, covs, weights;
-                    iters=opt.selftrain, covariance_mode=opt.covariance_mode, ridge=opt.covariance_ridge,
-                    diagnostics=seed_diagnostics, observation_weights, covariance_structure=opt.covariance_structure)
+            try
+                means, covs, weights = _gmm_fit(data, seed; ridge=opt.covariance_ridge, observation_weights,
+                    covariance_structure=opt.covariance_structure, covariance_scope=opt.covariance_scope,
+                    max_iter=opt.learning.maxiter, tol=opt.learning.tolerance,
+                    min_mass=opt.learning.min_mass, trace=update_trace)
+                if opt.selftrain > 0
+                    means, covs, weights = _mahalanobis_self_train(data, means, covs, weights;
+                        iters=opt.selftrain, covariance_mode=opt.covariance_mode, ridge=opt.covariance_ridge,
+                        diagnostics=seed_diagnostics, observation_weights, covariance_structure=opt.covariance_structure,
+                        covariance_scope=opt.covariance_scope, min_mass=opt.learning.min_mass, trace=update_trace)
+                end
+            catch err
+                opt.covariance_scope == "all_updates" && err isa MixtureFitError || rethrow()
+                println("Mixture fit seed ", seed, " family=gaussian scope=all_updates status=unavailable reason=", err.reason)
+                continue
             end
         else
             initial = _gmm_fit(data, seed; ridge=opt.covariance_ridge, max_iter=0)
@@ -905,13 +984,14 @@ function _view_probability(records::Vector{LobeRecord}, features::Vector{String}
             println("Mixture fit seed ", seed, " family=", opt.learning.family,
                 " status=ok em_updates=", result.updates, " converged=", result.converged,
                 " hard_updates=", opt.selftrain, " rank=", opt.learning.factor_rank, " df=", opt.learning.student_df,
+                " hard_assignment=", opt.learning.hard_assignment,
                 " noise_min=", noise_min, " factor_error=", factor_error,
                 " precision_min=", result.precision_range[1], " precision_max=", result.precision_range[2],
                 " log_kernel_sum=", result.log_kernel_sum)
         end
         diagnostics === nothing || push!(diagnostics,
             (seed=seed, indices=copy(idxs), clusters=seed_diagnostics,
-             observation_weights=observation_weights === nothing ? nothing : copy(observation_weights)))
+             observation_weights=observation_weights === nothing ? nothing : copy(observation_weights), updates=update_trace))
         # Physical mapping is fitted on training members only, then frozen.
         assignments = Int[]
         log_resp = zeros(size(scoring_data, 2), 2)
@@ -1025,6 +1105,8 @@ function main(args=ARGS)
     println("  views:      ", join(first.(views), ", "))
     println("  weighting:  ", opt.training_weighting)
     println("  covariance structure: ", opt.covariance_structure)
+    println("  covariance scope: ", opt.covariance_scope)
+    println("  hard assignment: ", opt.learning.hard_assignment)
     println("  learning family: ", opt.learning.family)
     println("  cluster naming: ", opt.cluster_naming)
     println("  seed aggregation: ", opt.seed_aggregation)

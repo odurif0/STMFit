@@ -2,7 +2,7 @@ module AssignmentMixtures
 
 using LinearAlgebra, Statistics
 
-export MixtureFitError, initialize_state, expectation, update_state, fit_mixture
+export MixtureFitError, initialize_state, expectation, update_state, fit_mixture, student_component_score
 
 "A failed numerical seed is unavailable, never silently replaced by a Gaussian."
 struct MixtureFitError <: Exception
@@ -18,6 +18,15 @@ function checked_cholesky(A)
         err isa PosDefException || rethrow()
         throw(MixtureFitError("nonpositive_matrix"))
     end
+end
+
+"Student log mass-density, omitting only the common fixed-dimension/fixed-df constant."
+function student_component_score(x, mean, scale, weight; df, guard)
+    df > 0 && isfinite(df) && weight > 0 && isfinite(weight) ||
+        throw(ArgumentError("positive finite Student df and mass required"))
+    chol = checked_cholesky(scale + guard * I)
+    distance = sum(abs2, chol.L \ (x - mean))
+    return log(weight) - sum(log, diag(chol.L)) - ((df + length(x)) / 2) * log1p(distance / df)
 end
 
 function initialize_state(means, covs, weights, settings; ridge)
@@ -115,7 +124,7 @@ function update_state(X, state, responsibilities, distances, settings; ridge)
     return (means, covs, weights=masses / n, loadings, noise)
 end
 
-"Learn one fixed family, then retain it through pure-Mahalanobis hard reassignment."
+"Learn one fixed family, then retain it through the explicitly configured hard rule."
 function fit_mixture(X, initial, settings; ridge, hard_iterations, trace=nothing)
     all(isfinite, X) || throw(ArgumentError("nonfinite training observations"))
     hard_iterations >= 0 || throw(ArgumentError("negative hard iteration count"))
@@ -135,7 +144,9 @@ function fit_mixture(X, initial, settings; ridge, hard_iterations, trace=nothing
     end
     for iteration in 1:hard_iterations
         e = expectation(X, state, settings)
-        assignments = [argmin(view(e.distances, i, :)) for i in axes(X, 2)]
+        assignments = settings.hard_assignment == "student_density" ?
+            [argmax(view(e.responsibilities, i, :)) for i in axes(X, 2)] :
+            [argmin(view(e.distances, i, :)) for i in axes(X, 2)]
         r = Float64.([assignments[i] == c for i in axes(X, 2), c in 1:2])
         state = update_state(X, state, r, e.distances, settings; ridge)
         trace === nothing || push!(trace, (stage="hard", iteration, state=deepcopy(state)))

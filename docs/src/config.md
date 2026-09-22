@@ -993,6 +993,43 @@ the bounded factor result is not evidence about its fully converged optimum.
 Source **e2205cb**, job **11935072**, report
 `results/factor_student_mixtures_20260922/report.md`.
 
+### All-update shrinkage and coherent Student decisions (2026-09-22)
+
+Two isolated opt-in profiles extend the completed learning-only comparison:
+
+| `[model]` key | Support / old profiles | `unit_assignment_em_shrinkage.toml` | `unit_assignment_student_density.toml` |
+|---|---|---|---|
+| `gmm_covariance_scope` | `final_only` | `all_updates` | `final_only` |
+| `gmm_final_covariance` | unchanged | `ledoit_wolf` | `ridge` |
+| `gmm_learning_family` | unchanged | `gaussian` | `student_t` |
+| `gmm_hard_assignment` | `mahalanobis` | `mahalanobis` | `student_density` |
+| `gmm_final_score` | unchanged | `mahalanobis` | `student_density` |
+
+Both new keys are explicit in every native config. The legacy values preserve
+the previous arithmetic. All-update shrinkage uses the existing spherical
+Ledoit-Wolf estimator for the initial and hard groups, and its declared
+fixed-responsibility plug-in extension at each EM M-step. Component covariances
+remain separate. Its intensity is calculated from current observations, not
+searched or chosen by recognition. It is numerical regularization, not an
+iid-optimality or noise-calibration claim. See [the equations](calibration.md).
+
+The Student profile requires matching hard/final `student_density` rules and
+`student_t` learning; mismatched combinations are rejected. It uses the same
+df-five scale model throughout, including component masses and matrix volumes.
+The two hard updates, ten-seed hard vote and final k-means fusion stay in place;
+this is not a continuous-vote or fusion-weight experiment.
+
+The new Gaussian arm uses the explicit `gmm_learning_maxiter=200` and
+`gmm_learning_tolerance=1e-6`, matching the previous Gaussian limits. These
+settings now also reach the ordinary unresampled Gaussian builder; every
+existing native config retains the identical values. Student retains its
+existing limits, ridge and guard. Shrinkage is not a likelihood-maximizing
+M-step: log-likelihood decreases and the largest decrease are reported, not
+used to choose seeds. Finite capped fits are retained and identified as such.
+No combination with tied covariance, alternative naming, weighting, resampling,
+normalization or Fisher grouping is enabled. Selected N, features, thresholds,
+DFT sources and unknown25 remain unchanged. No benchmark result yet.
+
 ## Opt-in diagnostic exploration settings (2026-09-18)
 
 `config/label_free_exploration.toml` is used only by standalone exploration tools;

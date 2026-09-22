@@ -2307,6 +2307,18 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-22. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0v. **Can covariance regularization throughout learning or coherent Student
+    decisions improve recognition?** → **AUTHORIZED; IN PROGRESS (Sep 22)**:
+    two separate candidates against the unchanged 676/34 support control,
+    with 677/36 historical still the target. Three hours preparation/tests
+    from 11:20 CEST, one Viper job capped at one hour, no combined arm or
+    post-grade tuning. Initial/hard spherical shrinkage is extended to soft
+    EM responsibilities by an explicit fixed-weight plug-in formula, without
+    iid/noise claims. Student keeps df five but uses its density for both hard
+    assignments and final scores. N, features, seeds, fusion and thresholds
+    remain fixed; outputs must be checked before external grading. No result
+    yet; measurement-error modelling and MFA cap changes are out of scope.
+
 0u. **Can lower-rank or heavy-tailed mixture learning improve recognition?** →
     **COMPLETE; NEGATIVE FOR THESE FIXED VERSIONS (Sep 22)**: source
     **e2205cb**, job **11935072**, **0:0 in 8m17s**, after **1m36s** queued.
@@ -10226,3 +10238,72 @@ page stays within the unchanged 200 KiB HTML limit. README, runbook, selection,
 assignment, config, calibration and HPC notes all report the same result and
 MFA convergence limitation. Scientific source/settings remain unchanged from
 **e2205cb** through grading; generated reports and fetched outputs stay ignored.
+
+## 2026-09-22 — All-update shrinkage and coherent Student decisions: bounded comparison
+
+The user authorizes the two proposed targeted experiments. Scientific
+deliverable: complete support-control replay and two separate full145-own-N
+grades, with coverage, emitted errors, exact chains and paired scan gains/losses.
+The reference remains **676/870 correct, 34/145 exact, 852/870 coverage**;
+historical **677/36, 854/870 coverage** remains the objective. Done means tested
+equations and integration, fetched/checked complete outputs before grading,
+an evidence-backed decision and committed source/docs. Time box: **three hours
+preparation/tests from 11:20 CEST, one Viper job capped at one hour**. No
+combined model, post-grade adjustment, seed/df/threshold sweep, changed N,
+new DFT/registration/noise model, MFA-cap change or unknown25 rerun. The archived
+scientific Must-NOT-have list remains; no retired process apparatus is revived.
+
+`unit_assignment_em_shrinkage.toml` changes only covariance scope and estimator
+(plus output name) from support. Separate covariances are shrunk toward their
+own spherical target at k-means initialization, every Gaussian EM update and
+both hard updates. Hard groups reuse the previous Ledoit-Wolf formula. Soft
+groups use the declared fixed-weight plug-in extension: `a_i=r_i/sum(r)`,
+`S=sum(a_i*y_i*y_i')`, `T=tr(S)/p I`, and coefficient
+`clamp(sum(a_i^2*||y_i*y_i'-S||_F^2)/||S-T||_F^2,0,1)`, zero when S=T.
+The same 1e-6 ridge follows shrinkage. It is not represented as a reproduction
+of Halbe et al.'s RGMM or an iid-optimal/noise estimator; that source motivates
+regularization during learning. The direct outer-product test independently
+checks the formula, hard-membership limit, zero weights, scale invariance of
+responsibilities, rotations and rank-deficient samples. No independent-sample
+count is inferred. Shrinkage need not increase ordinary likelihood; observed
+decreases are logged, never used to select seeds. The existing 200-update /
+1e-6 stopping limits are explicit; finite capped fits remain, without retries.
+
+`unit_assignment_student_density.toml` keeps df five and the existing Student
+scale/latent-precision updates, but uses Student log mass-density for both hard
+assignments and final scoring. The score includes log mass and log determinant,
+and the `log1p(distance²/df)` tail. Only the common dimension/df constant is
+omitted. Scale is not multiplied by df/(df-2). Both classification-style hard
+updates remain; this is not pure soft EM or a continuous-vote experiment.
+Independent density and weighted-moment calculations check all stages.
+
+Both new policy keys are explicit in all native profiles, with old values
+preserving their behavior. Unsupported combinations are rejected. Eight
+features plus 28 interactions, per-file scaling, selected N, patch support,
+Fisher, raw-amplitude naming, seeds, hard-vote aggregation, final fusion,
+threshold and abstention rules remain unchanged. All keys remain even if a
+seed or row is unavailable. These internal scores are not calibrated chemical
+probabilities; no labels or composition quotas enter inference. The historical
+representation diagnostic rejects the two new modes it cannot reproduce.
+
+An initial Julia invocation in the filesystem sandbox cannot create juliaup's
+lock; using the authorized local Julia cache access resolves it, with Julia
+1.13 confirmed. The first targeted numerical suite catches an implementation
+error: the weighted covariance helper returned a positional tuple instead of
+the named tuple expected by callers. Adding the named-tuple semicolon fixes
+the interface without changing equations or settings. The initial log is
+retained as `initial_tuple_return_failure.log`. Synthetic/CLI and complementary
+regressions continue; no real scientific output or new grade exists yet.
+
+Viper access and its Julia 1.13.0 executable are verified; the first queue check
+shows no jobs for the account. The comparison runner remains one sbatch, four
+requested CPUs, 16 GB, one hour, no requeue, with five explicitly exported
+paths. No real job has been submitted yet.
+
+The final targeted suite passes **585 assertions**, including unavailable-seed
+row retention in both new modes; the existing mixture suite passes **516** and
+the new runner **20**. The Julia 1.13 documentation build passes with existing
+large-page/search-index warnings and the expected non-CI deployment skip.
+Source is committed before remote preparation. The thirteen-variant synthetic
+pipeline and complementary regressions are still running; their completion is
+not yet claimed. No benchmark outcomes have been read for the new methods.

@@ -105,7 +105,7 @@ end
 if "--e2e" in ARGS
     @testset "Native extracted-input pipeline end to end" begin
         saved = Dict{String,Vector{UInt8}}()
-        for variant in ("control", "complete_training", "robust_normalization", "scan_weighting", "continuous_vote", "scan_bagging", "tied_covariance", "scan_fisher", "relative_naming", "factor_analyzer", "student_t")
+        for variant in ("control", "complete_training", "robust_normalization", "scan_weighting", "continuous_vote", "scan_bagging", "tied_covariance", "scan_fisher", "relative_naming", "factor_analyzer", "student_t", "em_shrinkage", "student_density")
             mktempdir() do dir
                 opts = pipeline_fixture(dir)
                 if variant != "control"
@@ -125,6 +125,13 @@ if "--e2e" in ARGS
                         cfg["selection"]["fisher_cv_scheme"] = "scan_hash_twofold"
                     elseif variant in ("factor_analyzer", "student_t")
                         cfg["model"]["gmm_learning_family"] = variant
+                    elseif variant == "em_shrinkage"
+                        cfg["model"]["gmm_covariance_scope"] = "all_updates"
+                        cfg["model"]["gmm_final_covariance"] = "ledoit_wolf"
+                    elseif variant == "student_density"
+                        cfg["model"]["gmm_learning_family"] = "student_t"
+                        cfg["model"]["gmm_hard_assignment"] = "student_density"
+                        cfg["model"]["gmm_final_score"] = "student_density"
                     elseif variant == "relative_naming"
                         cfg["selection"]["gmm_cluster_naming"] = "within_scan_z"
                     else
@@ -159,7 +166,7 @@ if "--e2e" in ARGS
                     bytes = read(joinpath(out,table*".tsv"))
                     if variant == "complete_training"
                         @test bytes == saved[table] # All synthetic patches are complete.
-                    elseif variant in ("robust_normalization", "scan_weighting", "continuous_vote", "scan_bagging", "tied_covariance", "relative_naming", "factor_analyzer", "student_t")
+                    elseif variant in ("robust_normalization", "scan_weighting", "continuous_vote", "scan_bagging", "tied_covariance", "relative_naming", "factor_analyzer", "student_t", "em_shrinkage", "student_density")
                         table in ("pred_gmm","predictions") || @test bytes == saved[table]
                     elseif variant == "scan_fisher"
                         table in ("training_support","pred_kmeans") && @test bytes == saved[table]
@@ -182,7 +189,12 @@ if "--e2e" in ARGS
                     read(joinpath(out, "logs", "gmm.log"), String))
                 @test occursin("cluster naming: " * (variant == "relative_naming" ? "within_scan_z" : "raw_amplitude"),
                     read(joinpath(out, "logs", "gmm.log"), String))
-                @test occursin("learning family: " * (variant in ("factor_analyzer", "student_t") ? variant : "gaussian"),
+                @test occursin("learning family: " * (variant == "student_density" ? "student_t" :
+                    variant in ("factor_analyzer", "student_t") ? variant : "gaussian"),
+                    read(joinpath(out, "logs", "gmm.log"), String))
+                @test occursin("covariance scope: " * (variant == "em_shrinkage" ? "all_updates" : "final_only"),
+                    read(joinpath(out, "logs", "gmm.log"), String))
+                @test occursin("hard assignment: " * (variant == "student_density" ? "student_density" : "mahalanobis"),
                     read(joinpath(out, "logs", "gmm.log"), String))
                 @test occursin("Fisher grouping: " * (variant == "scan_fisher" ? "scan_hash_twofold" : "lobe_parity"),
                     read(joinpath(out, "logs", "fisher.log"), String))

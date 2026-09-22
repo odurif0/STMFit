@@ -1,6 +1,8 @@
 # One descriptor comparison: half-plane asymmetry after affine patch projection.
 [model]
 gmm_learning_family = "gaussian"
+gmm_covariance_scope = "final_only"
+gmm_hard_assignment = "mahalanobis"
 gmm_factor_rank = 4
 gmm_student_df = 5.0
 gmm_learning_maxiter = 200

@@ -571,6 +571,45 @@ zero-margin vote tie. Retain support without post-grade cap/rank/df,
 threshold, naming or fusion adjustment. Source **e2205cb**, job **11935072**;
 full losses: `results/factor_student_mixtures_20260922/report.md`.
 
+### Covariance regularization during learning and Student density (2026-09-22)
+
+`unit_assignment_em_shrinkage.toml` applies spherical covariance shrinkage at
+initialization, each Gaussian EM M-step and both hard updates. For centered
+vectors `y_i`, responsibility weights `a_i = r_i / sum(r)`, define
+`S = sum(a_i y_i y_i')`, `T = tr(S)/p I`, and
+`b = sum(a_i^2 ||y_i y_i' - S||_F^2)`. The fixed coefficient is
+`alpha = clamp(b / ||S-T||_F^2, 0, 1)`, or zero if `S == T`. Use
+`(1-alpha) S + alpha T + 1e-6 I`. Hard memberships reduce to the previously
+tested equal-weight formula. Means and free mixture masses use unchanged
+updates; neither group is forced to contain a specified number of lobes.
+
+This is a **declared fixed-weight plug-in extension**, not a reproduced
+implementation or optimality claim for
+[Halbe, Bortman and Aladjem's regularized GMM](https://cris.bgu.ac.il/en/publications/regularized-mixture-density-estimation-with-an-analytical-setting/).
+The latter motivates regularization during learning. The extension is checked
+against direct weighted outer products and the hard-membership limit.
+Learned responsibilities, dependent lobes and estimated centering invalidate
+any automatic interpretation as independent measurement-error variance. No
+`n_eff`, physical noise estimate or chemically calibrated confidence is inferred.
+Shrinkage need not increase unpenalized likelihood monotonically; decreases
+and bounded-fit convergence are reported without filtering seeds by grade.
+
+`unit_assignment_student_density.toml` retains fixed df `nu=5` and the
+[Student latent-precision updates](https://people.smp.uq.edu.au/GeoffMcLachlan/pm_sc00.pdf),
+but uses the same log mass-density in the E-step, both hard assignments and
+final scoring: `log(pi_c) - log(det(scale_c + guard I))/2 -
+(nu+p)/2 * log1p(distance_c^2/nu)`. Only the common fixed-dimension/fixed-df
+normalizing constant is omitted. Scale is not converted to covariance.
+Hard assignment now maximizes this score, rather than minimizing distance
+alone; the parameter update still uses responsibility-times-precision means
+and responsibility-mass scale denominators. This is a classification-style
+hard-update extension of the soft Student mixture, not pure soft EM throughout.
+
+Both arms preserve raw-amplitude naming, ten hard seed votes, k-means fusion,
+thresholds, support and selected N. Internal model memberships and final vote
+fractions are not calibrated chemical probabilities. The bounded comparison
+has no new result yet; benchmark labels are used only in external grading.
+
 ## Opt-in label-free exploration (2026-09-18)
 
 `config/label_free_exploration.toml` is diagnostic configuration, not a new
