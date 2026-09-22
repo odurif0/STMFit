@@ -1211,7 +1211,8 @@ function _pack_chain_initial(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConf
 end
 
 function _fit_chain_n(xs, ys, zimg, x, y, z, noise, n::Int, axisctx, ccfg::ChainSweepConfig; starts::Int=ccfg.multistart,
-                     warm_start::Union{Vector{Float64},Nothing}=nothing, observed_only::Bool=false)
+                     warm_start::Union{Vector{Float64},Nothing}=nothing, observed_only::Bool=false,
+                     diagnostics=nothing)
     n == 0 && return ChainModelResult(n=0, params=[median(z)], success=true)
     if !_chain_can_fit_support(n, axisctx, ccfg)
         return ChainModelResult(n=n, success=false, valid=false,
@@ -1247,9 +1248,13 @@ function _fit_chain_n(xs, ys, zimg, x, y, z, noise, n::Int, axisctx, ccfg::Chain
         p_start = clamp.(p_start, lower .+ 1e-9, upper .- 1e-9)
 
         p_global = p_start
+        global_status = "skipped"
+        global_error = ""
+        global_evaluations = 0
         if !ccfg.skip_global
             objective = let km=ccfg.kappa_max, kw=ccfg.kappa_weight, nf=n, ax=axisctx, c=ccfg
                 (u, _) -> begin
+                    diagnostics === nothing || (global_evaluations += 1)
                     rss_val = sum(abs2, z .- model_f(xy, u))
                     if km > 0 && nf > 1
                         _, _, ts, _, spars, sperps = _decode_chain(u, nf, ax, c;
@@ -1268,27 +1273,46 @@ function _fit_chain_n(xs, ys, zimg, x, y, z, noise, n::Int, axisctx, ccfg::Chain
             try
                 sol = solve(prob, nlop; maxiters=ccfg.global_maxiter)
                 p_global = sol.u
-            catch
+                diagnostics === nothing || (global_status = string(sol.retcode))
+            catch err
                 # NLopt failed, keep p_start for LM fallback
+                if diagnostics !== nothing
+                    global_status = "exception"
+                    global_error = sprint(showerror, err)
+                end
             end
         end
 
         p_final = p_global
         perr_local = fill(NaN, length(p_global))
+        lm_converged = false
+        lm_status = "exception"
+        lm_error = ""
+        lm_iterations = 0
         try
-            fit = curve_fit(model_f, xy, z, p_global; lower=lower, upper=upper, maxIter=ccfg.max_iter, autodiff=:finite)
+            fit = curve_fit(model_f, xy, z, p_global; lower=lower, upper=upper, maxIter=ccfg.max_iter,
+                            autodiff=:finite, store_trace=diagnostics !== nothing)
             p_final = fit.param
+            if diagnostics !== nothing
+                lm_converged = fit.converged
+                lm_status = lm_converged ? "converged" : "not_converged"
+                lm_iterations = isempty(fit.trace) ? 0 : last(fit.trace).iteration
+            end
             try
                 pcov = estimate_covar(fit)
                 perr_local = sqrt.(max.(diag(pcov), 0.0))
             catch
             end
-        catch
+        catch err
+            diagnostics === nothing || (lm_error = sprint(showerror, err))
         end
         pred = model_f(xy, p_final)
         rss = sum(abs2, z .- pred)
         nll = _student_nll(z .- pred, noise, ccfg.student_nu)
-        return (params=p_final, rss=rss, nll=nll, perr=perr_local)
+        return (params=p_final, rss=rss, nll=nll, perr=perr_local,
+                diagnostic=diagnostics === nothing ? nothing :
+                    (; global_status, global_error, global_evaluations, lm_status, lm_error,
+                        lm_converged, lm_iterations, initial=copy(p_start), global_params=copy(p_global)))
     end
 
     # ── Multistart loop ──
@@ -1328,6 +1352,10 @@ function _fit_chain_n(xs, ys, zimg, x, y, z, noise, n::Int, axisctx, ccfg::Chain
         end
 
         res = _run_one_start(p_start, amp_min, amp_range)
+        # Opt-in observer runs after the timed optimizer. Copies prevent an
+        # observer from mutating the candidate used by the unchanged selection.
+        diagnostics === nothing || diagnostics((; start=s, params=copy(res.params),
+            amp_min, amp_range, rss=res.rss, res.diagnostic...))
         if res.rss < best_rss
             best_rss = res.rss
             best_result = res

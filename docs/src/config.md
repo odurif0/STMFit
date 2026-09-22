@@ -1053,6 +1053,18 @@ unknown25 change follows; see `results/gcv_reselection_20260922/report.md`.
 
 ## Opt-in diagnostic exploration settings (2026-09-18)
 
+`paired_acquisition.toml` declares the September 22 shared-geometry feasibility
+experiment. Its mean gain is fixed to one; a differential gain, intercept and
+two tilts distinguish forward/backward views without changing the native mean
+shape. `[model] gain_delta_max = 0.5` gives gains `[0.5,1.5]`,
+`background_delta_max_nm = 5.0` and `tilt_delta_max = 1.0` reuse native plane
+boxes, and `local_maxiter = 300` caps both matched local continuations. These
+are explicit exploratory settings, not a promoted calibration. Selection
+retains saved N and valid minimum full-parameter GCV, with native mean validity
+plus the unchanged maximum-residual guard in both paired views. Original support,
+observed samples and accepted registration remain fixed. No partial grade or
+silent fallback is allowed. See the journal's authorized paired-acquisition entry.
+
 The authorized original-support follow-up uses
 `registered_refit_original_support.toml`. Only `[preprocessing].roi` changes to
 `original_native_roi_intersect_observed_mask`, with the explicit `geometry =

@@ -2307,6 +2307,17 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-22. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0ac. **Can a shared-geometry model of the two acquisition directions improve recognition?**
+    → **AUTHORIZED, DIAGNOSTIC FIRST (Sep 22)**: first instrument the existing
+    `240817_006.sxm` failure without changing its N, thresholds or optimization
+    budget. If this reveals no blocking problem, compare a minimal paired-view
+    model with view-specific gain/background and common molecular geometry.
+    Four hours preparation from 23:21 CEST; at most one two-hour Viper job,
+    four requested CPUs / 16 GB, no automatic retry. A complete comparison or
+    an explicit indeterminate conclusion is required; no promotion is implied.
+    Count reselection and measurement-error classification are separate ideas,
+    not included in this first experiment. Saved support remains **676/34**.
+
 0ab. **Can original unregistered geometric support make the registered refit complete?**
     → **DIAGNOSTIC COMPLETE; RECOGNITION INDETERMINATE (Sep 22)**: source
     **98d664d**, job **11942393**, **FAILED 1:0 in 28m10s** after nine seconds
@@ -11677,3 +11688,91 @@ deployment. Assignment HTML is **199.27 KiB**, below the unchanged 200 KiB
 limit; existing page-size/search-index warnings remain. The Manifest hash
 remains unchanged. The completed diagnostic is handed off without promoting
 a candidate or claiming the broader recognition objective is achieved.
+
+### 2026-09-22 — Authorized failure diagnosis before a paired-acquisition fit
+
+The user authorizes the proposed follow-up. The first deliverable is a
+numerically explained reproduction of `240817_006.sxm`, selected because it
+failed native validity, not because of its external grade. Preparation starts
+at **23:21 CEST**, capped at four hours, followed if feasible by **one Viper
+job capped at two hours**, four requested CPUs / 16 GB, no automatic retry.
+The intended method comparison is common molecular geometry with separate
+forward/backward acquisition gain/background at saved label-free N. Done means
+tested code, fetched and checked complete-cohort predictions and an external
+recognition comparison, or an explicit indeterminate result if the diagnostic
+exposes a blocking issue. The reference is retained until that comparison.
+
+The native optimizer receives an optional, post-optimization observer. It
+records each start's raw initial/global/final vectors, global termination and
+evaluation count, LM convergence/iterations and swallowed optimizer exceptions.
+Observer vectors are copies. Native objectives, bounds, initialization, budgets,
+minimum-RSS start choice and final validity remain unchanged. With observation
+enabled LM stores its existing numerical trace; no optimizer is added. Timed
+global optimization means a new replay is not assumed bit-identical to the old
+cluster result, and a local convergence flag is not global optimality.
+
+`test/diagnose_registered_fit_failure.jl` replays the original geometric support
+and both zero/accepted shifts on exactly one raw scan. It saves all native
+circular and elliptical Gaussian/split candidates, including rejected ones,
+their observed-pixel residual maps and the unchanged validity calculations.
+The split fit is attempted independently here to diagnose shape adequacy; this
+does not change the previous production comparison's skip-on-failure policy.
+No candidate is rescued, selected by labels, substituted into saved predictions
+or graded. No new physical/selection parameter is introduced.
+
+The completed unknown25 application and the archived scientific Must-NOT-have
+list remain intact: no composition prior, expected count, truth-selected variant,
+uncertain-row exclusion, user-artifact overwrite, new DFT, count reselection,
+classifier tuning, threshold relaxation or retired orchestration. The reused
+development benchmark is not independent validation. The noise difference
+between acquisitions is not assumed independent or a calibrated uncertainty.
+
+The native observer passes **40 synthetic equality/isolation checks**, and the
+2D package passes **151 tests**. The first real local diagnostic stops after
+the two control Gaussian fits because the shared TSV writer deliberately
+refuses to overwrite a previously emitted summary. This is a diagnostic writer
+bug, not a scientific failure. The initial outputs/log are retained; no
+registered fit or external grade ran. The writer now emits unique per-stage
+tables and final summaries once; a new synthetic end-to-end test adds **27
+checks**, with six CLI checks (**73 diagnostic tests** total). The corrected
+single-file diagnostic uses a separate `diagnostic_v2` directory, never
+overwriting the first attempt.
+
+An old `audit_fwd_bwd_joint_refit.jl` prototype already exists, but has free
+gain/offset scale degeneracies, permits negative gains, subsamples its fit and
+silently substitutes an OLS rescore on failure. It is not a complete recognition
+comparison and is not reused as such. The new opt-in paired feasibility model
+fixes the mean gain to one, sharing all molecular parameters, with opposite
+view-specific gain and background-plane differences. Its average is exactly
+the native Gaussian/split model; no new mean shape or noise model is introduced.
+
+`config/paired_acquisition.toml` freezes positive gains in **[0.5, 1.5]**, a
+differential intercept box **[-5,5] nm**, differential tilt boxes **[-1,1]**, and
+**300 LM iterations**. The plane boxes reuse native numerical bounds; the gain
+box is an exploratory constraint, not calibrated chemical evidence. All values
+are explicit and are not chosen by the benchmark. The gain multiplies only the
+molecular peaks, not the mean background. Equal/opposite view coefficients
+remove the trivial scale/offset ambiguity; this does not guarantee that every
+remaining parameter is identifiable on a narrow molecular support.
+
+The planned one-file paired feasibility check starts each family from its
+exported registered native candidate, even if native validity rejected it.
+Both the fused-mean continuation and paired-view LM use the same molecular
+start, physical bounds and 300-iteration ceiling. No new global search or
+alternative seed is added. Both must pass native mean validity; the paired arm
+also must pass the existing 3.5 maximum residual/noise guard in **each** view,
+using the unchanged conservative native noise. At fixed saved N, valid minimum
+full-parameter GCV selects the family separately in each arm/profile. The paired
+score uses stacked observations and four additional parameters; it is a
+predictive heuristic, not a proof of independent noise, and `n_eff` is unchanged.
+Any missing Gaussian or split family leaves this planned complete-comparison
+workflow infeasible; it does not permit partial learning or scoring. No claim of
+global impossibility follows from a failed local attempt.
+
+The paired model passes **85 synthetic/configuration checks**, including exact
+mean preservation, view exchange, recovery of synthetic acquisition parameters,
+full GCV count, finite bounds, rejected unobserved samples, unchanged starting
+vectors and non-relaxation of native validity. An initial test-only decimal/
+broadcast syntax error was corrected before any real paired fit. The only real
+scan remains `240817_006.sxm`; full-cohort fitting is reserved for Viper if this
+fixed hypothesis can produce all required fits on that scan.

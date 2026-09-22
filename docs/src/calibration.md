@@ -642,6 +642,18 @@ of N or independent validation. See `results/gcv_reselection_20260922/report.md`
 
 ## Opt-in label-free exploration (2026-09-18)
 
+The September 22 paired-acquisition feasibility experiment preserves the native
+Gaussian/split mean shape and all molecular bounds at saved N. It adds
+equal/opposite view gain and background-plane terms, fixing mean gain to one
+to remove the trivial gain/amplitude ambiguity. `paired_acquisition.toml` bounds
+gains to `[0.5,1.5]`, the differential intercept to `[-5,5] nm` and differential
+tilts to `[-1,1]`; these are exploratory numerical boxes, not a new physical
+calibration. The matched fused and paired continuations share their start and
+300-iteration budget. Native mean validity is never relaxed; paired residuals
+must additionally pass the unchanged guard in both acquisitions. Stacked GCV
+is a heuristic with four added coefficients, not an independence/noise claim.
+The first real check is confined to the previously failed scan, without labels.
+
 The newly authorized `registered_refit_original_support.toml` follow-up freezes
 the original unregistered native ROI, axis/origin, tube and axial bounds for
 both refit arms. It changes no physical constant and does not expand support
