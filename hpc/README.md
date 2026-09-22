@@ -1151,4 +1151,17 @@ check control byte replay, all 146 scans / 900 keys, unchanged selected N and
 upstream tables, seed availability, covariance intensities, convergence and
 unchanged vote arithmetic. Nonmonotone ordinary likelihood under shrinkage
 is logged without seed selection. Outputs and Slurm logs must be fetched
-locally. No scientific result has been produced for this comparison yet.
+locally.
+
+Completed source **bb6943b**, job **11936229**, **0:0 in 7m56s**, after
+**3s** queued. Four CPUs requested, eight allocated, 16 GB requested,
+MaxRSS **2,283,380 K**. All **588 regular outputs and Slurm log** are fetched
+and checksummed. **4,277 assertions / 21 suites**, **11,120 pre-grade checks**,
+eight component checks and 580 paired scan rows pass. All control tables replay
+exactly. Shrinkage gives **637/870 correct, 24/145 exact**; coherent Student
+gives **627/870, 25/145**, versus **676/34** support, all at **852/870 coverage**.
+Every fit meets the stopping criterion; two shrinkage seeds have reported
+ordinary-likelihood decreases, without exclusion. Retain support, below the
+historical 677/36 target. No retry, parameter search, combined arm, count refit,
+DFT change or unknown25 rerun follows. Full evidence and limitations:
+`results/em_shrinkage_student_density_20260922/report.md`.

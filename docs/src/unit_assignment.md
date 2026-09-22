@@ -2454,64 +2454,60 @@ historical objective remains open.
 
 ### Whole-scan Fisher and relative GMM naming (2026-09-22): no improvement
 
-Two independent profiles test whole-scan Fisher cross-fitting
-(`unit_assignment_scan_fisher.toml`) and within-scan amplitude naming of
-unchanged GMM groups (`unit_assignment_relative_naming.toml`). No composition
-prior or combined arm is used; geometry, N and remaining settings stay fixed.
-
-Source **43f8993**, Viper job **11931478**, completes **0:0 in 8m30s** after
-3m01s queued. All 588 outputs plus Slurm log are fetched/checksummed; the
-twelve control tables replay exactly. All 146 scans / 900 keys, selected N
-and four unavailable rows remain. Verification: 3,035 focused assertions,
-10,987 pre-grade checks, eight component checks and 580 paired scan rows.
-
-| Profile | Correct / 870 | Classified accuracy | Exact / 145 | Coverage / 870 |
-|---|---:|---:|---:|---:|
-| Historical saved reference | 677 | 677/854 (79.3%) | 36 | 854 |
-| Exactly replayed support control | 676 | 676/852 (79.3%) | 34 | 852 |
-| Whole-scan Fisher | 668 | 668/852 (78.4%) | 34 | 852 |
-| Within-scan GMM naming | 676 | 676/852 (79.3%) | 34 | 852 |
-
-Fisher uses two disjoint 73-scan groups; both fits converge. Against control,
-8 scans gain, 15 lose, 122 tie; four exact chains are gained and four lost.
-All 26 final flips are 0→1 into zero-margin GMM=1 / k-means=0 ties (58→84
-total ties). Relative naming preserves every fit hash and group name; all
-scores/decisions are unchanged, only the final model-name field differs.
-
-**Reject grouped Fisher; relative naming gives no gain. Retain support
-676/34**, below historical 677/36. Full methods, confusion counts, exact-chain
-gains/losses and limitations remain in the [dated journal](journal.md) and
-`results/scan_fisher_naming_20260922/report.md`. No post-grade tuning, combined
-arm, N refit, DFT change or unknown25 rerun follows. This reused development
-benchmark does not establish independent validation or physical correspondence.
+Whole-scan Fisher gives **668/870 correct, 34/145 exact**; within-scan GMM
+naming gives unchanged **676/870, 34/145**, at **852/870 coverage**. Both
+73-scan Fisher fits converge; 8 scans gain, 15 lose, and exact gains/losses
+are 4/4. All 26 final flips enter zero-margin ties. Relative naming preserves
+every fitted parameter and group name. **Retain support 676/34**, below
+historical 677/36. Source **43f8993**, job **11931478**, **0:0 in 8m30s**;
+all outputs are fetched and checked. Full methods, test counts and losses:
+[journal](journal.md), `results/scan_fisher_naming_20260922/report.md`.
+No post-grade tuning, combined arm, N refit or unknown25 rerun follows.
+The reused grade is not independent validation or physical correspondence.
 
 ### Factor-analyzer and Student learning (2026-09-22): negative
 
-Two independent profiles change only mixture learning: rank-four factor
-analyzers and Student components with fixed df five. The family persists
-through both hard updates; naming, final Mahalanobis vote and N stay fixed.
-See [configuration](config.md) and [equations](calibration.md).
+Fixed rank-four factors give **620/870 correct, 23/145 exact**; df-five
+Student learning with the old Mahalanobis final score gives **631/870,
+25/145**, at **852/870 coverage**. The family persists through both hard
+updates; naming, final vote and N stay fixed. Factors gain on 21 scans and
+lose on 65 (exact 5/16); Student gains on 18 and loses on 57 (4/13). All
+Student fits converge; all factor fits hit 200 updates, so this is not a
+verdict on a converged MFA optimum. **Retain support 676/34**, below history
+677/36. Source **e2205cb**, job **11935072**, **0:0 in 8m17s**; all outputs
+are fetched and checked. Full equations, tests, losses and limitations:
+[journal](journal.md), `results/factor_student_mixtures_20260922/report.md`.
+No post-grade tuning or application rerun follows; grading is not independent.
+
+### All-update shrinkage and coherent Student decisions (2026-09-22): negative
+
+The first candidate regularizes separate covariances at initialization, every
+Gaussian EM update and both hard steps. The second keeps df-five Student
+learning and uses Student density for both hard assignment and final scoring.
+Features, naming, N, seed votes and final fusion stay fixed. See
+[configuration](config.md) and [equations and limitations](calibration.md).
 
 | Profile | Correct / 870 | Exact / 145 | Coverage / 870 |
 |---|---:|---:|---:|
 | Historical reference | 677 | 36 | 854 |
 | Replayed support control | 676 | 34 | 852 |
-| Factor analyzers | 620 | 23 | 852 |
-| Student-t | 631 | 25 | 852 |
+| All-update shrinkage | 637 | 24 | 852 |
+| Coherent Student density | 627 | 25 | 852 |
 
-Source **e2205cb**, job **11935072**, completes **0:0 in 8m17s**. All 588
-outputs plus Slurm log are fetched/checksummed. Verification: 3,616 focused
-assertions, 11,083 pre-grade checks, eight component checks and 580 paired
-scan rows. Keys, N, upstream/Fisher/k-means tables and availability are fixed.
+Source **bb6943b**, job **11936229**, **0:0 in 7m56s**, after three seconds
+queued. All 588 outputs and Slurm log are fetched/checksummed; 4,277 focused
+assertions, 11,120 pre-grade checks, eight component checks and 580 paired
+scan rows pass. Every fit meets the fixed stopping criterion. Two regularized
+fits have nonmonotone ordinary likelihood; none is dropped or retuned.
 
-Factors gain on 21 scans and lose on 65; Student gains on 18 and loses on 57.
-Exact gains/losses are 5/16 and 4/13. False positives rise 52→158 / 144.
-Of 159 / 142 final 0→1 flips, 158 / 141 enter zero-margin ties. All Student
-fits converge; all factor fits hit 200 updates, limiting that conclusion
-to this bounded version. **Retain support 676/34; history remains unexceeded.**
-No post-grade tuning or application rerun follows. Full losses and caveats:
-[journal](journal.md), `results/factor_student_mixtures_20260922/report.md`.
-This repeatedly reused grade is not independent validation.
+Shrinkage gains on 19 scans and loses on 55 (exact 6/16); Student gains on
+17 and loses on 58 (4/13). False positives rise 52→135 / 152, outweighing
+the recovered false negatives. Of 129 / 154 final changes, 128 / 153 enter
+zero-margin ties. **Retain support 676/34; historical 677/36 remains unexceeded.**
+No post-grade tuning, combination, count refit or unknown25 rerun follows.
+Full losses: `results/em_shrinkage_student_density_20260922/report.md` and
+[journal](journal.md). The reused development benchmark is not independent
+validation and its orientation alignment is not measured spatial matching.
 
 ### Native numerical conventions
 

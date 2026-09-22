@@ -79,6 +79,14 @@ factor fits reach the fixed 200-update cap, so this is not a verdict on a
 fully converged MFA optimum. No iteration/rank/df or tie-rule tuning follows.
 See the [mixture comparison](docs/src/unit_assignment.md#factor-analyzer-and-student-learning-2026-09-22-negative).
 
+The subsequent all-update covariance shrinkage and coherent Student-density
+tests also regress: **637/870 correct, 24/145 exact**, and **627/870, 25/145**,
+respectively, at unchanged **852/870 coverage**. All ten fits per candidate
+meet their stopping criterion; control tables replay exactly. Retain the
+**676/34 support candidate**, below historical 677/36. No post-grade tuning
+or unknown-chain rerun follows. See the
+[shrinkage/Student-density comparison](docs/src/unit_assignment.md#all-update-shrinkage-and-coherent-student-decisions-2026-09-22-negative).
+
 **Research branch, September 20:** the symmetric fused-fit correction improves
 the regenerated reconstruction from **666 to 671 correct / 870 controls** and
 **24 to 28 exact chains / 145**, at identical cached counts and coverage

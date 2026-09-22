@@ -240,6 +240,26 @@ count refit, DFT change or unknown25 rerun follows. Complete gains/losses:
 `results/factor_student_mixtures_20260922/report.md`. The reused benchmark
 remains development evidence, not independent generalization.
 
+The subsequent all-update shrinkage / coherent Student-density comparison
+(source **bb6943b**, job **11936229**, **0:0 in 7m56s**, after **3s** queued)
+is also negative: **637/870 correct, 24/145 exact** and **627/870, 25/145**,
+at unchanged **852/870 coverage**, versus the exactly replayed **676/34**
+support control. Shrinkage gains on 19 scans and loses on 55 (6 exact gains /
+16 losses); Student gains on 17 and loses on 58 (4 / 13). All ten fits per
+candidate meet their stopping criterion (25/43 and 65–86 updates). Two
+regularized fits have nonmonotone ordinary likelihood, as allowed and reported;
+none is discarded or retried. False positives rise 52→135 / 152, exceeding
+the recovered false negatives. Almost all changed decisions enter vote ties.
+
+All **588 outputs and Slurm log** are fetched/checksummed; **4,277 assertions
+in 21 suites**, **11,120 pre-grade checks**, eight component checks and 580
+paired scan rows pass. All 146 scans / 900 keys, N, common upstream tables
+and four unavailable rows remain. Keep `config/unit_assignment_patch_support.toml`;
+historical 677/36 remains unexceeded. No post-grade coefficient/df/threshold
+search, combination, count refit, DFT change or unknown25 rerun follows.
+Details: `results/em_shrinkage_student_density_20260922/report.md`. This reused
+benchmark is development evidence, not independent validation.
+
 This page is the hand-off document for reproducing the current chitosan workflow
 without relying on prior conversation context.  The goal is a label-free fitting
 and model-selection pipeline that is externally graded on the benchmark and then

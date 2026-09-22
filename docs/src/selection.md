@@ -116,6 +116,16 @@ GCV/guard, counting claim, DFT or unknown25 result changes. No post-grade
 iteration/rank/df or fusion tuning follows; reused grading is not independent
 validation. Details: `results/factor_student_mixtures_20260922/report.md`.
 
+All-update covariance shrinkage and coherent Student-density decisions also
+regress assignment: **637/870 correct, 24/145 exact** and **627/870, 25/145**,
+at unchanged **852/870 coverage**. The support control replays **676/34**
+exactly and remains the working candidate; historical 677/36 is not exceeded.
+All ten fits per arm meet their stopping criterion. No selected N, geometry,
+GCV/guard, physical calibration, counting claim, DFT or unknown25 result changes.
+No post-grade coefficient, df, threshold or fusion tuning follows. Full losses
+and limitations: `results/em_shrinkage_student_density_20260922/report.md`.
+This assignment-only development comparison is not independent validation.
+
 How STMFit chooses the optimal number of lobes (N) from the sweep results.
 
 ## Selection Hierarchy

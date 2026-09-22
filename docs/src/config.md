@@ -1028,7 +1028,15 @@ M-step: log-likelihood decreases and the largest decrease are reported, not
 used to choose seeds. Finite capped fits are retained and identified as such.
 No combination with tied covariance, alternative naming, weighting, resampling,
 normalization or Fisher grouping is enabled. Selected N, features, thresholds,
-DFT sources and unknown25 remain unchanged. No benchmark result yet.
+DFT sources and unknown25 remain unchanged.
+
+The completed comparison is negative: all-update shrinkage gives **637/870
+correct, 24/145 exact**; coherent Student gives **627/870, 25/145**, both at
+**852/870 coverage**, versus exactly replayed **676/34** support. All ten fits
+per arm satisfy their stopping criterion. Keep the support profile; historical
+677/36 remains unexceeded. No coefficient, df, threshold or fusion rule changes
+after grading. Source **bb6943b**, job **11936229**; full evidence and losses:
+`results/em_shrinkage_student_density_20260922/report.md`.
 
 ## Opt-in diagnostic exploration settings (2026-09-18)
 

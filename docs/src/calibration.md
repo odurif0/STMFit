@@ -607,8 +607,20 @@ hard-update extension of the soft Student mixture, not pure soft EM throughout.
 
 Both arms preserve raw-amplitude naming, ten hard seed votes, k-means fusion,
 thresholds, support and selected N. Internal model memberships and final vote
-fractions are not calibrated chemical probabilities. The bounded comparison
-has no new result yet; benchmark labels are used only in external grading.
+fractions are not calibrated chemical probabilities. Benchmark labels are
+used only in external grading.
+
+Completed outcome: **637/870 correct, 24/145 exact** for all-update shrinkage,
+**627/870, 25/145** for coherent Student, versus exactly replayed **676/34**
+support, all at **852/870 coverage**. All ten fits per arm meet tolerance:
+25 or 43 updates for shrinkage, 65–86 for Student. Shrinkage coefficients
+range about 0.02993–0.06040; seeds 1 and 3 each show eleven ordinary-likelihood
+decreases, with maximum drop 1.14377. None is excluded or retried. Student
+latent precisions range about 0.003045–5.447092. Numerical convergence does
+not establish good recognition or a global optimum. Reject these two fixed
+versions, retain support and leave the historical 677/36 target open. No
+post-grade tuning or unknown-chain claim follows. Source **bb6943b**, job
+**11936229**, full report `results/em_shrinkage_student_density_20260922/report.md`.
 
 ## Opt-in label-free exploration (2026-09-18)
 

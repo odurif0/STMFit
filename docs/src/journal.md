@@ -2308,16 +2308,23 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0v. **Can covariance regularization throughout learning or coherent Student
-    decisions improve recognition?** → **AUTHORIZED; IN PROGRESS (Sep 22)**:
-    two separate candidates against the unchanged 676/34 support control,
-    with 677/36 historical still the target. Three hours preparation/tests
-    from 11:20 CEST, one Viper job capped at one hour, no combined arm or
-    post-grade tuning. Initial/hard spherical shrinkage is extended to soft
-    EM responsibilities by an explicit fixed-weight plug-in formula, without
-    iid/noise claims. Student keeps df five but uses its density for both hard
-    assignments and final scores. N, features, seeds, fusion and thresholds
-    remain fixed; outputs must be checked before external grading. No result
-    yet; measurement-error modelling and MFA cap changes are out of scope.
+    decisions improve recognition?** → **COMPLETE; NEGATIVE (Sep 22)**:
+    source **bb6943b**, job **11936229**, **0:0 in 7m56s**, after **3s** queued.
+    All-update shrinkage gives **637/870 correct, 24/145 exact**; coherent
+    df-five Student gives **627/870, 25/145**, versus exactly replayed
+    **676/34** support, all at **852/870 coverage**. All ten fits per arm
+    meet their stopping criterion (25/43 and 65–86 updates). Two shrinkage
+    seeds show ordinary-likelihood decreases, without exclusion or retry.
+    Shrinkage gains on 19 scans and loses on 55 (exact 6/16); Student gains
+    on 17 and loses on 58 (4/13). False positives outweigh recovered false
+    negatives; nearly all changed decisions enter zero-margin vote ties.
+    All **588 outputs and Slurm log** are fetched/checksummed. **4,277 tests,
+    11,120 pre-grade checks**, eight component checks and 580 paired scan
+    rows pass; keys/N, common upstream tables and four unavailable rows stay
+    fixed. Retain support; historical 677/36 remains unexceeded. No new run,
+    coefficient/df/seed/threshold search, combination, N refit, DFT change,
+    MFA-cap change, measurement-error model or unknown25 rerun follows.
+    This reused development benchmark is not independent validation.
 
 0u. **Can lower-rank or heavy-tailed mixture learning improve recognition?** →
     **COMPLETE; NEGATIVE FOR THESE FIXED VERSIONS (Sep 22)**: source
@@ -10334,3 +10341,105 @@ saved-output report scripts are under
 `results/em_shrinkage_student_density_20260922/`. The preparation takes about
 41 minutes, within the declared three-hour limit. No real result or grade is
 claimed at submission; scientific settings remain frozen at **bb6943b**.
+
+### Completed comparison: both coherent-learning candidates regress
+
+Job **11936229** is submitted at **12:01:26 CEST**, starts at **12:01:29**
+after **3s** queued, and completes **0:0 at 12:09:25**, elapsed **7m56s**.
+Control finishes at 12:05:34, all-update shrinkage at 12:07:29 and Student
+at 12:09:22. Four CPUs are requested, eight allocated; 16 GB requested,
+MaxRSS **2,283,380 K** (about 2.34 GB). No retry or second job is submitted.
+All **588 regular output files plus Slurm log** are fetched locally; both
+checksum comparisons are empty. Remote raw-input symlinks are not recopied.
+
+Before any new grade, **11,120 saved-output checks** pass. Twelve control
+tables are byte-identical to the saved support run; prediction SHA-256 remains
+`eb8d69b8cebcd607b0244db5c65104347e6bcd24acee06f64748cf0e6ec310e3`.
+All arms preserve 146 scans / 900 keys, every selected N and eleven common
+upstream/Fisher/k-means/support tables. The same four rows are unavailable:
+`240310_Cu100009.sxm` lobe 8, `240818_015.sxm` lobe 1 and
+`240818_019.sxm` lobes 1–2. Only external grading excludes the technical scan.
+All ten seeds per arm are numerically usable and physically named, with free
+positive component masses; no fallback, dropped seed or silent row removal.
+
+All regularized fits satisfy the fixed relative-log-likelihood stopping rule
+in **25 or 43 updates**. Initial/EM shrinkage coefficients range about
+**0.029928–0.060398**, and hard-stage coefficients about **0.033321–0.039135**.
+Seeds 1 and 3 each have **eleven ordinary-likelihood decreases**, with largest
+drop **1.1437665**; the other eight have none. This is the expected limitation
+of a plug-in covariance regularizer, not a monotone likelihood-maximizing
+M-step. No seed is discarded or rerun. Student fits all converge in **65–86
+updates**, with latent precisions about **0.00304549–5.44709175**, retaining
+df five and both density-based hard updates. No numerical criterion claims
+a global optimum or calibrated chemical uncertainty.
+
+The unchanged external full145-own-N grade then gives:
+
+| Profile | Correct / 870 | Classified accuracy | Exact / 145 | Coverage / 870 |
+|---|---:|---:|---:|---:|
+| Historical saved reference | 677 | 677/854 (79.3%) | 36 | 854 |
+| Exactly replayed support control | 676 | 676/852 (79.3%) | 34 | 852 |
+| All-update covariance shrinkage | 637 | 637/852 (74.8%) | 24 | 852 |
+| Coherent Student-density decisions | 627 | 627/852 (73.6%) | 25 | 852 |
+
+Against support, shrinkage gives **19 scan gains, 55 losses, 71 ties**, with
+**6 exact gains / 16 losses**. Student gives **17 gains, 58 losses, 70 ties**,
+with **4 exact gains / 13 losses**. Against history, shrinkage gives 26/61/58
+scan gains/losses/ties and 8/20 exact gains/losses; Student gives 22/65/58
+and 6/17. All **580 paired scan rows** are saved. Grade orientation changes
+on 8 / 7 scans against support and 12 / 11 against history; these alignments
+are not independently measured spatial monomer correspondences.
+
+Confusion `(TN,FP,FN,TP)` is support `(513,52,124,163)`, shrinkage
+`(430,135,80,207)`, Student `(413,152,73,214)`. Shrinkage's 44 fewer false
+negatives do not offset 83 extra false positives; Student's 51 fewer do not
+offset 100 extra false positives. Emitted errors rise **176→215 / 225**.
+Counts remain 892 benchmark predictions, 16 missing positions, 38 extras,
+14 short-N and 25 extra-N scans. The same two aligned abstentions leave
+852 classified positions. No count-selection or counting-validation claim changes.
+
+Eight independent saved-component checks pass. Shrinkage changes **179 scores
+and 129 final decisions**, Student **240 scores and 154 decisions**. Every
+final flip is **0→1**, with candidate GMM vote one. **128 / 153** enter exact
+GMM=1 / k-means=0 ties; one flip per arm has final margin 0.25. Total ties
+rise **58→186 / 211**. GMM hard classes change 0→1 for 123 / 148 rows, never
+1→0; six final changes per arm only reinforce a GMM vote already classified 1.
+Among 896 usable rows, GMM scores decrease/increase/tie for **46/133/717**
+with shrinkage and **85/155/656** with Student. Raw `(0,1,?)` frequencies
+change `(673,223,4)` to `(544,352,4)` / `(519,377,4)`. These observations do
+not authorize retuning the fusion or tie rule after grading.
+
+Shrinkage exact gains: `240814_025`, `240816_002`, `240817_024`, `240817_082`,
+`240817_085`, `241114_028`. Losses: `240307_017`, `240815_072`, `240817_005`,
+`240817_007`, `240817_021`, `240817_041`, `240817_044`, `240817_047`,
+`240817_048`, `240817_049`, `240817_052`, `240817_053`, `240817_055`,
+`240818_020`, `241113_087`, `241113_088` (all `.sxm`). Student gains:
+`240814_025`, `240817_082`, `240817_085`, `241114_028`. Losses: `240815_072`,
+`240817_005`, `240817_007`, `240817_021`, `240817_041`, `240817_047`,
+`240817_048`, `240817_049`, `240817_053`, `240817_055`, `240818_020`,
+`241113_087`, `241113_088`. Every changed decision and full grade command
+is retained in `results/em_shrinkage_student_density_20260922/report.md`.
+
+**Decision: reject both fixed candidates as replacements; retain support
+676/34.** Historical 677/36 remains unexceeded. Unlike the preceding capped
+MFA test, all fits meet their stopping criterion here, but this does not
+reject all regularization schemes or Student models. No post-grade parameter
+change, new job, combined arm, count refit, DFT change, measurement-error model,
+MFA retry or unknown25 rerun follows. This two-candidate comparison is complete;
+the broader historical objective remains open. The reused benchmark is
+development evidence, not independent validation or unknown-chain accuracy.
+
+README, runbook, selection, assignment, configuration, calibration and HPC
+notes are updated consistently. The preceding Fisher/naming and MFA/Student
+summaries in the assignment page are condensed, preserving their scores and
+links to the full dated journal, to stay within the existing HTML size limit.
+No documentation size limit is raised. Final documentation verification follows;
+scientific source/settings remain unchanged from **bb6943b** through grading.
+
+The final Julia 1.13 documentation build passes. The assignment page is
+**199.53 KiB**, under the unchanged 200 KiB limit; existing size/search-index
+warnings and the non-CI deployment skip remain. `git diff bb6943b -- config
+test hpc/compare_em_shrinkage_student_density.sbatch Manifest.toml` is empty:
+no scientific code or setting changes during execution, checking or grading.
+Generated results remain ignored; the completed outcome is committed in the
+journal and all cited documentation headlines.
