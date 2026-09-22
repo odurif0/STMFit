@@ -9,7 +9,11 @@ Run `--dry-run` before submitting with explicit `sbatch --export=...`.
 Four one-thread shards create common fixed-N native starts and matched
 joint/profiled refinements. The job also regenerates the cached support reference
 and both unchanged assignment pipelines. Fetch all numerical traces and outputs
-before external grading. The job is not yet submitted; no retry is authorized.
+before external grading. Source **7c5fb6c**, job **11940220** submitted
+**17:24:09 CEST**, initially **PENDING / QOSGrpCpuLimit**. Remote dry-run,
+`sbatch --test-only`, source/input checksums and Julia 1.13 instantiation pass;
+the runtime result is still pending. No retry is authorized. Do not resubmit
+`/ptmp/oldu/stmfit/geometry_profile_20260922_v1`.
 
 The authorized September 22 fixed-geometry amplitude comparison uses
 `hpc/compare_frozen_amplitudes.sbatch`: one two-hour, four-CPU / 16 GB job.

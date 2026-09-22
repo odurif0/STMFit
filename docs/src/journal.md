@@ -2308,8 +2308,9 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0y. **Does full geometric variable projection improve recognition at fixed N?**
-    → **AUTHORIZED; PREPARATION (Sep 22)**: four hours from 16:52 CEST, then
-    one Viper job capped at four hours, four requested CPUs / 16 GB, no retry.
+    → **SUBMITTED (Sep 22)**: source **7c5fb6c**, one Viper job **11940220**,
+    submitted **17:24:09 CEST**, capped at four hours, four requested CPUs /
+    16 GB, no retry. Initially waiting on `QOSGrpCpuLimit`.
     Compare joint and profiled local optimization from an identical fresh
     native initialization, using the same objective, physical validity checks,
     optimizer and evaluation/time ceilings. Replay saved support separately.
@@ -10917,3 +10918,23 @@ Evidence is under `results/geometry_profile_20260922/`. An initial local dry-run
 used a nonexistent Julia launcher path; repeating metadata-only validation with
 the verified `/usr/bin/julia` succeeds. Neither attempt performed scientific
 computation. Viper uses its separately verified absolute Julia 1.13 executable.
+
+Scientific source is committed as **7c5fb6c** and synced to
+`/u/oldu/code/STMFit_geometry_profile_20260922`. All tracked source checksums
+match. The ignored local Manifest is copied separately, then `Pkg.instantiate()`
+and package imports succeed on the login node under Julia 1.13; its SHA256
+remains **617de8162fa4c7a814aacb106f145349bc57ead58ec9a6c332971a821b5974fe**.
+Only dependency preparation and metadata dry-run run there, never STM fits.
+Remote 146-file dry-run and `sbatch --test-only` pass. The latter reports a
+prospective eight-CPU allocation, not a completed job or runtime environment test.
+The saved-output smoke verifier additionally checks overlap independently,
+bringing its checks to **87**, all passing without another fit.
+
+The sole real submission is **11940220**, at **17:24:09 CEST**, output
+`/ptmp/oldu/stmfit/geometry_profile_20260922_v1`, with explicit command-line
+`--export=ALL` and all five required absolute-path variables, `--no-requeue`,
+four requested CPUs / 16 GB and four-hour walltime. Slurm initially reports
+**PENDING / QOSGrpCpuLimit**, no compute yet. Preparation took 32 minutes,
+within the four-hour preparation window. No other candidate or retry is
+submitted. Continue through completion, fetching, checks and external grading;
+submission alone does not satisfy the scientific deliverable.
