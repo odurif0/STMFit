@@ -9,7 +9,9 @@ Viper requires an explicit command-line `sbatch --export=...` with all five.
 The job regenerates support control, profiles Gaussian amplitudes/background
 in four one-thread shards without changing geometry/N, then regenerates the
 candidate assignment. Fetch all diagnostics/outputs before separate grading.
-Preparation is ongoing; no job or new result is available yet.
+Actual **job 11938782** is submitted once, source **567cdde**, output
+`/ptmp/oldu/stmfit/frozen_amplitudes_20260922_v1`. No result is available yet;
+monitor this instance, with no automatic retry.
 
 The authorized September 22 raw-GCV reselection uses
 `hpc/compare_gcv_reselection.sbatch`: one four-hour, four-CPU / 16 GB job.

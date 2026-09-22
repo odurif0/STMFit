@@ -2308,7 +2308,7 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0x. **Does bounded amplitude/background profiling improve assignment with
-    saved N and geometry fixed?** → **AUTHORIZED; IN PREPARATION (Sep 22)**:
+    saved N and geometry fixed?** → **SUBMITTED (Sep 22), JOB 11938782**:
     one support control and one Gaussian-base linear-profile arm, no nonlinear
     refit or count selection. The split geometry stays unchanged because only
     its shape enters this assignment. Existing physical bounds and diagnostic
@@ -10712,3 +10712,11 @@ Both cached geometries and templates match local hashes. Itemized source and
 dereferenced raw-content comparisons are empty. Local and remote dry-runs both
 validate all 146 files without reading pixels. Slurm test-only passes with all
 five variables explicitly exported; it does not validate compute-node execution.
+
+The single actual job is **11938782**, submitted with `--no-requeue` and the
+explicit five-variable export. Source remains **567cdde**, preparation record
+**19b3921**. Slurm test-only identifier **11938774** was speculative, not a real
+job. Preparation took about twenty minutes, within the four-hour bound. Remote
+output is `/ptmp/oldu/stmfit/frozen_amplitudes_20260922_v1`; local fetch/report root
+will be `results/frozen_amplitude_profile_20260922/`. No new benchmark result is
+available; monitor this job rather than submitting another instance.
