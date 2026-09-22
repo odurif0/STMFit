@@ -1064,7 +1064,11 @@ finite-statistic ROI, forward reference and nearest observed initialization
 sample only. No objective or patch pixel is filled. Other native optimizer
 budgets stay in `chitosan.toml`; all registration gates stay in
 `acquisition_registration.toml`. This is a bounded experiment, not a promoted
-configuration; the saved support reference remains 676/34 pending its result.
+configuration. The result is **inconclusive**: three fixed-N span failures,
+including two in the zero-shift control, prevent a complete candidate grade.
+143/146 scans complete all four fits; no setting is relaxed, no partial
+classifier is emitted. Retain saved support **676/34**; full diagnostic:
+`results/registered_refit_20260922/report.md`.
 
 The September 22 acquisition experiment is separately configured by
 `acquisition_registration.toml`. `[model]` fixes signed row-centered integer-x

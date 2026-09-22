@@ -1,6 +1,6 @@
 # Running STMFit on the MPCDF HPC cluster
 
-The authorized September 22 **registered native refit** uses
+The completed September 22 **registered native refit** uses
 `hpc/compare_registered_refit.sbatch`: one two-hour job, four requested CPUs /
 16 GB, four one-thread shards, no retry. It reuses the acquisition estimator,
 then compares saved support with fresh zero-shift and registered Gaussian/split
@@ -10,8 +10,16 @@ pass them explicitly through `sbatch --export=ALL,... --no-requeue`.
 Sync committed code and the existing Manifest, instantiate on the login node,
 compute only in Slurm, then fetch/check all outputs. Source **c7836f9**, job
 **11942091**, submitted **20:39:57 CEST**, started **20:42:15** after group CPU quota.
+It finishes **21:09:12**, **FAILED 1:0 in 26m57s**: three fixed-N support-span
+failures trigger the declared refusal to emit incomplete assignment arms.
+All 146 scans are accounted for; 143 complete all four fits. The result is
+**inconclusive**, with no candidate grade, not a measured recognition loss.
+All **549 outputs and Slurm log** are fetched/checksummed; **22,742** final
+checks pass. Fifteen reference tables replay exactly; support **676/34** stays.
 Output: `/ptmp/oldu/stmfit/registered_refit_20260922_v1`; do not resubmit it.
-No benchmark result or improvement is claimed before completion and grading.
+Use `test/verify_registered_refit.jl --recorded-failures` for the saved-only
+diagnostic, not to authorize partial grading. Full report:
+`results/registered_refit_20260922/report.md`.
 
 The completed September 22 acquisition experiment uses
 `hpc/compare_acquisition_registration.sbatch`: **one two-hour job, four CPUs /

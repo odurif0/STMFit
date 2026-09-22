@@ -1,6 +1,18 @@
 # Chitosan Benchmark and 10–20mer Runbook
 
-Latest September 22 comparison: **fixed-geometry acquisition registration is
+Latest September 22 diagnostic: **registered native refit is inconclusive**.
+All 146 scans are accounted for, but only 143 complete the four Gaussian/split
+fits. Three fits fail the unchanged fixed-N support-span constraint, including
+two in the zero-shift control; seven later fits are not attempted. No partial
+assignment or external grade is produced. The fifteen reference tables replay
+exactly; retain saved support **676/870 correct, 34/145 exact**, below historical
+**677/36**. Source **c7836f9**, job **11942091**, **FAILED 1:0 in 26m57s** by the
+explicit incomplete-cohort guard. All 549 outputs plus the Slurm log are fetched and checked;
+22,742 final checks pass. This does not establish a negative recognition effect.
+Full report: `results/registered_refit_20260922/report.md`. No retry, altered
+support/count, partial grade or unknown-chain run follows.
+
+Earlier September 22 comparison: **fixed-geometry acquisition registration is
 rejected**. It gives **671/870 correct, 26/145 exact**, versus both native
 replay and observation-mask control **676/34**; coverage falls **852→850/870**.
 Registration passes on 104/146 scans and improves all 629 comparable local
@@ -9,8 +21,8 @@ none. All N and geometric fields stay fixed. Keep saved support, below
 historical 677/36; no promotion or post-grade tuning. Source **9961973**, job
 **11941278**, **0:0 in 6m52s**; all **626 outputs and Slurm log** are fetched
 and checksummed. Full report: `results/acquisition_registration_20260922/report.md`.
-No new Gaussian fit, count selection, missing-head fallback, DFT or unknown25
-run follows this completed experiment.
+That fixed-geometry comparison included no new Gaussian fit, count selection,
+missing-head fallback, DFT or unknown25 run.
 
 Earlier September 22 comparison: **geometric variable projection is rejected**.
 At fixed cached N and unchanged support-assignment settings, it gives

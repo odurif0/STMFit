@@ -653,7 +653,13 @@ the identical rules and its fits are reused exactly when registration is zero.
 ROIs/axes/support may differ for nonzero shifts; lower RSS across these arms is
 not itself an improvement in a common objective. Native noise estimates and
 the `n_eff` placeholder are unchanged; no independence or convergence claim is
-made. Settings: `registered_refit.toml`; result pending, support 676/34 retained.
+made. Settings: `registered_refit.toml`. The result is **inconclusive**: two
+zero-shift controls and one registered scan cannot fit their saved N within
+the new observed support under the unchanged conservative parametrization.
+143/146 scans complete all fits. This does not prove incorrect counts or worse
+recognition; no candidate grade is available. No bound, support parameter or N
+is adjusted afterward. Retain support **676/34**; full diagnostic:
+`results/registered_refit_20260922/report.md`.
 
 The September 22 acquisition-translation experiment changes neither molecular
 calibration nor cached N/geometry. `acquisition_registration.toml` declares all

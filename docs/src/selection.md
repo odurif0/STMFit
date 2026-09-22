@@ -1,5 +1,18 @@
 # Model Selection
 
+The September 22 **registered native refit is inconclusive** at saved N.
+Two N=10 scans fail even the zero-shift control: minimum native span 4.6303 nm
+exceeds the observed support 4.2040 nm. A third, N=6, fails after registration
+(2.5724 versus 2.5421 nm). These are conservative native parametrization
+constraints, not proof that the saved counts are false. All 146 inputs remain
+accounted for; 143 have four valid fits. No N, overlap bound or support rule is
+changed to rescue them, and no partial candidate grade is emitted. Full-parameter
+GCV selects only the family at each saved N; the `n_eff` formula is unchanged.
+The exact reference replay retains **676/34**, below historical **677/36**.
+Source **c7836f9**, job **11942091**; complete diagnostic:
+`results/registered_refit_20260922/report.md`. Support/N consistency needs a
+separately authorized scope before a complete recognition comparison is possible.
+
 The September 22 fixed-geometry acquisition registration is **negative:
 671/870 correct, 26/145 exact**, versus both native and observation-mask
 controls **676/34**. Coverage falls **852→850/870**. N and every base/split

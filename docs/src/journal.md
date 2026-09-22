@@ -2308,15 +2308,18 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0aa. **Does refitting both shape models after accepted registration improve recognition?**
-    → **RUNNING; FEASIBILITY FAILURES (Sep 22)**: source **c7836f9**, job **11942091**.
-    Saved N, unchanged registration
-    gates and assignment settings. Compare saved support, fresh zero-shift
-    refits, and registered refits of both Gaussian base and split shape. Native
-    GCV chooses the family at fixed N. Four-hour preparation window from
-    **20:12 CEST**, submitted **20:39:57**, one two-hour Viper job, no retry.
-    Started **20:42:15** after **2m18s** queued. Some fixed-N refits fail
-    physical support constraints, including in the zero-shift control. No
-    partial grade or rescue is allowed; complete diagnostic still running.
+    → **DIAGNOSTIC COMPLETE; RECOGNITION INDETERMINATE (Sep 22)**: source
+    **c7836f9**, job **11942091**, **FAILED 1:0 in 26m57s**, after 2m18s queued.
+    All 146 inputs are accounted for; **143 complete all four fits**. Of
+    584 planned fits, 574 are valid, three fail the unchanged native span
+    constraint and seven later stages are not attempted. Two failures occur
+    in the zero-shift control at N=10; one after registration at N=6.
+    No partial classifier or grade is emitted. Fifteen reference tables replay
+    exactly; **549 outputs plus the Slurm log** are fetched/checksummed and
+    **22,742 final checks** pass. Retain support **676/34**, below historical **677/36**.
+    This does not establish a recognition loss or invalid saved counts. A
+    complete comparison needs a new decision about support/N consistency;
+    no rescue, retry, new N or other campaign follows.
 
 0z. **Can identifiable acquisition translation improve fixed-geometry recognition?**
     → **COMPLETE; NEGATIVE (Sep 22)**: source **9961973**, job **11941278**,
@@ -11400,3 +11403,77 @@ The explicit recorded-failure fixture also passes: it combines the saved smoke
 with a clearly synthetic failed filename in a temporary directory, verifies
 all completed numerical fits, accounts for the missing stages, and emits no
 classifier or grade. This is a verifier test, not another scientific scan.
+
+### Completed diagnostic and decision
+
+Job **11942091** finishes **21:09:12 CEST**, **FAILED, 1:0**, after **26m57s**
+compute and **2m18s** queued. All four shards finish traversing their input
+files; the failure status comes from the declared refusal to emit incomplete
+assignment arms, not a time limit, OOM, new retry or count adjustment. All
+**549 regular output files plus the Slurm log** are fetched locally with
+matching SHA256. The source used on Viper remains **c7836f9**.
+
+There are exactly the three support-span failures listed above, no others.
+All **146 scans / 900 cached input keys** are accounted for; **143 scans**
+complete Gaussian and split fits in both arms. Status accounting is:
+
+| Stage | Native-valid fits | Failed fits | Not attempted after failure |
+|---|---:|---:|---:|
+| Zero-shift Gaussian | 144 | 2 | 0 |
+| Zero-shift split | 144 | 0 | 2 |
+| Registered Gaussian | 143 | 1 | 2 |
+| Registered split | 143 | 0 | 3 |
+| Total | 574 | 3 | 7 |
+
+The two N=10 controls fail before any new family optimization; the same files'
+registered stages are not attempted. The N=6 case has two valid control fits
+before its registered Gaussian initialization is rejected. Its required
+2.5724 nm versus 2.5421 nm support is not a numerical convergence diagnosis.
+The model's minimum-span rule is conservative because it couples spacing to
+maximum allowed width and overlap. These failures do **not** establish that
+the saved N values are false or that no other physical geometry is possible.
+Native-valid fits are not advertised as converged: native convergence remains
+unexposed. No constraint is relaxed and no alternate N/support is tried.
+
+The acquisition shift table, summaries, peaks and **all lag scores** replay
+the preceding experiment exactly: **104 accepted nonzero shifts, 42 zero**.
+The two failed controls are zero-shift scans, leaving **80** exact reused
+profile fits among the successful zero-shift cases. The saved reference
+replays **fifteen scientific tables**, including all predictions, byte-for-byte.
+
+The final saved-only audit passes **22,134 assertions**: recorded failures and
+missing-stage consistency, cohort accounting, actual finite fit pixels and
+view mean, full parameter vectors and bounds, independently assembled Gaussian
+and split RSS, full-parameter GCV, family choice, exported features where a
+complete shard exists, and exact zero-shift reuse. A separate status/input/span
+summary passes **608** checks (591 stage/cohort, eight input-hash, nine physical
+span), making **22,742 final checks**. These checks validate the diagnostic
+record, not a complete classifier or benchmark. The explicit failure-verifier
+mode changes only postprocessing; inference and its settings remain frozen.
+
+**No new control or registered assignment table is produced, and the external
+candidate grade is not run.** The aborted arms are not trained on the 143
+successful scans, nor patched with saved predictions or a new abstention rule.
+No per-unit accuracy, exact-chain count or claimed gain can be assigned to
+this incomplete candidate. The exactly replayed saved support still corresponds
+to **676/870 correct, 34/145 exact**, below historical **677/870, 36/145**.
+
+**Decision: retain saved support; this registered-refit comparison is
+inconclusive**, not a measured negative recognition effect. The bounded
+diagnostic is finished, but the requested full recognition comparison is
+unavailable and the broader historical objective remains unmet. Support/N
+consistency must be resolved in a separately scoped experiment: preserve/replay
+the original support, or permit a fresh label-free N selection on corrected
+acquisitions. Neither alternative, another proposed direction, new DFT or an
+unknown25 rerun is launched. No benchmark-dependent adjustment occurs.
+
+Full methods, exact failures, all **584 planned stage statuses**, accounting,
+hashes, tests and commands: `results/registered_refit_20260922/report.md`.
+README, runbook, selection, assignment, configuration, calibration and HPC
+notes distinguish this inconclusive diagnostic from the earlier scored
+fixed-geometry experiment. The saved working candidate is unchanged.
+
+The final documentation build succeeds under Julia **1.13.0**, without
+deployment. The assignment page is approximately **199.6 KiB**, below the unchanged
+200 KiB limit; existing page-size/search-index warnings remain. The final
+wording distinguishes 549 regular output files from the additional Slurm log.

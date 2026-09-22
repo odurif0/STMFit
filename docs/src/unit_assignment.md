@@ -2484,6 +2484,22 @@ All 146 scans/900 keys remain. Source **9961973**, job **11941278**, **0:0 in
 validation claim. Method, acceptance, losses and checks: [journal](journal.md),
 `results/acquisition_registration_20260922/report.md`.
 
+### Registered native refit (2026-09-22): inconclusive
+
+Gaussian and split profiles are refitted after accepted registration, with a
+matched zero-shift refit and exact saved reference replay. N, physical bounds,
+registration gates and assignment settings stay fixed. **143/146 scans**
+complete all four fits; three fail the native span constraint, two already in
+the zero-shift control. Of 584 planned fits, **574 are valid, three fail and
+seven are not attempted after failure**. No partial classifier or benchmark
+grade is emitted. This is not evidence of worse chemical recognition.
+
+Retain **support 676/34**, below historical **677/36**. Fifteen reference tables
+replay exactly. Source **c7836f9**, job **11942091**, **FAILED 1:0 in 26m57s**;
+549 outputs plus the Slurm log fetched and checked, **22,742 final checks** pass. No rescue,
+retry, new N or other campaign follows. Full method and failure evidence:
+[journal](journal.md), `results/registered_refit_20260922/report.md`.
+
 ### Native numerical conventions
 
 The constant-current port retains the old first-axis-fast cube index, sampling

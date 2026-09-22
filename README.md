@@ -16,7 +16,15 @@ no variants combined and no settings tuned after grading. Labels are used only
 by external grading; this reused development benchmark is not independent
 validation. See the [support/score comparison](docs/src/unit_assignment.md#complete-disk-support-and-final-gaussian-score-2026-09-21).
 
-The fixed-geometry **acquisition registration** comparison is negative:
+The subsequent **registered native refit** is **inconclusive**, not a new
+benchmark result. At saved N, three scans fail the unchanged support-span
+constraint (two in the zero-shift control); 143/146 complete all four shape
+fits. No scan is excluded and no partial classifier or grade is produced.
+The fifteen reference tables replay exactly. Retain support **676/34**, below
+historical **677/36**. See the
+[registered-refit diagnostic](docs/src/unit_assignment.md#registered-native-refit-2026-09-22-inconclusive).
+
+The earlier fixed-geometry **acquisition registration** comparison is negative:
 **671/870 correct, 26/145 exact**, versus **676/34** for both native replay
 and the observation-mask control. Coverage falls **852→850/870**. Registration
 is accepted on 104/146 scans and improves all 629 comparable patch correlations
