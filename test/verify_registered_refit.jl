@@ -11,27 +11,42 @@ num(r,k)=parse(Float64,r[k])
 int(r,k)=parse(Int,r[k])
 close(a,b)=isapprox(a,b;atol=1e-12,rtol=1e-10)
 
-function geometry(root,cache,shiftpath)
+function geometry(root,cache,shiftpath; complete=true)
     _,base=lobe_table(cache)
     shifts=RR.read_shifts(shiftpath,unique(first.(collect(keys(base)))))
     expected=Set(keys(base)); seen=Set{String}()
     raw=TOML.parsefile(joinpath(ROOT,"config","chitosan.toml"))
     assignment=TOML.parsefile(joinpath(ROOT,"config","unit_assignment_patch_support.toml"))
-    paths=sort(filter(p->endswith(p,".fits.tsv"),readdir(root;join=true)))
+    paths=sort(unique([chop(p;tail=length(suffix)) for p in readdir(root;join=true)
+        for suffix in (".fits.tsv",".failures.tsv") if endswith(p,suffix)]))
+    combinations=[(a,p) for a in RR.ARMS for p in RR.PROFILES]
+    completed_before_failure=Dict("load"=>0,"control_support"=>0,"control_gaussian"=>0,"control_split"=>1,
+        "registered_support"=>2,"registered_gaussian"=>2,"registered_split"=>3)
+    optional_table(path)=isfile(path) ? last(read_table(path)) : Dict{String,String}[]
     @testset "Observed native refits: parameters, independent RSS/GCV, family choice and zero-shift reuse" begin
         @test !isempty(paths)
-        for path in paths
-            prefix=chop(path;tail=length(".fits.tsv"))
-            _,audits=read_table(path); _,parameters=read_table(prefix*".parameters.tsv"); _,bootstrap=read_table(prefix*".bootstrap.tsv")
-            @test !isfile(prefix*".failures.tsv")
-            tables=Dict((a,p)=>last(lobe_table(prefix*".$a.$p.tsv")) for a in RR.ARMS for p in RR.PROFILES)
-            files=Set(r["file"] for r in audits)
-            @test length(audits)==4length(files) && length(bootstrap)==8length(files)
+        for prefix in paths
+            audits=optional_table(prefix*".fits.tsv"); parameters=optional_table(prefix*".parameters.tsv"); bootstrap=optional_table(prefix*".bootstrap.tsv")
+            failures=optional_table(prefix*".failures.tsv")
+            complete && @test isempty(failures)
+            failed=Dict(r["file"]=>r for r in failures)
+            @test length(failed)==length(failures)
+            tables=Dict((a,p)=>last(lobe_table(prefix*".$a.$p.tsv")) for a in RR.ARMS for p in RR.PROFILES if isfile(prefix*".$a.$p.tsv"))
+            @test isempty(failures) ? length(tables)==4 : isempty(tables)
+            files=union(Set(r["file"] for r in audits),Set(keys(failed)))
+            @test length(bootstrap)==2length(audits)
+            @test Set((r["file"],r["arm"],r["profile"]) for r in parameters)==Set((r["file"],r["arm"],r["profile"]) for r in audits)
+            @test length(parameters)==sum(int(a,"p_full") for a in audits;init=0)
+            for f in files
+                expected_slots=haskey(failed,f) ? combinations[1:completed_before_failure[failed[f]["stage"]]] : combinations
+                actual=[(r["arm"],r["profile"]) for r in audits if r["file"]==f]
+                @test actual==expected_slots
+            end
             @test isempty(intersect(seen,files)); union!(seen,files)
             for table in values(tables)
                 @test Set(keys(table))==Set(k for k in expected if first(k) in files)
             end
-            fitdata=Dict((f,a)=>last(read_table(joinpath(prefix*".fit_data",f*".$a.tsv"))) for f in files for a in RR.ARMS)
+            fitdata=Dict((f,a)=>last(read_table(joinpath(prefix*".fit_data",f*".$a.tsv"))) for f in files for a in RR.ARMS if isfile(joinpath(prefix*".fit_data",f*".$a.tsv")))
             for a in audits
                 file,arm,profile=a["file"],a["arm"],a["profile"]
                 n=count(k->first(k)==file,expected)
@@ -90,12 +105,12 @@ function geometry(root,cache,shiftpath)
                 @test num(a,"gcv")==minimum(num(r,"gcv") for r in boots if r["valid"]==r["success"]=="true")
                 result=G.ChainModelResult(n=n,params=p,amp_min=num(a,"amp_min"),amp_range=num(a,"amp_range"),gcv=num(a,"gcv"))
                 serialized=RR.R.feature_rows(file,result,(axisctx=axis,),cfg,a["source"])
-                @test all(tables[(arm,profile)][(file,i)]==serialized[i] for i in 1:n)
+                haskey(tables,(arm,profile)) && @test all(tables[(arm,profile)][(file,i)]==serialized[i] for i in 1:n)
                 if arm=="registered" && shifts[file]==0
                     control=only(r for r in audits if (r["file"],r["arm"],r["profile"])==(file,"control",profile))
                     @test all(a[k]==control[k] for k in setdiff(keys(a),["arm","reused_zero_shift","elapsed_s"]))
                     @test int(a,"elapsed_s")==0
-                    @test all(tables[(arm,profile)][(file,i)]==tables[("control",profile)][(file,i)] for i in 1:n)
+                    haskey(tables,(arm,profile)) && @test all(tables[(arm,profile)][(file,i)]==tables[("control",profile)][(file,i)] for i in 1:n)
                     @test fitdata[(file,arm)]==fitdata[(file,"control")]
                 end
             end
@@ -148,8 +163,34 @@ function cohort(run,saved,previous)
     geometry(run,joinpath(run,"cached_features.tsv"),joinpath(run,"shifts.tsv"))
 end
 
+"Verify recorded failures and every completed fit without turning them into a benchmark."
+function recorded_failures(run,saved,previous)
+    @testset "Indeterminate comparison: explicit failures, no partial classifier or grade" begin
+        _,top=read_table(joinpath(run,"failures.tsv"))
+        @test length(top)==1 && top[1]["stage"]=="refit"
+        @test !isdir(joinpath(run,"control")) && !isdir(joinpath(run,"registered"))
+        failures=reduce(vcat,[last(read_table(p)) for p in readdir(run;join=true) if endswith(p,".failures.tsv")];init=Dict{String,String}[])
+        @test !isempty(failures)
+        @test length(Set(r["file"] for r in failures))==length(failures)
+        _,base=lobe_table(joinpath(run,"cached_features.tsv"))
+        @test all(any(first(k)==r["file"] for k in keys(base)) for r in failures)
+        for suffix in ("",".summary.tsv",".peaks.tsv",".scores.tsv")
+            @test read(joinpath(run,"shifts.tsv"*suffix))==read(joinpath(previous,"shifts.tsv"*suffix))
+        end
+        for table in ("features","features_split","features_local","features_descriptor","features_predictor",
+                "patches_fwd17","patches_bwd17","patches_bwd9","training_support","score_fwd","score_bwd","fisher_cv","pred_gmm","pred_kmeans","predictions")
+            @test read(joinpath(run,"reference",table*".tsv"))==read(joinpath(saved,table*".tsv"))
+        end
+    end
+    geometry(run,joinpath(run,"cached_features.tsv"),joinpath(run,"shifts.tsv");complete=false)
+    println("Recorded failures checked. The recognition comparison is INDETERMINATE; no candidate grade is produced.")
+end
+
 function main(args=ARGS)
-    length(args) in (1,3) || error("Usage: verify_registered_refit.jl SMOKE_DIR OR RUN_DIR SAVED_SUPPORT_DIR PREVIOUS_REGISTRATION_RUN")
+    if length(args)==4 && first(args)=="--recorded-failures"
+        return recorded_failures(args[2:end]...)
+    end
+    length(args) in (1,3) || error("Usage: verify_registered_refit.jl SMOKE_DIR OR [--recorded-failures] RUN_DIR SAVED_SUPPORT_DIR PREVIOUS_REGISTRATION_RUN")
     length(args)==1 ? geometry(args[1],joinpath(args[1],"features.tsv"),joinpath(args[1],"shifts.tsv")) : cohort(args...)
 end
 end

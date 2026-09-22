@@ -2308,13 +2308,15 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0aa. **Does refitting both shape models after accepted registration improve recognition?**
-    → **SUBMITTED; PENDING QUOTA (Sep 22)**: source **c7836f9**, job **11942091**.
+    → **RUNNING; FEASIBILITY FAILURES (Sep 22)**: source **c7836f9**, job **11942091**.
     Saved N, unchanged registration
     gates and assignment settings. Compare saved support, fresh zero-shift
     refits, and registered refits of both Gaussian base and split shape. Native
     GCV chooses the family at fixed N. Four-hour preparation window from
     **20:12 CEST**, submitted **20:39:57**, one two-hour Viper job, no retry.
-    Initial state `QOSGrpCpuLimit`; no score yet, retain 676/34.
+    Started **20:42:15** after **2m18s** queued. Some fixed-N refits fail
+    physical support constraints, including in the zero-shift control. No
+    partial grade or rescue is allowed; complete diagnostic still running.
 
 0z. **Can identifiable acquisition translation improve fixed-geometry recognition?**
     → **COMPLETE; NEGATIVE (Sep 22)**: source **9961973**, job **11941278**,
@@ -11372,3 +11374,29 @@ Preparation takes about **28 minutes**, within the four-hour window. Output:
 source **c7836f9**, no second real local scan and no second job is submitted.
 Continue through completion, fetching, saved-output checks and external grade;
 submission alone does not complete the deliverable.
+
+Job **11942091** starts **20:42:15 CEST** on `vipc2400`, **2m18s** queued,
+eight allocated CPUs with four one-thread refit workers. Registration finishes
+for all 146 scans, and the completed reference's **fifteen scientific tables**
+match the saved support by SHA256, including final predictions.
+
+During refitting, **240312_Cu100070/071.sxm** fail in the zero-shift Gaussian
+control: saved N=10 requires a minimum span **4.6303 nm** under the unchanged
+native parametrization, but the observed-mask support is **4.2040 nm**. The
+earlier saved native support was **4.7951 nm**, with 8,131 fit pixels; the
+new control saves 7,169 observed fit pixels. The two new fit-data tables are
+byte-identical, as were the prior numerical native fits; no scan is removed.
+**240814_025.sxm** subsequently fails only after registration: saved N=6
+requires **2.5724 nm**, versus support **2.5421 nm**. These are fixed-N/support
+incompatibilities, not evidence of chemically worse recognition or proof that
+the saved counts are false. The complete diagnostic continues without changing
+N, overlap, support gates or source. No incomplete candidate can be graded.
+
+Only the saved-output verifier gains an explicit `--recorded-failures` mode to
+audit every completed fit and account for failed stages without claiming a
+complete comparison. Its default remains strict. No inference or cluster code
+changes after source **c7836f9**. The ordinary smoke verification still passes.
+The explicit recorded-failure fixture also passes: it combines the saved smoke
+with a clearly synthetic failed filename in a temporary directory, verifies
+all completed numerical fits, accounts for the missing stages, and emits no
+classifier or grade. This is a verifier test, not another scientific scan.

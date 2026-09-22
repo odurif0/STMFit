@@ -9,7 +9,7 @@ run `bash hpc/compare_registered_refit.sbatch --dry-run` before submission and
 pass them explicitly through `sbatch --export=ALL,... --no-requeue`.
 Sync committed code and the existing Manifest, instantiate on the login node,
 compute only in Slurm, then fetch/check all outputs. Source **c7836f9**, job
-**11942091**, submitted **20:39:57 CEST**, initially pending group CPU quota.
+**11942091**, submitted **20:39:57 CEST**, started **20:42:15** after group CPU quota.
 Output: `/ptmp/oldu/stmfit/registered_refit_20260922_v1`; do not resubmit it.
 No benchmark result or improvement is claimed before completion and grading.
 
