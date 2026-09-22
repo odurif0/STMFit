@@ -2308,7 +2308,8 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0z. **Can identifiable acquisition translation improve fixed-geometry recognition?**
-    → **AUTHORIZED / PREPARING (Sep 22)**: one integer-x backward-to-forward
+    → **SUBMITTED / QUEUED (Sep 22)**: source **9961973**, job **11941278**,
+    submitted **18:47:13 CEST**, waiting on `QOSGrpCpuLimit`. One integer-x backward-to-forward
     registration experiment; four hours preparation from 18:21 CEST, one Viper
     job capped at two hours, no retry. Saved N, base/split geometry and all
     assignment settings stay unchanged. Three arms isolate native replay,
@@ -11135,3 +11136,19 @@ pass. No grade or chemical agreement was computed for this scan. There was
 no parameter adjustment after the smoke. The full146 driver dry-run verifies
 146 files / 900 keys without reading image arrays. Documentation builds under
 the unchanged 200 KiB limit (assignment page **199.81 KiB**).
+
+**Submission:** source **9961973** is committed before transfer. Checksummed
+rsync dry-runs confirm identical tracked sources, all raw inputs, base/split
+caches and templates. The ignored Manifest is copied separately and remains
+SHA256 `617de8162fa4c7a814aacb106f145349bc57ead58ec9a6c332971a821b5974fe`
+after login-node `Pkg.instantiate()` / precompile with Julia 1.13. The expected
+Manifest 1.12.6 warning is recorded, not repaired by hand. Local and remote
+driver dry-runs pass; `sbatch --test-only` succeeds. The actual submission uses
+the explicit command-line `--export=ALL,...` list for all five required paths.
+One job **11941278** is submitted at **18:47:13 CEST**, after approximately
+26 minutes preparation; initial state is `PENDING (QOSGrpCpuLimit)`. The
+two-hour cap and no-retry scope are unchanged. Remote source:
+`/u/oldu/code/STMFit_acquisition_registration_20260922`; outputs:
+`/ptmp/oldu/stmfit/acquisition_registration_20260922_v1`. No STM computation runs
+on the login node. Submission is not a scientific result; the comparison is
+still pending and the saved support candidate remains the working reference.

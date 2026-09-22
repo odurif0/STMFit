@@ -8,7 +8,9 @@ The authorized September 22 acquisition experiment uses
 command line. Run the script with `--dry-run` first. Up to four one-thread
 registration shards precede native replay, observed-mask control and registered
 assignment arms; no fitting or count selection occurs. Fetch all outputs and
-check gates/coverage before external grading. Job/result pending.
+check gates/coverage before external grading. Source **9961973**, job
+**11941278**, submitted **18:47:13 CEST**, initially queued on `QOSGrpCpuLimit`.
+Results pending; do not resubmit `/ptmp/oldu/stmfit/acquisition_registration_20260922_v1`.
 
 The authorized September 22 matched geometric comparison uses
 `hpc/compare_geometry_profile.sbatch`: **one four-hour job, four CPUs / 16 GB**.
