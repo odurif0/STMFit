@@ -10100,3 +10100,22 @@ the whole-scan/naming regression passes **295**. The documentation build
 passes under Julia 1.13. Source is committed before remote preparation;
 the extended synthetic pipeline and complementary regressions are still
 running, so no complete-suite or real-output claim is made at this point.
+
+Source **e2205cb** and the unchanged Manifest are synchronized to
+`/u/oldu/code/STMFit_factor_student_mixtures_20260922`; final source/Manifest
+checksum comparisons are empty. Login-node instantiate without precompilation
+passes with Julia 1.13.0. The metadata-only three-arm dry-run and scheduler
+`--test-only` pass; the latter's speculative identifier is not a submitted
+job. The **331 pipeline assertions**, including **198 across eleven complete
+synthetic variants**, pass before submission. Further complementary tests
+continue concurrently, without changing scientific source.
+
+Actual job **11935072** is submitted once with five explicitly exported
+variables, four requested CPUs, 16 GB, a one-hour limit and no requeue.
+Outputs are reserved at
+`/ptmp/oldu/stmfit/factor_student_mixtures_20260922_v1`; local preparation
+logs are under `results/factor_student_mixtures_20260922/`. No real outcome
+or benchmark score is claimed yet. To keep the assignment documentation
+within its existing HTML size limit, the preceding Fisher/naming section is
+condensed without changing its figures; full detail remains in its dated
+journal entry and local report. No documentation size limit is increased.

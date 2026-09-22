@@ -2454,25 +2454,16 @@ historical objective remains open.
 
 ### Whole-scan Fisher and relative GMM naming (2026-09-22): no improvement
 
-The user authorizes two independent candidates against the retained 676/34
-support control, without combining them. `unit_assignment_scan_fisher.toml`
-changes only cross-fitting to two deterministic whole-scan groups: sort
-basenames by SHA-256 of seed zero + NUL + basename, then alternate ranks.
-Every PCA, GMM, center, amplitude ordering and Fisher vector excludes the
-whole scored scan. No labels, lobe counts or patch validity choose the groups.
-`unit_assignment_relative_naming.toml` instead names the unchanged GMM groups
-using raw amplitude centered/sample-std scaled within each training scan.
-The higher global group mean receives class 1; there is no per-scan quota or
-composition prior. Constant/singleton scales use the existing explicit fallback.
-Both variants preserve N, geometry, remaining signals, seeds and final fusion.
+Two independent profiles test whole-scan Fisher cross-fitting
+(`unit_assignment_scan_fisher.toml`) and within-scan amplitude naming of
+unchanged GMM groups (`unit_assignment_relative_naming.toml`). No composition
+prior or combined arm is used; geometry, N and remaining settings stay fixed.
 
-Scientific source **43f8993**, Viper job **11931478**, completes **0:0 in
-8m30s**, after **3m01s** queued. All **588 outputs and the Slurm log** are
-fetched/checksummed. Verification passes **3,035 assertions across 19 suites**,
-**10,987 pre-grade output checks**, eight saved-component checks and paired
-grade arithmetic. The twelve control tables replay the saved support run
-byte-for-byte. All arms retain 146 scans / 900 keys, all selected N, nine
-common upstream/k-means/support tables and the same four unavailable rows.
+Source **43f8993**, Viper job **11931478**, completes **0:0 in 8m30s** after
+3m01s queued. All 588 outputs plus Slurm log are fetched/checksummed; the
+twelve control tables replay exactly. All 146 scans / 900 keys, selected N
+and four unavailable rows remain. Verification: 3,035 focused assertions,
+10,987 pre-grade checks, eight component checks and 580 paired scan rows.
 
 | Profile | Correct / 870 | Classified accuracy | Exact / 145 | Coverage / 870 |
 |---|---:|---:|---:|---:|
@@ -2481,42 +2472,18 @@ common upstream/k-means/support tables and the same four unavailable rows.
 | Whole-scan Fisher | 668 | 668/852 (78.4%) | 34 | 852 |
 | Within-scan GMM naming | 676 | 676/852 (79.3%) | 34 | 852 |
 
-Whole-scan Fisher has two disjoint groups of 73 scans, containing 449 and 447
-valid rows. Both fits converge and no held scan trains its own feature. All
-896 valid Fisher margins change, as do 242 GMM/final scores and **26 final
-decisions**, all 0→1 into exact GMM=1 / k-means=0 ties with zero final margin.
-Twenty-one of these also change the GMM hard class; five only change its
-vote strength. Final ties rise from 58 to 84; raw `(0,1,?)` counts change
-`(673,223,4)` → `(647,249,4)`. No precision or threshold setting changes.
+Fisher uses two disjoint 73-scan groups; both fits converge. Against control,
+8 scans gain, 15 lose, 122 tie; four exact chains are gained and four lost.
+All 26 final flips are 0→1 into zero-margin GMM=1 / k-means=0 ties (58→84
+total ties). Relative naming preserves every fit hash and group name; all
+scores/decisions are unchanged, only the final model-name field differs.
 
-Against control, **8 scans gain, 15 lose, 122 tie**; **four exact chains are
-gained and four lost**. Gained: `240307_016`, `240814_011`, `240817_045`,
-`241114_028`. Lost: `240817_021`, `240818_020`, `241113_087`, `241113_088`
-(all `.sxm`). Confusion `(TN,FP,FN,TP)` changes `(513,52,124,163)` →
-`(496,69,115,172)`. Against history, 23 scans gain, 30 lose and 92 tie; seven
-exact chains are gained and nine lost. Four grade-orientation changes occur
-against control, eight against history; these are not independent spatial
-monomer correspondences. Counts remain 892 benchmark predictions, 16 missing
-positions and 38 extras; two aligned abstentions leave 852 classified positions.
-
-Relative naming has **identical full-parameter hashes for every seed** and
-selects exactly the same high group under both amplitude conventions. Its
-GMM TSV is byte-identical; all final scores, decisions, margins and abstentions
-are identical, with only the final table's model-name field changed. This is
-a genuine null result on this cohort, not a failed activation or proof that
-absolute-amplitude naming is universally insensitive to acquisition effects.
-
-**Reject grouped Fisher as the working replacement; relative naming supplies
-no improvement. Retain `unit_assignment_patch_support.toml` at 676/34.**
-Historical 677/36 remains the target. The full **580 paired scan comparisons**,
-26 changed decisions and component-score arithmetic are in
-`results/scan_fisher_naming_20260922/report.md` and its linked tables.
-No partition/seed search, combined candidate, post-grade adjustment, count
-refit, DFT change or unknown25 rerun follows. This result does not establish
-that parity cross-fitting or the downstream transductive GMM is independent
-validation. Inference remains label-free; the reused benchmark is development
-evidence. This authorized comparison is complete; the historical objective
-remains open.
+**Reject grouped Fisher; relative naming gives no gain. Retain support
+676/34**, below historical 677/36. Full methods, confusion counts, exact-chain
+gains/losses and limitations remain in the [dated journal](journal.md) and
+`results/scan_fisher_naming_20260922/report.md`. No post-grade tuning, combined
+arm, N refit, DFT change or unknown25 rerun follows. This reused development
+benchmark does not establish independent validation or physical correspondence.
 
 ### Native numerical conventions
 
