@@ -36,7 +36,9 @@ function predictions(q,n,x,y,axis,cfg,amp_min,amp_range)
 end
 
 "Matched LM continuation from the same native candidate; never a saved-result fallback."
-function fit(initial,data,cfg,fwd,bwd,mode,options)
+function fit(initial,data,cfg,fwd,bwd,mode,options; optimizer_options::NamedTuple=(;), diagnostic::Bool=false)
+    all(k in (:maxTime,:x_tol,:g_tol) for k in keys(optimizer_options)) || error("Unsupported optimizer override")
+    all(v isa Real && !(v isa Bool) && isfinite(v) && v>0 for v in values(optimizer_options)) || error("Positive finite optimizer limits required")
     mode in ("fused","paired") || error("Unknown acquisition fit mode")
     length(fwd)==length(bwd)==length(data.z) || throw(DimensionMismatch("Unequal supports"))
     all(isfinite,fwd) && all(isfinite,bwd) || error("Unobserved objective pixel")
@@ -64,7 +66,7 @@ function fit(initial,data,cfg,fwd,bwd,mode,options)
     initial_rss=sum(abs2,target.-model(xy,p0))
     started=time_ns()
     fitted=G.LsqFit.curve_fit(model,xy,target,p0;lower=lo,upper=hi,maxIter=options.local_maxiter,
-        autodiff=:finite,store_trace=true)
+        autodiff=:finite,store_trace=true,optimizer_options...)
     elapsed_s=(time_ns()-started)/1e9
     q=copy(fitted.param); k=G._chain_nparams(initial.n,cfg)
     p=copy(q[1:k])
@@ -84,6 +86,8 @@ function fit(initial,data,cfg,fwd,bwd,mode,options)
         mode=="paired" && max(peak_fwd,peak_bwd)>cfg.residual_peak_snr_threshold ? "view residual high" : ""]),",")
     return (;result=r,params=q,lower=lo,upper=hi,valid,reason,rss,gcv,nd,np,rss_fwd,rss_bwd,peak_fwd,peak_bwd,
         initial_rss,elapsed_s,converged=fitted.converged,iterations=isempty(fitted.trace) ? 0 : last(fitted.trace).iteration,
-        predictions=both,mode)
+        predictions=both,mode,diagnostic=diagnostic ?
+            (;initial=copy(p0),target=copy(target),jacobian=copy(fitted.jacobian),trace=deepcopy(fitted.trace),
+                predict=q->model(xy,q)) : nothing)
 end
 end

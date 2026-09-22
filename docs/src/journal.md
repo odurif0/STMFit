@@ -2304,8 +2304,18 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
-> Updated 2026-09-22. Questions from earlier sessions are archived in
+> Updated 2026-09-23. Questions from earlier sessions are archived in
 > `journal_archive.md`.
+
+0ad. **Does a larger native LM budget resolve the registered one-file rejection?**
+    → **AUTHORIZED, BOUNDED CONVERGENCE DIAGNOSTIC (Sep 23)**: replay the same
+    saved pixels, N, frame, physical bounds and native starts on `240817_006.sxm`.
+    Compare fresh 300/10,000-iteration fused/paired continuations for all four
+    shape families; keep native stopping tolerances and validity unchanged.
+    Report trace-prefix identity and independently recomputed box stationarity,
+    without treating a local stop as global optimality. Two-hour preparation,
+    one one-hour Viper job, no retry, classifier, partial grade or new seed.
+    Keep support **676/34**; recognition comparison is a separate task.
 
 0ac. **Can a shared-geometry model of the two acquisition directions improve recognition?**
     → **ONE-FILE FEASIBILITY COMPLETE; RECOGNITION INDETERMINATE (Sep 22)**:
@@ -11864,3 +11874,60 @@ without deployment. Assignment HTML is **199.53 KiB**, below the unchanged
 200 KiB limit; existing size/search-index warnings remain. The completed
 bounded experiment retains the reference and hands off without any HPC job
 or claim of improved recognition.
+
+### 2026-09-23 — Budget-only convergence diagnostic on the registered blocking scan
+
+The user authorizes the next experiment. Preparation starts September 22 at
+**23:53 CEST**, capped at two hours; computation is limited to **one Viper job
+of one hour**, four requested CPUs / 16 GB, no automatic retry. The scientific
+deliverable is to distinguish an insufficient local iteration budget from a
+rejection persisting at a numerically stationary point, or explicitly report
+that this budget still does not decide. This is not a recognition campaign.
+
+`diagnose_paired_convergence.jl` consumes only the verified saved registered
+pixels and native starts from `paired_acquisition_20260922/diagnostic_v2`.
+Its hash checks bind those inputs to `paired_v1` and the unchanged physical and
+assignment configurations. On **one scan, `240817_006.sxm`**, all four native
+families receive matched fresh fused/paired fits at **300 and 10,000 LM
+iterations**, from exactly the same initial vectors. No global optimization,
+new seed, objective, N, physical box, noise estimate, registration, ROI,
+classifier, residual threshold, 1D fit or `n_eff` change is allowed. The
+completed unknown25 application and previous scientific Must-NOT-have list
+remain intact. No labels are read and no benchmark is graded.
+
+`config/paired_convergence.toml` makes the budget and numerical diagnostics
+explicit before the real fits. Native `x_tol=1e-8`, `g_tol=1e-12` are unchanged;
+each fit has a 600-second LM timer in addition to the job's hard wall limit.
+The timer starts inside LsqFit after initial setup, so exported whole-call
+elapsed time may exceed 600 seconds. Four single-thread processes shard the
+eight mode/family cases; each runs its own short/long pair in sequence.
+
+Saved LM traces must have identical short/long prefixes. Accepted updates are
+reconstructed from strictly decreasing RSS; rejected trial steps are not
+applied. Full parameter checkpoints are saved at 0, 300, 1,000, 3,000 and
+10,000 iterations, if reached, plus the actual final iteration. Native LM can
+stop on a small clipped trial step or its unprojected gradient; that flag
+alone does not establish stationarity under box constraints. Trace gradient
+norms can combine the pre-step Jacobian and post-step residual and are not
+advertised as independently recomputed final gradients.
+
+The separate final audit uses second-order bound-respecting differences at
+`h=6.055454452393343e-6*max(1,abs(parameter))` and `h/2`, clipped to a quarter
+of the parameter box width. It reports the infinity norm of the unit-box
+projected gradient of RSS / initial RSS (floor `1e-12`). Both norms must be
+at most `1e-6`, and full gradients must agree within `1e-7 + 1e-4*max_norm`,
+for the diagnostic stationarity flag. Box-scaled Jacobian singular values
+and numerical rank (`rtol=1e-10`) expose ill-conditioning. These are numerical
+audit settings, not physical selection or validity thresholds, nor evidence
+of global optimality. Valid minimum full-parameter GCV still selects families
+within each mode/profile; no GCV comparison across different targets is made.
+
+Before any real fit, the first synthetic derivative test exposes a Julia
+literal mistake (`3f0` denotes a Float32 literal, not `3*f0`) in the new
+one-sided difference expression. Explicit multiplication fixes it. All **64
+new tests** then pass, including active bounds, trace prefix identity, saved
+pixel runner, merger completeness and unchanged default fitting. The existing
+paired model passes **85 tests**. The production engine remains unchanged;
+the only shared helper addition is opt-in diagnostic exports/native optimizer
+keyword forwarding. Preparation and synthetic evidence are not a scientific
+result; the real outcome is recorded below after fetching the one job.

@@ -642,6 +642,18 @@ of N or independent validation. See `results/gcv_reselection_20260922/report.md`
 
 ## Opt-in label-free exploration (2026-09-18)
 
+The September 23 `paired_convergence.toml` follow-up changes only the local
+iteration ceiling (300 versus 10,000), retaining all saved starts, objective
+pixels, physical bounds and native stopping tolerances on the single blocked
+scan. Each fit has a 600-second internal LM limit; the one Viper job is capped
+at one hour. An independent two-step finite-difference audit measures
+box-constrained stationarity after scaling parameters to the unit box and RSS
+by its initial value. Its explicit numerical tolerances are documented in
+[configuration](config.md), never used to relax validity, choose N or infer
+chemistry. Neither a native small-step stop nor a stationary point proves a
+global optimum. No physical calibration or recognition claim follows merely
+from reduced residuals; this experiment does not grade the benchmark.
+
 The September 22 paired-acquisition feasibility experiment preserves the native
 Gaussian/split mean shape and all molecular bounds at saved N. It adds
 equal/opposite view gain and background-plane terms, fixing mean gain to one

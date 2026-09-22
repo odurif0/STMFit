@@ -1053,6 +1053,20 @@ unknown25 change follows; see `results/gcv_reselection_20260922/report.md`.
 
 ## Opt-in diagnostic exploration settings (2026-09-18)
 
+`paired_convergence.toml` freezes the September 23 budget-only diagnostic on
+`240817_006.sxm`. `[model]` sets control/extended iterations to **300/10,000**,
+`max_time_s=600`, unchanged native `x_tol=1e-8`, `g_tol=1e-12`, and checkpoints
+`[0,300,1000,3000,10000]`. The independent derivative audit uses relative step
+`6.055454452393343e-6`, half-step factor `0.5`, gradient-agreement absolute/
+relative tolerances `1e-7/1e-4`, projected stationarity tolerance `1e-6`,
+objective scale floor `1e-12`, Jacobian rank relative tolerance `1e-10`, and
+trace replay absolute/relative tolerances `1e-12/1e-10`. These audit tolerances
+do not enter native validity or family selection. `[selection]` requires saved
+N, valid minimum full-parameter GCV and separate native-stop/stationarity
+reporting; `[preprocessing]` reuses verified saved pixels, frame, bounds and
+noise. The paired model settings below remain unchanged. No seed, threshold,
+optimizer method or benchmark-grade sweep is authorized by this diagnostic.
+
 `paired_acquisition.toml` declares the September 22 shared-geometry feasibility
 experiment. Its mean gain is fixed to one; a differential gain, intercept and
 two tilts distinguish forward/backward views without changing the native mean
