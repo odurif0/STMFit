@@ -11858,3 +11858,9 @@ focused tests**. The older signed-CC/affine-Fisher documentation is condensed
 without changing its negative result or report pointer, leaving room for the
 new bounded diagnostic under the existing HTML size limit. The Manifest SHA256
 remains **617de8162fa4c7a814aacb106f145349bc57ead58ec9a6c332971a821b5974fe**.
+
+The paired-diagnostic documentation build passes under Julia **1.13.0**,
+without deployment. Assignment HTML is **199.53 KiB**, below the unchanged
+200 KiB limit; existing size/search-index warnings remain. The completed
+bounded experiment retains the reference and hands off without any HPC job
+or claim of improved recognition.
