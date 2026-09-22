@@ -1,5 +1,15 @@
 # Running STMFit on the MPCDF HPC cluster
 
+The authorized September 22 acquisition experiment uses
+`hpc/compare_acquisition_registration.sbatch`: **one two-hour job, four CPUs /
+16 GB, no retry**. Explicitly export `STMFIT_PROJECT_DIR`, `STMFIT_CACHE_DIR`
+(saved symmetric base/split tables), `STMFIT_INPUT_DIR` (raw scans/templates),
+`STMFIT_OUTDIR` (new) and `JULIA_BIN` (1.13) on the `sbatch --export=ALL,...`
+command line. Run the script with `--dry-run` first. Up to four one-thread
+registration shards precede native replay, observed-mask control and registered
+assignment arms; no fitting or count selection occurs. Fetch all outputs and
+check gates/coverage before external grading. Job/result pending.
+
 The authorized September 22 matched geometric comparison uses
 `hpc/compare_geometry_profile.sbatch`: **one four-hour job, four CPUs / 16 GB**.
 Its five explicit exported variables are `STMFIT_PROJECT_DIR`,

@@ -222,6 +222,35 @@ mktempdir() do dir
             prefix = name == "forward" ? "res_p" : "bwd_res_p"
             measured = [parse(Float64,actual[1][prefix*lpad(string(i),3,'0')]) for i in eachindex(expected)]
             @test maximum(abs,measured-expected) < 5e-6 # seven significant TSV digits
+            # Opt-in observation-mask zero transform is byte-identical when raw
+            # pixels are finite. Only backward moves, before model subtraction.
+            matched_bytes=read(output)
+            shifts=joinpath(dir,"$(name)_shifts.tsv")
+            write(shifts,"file\tbwd_sample_dx_px\nsynthetic.sxm\t0\n")
+            registered_args=vcat(args,["--config",COUNT_CONFIG,"--assignment-config",MATCHED_CONFIG,
+                "--acquisition-shifts",shifts])
+            extract_quietly(mod,registered_args)
+            @test read(output)==matched_bytes
+            write(shifts,"file\tbwd_sample_dx_px\nsynthetic.sxm\t2\n")
+            extract_quietly(mod,registered_args)
+            if name=="forward"
+                @test read(output)==matched_bytes
+            else
+                @test read(output)!=matched_bytes
+                moved=fill(NaN,size(z)); moved[:,1:end-2] .= z[:,3:end]
+                independent=_box_smooth(moved-model,1)
+                vals=[mod._interp(xs,ys,independent,1.2+t,1.2+u) for u in coords for t in coords]
+                want=mod._normalize_patch(vals)
+                _,registered=mod.ScriptUtils._read_tsv(output)
+                got=[parse(Float64,registered[1][prefix*lpad(string(i),3,'0')]) for i in eachindex(want)]
+                @test maximum(abs,got-want)<5e-6
+                # Translating the already-subtracted residual is NOT this model.
+                wrong=fill(NaN,size(z)); wrong[:,1:end-2] .= residual[:,3:end]
+                wrongvals=[mod._interp(xs,ys,wrong,1.2+t,1.2+u) for u in coords for t in coords]
+                @test maximum(abs,want-mod._normalize_patch(wrongvals))>1e-3
+            end
+            @test_throws ErrorException mod._parse_cli(vcat(args,["--acquisition-shifts"]))
+            @test_throws ErrorException mod._parse_cli(vcat(registered_args,["--acquisition-shifts",shifts]))
             for (key,value) in (("stride",2),("flatten","none"),("smooth_radius_px",0))
                 config_fields = copy(defaults); config_fields[key] = value
                 cfg = write_config(joinpath(dir,"$(name)_$(key).toml"),config_fields)

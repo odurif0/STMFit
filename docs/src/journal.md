@@ -2307,6 +2307,16 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-22. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0z. **Can identifiable acquisition translation improve fixed-geometry recognition?**
+    → **AUTHORIZED / PREPARING (Sep 22)**: one integer-x backward-to-forward
+    registration experiment; four hours preparation from 18:21 CEST, one Viper
+    job capped at two hours, no retry. Saved N, base/split geometry and all
+    assignment settings stay unchanged. Three arms isolate native replay,
+    restored-observation-mask control, and accepted translations. Full benchmark
+    comparison or explicit indeterminacy is the deliverable, not a better
+    correlation alone. Cross-view residual fitting, missing-head fallback,
+    uncertainty classifiers, new N, DFT and unknown25 remain out of scope.
+
 0y. **Does full geometric variable projection improve recognition at fixed N?**
     → **COMPLETE; NEGATIVE (Sep 22)**: source **7c5fb6c**, job **11940220**,
     **0:0 in 15m17s**, after 3m07s queued. Profiled gives **632/870 correct,
@@ -11056,3 +11066,72 @@ The final Julia 1.13 documentation build passes with the existing size/search
 warnings. The assignment page is **199.81 KiB**, below the unchanged limit.
 Source remains **7c5fb6c**, with no post-grade scientific changes. The completed
 negative comparison is handed off with saved support retained and no new job.
+
+### 2026-09-22 — Authorized fixed-geometry acquisition translation
+
+After the negative geometric-profile result, the user authorizes **piste 1
+only**: correct identifiable trace/retrace displacement before patch extraction.
+Preparation starts **18:21 CEST**, capped at four hours; at most **one Viper job,
+two hours, four requested CPUs / 16 GB**, no automatic retry. Completion means
+a fully fetched, checked external comparison against saved support **676/870,
+34/145** and historical **677/870,36/145**, or an explicit indeterminate result.
+The 10–20mer application has already been completed on the frozen reference;
+it is not rerun. No cross-view residual fit, measurement-error classifier,
+missing-head fallback, N selection, composition prior or DFT change is included.
+
+`acquisition_registration.toml` fixes the experiment before the real smoke or
+grade. It compares **unsmoothed native-preprocessed Z**, restoring masks from
+the actual SXM channels (the preprocessing function's `raw` return is already
+imputed). The backward x reversal belongs to the reader and is NOT repeated.
+Integer sample lags span the smaller of **2 nm** and **one quarter of image
+width**, with no per-file enlargement. This covers the earlier unlabelled
+−1.370 nm example without assuming that its displacement applies elsewhere.
+All candidates use the exact same observed forward pixels, each available in
+backward at every candidate lag. Rows with fewer than **16** such pixels are
+excluded from all candidates. Correlation pools within-row-centered contrasts;
+it is signed, with no absolute-correlation or negative-gain rescue.
+
+The global maximum and all **four contiguous y bands** must each have at least
+**256 pixels / eight rows**, correlation **≥0.60**, an interior maximum, and a
+correlation gap **≥0.01** to every peak outside a **0.08 nm** neighborhood.
+Band maxima must agree with the global maximum within **0.08 nm**. Both
+distances round upward to integer pixels, with a one-pixel minimum; the search
+must span more than the neighborhood plus one pixel. These are declared
+stability criteria, not independent-band evidence, a calibrated uncertainty
+interval, or a chemical test. Every rejected/ambiguous scan remains in the
+cohort with **zero applied displacement** and an explicit reason.
+
+Three full arms isolate native reference replay, restored-observation-mask
+control at zero lag, and the same mask treatment with accepted shifts. The
+forward view is the reference: **B_new(y,x)=B(y,x+dx)**, outside pixels become
+NaN, then the original smoother and **S(B_new−M_frozen)** are used. No shifting
+of an already-subtracted residual is allowed. Base/split tables, N, lobe
+coordinates, amplitudes, widths, axis, baseline, classifier settings, molds and
+vote remain fixed. The cached geometry was fitted to an unregistered fused
+view: using forward coordinates is the explicit perturbation being tested,
+NOT a claim that this saved geometry is optimal for the registered images.
+Restoring missing masks cannot undo their earlier influence on native plane/
+row flattening. The zero-shift control separates that mask effect from the
+translation effect. Edge losses become unavailable pixels, never dropped files.
+
+Implementation is opt-in through `--acquisition-shifts`, requiring supplied
+base/split geometry and fresh patches. Synthetic tests cover known positive,
+negative and zero shifts, signed signal, boundary/constant/periodic ambiguity,
+band disagreement, fixed support, raw holes, untouched geometry and model
+subtraction order. An initial test expected a direction-check helper to return
+`nothing` while Julia returned its final `true` condition; an explicit `nothing`
+return resolves this API-only mismatch. No scientific setting was adjusted.
+
+**Preflight completed, before grading.** Julia 1.13 passes **10,033 assertions**
+(registration 9,224; patch extraction 390; pipeline 133; unchanged support/score
+286). A single real smoke uses the lexicographically first cached scan,
+`240307_015.sxm`, not a selected success/failure case. It accepts **−52 pixels,
+−0.610567 nm** within the fixed ±128-pixel window; global correlation is
+0.990756, distant-peak gap 0.016541. Band maxima are −49/−50/−53/−52 pixels,
+each passing the frozen gates. Raw missing counts are 36,016 forward / 36,352
+backward, so the separate mask-only control is necessary. All nine patch
+exports retain the seven saved lobes and metadata; **326 additional checks**
+pass. No grade or chemical agreement was computed for this scan. There was
+no parameter adjustment after the smoke. The full146 driver dry-run verifies
+146 files / 900 keys without reading image arrays. Documentation builds under
+the unchanged 200 KiB limit (assignment page **199.81 KiB**).

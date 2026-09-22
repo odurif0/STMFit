@@ -21,6 +21,8 @@ using .ScriptUtils: _parse_f, _read_tsv
 include(joinpath(@__DIR__, "lib", "patch_preprocessing.jl"))
 using .PatchPreprocessing: PreprocessingSettings, load_patch_preprocessing,
     load_patch_residual_filter, patch_residual
+include(joinpath(@__DIR__, "lib", "patch_acquisition.jl"))
+using .PatchAcquisition
 
 const DEFAULT_FEATURES = "results/unit_separability/lobe_features_selectedN_primary.tsv"
 const DEFAULT_OUT = "results/unit_separability/lobe_patches_selectedN_primary_bwd.tsv"
@@ -33,6 +35,7 @@ struct Options
     step_nm::Float64
     preprocessing::PreprocessingSettings
     residual_filter::String
+    acquisition_shifts::Union{Nothing,String}
 end
 
 function _parse_cli(args)
@@ -41,6 +44,7 @@ function _parse_cli(args)
     data_dir = get(ENV, "STMFIT_DATA_DIR", "")
     config_path::Union{Nothing,String} = nothing
     assignment_path::Union{Nothing,String} = nothing
+    acquisition_path::Union{Nothing,String} = nothing
     half_nm = 0.32
     step_nm = 0.08
     i = 1
@@ -59,6 +63,10 @@ function _parse_cli(args)
         elseif startswith(arg, "--config=")
             config_path === nothing || error("Duplicate --config option")
             config_path = split(arg, "=", limit=2)[2]; i += 1
+        elseif arg == "--acquisition-shifts"
+            acquisition_path === nothing || error("Duplicate --acquisition-shifts")
+            i < length(args) && !startswith(args[i+1], "--") || error("Missing acquisition table")
+            acquisition_path = args[i+1]; i += 2
         elseif arg == "--assignment-config"
             assignment_path === nothing || error("Duplicate --assignment-config option")
             i < length(args) && !startswith(args[i+1], "--") || error("Missing value for --assignment-config")
@@ -83,6 +91,7 @@ function _parse_cli(args)
               --data-dir PATH   SXM data directory [\$STMFIT_DATA_DIR]
               --config PATH     Optional count TOML: all three [preprocessing] fields
                                 (omitted: stride=1, flatten=plane+rows, smooth_radius_px=1)
+              --acquisition-shifts PATH  Opt-in integer backward shifts and restored raw masks
               --assignment-config PATH  TOML with [preprocessing] patch_residual_filter
                                         (omitted: legacy smooth_data_only)
               --half-nm FLOAT   Patch half-size [0.32]
@@ -98,7 +107,7 @@ function _parse_cli(args)
     isfile(features) || error("Features TSV not found: $features")
     preprocessing = load_patch_preprocessing(config_path)
     residual_filter = load_patch_residual_filter(assignment_path)
-    return Options(features, out_tsv, data_dir, half_nm, step_nm, preprocessing, residual_filter)
+    return Options(features, out_tsv, data_dir, half_nm, step_nm, preprocessing, residual_filter, acquisition_path)
 end
 
 function _eval_peak(x, y, cx, cy, ax, ay, A, spar, sperp, skew_ratio)
@@ -141,6 +150,7 @@ function main(args=ARGS)
     for row in rows
         push!(get!(by_file, basename(row["file"]), Dict{String,String}[]), row)
     end
+    shifts = read_shifts(opt.acquisition_shifts,keys(by_file))
     coords = collect(-opt.half_nm:opt.step_nm:opt.half_nm)
     pix_names = [@sprintf("%03d", i) for i in 1:(length(coords)^2)]
 
@@ -173,6 +183,12 @@ function main(args=ARGS)
                     smooth_radius_px=opt.preprocessing.smooth_radius_px,
                     output_dir=dirname(opt.out_tsv), no_plot=true)
                 xs_b, ys_b, raw_b, z_b, z_smooth_b, su_b, noise_b = preprocess_channel(img, ch_bwd, pcfg_bwd)
+                if shifts !== nothing
+                    require_direction(ch_fwd,"fwd"); require_direction(ch_bwd,"bwd")
+                    xs_f == xs_b && ys_f == ys_b || error("Acquisition grids differ")
+                    z_f,z_smooth_f = observed_shift(z_f,ch_fwd,opt.preprocessing,0)
+                    z_b,z_smooth_b = observed_shift(z_b,ch_bwd,opt.preprocessing,shifts[file])
+                end
 
                 nx, ny = length(xs_f), length(ys_f)
 

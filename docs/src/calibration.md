@@ -642,6 +642,19 @@ of N or independent validation. See `results/gcv_reselection_20260922/report.md`
 
 ## Opt-in label-free exploration (2026-09-18)
 
+The September 22 acquisition-translation experiment changes neither molecular
+calibration nor cached N/geometry. `acquisition_registration.toml` declares all
+search and acceptance settings: up to 2 nm / one quarter width in x, four
+contiguous bands, signed correlation ≥0.60, distant-peak gap ≥0.01 and 0.08 nm
+peak-neighborhood/band-agreement distances. At least 256 common pixels / eight
+rows per band and 16 pixels per row are required. These are experimental
+identifiability gates, not a noise estimate or chemical validation. Forward is
+the fixed reference; only backward observations move before subtracting the
+saved Gaussian model. Native flattening stays unchanged; restored raw masks
+cannot undo earlier imputation influence on that background. A separate
+zero-shift mask control isolates this effect. No N, optimizer, GCV, `n_eff`,
+class threshold, composition prior or missing-head fallback changes.
+
 The subsequent September 22 geometric-profile comparison keeps N, physical
 calibration, preprocessing and assignment settings fixed. Joint and profiled
 LN_BOBYQA arms share one fresh native initialization chosen by valid GCV at the

@@ -1053,6 +1053,20 @@ unknown25 change follows; see `results/gcv_reselection_20260922/report.md`.
 
 ## Opt-in diagnostic exploration settings (2026-09-18)
 
+The September 22 acquisition experiment is separately configured by
+`acquisition_registration.toml`. `[model]` fixes signed row-centered integer-x
+translation and the forward reference frame. `[preprocessing]` sets the search
+to the smaller of `max_lag_nm=2.0` and `max_lag_width_fraction=0.25`, and restores
+actual raw missing masks before smoothing. `[selection]` requires four bands,
+256 pixels and eight rows per band, 16 common pixels per row, correlation
+≥0.60, distant-peak gap ≥0.01, a 0.08 nm peak neighborhood and 0.08 nm maximum
+band disagreement. Spatial tolerances round up to pixels (minimum one).
+Unresolved scans keep zero shift and remain in the cohort. These are explicit
+experimental stability gates, not calibrated confidence or class thresholds.
+No bound expands per image. The three-arm comparator keeps native replay,
+zero-shift mask control and registered data separate; cached N/base/split/model
+and `unit_assignment_patch_support.toml` remain unchanged. See the [journal](journal.md).
+
 The authorized September 22 **geometric** comparison uses the separate
 `config/geometry_profile_comparison.toml`, with empty physical/selection/preprocessing
 tables. Its `[counting_variable_projection]` values copy the existing diagnostic

@@ -10,7 +10,7 @@ const BASE4 = "amp_prominence,amp_neighbor_ratio,integrated_prominence,amp_rel"
 const VALUE_OPTIONS = Set(["--data-dir", "--count-config", "--config", "--outdir",
     "--selected-summary", "--features", "--split-features", "--patches-fwd",
     "--patches-bwd", "--descriptor-patches", "--templates",
-    "--cube0", "--cube1", "--frame0", "--frame1"])
+    "--cube0", "--cube1", "--frame0", "--frame1", "--acquisition-shifts"])
 
 function parse_options(args)
     if "--help" in args || "-h" in args
@@ -25,6 +25,8 @@ function parse_options(args)
           --split-features PATH --patches-fwd PATH --patches-bwd PATH
           --descriptor-patches PATH (backward residual 9x9; mold patches are 17x17)
           Matched-residual mode regenerates all patches; patch caches are rejected.
+        --acquisition-shifts PATH: experimental fixed-N backward translations;
+          restores raw missing masks in both views, before smoothing/subtraction.
         --dry-run: check supplied input paths and print the stages without computing.
 
         Production only: no benchmark labels, expected count, control sequence,
@@ -222,6 +224,12 @@ end
 function execute_pipeline(opts)
     VERSION.major == 1 && VERSION.minor == 13 || error("This reconstruction requires Julia 1.13")
     cfg = load_config(opts["--config"])
+    if haskey(opts,"--acquisition-shifts")
+        all(haskey(opts,k) for k in ("--features","--split-features")) ||
+            error("Acquisition correction requires frozen base and split geometry")
+        any(haskey(opts,k) for k in ("--patches-fwd","--patches-bwd","--descriptor-patches")) &&
+            error("Acquisition correction requires fresh patches")
+    end
     if cfg["preprocessing"]["patch_residual_filter"] == "smooth_residual"
         any(haskey(opts, k) for k in ("--patches-fwd", "--patches-bwd", "--descriptor-patches")) &&
             error("Matched-residual mode requires fresh patches; remove cached patch inputs")
@@ -293,7 +301,8 @@ function execute_pipeline(opts)
             path = cached_or_run(opts, key, joinpath(outdir, name * ".tsv"), name, script,
                 ["--features", geometry, "--data-dir", raw, "--config", abspath(opts["--count-config"]),
                  "--assignment-config", abspath(opts["--config"]),
-                 "--half-nm", string(half), "--step-nm", string(step)], outdir)
+                 "--half-nm", string(half), "--step-nm", string(step),
+                 (haskey(opts,"--acquisition-shifts") ? ["--acquisition-shifts",abspath(opts["--acquisition-shifts"])] : String[])...], outdir)
             header, patchkeys = lobe_table(path; required=[prefix * lpad(string(i), 3, '0') for i in 1:side^2])
             length(filter(c -> startswith(c, prefix), header)) == side^2 || error("Unexpected patch dimensions: $path")
             require_same_keys(basekeys, patchkeys, name)
