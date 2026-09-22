@@ -559,6 +559,18 @@ No preprocessing, DFT calibration, count selection, abstention threshold or
 unknown-chain claim changes. The repeatedly reused benchmark can compare
 these frozen choices, but cannot provide independent validation.
 
+The completed comparison is negative: factors **620/870 correct, 23/145
+exact**, Student **631/870, 25/145**, versus exactly replayed **676/34** support,
+at **852/870 coverage** throughout. All ten Student fits converge in 65–86
+updates; all factor fits reach 200 updates without satisfying tolerance.
+Their smallest noise variance is about 7.59e-5, above the 1e-6 floor, so no
+floor saturation or collapsed seed is observed. The capped MFA result does
+not characterize a fully converged optimum. False positives increase more
+than false negatives decrease; almost every changed final decision enters a
+zero-margin vote tie. Retain support without post-grade cap/rank/df,
+threshold, naming or fusion adjustment. Source **e2205cb**, job **11935072**;
+full losses: `results/factor_student_mixtures_20260922/report.md`.
+
 ## Opt-in label-free exploration (2026-09-18)
 
 `config/label_free_exploration.toml` is diagnostic configuration, not a new

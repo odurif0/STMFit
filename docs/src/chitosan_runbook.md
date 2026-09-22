@@ -220,6 +220,26 @@ This two-candidate comparison is complete: no retry, combined candidate,
 post-grade setting change, count refit, DFT change or unknown25 rerun follows.
 Inference remains label-free; the reused grade is not independent validation.
 
+The fixed factor-analyzer / Student learning comparison (source **e2205cb**,
+job **11935072**, **0:0 in 8m17s**, after **1m36s** queued) is negative:
+**620/870 correct, 23/145 exact** and **631/870, 25/145**, respectively, at
+unchanged **852/870 coverage**. The support control replays **676/34** exactly.
+Factors gain on 21 scans and lose on 65 (5 exact gains / 16 losses);
+Student gains on 18 and loses on 57 (4 exact gains / 13 losses). All Student
+fits converge in 65–86 updates; all factor fits reach the fixed 200-update
+cap. That limits the MFA conclusion to this bounded implementation.
+
+All **588 outputs plus Slurm log** are fetched/checksummed. Verification:
+**3,616 assertions in 20 suites**, **11,083 pre-grade checks**, eight component
+checks and 580 paired scan rows. All keys, N, upstream/Fisher/k-means tables
+and availability remain unchanged. False positives rise 52→158 / 144, while
+false negatives fall 124→74 / 77. Almost all final flips enter zero-margin
+vote ties. Retain `config/unit_assignment_patch_support.toml`, still below
+historical 677/36. No cap/rank/df/seed search, fusion change, combined arm,
+count refit, DFT change or unknown25 rerun follows. Complete gains/losses:
+`results/factor_student_mixtures_20260922/report.md`. The reused benchmark
+remains development evidence, not independent generalization.
+
 This page is the hand-off document for reproducing the current chitosan workflow
 without relying on prior conversation context.  The goal is a label-free fitting
 and model-selection pipeline that is externally graded on the benchmark and then

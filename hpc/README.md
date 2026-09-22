@@ -1120,3 +1120,15 @@ Before external grading, check exact control replay, all keys/N, unchanged
 upstream/Fisher/k-means tables, actual family/seed/convergence logs and final
 vote arithmetic. Invalid seeds and unavailable rows must remain visible.
 No labels, grade manifest or saved champion predictions enter the job.
+
+Completed source **e2205cb**, job **11935072**, **0:0 in 8m17s**, after
+**1m36s** queued; four CPUs requested, eight allocated, 16 GB requested,
+MaxRSS 2,238,210 K, no restart/requeue. All **588 outputs plus Slurm log** are
+fetched/checksummed. The **3,616 focused assertions**, **11,083 pre-grade
+checks**, eight component checks and paired arithmetic pass. Control tables
+replay exactly. Fixed factors give **620/870 correct, 23/145 exact**, Student
+**631/870, 25/145**, versus **676/34** support, all at **852/870 coverage**.
+All Student fits converge; factors reach the fixed 200-update cap. Retain
+support, below historical 677/36. This job/comparison is complete: no retry,
+cap/rank/df/seed search, combined arm, post-grade fusion tuning or application
+rerun follows. Details: `results/factor_student_mixtures_20260922/report.md`.

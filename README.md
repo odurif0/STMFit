@@ -71,6 +71,14 @@ the old names for all ten unchanged GMM fits. Keep the **676/34 support
 candidate**, below historical 677/36. No combination or post-grade tuning
 follows. See the [Fisher/naming comparison](docs/src/unit_assignment.md#whole-scan-fisher-and-relative-gmm-naming-2026-09-22-no-improvement).
 
+The fixed rank-four factor-analyzer and df-five Student learning tests are
+**negative: 620/870 correct, 23/145 exact**, and **631/870, 25/145**,
+respectively, at unchanged **852/870 coverage**. Keep the **676/34 support
+candidate**, below historical 677/36. All ten Student fits converge; the
+factor fits reach the fixed 200-update cap, so this is not a verdict on a
+fully converged MFA optimum. No iteration/rank/df or tie-rule tuning follows.
+See the [mixture comparison](docs/src/unit_assignment.md#factor-analyzer-and-student-learning-2026-09-22-negative).
+
 **Research branch, September 20:** the symmetric fused-fit correction improves
 the regenerated reconstruction from **666 to 671 correct / 870 controls** and
 **24 to 28 exact chains / 145**, at identical cached counts and coverage

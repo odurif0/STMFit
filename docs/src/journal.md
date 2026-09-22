@@ -2308,14 +2308,22 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0u. **Can lower-rank or heavy-tailed mixture learning improve recognition?** →
-    **IN PROGRESS (Sep 22)**: user authorizes several leads. Compare two
-    fixed independent candidates, rank-four factor analyzers and df-five
-    Student components, against 676/34 support control. Three hours maximum
-    preparation/tests, then one three-arm Viper job capped at one hour.
-    No combined arm, rank/df/seed search, post-grade tuning, count refit,
-    forward/backward joint model, DFT change or unknown25 rerun. Done means
-    fetched outputs, pre-grade integrity checks, external grade and paired
-    scan gains/losses, recorded decision and committed tested source/docs.
+    **COMPLETE; NEGATIVE FOR THESE FIXED VERSIONS (Sep 22)**: source
+    **e2205cb**, job **11935072**, **0:0 in 8m17s**, after **1m36s** queued.
+    Rank-four factors give **620/870 correct, 23/145 exact**; df-five Student
+    gives **631/870, 25/145**, versus exactly replayed **676/34** support,
+    all at **852/870 coverage**. All Student fits converge; all factor fits
+    hit the fixed 200-update cap, so a fully converged MFA optimum is not
+    assessed. Factors gain on 21 scans and lose on 65 (5 exact gains / 16
+    losses); Student gains on 18 and loses on 57 (4 / 13). False positives
+    dominate the loss; almost all final flips enter zero-margin ties.
+    All **588 outputs plus Slurm log** are fetched/checksummed, with keys/N,
+    upstream/Fisher/k-means tables and availability unchanged. **3,616 tests,
+    11,083 pre-grade checks**, eight component checks and 580 paired scan
+    rows pass. Retain **676/34**, below historical 677/36. No retry, cap/rank/
+    df/seed search, combined arm, post-grade tuning, N refit, paired-view
+    model, DFT change or unknown25 rerun follows. Reused grading remains
+    development evidence, not independent validation.
 
 0t. **Can scan-grouped Fisher or within-scan GMM naming improve recognition?** →
     **COMPLETE; NEGATIVE / NULL (Sep 22)**: source **43f8993**, job **11931478**,
@@ -10119,3 +10127,102 @@ or benchmark score is claimed yet. To keep the assignment documentation
 within its existing HTML size limit, the preceding Fisher/naming section is
 condensed without changing its figures; full detail remains in its dated
 journal entry and local report. No documentation size limit is increased.
+
+### Completed comparison: both fixed learning alternatives regress
+
+Job **11935072** waits **1m36s**, starts at **10:44:26 CEST** and completes
+**0:0 at 10:52:43**, elapsed **8m17s**. The control finishes at 10:48:34,
+factors at 10:50:34 and Student at 10:52:43. Slurm allocates eight CPUs for
+the four-CPU request, 16 GB requested, MaxRSS **2,238,210 K** (about 2.29 GB).
+No retry or second job is submitted. All **588 regular outputs plus Slurm
+log** are fetched; both checksum comparisons are empty.
+
+All **20 suites / 3,616 assertions** finish successfully under Julia 1.13.
+These include 514 mixture, 331 pipeline, 20 runner, 295 scan-Fisher/naming,
+216 tied covariance, 138 scan weighting, 113 continuous vote, 227 bagging,
+99 robust normalization, 154 complete training, 136 numerical assignment,
+229 native Fisher, 74 affine Fisher, 210 Fisher attribution, 319 representation
+diagnostics, 20 numerical diagnostics, 286 patch support, 125 transverse
+descriptors, 73 label-free signal and 37 assignment assertions.
+
+Before any new grade, **11,083 saved-output assertions** pass. All twelve
+control tables replay the previous support run byte-for-byte; prediction
+SHA-256 remains `eb8d69b8cebcd607b0244db5c65104347e6bcd24acee06f64748cf0e6ec310e3`.
+All arms preserve 146 scans / 900 keys, every selected N, eleven common
+upstream/Fisher/k-means/training-support tables and four unavailable keys:
+`240310_Cu100009.sxm` lobe 8, `240818_015.sxm` lobe 1 and
+`240818_019.sxm` lobes 1–2. Only external grading excludes the technical scan.
+No incomplete output or unusable seed is observed; all ten fits per arm
+are physically named, with positive, freely learned masses summing to one.
+
+All **ten factor fits reach 200 updates without convergence**, as allowed
+by the predeclared bounded-fit policy. They retain rank four through both
+hard steps; smallest diagonal noise is about **7.59e-5**, above the existing
+1e-6 floor, and covariance reconstruction error is at most **1.12e-16**.
+All **ten Student fits converge in 65–86 updates**, retain df five and both
+hard updates, with latent precision range approximately **0.003115–5.410931**.
+No iteration cap, tolerance, rank, df, regularizer or seed is adjusted.
+The factor result tests this bounded implementation, not a converged MFA
+optimum; the finite/correct arithmetic does not establish optimization quality.
+
+Only then is the unchanged external full145-own-N grade run:
+
+| Profile | Correct / 870 | Classified accuracy | Exact / 145 | Coverage / 870 |
+|---|---:|---:|---:|---:|
+| Historical saved reference | 677 | 677/854 (79.3%) | 36 | 854 |
+| Exactly replayed support control | 676 | 676/852 (79.3%) | 34 | 852 |
+| Fixed rank-four factor analyzers | 620 | 620/852 (72.8%) | 23 | 852 |
+| Fixed df-five Student components | 631 | 631/852 (74.1%) | 25 | 852 |
+
+Against support, factors give **21 scan gains, 65 losses, 59 ties**, with
+**5 exact chains gained and 16 lost**. Student gives **18 gains, 57 losses,
+70 ties**, with **4 exact chains gained and 13 lost**. Against history,
+factors give 25/69/51 scan gains/losses/ties and 7/20 exact gains/losses;
+Student gives 23/65/57 and 6/17. The full **580 paired scan rows** are saved,
+including all losses. Grade orientation changes on 13 / 7 scans against
+support and 13 / 11 against history; it is not independent spatial matching.
+
+Confusion `(TN,FP,FN,TP)` is support `(513,52,124,163)`, factors
+`(407,158,74,213)`, Student `(421,144,77,210)`. Thus factors recover 50 false
+negatives but add 106 false positives; Student recovers 47 but adds 92.
+Emitted errors rise **176→232 / 221**. Counts remain 892 benchmark predictions,
+16 missing positions, 38 extras, 14 short-N and 25 extra-N scans, with the
+same two aligned abstentions leaving 852 classified positions.
+
+Eight independent saved-component checks pass. Factors change **201 GMM/final
+scores and 159 final decisions**, Student **240 scores and 142 decisions**.
+Every final flip is **0→1**, with candidate GMM vote exactly one; **158 / 141
+flips enter exact GMM=1 / k-means=0 ties**, while the remaining flip in each
+arm has margin 0.25. Final ties rise **58→216 / 199**. GMM hard decisions
+change 0→1 for 153 / 136 rows and never 1→0; six final flips per arm change
+only an already class-1 GMM vote's strength. Among 896 usable rows, GMM votes
+decrease/increase/tie for **25/176/695** with factors and **97/143/656** with
+Student. Raw `(0,1,?)` frequencies change `(673,223,4)` to `(514,382,4)` /
+`(531,365,4)`. No fusion, tie-breaking or precision rule is retuned afterward.
+
+Factor exact gains: `240814_011`, `240814_025`, `240816_002`, `240817_002`,
+`241114_028`. Losses: `240310_Cu100007`, `240817_005`, `240817_007`,
+`240817_021`, `240817_041`, `240817_044`, `240817_047`, `240817_048`,
+`240817_049`, `240817_053`, `240817_054`, `240817_055`, `240817_079`,
+`240818_020`, `241113_087`, `241113_088` (all `.sxm`). Student exact gains:
+`240814_011`, `240814_025`, `240817_082`, `241114_028`. Losses: `240815_072`,
+`240817_005`, `240817_007`, `240817_021`, `240817_041`, `240817_047`,
+`240817_048`, `240817_049`, `240817_053`, `240817_055`, `240818_020`,
+`241113_087`, `241113_088`. Full decision-level tables and commands are in
+`results/factor_student_mixtures_20260922/report.md` and linked outputs.
+
+**Decision: reject these two fixed variants as replacements and retain the
+676/34 support candidate.** Historical 677/36 remains unexceeded. These
+negative results do not prove that all lower-rank or robust models fail,
+especially with MFA's observed iteration-cap limit. No extra run, parameter
+search, combined model, count refit, DFT change or unknown25 rerun follows.
+Inference remains label-free; choosing/assessing methods repeatedly on this
+benchmark is development work, not independent validation. This authorized
+two-candidate comparison is complete; the historical objective remains open.
+
+The final Julia 1.13 documentation build passes, with existing large-page /
+search-index warnings and the expected non-CI deployment skip. The assignment
+page stays within the unchanged 200 KiB HTML limit. README, runbook, selection,
+assignment, config, calibration and HPC notes all report the same result and
+MFA convergence limitation. Scientific source/settings remain unchanged from
+**e2205cb** through grading; generated reports and fetched outputs stay ignored.

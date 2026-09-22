@@ -106,6 +106,16 @@ historical 677/36. All selected N, geometry, GCV/guards and physical calibration
 stay fixed; no count refit, DFT change or unknown25 rerun follows. This reused
 assignment benchmark does not revalidate counting or independent generalization.
 
+The fixed factor-analyzer / Student learning comparison also regresses
+assignment: **620/870 correct, 23/145 exact** and **631/870, 25/145**, at
+unchanged **852/870 coverage**, versus exactly replayed **676/34** support.
+Retain the support candidate; historical 677/36 remains unexceeded. All
+Student fits converge, while factor fits reach the fixed 200-update cap;
+this does not reject a fully converged MFA optimum. No selected N, geometry,
+GCV/guard, counting claim, DFT or unknown25 result changes. No post-grade
+iteration/rank/df or fusion tuning follows; reused grading is not independent
+validation. Details: `results/factor_student_mixtures_20260922/report.md`.
+
 How STMFit chooses the optimal number of lobes (N) from the sweep results.
 
 ## Selection Hierarchy

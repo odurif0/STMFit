@@ -2485,6 +2485,34 @@ gains/losses and limitations remain in the [dated journal](journal.md) and
 arm, N refit, DFT change or unknown25 rerun follows. This reused development
 benchmark does not establish independent validation or physical correspondence.
 
+### Factor-analyzer and Student learning (2026-09-22): negative
+
+Two independent profiles change only mixture learning: rank-four factor
+analyzers and Student components with fixed df five. The family persists
+through both hard updates; naming, final Mahalanobis vote and N stay fixed.
+See [configuration](config.md) and [equations](calibration.md).
+
+| Profile | Correct / 870 | Exact / 145 | Coverage / 870 |
+|---|---:|---:|---:|
+| Historical reference | 677 | 36 | 854 |
+| Replayed support control | 676 | 34 | 852 |
+| Factor analyzers | 620 | 23 | 852 |
+| Student-t | 631 | 25 | 852 |
+
+Source **e2205cb**, job **11935072**, completes **0:0 in 8m17s**. All 588
+outputs plus Slurm log are fetched/checksummed. Verification: 3,616 focused
+assertions, 11,083 pre-grade checks, eight component checks and 580 paired
+scan rows. Keys, N, upstream/Fisher/k-means tables and availability are fixed.
+
+Factors gain on 21 scans and lose on 65; Student gains on 18 and loses on 57.
+Exact gains/losses are 5/16 and 4/13. False positives rise 52→158 / 144.
+Of 159 / 142 final 0→1 flips, 158 / 141 enter zero-margin ties. All Student
+fits converge; all factor fits hit 200 updates, limiting that conclusion
+to this bounded version. **Retain support 676/34; history remains unexceeded.**
+No post-grade tuning or application rerun follows. Full losses and caveats:
+[journal](journal.md), `results/factor_student_mixtures_20260922/report.md`.
+This repeatedly reused grade is not independent validation.
+
 ### Native numerical conventions
 
 The constant-current port retains the old first-axis-fast cube index, sampling

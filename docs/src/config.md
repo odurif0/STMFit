@@ -984,6 +984,15 @@ are logged and excluded from the fixed-seed average; no usable seed means
 `?`/`no_valid_view`, without dropping rows or falling back to Gaussian learning.
 The historical representation diagnostic rejects both alternative families.
 
+Completed comparison: **620/870 correct, 23/145 exact** for factors and
+**631/870, 25/145** for Student, versus exactly replayed **676/34** support;
+all retain **852/870 coverage**. Student converges for all ten seeds;
+factors reach the predeclared 200-update cap for all ten. Retain support,
+not either alternative. No setting changes after grading, including the cap;
+the bounded factor result is not evidence about its fully converged optimum.
+Source **e2205cb**, job **11935072**, report
+`results/factor_student_mixtures_20260922/report.md`.
+
 ## Opt-in diagnostic exploration settings (2026-09-18)
 
 `config/label_free_exploration.toml` is used only by standalone exploration tools;
