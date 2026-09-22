@@ -1065,6 +1065,12 @@ plus the unchanged maximum-residual guard in both paired views. Original support
 observed samples and accepted registration remain fixed. No partial grade or
 silent fallback is allowed. See the journal's authorized paired-acquisition entry.
 
+The one-file feasibility result is **inconclusive for recognition**: paired
+Gaussian mean maximum/noise remains **3.518 > 3.5**, and the forward view reaches
+4.642. All matched continuations hit their iteration cap. No full-cohort run,
+partial grade or parameter adjustment follows; retain support **676/34**.
+Evidence: `results/paired_acquisition_20260922/report.md`.
+
 The authorized original-support follow-up uses
 `registered_refit_original_support.toml`. Only `[preprocessing].roi` changes to
 `original_native_roi_intersect_observed_mask`, with the explicit `geometry =

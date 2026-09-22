@@ -654,6 +654,14 @@ must additionally pass the unchanged guard in both acquisitions. Stacked GCV
 is a heuristic with four added coefficients, not an independence/noise claim.
 The first real check is confined to the previously failed scan, without labels.
 
+That check does not clear native validity: Gaussian elliptical mean maximum/
+noise is **3.651 fused / 3.518 paired**, above 3.5, with capped nonconverged
+continuations. Paired split passes mean validity but fails the forward-view
+guard. This is not proof of a wrong N or inadequate physical widths; numerical
+and model limitations remain unresolved. No calibration is changed and no
+full-cohort recognition grade follows. Report:
+`results/paired_acquisition_20260922/report.md`.
+
 The newly authorized `registered_refit_original_support.toml` follow-up freezes
 the original unregistered native ROI, axis/origin, tube and axial bounds for
 both refit arms. It changes no physical constant and does not expand support

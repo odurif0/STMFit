@@ -1847,22 +1847,13 @@ One Viper job, bounded to 30 minutes and four requested CPUs, compared the saved
   The original center amplitudes still orient the unsupervised groups. Pure
   projected zero-mass rows remain present as NA at the declared `1e-12` L1 floor.
 
-Neither uses experimental labels, expected counts, class composition or a
-truth-selected sign. The physical identities of simulated templates are not
-experimental training labels. All 146 scans are processed before the separate
-full145 grade. Counts, successful descriptor, seeds, classifier/vote settings
-and missing-pixel rules remain unchanged. All patches are regenerated; the
-control reproduces its twelve scientific tables byte-for-byte. No parameter
-search follows the grade. This benchmark comparison is development evidence,
-not independent validation or calibrated chemical confidence.
-
-Source **3c45c7c**, job **11889205**, completes with exit 0:0 in **7m05s** on
-`vipm2008` (four CPUs requested, eight allocated). All 585 outputs and the Slurm
-log are fetched with matching checksums. The full146 cohort keeps 900 keys and
-the same seven unavailable assignments in every arm. The external full145 grade
-uses 870 truth positions, 892 predicted lobes, 16 missing positions and 38 extra
-lobes; the three native arms retain **849/870 coverage**, including five aligned
-abstentions. No rows are imputed or selectively dropped.
+Neither uses labels, expected counts, composition or a truth-selected sign.
+All 146 scans / 900 keys remain, with seven unavailable assignments; the control
+replays twelve scientific tables exactly. External full145 grading uses 870
+positions, 892 predicted lobes, 16 missing positions and 38 extra lobes, with
+**849/870 coverage**. Source **3c45c7c**, job **11889205**, completes **0:0 in
+7m05s**; all 585 outputs and the Slurm log are fetched/checksummed. No settings
+are tuned after grading; this is development evidence, not independent validation.
 
 | Version | Correct / 870 | Correct / classified | Exact / 145 |
 |---|---:|---:|---:|
@@ -1871,21 +1862,12 @@ abstentions. No rows are imputed or selectively dropped.
 | Signed CC margins | 668 (76.8%) | 668/849 (78.7%) | 32 |
 | Affine Fisher disk | 672 (77.2%) | 672/849 (79.2%) | 32 |
 
-Signed margins change 14 final decisions, 13 in the benchmark: **four scan gains,
-nine losses and 132 ties**, two exact chains gained and three lost. Affine Fisher
-changes 20 decisions, 19 in the benchmark: **nine gains, ten losses and 126
-ties**, three exact chains gained and four lost. Each also changes lobe 7 of
-the already-excluded technical scan `240310_Cu100009.sxm`, retained in all
-scientific outputs. The external grade reverses orientation on `240314_Cu100_024`
-for signed margins and `241113_089` for affine Fisher; these conventions are not
-spatial monomer correspondences. All gains, losses and ties are reported.
-
-The unchanged k-means component and vote rule can turn a changed GMM decision
-into either a tie or a large voting margin. Five signed changes and four Fisher
-changes end at zero margin; signed margins also make eight benchmark changes
-at margin one, of which three gain and five lose. These margins are not calibrated
-chemical confidence. No threshold, sign, seed, hybrid or per-file choice follows
-the grade.
+Signed margins change 14 decisions (13 benchmark), with **4/9/132 scan gains/
+losses/ties**, two exact gains and three losses. Affine Fisher changes 20
+(19 benchmark), with **9/10/126**, three exact gains and four losses. Both retain
+the technical scan in scientific outputs. Orientation changes and all vote
+ties/losses are detailed in the report; neither orientation nor vote margin
+establishes physical correspondence or calibrated chemical confidence.
 
 **Decision: reject both as replacements; keep the affine-descriptor candidate
 at 673/33, without promotion.** The historical target remains four correct
@@ -2495,6 +2477,22 @@ not a measured recognition gain or loss. Source **98d664d**, job **11942393**,
 **FAILED 1:0 in 28m10s**; 706 outputs plus Slurm log fetched and checksummed.
 Full evidence: [journal](journal.md),
 `results/registered_original_support_20260922/report.md`.
+
+### Paired-acquisition feasibility (2026-09-22): inconclusive
+
+Instrumenting `240817_006.sxm` reveals a registered Gaussian elliptical maximum
+residual/noise of **3.609**, above 3.5 on three adjacent pixels. All eight native
+LM fits hit their iteration caps. Matched 300-iteration continuations from the
+same family starts give maxima **3.651 fused / 3.518 paired**. The paired model
+shares molecular geometry with mean gain fixed to one and separate view gain/
+plane differences; its forward maximum is **4.642**. Neither Gaussian arm is
+valid. Paired split passes mean validity but fails the view guard. All eight
+continuations remain nonconverged, so model inadequacy is not established.
+
+No full146 fit, Viper job, classifier or partial grade follows. Counts, bounds
+and thresholds stay fixed; retain **676/34**, below historical **677/36**.
+Sources **69ea44b / 5a1008c**; full evidence and initial writer failure:
+`results/paired_acquisition_20260922/report.md`, [journal](journal.md).
 
 ### Native numerical conventions
 

@@ -1,5 +1,15 @@
 # Model Selection
 
+The September 22 **paired-acquisition feasibility check remains inconclusive
+for recognition**. A native observer reveals capped, nonconverged LM fits on
+`240817_006.sxm`; the registered Gaussian elliptical maximum residual/noise is
+3.609 on three adjacent pixels. Equal-budget 300-iteration continuations reach
+**3.651 fused / 3.518 paired**, both failing the unchanged 3.5 mean guard.
+Paired split passes the mean guard but fails the additional per-view guard.
+All continuations remain nonconverged. No N, `n_eff`, threshold or production
+selection changes; no full-cohort or partial grade. Retain **676/34**, below
+historical **677/36**. See `results/paired_acquisition_20260922/report.md`.
+
 The September 22 **original-support registered refit remains inconclusive**.
 Original ROI/axis/tube/bounds replay exactly for all 146 scans. The three earlier
 span failures disappear, but registered Gaussian fitting of `240817_006.sxm`

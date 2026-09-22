@@ -23,6 +23,12 @@ original supports replay exactly. No partial classifier or grade is produced.
 Keep saved support **676/870 correct, 34/145 exact**, below historical **677/36**.
 See the [original-support follow-up](docs/src/unit_assignment.md#original-support-registered-refit-2026-09-22-inconclusive).
 
+The subsequent **paired-acquisition feasibility check** still cannot produce
+a valid Gaussian fit on that scan: mean maximum residual/noise **3.518 > 3.5**,
+despite separate view gains/backgrounds. All matched continuations hit their
+iteration cap. No full-cohort run or new grade follows; see the
+[one-file diagnosis](docs/src/unit_assignment.md#paired-acquisition-feasibility-2026-09-22-inconclusive).
+
 The preceding **registered native refit** is **inconclusive**, not a new
 benchmark result. At saved N, three scans fail the unchanged support-span
 constraint (two in the zero-shift control); 143/146 complete all four shape

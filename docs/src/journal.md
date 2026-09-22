@@ -2308,15 +2308,18 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0ac. **Can a shared-geometry model of the two acquisition directions improve recognition?**
-    → **AUTHORIZED, DIAGNOSTIC FIRST (Sep 22)**: first instrument the existing
-    `240817_006.sxm` failure without changing its N, thresholds or optimization
-    budget. If this reveals no blocking problem, compare a minimal paired-view
-    model with view-specific gain/background and common molecular geometry.
-    Four hours preparation from 23:21 CEST; at most one two-hour Viper job,
-    four requested CPUs / 16 GB, no automatic retry. A complete comparison or
-    an explicit indeterminate conclusion is required; no promotion is implied.
-    Count reselection and measurement-error classification are separate ideas,
-    not included in this first experiment. Saved support remains **676/34**.
+    → **ONE-FILE FEASIBILITY COMPLETE; RECOGNITION INDETERMINATE (Sep 22)**:
+    native registered Gaussian residual rejection is reproduced and instrumented.
+    Its elliptical candidate reaches **3.6092 noise units**, with three adjacent
+    pixels above 3.5; LM hits 50 iterations. From those same native starts, an
+    additional 300-iteration fused continuation reaches **3.6512**, paired
+    gain/plane fitting **3.5184** (forward view **4.6419**). Both remain invalid;
+    all eight local continuations hit their cap without convergence. Paired
+    split passes mean validity but fails the forward-view guard. No full-cohort
+    fit, Viper submission, partial classifier or grade. This bounded version
+    cannot complete the comparison; it does not disprove all paired models.
+    Keep support **676/34**, below historical **677/36**. Report:
+    `results/paired_acquisition_20260922/report.md`.
 
 0ab. **Can original unregistered geometric support make the registered refit complete?**
     → **DIAGNOSTIC COMPLETE; RECOGNITION INDETERMINATE (Sep 22)**: source
@@ -11776,3 +11779,82 @@ vectors and non-relaxation of native validity. An initial test-only decimal/
 broadcast syntax error was corrected before any real paired fit. The only real
 scan remains `240817_006.sxm`; full-cohort fitting is reserved for Viper if this
 fixed hypothesis can produce all required fits on that scan.
+
+### Completed native diagnosis and matched paired feasibility
+
+Sources **69ea44b** (observer/model) and **5a1008c** (matched diagnostic runner).
+The corrected local native diagnostic completes all eight family fits on
+`240817_006.sxm`, saved N=6, original support **3.8117942672 nm**, **6,496
+observed pixels** in each arm and unchanged noise **0.01516235363 nm**.
+Control maximum absolute residual/noise is **1.5450/1.5661** for circular/
+elliptical Gaussian, **1.3936/1.4073** for split; all are valid. After the
+unchanged accepted −35-pixel translation:
+
+| Native family | Maximum absolute residual/noise | Pixels above 3.5 | Valid |
+|---|---:|---:|---|
+| Gaussian circular | 4.248451 | 6 | no |
+| Gaussian elliptical | 3.609172 | 3 | no |
+| Split circular | 3.963961 | 3 | no |
+| Split elliptical | 3.341651 | 0 | yes |
+
+The Gaussian elliptical exceedances are all positive, at **row 179, columns
+287–289**, with residuals **0.054724, 0.054291, 0.053399 nm**. They are adjacent,
+not demonstrated independent outliers. Its 99th percentile absolute residual
+is **1.2015 noise units**; the failure is a localized maximum, not a high
+residual everywhere. All eight native LM fits (valid ones included) hit their
+configured **300 circular / 50 elliptical** iteration caps without declaring
+convergence. No swallowed global or LM exception is recorded. Global wrapper
+statuses are Success or MaxIters; Success aggregates several NLopt termination
+conditions and is not a global-optimality certificate. The split success cannot
+replace the Gaussian base required by the unchanged assignment pipeline.
+
+The paired feasibility check independently replays the exact saved native
+registered objective pixels and uses the final native family vectors as shared
+starts. All eight matched local continuations finish their **300 iterations**
+without declared convergence or exceptions:
+
+| Shape | Family | Fused mean maximum/noise | Paired mean maximum/noise | Paired forward/backward maximum/noise |
+|---|---|---:|---:|---:|
+| Gaussian | circular | 4.196838 | 4.127342 | 5.314639 / 3.806154 |
+| Gaussian | elliptical | 3.651233 | 3.518354 | 4.641883 / 3.331164 |
+| Split | circular | 4.002019 | 3.923763 | 5.017759 / 3.706424 |
+| Split | elliptical | 3.357234 | 3.230708 | 4.415026 / 2.964692 |
+
+Only the **fused split elliptical** continuation is valid. Paired split
+elliptical passes native mean validity but fails the declared forward-view
+guard. Both Gaussian families fail even the **original mean guard**, so the
+new per-view checks are not the sole reason this comparison cannot proceed.
+The fused elliptical Gaussian decreases RSS **0.176116 → 0.168989** while
+increasing the maximum residual; least squares and the maximum-residual guard
+are different objectives. Paired Gaussian reduces its stacked RSS
+**1.066788 → 0.873776**, but its mean RSS is **0.176413**, illustrating the
+cross-view tradeoff, not a chemistry improvement. GCV values with different
+observation targets are not compared across modes to select a method.
+
+**Stop this bounded version at the one-file feasibility result.** No full146
+fit, HPC submission, classifier learning, partial grade or benchmark-selected
+rescue occurs. The four-hour preparation / one two-hour-job ceilings are not
+expanded; unused compute is not a reason to relax validity or launch a known
+incomplete comparison. Counts, labels, thresholds, optimizer settings and
+application predictions remain untouched. Further optimizer convergence or
+mean-shape hypotheses need a separately bounded experiment; the current data
+do not distinguish a local optimization limitation from model inadequacy.
+Retain support **676/870 correct, 34/145 exact**, below historical **677/870,
+36/145**. No recognition gain or loss is established for this new model.
+
+The completed synthetic end-to-end native→paired test raises the diagnostic
+suite to **103 assertions**, alongside **85 paired mathematical/configuration
+checks** and **151 2D package tests**. Saved native residual maps independently
+reconstruct in **207,995 pixel/numerical assertions**, without an optimizer or
+label read. Complete saved-output verification, non-regression tests and final
+documentation checks are recorded below when complete. All data stay local in
+`results/paired_acquisition_20260922/`, with the initial writer failure retained.
+
+Final numerical verification passes **363,886 paired pixel/parameter/score
+assertions**, in addition to the **207,995 native** checks, without further
+fitting. The unchanged registered-refit suite passes **4,387 assertions**;
+with the 103 diagnostic, 85 paired-model and 151 core tests this is **4,726
+focused tests**. The older signed-CC/affine-Fisher documentation is condensed
+without changing its negative result or report pointer, leaving room for the
+new bounded diagnostic under the existing HTML size limit. The Manifest SHA256
+remains **617de8162fa4c7a814aacb106f145349bc57ead58ec9a6c332971a821b5974fe**.
