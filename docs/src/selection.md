@@ -1,5 +1,13 @@
 # Model Selection
 
+The September 22 authorized GCV-reselection comparison now tests the previously
+frozen counts. It repeats the original direct extractor's raw GCV rule with the
+corrected fused input, then refits both arms at fixed N before unchanged support
+assignment. It does **not** substitute the batch `support_midpoint_hybrid`
+policy or claim an exhaustive sweep. The comparison is in preparation; there
+is no new counting or recognition result. See the dated journal entry and
+`test/run_gcv_reselection.jl`; all physical and assignment TOMLs stay unchanged.
+
 On the September 20 symmetric-fusion research branch, fused fit samples use
 both unsmoothed views and ROI detection still uses both smoothed views. The
 completed fixed-count assignment comparison improves 666 → 671 correct / 870

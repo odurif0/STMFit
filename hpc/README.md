@@ -1,5 +1,19 @@
 # Running STMFit on the MPCDF HPC cluster
 
+The authorized September 22 raw-GCV reselection uses
+`hpc/compare_gcv_reselection.sbatch`: one four-hour, four-CPU / 16 GB job.
+It regenerates the fixed-count support control, performs a four-shard native
+GCV sweep, and refits the treatment at its selected counts before assignment.
+Set `STMFIT_PROJECT_DIR`, `STMFIT_INPUT_DIR` (with `full146_raw/` and
+`templates_cc.tsv`), `STMFIT_SELECTED_SUMMARY` (original cached own-N counts),
+`STMFIT_OUTDIR` (new), and `JULIA_BIN` (1.13), all absolute paths. Run
+`bash hpc/compare_gcv_reselection.sbatch --dry-run` first, then submit with an
+explicit command-line `sbatch --export=...` list of those five variables.
+The raw-GCV extractor and its existing early stopping remain unchanged;
+neither the batch hybrid guard nor any external label is used. Fetch all
+outputs/logs, check coverage, then grade separately. No job has been submitted
+at this preparation stage.
+
 For the September 20 fixed-count filtering comparison, use
 `hpc/compare_fusion.sbatch`. It runs two separate source checkouts sequentially,
 regenerating base/split features and all patches in both, then fitting native

@@ -2307,6 +2307,15 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-22. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0w. **Does fresh raw-GCV selection with corrected fused input improve the full
+    recognition pipeline?** → **AUTHORIZED; PREPARATION (Sep 22)**: compare the
+    existing cached own-N control with a fresh native extractor GCV sweep, then
+    refit both arms at fixed N and apply the unchanged 676/34 support method.
+    The direct-extractor 900-key lineage is not the batch-policy 871-key lineage;
+    no hybrid guard is substituted. One Viper job, four hours, no parameter
+    search, registration/noise experiment, or unknown25 rerun. Full outcome is
+    recorded in the dated entry below; no new score is available yet.
+
 0v. **Can covariance regularization throughout learning or coherent Student
     decisions improve recognition?** → **COMPLETE; NEGATIVE (Sep 22)**:
     source **bb6943b**, job **11936229**, **0:0 in 7m56s**, after **3s** queued.
@@ -10443,3 +10452,49 @@ test hpc/compare_em_shrinkage_student_density.sbatch Manifest.toml` is empty:
 no scientific code or setting changes during execution, checking or grading.
 Generated results remain ignored; the completed outcome is committed in the
 journal and all cited documentation headlines.
+
+## 2026-09-22 — Fresh GCV counts after symmetric filtering: bounded comparison
+
+The user authorizes the recommended first direction. Scientific deliverable:
+reselect counts using the corrected input and unchanged native GCV rule, apply
+the unchanged support assignment, and externally compare counting, correct/all
+positions, classified coverage, emitted errors, exact chains and paired gains /
+losses against the fixed-N control and historical reference. Done requires
+tested input/selection boundaries, complete fetched outputs, integrity checks,
+an explicit result/decision and committed documentation. Time box: three hours
+preparation from 12:28 CEST, one Viper job capped at four hours, four requested
+CPUs / 16 GB, no automatic retry. Other proposed directions are not authorized.
+
+The source/history check matters: the cached 900 lobes came from the direct
+extractor's minimum valid circular/elliptical GCV, not `batch_full.jl`'s current
+`support_midpoint_hybrid` policy. The experiment repeats precisely that raw-GCV
+path, including its existing intelligent sweep and BIC early-stop diagnostic.
+It is not exhaustive and does not substitute the separate 871-key promoted
+counting summary. No expected N, sequence, chemical proportions, benchmark
+membership/quality filtering or externally selected per-scan rule enters fitting.
+GCV, n_eff, physical bounds, optimization limits and TOMLs remain unchanged.
+
+`run_gcv_reselection.jl` uses four native extractor shards for the new sweep.
+Only each scan's selected count is passed onward: both control and treatment
+regenerate their base/split fits at fixed N, then patches, Fisher, classifiers,
+vote and QC with `unit_assignment_patch_support.toml`. Sweep geometry is saved
+for inspection but never used as assignment geometry. This avoids confounding
+the count change with variable-sweep warm starts in only one assignment arm.
+Unchanged-N geometries will be compared explicitly; whole-cohort learning can
+still change predictions on those scans when other scans' counts change.
+The old counts remain only in the control, not in treatment's sweep/range.
+
+Metadata-only dry-runs check the entire raw/control cohort. Incomplete, invalid,
+duplicated or gapped outputs fail the comparison; no scans are silently dropped.
+The computation reads no grading tables. Existing historical and support grades
+are references only; no grade-guided tuning, new DFT, acquisition/noise model,
+changed abstention, classifier variant or unknown25 rerun is included. This
+heavily reused benchmark remains development evidence, not independent validation.
+
+The new comparison suite passes **54 synthetic assertions** under Julia 1.13,
+covering the original raw-GCV validity/tie rules, unchanged free/fixed-N settings,
+strict cohorts and contiguous keys, independent fixed-N arms, failed-output
+retention, CLI exclusions and Slurm/dry-run arguments. An initial fixture reused
+a TSV path rejected by the existing no-overwrite writer; unique fixture paths
+fix that test-only collision, and its log is retained. Package, selected-support
+and assignment regressions are still running; no real fit or grade has run.
