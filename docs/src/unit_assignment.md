@@ -2421,38 +2421,18 @@ independent validation or evidence of unknown-chain chemical accuracy.
 
 The Gaussian base amplitudes and tilted background are jointly re-estimated
 by bounded linear least squares at identical saved N, centers, widths and axes.
-The original symmetric-fusion cache is used, not either fresh GCV-refit arm.
-Native coefficient bounds and the existing linear solver settings stay fixed;
-no nonlinear search, selection or new hyperparameter is involved. The split
-cache stays byte-identical. Both arms regenerate all derived features,
-patches and assignment stages with unchanged support configuration.
-
-| Profile | Correct / 870 | Exact / 145 | Coverage / 870 | Emitted errors |
-|---|---:|---:|---:|---:|
-| Historical saved reference | 677 | 36 | 854 | 177 |
-| Exactly replayed support control | 676 | 34 | 852 | 176 |
-| Frozen-geometry linear profile | 675 | 32 | 852 | 177 |
-
-Against control: **4 scan gains, 5 losses, 136 ties; zero exact gains,
-two losses** (`240310_Cu100007.sxm`, `240818_020.sxm`), without changed
-grade orientation. All 146 profiles satisfy KKT in one to three iterations;
-RSS decreases **0.0137–12.1647%, median 0.6814%**. Ten final decisions change,
-nine 1→0 and one 0→1; eight leave old vote ties and one enters a tie.
-Four unavailable keys, 892 benchmark predictions, 16 missing positions,
-38 extra lobes and 106 exact counts remain. Better pixel fit is not better
-chemical recognition.
-
-Source **567cdde**, job **11938782**, **0:0 in 6m17s**, after 5m29s queued.
-All **561 outputs and Slurm log** are fetched/checksummed; **4,936 tests,
-22,912 pre-grade checks and 31 aggregate checks** pass, with 290 paired rows.
-Thirteen control tables replay exactly; an independent basis reconstruction
-checks coefficients, bounds, gradients, KKT, RSS and full-parameter GCV.
-**Reject this version; retain support 676/34**, below historical 677/36.
-No post-grade bound, threshold, vote, counting or unknown25 change follows.
-Full method, losses and limitations: [journal](journal.md),
-`results/frozen_amplitude_profile_20260922/report.md`. The saved geometry is
-decimal-rounded, not the unsaved full-precision fit. Labels remain external;
-this reused development benchmark does not establish independent validation.
+Native coefficient bounds, split cache and assignment settings stay fixed.
+The profile gives **675/870 correct, 32/145 exact**, versus exactly replayed
+support **676/34**, both at **852/870 coverage**. Against control: four scan
+gains, five losses, 136 ties; zero exact gains, two losses. All 146 profiles
+satisfy KKT and reduce RSS (median **0.6814%**), without improving recognition.
+All 146 scans/900 keys remain. Source **567cdde**, job **11938782**, **0:0 in
+6m17s**; all outputs/log are fetched and checked. **Reject; retain support**,
+below historical 677/36, without post-grade tuning. The fixed cache is
+decimal-rounded geometry, not the unsaved full-precision fit. Full checks,
+losses and limits: [journal](journal.md),
+`results/frozen_amplitude_profile_20260922/report.md`. Labels remain external;
+this reused development benchmark is not independent validation.
 
 ### Matched geometric variable projection (2026-09-22): negative
 

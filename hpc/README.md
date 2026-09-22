@@ -11,6 +11,9 @@ First run `bash hpc/compare_registered_refit_original_support.sbatch --dry-run`;
 never compute on the login node. This is not a retry of the completed failed
 job below. The deliverable includes fetched outputs, saved-only verification
 and a complete external grade, or an explicitly inconclusive diagnostic.
+Source **98d664d**, actual job **11942393**, submitted **21:42:17 CEST** and
+started **21:42:26** on `vipc2488`. Output:
+`/ptmp/oldu/stmfit/registered_original_support_20260922_v1`; do not resubmit.
 
 The completed September 22 **registered native refit** uses
 `hpc/compare_registered_refit.sbatch`: one two-hour job, four requested CPUs /

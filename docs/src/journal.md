@@ -2308,7 +2308,8 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0ab. **Can original unregistered geometric support make the registered refit complete?**
-    → **AUTHORIZED; PREPARING (Sep 22, 21:26 CEST)**: preserve the original
+    → **RUNNING (Sep 22)**: source **98d664d**, job **11942393**, started
+    **21:42:26 CEST**, nine seconds after submission. Preserve the original
     native ROI, axis, tube and axial bounds, while fitting only observed pixels
     in matched zero-shift and registered arms. Saved N, physical constraints,
     registration and assignment settings remain unchanged. Four-hour preparation
@@ -11559,3 +11560,22 @@ remote Julia is 1.13.0. No new real local file or fit retry is used.
 Documentation builds successfully, without deployment; existing size/search
 warnings remain. The Manifest is unchanged (SHA256
 `617de8162fa4c7a814aacb106f145349bc57ead58ec9a6c332971a821b5974fe`).
+
+Scientific source **98d664d** is committed before transfer to
+`/u/oldu/code/STMFit_registered_original_support_20260922`. Tracked-source and
+dereferenced raw-data checksum dry-runs show no differences. Login-node
+instantiation/imports succeed under Julia 1.13, retaining the unchanged
+Manifest and its expected 1.12.6 provenance warning. The remote metadata-only
+dry-run and `sbatch --test-only` pass; test-only ID 11942392 is not a submitted
+job or a check of the compute-node environment.
+
+The sole actual job **11942393** is submitted **21:42:17 CEST**, starts
+**21:42:26** on `vipc2488`, with nine seconds queued. It requests four CPUs /
+16 GB, receives eight allocated CPUs and runs four one-thread workers.
+Command-line `--export=ALL,...` names all five paths, with `--no-requeue` and
+the explicit two-hour limit. Preparation takes about sixteen minutes.
+Output: `/ptmp/oldu/stmfit/registered_original_support_20260922_v1`.
+No scientific source/settings change or second submission follows. Continue
+through fetching, saved-output verification and external grade, not merely
+submission. The assignment page's older amplitude-profile summary is condensed
+to leave documentation space, preserving its result and full journal/report links.
