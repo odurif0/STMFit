@@ -1053,6 +1053,18 @@ unknown25 change follows; see `results/gcv_reselection_20260922/report.md`.
 
 ## Opt-in diagnostic exploration settings (2026-09-18)
 
+`paired_solver.toml` declares the September 23 one-scan LM/SLSQP comparison.
+Its `[model]` fixes method `unit_box_slsqp`, LM iterations and SLSQP objective
+callbacks at **10,000** each, a **600 s** per-optimizer limit, SLSQP relative
+objective/coordinate tolerances **1e-14/1e-12**, derivative relative step
+**6.055454452393343e-6**, evaluation checkpoints `[1,300,1000,3000,10000]`, and
+coordinate-roundoff tolerance **1e-12** of native box width. Callback counts
+are not LM iteration counts. `[selection]` fixes the one scan, saved N, valid
+minimum full-parameter GCV and unchanged `paired_convergence.toml` stationarity
+audit, with no retry or partial grade. `[preprocessing]` reuses saved registered
+pixels, frame, bounds and noise. All physical settings remain in the original
+configs; this is a numerical comparison, not a promoted calibration.
+
 `paired_convergence.toml` freezes the September 23 budget-only diagnostic on
 `240817_006.sxm`. `[model]` sets control/extended iterations to **300/10,000**,
 `max_time_s=600`, unchanged native `x_tol=1e-8`, `g_tol=1e-12`, and checkpoints

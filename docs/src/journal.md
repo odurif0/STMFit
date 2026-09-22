@@ -2307,6 +2307,14 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-23. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0ae. **Can a different box-constrained solver resolve the nonstationary endpoints?**
+    → **AUTHORIZED, ONE-SCAN COMPARISON (Sep 23)**: fresh native LM and
+    unit-box SLSQP share saved starts, pixels, N, physics and unchanged validity
+    on `240817_006.sxm`. The previous two-step stationarity audit is frozen.
+    Two-hour preparation from 01:07 CEST, one one-hour Viper job, no retry,
+    analytic profiling, new seed, classifier, threshold change or grade.
+    Keep support **676/34** until a separate complete recognition comparison.
+
 0ad. **Does a larger native LM budget resolve the registered one-file rejection?**
     → **COMPLETE; 10,000 ITERATIONS STILL DO NOT CONVERGE (Sep 23)**: all eight
     long fits hit their cap, fail independent box stationarity and add no fully
@@ -12021,3 +12029,73 @@ limit. Existing size/search-index warnings remain. The Manifest SHA256 stays
 **617de8162fa4c7a814aacb106f145349bc57ead58ec9a6c332971a821b5974fe**.
 All validated source, tests and documentation are committed; generated data
 remain in the ignored local results directory. No further job is submitted.
+
+### 2026-09-23 — Authorized unit-box SLSQP comparison at fixed acquisition physics
+
+The user approves the proposed numerical-solver follow-up. Preparation begins
+at **01:07 CEST**, capped at two hours; at most **one one-hour Viper job**, four
+requested CPUs / 16 GB, no automatic retry. Deliverable: compare native LM
+and a different bounded solve on the same blocked scan, reporting whether each
+endpoint is independently stationary and fully valid, or remains indeterminate.
+No recognition gain is assumed from a lower RSS. The unknown25 application is
+already complete and is not changed or rerun.
+
+The preceding diagnostic shows large interior background-plane gradients and
+alternating large rejected/small accepted LM steps. The new method uses
+**NLopt LD_SLSQP**, already installed (NLopt library 2.10.0), on affine unit-box
+coordinates. The affine map is anchored at the saved native vector so the
+initial parameters replay exactly; only endpoint roundoff up to `1e-12` of
+box width is clipped, never an infeasible physical point. Molecular parameters
+and the four existing paired acquisition coefficients remain jointly optimized.
+There is no analytic profiling, extra background flexibility, alternate mean
+shape, prior, robust loss, seed search or new observation/noise model.
+
+All eight cases (Gaussian/split × circular/elliptical × fused/paired) share the
+same saved native starts and registered observed pixels as the previous job.
+The LM arm is rerun with its previous **10,000 iterations**, `x_tol=1e-8`,
+`g_tol=1e-12`; the SLSQP arm gets at most **10,000 objective callbacks**,
+relative objective tolerance **1e-14** and relative unit-coordinate tolerance
+**1e-12**. Each optimizer has the same **600-second internal wall limit**.
+Callback counts and LM iterations are not comparable computational units:
+SLSQP gradients evaluate the model repeatedly. Actual times, callback/gradient/
+model counts and termination codes are saved; no equal-arithmetic-cost claim.
+The single-thread SLSQP callback is compiled once before its timer without
+taking any optimizer step; this setup time is reported separately.
+
+The objective remains exactly native mean RSS or stacked forward/backward RSS,
+divided by the constant initial RSS (floor `1e-12`, reused from the audit) for
+numerical scaling. Native final validity, physical boxes, GCV parameter counts,
+per-view 3.5 residual guard, support, registration, N and noise stay unchanged.
+Second-order bound-respecting finite differences at the already declared
+`6.055454452393343e-6` relative step supply SLSQP gradients. The **unchanged**
+post-fit two-step audit recomputes gradients and projected stationarity, and a
+saved-output verifier uses a separate peak-evaluation implementation. A solver
+stopping code (including rounding limits) is never relabeled as independently
+verified stationarity or global optimality. Native helper/production fitting
+code is not modified.
+
+`config/paired_solver.toml` records all new numerical settings before real fits.
+`diagnose_paired_solver.jl` binds the native inputs, previous 300-iteration
+reference and previous convergence comparison by hashes. It saves all returned
+endpoints, residual maps, gradients, singular values, scalar traces and declared
+checkpoints. SLSQP checkpoints index **callback evaluations**, not accepted
+iterations; the returned endpoint is saved separately from the last trial.
+No best-valid evaluated point, saved result or alternate solver substitutes for
+an invalid endpoint. Four ordinary single-thread subprocesses shard the eight
+cases; the job merges only a complete sixteen-endpoint comparison.
+
+Scientific Must-NOT-have constraints remain: no labels, expected N, class
+composition, truth-selected variant, uncertain-row exclusion, 1D selection,
+`n_eff` reinterpretation, parameter tuning after outcomes, full146 classifier,
+benchmark grade, DFT or retired orchestration. Retain **676/870 correct,
+34/145 exact**, below historical **677/870, 36/145**. Any broader comparison
+requires a separate scope rather than consuming unused diagnostic time.
+
+Before any real optimization, **118 solver/constraint tests** and **17,174
+synthetic end-to-end/export/merge/independent-verification assertions** pass.
+The active-bound quadratic test reaches its known constrained solution and
+passes the unchanged stationarity audit; an intentionally capped solve remains
+explicitly nonstationary. All eight synthetic molecular objectives and starts
+match the native LM problem exactly. The local launcher dry-run validates the
+saved real tables without fitting or writing an output directory. The Manifest
+SHA256 remains **617de8162fa4c7a814aacb106f145349bc57ead58ec9a6c332971a821b5974fe**.

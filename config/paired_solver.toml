@@ -1,0 +1,22 @@
+[model]
+method = "unit_box_slsqp"
+lm_maxiter = 10000
+slsqp_maxeval = 10000
+max_time_s = 600.0
+slsqp_ftol_rel = 1e-14
+slsqp_xtol_rel = 1e-12
+derivative_relative_step = 6.055454452393343e-6
+evaluation_checkpoints = [1, 300, 1000, 3000, 10000]
+coordinate_roundoff_tolerance = 1e-12
+
+[selection]
+file = "240817_006.sxm"
+count_policy = "reuse_native_diagnostic_N"
+family_policy = "valid_minimum_full_parameter_gcv"
+stationarity = "reuse_paired_convergence_audit_unchanged"
+failure_policy = "explicit_no_retry_no_partial_grade"
+
+[preprocessing]
+input = "verified_saved_registered_fit_pixels"
+support = "reuse_native_frame_and_bounds"
+noise = "reuse_native_noise"

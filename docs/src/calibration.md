@@ -642,6 +642,16 @@ of N or independent validation. See `results/gcv_reselection_20260922/report.md`
 
 ## Opt-in label-free exploration (2026-09-18)
 
+The September 23 `paired_solver.toml` experiment compares fresh native LM with
+SLSQP on the same fixed one-scan mean/paired objectives and native starts.
+An anchored affine unit-box parameterization and constant initial-RSS scaling
+change numerical coordinates, not physical boxes or the minimizer set. All
+molecular/acquisition coefficients remain jointly fitted; no plane/amplitude
+profiling or physical calibration is added. Numerical budgets and tolerances
+are explicit in [configuration](config.md). Native validity and the previous
+independent stationarity audit are retained, separately from solver stop codes.
+No recognition or chemical accuracy claim follows from solver convergence.
+
 The September 23 `paired_convergence.toml` follow-up changes only the local
 iteration ceiling (300 versus 10,000), retaining all saved starts, objective
 pixels, physical bounds and native stopping tolerances on the single blocked
