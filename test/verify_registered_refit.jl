@@ -126,6 +126,9 @@ function geometry(root,cache,shiftpath; complete=true)
                 end
                 rss=sum(abs2,pred.-z)
                 @test close(rss,num(a,"rss"))
+                peak=maximum(abs.(pred.-z))/max(num(a,"noise"),G.EPS)
+                @test close(peak,num(a,"residual_peak_snr"))
+                @test peak<=cfg.residual_peak_snr_threshold
                 @test close(length(z)/(length(z)-pfull)^2*rss,num(a,"gcv"))
                 overlap=0.
                 for i in 1:n-1,j in i+1:n

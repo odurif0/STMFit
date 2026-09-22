@@ -11596,3 +11596,10 @@ is introduced to rescue it. Final failure/cohort accounting awaits completion.
 
 The condensed documentation rebuild passes; assignment HTML is 197.86 KiB,
 below the unchanged 200 KiB limit, with existing warnings and no deployment.
+
+Postprocessing additionally recomputes maximum absolute residual divided by
+the native noise for every saved valid fit, compares it to the exported value
+and checks the unchanged native validity threshold. The smoke passes 196
+saved-fit checks plus the previous 306 original-support checks. This extends
+verification only: the scientific source on Viper stays **98d664d**, and failed
+fit parameters are neither reconstructed by a new optimization nor invented.
