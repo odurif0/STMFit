@@ -1,5 +1,15 @@
 # Model Selection
 
+The September 22 fixed-geometry acquisition registration is **negative:
+671/870 correct, 26/145 exact**, versus both native and observation-mask
+controls **676/34**. Coverage falls **852→850/870**. N and every base/split
+geometry field remain byte-identical: **106/145 exact counts**, 16 missing
+positions and 38 extra lobes stay unchanged. GCV and `n_eff` do not change;
+no count selection or Gaussian refit occurs. Accepted translations improve image agreement,
+not recognition in this frozen-geometry pipeline. Retain saved support;
+source **9961973**, job **11941278**, report
+`results/acquisition_registration_20260922/report.md`. No post-grade tuning.
+
 The September 22 matched **geometric variable-projection** comparison is
 **negative: 632/870 correct, 20/145 exact**, against same-start joint
 optimization **676/34** and exactly replayed saved support **676/34**.

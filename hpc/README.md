@@ -7,11 +7,16 @@ The authorized September 22 acquisition experiment uses
 `STMFIT_OUTDIR` (new) and `JULIA_BIN` (1.13) on the `sbatch --export=ALL,...`
 command line. Run the script with `--dry-run` first. Up to four one-thread
 registration shards precede native replay, observed-mask control and registered
-assignment arms; no fitting or count selection occurs. Fetch all outputs and
+assignment arms; no Gaussian refitting or count selection occurs. Fetch all outputs and
 check gates/coverage before external grading. Source **9961973**, job
 **11941278**, starts **18:53:18 CEST** on `vipc2227`, after **6m04s** queued on
-`QOSGrpCpuLimit`. Eight CPUs allocated, four workers used. Results pending;
-do not resubmit `/ptmp/oldu/stmfit/acquisition_registration_20260922_v1`.
+`QOSGrpCpuLimit`, finishes **19:00:10**, **COMPLETED, 0:0 in 6m52s**. Eight
+CPUs allocated, four workers used. All **626 outputs and Slurm log** are fetched
+and checksummed. The result is **negative: 671/870 correct, 26/145 exact**,
+versus both controls **676/34**, coverage **850 versus 852/870**. Retain saved
+support; no retry or tuning. Full report:
+`results/acquisition_registration_20260922/report.md`. Do not resubmit
+`/ptmp/oldu/stmfit/acquisition_registration_20260922_v1`.
 
 The authorized September 22 matched geometric comparison uses
 `hpc/compare_geometry_profile.sbatch`: **one four-hour job, four CPUs / 16 GB**.

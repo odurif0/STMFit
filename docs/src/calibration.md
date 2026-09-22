@@ -654,6 +654,11 @@ saved Gaussian model. Native flattening stays unchanged; restored raw masks
 cannot undo earlier imputation influence on that background. A separate
 zero-shift mask control isolates this effect. No N, optimizer, GCV, `n_eff`,
 class threshold, composition prior or missing-head fallback changes.
+The completed comparison is **negative: 671/870 correct, 26/145 exact**, versus
+both controls **676/34**, coverage **850 versus 852/870**. Stronger local
+image agreement does not validate this assignment change. Keep saved support,
+without post-grade calibration changes; report:
+`results/acquisition_registration_20260922/report.md`.
 
 The subsequent September 22 geometric-profile comparison keeps N, physical
 calibration, preprocessing and assignment settings fixed. Joint and profiled

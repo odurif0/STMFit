@@ -1066,6 +1066,10 @@ experimental stability gates, not calibrated confidence or class thresholds.
 No bound expands per image. The three-arm comparator keeps native replay,
 zero-shift mask control and registered data separate; cached N/base/split/model
 and `unit_assignment_patch_support.toml` remain unchanged. See the [journal](journal.md).
+The completed comparison is **negative: 671/870 correct, 26/145 exact**, versus
+both controls **676/34**, coverage **850 versus 852/870**. Keep saved support;
+do not retune these gates after grading. Full report:
+`results/acquisition_registration_20260922/report.md`.
 
 The authorized September 22 **geometric** comparison uses the separate
 `config/geometry_profile_comparison.toml`, with empty physical/selection/preprocessing

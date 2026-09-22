@@ -11,10 +11,18 @@ classified accuracy is **676/852 (79.3%)**. Three newly available predictions
 are correct, but two formerly correct decisions regress. This is **not a new
 champion**: historical 677/870 and 36/145 still lead, with higher coverage (854).
 The independent final Gaussian-score arm regresses to **666/870 and 32/145**
-and is rejected. All 900 keys and selected counts remain; no pixels are imputed,
+and is rejected. All 900 keys and selected counts remain; the support rule imputes no patch pixels,
 no variants combined and no settings tuned after grading. Labels are used only
 by external grading; this reused development benchmark is not independent
 validation. See the [support/score comparison](docs/src/unit_assignment.md#complete-disk-support-and-final-gaussian-score-2026-09-21).
+
+The fixed-geometry **acquisition registration** comparison is negative:
+**671/870 correct, 26/145 exact**, versus **676/34** for both native replay
+and the observation-mask control. Coverage falls **852→850/870**. Registration
+is accepted on 104/146 scans and improves all 629 comparable patch correlations
+(median **0.23→0.99**), but loses eight exact chains and gains none. Keep saved
+support; better image agreement is not better recognition here. See the
+[acquisition-registration result](docs/src/unit_assignment.md#fixed-geometry-acquisition-registration-2026-09-22-negative).
 
 The matched **geometric variable-projection** comparison is negative:
 **632/870 correct, 20/145 exact**, versus **676/34** for both saved support

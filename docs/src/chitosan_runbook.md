@@ -1,6 +1,18 @@
 # Chitosan Benchmark and 10–20mer Runbook
 
-Latest September 22 comparison: **geometric variable projection is rejected**.
+Latest September 22 comparison: **fixed-geometry acquisition registration is
+rejected**. It gives **671/870 correct, 26/145 exact**, versus both native
+replay and observation-mask control **676/34**; coverage falls **852→850/870**.
+Registration passes on 104/146 scans and improves all 629 comparable local
+image correlations (median 0.23→0.99), yet loses eight exact chains and gains
+none. All N and geometric fields stay fixed. Keep saved support, below
+historical 677/36; no promotion or post-grade tuning. Source **9961973**, job
+**11941278**, **0:0 in 6m52s**; all **626 outputs and Slurm log** are fetched
+and checksummed. Full report: `results/acquisition_registration_20260922/report.md`.
+No new Gaussian fit, count selection, missing-head fallback, DFT or unknown25
+run follows this completed experiment.
+
+Earlier September 22 comparison: **geometric variable projection is rejected**.
 At fixed cached N and unchanged support-assignment settings, it gives
 **632/870 correct, 20/145 exact**, versus **676/34** for both the same-start
 joint optimizer and byte-identical saved support replay. Coverage remains

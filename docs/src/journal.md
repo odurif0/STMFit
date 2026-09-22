@@ -2308,16 +2308,18 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0z. **Can identifiable acquisition translation improve fixed-geometry recognition?**
-    → **RUNNING (Sep 22)**: source **9961973**, job **11941278**,
-    starts **18:53:18 CEST** on `vipc2227`, after about six minutes on
-    `QOSGrpCpuLimit`. One integer-x backward-to-forward
-    registration experiment; four hours preparation from 18:21 CEST, one Viper
-    job capped at two hours, no retry. Saved N, base/split geometry and all
-    assignment settings stay unchanged. Three arms isolate native replay,
-    restored-observation-mask control, and accepted translations. Full benchmark
-    comparison or explicit indeterminacy is the deliverable, not a better
-    correlation alone. Cross-view residual fitting, missing-head fallback,
-    uncertainty classifiers, new N, DFT and unknown25 remain out of scope.
+    → **COMPLETE; NEGATIVE (Sep 22)**: source **9961973**, job **11941278**,
+    **0:0 in 6m52s**, after 6m04s queued. Registration is accepted on
+    **104/146 scans**; all **629 comparable patches** improve spatial
+    correlation (median **0.2314→0.9911**). Yet recognition falls to
+    **671/870 correct, 26/145 exact**, versus both native replay and
+    observation-mask control **676/34**; coverage **852→850/870**. Against
+    either control: 11 scan gains, 15 losses, 119 ties; **zero exact gains,
+    eight losses**. N and all geometry remain fixed; 42 rejected scans stay
+    at zero shift. All **626 outputs and Slurm log** are fetched/checksummed;
+    **10,359 tests/smoke checks, 23,526 pre-grade checks and 41 aggregate checks**
+    pass, with 580 paired rows. Retain saved support, below historical 677/36.
+    No post-grade tuning, retry, other direction or unknown25 rerun follows.
 
 0y. **Does full geometric variable projection improve recognition at fixed N?**
     → **COMPLETE; NEGATIVE (Sep 22)**: source **7c5fb6c**, job **11940220**,
@@ -11162,3 +11164,85 @@ the assignment page is condensed, retaining its headline and linking the full
 journal/report. Documentation passes; the page is now **198.11 KiB**, leaving
 room for this outcome without raising the existing 200 KiB limit. No scientific
 code or setting changes after source **9961973**.
+
+**Completed and checked:** job **11941278** finishes at **19:00:10 CEST**,
+**COMPLETED, 0:0, 6m52s**, without retry or budget extension. All **626 result
+files and the Slurm log** are fetched with matching SHA256. The independent
+saved-only review passes **23,526 assertions**, recomputing acceptance from
+all **183,080 lag scores**, checking full cohorts, literal cached geometry,
+input hashes, fifteen reference tables and final probability votes. External
+grading then passes **41 aggregate checks**; four paired comparisons contain
+**580 file rows**. Source stays **9961973**; only documentation changes later.
+
+Registration is accepted on **104/146 scans**, all nonzero and negative,
+spanning **−0.841487 to −0.150685 nm**, median **−0.328767 nm**. The other
+42 scans stay at zero lag, not removed. Rejection reasons overlap: 37 ambiguous
+peaks, 14 band disagreements, eight weak/negative correlations, seven
+insufficient supports, four constant signals and three boundary peaks. No
+window expands. The accepted scans contain 631 saved lobes; 629 have measurable
+raw-patch correlation on a fixed common finite set before/after. **All 629
+improve**, median **0.231432→0.991123**, none negative afterward. The remaining
+two have empty common support (240818_019 lobes 1–2). This is spatial agreement
+evidence, not independence, calibrated noise, or chemical identity.
+
+There are **36 scans with missing raw pixels**, but the zero-shift observed-mask
+control reproduces **all fifteen scientific tables** of the native reference,
+patches included, byte-for-byte. Thus restoring masks has no numerical effect
+on these molecular patches, not a license to impute other supports. The native
+reference itself exactly replays the saved support.
+
+| Profile | Correct /870 | Exact /145 | Coverage /870 | Emitted errors | TN / FP / FN / TP |
+|---|---:|---:|---:|---:|---|
+| Historical saved reference | 677 | 36 | 854 | 177 | 507 / 59 / 118 / 170 |
+| Native support replay | 676 | 34 | 852 | 176 | 513 / 52 / 124 / 163 |
+| Observed-mask, zero shift | 676 | 34 | 852 | 176 | 513 / 52 / 124 / 163 |
+| Accepted acquisition shifts | 671 | 26 | 850 | 179 | 523 / 40 / 139 / 148 |
+
+Against either control: **11 scan gains, 15 losses, 119 ties**, net **−5 correct
+positions; zero exact gains, eight losses**, with three grade-orientation
+changes. Exact losses: 240307_017, 240310_Cu100007, 240817_006, 240817_007,
+240817_044, 240817_080, 240817_081 and 240818_020. Against historical: 22 gains,
+28 losses, 95 ties; four exact gains, fourteen losses, net −6 units / −10
+exact chains. Grade orientation is a reporting convention, not registration.
+
+All **146 scans / 900 keys** remain. The grade covers 145 scans / 892 predicted
+lobes against 870 truth positions. Every N stays unchanged: 106 exact counts,
+14 short / 25 long chains, 16 missing positions and 38 extra lobes. Final raw
+assignments change at **30 keys / 28 scans** (28 `1→0`, two `0→?`). Six changed
+keys belong to zero-shift scans, because the unchanged learning rules refit
+on the cohort's changed features; learned classifier parameters are not frozen.
+The GMM hard head changes 154 decisions, k-means six; the final soft vote is
+checked separately. Forward patches, forward CC and Fisher stay identical
+between mask control and registered arms.
+
+Four old unavailable keys remain. Two more appear at **240818_019 lobes 3–4**:
+translation exposes missing backward descriptor-disk pixels at the image edge,
+so GMM and the unchanged final rule abstain. K-means has no missing head; no
+fallback fills the two new gaps. False positives decrease **52→40**, but false
+negatives increase **124→139**; classified accuracy falls **79.3%→78.9%**.
+
+**Decision: reject this fixed-geometry registration variant for recognition;
+retain saved support 676/34**, still below historical 677/36. Better trace/
+retrace agreement is not enough for this frozen-model assignment pipeline.
+Interaction with geometry fitted to the original unregistered fusion is a
+plausible explanation, not a demonstrated cause. The result does not reject
+all registration methods or prove that chemical signal is absent. No gate,
+window, geometry, vote, threshold, missing-head rule or parameter is tuned
+after the grade. No other suggested direction, N, DFT or unknown25 run follows.
+Inference remains label-free; repeated benchmark reuse is development evidence,
+not independent validation or accuracy evidence for unknown chains.
+
+The authorized comparison is complete; the broader historical objective is not.
+Full method, hashes, checks, confusion and paired losses:
+`results/acquisition_registration_20260922/report.md`. README, runbook,
+selection, assignment, configuration, calibration and HPC notes reflect this
+outcome. README's support claim is clarified to **no patch-pixel imputation by
+the support rule**, not a false claim that native SXM preprocessing never imputes.
+
+Final Julia 1.13 documentation rendering passes, with the existing size/search
+warnings. The assignment page is **199.61 KiB**, below the unchanged 200 KiB
+limit. The first final-build invocation never executes because its automatic
+command-approval review times out; the single retry only rebuilds local docs,
+not inference or Slurm. Scientific source remains **9961973**, with no
+post-grade parameter changes. The completed negative experiment is handed off
+with saved support retained; no required scientific work remains in this scope.

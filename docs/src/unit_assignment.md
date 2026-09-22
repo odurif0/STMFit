@@ -2480,6 +2480,22 @@ unknown-chain accuracy claims. Full method, timings, checks, confusion and
 losses remain in the [journal](journal.md) and
 `results/geometry_profile_20260922/report.md`.
 
+### Fixed-geometry acquisition registration (2026-09-22): negative
+
+Accepted integer-x translations move backward observations before subtraction
+of the unchanged Gaussian model. N, geometry, split cache, molds and assignment
+settings stay fixed. **104/146 scans** pass the declared gates; the others keep
+zero shift. All **629 comparable patches** improve spatial correlation (median
+**0.23→0.99**), but recognition falls to **671/870 correct, 26/145 exact**,
+against both native replay and observation-mask control **676/34**. Coverage
+falls **852→850/870**; eight exact chains are lost, none gained.
+
+**Reject this variant; retain saved support 676/34**, below historical 677/36.
+All 146 scans/900 keys remain. Source **9961973**, job **11941278**, **0:0 in
+6m52s**; 626 outputs/log fetched and checked. No post-grade tuning or chemical
+validation claim. Method, acceptance, losses and checks: [journal](journal.md),
+`results/acquisition_registration_20260922/report.md`.
+
 ### Native numerical conventions
 
 The constant-current port retains the old first-axis-fast cube index, sampling
