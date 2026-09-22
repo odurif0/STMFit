@@ -2308,8 +2308,9 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0z. **Can identifiable acquisition translation improve fixed-geometry recognition?**
-    → **SUBMITTED / QUEUED (Sep 22)**: source **9961973**, job **11941278**,
-    submitted **18:47:13 CEST**, waiting on `QOSGrpCpuLimit`. One integer-x backward-to-forward
+    → **RUNNING (Sep 22)**: source **9961973**, job **11941278**,
+    starts **18:53:18 CEST** on `vipc2227`, after about six minutes on
+    `QOSGrpCpuLimit`. One integer-x backward-to-forward
     registration experiment; four hours preparation from 18:21 CEST, one Viper
     job capped at two hours, no retry. Saved N, base/split geometry and all
     assignment settings stay unchanged. Three arms isolate native replay,
@@ -11152,3 +11153,12 @@ two-hour cap and no-retry scope are unchanged. Remote source:
 `/ptmp/oldu/stmfit/acquisition_registration_20260922_v1`. No STM computation runs
 on the login node. Submission is not a scientific result; the comparison is
 still pending and the saved support candidate remains the working reference.
+
+**Started:** Slurm records submission at **18:47:14** (one second after the
+submission command's timestamp) and start **18:53:18 CEST**, **6m04s** queued.
+The job runs on `vipc2227`, eight allocated CPUs with four one-thread workers.
+All four acquisition logs advance. The earlier geometric-profile paragraph in
+the assignment page is condensed, retaining its headline and linking the full
+journal/report. Documentation passes; the page is now **198.11 KiB**, leaving
+room for this outcome without raising the existing 200 KiB limit. No scientific
+code or setting changes after source **9961973**.
