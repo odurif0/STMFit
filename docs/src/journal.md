@@ -11348,3 +11348,25 @@ syntax and rerunning that verifier requires no second fit or setting change.
 No external labels are read. Remote/local base, split and template SHA256s
 match; the ignored Manifest remains unchanged. Documentation rendering is
 still in progress at this checkpoint.
+
+Scientific source is committed as **c7836f9** before transfer to
+`/u/oldu/code/STMFit_registered_refit_20260922`. The tracked-source checksum
+dry-run and dereferenced raw-data checksum dry-run report no differences.
+Login-node `Pkg.instantiate()` and package imports succeed under Julia 1.13;
+the Manifest SHA256 remains
+`617de8162fa4c7a814aacb106f145349bc57ead58ec9a6c332971a821b5974fe`, with its
+expected Julia-1.12.6 provenance warning. No STM fit runs on the login node.
+Local documentation builds successfully; the older geometric-profile summary
+is condensed without losing its result or journal/report pointers. The
+assignment HTML is **198.20 KiB**, below the unchanged 200 KiB limit.
+
+The remote metadata dry-run passes. `sbatch --test-only` succeeds and reports
+eight prospective allocated CPUs for the four-CPU request; it is not a runtime
+environment test. The sole actual submission is **11942091**, at
+**20:39:57 CEST**, with explicit command-line `--export=ALL,...`, all five
+required paths, `--no-requeue`, two-hour walltime and four requested CPUs / 16 GB.
+Preparation takes about **28 minutes**, within the four-hour window. Output:
+`/ptmp/oldu/stmfit/registered_refit_20260922_v1`. No scientific change after
+source **c7836f9**, no second real local scan and no second job is submitted.
+Continue through completion, fetching, saved-output checks and external grade;
+submission alone does not complete the deliverable.
