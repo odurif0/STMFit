@@ -1,6 +1,19 @@
 # Model Selection
 
-The September 22 **registered native refit is inconclusive** at saved N.
+The September 22 **original-support registered refit remains inconclusive**.
+Original ROI/axis/tube/bounds replay exactly for all 146 scans. The three earlier
+span failures disappear, but registered Gaussian fitting of `240817_006.sxm`
+at saved N=6 fails the existing maximum absolute residual/noise guard (3.5) in
+both circular and elliptical families. The registered split fit is then not
+attempted. This does not prove an incorrect N, physical impossibility or worse
+chemical recognition; failed numerical residual values and convergence are
+unavailable. **145/146 scans** complete all four fits. No count, validity
+threshold, GCV policy or `n_eff` formula changes, and no partial grade is run.
+Retain exactly replayed support **676/34**, below historical **677/36**.
+Source **98d664d**, job **11942393**; diagnostic:
+`results/registered_original_support_20260922/report.md`.
+
+The preceding September 22 **registered native refit is inconclusive** at saved N.
 Two N=10 scans fail even the zero-shift control: minimum native span 4.6303 nm
 exceeds the observed support 4.2040 nm. A third, N=6, fails after registration
 (2.5724 versus 2.5421 nm). These are conservative native parametrization
@@ -10,8 +23,8 @@ changed to rescue them, and no partial candidate grade is emitted. Full-paramete
 GCV selects only the family at each saved N; the `n_eff` formula is unchanged.
 The exact reference replay retains **676/34**, below historical **677/36**.
 Source **c7836f9**, job **11942091**; complete diagnostic:
-`results/registered_refit_20260922/report.md`. Support/N consistency needs a
-separately authorized scope before a complete recognition comparison is possible.
+`results/registered_refit_20260922/report.md`. Its original-support follow-up
+is reported above; no complete recognition comparison is yet available.
 
 The September 22 fixed-geometry acquisition registration is **negative:
 671/870 correct, 26/145 exact**, versus both native and observation-mask

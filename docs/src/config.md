@@ -1060,7 +1060,11 @@ The authorized original-support follow-up uses
 tube and bounds are replayed once and verified against the saved frame, then
 held fixed for both arms. Objective pixels must still be observed in both views;
 the offset uses the observed original ROI. No bound expands for N. All remaining
-registered-refit settings below stay identical. Result pending; no promotion.
+registered-refit settings below stay identical. The follow-up is **inconclusive**:
+the three span failures disappear, but another registered Gaussian fit fails
+the unchanged residual guard. 145/146 scans complete all fits; no partial
+classifier or grade is produced, no threshold or N is adjusted. Retain support
+**676/34**; `results/registered_original_support_20260922/report.md`.
 
 The authorized September 22 **registered native refit** adds
 `registered_refit.toml`, without changing molecule calibration or assignment.

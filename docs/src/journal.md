@@ -2308,14 +2308,16 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0ab. **Can original unregistered geometric support make the registered refit complete?**
-    → **RUNNING (Sep 22)**: source **98d664d**, job **11942393**, started
-    **21:42:26 CEST**, nine seconds after submission. Preserve the original
-    native ROI, axis, tube and axial bounds, while fitting only observed pixels
-    in matched zero-shift and registered arms. Saved N, physical constraints,
-    registration and assignment settings remain unchanged. Four-hour preparation
-    window, one two-hour Viper job / four requested CPUs / 16 GB, no retry.
-    No support expansion for N or partial grade. Support 676/34 stays pending
-    the fetched, verified complete comparison; historical objective 677/36 remains.
+    → **DIAGNOSTIC COMPLETE; RECOGNITION INDETERMINATE (Sep 22)**: source
+    **98d664d**, job **11942393**, **FAILED 1:0 in 28m10s** after nine seconds
+    queued. All original contexts replay exactly and the three span failures
+    disappear. A different scan, `240817_006.sxm`, fails registered Gaussian
+    residual validity at saved N=6; its registered split is not attempted.
+    **145/146 scans** complete four fits: **582 valid, one failed, one skipped**.
+    No partial classifier or grade. All **706 outputs plus Slurm log** are
+    fetched/checksummed; 27,060 numerical checks pass, plus cohort/input/native
+    support checks. Fifteen reference tables replay exactly; retain **676/34**,
+    below historical **677/36**. No rescue, threshold change, new N or retry.
 
 0aa. **Does refitting both shape models after accepted registration improve recognition?**
     → **DIAGNOSTIC COMPLETE; RECOGNITION INDETERMINATE (Sep 22)**: source
@@ -11603,3 +11605,75 @@ and checks the unchanged native validity threshold. The smoke passes 196
 saved-fit checks plus the previous 306 original-support checks. This extends
 verification only: the scientific source on Viper stays **98d664d**, and failed
 fit parameters are neither reconstructed by a new optimization nor invented.
+
+### Completed original-support diagnostic and decision
+
+Job **11942393** ends **22:10:36 CEST**, **FAILED 1:0**, after **28m10s**
+compute and nine seconds queued. All four shards traverse all their files;
+the failure is the declared incomplete-cohort guard, not timeout or OOM.
+All **706 regular output files plus the Slurm log** are fetched locally and
+match their SHA256s. Source **98d664d** and inference settings stay unchanged;
+there is no retry or second real local scan.
+
+All **146 scans / 900 saved input keys** are accounted for. The exact status
+table is saved in `results/registered_original_support_20260922/fit_statuses.tsv`:
+
+| Stage | Native-valid fits | Failed fits | Not attempted after failure |
+|---|---:|---:|---:|
+| Zero-shift Gaussian | 146 | 0 | 0 |
+| Zero-shift split | 146 | 0 | 0 |
+| Registered Gaussian | 145 | 1 | 0 |
+| Registered split | 145 | 0 | 1 |
+| Total | 582 | 1 | 1 |
+
+The three previous span failures complete all four fits. Every original
+ROI/axis/tube/bound and every original native fit sample matches the earlier
+saved native-geometry run exactly, including the failed scan. All 146 original
+contexts are feasible at saved N under both families' unchanged span rule.
+No bound was expanded to rescue a count. The registration's four tables replay
+exactly: **104 accepted nonzero shifts, 42 zero**; all **84** zero-shift profile
+fits are reused exactly. Fifteen saved-reference tables, including predictions,
+are also byte-identical.
+
+The sole failure remains **240817_006.sxm**, saved **N=6**, accepted **−35 px**
+translation. Its original support is **3.8117942672196974 nm**; both controls
+are valid on 6,496 pixels, with native maximum-residual/noise values
+**1.5661341761** (Gaussian) and **1.4073437257** (split). Both registered
+Gaussian families fail the unchanged **3.5** validity guard. Their actual
+residual values/parameters are unavailable, so no quantitative excess or
+convergence explanation is claimed. Registered split is not attempted.
+This does not prove that N is wrong or that recognition is worse.
+
+Saved-only verification passes **27,060 numerical/cohort assertions**:
+24 explicit-failure checks and 27,036 parameter/pixel/independent RSS/GCV,
+maximum residual, family, original-context and zero-shift checks. Separate
+summaries pass 594 stage/key checks, nine input-hash/config-copy checks,
+1,607 prior-native context/sample checks, and 147 fixed-N support-feasibility
+checks, plus the original-support mode assertion. No new optimizer is run.
+These validate the diagnostic record, not a complete classifier or benchmark.
+
+**No new control or registered assignment table is produced and no external
+candidate grade is run.** In particular, 145 successfully refitted scans do
+not constitute the full145 external benchmark. There is no scan exclusion,
+training on the successful subset, saved-prediction substitution, new
+abstention rule, threshold relaxation or post-grade tuning. The complete-arm
+descriptive script is prepared but not executed. The exactly replayed saved
+support remains **676/870 correct, 34/145 exact**, below historical **677/870,
+36/145**; these are not scores for the new refits.
+
+**Decision: retain saved support; recognition remains inconclusive.** The
+authorized support replay resolves the previously observed span incompatibility,
+but does not produce the required complete recognition comparison. The bounded
+diagnostic is finished and the broader historical objective remains unmet.
+Handling model-validity failures, changing N or any other hypothesis needs a
+separate human-approved scope; no such change, new DFT or unknown25 rerun follows.
+Full methods and evidence: `results/registered_original_support_20260922/report.md`.
+README, runbook, selection, assignment, configuration, calibration and HPC notes
+are updated consistently. Scientific source remains **98d664d**; later source
+changes affect only saved-output verification and documentation.
+
+The final documentation build passes under Julia **1.13.0**, without
+deployment. Assignment HTML is **199.27 KiB**, below the unchanged 200 KiB
+limit; existing page-size/search-index warnings remain. The Manifest hash
+remains unchanged. The completed diagnostic is handed off without promoting
+a candidate or claiming the broader recognition objective is achieved.

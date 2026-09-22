@@ -2480,6 +2480,22 @@ replay exactly. Source **c7836f9**, job **11942091**, **FAILED 1:0 in 26m57s**;
 retry, new N or other campaign follows. Full method and failure evidence:
 [journal](journal.md), `results/registered_refit_20260922/report.md`.
 
+### Original-support registered refit (2026-09-22): inconclusive
+
+The original native ROI/axis/tube/bounds are held fixed across the zero-shift
+and registered refits; only observed pixels enter their objectives. All 146
+supports replay the earlier native context exactly. The three previous span
+failures disappear, but `240817_006.sxm` fails the registered Gaussian residual
+guard at saved N=6; its registered split is not attempted. **145/146 scans**
+complete all four fits (**582 valid, one failed, one skipped**). No partial
+classifier, exclusion, threshold relaxation or candidate grade follows.
+
+Keep exactly replayed support **676/34**, below historical **677/36**; this is
+not a measured recognition gain or loss. Source **98d664d**, job **11942393**,
+**FAILED 1:0 in 28m10s**; 706 outputs plus Slurm log fetched and checksummed.
+Full evidence: [journal](journal.md),
+`results/registered_original_support_20260922/report.md`.
+
 ### Native numerical conventions
 
 The constant-current port retains the old first-axis-fast cube index, sampling

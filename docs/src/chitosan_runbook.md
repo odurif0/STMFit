@@ -1,6 +1,19 @@
 # Chitosan Benchmark and 10–20mer Runbook
 
-Latest September 22 diagnostic: **registered native refit is inconclusive**.
+Latest September 22 diagnostic: **original-support registered refit remains
+inconclusive**. All three prior span failures are resolved, with every original
+ROI/axis/tube/bound replayed exactly, but `240817_006.sxm` fails the unchanged
+Gaussian residual guard after registration at saved N=6. Its registered split
+is not attempted. **145/146 scans** have four valid fits: **582 valid stages,
+one failed, one skipped**, all 146 scans/900 keys accounted for. No partial
+classifier or grade is produced. Source **98d664d**, job **11942393**, **FAILED
+1:0 in 28m10s** by the incomplete-cohort guard. All 706 outputs plus the Slurm
+log are fetched/checksummed. Fifteen reference tables replay exactly; retain
+support **676/870 correct, 34/145 exact**, below historical **677/36**. No new
+threshold, N, retry or unknown25 run. Report:
+`results/registered_original_support_20260922/report.md`.
+
+Earlier September 22 diagnostic: **registered native refit is inconclusive**.
 All 146 scans are accounted for, but only 143 complete the four Gaussian/split
 fits. Three fits fail the unchanged fixed-N support-span constraint, including
 two in the zero-shift control; seven later fits are not attempted. No partial
@@ -9,8 +22,8 @@ exactly; retain saved support **676/870 correct, 34/145 exact**, below historica
 **677/36**. Source **c7836f9**, job **11942091**, **FAILED 1:0 in 26m57s** by the
 explicit incomplete-cohort guard. All 549 outputs plus the Slurm log are fetched and checked;
 22,742 final checks pass. This does not establish a negative recognition effect.
-Full report: `results/registered_refit_20260922/report.md`. No retry, altered
-support/count, partial grade or unknown-chain run follows.
+Full report: `results/registered_refit_20260922/report.md`. That diagnostic
+included no retry, altered support/count, partial grade or unknown-chain run.
 
 Earlier September 22 comparison: **fixed-geometry acquisition registration is
 rejected**. It gives **671/870 correct, 26/145 exact**, versus both native

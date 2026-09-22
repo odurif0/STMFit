@@ -649,7 +649,12 @@ to accommodate saved N. The legacy preprocessing's imputation influence remains
 in this original support; only actually observed samples enter either new
 objective. The offset is estimated on the observed original ROI. Frame/cache
 consistency is checked, with a saved-only replay against prior native geometry
-before grading. No new N, noise estimate or independence claim; result pending.
+before grading. No new N, noise estimate or independence claim. The three
+previous span failures disappear, but `240817_006.sxm` fails the native Gaussian
+residual guard after registration; 145/146 scans complete all fits. No partial
+grade is produced, and no guard is relaxed. All original supports replay
+exactly; retain support **676/34**, with recognition still inconclusive. See
+`results/registered_original_support_20260922/report.md`.
 
 The authorized September 22 registered-refit follow-up keeps physical bounds,
 registration gates, selected N and assignment settings unchanged. It refits

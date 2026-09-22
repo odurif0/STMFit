@@ -1,6 +1,6 @@
 # Running STMFit on the MPCDF HPC cluster
 
-The newly authorized original-support follow-up uses
+The completed original-support follow-up uses
 `hpc/compare_registered_refit_original_support.sbatch` and
 `config/registered_refit_original_support.toml`: one two-hour Viper job,
 four requested CPUs / 16 GB, four one-thread workers, no automatic retry.
@@ -14,6 +14,14 @@ and a complete external grade, or an explicitly inconclusive diagnostic.
 Source **98d664d**, actual job **11942393**, submitted **21:42:17 CEST** and
 started **21:42:26** on `vipc2488`. Output:
 `/ptmp/oldu/stmfit/registered_original_support_20260922_v1`; do not resubmit.
+It finishes **22:10:36 CEST**, **FAILED 1:0 in 28m10s**, by the incomplete-cohort
+guard: 145/146 scans complete four fits; one registered Gaussian fails the
+unchanged residual guard, with its split stage not attempted. All three prior
+span failures are resolved. All **706 outputs plus the Slurm log** are fetched
+and checksummed; 27,060 numerical checks pass, with exact original-support
+replay on all 146 scans. No candidate grade, threshold relaxation or retry.
+Retain exactly replayed support **676/34**. Report:
+`results/registered_original_support_20260922/report.md`.
 
 The completed September 22 **registered native refit** uses
 `hpc/compare_registered_refit.sbatch`: one two-hour job, four requested CPUs /

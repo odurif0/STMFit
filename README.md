@@ -16,7 +16,14 @@ no variants combined and no settings tuned after grading. Labels are used only
 by external grading; this reused development benchmark is not independent
 validation. See the [support/score comparison](docs/src/unit_assignment.md#complete-disk-support-and-final-gaussian-score-2026-09-21).
 
-The subsequent **registered native refit** is **inconclusive**, not a new
+The **original-support registered refit** resolves the three earlier span
+failures, but remains **inconclusive**: 145/146 scans complete all four fits;
+a different scan fails the unchanged residual guard after registration. All
+original supports replay exactly. No partial classifier or grade is produced.
+Keep saved support **676/870 correct, 34/145 exact**, below historical **677/36**.
+See the [original-support follow-up](docs/src/unit_assignment.md#original-support-registered-refit-2026-09-22-inconclusive).
+
+The preceding **registered native refit** is **inconclusive**, not a new
 benchmark result. At saved N, three scans fail the unchanged support-span
 constraint (two in the zero-shift control); 143/146 complete all four shape
 fits. No scan is excluded and no partial classifier or grade is produced.
