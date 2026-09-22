@@ -1065,6 +1065,12 @@ audit, with no retry or partial grade. `[preprocessing]` reuses saved registered
 pixels, frame, bounds and noise. All physical settings remain in the original
 configs; this is a numerical comparison, not a promoted calibration.
 
+The completed SLSQP comparison lowers all eight RSS objectives by **0.75–6.73%**
+against exactly replayed LM, but adds no fully valid family. All eight stop on
+FTOL_REACHED while failing the unchanged stationarity audit (`1.15e-6–2.07e-5`
+versus `1e-6`). No tolerance or physical setting is retuned and no grade follows;
+see `results/paired_solver_20260923/report.md`.
+
 `paired_convergence.toml` freezes the September 23 budget-only diagnostic on
 `240817_006.sxm`. `[model]` sets control/extended iterations to **300/10,000**,
 `max_time_s=600`, unchanged native `x_tol=1e-8`, `g_tol=1e-12`, and checkpoints

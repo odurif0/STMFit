@@ -2308,12 +2308,17 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0ae. **Can a different box-constrained solver resolve the nonstationary endpoints?**
-    → **AUTHORIZED, ONE-SCAN COMPARISON (Sep 23)**: fresh native LM and
-    unit-box SLSQP share saved starts, pixels, N, physics and unchanged validity
-    on `240817_006.sxm`. The previous two-step stationarity audit is frozen.
-    Two-hour preparation from 01:07 CEST, one one-hour Viper job, no retry,
-    analytic profiling, new seed, classifier, threshold change or grade.
-    Keep support **676/34** until a separate complete recognition comparison.
+    → **COMPLETE; NUMERICAL GAIN WITHOUT COMPLETE VALIDITY (Sep 23)**: unit-box
+    SLSQP reduces all eight RSS objectives **0.75–6.73%** relative to exactly
+    replayed LM controls. Projected gradients shrink **24,000–440,000-fold**,
+    but remain **1.15e-6–2.07e-5**, above the unchanged `1e-6` audit threshold.
+    All SLSQP stops are FTOL_REACHED; none is called strictly stationary.
+    Gaussian elliptical maxima become **3.559 fused / 3.443 paired mean**;
+    paired views **4.291/3.542** still fail 3.5. No fully valid family is added.
+    Source **eec6c71**, job **11944232**, **0:0 in 11m32s**; 142 outputs plus
+    log fetched/checked, **728,277 numerical assertions** pass. No retuning,
+    second job or grade. Keep **676/34**, below **677/36**; see
+    `results/paired_solver_20260923/report.md`.
 
 0ad. **Does a larger native LM budget resolve the registered one-file rejection?**
     → **COMPLETE; 10,000 ITERATIONS STILL DO NOT CONVERGE (Sep 23)**: all eight
@@ -12099,3 +12104,86 @@ explicitly nonstationary. All eight synthetic molecular objectives and starts
 match the native LM problem exactly. The local launcher dry-run validates the
 saved real tables without fitting or writing an output directory. The Manifest
 SHA256 remains **617de8162fa4c7a814aacb106f145349bc57ead58ec9a6c332971a821b5974fe**.
+
+Source **eec6c71** is committed before sync. The additional **151 core-2D
+tests** pass (**17,443 pre-run assertions total**), as does the documentation
+build without deployment. Local and remote metadata-only dry-runs pass with
+Julia **1.13.0** and NLopt **2.10.0**; dependency instantiation does not change
+the Manifest. After `sbatch --test-only`, the sole real job **11944232** is
+submitted at **01:25:48 CEST**, with explicit command-line exports and
+`--no-requeue`. Scientific results will be recorded after fetching this job;
+passing preparation checks is not evidence that the alternative solver helps.
+
+### Completed SLSQP comparison: much smaller gradients, unchanged eligibility
+
+Job **11944232** completes **0:0 in 11m32s** on `vipc2575`, after **three
+seconds queued**, with four single-thread subprocesses (eight CPUs allocated
+for four requested) and maximum reported memory **3.075 GB**. All sixteen
+endpoints are present, without exception, fallback, timeout or retry. The eight
+fresh LM controls reach their **10,000-iteration caps** and reproduce the
+previous parameters and RSS **exactly**. Their elapsed times vary from the
+previous node; numerical identity is not an equal-timing claim.
+
+All eight SLSQP runs stop on **FTOL_REACHED**, after **176–605 objective
+callbacks**, **112–505 gradient requests** and **7,680–38,480 model calls**.
+Observed SLSQP times are **4.57–22.73 s**, plus **0.036–0.756 s** compilation/
+setup without an optimization step; LM takes **156.2–349.1 s** per fit. Counts
+and costs are reported separately, not treated as equal work. No broader
+hardware or algorithm speed benchmark is implied.
+
+SLSQP improves each within-mode RSS by **0.75–6.73%**. Its two-step gradients
+agree, with projected norms **1.15e-6–2.07e-5**, versus LM **0.4996–0.5428**:
+a **24,000–440,000-fold** reduction. However **none passes the predeclared
+`1e-6` stationarity audit**, including the closest split circular paired case
+at **1.154138e-6**. A relative-objective stopping code is not relabeled as
+stationarity and the threshold is not changed. Full numerical column rank
+persists at `rtol=1e-10`, with SLSQP box-scaled Jacobian condition numbers
+**2.17e5–1.17e8**. Remaining projected gradients still mostly concern the
+interior mean-plane coefficients, now at much smaller magnitudes.
+
+Maximum absolute residual / unchanged native noise (LM → SLSQP):
+
+| Shape/family | Fused mean | Paired mean | Paired SLSQP forward/backward |
+|---|---:|---:|---:|
+| Gaussian circular | 4.182173 → 4.105204 | 4.094680 → 4.007292 | 4.819479 / 4.055087 |
+| Gaussian elliptical | 3.614500 → 3.558737 | 3.490705 → 3.443455 | 4.290874 / 3.541626 |
+| Split circular | 3.843275 → 3.772761 | 3.768876 → 3.398358 | 4.128921 / 3.509969 |
+| Split elliptical | 3.353815 → 3.164898 | 3.277893 → 3.037871 | 3.855423 / 3.178059 |
+
+Only **fused split elliptical** remains fully valid under either solver.
+Paired Gaussian elliptical and now paired split circular pass native mean
+validity but fail both view guards; paired split elliptical still fails its
+forward guard. Fused Gaussian fails the unchanged mean guard. Thus neither
+mode has the complete valid Gaussian/split pair needed by the assignment
+pipeline. Fused Gaussian elliptical RSS changes **0.166369 → 0.163272**;
+paired stacked RSS **0.811075 → 0.804992**, with mean RSS **0.164124**.
+Across-mode GCV values are not used to rank different observation targets.
+
+The Gaussian elliptical fused rejection still involves **two pixels**, largest
+at **row 179, column 287**. Its paired version has **six forward exceedances**,
+largest at **178,288**, and **one backward exceedance**, at **179,287**. Paired
+split elliptical retains **three forward exceedances**, none backward. These
+maxima are positive and localized near the previous failing region; no pixel
+is excluded or presumed to be an independent outlier. Saved maps, not labels,
+support these observations.
+
+All **142 output files plus the Slurm log** are fetched and SHA256 checked.
+The independent saved-output verifier passes **728,277 assertions**, in addition
+to the **17,443 pre-run tests**, without further fitting or label access.
+Report and numerical summaries: `results/paired_solver_20260923/`.
+
+**Close this bounded comparison without promotion.** The alternative numerical
+method improves optimization markedly, but does not clear complete validity or
+the strict stationarity audit. This is not proof of a globally inadequate
+shared-shape model or of a wrong N. No tolerance change, analytic polish,
+restart, alternate solver, extra job, full146 classifier/grade, unknown25 rerun
+or DFT follows. Retain **676/870 correct, 34/145 exact**, below historical
+**677/870, 36/145**: no recognition improvement has been measured.
+
+The final documentation build passes under Julia **1.13.0**, without
+deployment. Older raw-GCV and budget-extension summaries are condensed without
+changing their conclusions or full-report pointers; the assignment page stays
+within the unchanged limit at **199.97 KiB / 200 KiB**. The configuration page
+now emits a size warning at **101.12 KiB**; the search-index warning remains.
+Manifest SHA256 is unchanged. Validated code, tests and outcome documentation
+are committed; generated outputs remain in the ignored local results directory.

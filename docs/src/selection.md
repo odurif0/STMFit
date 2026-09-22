@@ -1,14 +1,14 @@
 # Model Selection
 
-The September 23 **budget-only follow-up does not unblock paired acquisition**.
-All eight 10,000-iteration fits remain nonconverged and independently
-nonstationary. The paired Gaussian elliptical mean now passes **3.491 < 3.5**,
-but view maxima **4.349/3.575** fail. Only fused split elliptical remains fully
-valid; valid minimum full-parameter GCV therefore adds no selectable family.
-Native validity, native stopping and diagnostic stationarity are reported
-separately. No N, `n_eff`, threshold or production selection changes, and no
-full-cohort or partial grade. Retain **676/34**, below historical **677/36**.
-See `results/paired_convergence_20260923/report.md`.
+The September 23 **SLSQP follow-up adds no fully valid family** despite lowering
+all eight diagnostic RSS objectives **0.75–6.73%**. All runs stop on
+FTOL_REACHED but fail the unchanged strict stationarity audit. Gaussian
+elliptical maxima reach **3.559 fused / 3.443 paired mean**; paired views
+**4.291/3.542** fail 3.5. Only fused split elliptical remains fully valid under
+either solver; valid minimum full-parameter GCV therefore changes no selection.
+Solver stopping, independent stationarity and native validity remain distinct.
+No N, `n_eff`, threshold or production selection change, and no new grade.
+Retain **676/34**, below **677/36**; `results/paired_solver_20260923/report.md`.
 
 The September 22 **original-support registered refit remains inconclusive**.
 Original ROI/axis/tube/bounds replay exactly for all 146 scans. The three earlier

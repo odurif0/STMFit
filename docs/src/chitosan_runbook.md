@@ -1,15 +1,15 @@
 # Chitosan Benchmark and 10–20mer Runbook
 
-Latest September 23 diagnostic: **extending LM from 300 to 10,000 iterations
-does not unblock the paired-acquisition comparison**. All eight long fits
-remain nonconverged and fail independent stationarity. Paired Gaussian
-elliptical mean maximum/noise improves **3.518 → 3.491**, but view maxima
-**4.349/3.575** still fail 3.5. Only fused split elliptical is fully valid.
-Source **92b6f15**, Viper job **11943523**, **0:0 in 8m35s**; all 97 outputs
-plus log fetched/checksummed and **742,804 saved-output checks** pass. No new
-solver, threshold, full146 fit, classifier or grade. Keep **676/870 correct,
-34/145 exact**, below historical **677/36**. Evidence:
-`results/paired_convergence_20260923/report.md`.
+Latest September 23 diagnostic: **unit-box SLSQP improves optimization without
+unblocking the paired-acquisition comparison**. All eight RSS objectives fall
+**0.75–6.73%** versus exactly replayed LM controls, but projected gradients
+**1.15e-6–2.07e-5** still exceed the unchanged `1e-6` stationarity criterion.
+Gaussian elliptical maxima become **3.559 fused / 3.443 paired mean**; paired
+views **4.291/3.542** fail 3.5. Only fused split elliptical remains fully valid.
+Source **eec6c71**, job **11944232**, **0:0 in 11m32s**; 142 outputs plus log
+fetched/checked and **728,277 saved-output assertions** pass. No retuning,
+second job, classifier or grade. Keep **676/870 correct, 34/145 exact**, below
+historical **677/36**. Evidence: `results/paired_solver_20260923/report.md`.
 
 Earlier September 22 diagnostic: **original-support registered refit remains
 inconclusive**. All three prior span failures are resolved, with every original

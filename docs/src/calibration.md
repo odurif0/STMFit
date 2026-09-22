@@ -652,6 +652,13 @@ are explicit in [configuration](config.md). Native validity and the previous
 independent stationarity audit are retained, separately from solver stop codes.
 No recognition or chemical accuracy claim follows from solver convergence.
 
+SLSQP reduces the projected gradients by **24,000–440,000-fold**, without
+passing the frozen strict stationarity audit or adding a fully valid family.
+Gaussian elliptical maxima become **3.559 fused / 3.443 paired mean**, with
+paired views **4.291/3.542**, still failing 3.5. The result supports numerical
+progress, not relaxed physical calibration or recognition improvement. Report:
+`results/paired_solver_20260923/report.md`.
+
 The September 23 `paired_convergence.toml` follow-up changes only the local
 iteration ceiling (300 versus 10,000), retaining all saved starts, objective
 pixels, physical bounds and native stopping tolerances on the single blocked

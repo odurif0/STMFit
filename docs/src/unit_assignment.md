@@ -2376,28 +2376,18 @@ input, then refitting both assignment arms at fixed N, gives:
 | Fresh GCV counts, same support | 661 | 32 | 849 | 101 |
 
 Twenty-two of 146 scans change N, 900 → 898 lobes. Benchmark missing/extras
-rise **16/38 → 19/39**; four unavailable keys remain identical. Against fresh
-control: **9 scan gains, 15 losses, 121 ties; 3 exact gains, 5 losses**.
-Counting has five gains and ten losses; errors rise **177 → 188**. The changed-N
-scans contribute −12 correct positions, the unchanged-N benchmark scans −2.
+rise **16/38 → 19/39**. Against fresh control: **9 scan gains, 15 losses,
+121 ties; 3 exact gains, 5 losses**. The fresh control itself changes three
+saved decisions and loses one correct position. Same-N base/split centers vary
+up to **0.00845/0.07637 nm**; timed optimization is a plausible, unproven cause.
+This tests the full reconstruction, not solely the causal effect of N.
 
-The fresh control is **not byte-identical** to saved support: three decisions
-change, losing one correct position. Same-N base/split centers also vary between
-fresh arms by up to **0.00845/0.07637 nm**. Time-limited optimization is a
-plausible but unproven cause; whole-cohort learning also couples scans. Thus
-this tests the full reconstruction, not solely the causal effect of N or
-filtering. No fits are rerun or replaced after grading.
-
-Source **853ad38**, job **11936561**, **0:0 in 1h25m43s**, after 26s queued.
-All **438 outputs and Slurm log** are fetched/checksummed; **1,658 tests,
-9,054 pre-grade checks and 37 aggregate checks** pass, with 435 paired rows.
-The original raw-GCV/intelligent-sweep rule and all TOMLs remain unchanged;
-this is not the promoted batch hybrid counting policy or an exhaustive sweep.
-**Reject this version; retain saved support 676/34**, below historical 677/36.
-No tuning, retry, new noise model or unknown25 run follows. Full evidence:
+The unchanged raw-GCV/intelligent-sweep policy is not the promoted batch hybrid
+rule or an exhaustive sweep. **Reject; retain support 676/34**, below 677/36,
+without post-grade tuning or reruns. Source **853ad38**, job **11936561**,
+**0:0 in 1h25m43s**; 438 outputs plus log fetched/checked. Full losses/checks:
 [journal](journal.md), `results/gcv_reselection_20260922/report.md`.
-Labels appear only in external grading; this reused benchmark is not
-independent validation or evidence of unknown-chain chemical accuracy.
+Labels remain external; this reused benchmark is not independent validation.
 
 ### Frozen-geometry amplitude profiling (2026-09-22): negative
 
@@ -2481,17 +2471,25 @@ No full146 fit or grade; retain **676/34**, below **677/36**. Sources
 
 ### Budget-only convergence (2026-09-23): no complete validity
 
-All eight matched 10,000-iteration fits remain nonconverged and fail independent
-box stationarity. Paired Gaussian elliptical mean improves **3.518 → 3.491**,
-but view maxima **4.349/3.575** fail 3.5. Only fused split elliptical remains
-fully valid. Short runs exactly replay previous parameters; the largest
-remaining gradients concern interior background-plane coefficients, motivating
-a numerical-solver investigation without relaxing physics.
-
-Source **92b6f15**, job **11943523**, **0:0 in 8m35s**; 97 outputs plus log
-fetched/checked, **742,804 numerical checks** pass. No new grade or promotion;
-retain **676/34**, below **677/36**. [Journal](journal.md),
+All eight 10,000-iteration fits remain nonconverged and nonstationary. Paired
+Gaussian mean reaches **3.491**, but views **4.349/3.575** fail 3.5. Only fused
+split elliptical remains valid; no grade or promotion. Source **92b6f15**,
+job **11943523**, **0:0 in 8m35s**; 97 outputs/log fetched, **742,804 checks**
+pass. [Journal](journal.md),
 `results/paired_convergence_20260923/report.md`.
+
+### Bounded SLSQP (2026-09-23): numerical progress only
+
+At the same native starts and physics, SLSQP lowers all eight RSS objectives
+**0.75–6.73%** versus exactly replayed LM. Projected gradients shrink
+**24,000–440,000-fold**, but remain above the fixed `1e-6` audit threshold.
+FTOL_REACHED is not strict stationarity. Gaussian elliptical maxima become
+**3.559 fused / 3.443 paired mean**, with views **4.291/3.542** still failing.
+Only fused split elliptical remains fully valid; no grade or promotion.
+
+Source **eec6c71**, job **11944232**, **0:0 in 11m32s**; 142 outputs plus log
+fetched/checked, **728,277 numerical assertions** pass. Keep **676/34**, below
+**677/36**. [Journal](journal.md), `results/paired_solver_20260923/report.md`.
 
 ### Native numerical conventions
 

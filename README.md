@@ -23,12 +23,13 @@ original supports replay exactly. No partial classifier or grade is produced.
 Keep saved support **676/870 correct, 34/145 exact**, below historical **677/36**.
 See the [original-support follow-up](docs/src/unit_assignment.md#original-support-registered-refit-2026-09-22-inconclusive).
 
-The **September 23 convergence follow-up** extends the paired-acquisition test
-from 300 to 10,000 iterations. All eight long fits remain nonconverged and
-nonstationary. Paired Gaussian mean maximum/noise improves **3.518 → 3.491**,
-but view maxima **4.349/3.575** still fail 3.5; no fully valid family is added.
-No new benchmark grade or promotion follows. See the
-[budget-only diagnosis](docs/src/unit_assignment.md#budget-only-convergence-2026-09-23-no-complete-validity).
+The **September 23 SLSQP follow-up** improves all eight diagnostic RSS
+objectives by **0.75–6.73%** versus exactly replayed LM controls. Projected
+gradients shrink **24,000–440,000-fold**, but none passes the fixed stationarity
+audit. Gaussian elliptical maxima reach **3.559 fused / 3.443 paired mean**;
+paired views **4.291/3.542** still fail 3.5. No fully valid family, benchmark
+grade or champion is added. See the
+[bounded-solver comparison](docs/src/unit_assignment.md#bounded-slsqp-2026-09-23-numerical-progress-only).
 
 The preceding **registered native refit** is **inconclusive**, not a new
 benchmark result. At saved N, three scans fail the unchanged support-span
