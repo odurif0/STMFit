@@ -1,5 +1,16 @@
 # Running STMFit on the MPCDF HPC cluster
 
+The authorized September 22 fixed-geometry amplitude comparison uses
+`hpc/compare_frozen_amplitudes.sbatch`: one two-hour, four-CPU / 16 GB job.
+Set `STMFIT_PROJECT_DIR`, `STMFIT_CACHE_DIR` (original symmetric `features.tsv`
+and `features_split.tsv`), `STMFIT_INPUT_DIR` (`full146_raw/`, `templates_cc.tsv`),
+`STMFIT_OUTDIR` (new), and `JULIA_BIN` (1.13). Run `--dry-run` before submission;
+Viper requires an explicit command-line `sbatch --export=...` with all five.
+The job regenerates support control, profiles Gaussian amplitudes/background
+in four one-thread shards without changing geometry/N, then regenerates the
+candidate assignment. Fetch all diagnostics/outputs before separate grading.
+Preparation is ongoing; no job or new result is available yet.
+
 The authorized September 22 raw-GCV reselection uses
 `hpc/compare_gcv_reselection.sbatch`: one four-hour, four-CPU / 16 GB job.
 It regenerates the fixed-count support control, performs a four-shard native

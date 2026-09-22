@@ -642,6 +642,15 @@ of N or independent validation. See `results/gcv_reselection_20260922/report.md`
 
 ## Opt-in label-free exploration (2026-09-18)
 
+The authorized September 22 fixed-geometry amplitude comparison changes no
+physical calibration. It solves only the Gaussian amplitudes and tilted plane
+inside their native finite bounds, using the existing linear-profile solver.
+The literal saved decimal geometry and N stay fixed; the split shape is reused.
+GCV keeps every original model parameter and is diagnostic only. A lower RSS
+or satisfied KKT condition does not establish better chemical recognition.
+The exact support control and external grade are still required; there is no
+new score yet. See the dated [journal](journal.md) for scope and failure handling.
+
 `config/label_free_exploration.toml` is diagnostic configuration, not a new
 molecular calibration. Its empty `[model]`, `[selection]` and `[preprocessing]`
 sections do not replace the explicit original molecule config. Native support,

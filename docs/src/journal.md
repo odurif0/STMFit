@@ -2307,6 +2307,16 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-22. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0x. **Does bounded amplitude/background profiling improve assignment with
+    saved N and geometry fixed?** → **AUTHORIZED; IN PREPARATION (Sep 22)**:
+    one support control and one Gaussian-base linear-profile arm, no nonlinear
+    refit or count selection. The split geometry stays unchanged because only
+    its shape enters this assignment. Existing physical bounds and diagnostic
+    solver settings are reused without tuning. Four-hour preparation limit from
+    15:28 CEST and one Viper job capped at two hours, four requested CPUs / 16 GB.
+    Require an exact saved-support replay and full-cohort checks before external
+    grading. No other proposed direction or unknown25 rerun is authorized.
+
 0w. **Does fresh raw-GCV selection with corrected fused input improve the full
     recognition pipeline?** → **COMPLETE; NEGATIVE (Sep 22), JOB 11936561**:
     source **853ad38**, **0:0 in 1h25m43s**, after 26s queued. Fresh raw GCV
@@ -10625,3 +10635,69 @@ under `results/gcv_reselection_20260922/report.md`. Documentation headlines
 are updated consistently. The older tied-covariance section of the assignment
 page is condensed, retaining its outcome, method and journal/report pointers,
 to keep the documentation within its existing HTML size limit; no limit is raised.
+
+## 2026-09-22 — Frozen-geometry amplitude/background profiling: bounded comparison
+
+The user authorizes the recommended first direction. Scientific deliverable:
+compare unchanged support assignment against the same method after constrained
+linear re-estimation of Gaussian amplitudes and background, at **identical saved
+N, centers, widths, axes and skew**. Done means tested arithmetic and input
+boundaries, one complete fetched comparison, independent output checks, external
+full145 correct/870, exact/145, coverage, errors and paired gains/losses, followed
+by a committed decision. Budget: one half-day interpreted as **four hours from
+15:28 CEST**, then **one two-hour Viper job**, four requested CPUs / 16 GB,
+no automatic retry. No nonlinear optimization, new N, registration, noise model,
+classifier variant, DFT change or unknown25 rerun is included.
+
+The existing September 18 prototype already solves finite-box least squares;
+this experiment reuses its `box_lsq` and all explicit linear solver settings
+from `label_free_exploration.toml`. It does not use its outer variable-projection
+search. The old prototype's lower RSS did not establish recognition accuracy.
+The amplitude floor/range come from the unchanged native fused image, and
+finite endpoints are mapped through the native raw bounds/decoder, not replaced
+with ordinary nonnegative least squares. No composition prior or class quota
+enters the solve.
+
+The input is the original symmetric-fusion base/split feature cache used by
+saved support **676/870, 34/145**. The last reselection's fresh **675/34** control
+and **661/32** candidate are not inputs. Gaussian base amplitudes, plane offset
+and two tilts are profiled jointly on reconstructed native fused ROI/tube pixels.
+Cached decimal centers, widths and axes are used literally, including their
+serialization precision; they are not recovered full-precision raw fit vectors.
+The reconstructed native axis/origin must agree at the cache's decimal precision.
+This preserves the interpretation of the existing support construction without
+claiming exact recovery of an unsaved full-precision fit.
+
+Only `amplitude`, `baseline`, `tilt_x`, `tilt_y`, derived `amp_rel` and diagnostic
+`gcv` may change in the base table. GCV retains the **full original model
+parameter count**, not just its linear degrees of freedom, and selects nothing.
+The split cache remains byte-identical: the assignment uses only its skew,
+which is geometry and must stay frozen. All base-derived local features, patches,
+Fisher, classifiers and votes are regenerated in both arms with unchanged
+`unit_assignment_patch_support.toml`. The control must reproduce saved support;
+there is no reoptimization chosen by the external score.
+
+The decimal cache can place a coefficient just outside its native endpoint.
+Initial projection is allowed only within **half the last written decimal unit**
+plus machine roundoff; bounds themselves never widen, and the adjustment is
+reported. Larger infeasibility, missing rows, changed geometry, nonconvergence
+or increased RSS stops the candidate. Failed scan records are retained; there
+is no silent row drop or selective fallback. Four one-thread profile shards
+save all fit pixels, coefficients/bounds/gradients and KKT/RSS diagnostics for
+independent saved-output checks. Inference reads no sequence, expected count,
+benchmark membership, chemical count or grade. External grading remains
+development evidence on the reused benchmark, not independent validation.
+
+Initial synthetic testing caught an invalid one-lobe fixture (`range` with one
+element but unequal endpoints), fixed by using a singleton amplitude. The failed
+test log is retained; no real output informed the correction. Focused and
+regression tests are running; no cluster job or benchmark grade has run.
+
+The **498 new synthetic/metadata assertions pass**. A single local raw check on
+the lexicographically first input, `240307_015.sxm`, preserves its seven lobes
+and every geometric field; RSS falls **0.06347161460 → 0.06181862243** (about
+2.60%), with KKT satisfied. This is not a recognition result or a sample chosen
+by benchmark error. The full146 local metadata-only dry-run passes. The native
+max-image amplitude scale is also saved with the per-scan diagnostics, so the
+mapped coefficient endpoints can be independently checked. No cohort fit or
+grade runs locally; no Slurm job has been submitted yet.

@@ -1053,6 +1053,16 @@ unknown25 change follows; see `results/gcv_reselection_20260922/report.md`.
 
 ## Opt-in diagnostic exploration settings (2026-09-18)
 
+The September 22 frozen-amplitude comparison reuses this file's existing
+`[counting_variable_projection]` settings for **linear box least squares only**;
+outer search budgets are read but never used. Physical endpoints still come from
+the unchanged native model. `profile_frozen_amplitudes.jl` accepts a Gaussian
+base cache and changes only amplitudes/background and their derived diagnostics.
+The split cache, N and every geometric field stay fixed. Decimal endpoint
+roundoff is derived from the input serialization, not a fitted tolerance.
+No new configuration parameter or default is introduced. The comparison is in
+preparation; it has no new benchmark result. See the dated [journal](journal.md).
+
 `config/label_free_exploration.toml` is used only by standalone exploration tools;
 it is not a production config. Pass the original molecule config separately.
 Its empty `[model]`, `[selection]`, `[preprocessing]` tables make this separation
