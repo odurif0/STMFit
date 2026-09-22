@@ -2245,69 +2245,31 @@ in `results/scan_weighting_20260921/report.md` and its linked tables.
 ### Continuous GMM seed vote (2026-09-21): negative
 
 `unit_assignment_continuous_vote.toml` copies the 676/34 support control, changing
-only its name and `[selection] gmm_seed_aggregation` from `hard_vote` to
-`mean_membership`. Each seed already normalizes the two final scores
-`log(weight) - Mahalanobis_distance²/2` by stable exponentiation. The control
-contributes 0 or 1 from their argmax; the candidate contributes the normalized
-score of the same physically named high-amplitude group. Ten contributions
-are averaged. This is inside the GMM head, not a new final two-head vote.
+only its name and `gmm_seed_aggregation="mean_membership"`. Ten normalized
+seed scores `log(weight) - Mahalanobis_distance²/2` replace binary argmax votes
+within the GMM head. Learning, naming, covariance, normalization, support,
+Fisher, k-means, N, abstentions, eight-decimal serialization and final `>=0.5`
+soft-vote rule remain fixed. No Gaussian-volume term, temperature, composition
+prior or probability calibration is added.
 
-EM, two hard updates, free mixture masses, covariance ridge, raw-amplitude
-naming, mean/std scaling, equal-lobe training weights, support, interactions,
-seed integers, Fisher and independent k-means remain fixed. There is no new
-Gaussian-volume term, temperature, class-count prior or label-fitted probability
-calibration. The final vote still averages GMM and k-means, uses `>=0.5` and
-keeps eight-decimal serialization and the same unavailable-row abstentions.
-These memberships and margins are not calibrated chemical probabilities.
+The result is **671/870 correct, 671/852 (78.8%), 26/145 exact**, against
+exactly replayed support **676/34**, at unchanged **852/870 coverage**.
+Against control: **8 scan gains, 13 losses, 124 ties; one exact gain, nine
+losses**. Errors rise **176→181**. All **24 final changes are 1→0**, leaving
+old GMM=1/k-means=0 zero-margin ties; exact ties fall **58→34**. The group
+learning is unchanged. This is a fusion effect, not calibrated confidence;
+no tie or precision adjustment follows.
 
-Scientific source **bef315f** passes **2,199 assertions across 17 suites** under
-Julia 1.13, including independent score arithmetic, identical learned parameters
-and a five-mode synthetic pipeline. One Viper job **11922389** waits **36m23s**,
-then completes **0:0 in 7m19s**, 19:25:55–19:33:14 CEST, on `vipc2034`.
-All **392 output files and the Slurm log** are fetched and checksummed.
-**7,240 saved-output checks** pass before external grading. Twelve control
-tables replay byte-for-byte; both arms retain all **146 scans / 900 keys**,
-identical N, upstream/Fisher/k-means tables, **896 usable GMM rows** and the
-same four unavailable final predictions. Only external grading selects 145 scans.
-
-| Version | Correct / 870 | Correct / classified | Exact / 145 | Classified / 870 |
-|---|---:|---:|---:|---:|
-| Historical saved reference | 677 | 677/854 (79.3%) | 36 | 854 |
-| Replayed support control | 676 | 676/852 (79.3%) | 34 | 852 |
-| Continuous GMM seed vote | 671 | 671/852 (78.8%) | 26 | 852 |
-
-GMM scores change for 129 rows, with one hard GMM decision changing. The final
-vote changes **24 decisions**, all **1→0** and all on benchmark scans; raw
-`(0,1,?)` totals move **(673,223,4)→(697,199,4)**. Every changed final decision
-was an exact control tie: **GMM=1, k-means=0**, emitted as 1. Its continuous
-GMM score becomes **0.75154286–0.99999999**, still emitting 1 within that head,
-but the unchanged average with k-means zero falls below 0.5. The resulting
-final margins range **0.00000001–0.24845714**. Exact final ties decrease
-**58→34**, before and after serialization; no displayed tie emits 0 in this run.
-This identifies a fusion effect, not a change to the learned clusters or
-missing-data handling. No tie or precision rule is changed after observing it.
-
-Against control: **8 scan gains, 13 losses, 124 ties**, net **−5 correct**;
-**one exact chain gained, nine lost**, with three grading-orientation changes.
-Exactness is gained on `241113_086` and lost on `240307_017`,
-`240310_Cu100007`, `240817_007`, `240817_021`, `240817_044`, `240817_048`,
-`240817_081`, `240818_017` and `240818_020`. Confusion `(TN,FP,FN,TP)` changes
-`(513,52,124,163)→(522,43,138,149)`: nine fewer false positives, fourteen more
-false negatives. Emitted errors increase **176→181**; coverage stays 852/870
-with two aligned abstentions. Counts stay 16 missing truth positions and 38
-extra lobes. Against history: 20 scan gains, 29 losses, 96 ties, net −6 correct;
-three exact chains gained and thirteen lost, with nine orientation changes.
-Grade orientation does not establish a spatial monomer correspondence.
-
-**Reject the continuous variant and retain the 676/34 support candidate.**
-Historical 677/36 remains unexceeded. This negative result concerns the specified
-uncalibrated memberships within the unchanged fusion rule, not all possible
-continuous-score methods. No threshold, precision, temperature, naming-rule,
-combined-variant or post-grade search follows; counting, DFT and unknown25 are
-untouched. Inference is label-free, but this repeatedly reused benchmark is
-development evidence, not independent validation. All 290 paired scan rows,
-24 changed decisions and component-score details are preserved in
-`results/continuous_vote_20260921/report.md` and its linked tables.
+Source **bef315f**, job **11922389**, **0:0 in 7m19s**, after 36m23s queued.
+All **392 outputs and Slurm log** are fetched/checksummed; **2,199 tests** and
+**7,240 pre-grade checks** pass. Twelve control tables replay exactly; all
+146 scans/900 keys, N, 896 usable GMM rows and four unavailable predictions
+remain. **Reject this variant; retain support 676/34**, below historical
+677/36. Full method, confusion, 290 paired rows, exact-chain losses and score
+details remain in the [journal](journal.md) and
+`results/continuous_vote_20260921/report.md`. This reused benchmark is
+development evidence, not independent validation or a verdict on every
+continuous-score method. Counting, DFT and unknown25 are untouched.
 
 ### Whole-scan GMM bagging (2026-09-21): negative
 

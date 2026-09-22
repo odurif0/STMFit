@@ -10,7 +10,8 @@ Four one-thread shards create common fixed-N native starts and matched
 joint/profiled refinements. The job also regenerates the cached support reference
 and both unchanged assignment pipelines. Fetch all numerical traces and outputs
 before external grading. Source **7c5fb6c**, job **11940220** submitted
-**17:24:09 CEST**, initially **PENDING / QOSGrpCpuLimit**. Remote dry-run,
+**17:24:09 CEST**, starts **17:27:16 CEST** on `vipc2400` after **3m07s**
+queued on `QOSGrpCpuLimit`. Eight CPUs allocated; four workers used. Remote dry-run,
 `sbatch --test-only`, source/input checksums and Julia 1.13 instantiation pass;
 the runtime result is still pending. No retry is authorized. Do not resubmit
 `/ptmp/oldu/stmfit/geometry_profile_20260922_v1`.

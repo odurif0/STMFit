@@ -2308,9 +2308,10 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0y. **Does full geometric variable projection improve recognition at fixed N?**
-    → **SUBMITTED (Sep 22)**: source **7c5fb6c**, one Viper job **11940220**,
+    → **RUNNING (Sep 22)**: source **7c5fb6c**, one Viper job **11940220**,
     submitted **17:24:09 CEST**, capped at four hours, four requested CPUs /
-    16 GB, no retry. Initially waiting on `QOSGrpCpuLimit`.
+    16 GB, no retry. Started **17:27:16 CEST** on `vipc2400` after 3m07s
+    waiting on `QOSGrpCpuLimit`; eight CPUs allocated, four workers used.
     Compare joint and profiled local optimization from an identical fresh
     native initialization, using the same objective, physical validity checks,
     optimizer and evaluation/time ceilings. Replay saved support separately.
@@ -10938,3 +10939,16 @@ four requested CPUs / 16 GB and four-hour walltime. Slurm initially reports
 within the four-hour preparation window. No other candidate or retry is
 submitted. Continue through completion, fetching, checks and external grading;
 submission alone does not satisfy the scientific deliverable.
+
+While the quota is pending, the assignment page's older continuous-GMM-vote
+section is condensed, retaining its method, negative result, decision and
+full journal/report pointers. This makes room for the eventual geometric
+comparison without raising the existing 200 KiB HTML limit; no scientific
+code or result changes.
+
+The job starts **17:27:16 CEST** on `vipc2400`, after **3m07s** queued.
+Viper allocates eight CPUs for the four-CPU request; the code still runs at
+most four workers. The compute log confirms the explicit runtime paths and
+starts the saved-reference pipeline before the paired geometric shards.
+Documentation builds successfully after condensation; existing warnings and
+limits are unchanged. Completion and external scores remain pending.
