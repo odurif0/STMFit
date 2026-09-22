@@ -12,7 +12,9 @@ explicit command-line `sbatch --export=...` list of those five variables.
 The raw-GCV extractor and its existing early stopping remain unchanged;
 neither the batch hybrid guard nor any external label is used. Fetch all
 outputs/logs, check coverage, then grade separately. No job has been submitted
-at this preparation stage.
+at the initial preparation stage; actual **job 11936561** is now submitted once,
+with source `853ad38` and output `/ptmp/oldu/stmfit/gcv_reselection_20260922_v1`.
+Do not submit another instance while this comparison is in progress.
 
 For the September 20 fixed-count filtering comparison, use
 `hpc/compare_fusion.sbatch`. It runs two separate source checkouts sequentially,

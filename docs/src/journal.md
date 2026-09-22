@@ -2308,7 +2308,7 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0w. **Does fresh raw-GCV selection with corrected fused input improve the full
-    recognition pipeline?** → **AUTHORIZED; PREPARATION (Sep 22)**: compare the
+    recognition pipeline?** → **SUBMITTED (Sep 22), JOB 11936561**: compare the
     existing cached own-N control with a fresh native extractor GCV sweep, then
     refit both arms at fixed N and apply the unchanged 676/34 support method.
     The direct-extractor 900-key lineage is not the batch-policy 871-key lineage;
@@ -10511,3 +10511,12 @@ templates and original counts retain their saved hashes. Raw-content verificatio
 dereferences local staging links; symlink targets and directory timestamps are
 not scientific content differences. Slurm test-only **11936531** is a speculative
 identifier, not a submitted job. No real job has been submitted at this point.
+
+The final source/raw-content checks and explicit Manifest comparison are empty.
+Julia imports the fit engine from the correct dedicated checkout, not another
+local package tree. **Job 11936561** is submitted once with all five variables
+explicitly exported and no requeue. Source is **853ad38**, preparation record
+**7e4ce2c**. Outputs go to `/ptmp/oldu/stmfit/gcv_reselection_20260922_v1` and will
+be fetched under `results/gcv_reselection_20260922/`; the Slurm log is
+`/ptmp/oldu/stmfit/gcv_reselection_20260922-11936561.log`. Preparation takes about
+17 minutes, within the three-hour bound. No benchmark result is available yet.
