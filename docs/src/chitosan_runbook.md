@@ -260,6 +260,27 @@ search, combination, count refit, DFT change or unknown25 rerun follows.
 Details: `results/em_shrinkage_student_density_20260922/report.md`. This reused
 benchmark is development evidence, not independent validation.
 
+The raw-GCV reselection (source **853ad38**, job **11936561**, **0:0 in
+1h25m43s**, after **26s** queued) is **negative**: **661/870 correct, 32/145
+exact**, versus **675/34 for the fresh fixed-N control** and saved support
+**676/34**. Exact counts fall **106 → 101/145**, coverage **852 → 849/870**;
+emitted errors rise **177 → 188** against fresh control. Of 146 scans, 22
+change N and the total falls 900 → 898 lobes. Counting gains/losses are 5/10;
+recognition scan gains/losses/ties are 9/15/121, exact-chain gains/losses 3/5.
+This repeats the original direct-extractor GCV rule, not the separately
+promoted batch hybrid policy; the existing intelligent sweep is not exhaustive.
+
+Both arms regenerate fixed-N geometry and all assignment stages. The fresh
+control differs from saved support on three decisions, giving one fewer correct
+position. Even same-N base/split geometry varies between fresh arms (maximum
+center shifts 0.00845/0.07637 nm). Therefore the comparison is not a pure causal
+N effect. All **438 outputs and Slurm log** are fetched/checksummed; **1,658
+tests, 9,054 pre-grade checks and 37 external aggregate checks** pass, with 435
+paired scan rows. No cohort loss or extra abstention is hidden. Retain saved
+support, below historical **677/36**; no tuning, retry or unknown25 rerun follows.
+Full evidence: `results/gcv_reselection_20260922/report.md`. This reused grade
+does not establish independent generalization or unknown-chain chemical accuracy.
+
 This page is the hand-off document for reproducing the current chitosan workflow
 without relying on prior conversation context.  The goal is a label-free fitting
 and model-selection pipeline that is externally graded on the benchmark and then

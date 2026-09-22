@@ -622,6 +622,24 @@ versions, retain support and leave the historical 677/36 target open. No
 post-grade tuning or unknown-chain claim follows. Source **bb6943b**, job
 **11936229**, full report `results/em_shrinkage_student_density_20260922/report.md`.
 
+### Fresh raw-GCV counts with unchanged calibration (2026-09-22)
+
+Repeating the original direct-extractor GCV sweep after symmetric filtering
+gives **661/870 correct, 32/145 exact**, versus fresh fixed-N control
+**675/34** and saved support **676/34**. Exact counts fall **106 → 101/145**;
+coverage falls **852 → 849/870**. No physical bound, GCV/guard, `n_eff`,
+threshold, optimizer limit or DFT source changes. This is not the promoted
+batch hybrid counting lineage or an exhaustive sweep.
+
+The fresh control changes three decisions despite identical N/settings.
+Same-N base/split centers vary by up to 0.00845/0.07637 nm between fresh arms;
+their maximum relative GCV differences are 0.115/1.049%. The existing
+time-limited global search is a plausible, unproven source of variability,
+not evidence for a new calibrated noise model. Whole-cohort learning also
+couples predictions across scans. Reject this version without retuning;
+the result is end-to-end development evidence, not an isolated causal effect
+of N or independent validation. See `results/gcv_reselection_20260922/report.md`.
+
 ## Opt-in label-free exploration (2026-09-18)
 
 `config/label_free_exploration.toml` is diagnostic configuration, not a new

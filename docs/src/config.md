@@ -1038,6 +1038,19 @@ per arm satisfy their stopping criterion. Keep the support profile; historical
 after grading. Source **bb6943b**, job **11936229**; full evidence and losses:
 `results/em_shrinkage_student_density_20260922/report.md`.
 
+### Fresh raw-GCV count comparison (2026-09-22)
+
+`run_gcv_reselection.jl` reuses unchanged `chitosan.toml` and
+`unit_assignment_patch_support.toml`; no parameter is added or retuned. Its
+direct-extractor GCV sweep retains intelligent early stopping, not the batch
+hybrid guard. Both assignment arms refit independently at their fixed N.
+The result is negative: **661/870 correct, 32/145 exact**, versus fresh
+control **675/34** and saved support **676/34**; exact counts fall
+**106 → 101/145**. Preserve the support settings and saved reference. Refit
+variability, including the unchanged ten-second global-optimizer budget, is
+reported rather than repaired after grading. No threshold, budget or
+unknown25 change follows; see `results/gcv_reselection_20260922/report.md`.
+
 ## Opt-in diagnostic exploration settings (2026-09-18)
 
 `config/label_free_exploration.toml` is used only by standalone exploration tools;

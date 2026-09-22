@@ -2308,13 +2308,17 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0w. **Does fresh raw-GCV selection with corrected fused input improve the full
-    recognition pipeline?** → **SUBMITTED (Sep 22), JOB 11936561**: compare the
-    existing cached own-N control with a fresh native extractor GCV sweep, then
-    refit both arms at fixed N and apply the unchanged 676/34 support method.
-    The direct-extractor 900-key lineage is not the batch-policy 871-key lineage;
-    no hybrid guard is substituted. One Viper job, four hours, no parameter
-    search, registration/noise experiment, or unknown25 rerun. Full outcome is
-    recorded in the dated entry below; no new score is available yet.
+    recognition pipeline?** → **COMPLETE; NEGATIVE (Sep 22), JOB 11936561**:
+    source **853ad38**, **0:0 in 1h25m43s**, after 26s queued. Fresh raw GCV
+    gives **661/870 correct, 32/145 exact**, versus fresh control **675/34**
+    and saved support **676/34**. Exact counts fall **106 → 101/145**, coverage
+    **852 → 849/870**; 22 scans change N, total 900 → 898 lobes. This is the
+    direct-extractor lineage, not the separate batch hybrid counting reference.
+    The fresh control changes three decisions; same-N geometries also vary,
+    preventing pure causal attribution to N. All **438 outputs and Slurm log**
+    are fetched/checksummed; **1,658 tests, 9,054 pre-grade checks, 37 aggregate
+    checks**, 435 paired rows. Retain saved support, below historical 677/36.
+    No retry, tuning, registration/noise experiment or unknown25 rerun follows.
 
 0v. **Can covariance regularization throughout learning or coherent Student
     decisions improve recognition?** → **COMPLETE; NEGATIVE (Sep 22)**:
@@ -10520,3 +10524,104 @@ explicitly exported and no requeue. Source is **853ad38**, preparation record
 be fetched under `results/gcv_reselection_20260922/`; the Slurm log is
 `/ptmp/oldu/stmfit/gcv_reselection_20260922-11936561.log`. Preparation takes about
 17 minutes, within the three-hour bound. No benchmark result is available yet.
+
+### Completed output and integrity
+
+The single job finishes **COMPLETED 0:0 in 1h25m43s**, from **12:45:36 to
+14:11:19 CEST**, after **26s** queued, on `vipc2575`. Viper allocates eight
+CPUs for the four requested; batch MaxRSS is **3,888,598 K**. No retry,
+requeue or login-node fit occurs. All **438 regular outputs and the Slurm
+log** are fetched locally; every output matches its remote SHA-256. A final
+itemized source comparison is empty. Manifest, both configs, templates and
+original selected-count summary retain their pre-job hashes.
+
+Both arms retain all **146 scans**, 15 complete scientific tables and 146
+individual plots, with no `failures.tsv`. The native sweep changes **22 N**,
+retaining 124; total lobes become **900 → 898**. Thirteen scans lose one,
+seven gain one and two gain two. The technical scan remains eight lobes.
+Raw `(0,1,?)` populations are `(672,224,4)` for fresh control and `(672,222,4)`
+for treatment; these are outcomes, never prescribed class counts. The four
+unavailable keys remain identical. **9,054 pre-grade assertions** pass:
+1,886 cohort/geometry/naming checks and 7,168 independent vote/availability
+checks. All ten seeds retain the old raw-amplitude naming rule, and learning
+stays Gaussian/full-covariance/final-only/Mahalanobis without resampling.
+
+### Fresh-refit variability, discovered before grading
+
+Fresh control is **not byte-identical** to saved support despite unchanged N,
+fit sources, inputs and settings. Base geometry differs on **55/900 rows in
+eight scans**; split geometry on **8/900 rows in one scan**. Maximum center
+shifts are **0.008447 nm / 0.021220 nm**, maximum absolute relative GCV changes
+**0.127% / 0.706%**. Patches differ on 55 rows; learned Fisher changes on
+896 usable rows, GMM on 50 rows, k-means on 48. Nine final rows change scores,
+but only **three decisions**: `240817_058.sxm` lobe 4, 0→1;
+`240817_076.sxm` lobe 3, 1→0; `241114_011.sxm` lobe 4, 0→1.
+Decision agreement is **897/900**, not an exact replay.
+
+Between fresh arms on **755 lobes in 124 same-N scans**, base geometry differs
+on **52 rows / eight scans**, split geometry on **88 rows / fourteen scans**.
+Maximum center shifts are **0.008447 / 0.076370 nm**, maximum relative GCV
+changes **0.115% / 1.049%**. The sub-0.009-nm bound reported during monitoring
+applied only to base geometry, not split geometry. The unchanged `GN_DIRECT_L`
+optimizer has a ten-second wall-clock cap before LM refinement. Timing-related
+variation is plausible, but not established without per-fit stopping/evaluation
+traces. No numerical setting is changed or fit repeated to obtain a preferred
+result. Whole-cohort learning can independently propagate count changes to
+same-N scans. This is consequently an end-to-end reselection comparison, not
+an isolated causal estimate of N or the filtering correction.
+
+### External benchmark result: negative
+
+Only after complete output checks does the external report select the 145
+benchmark files and use their labels. Full-own-N grading retains the 870-position
+denominator and reports extras separately; **37 independent aggregate checks**
+pass and **435 paired rows** cover all three reference comparisons.
+
+| Profile | Exact N / 145 | Correct / 870 | Exact / 145 | Coverage / 870 | Missing / extra | Emitted errors |
+|---|---:|---:|---:|---:|---:|---:|
+| Historical saved reference | 106 | 677 | 36 | 854 | 16 / 38 | 177 |
+| Saved support | 106 | 676 | 34 | 852 | 16 / 38 | 176 |
+| Fresh fixed-N control | 106 | 675 | 34 | 852 | 16 / 38 | 177 |
+| Fresh raw-GCV counts | 101 | 661 | 32 | 849 | 19 / 39 | 188 |
+
+Fresh control loses one correct position against saved support, with unchanged
+exact-chain count. Treatment gives **661/849 classified accuracy (77.9%)**,
+versus **675/852 (79.2%)** for fresh control, saved **676/852 (79.3%)** and
+historical **677/854 (79.3%)**. Relative to all 870 positions it gives **76.0%**,
+not 77.9%. Benchmark output rows become 892 → 890; short/long files 14/25 →
+17/27. Two abstentions align with the reference, so three more missing positions
+explain coverage falling 852 → 849 without additional unavailable keys.
+
+Against fresh control, **9 scans gain, 15 lose, 121 tie**, net **−14 correct**;
+**three exact chains are gained, five lost**. Against saved support: 10/16/119,
+net −15, exact 3/5. Against history: 24/30/91, net −16, exact 6/10. Grade
+orientation changes on seven scans against either control, eleven against
+history; that alignment is not measured spatial correspondence. Of the −14
+positions, −12 occur on the 22 changed-N scans and −2 on the 123 unchanged-N
+benchmark scans; this partition does not identify a causal mechanism.
+
+Exact-chain gains against control: `240307_016.sxm`, `240814_011.sxm`,
+`240817_077.sxm`. Losses: `240307_017.sxm`, `240310_Cu100007.sxm`,
+`240314_Cu100_025.sxm`, `240817_041.sxm`, `240817_049.sxm`.
+Exact-count gains: `240310_Cu100006.sxm`, `240314_Cu100_024.sxm`,
+`240817_077.sxm`, `240817_093.sxm`, `241113_089.sxm`. Count losses:
+`240307_017.sxm`, `240313_Cu100058.sxm`, `240314_Cu100_025.sxm`,
+`240814_024.sxm`, `240814_025.sxm`, `240817_041.sxm`, `240817_049.sxm`,
+`240817_060.sxm`, `240817_091.sxm`, `241114_028.sxm`.
+
+**Reject this reselection version and retain saved support 676/34; historical
+677/36 remains unexceeded.** The bounded authorized comparison is complete,
+not the broader historical objective. No post-grade optimization budget,
+threshold, selector, seed, classifier, registration/noise or combined-method
+change follows; no DFT or unknown25 run occurs. The direct-extractor raw-GCV
+lineage here is not the separately promoted batch-policy counting reference.
+Labels remain external to inference, but repeated benchmark reuse supplies
+development evidence rather than independent validation or unknown-chain
+chemical accuracy. Numerical reproducibility is a limitation for future
+small-gain claims, not an authorization for another campaign.
+
+Full report, settings, hashes, tests, grade tables and paired losses are saved
+under `results/gcv_reselection_20260922/report.md`. Documentation headlines
+are updated consistently. The older tied-covariance section of the assignment
+page is condensed, retaining its outcome, method and journal/report pointers,
+to keep the documentation within its existing HTML size limit; no limit is raised.

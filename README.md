@@ -4,7 +4,7 @@ Analysis pipeline for STM images of molecular chains (chitosan on Cu(100) and
 similar systems). Detects and fits a chain-of-Gaussians model to count the
 number of monomer units (lobes) per chain, label-free.
 
-**Latest working candidate, September 22:** complete-disk support improves
+**Latest working candidate, September 22 (saved inputs):** complete-disk support improves
 **675 → 676 correct / 870** and **33 → 34 exact chains / 145**. Use the opt-in
 `config/unit_assignment_patch_support.toml`. Coverage rises **849 → 852 / 870**;
 classified accuracy is **676/852 (79.3%)**. Three newly available predictions
@@ -15,6 +15,17 @@ and is rejected. All 900 keys and selected counts remain; no pixels are imputed,
 no variants combined and no settings tuned after grading. Labels are used only
 by external grading; this reused development benchmark is not independent
 validation. See the [support/score comparison](docs/src/unit_assignment.md#complete-disk-support-and-final-gaussian-score-2026-09-21).
+
+Fresh raw-GCV count selection after symmetric filtering is **negative**:
+**661/870 correct, 32/145 exact**, versus **675/34 for a freshly refitted
+fixed-N control** and **676/34 for saved support**. Exact counts fall
+**106 → 101/145**, coverage **852 → 849/870**, and emitted errors rise
+**177 → 188** against the fresh control. The latter differs from saved support
+on three decisions; refit variability prevents attributing every change solely
+to N. Retain saved support; historical 677/36 remains unexceeded. This tests
+the original direct-extractor GCV lineage, not the separately promoted hybrid
+counting policy. No tuning or unknown25 rerun follows. See the
+[reselection result](docs/src/unit_assignment.md#fresh-raw-gcv-count-selection-2026-09-22-negative).
 
 The complete-patch-training follow-up is **negative**: **674/870 correct,
 33/145 exact**, with coverage falling to **850/870**. One scan has no complete

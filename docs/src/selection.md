@@ -1,12 +1,18 @@
 # Model Selection
 
-The September 22 authorized GCV-reselection comparison now tests the previously
-frozen counts. It repeats the original direct extractor's raw GCV rule with the
-corrected fused input, then refits both arms at fixed N before unchanged support
-assignment. It does **not** substitute the batch `support_midpoint_hybrid`
-policy or claim an exhaustive sweep. The comparison is in preparation; there
-is no new counting or recognition result. See the dated journal entry and
-`test/run_gcv_reselection.jl`; all physical and assignment TOMLs stay unchanged.
+The September 22 raw-GCV reselection is **complete and negative**: exact counts
+fall **106 → 101/145**; assignment gives **661/870 correct, 32/145 exact**,
+versus **675/34 for the freshly refitted control** and **676/34 for saved
+support**. Coverage falls 852 → 849/870. Twenty-two of 146 scans change N,
+900 → 898 lobes; benchmark missing/extras rise 16/38 → 19/39. Both arms refit
+at fixed N after the unchanged direct extractor's raw-GCV sweep. This is
+neither the batch `support_midpoint_hybrid` policy nor an exhaustive sweep.
+The refitted control differs on three decisions, and same-N geometries also
+vary, so this is an end-to-end comparison, not an isolated causal N effect.
+Retain saved support, below historical 677/36. Source `853ad38`, job `11936561`;
+see the dated [journal](journal.md) and `results/gcv_reselection_20260922/report.md`.
+Physical/assignment TOMLs, GCV/guards and the separately promoted counting
+reference stay unchanged. No post-grade tuning or unknown25 rerun follows.
 
 On the September 20 symmetric-fusion research branch, fused fit samples use
 both unsmoothed views and ROI detection still uses both smoothed views. The

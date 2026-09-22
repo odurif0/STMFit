@@ -11,10 +11,17 @@ Set `STMFIT_PROJECT_DIR`, `STMFIT_INPUT_DIR` (with `full146_raw/` and
 explicit command-line `sbatch --export=...` list of those five variables.
 The raw-GCV extractor and its existing early stopping remain unchanged;
 neither the batch hybrid guard nor any external label is used. Fetch all
-outputs/logs, check coverage, then grade separately. No job has been submitted
-at the initial preparation stage; actual **job 11936561** is now submitted once,
-with source `853ad38` and output `/ptmp/oldu/stmfit/gcv_reselection_20260922_v1`.
-Do not submit another instance while this comparison is in progress.
+outputs/logs, check coverage, then grade separately.
+
+This comparison completed as **job 11936561**, **0:0 in 1h25m43s**, after
+26 seconds queued, source `853ad38`. Viper allocated eight CPUs for four
+requested. All **438 outputs and Slurm log** are fetched locally under
+`results/gcv_reselection_20260922/`, with matching checksums. The outcome is
+negative: **661/870 correct, 32/145 exact**, versus fresh control **675/34**
+and saved support **676/34**; exact counts fall **106 → 101/145**. Fresh refits
+are not byte-identical even at fixed N; the report quantifies this variability.
+Keep saved support, with no promotion or retry. The job is closed; do not
+resubmit `/ptmp/oldu/stmfit/gcv_reselection_20260922_v1`.
 
 For the September 20 fixed-count filtering comparison, use
 `hpc/compare_fusion.sbatch`. It runs two separate source checkouts sequentially,
