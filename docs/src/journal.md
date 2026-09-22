@@ -2307,6 +2307,17 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-22. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0y. **Does full geometric variable projection improve recognition at fixed N?**
+    → **AUTHORIZED; PREPARATION (Sep 22)**: four hours from 16:52 CEST, then
+    one Viper job capped at four hours, four requested CPUs / 16 GB, no retry.
+    Compare joint and profiled local optimization from an identical fresh
+    native initialization, using the same objective, physical validity checks,
+    optimizer and evaluation/time ceilings. Replay saved support separately.
+    N, split-skew cache, classifier settings, thresholds and preprocessing
+    remain fixed. Done requires complete fetched/checked outputs and external
+    correct/870, exact/145, coverage, errors and paired gains/losses. The other
+    suggested directions and unknown25 are not part of this authorization.
+
 0x. **Does bounded amplitude/background profiling improve assignment with
     saved N and geometry fixed?** → **COMPLETE; NEGATIVE (Sep 22)**:
     source **567cdde**, job **11938782**, **0:0 in 6m17s**, after **5m29s**
@@ -10812,3 +10823,97 @@ The final Julia 1.13 documentation build passes with the existing size/search
 warnings; the assignment page is **198.83 KiB**, below its unchanged 200 KiB
 limit. Scientific source remains unchanged from **567cdde**. The completed
 comparison is handed off without another compute submission.
+
+## 2026-09-22 — Matched fixed-N geometric profiling: bounded recognition comparison
+
+The user authorizes the first proposed direction after the negative amplitude-only
+result. Deliverable: a complete external recognition comparison of geometric
+variable projection against matched joint optimization, plus the saved support
+and historical references, with an explicit decision. Done requires tests,
+complete fetched outputs, independent numerical/cohort checks, correct/all870,
+exact/145, coverage, errors and paired gains/losses, and committed documentation.
+Budget: **four hours preparation from 16:52 CEST**, then **one Viper job capped
+at four hours**, four requested CPUs / 16 GB, no automatic retry. No missing-head
+vote, joint acquisition model, new counts, class quota, DFT change, unknown25
+rerun or post-grade parameter search is included.
+
+The prior full-profile prototype improved RSS on four unknown scans but gave
+almost only capped outer searches, had no equal-budget control and did not
+measure recognition. The completed fixed-geometry benchmark gave 675/32 against
+676/34 despite lower RSS. Neither establishes whether positions/widths are a
+recognition bottleneck. The new comparison tests that hypothesis, not an assumed
+benefit of numerical optimization.
+
+One shared native initialization is regenerated per saved N with the unchanged
+circular fit and circular→elliptical refinement. Existing valid minimum-GCV
+selection chooses the family **at that fixed N only**. Its full-precision vector,
+family, axis and native ROI/tube pixels are shared by both local arms. This avoids
+inventing unsaved raw parameters from rounded feature coordinates, or separately
+refitting the two starts under the native wall-clock limit. The initialization
+may differ from the original saved support; its parameters and both bootstrap
+validities/GCVs are saved. The reference arm separately must replay saved support
+676/34 exactly. The common initialization's native optimizer convergence is not
+exposed and is not claimed.
+
+Both local arms use **LN_BOBYQA**, maximum **800 total callback evaluations**,
+**30 seconds inside NLopt**, relative x tolerance **1e-6** and objective tolerance
+**1e-9**. These numerical values are reused from the September 18 diagnostic in
+`config/geometry_profile_comparison.toml`; the native elliptical initialization
+keeps its explicit 50-iteration budget. The first callback counts against the
+evaluation ceiling and compiles before the NLopt timer; its setup time is saved
+separately. Equal ceilings are **not equal arithmetic or elapsed cost**: a
+profiled call additionally solves a bounded linear problem. Both actual evaluation
+counts and stopping statuses are reported, and capped iterates are not called
+converged. No extra optimization or seed search follows the result.
+
+The joint arm moves the whole native parameter vector. The profiled arm moves
+only the geometry block and solves amplitudes/background at each evaluation with
+the already tested finite-box solver. Both minimize **the same native global
+RSS × (1 + κ penalty)**, with unchanged κ threshold/weight. The penalty depends
+only on geometry, so the linear elimination remains appropriate. This deliberately
+does not reuse the old prototype's mismatched raw-RSS-only outer objective.
+The same native final validity checks reject inadmissible evaluated points in
+both arms. Each returns its best valid objective point, with rejected evaluations
+and the full scalar trace recorded. A failed initialization or linear solve is
+explicit; a profiled arm cannot silently substitute an unprofiled native result.
+No scan is dropped or externally selected for a retry.
+
+All parameters retain the native physical boxes. GCV uses the full original
+parameter count and is diagnostic during local refinement; N and family stay
+fixed once the common initialization is chosen. Split geometry/skew is reused
+byte-for-byte, isolating Gaussian base geometry. This is not a simultaneous
+refit of the asymmetric shape model. Both arms regenerate all base-derived
+patches, descriptors, Fisher, GMM, k-means and final votes using the unchanged
+support assignment config. Geometry tables keep the native exporter precision.
+The 146-file cohort is determined by raw/cache keys, never benchmark membership;
+labels and expected counts are read only by separate external grading afterward.
+This reused development benchmark cannot establish independent generalization.
+
+Preparation uses synthetic tests and one focused local raw check only. The
+full146 comparison is sharded across four one-thread Viper workers. No scientific
+cluster job or external grade has run at this preparation checkpoint.
+
+Preparation checks pass under Julia **1.13.0**: **5,047 assertions in eleven
+suites**, including 111 new matched-refinement checks (active κ penalty,
+unchanged starts, actual callback ceilings, full GCV, KKT, explicit failures,
+three complete assignment arms and forbidden label options). The 146-file
+local metadata dry-run passes. The documentation builds within the unchanged
+HTML limits; existing size/search warnings remain.
+
+The only real local fit is the lexicographically first cached scan,
+`240307_015.sxm`, saved **N=7**, without external grading. Shared native RSS
+is **0.06349117339**; joint gives **0.06347592674**, `XTOL_REACHED`, 97
+evaluations, six rejected points; profiled gives **0.04999638934**,
+`MAXEVAL_REACHED`, 800 evaluations, zero rejected points. Profiled optimization
+takes 16.79 seconds excluding separately reported setup. This is a numerical
+smoke check, not evidence of recognition improvement or outer convergence.
+All **84 saved-output checks** pass, including independently assembled Gaussian
+RSS, κ objective, full GCV, linear KKT, native bounds, trace/budget consistency
+and serialization. No second local scan or parameter adjustment follows.
+
+Remote cached base, split, templates and saved support predictions match local
+SHA256 values. A dereferenced checksum-only rsync reports no raw-scan difference.
+Evidence is under `results/geometry_profile_20260922/`. An initial local dry-run
+used a nonexistent Julia launcher path; repeating metadata-only validation with
+the verified `/usr/bin/julia` succeeds. Neither attempt performed scientific
+computation. Viper uses its separately verified absolute Julia 1.13 executable.

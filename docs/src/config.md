@@ -1053,6 +1053,18 @@ unknown25 change follows; see `results/gcv_reselection_20260922/report.md`.
 
 ## Opt-in diagnostic exploration settings (2026-09-18)
 
+The authorized September 22 **geometric** comparison uses the separate
+`config/geometry_profile_comparison.toml`, with empty physical/selection/preprocessing
+tables. Its `[counting_variable_projection]` values copy the existing diagnostic
+settings, including **800 evaluations / 30 seconds** for each local arm and
+50 iterations for the shared native elliptical initialization. The first callback
+counts in the 800 but is timed separately from the NLopt search. `[geometry_refinement]`
+requires `algorithm="LN_BOBYQA"` and `objective="native_kappa_rss"`; no hidden
+alternative optimizer or loss is selected. Joint and profiled arms share the
+same native bounds, penalty, validity checks, starting fit and ceilings. These
+are diagnostic numerical settings, not new production calibration. Preparation
+does not establish a recognition gain; see the dated [journal](journal.md).
+
 The September 22 frozen-amplitude comparison reuses this file's existing
 `[counting_variable_projection]` settings for **linear box least squares only**;
 outer search budgets are read but never used. Physical endpoints still come from

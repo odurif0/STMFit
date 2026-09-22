@@ -1,5 +1,16 @@
 # Running STMFit on the MPCDF HPC cluster
 
+The authorized September 22 matched geometric comparison uses
+`hpc/compare_geometry_profile.sbatch`: **one four-hour job, four CPUs / 16 GB**.
+Its five explicit exported variables are `STMFIT_PROJECT_DIR`,
+`STMFIT_CACHE_DIR`, `STMFIT_INPUT_DIR`, `STMFIT_OUTDIR` and `JULIA_BIN` (1.13),
+with the same cache/raw/template layouts as the amplitude comparison below.
+Run `--dry-run` before submitting with explicit `sbatch --export=...`.
+Four one-thread shards create common fixed-N native starts and matched
+joint/profiled refinements. The job also regenerates the cached support reference
+and both unchanged assignment pipelines. Fetch all numerical traces and outputs
+before external grading. The job is not yet submitted; no retry is authorized.
+
 The authorized September 22 fixed-geometry amplitude comparison uses
 `hpc/compare_frozen_amplitudes.sbatch`: one two-hour, four-CPU / 16 GB job.
 Set `STMFIT_PROJECT_DIR`, `STMFIT_CACHE_DIR` (original symmetric `features.tsv`

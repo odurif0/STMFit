@@ -1,0 +1,26 @@
+# Opt-in, fixed-N geometry comparison. Not a production molecule calibration.
+# Both local arms reuse identical native initialization, physical bounds,
+# objective, optimizer and ceilings. One profiled evaluation includes a box LS
+# solve; equal ceilings do not imply equal arithmetic cost or elapsed time.
+[model]
+[selection]
+[preprocessing]
+
+[geometry_refinement]
+algorithm = "LN_BOBYQA"
+objective = "native_kappa_rss"
+
+# Same numerical settings as the September 18 diagnostic; no score-based tuning.
+[counting_variable_projection]
+outer_maxeval = 800
+outer_maxtime_s = 30.0
+outer_xtol_rel = 1e-6
+outer_ftol_rel = 1e-9
+linear_maxiter = 1000
+linear_kkt_atol = 1e-12
+linear_kkt_rtol = 1e-10
+linear_bound_atol = 1e-12
+linear_svd_rtol = 1e-12
+mapping_atol = 1e-10
+mapping_rtol = 1e-10
+native_elliptical_maxiter = 50

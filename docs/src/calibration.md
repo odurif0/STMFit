@@ -642,6 +642,17 @@ of N or independent validation. See `results/gcv_reselection_20260922/report.md`
 
 ## Opt-in label-free exploration (2026-09-18)
 
+The subsequent September 22 geometric-profile comparison keeps N, physical
+calibration, preprocessing and assignment settings fixed. Joint and profiled
+LN_BOBYQA arms share one fresh native initialization chosen by valid GCV at the
+saved N. Both use the native κ-penalized RSS and native validity checks, unlike
+the old raw-RSS-only prototype. Equal evaluation/time ceilings are not equal
+computational cost and do not prove convergence; actual stops and costs are
+saved. Split skew remains cached. No new noise covariance, effective sample
+size, composition prior or class threshold is introduced. This authorized
+comparison is in preparation; any recognition claim requires complete external
+grading. Its explicit numerical settings live in `geometry_profile_comparison.toml`.
+
 The authorized September 22 fixed-geometry amplitude comparison changes no
 physical calibration. It solves only the Gaussian amplitudes and tilted plane
 inside their native finite bounds, using the existing linear-profile solver.
