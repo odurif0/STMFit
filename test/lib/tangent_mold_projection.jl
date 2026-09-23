@@ -10,7 +10,7 @@ function settings(path)
     Set(keys(c["selection"])) == Set(["minimum_observed_pixels", "minimum_observed_fraction"]) || error("Unexpected tangent selection key")
     c["preprocessing"] == Dict("sampling" => "native_box_bilinear") || error("Native tangent sampling required")
     m, s = c["model"], c["selection"]
-    m["basis"] == "target_gaussian_affine" || error("Unsupported tangent basis")
+    m["basis"] in ("target_gaussian_affine", "target_gaussian_affine_orientation") || error("Unsupported tangent basis")
     for k in ("rank_rtol", "zero_norm_rtol")
         x = m[k]
         x isa Real && !(x isa Bool) && isfinite(x) && 0 < x < 1 || error("Invalid $k")
@@ -18,7 +18,8 @@ function settings(path)
     s["minimum_observed_pixels"] === 5 && s["minimum_observed_fraction"] == 0.5 ||
         error("The native connected-mold observation guard is frozen")
     return (rank_rtol=Float64(m["rank_rtol"]), zero_norm_rtol=Float64(m["zero_norm_rtol"]),
-            minimum_pixels=5, minimum_fraction=0.5)
+            minimum_pixels=5, minimum_fraction=0.5,
+            orientation=m["basis"] == "target_gaussian_affine_orientation")
 end
 
 number(r, k) = parse(Float64, r[k])
@@ -38,31 +39,41 @@ end
 # Rescaled derivatives span the same tangent space as exact derivatives with
 # respect to amplitude, center t/u and log widths. Circular fits have one width.
 # The amplitude feature itself remains unchanged in the downstream classifier.
-function basis_at(x,y,r)
+has_orientation(r) = r["source"] == "ell" && number(r,"sigma_parallel_nm") != number(r,"sigma_perp_nm")
+
+function basis_at(x,y,r; orientation::Bool=false)
     dx=x-number(r,"x_nm"); dy=y-number(r,"y_nm")
     t=dx*number(r,"axis_x")+dy*number(r,"axis_y")
     u=-dx*number(r,"axis_y")+dy*number(r,"axis_x")
     a=t/number(r,"sigma_parallel_nm"); b=u/number(r,"sigma_perp_nm")
     g=exp(-0.5*(a*a+b*b))
     affine=[1.0,t,u,g,a*g,b*g]
-    return r["source"] == "circ" ? vcat(affine,(a*a+b*b)*g) : vcat(affine,a*a*g,b*b*g)
+    base = r["source"] == "circ" ? vcat(affine,(a*a+b*b)*g) : vcat(affine,a*a*g,b*b*g)
+    if orientation && has_orientation(r)
+        sp=number(r,"sigma_parallel_nm"); su=number(r,"sigma_perp_nm")
+        # dG/dtheta at a fixed native pixel and fixed sampling frame. Factoring
+        # sp^2-su^2 avoids cancellation for nearly circular ellipses. The exact
+        # zero derivative is omitted only at equality, with no anisotropy cutoff.
+        push!(base,a*b*g*((sp-su)*(sp+su)/(sp*su)))
+    end
+    return base
 end
 
 "Native clipped box smoothing followed by the extractor's bilinear sampling."
-function native_design(xs,ys,r,coords,radius::Int)
+function native_design(xs,ys,r,coords,radius::Int; orientation::Bool=false)
     validate_geometry(r)
     radius >= 0 || error("Negative smoothing radius")
     length(xs)>=2 && length(ys)>=2 && all(isfinite,xs) && all(isfinite,ys) &&
         all(>(0),diff(xs)) && all(>(0),diff(ys)) || error("Invalid native image grid")
     !isempty(coords) && all(isfinite,coords) || error("Invalid patch coordinates")
-    p=r["source"]=="circ" ? 7 : 8
+    p=(r["source"]=="circ" ? 7 : 8) + Int(orientation && has_orientation(r))
     B=fill(NaN,length(coords)^2,p)
     cache=Dict{Tuple{Int,Int},Vector{Float64}}()
     function smoothed(ix,iy)
         get!(cache,(ix,iy)) do
             v=zeros(p); n=0
             for j in max(1,iy-radius):min(length(ys),iy+radius), i in max(1,ix-radius):min(length(xs),ix+radius)
-                v .+= basis_at(xs[i],ys[j],r); n+=1
+                v .+= basis_at(xs[i],ys[j],r;orientation); n+=1
             end
             v/n
         end

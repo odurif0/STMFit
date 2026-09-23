@@ -76,16 +76,17 @@ function execute(o)
     mkpath(dirname(o["--out"]))
     # Save the actual pixel-space design for a separate QR/arithmetic check.
     open(o["--out"]*".basis.tsv","w") do bio
-        println(bio,"file\tlobe\tpixel\tbasis_count\t",join(["b$j" for j in 1:8],'\t'))
+        maxcols=opt.orientation ? 9 : 8
+        println(bio,"file\tlobe\tpixel\tbasis_count\t",join(["b$j" for j in 1:maxcols],'\t'))
         for (fi,f) in enumerate(files)
             try
                 img=read_sxm(joinpath(o["--data-dir"],f))
                 xs,ys=_coordinate_vectors(img;stride=pre.stride)
                 scores=Dict{Tuple{Int,Int,Int},Vector{Float64}}()
                 for r in byfile[f]
-                    B=T.native_design(xs,ys,base[(f,r.lobe)],coords,pre.smooth_radius_px)
+                    B=T.native_design(xs,ys,base[(f,r.lobe)],coords,pre.smooth_radius_px;orientation=opt.orientation)
                     for k in axes(B,1)
-                        vals=vcat(B[k,:],fill(NaN,8-size(B,2)))
+                        vals=vcat(B[k,:],fill(NaN,maxcols-size(B,2)))
                         println(bio,join(vcat([f,string(r.lobe),string(k),string(size(B,2))],[@sprintf("%.17g",v) for v in vals]),'\t'))
                     end
                     for parity in 0:1, mirror in 0:1

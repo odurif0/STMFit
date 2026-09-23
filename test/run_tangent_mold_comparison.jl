@@ -1,25 +1,27 @@
 #!/usr/bin/env julia
-# One saved-support replay and one tangent-CC variant. No external labels.
+# One replay and one tangent-CC variant. No external labels.
 include(joinpath(@__DIR__,"run_reconstructed_chitosan.jl"))
 using SHA
 const TANGENT_OPTIONS=Set(["--data-dir","--count-config","--config","--settings",
     "--features","--split-features","--templates","--outdir"])
+const TANGENT_OPTIONAL=Set(["--reference-settings"])
 
 function tangent_comparison(args=ARGS;runner=run_stage)
     if "--help" in args
-        println("run_tangent_mold_comparison.jl: ",join(sort(collect(TANGENT_OPTIONS))," VALUE ")," VALUE [--dry-run]")
+        println("run_tangent_mold_comparison.jl: ",join(sort(collect(TANGENT_OPTIONS))," VALUE ")," VALUE [--reference-settings TOML] [--dry-run]")
         return
     end
     opts=Dict{String,String}(); filtered=String[]; i=1
     while i<=length(args)
         k=args[i]; haskey(opts,k) && error("Repeated comparison option")
         if k=="--dry-run"; opts[k]="true"; push!(filtered,k); i+=1; continue; end
-        k in TANGENT_OPTIONS && i<length(args) && !startswith(args[i+1],"--") || error("Missing/forbidden comparison option")
-        opts[k]=args[i+1]; k=="--settings" || append!(filtered,args[i:i+1]); i+=2
+        k in union(TANGENT_OPTIONS,TANGENT_OPTIONAL) && i<length(args) && !startswith(args[i+1],"--") || error("Missing/forbidden comparison option")
+        opts[k]=args[i+1]; k in ("--settings","--reference-settings") || append!(filtered,args[i:i+1]); i+=2
     end
     all(haskey(opts,k) for k in TANGENT_OPTIONS) || error("All comparison inputs required")
     parse_options(filtered); cfg=load_config(opts["--config"])
     TangentMoldProjection.settings(opts["--settings"])
+    haskey(opts,"--reference-settings") && TangentMoldProjection.settings(opts["--reference-settings"])
     cfg["preprocessing"]["patch_residual_filter"]=="smooth_residual" || error("Matched residual required")
     _,base=lobe_table(opts["--features"]); _,splitrows=lobe_table(opts["--split-features"])
     require_same_keys(base,splitrows,"split geometry")
@@ -33,7 +35,7 @@ function tangent_comparison(args=ARGS;runner=run_stage)
     out=abspath(opts["--outdir"]); mkpath(joinpath(out,"logs")); stage="inputs"
     try
         write_table(joinpath(out,"input_hashes.tsv"),["input","sha256"],
-            [Dict("input"=>k,"sha256"=>bytes2hex(sha256(read(opts[k])))) for k in sort(collect(TANGENT_OPTIONS)) if isfile(opts[k])])
+            [Dict("input"=>k,"sha256"=>bytes2hex(sha256(read(opts[k])))) for k in sort(collect(keys(opts))) if isfile(opts[k])])
         write_table(joinpath(out,"raw_hashes.tsv"),["file","sha256"],
             [Dict("file"=>f,"sha256"=>bytes2hex(sha256(read(p)))) for (f,p) in sort(collect(raw))])
         basepath=joinpath(out,"cached_features.tsv"); splitpath=joinpath(out,"cached_split.tsv")
@@ -41,7 +43,8 @@ function tangent_comparison(args=ARGS;runner=run_stage)
         common=["--data-dir",abspath(opts["--data-dir"]),"--count-config",abspath(opts["--count-config"]),
             "--config",abspath(opts["--config"]),"--templates",abspath(opts["--templates"]),
             "--features",basepath,"--split-features",splitpath]
-        for (arm,extras) in (("reference",String[]),("tangent",["--mold-tangent-settings",abspath(opts["--settings"])]))
+        reference=haskey(opts,"--reference-settings") ? ["--mold-tangent-settings",abspath(opts["--reference-settings"])] : String[]
+        for (arm,extras) in (("reference",reference),("tangent",["--mold-tangent-settings",abspath(opts["--settings"])]))
             stage=arm
             runner(out,stage,"run_reconstructed_chitosan.jl",vcat(common,extras,["--outdir",joinpath(out,arm)]))
             cp(basepath,joinpath(out,arm,"features.tsv")); cp(splitpath,joinpath(out,arm,"features_split.tsv"))

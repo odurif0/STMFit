@@ -1297,6 +1297,14 @@ or unknown25 rerun. Full evidence: `results/local_orientation_20260923/report.md
 
 ## Tangent physical-mold comparison (September 23)
 
+The separately authorized orientation ablation uses
+`hpc/compare_tangent_orientation.sbatch` with the same dry-run, resources and
+explicit-export procedure below. It replays the tangent control in `reference/`
+and adds only the angle derivative in `tangent/`. New paths are
+`/u/oldu/code/STMFit_tangent_orientation_20260923` and
+`/ptmp/oldu/stmfit/tangent_orientation_20260923_v1`; inputs and Julia stay the
+same. Fetch to `results/tangent_orientation_20260923/`. One job, no retries.
+
 The September 23 tangent-mold comparison uses
 `bash hpc/compare_tangent_molds.sbatch --dry-run` before submission. One job,
 two-hour cap, four requested CPUs / 16 GB, `--no-requeue`; four one-thread score

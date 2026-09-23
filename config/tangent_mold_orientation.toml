@@ -1,0 +1,12 @@
+# One added derivative at frozen geometry; no angle fit or anisotropy cutoff.
+[model]
+basis = "target_gaussian_affine_orientation"
+rank_rtol = 1e-12
+zero_norm_rtol = 1e-12
+
+[selection]
+minimum_observed_pixels = 5
+minimum_observed_fraction = 0.5
+
+[preprocessing]
+sampling = "native_box_bilinear"

@@ -1,5 +1,12 @@
 # Calibration: deriving parameters objectively
 
+The subsequent orientation test adds only the analytic ellipse-angle derivative
+at fixed pixels/frame (`config/tangent_mold_orientation.toml`). Exactly isotropic
+rows have no angle derivative; every nonzero derivative is normalized with the
+same rank tolerance, without an ellipticity threshold. Near-isotropic behavior
+is therefore a nuisance-span convention, not calibrated angular uncertainty.
+No physical bound, fitted angle, patch support or classifier setting changes.
+
 The September 23 tangent-mold experiment is not a new physical calibration.
 `config/tangent_mold_projection.toml` fixes the affine/target-Gaussian derivative
 span before grading, respecting circular versus elliptical widths. The two

@@ -2307,6 +2307,13 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-23. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0am. **Does adding the elliptical orientation derivative improve tangent CC?**
+    → **AUTHORIZED, IN PREPARATION (Sep 23)**. One reference/variant comparison
+    against tangent **679/33**, saved support **676/34** and history **677/36**.
+    Only add the fixed-pixel orientation derivative to the projected nuisance
+    span. No refit, patch rotation, neighbor columns or new classifier settings.
+    Four-hour preparation and one two-hour Viper job; see the dated entry below.
+
 0al. **Can native-sampled local Gaussian tangent rejection improve physical mold scores?**
     → **COMPLETE; TRADE-OFF (Sep 23)**. Tangent CC gives **679/870 correct,
     33/145 exact**, versus exactly replayed support **676/34**, both at
@@ -13450,3 +13457,60 @@ existing size/search warnings; assignment HTML is **199.84 KiB / 200 KiB**.
 Tests, full outputs, gains/losses and limitations are ready for human review.
 Only documentation changed after **92cce55**; validated source and conclusions
 are versioned, generated outputs remain ignored/local, and no job is left queued.
+
+## 2026-09-23 — Bounded orientation derivative in tangent physical-mold scoring
+
+**Deliverable before diagnostics.** The user authorizes the first proposed lead
+only. Start **19:37 CEST**, preparation capped at four hours, at most one
+two-hour Viper job (four requested CPUs / 16 GB). Done means both complete
+146-scan / 900-key outputs, exact replay of tangent **679/870, 33/145**, independent
+checks followed by external full145 grading, or an explicit feasibility failure.
+Keep saved support **676/34** and history **677/36**, coverage **854**, in the
+comparison. An intermediate gain at the current **852** coverage is not an
+overall historical champion. No retry, sweep or other campaign follows.
+
+`config/tangent_mold_orientation.toml` adds exactly one column to the elliptical
+target-Gaussian span: the derivative with respect to its angle, with native
+pixels, center and patch-sampling frame held fixed. For unit-amplitude G,
+`dG/dtheta = (t/sigma_t)(u/sigma_u) G (sigma_t^2-sigma_u^2)/(sigma_t sigma_u)`.
+Factor the width difference to avoid cancellation. Evaluate on the native SXM
+grid, then apply the unchanged clipped box smoother and bilinear patch sampler.
+Keep the original columns literal. Circle derivatives are zero; an elliptical
+row with exactly equal stored widths also has no added column. There is no
+near-circular threshold: every nonzero derivative is column-normalized under
+the original SVD rule, including near-circular cases. This discontinuity at
+exact isotropy is explicit, not a calibrated finite-angle uncertainty model.
+
+Everything else stays fixed: N, geometry, axis, support, patches, templates,
+global direction/phase/mirror enumeration, score sign/absolute margin, Fisher,
+k-means, GMM settings and vote. The GMM is relearned without labels because its
+two CC inputs change. Same finite-pixel mask and projection for both templates
+and observations, same `1e-12` numerical tolerances and existing pixel guard.
+Numerical annihilation still fails the comparison; no per-file fallback.
+Retained template energy is diagnostic, not proof of retained chemical signal.
+
+First synthetic derivative/native-sampling/QR tests, then only lexicographic
+first scan `240307_015.sxm` locally, metadata-only full-cohort dry-run, commit,
+checksum sync, login-node instantiate, one explicit-export sbatch, poll, fetch
+and verify. The driver gains optional `--reference-settings` to replay the
+previous tangent method; default support-versus-tangent behavior is unchanged.
+Labels enter only the final external grader. No expected N, composition prior,
+class quota, benchmark-chosen column/rank/threshold, optimizer/count refit,
+noise model, neighbor correction, DFT change, unknown25 rerun or new framework.
+The completed application and existing scientific Must-NOT-have list stand.
+
+**Before submission.** Julia **1.13.0** passes **1,354** assertions in projection
+(546), scorer/driver including synthetic preprocessing (675), and reconstruction
+boundaries (133). Support/Fisher regression suites run separately. The only real
+scan is lexicographic first **240307_015.sxm**, seven frozen lobes. Its two control
+score tables exactly replay the saved tangent run; **17,406** independent QR,
+serialization, nested-span and replay assertions pass across both views/arms.
+Orientation retains **96.4012–97.1984%** of physical contrast energy (median
+**97.0751%**); patch medians fall **5.3405→0.8280% forward / 6.5693→1.4799%
+backward**. These are numerical diagnostics, not chemical preservation evidence.
+
+Metadata dry-run confirms **146 scans / 900 keys**. All raw images, geometry and
+templates match Viper by SHA256. Documentation builds without deployment; root
+Project/Manifest hashes are unchanged. No formula, threshold or setting is
+adjusted after the smoke. Freeze and commit this source before synchronization
+and the sole job. No job has yet been submitted.

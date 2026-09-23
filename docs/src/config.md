@@ -2,6 +2,15 @@
 
 ## Experimental tangent physical-mold scoring (2026-09-23)
 
+The separately authorized orientation test uses
+`config/tangent_mold_orientation.toml`: `basis="target_gaussian_affine_orientation"`
+adds `dG/dtheta` at fixed native pixels and fixed patch frame. All numerical
+settings stay unchanged. Noncircular ellipses have nine columns; circular and
+exactly equal-width elliptical rows keep seven/eight. No anisotropy cutoff or
+angle fitting. `run_tangent_mold_comparison.jl --reference-settings TOML` replays
+an explicit tangent control instead of the default unprojected support control.
+This experiment is opt-in, not a production or calibration change.
+
 `run_reconstructed_chitosan.jl --mold-tangent-settings
 config/tangent_mold_projection.toml` changes only both physical CC scores at
 frozen Gaussian geometry. `[model] basis="target_gaussian_affine"` uses seven
