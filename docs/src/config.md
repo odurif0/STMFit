@@ -1066,7 +1066,11 @@ The two `--residual-features-fwd/bwd` paths specify models for the **target**
 directions, not necessarily the training directions. They require complete,
 literal frozen geometry plus a distinct `profile_view` tag, fresh patches and
 unchanged main/split features. No shifts, local frames or local model axes may
-be combined. Default behavior remains unchanged. See the journal for stop rules.
+be combined. Default behavior remains unchanged. The completed comparison is
+**negative**: own-view **675/870 correct, 30/145 exact**, cross-view **673/30**,
+versus saved **676/34**, all at **852/870 coverage**. All 292 profiles converge
+and 146 fused means pass native validity. Reject without parameter changes;
+`results/cross_view_residual_20260923/report.md` and journal contain the full scope.
 
 `local_gaussian_orientation.toml` declares a separate fixed-N **model** test.
 `[model] chain_peak_orientation = "local_tangent"` and `chain_tangent_degree = 2`

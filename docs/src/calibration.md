@@ -652,7 +652,12 @@ individual-view errors are diagnostics, not a new calibrated noise or chemical
 validity criterion. This is conditional cross subtraction, **not independent
 cross-validation**: both views already informed geometry/support/bounds and
 shared chemical contrast can be fitted away in both. No new physical threshold
-or class prior; settings are in `config/cross_view_residual.toml`. See the journal.
+or class prior; settings are in `config/cross_view_residual.toml`. The completed
+test gives **675/870 correct, 30/145 exact** in same-view and **673/30** in
+cross-view, versus saved **676/34**, all at **852/870 coverage**. All 292 solves
+converge and 146 fused means pass validity, but neither variant improves
+recognition. Retain support without calibration changes; journal and
+`results/cross_view_residual_20260923/report.md` retain all failures and limitations.
 
 The September 23 local-Gaussian follow-up changes the **fitted base model**, not
 the patch frame. A quadratic tangent is derived at each evaluation from current

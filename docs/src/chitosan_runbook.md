@@ -1,6 +1,17 @@
 # Chitosan Benchmark and 10–20mer Runbook
 
-Latest September 23 result: **locally oriented Gaussian models regress to
+Latest September 23 result: **cross-view residual subtraction is negative**.
+Same-view gives **675/870 correct, 30/145 exact**, opposite-view **673/30**,
+versus byte-identical support replay **676/34**, all at **852/870 coverage**.
+N, main/split features and raw patches remain literal. All 292 linear profiles
+converge and their fused means pass native validity, without per-view molecular
+validity or independent cross-validation claims. Source **9d6c541**, job
+**11952397**, **0:0 in 7m57s**; 766 outputs plus log fetched/checksummed,
+**80,823 pre-grade and 41 aggregate checks** pass. Reject both variants; retain
+support below historical **677/36**, no retuning or unknown25 rerun.
+`results/cross_view_residual_20260923/report.md`.
+
+Earlier September 23 result: **locally oriented Gaussian models regress to
 664/870 correct, 30/145 exact**, versus matched global refit **674/31** and
 saved reference **676/34**, all at **852/870 coverage**. GCV chooses the local
 model on 87/146 scans; N/global sampling/split cache stay fixed. All 584 fits

@@ -2458,6 +2458,16 @@ fetched and checked; **62,464 pre-grade and 41 aggregate checks** pass. Full
 method, stopping diagnostics and all 725 paired scan comparisons:
 [journal](journal.md), `results/local_gaussian_20260923/report.md`.
 
+### Cross-view residual subtraction (2026-09-23): negative
+
+Only native-box amplitudes/backgrounds change subtraction; N, geometry,
+main/split features, raw patches and classifier settings stay fixed. Same-view
+gives **675/870 correct, 30/145 exact**, opposite-view **673/30**, versus replay
+**676/34**, all at **852/870 coverage**. Cross gains two exact chains, loses six.
+All 292 solves converge; 146 fused means pass native guards, not independent
+per-view validation. Reject both; retain support below **677/36**. Source
+**9d6c541**, job **11952397**; [journal](journal.md), `results/cross_view_residual_20260923/report.md`.
+
 ### Native numerical conventions
 
 The constant-current port retains the old first-axis-fast cube index, sampling

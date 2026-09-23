@@ -1237,7 +1237,14 @@ variables with command-line `sbatch --export=ALL,...`; dry-run and `--test-only`
 do not check the compute-node environment. Fetch results and log to
 `results/cross_view_residual_20260923/`, checksum them and verify full keys,
 literal main/split/raw-patch invariance, KKT/guards and reference replay before
-external grading. Scope and limitations: journal, dated cross-view entry.
+external grading. This comparison is **complete and negative**: source
+**9d6c541**, sole job **11952397**, **0:0 in 7m57s**, 50s queued. All **766 outputs
+and log** are fetched/checksummed; **80,823 pre-grade and 41 aggregate checks**
+pass. Same-view gives **675/870, 30/145**, cross-view **673/30**, saved **676/34**,
+all at **852/870 coverage**. All 292 profiles converge and 146 fused means pass
+native validity, not independent per-view validation. Retain support below
+historical **677/36**; no retry, retuning or unknown25 rerun. Full evidence:
+`results/cross_view_residual_20260923/report.md` and journal, dated cross-view entry.
 
 The separate model follow-up uses `hpc/compare_local_gaussian.sbatch`:
 saved `reference/`, matched `global_refit/` and `gcv_orientation/`. Four

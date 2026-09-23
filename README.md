@@ -16,6 +16,15 @@ no variants combined and no settings tuned after grading. Labels are used only
 by external grading; this reused development benchmark is not independent
 validation. See the [support/score comparison](docs/src/unit_assignment.md#complete-disk-support-and-final-gaussian-score-2026-09-21).
 
+The **September 23 cross-view residual comparison** is negative: same-view
+subtraction gives **675/870 correct, 30/145 exact**, opposite-view subtraction
+**673/30**, versus exactly replayed support **676/34**, all at **852/870 coverage**.
+Only subtraction amplitudes/backgrounds change; N, geometry, main features and
+raw patches remain literal. All 292 linear solves converge and all fused means
+pass native validity. Retain support, below historical **677/36**; no promotion
+or retuning. This is not independent cross-validation.
+See the [cross-view result](docs/src/unit_assignment.md#cross-view-residual-subtraction-2026-09-23-negative).
+
 The **September 23 locally oriented Gaussian comparison** is negative:
 **664/870 correct, 30/145 exact**, versus matched global refit **674/31** and
 byte-identical saved reference **676/34**, all at **852/870 coverage**. The

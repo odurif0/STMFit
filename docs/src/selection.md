@@ -1,5 +1,15 @@
 # Model Selection
 
+The September 23 **cross-view residual comparison is negative**: own-view
+subtraction **675/870 correct, 30/145 exact**, opposite-view **673/30**, versus
+exact saved support replay **676/34**, all at **852/870 coverage**. N, geometry,
+main/split features, raw patches, all selection rules and `n_eff` remain fixed.
+Both sets of bounded linear coefficients affect subtraction only. All 292
+profiles converge; 146 fused means pass unchanged native guards. Full-complexity
+GCV is diagnostic, not a new selector. Reject both versions, retain support below
+historical **677/36**. Source **9d6c541**, job **11952397**; full comparisons and
+limits: `results/cross_view_residual_20260923/report.md`.
+
 The September 23 **local-Gaussian model comparison is negative**: valid minimum
 GCV selects local ellipses on **87/146** scans, but recognition falls to
 **664/870 correct, 30/145 exact**, versus matched global **674/31** and saved

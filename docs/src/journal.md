@@ -2308,14 +2308,16 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0ak. **Can opposite-view amplitude profiles improve residual recognition?**
-    → **AUTHORIZED; BOUNDED (Sep 23)**. Three arms: unchanged saved support,
-    same-view subtraction, opposite-view subtraction. Literal saved geometry,
-    N, main features, split cache and classifier remain fixed. Two native-box
-    linear profiles per scan; no nonlinear fit or registration. Preparation
-    limited to half a day, then one two-hour Viper job, no retry or adjustment.
-    Full comparison only if every solve and native fused-mean guard passes;
-    otherwise report feasibility failure without partial grading. See the
-    dated cross-view residual entry below. No independent validation claim.
+    → **COMPLETE; NEGATIVE (Sep 23)**. Same-view subtraction gives **675/870
+    correct, 30/145 exact**, opposite-view **673/30**, versus byte-identical
+    saved support **676/34**, all at **852/870 coverage**. N, geometry, main/split
+    features and raw patches remain literal. All 292 native-box linear solves
+    converge; 146 fused means pass unchanged native validity. No per-view
+    molecular validity or independent cross-validation claim. Source **9d6c541**,
+    sole job **11952397**, **0:0 in 7m57s**; 766 outputs/log fetched/checksummed,
+    80,823 pre-grade and 41 aggregate checks pass. Reject both variants and keep
+    support below historical **677/36**. No retry, retuning or unknown25 rerun.
+    `results/cross_view_residual_20260923/report.md`.
 
 0aj. **Does fitting locally oriented Gaussian lobes improve recognition?**
     → **COMPLETE; NEGATIVE (Sep 23)**. GCV-local gives **664/870 correct,
@@ -2328,8 +2330,8 @@ See `docs/src/selection.md` for the full guard specification and
     and log fetched/checked; 62,464 pre-grade and 41 aggregate checks pass.
     Reject this version; retain support below historical **677/36**. No retry,
     angle/degree/threshold/budget adjustment, combination or unknown25 rerun.
-    `results/local_gaussian_20260923/report.md`. Cross-view residual subtraction
-    remains a distinct untested hypothesis, not a launched follow-up.
+    `results/local_gaussian_20260923/report.md`. The separately authorized
+    cross-view subtraction comparison is recorded in 0ak, not a retry here.
 
 0ai. **Does a local chain-tangent patch frame improve recognition?**
     → **COMPLETE; NEGATIVE (Sep 23)**. Local sampling gives **670/870 correct,
@@ -13179,3 +13181,97 @@ CPUs, 16 GB, a two-hour cap, `--no-requeue`, and all five path variables in the
 explicit command-line `--export=ALL,...` list. Initial state is pending.
 Output: `/ptmp/oldu/stmfit/cross_view_residual_20260923_v1`; Slurm log alongside.
 Remain through result/fetch; no retry or post-submission scientific change.
+
+**Completed negative comparison.** Job **11952397** starts **18:05:37 CEST**
+after **50 s** queued and ends **18:13:34**, **COMPLETED 0:0 in 7m57s**, on
+`vipc2190`. Four CPUs requested, eight allocated, 16 GB requested, MaxRSS
+**3,621,797 K**. All **146 scans / 900 keys** finish in all three arms.
+The **766 regular output files and Slurm log** are fetched and SHA256-identical.
+No job remains. Project/Manifest and scientific sources/settings remain
+unchanged from **9d6c541**; submission record **3fdcbfc**. Preparation and the
+sole job stay within the declared time box.
+
+Independent pre-grade verification passes **80,823 assertions**: 40,727 on all
+raw/input hashes, complete keys/N, fifteen byte-identical reference scientific
+tables, literal main/split/local features, raw patches and metadata, observed
+support and final votes; 40,096 on explicit cached Gaussian pixel values,
+native finite coefficient endpoints, full-precision coefficients, gradients/KKT,
+own/cross residuals, full-complexity GCV and fused-mean validity. The latter
+40,096 were also checked while inference ran; they are included once, not added
+twice to the full total. No benchmark grade was opened until checks passed.
+
+All **292 linear solves converge** in 1–5 iterations forward and 1–6 backward.
+Own-view relative RSS reductions have medians **84.80% / 87.18%**; respective
+minima **19.05% / 35.07%**. The sum of own/cross RSS is
+**65.82303 / 1310.82504** for the forward-trained model and
+**53.46000 / 1315.88678** for backward. Maximum own/cross residual-to-noise is
+**7.362 / 27.820** forward-trained and **6.718 / 27.318** backward-trained.
+All 146 means pass native fused guards, maximum fused ratio **2.8996883** below
+unchanged 3.5. These large per-view residuals remain diagnostics, not independent
+molecular-validity claims or a calibrated noise model. Do not change acceptance
+after seeing them. Conditional coefficient optimality does not identify chemical
+contrast or validate the shared geometry.
+
+The three arms preserve the same four unavailable keys (`240310_Cu100009`, lobe
+8; `240818_015`, lobe 1; `240818_019`, lobes 1/2), **896 usable rows**, and **893**
+complete square patches in each family. The existing disk support and
+`all_admissible` training rule remain fixed. Both Fisher folds converge, 434/462
+rows. Final `(0,1,?)` populations are **(673,223,4) / (692,204,4) / (687,209,4)**,
+outputs rather than composition priors. Reference→same changes **25** decisions
+(3 zero→one, 22 one→zero); reference→cross **26** (6/20); same→cross **19** (12/7).
+
+External grading then passes **41 aggregate assertions**, on **145 scans /
+892 predictions / 870 truth positions**:
+
+| Profile | Correct /870 | Exact chains /145 | Coverage /870 | Emitted errors |
+|---|---:|---:|---:|---:|
+| Historical saved reference | 677 | 36 | 854 | 177 |
+| Saved support, exact replay | 676 | 34 | 852 | 176 |
+| Same-view subtraction | 675 | 30 | 852 | 177 |
+| Opposite-view subtraction | 673 | 30 | 852 | 179 |
+
+Versus saved support, same-view gives **11 scan gains / 12 losses / 122 ties**,
+net −1 unit, **three exact gains / seven losses** and two external orientation
+changes. Cross-view gives **9/12/124**, net −3, **two exact gains / six losses**
+and one orientation change. Cross versus same gives **8/10/127**, net −2,
+three exact gains/three losses and one orientation change. Confusion
+`(TN,FP,FN,TP)` is **(513,52,124,163) → (522,43,134,153) / (518,47,132,155)**:
+same-view removes nine false positives but loses ten true positives; cross-view
+removes five but loses eight. Grading orientation is not used by inference and
+is not an observed spatial correspondence.
+
+Cross-view exact gains against support are `240814_011` and `240817_075`;
+losses are `240310_Cu100007`, `240817_003`, `240817_007`, `240817_021`,
+`240817_044`, `240818_020`. Same-view additionally gains `240307_016`; its seven
+losses are `240310_Cu100007`, `240817_006`, `240817_021`, `240817_044`,
+`240817_048`, `240818_020`, `241114_027`. All **725 paired scan rows**, including
+the historical comparisons, are saved. Against history, same-view gives
+23 gains/26 losses/96 ties, cross-view 22/26/97; both gain five exact chains
+and lose eleven, with two fewer covered positions. Counts stay **106/145 exact**,
+14 short, 25 long, 16 missing positions and 38 extra lobes.
+
+**Reject both bounded variants; retain saved support 676/34.** Historical
+**677/36** remains unexceeded. A better own-view image fit and conditional KKT
+convergence do not improve recognition. Shared-contrast absorption remains a
+possible explanation, not established causally; this result does not exhaust
+all cross-acquisition methods. Geometry/support/bounds already use both views,
+and learning is transductive: this is not independent cross-validation. Labels
+enter only external grading, but repeated reuse makes this a development
+benchmark, not chemical proof for unknown 10–20mers. No post-grade threshold,
+bound, filter, offset, class quota, hybrid, new campaign, retry or unknown25
+rerun follows. This bounded comparison is complete, not the historical objective.
+
+Full report: `results/cross_view_residual_20260923/report.md`; all conclusions,
+gains and losses are retained locally. README, runbook, selection, assignment,
+config/calibration and HPC notes are updated consistently. Only documentation
+changes after the scientific source freeze; outputs remain ignored.
+
+The first final docs build exceeds the existing assignment-page size limit by
+0.08 KiB (200.08/200). Condense only the new summary, leaving full evidence here
+and in the report; do not increase the documentation limit.
+
+The final Julia **1.13.0** docs build passes without deployment, with existing
+size/search warnings; assignment HTML is **199.91 KiB / 200 KiB**. No scientific
+source or setting changed after submission or grading. Source, tests and
+conclusions are versioned; generated results remain ignored and locally
+available for human review. This one-job loop is closed.
