@@ -1053,6 +1053,24 @@ unknown25 change follows; see `results/gcv_reselection_20260922/report.md`.
 
 ## Opt-in diagnostic exploration settings (2026-09-18)
 
+`directional_response.toml` declares an image-only mirrored first-order
+response pilot, not production deconvolution. Acquisition-order quantiles
+**0/0.25/0.5/0.75/1** select five scans without grades. Mean lags
+**0/0.5/1/2/3/4 px**, a finite-kernel L1 tail **1e-12**, residual shifts
+**±4 px / 0.5 px**, and positive gains **[0.5,1.5]** are fixed. The centered
+relative response is all-pass; translation-only and reversed-direction models
+are matched controls. Bilinear translation itself is not unitary.
+
+All candidates share observed source pixels. Conditional **64-row** folds
+have **five-row** buffers, **4,096 pixels / 32 rows** minimum per fold and
+**16 pixels** minimum per row. Candidate/gain fitting uses training-only,
+within-row-centered contrasts. Each direction/fold must improve at least
+**1%** over translation; pooled heldout error must improve at least **1%**
+over the reverse-sign control. Nonzero lag, shifts and gains must be interior;
+full/fold lag/shift spreads are at most **0.5/1 px**. At least **three of five**
+complete scans must support the hypothesis. These are exploratory rules, not
+confidence intervals, chemistry thresholds or an automatic champion change.
+
 `image_registration_2d.toml` declares the September 23 image-only residual
 registration experiment. Around the saved integer-x transform, the residual
 window is **±0.16 nm** per axis (rounded inward, capped at one quarter of image

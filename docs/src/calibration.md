@@ -642,6 +642,22 @@ of N or independent validation. See `results/gcv_reselection_20260922/report.md`
 
 ## Opt-in label-free exploration (2026-09-18)
 
+The September 23 `directional_response.toml` pilot tests relative scan-response
+phase on five acquisition-order scans. Equal forward/backward line times are
+required for the same-time-constant, mirrored first-order hypothesis. The
+normalized relative transfer has unit spectral magnitude before the common
+bilinear translation; its mean lag is removed to separate shape from displacement.
+It cannot calibrate absolute/common blur, identify a full controller, or recover
+latent molecular amplitudes. Its **0–4 pixel** lag range is exploratory.
+
+Training and checking use buffered scan-line bands and shared observed sources.
+Native preprocessing/base shifts still use the full image, and within-row
+means are conditioned on in the heldout score: this is conditional predictive
+evidence, not independent validation or a noise covariance estimate. A reverse
+response direction is a matched negative control. No molecular geometry, N,
+unit assignment, physical calibration or champion parameter changes follow
+automatically, even from a positive image-only result.
+
 The September 23 `image_registration_2d.toml` follow-up estimates displacement
 from observed images without a molecular shape, count or template. Its fixed
 **±0.16 nm** residual window is an exploratory hypothesis, not a newly measured

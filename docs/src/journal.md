@@ -2307,6 +2307,18 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-23. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0ah. **Does a small mirrored acquisition response explain more than translation?**
+    → **AUTHORIZED IMAGE-ONLY PANEL PILOT (Sep 23)**. Five acquisition-order
+    quantiles, selected without recognition errors, compare translation with
+    a centered first-order relative response and a reversed-direction control.
+    The response transfer is all-pass before the common interpolation; this
+    avoids a cross-smoothing objective that can improve by erasing signal.
+    Buffered row folds, actual-source masks and training-only gains are fixed
+    in `directional_response.toml`. One preparation day / one four-hour Viper
+    job maximum. No molecular deformation, N change, labels or deconvolved
+    production image. A positive diagnostic is not a recognition gain; retain
+    **676/34**, below **677/36**, pending evidence.
+
 0ag. **Is the model-preferred residual shift present directly in the two images?**
     → **COMPLETE; IMAGE PEAKS AMBIGUOUS, NO FOLLOW-UP FIT (Sep 23)**. All peaks
     are interior, but full/fold global peak gaps **0.00652/0.00801/0.00405**
@@ -12544,3 +12556,91 @@ byte-identical. All validated source/tests and conclusions are committed;
 generated evidence remains under ignored `results/`. One of the two permitted
 compute jobs was used; the image-only deliverable is complete, while the
 historical recognition target remains unmet.
+
+### 2026-09-23 — Authorized directional-response panel, before molecular fitting
+
+The user authorizes the proposed bounded loop. Preparation starts **13:42
+CEST**, capped at one day, with at most **one Viper job capped at four hours**,
+four requested CPUs / 16 GB. The scientific deliverable is to determine
+whether a small mirrored scan response predicts the other view better than
+translation alone on an acquisition-selected panel, without changing molecular
+geometry. Done means tested code and fetched, independently checked results,
+including all unsuccessful scans and a negative or indeterminate outcome when
+appropriate. A recognition comparison requires an actual complete candidate;
+an image-only improvement cannot substitute for it. The completed unknown25
+application is not rerun. The scientific Must-NOT-have list remains: no labels,
+expected N, composition prior, truth-selected cases/parameters, excluded error
+rows, altered champion, new DFT, noise/threshold relaxation, count reselection
+or retired process apparatus.
+
+The first/quarter/half/three-quarter/last sorted acquisition filenames in the
+existing 146-scan shift table select indices **1/37/74/110/146**:
+`240307_015.sxm`, `240814_024.sxm`, `240817_054.sxm`, `240817_094.sxm`,
+`241114_046.sxm`. Only that table's filenames/integer shifts and raw metadata
+are read for panel selection, not feature tables or grades. All five are
+512×512, −0.300 V, and have equal trace/retrace line times: 0.0512 s for the
+first four, 0.1024 s for the last. One has a 30-degree scan angle; all response
+directions are defined in the acquisition pixel frame, not molecular axes.
+The saved applied x shifts **−52/−31/−29/−28/−17 px** are held fixed.
+
+This is a deliberately limited **single-pole, same-time-constant** response
+hypothesis, not a measured STM controller. Feedback-induced directional effects
+are physically motivated by Zhang et al. (2017),
+<https://pmc.ncbi.nlm.nih.gov/articles/PMC5736918/>, on Cu(111); that study does
+not validate this kernel or chitosan recognition. No rubber-band filtering,
+ranking map or assumption that a feature seen in one view is spurious is used.
+
+For an image-row latent signal, the normalized first-order response has
+`Hf(w)=(1-a)/(1-a*exp(-iw))`, `Hb=conj(Hf)`, and mean lag `mu=a/(1-a)`.
+The **relative** transfer `Hb/Hf` has unit frequency magnitude. Its sample
+coefficients are `-a` at offset −1 and `(1-a^2)*a^k` at offsets `k>=0`.
+Subtracting the integer `2mu` from these offsets recenters its mean: the
+remaining shape response is tested separately from a nuisance translation.
+The inverse transfer uses opposite offsets. Truncate only a declared L1 tail
+of at most **1e-12**, never wrap or pad an observed image. This diagnostic
+does not identify the absolute/common blur or reconstruct a latent molecule.
+
+`config/directional_response.toml` freezes mean lags **0/0.5/1/2/3/4 px**,
+residual x/y translations **±4 px in 0.5-px steps**, and separate positive
+prediction gains **[0.5,1.5]**. Zero lag nests the translation control; a
+reversed response sign is a negative control. These exploratory bounds are
+not physically calibrated, and a boundary estimate is not accepted evidence.
+The finite all-pass kernel itself is not a smoother; the common bilinear
+translation can attenuate high frequencies and is not claimed unitary.
+
+All candidates and both prediction directions use the same conservative
+observed-source rectangle, including every kernel tap and interpolation
+corner. Actual raw missing masks are restored after unchanged, unsmoothed
+native preprocessing; that does not undo earlier imputation in flattening.
+Alternate **64-row bands**, with **five-row buffers**, supply two conditional
+folds. Every candidate source remains in its target's band. Each fold needs
+**4,096 pixels / 32 rows**, with **16 pixels per row**; no variable support or
+imputed target can rescue a hypothesis. The objective pools within-row
+contrasts: heldout row means are conditioned on, not predicted. The full-image
+preprocessing and base alignment also prevent an independent-validation claim.
+
+Gains and candidate choice use training contrasts only; every candidate score
+is retained. Supporting evidence requires **≥1%** heldout RSS gain in **each
+direction and fold**, plus **≥1%** pooled advantage over the reversed control,
+interior nonzero lag/translation/gains, full/fold lag spread **≤0.5 px** and
+shift spread **≤1 px**. Three of five complete scans must support the panel
+hypothesis. These are fixed exploratory consistency rules, not p-values or
+calibrated uncertainty. All scans remain reported regardless of outcome.
+No GCV/counting, `n_eff`, noise, residual guard, molecular fit, classifier or
+production patch extraction changes. The inference code has no label input.
+
+Before real image scoring, Julia **1.13.0** passes **74,221** new synthetic,
+configuration, source-mask, fold-isolation and mocked-workflow assertions,
+including independent saved-output convolution/residual checks. Analytic
+Fourier-generated acquisitions recover the known centered response, translations
+and gains; identical views select zero, and reversed acquisition direction is
+not accepted as the physical hypothesis. Perturbing heldout rows leaves every
+training candidate score unchanged. Unequal scan times and missing support
+are explicit failures. These tests validate arithmetic/workflow, not real
+instrument physics. Unchanged image-registration and horizontal-registration
+suites add **15,846 + 9,221** assertions (**99,288 total**). The new runner and
+sbatch wrapper dry-runs read metadata only, produce no scientific output and
+preserve the five preselected scans. Documentation builds with `--build-only`
+and existing size warnings; assignment HTML remains **199.83 KiB**. Project
+and ignored Manifest hashes remain unchanged, including Manifest
+`617de8162fa4c7a814aacb106f145349bc57ead58ec9a6c332971a821b5974fe`.
