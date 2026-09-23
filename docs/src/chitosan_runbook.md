@@ -1,6 +1,17 @@
 # Chitosan Benchmark and 10–20mer Runbook
 
-Latest September 23 result: **local-tangent patch frames regress to 670/870
+Latest September 23 result: **locally oriented Gaussian models regress to
+664/870 correct, 30/145 exact**, versus matched global refit **674/31** and
+saved reference **676/34**, all at **852/870 coverage**. GCV chooses the local
+model on 87/146 scans; N/global sampling/split cache stay fixed. All 584 fits
+are natively valid but hit their iteration caps, not converged optima. Source
+**c692958**, job **11951208**, **0:0 in 26m58s**. All 775 outputs plus log are fetched
+and checked; **62,464 pre-grade checks and 41 aggregate checks** pass, with
+fifteen reference tables byte-identical. Retain support below historical
+**677/36**; no tuning, resubmission or unknown25 rerun. Evidence:
+`results/local_gaussian_20260923/report.md`.
+
+Earlier September 23 result: **local-tangent patch frames regress to 670/870
 correct units, 30/145 exact chains**, versus exactly replayed global support
 **676/34**, at unchanged **852/870 coverage**. All 146 scans / 900 keys finish;
 two exact chains are gained and six lost. N, base/split geometry, subtraction

@@ -1065,6 +1065,11 @@ refit and expanded-GCV candidate are three complete arms, with the same split
 cache and assignment config. Exported `model_orientation/model_axis_x/model_axis_y`
 must be complete and finite; the runner refuses stale patch caches. No physical
 bound, residual guard, GCV complexity or `n_eff` change is introduced.
+The complete comparison is **negative: 664/870 correct, 30/145 exact**, versus
+matched global **674/31** and saved **676/34**, all at **852/870 coverage**.
+Local models win GCV on 87/146 scans, but all fits hit their declared iteration
+caps. Retain the global default and saved support without parameter adjustment;
+`results/local_gaussian_20260923/report.md`.
 
 `local_patch_orientation.toml` declares the September 23 patch-frame ablation:
 `[model] centerline_degree = 2`, `[selection] centerline_fit = "ordinary_least_squares"`,

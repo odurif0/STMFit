@@ -16,12 +16,21 @@ no variants combined and no settings tuned after grading. Labels are used only
 by external grading; this reused development benchmark is not independent
 validation. See the [support/score comparison](docs/src/unit_assignment.md#complete-disk-support-and-final-gaussian-score-2026-09-21).
 
-The **September 23 local patch-frame comparison** is negative: **670/870
+The **September 23 locally oriented Gaussian comparison** is negative:
+**664/870 correct, 30/145 exact**, versus matched global refit **674/31** and
+byte-identical saved reference **676/34**, all at **852/870 coverage**. The
+label-free GCV pool selects local models on 87/146 scans; lower GCV does not
+improve recognition. All 584 fits pass native validity but hit their iteration
+caps, so they are not converged optima. N, patch sampling and the split cache
+stay fixed. Retain support, below historical **677/36**; no promotion or tuning.
+See the [local-model result](docs/src/unit_assignment.md#locally-oriented-gaussian-model-2026-09-23-negative).
+
+The earlier **September 23 local patch-frame comparison** is negative: **670/870
 correct, 30/145 exact**, versus exactly replayed global support **676/34**,
 at unchanged **852/870 coverage**. Two exact chains are gained, six lost.
 Only patch sampling rotates along a label-free quadratic centerline; N and
 both saved molecular fits remain unchanged. Keep support, below historical
-677/36; no angle tuning or promotion. This does not test a locally rotated
+677/36; no angle tuning or promotion. That ablation did not test a locally rotated
 molecular fit. See the [local-frame result](docs/src/unit_assignment.md#local-chain-tangent-patch-frames-2026-09-23-negative).
 
 The **original-support registered refit** resolves the three earlier span

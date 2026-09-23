@@ -1880,31 +1880,13 @@ checks**, plus paired-grade arithmetic assertions. All 580 paired file compariso
 
 ### Fisher centering and final covariance candidates (2026-09-21, centering gain)
 
-The authorized comparison tests two independent numerical changes against the
-673/33 affine-descriptor candidate. `unit_assignment_centered_fisher.toml`
-subtracts the opposite-fold training mean at Fisher scoring, retaining exactly
-the same learned weights, folds, amplitude mapping and mirror. This corrects
-the training/scoring origin mismatch, but any common offset disappears under
-per-file z-scoring; only the actual downstream effect matters for recognition.
-
-`unit_assignment_shrunk_gmm.toml` instead applies analytical Ledoit-Wolf shrinkage
-to the final hard-cluster covariances only. Earlier EM/reassignment steps, final
-pre-score means, memberships and free proportions remain unchanged. There is
-no composition prior or class count. The explicit historical covariance floor
-stays `1e-6`. Dependent lobes prevent treating the shrinkage formula as iid noise
-calibration or treating its votes as chemical confidence.
-
-One Viper job (30 minutes, four requested CPUs) regenerates the control and both
-complete 146-scan / 900-key arms, then runs numerical diagnostics. Two fixed
-whole-scan training halves diagnose GMM sensitivity; they are not a held-out
-recognition test and do not retrain Fisher within the halves. No normalization
-change, combined arm or setting search is included. The external grade follows
-all predictions and checks, without tuning afterward. Job **11891104** completes
-**0:0 in 9m04s** on `vipl2005`, from source **0d58b44**. All **590 output files
-and the Slurm log** are fetched and checksum-identical. The twelve control
-tables replay exactly; **76 saved-output checks** pass. All arms retain 900 keys,
-146 scans and the same seven unavailable assignments. Grading alone then selects
-the unchanged 145 scans / 892 predicted lobes / 870 truth positions.
+`unit_assignment_centered_fisher.toml` subtracts the opposite-fold training
+mean at scoring, retaining learned weights, folds, amplitude mapping and mirror.
+`unit_assignment_shrunk_gmm.toml` independently applies Ledoit-Wolf shrinkage
+only to final hard-cluster covariances; earlier learning, memberships, free
+weights and the `1e-6` floor stay fixed. Neither uses labels or composition
+priors. Whole-scan withdrawal diagnoses training sensitivity, not held-out
+recognition or calibrated chemical confidence.
 
 | Version | Correct / 870 | Correct / classified | Exact / 145 |
 |---|---:|---:|---:|
@@ -1913,43 +1895,21 @@ the unchanged 145 scans / 892 predicted lobes / 870 truth positions.
 | Training-mean Fisher | 675 (77.6%) | 675/849 (79.5%) | 33 |
 | Final covariance shrinkage | 665 (76.4%) | 665/849 (78.3%) | 34 |
 
-All native arms classify 849/870, with 16 missing positions, five aligned
-abstentions and 38 extra lobes. Fisher centering changes just two final decisions:
-lobe 3 of `240815_048.sxm` and `240817_076.sxm`, both `1→0`, with final vote
-margins 0.1 and 0.9. Each scan improves 4→5 correct. There are **two scan gains,
-zero losses and 143 ties**, no exact-chain or grading-orientation change.
+All native arms classify **849/870**, with 16 missing positions, five aligned
+abstentions and 38 extra lobes. Centering changes lobe 3 of `240815_048` and
+`240817_076` from 1 to 0: **two scan gains, zero losses, 143 ties**, no exact-chain
+change. Shrinkage changes 22 decisions: **five gains, eleven losses, 129 ties**;
+two exact chains gained, one lost. Better covariance conditioning is not better
+recognition. Retain centering **675/33** at that stage, reject shrinkage; neither
+beats historical **677/36**. No combination or post-grade tuning follows.
 
-The two training-fold offsets are **4.51785984** and **4.44803586**. They change
-all 893 finite Fisher scores, but much of their common offset disappears in
-per-file z-scoring; median absolute standardized change is **0.02968**. Four GMM
-vote frequencies and two final assignments change. This small measured gain is
-not evidence that an origin correction solves the remaining recognition problem.
-
-Shrinkage changes 22 final decisions: **five scan gains, eleven losses, 129 ties**,
-net **minus eight correct**. It gains exact chains `240814_011` and `240814_025`
-but loses `240818_020`, hence 34 exact. Nineteen changed decisions land at the
-unchanged zero-margin vote tie; all three other changes, at margin 0.9, reduce
-the scan grade. Grade orientation changes on three scans, not spatial monomer
-correspondence. Full-cohort shrinkage coefficients range **0.0327–0.0452**;
-median covariance condition number improves **23,138 → 191**, while recognition
-worsens. Final pre-score memberships/means/free weights are exactly unchanged.
-Whole-scan withdrawal changes **370/893 → 350/893** GMM decisions and mean absolute
-vote change **0.2685 → 0.2492**; considerable training sensitivity remains.
-These diagnostics do not calibrate noise or chemical confidence.
-
-**Decision at that stage: retain `unit_assignment_centered_fisher.toml` at 675/33
-as the opt-in working candidate; no champion promotion.** Reject final shrinkage as the
-working replacement despite one extra exact chain. Historical 677/36 remains
-ahead by two correct positions and three exact chains merely to equal it. Its
-classified coverage is also higher, so 79.5% versus 79.3% alone is not a victory.
-No combined variant, post-grade tuning, count refit or unknown25 rerun follows.
-This reused benchmark supplies development evidence, not independent validation.
-
-Verification passes **1,186 focused Julia 1.13 assertions**, the saved-output
-checks and paired-grade arithmetic. Every one of the **580 paired scan rows and
-24 changed decisions**, including losses, is retained in
-`results/numerical_signals_20260921/report.md` and its linked tables. The bounded
-comparison is complete; the broader historical target remains open.
+Source **0d58b44**, job **11891104**, **0:0 in 9m04s**; all 146 scans / 900 keys,
+590 outputs/log fetched and checked, twelve control tables byte-identical.
+Verification: **1,186 focused assertions**, 76 saved-output checks and paired
+arithmetic. Full numerical diagnostics, all 580 paired scan rows and 24 changed
+decisions remain in [journal](journal.md) and
+`results/numerical_signals_20260921/report.md`. This reused development benchmark
+is not independent validation.
 
 ### Complete-disk support and final Gaussian score (2026-09-21)
 
@@ -2475,6 +2435,28 @@ training gate (`all_admissible` stays fixed). Reject this ablation, not all
 local-orientation molecular fits; keep support below historical **677/36**.
 Source **87235dc**, job **11950305**, **0:0 in 9m01s**; complete checks and
 paired losses: [journal](journal.md), `results/local_orientation_20260923/report.md`.
+
+### Locally oriented Gaussian model (2026-09-23): negative
+
+Unlike sampling-only rotation, this refits the Gaussian base with quadratic
+tangents recomputed from current centers at every evaluation, without extra
+angle parameters. Local/global ellipses share an initialization, pixels, bounds
+and 300-iteration LM budget. Valid minimum full-parameter GCV adds the local
+candidate to the global pool; patch sampling and the split cache stay fixed.
+
+All **146 scans / 900 keys** finish. Local models win GCV on **87 scans**, but
+recognition gives **664/870 correct, 30/145 exact**, versus global refit
+**674/31** and byte-identical saved reference **676/34**, all at **852/870
+coverage**. Against global: 10 scan gains, 21 losses, 114 ties; two exact chains
+gained, three lost. The GCV reduction has median 0.604%, not a chemistry gain.
+All **584 fits** pass native validity but hit their iteration caps; this does
+not establish converged optima. Reject this version, retain support below
+historical **677/36**; no post-grade tuning or unknown25 rerun.
+
+Source **c692958**, job **11951208**, **0:0 in 26m58s**. All 775 outputs plus log are
+fetched and checked; **62,464 pre-grade and 41 aggregate checks** pass. Full
+method, stopping diagnostics and all 725 paired scan comparisons:
+[journal](journal.md), `results/local_gaussian_20260923/report.md`.
 
 ### Native numerical conventions
 

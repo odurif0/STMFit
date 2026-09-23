@@ -1,13 +1,24 @@
 # Model Selection
 
+The September 23 **local-Gaussian model comparison is negative**: valid minimum
+GCV selects local ellipses on **87/146** scans, but recognition falls to
+**664/870 correct, 30/145 exact**, versus matched global **674/31** and saved
+support **676/34**. Coverage stays **852/870**, counts **106/145 exact**. All
+584 fits pass native validity while hitting their iteration caps; validity is
+not convergence. Tangents reuse fitted centers, not free angles or labels.
+GCV retains full parameter counts; `n_eff`, physical guards, global sampling
+and split cache stay unchanged. No production selector change or promotion.
+Source **c692958**, job **11951208**; `results/local_gaussian_20260923/report.md`.
+
 The September 23 **local-tangent patch-frame comparison is negative**:
 **670/870 correct, 30/145 exact**, versus global replay **676/34**, with
 unchanged **852/870 coverage**. Sampling axes derive only from saved centers;
 all N/base/split geometry and Gaussian subtraction remain unchanged. Counts
 stay **106/145 exact**, with 16 missing positions and 38 extra lobes. Neither
 GCV, `n_eff`, physical guards nor assignment settings change. No locally
-oriented molecular model is fitted. Retain support, below historical **677/36**;
-source **87235dc**, job **11950305**, `results/local_orientation_20260923/report.md`.
+oriented molecular model was fitted in that ablation. Retain support, below
+historical **677/36**; source **87235dc**, job **11950305**,
+`results/local_orientation_20260923/report.md`.
 
 The September 23 **multi-start/subpixel pilot adds no admissible paired family**.
 Four fixed starts select by training RSS; paired GCV counts both added shift

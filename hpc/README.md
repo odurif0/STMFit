@@ -1236,6 +1236,15 @@ Manifest separately before login-node instantiate; fits run only on compute node
 Fetch all outputs to `results/local_gaussian_20260923/`. Before any external grade,
 verify reference replay, complete cohorts, fixed N/split cache, shared starts,
 native validity/full GCV, exported axes, subtraction and complete final votes.
+This comparison is now **complete and negative**: source **c692958**, job
+**11951208**, **COMPLETED 0:0 in 26m58s**, after 2m15s queued. All **775 outputs
+and the Slurm log** are fetched/checksummed. **62,464 pre-grade** and **41
+aggregate** checks pass. GCV-local gives **664/870, 30/145**, matched global
+**674/31**, saved reference **676/34**, with **852/870 coverage** throughout.
+All 584 fits pass native validity but hit their iteration caps. Retain saved
+support below historical **677/36**; no automatic retry, post-grade adjustment,
+combined variant or unknown25 rerun. Full evidence:
+`results/local_gaussian_20260923/report.md`.
 
 `hpc/compare_local_orientation.sbatch` runs two complete arms, `reference/` and
 `local_frame/`, at identical saved base/split geometry and N. Only patch sampling

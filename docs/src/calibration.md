@@ -653,6 +653,12 @@ support, residual guard and orientation-independent overlap/κ proxies are retai
 not reinterpreted as exact anisotropic overlaps. Circular Gaussians keep the
 exact global arithmetic. No degree/angle calibration from benchmark labels is
 allowed. Settings: `config/local_gaussian_orientation.toml`; see the journal.
+The completed test gives **664/870 correct, 30/145 exact**, versus matched
+global **674/31** and saved **676/34**, with unchanged **852/870 coverage**.
+All 584 fits are natively valid but iteration-limited, not converged optima.
+Lower GCV on 87/146 scans is not improved chemical recognition. Reject this
+version without changing bounds, degree, angles, iteration limits or thresholds;
+retain saved support. See `results/local_gaussian_20260923/report.md`.
 
 The September 23 `local_patch_orientation.toml` experiment derives a quadratic
 centerline tangent from frozen Gaussian centers and rotates only patch sampling.

@@ -2308,15 +2308,18 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0aj. **Does fitting locally oriented Gaussian lobes improve recognition?**
-    → **RUNNING CAMPAIGN, QUEUED (Sep 23)**. At saved N, compare a matched
-    global Gaussian refit with a valid-minimum-GCV pool adding locally oriented
-    elliptical Gaussians. Tangents are recomputed from current fitted centers;
-    no free angle or label is added. Exported axes reach residual subtraction,
-    while sampling stays global and the split cache stays frozen. Saved support
-    is a separate replay arm. One preparation day / one four-hour Viper job,
-    no retry, post-grade tuning, threshold relaxation or unknown25 rerun.
-    Source **c692958**, sole job **11951208**, submitted **16:17:08 CEST**;
-    initially pending under the shared `QOSGrpCpuLimit`, not a result.
+    → **COMPLETE; NEGATIVE (Sep 23)**. GCV-local gives **664/870 correct,
+    30/145 exact**, versus matched global **674/31** and exactly replayed saved
+    support **676/34**, all at **852/870 coverage**. Local models win GCV on
+    87/146 scans, but lose ten correct positions versus global. All 584 fits
+    pass native validity and hit their iteration caps; not converged optima.
+    N, global sampling, split cache, guards and full GCV complexity stay fixed.
+    Source **c692958**, sole job **11951208**, **0:0 in 26m58s**. All 775 outputs
+    and log fetched/checked; 62,464 pre-grade and 41 aggregate checks pass.
+    Reject this version; retain support below historical **677/36**. No retry,
+    angle/degree/threshold/budget adjustment, combination or unknown25 rerun.
+    `results/local_gaussian_20260923/report.md`. Cross-view residual subtraction
+    remains a distinct untested hypothesis, not a launched follow-up.
 
 0ai. **Does a local chain-tangent patch frame improve recognition?**
     → **COMPLETE; NEGATIVE (Sep 23)**. Local sampling gives **670/870 correct,
@@ -12987,3 +12990,91 @@ CPUs, 16 GB, four-hour limit and `--no-requeue`. It initially waits under
 with Slurm log alongside; local results go to `results/local_gaussian_20260923/`.
 No labels or downstream grade have been read for candidate selection. Remain
 with this job through completion and fetch; do not tune or resubmit on failure.
+
+**Completed negative comparison.** Job **11951208** starts **16:19:23 CEST**
+after **2m15s** under the shared quota and ends **16:46:21**, **COMPLETED 0:0
+in 26m58s**, on `vipc2488`. Four CPUs requested, eight allocated, 16 GB requested,
+MaxRSS **3,794,637 K**. All **146 scans / 900 keys** finish in each of the three
+arms. The **775 regular output files and Slurm log** are fetched locally and
+SHA256-identical. No job remains. Project/Manifest and every scientific source
+and setting remain unchanged from **c692958**; submission record **a76821d**.
+
+Independent saved-output verification passes **62,464 assertions** before any
+grade: all input/raw hashes; fifteen reference scientific tables byte-identical;
+complete keys/N; literal split cache; patch metadata and observed support; final
+vote; unscaled normal-equation tangents and explicit rotated Gaussian pixel
+values; native raw boxes, same clamped full-precision starts, overlap/κ proxies,
+residual/endpoint guards and full-parameter GCV selection. The geometry subset
+alone passes **21,755**, included in that total rather than added twice.
+
+All **584 fits** succeed without optimizer exceptions and pass native validity.
+Every LM run hits its cap: **146 circular initializations × 300**, **146
+elliptical initializations × 50**, **292 continuations × 300**. None reports
+convergence; no stationary or globally optimal fit is claimed. The control
+selects the final global ellipse on all 146 scans. The expanded pool selects
+**87 local and 59 global** ellipses; its relative GCV decrease has median
+**0.604%**, p95 **13.829%**, maximum **33.699%**. Sums of RSS for all global/local
+continuations are **20.13548 / 19.88516** (the latter is not the selected-pool
+sum). Absolute selected local angles have median/p95/max
+**8.565° / 26.437° / 39.437°**. No thresholds are derived from these diagnostics.
+
+All three arms retain the same four unavailable keys and **896 usable rows**.
+Both Fisher folds converge (434/462 rows). Complete-square patch counts are
+**893 / 893 / 894** in reference/global/GCV-local, for each of the three patch
+families; `all_admissible` and the existing disk support stay fixed. This is a
+support diagnostic, not a new training gate. Final populations `(0,1,?)` are
+**(673,223,4) / (684,212,4) / (659,237,4)**, outputs rather than class quotas.
+Reference→global changes **25 decisions** (7 zero→one, 18 one→zero),
+reference→GCV-local **38** (26/12), and global→GCV-local **35** (30/5).
+Whole-cohort learning can change predictions even on scans keeping global fits.
+
+External grading is run only after all complete inference and checks; its
+**41 aggregate assertions** pass on **145 scans / 892 predictions / 870 truth
+positions**:
+
+| Profile | Correct /870 | Exact chains /145 | Coverage /870 | Emitted errors |
+|---|---:|---:|---:|---:|
+| Historical saved reference | 677 | 36 | 854 | 177 |
+| Saved support, exact replay | 676 | 34 | 852 | 176 |
+| Matched global refit | 674 | 31 | 852 | 178 |
+| Expanded GCV global/local | 664 | 30 | 852 | 188 |
+
+Against saved support, global gives **9 scan gains / 10 losses / 126 ties**,
+net **−2 correct**, with two exact gains/five losses and three external grading
+orientation changes. GCV-local gives **10/21/114**, net **−12**, with three exact
+gains/seven losses and four grading-orientation changes. Against matched global,
+GCV-local gives **10/21/114**, net **−10**, with two exact gains/three losses and
+five grading-orientation changes. Its exact gains are `240314_Cu100_025` and
+`240814_022`; losses are `240817_004`, `240817_021`, `240817_044`.
+Confusion `(TN,FP,FN,TP)` is **(513,52,124,163) → (517,48,130,157) →
+(500,65,123,164)**: relative to global, local gains seven true positives but
+adds seventeen false positives. External orientation choices do not enter fits
+or assignment. All **725 paired scan rows**, including both historical
+comparisons and every loss, are saved. Counts stay **106/145 exact**, 14 short,
+25 long, 16 missing positions and 38 extra lobes.
+
+**Reject this bounded local-model version and retain saved support 676/34.**
+Historical **677/36** remains unexceeded. Better image GCV is again not better
+chemical recognition. Absorption of useful contrast by the refitted base is a
+possible explanation, not established causally. This iteration-limited result
+does not exhaust all locally oriented models. No angle clipping, degree search,
+class quota, threshold, optimizer-budget expansion, hybrid combination, count
+sweep, DFT change, retry or unknown25 rerun follows. Cross-view residual
+subtraction is a distinct future hypothesis requiring its own human-reviewed,
+bounded scope, not another job in this loop. Learning and inference are
+label-free; the repeatedly reused development benchmark is not independent
+validation or chemical proof for unknown 10–20mers. The bounded comparison is
+complete; the historical objective is not.
+
+Full report: `results/local_gaussian_20260923/report.md`. README, runbook,
+selection, assignment, config/calibration and HPC notes carry consistent
+headlines. The older Fisher-centering/shrinkage narrative is condensed on the
+assignment page while retaining its methods, scores, losses and links to full
+evidence here and in its report; the 200 KiB documentation limit is not raised.
+
+The final Julia **1.13.0** docs build passes without deployment, with the
+existing size/search warnings; assignment HTML is **198.83 KiB / 200 KiB**.
+No scientific code or parameter changed after submission or grading. Source,
+tests and conclusions are versioned; generated outputs remain ignored and are
+present locally for human review. This one-job loop is closed, not the broader
+historical objective.
