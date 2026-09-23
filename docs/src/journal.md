@@ -2304,8 +2304,16 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
-> Updated 2026-09-23. Questions from earlier sessions are archived in
+> Updated 2026-09-24. Questions from earlier sessions are archived in
 > `journal_archive.md`.
+
+0ap. **Does leave-target-out parity/mirror selection improve physical CC scores?**
+    → **AUTHORIZED, IN PROGRESS (Sep 24)**. Compare finite target-only control
+    against per-lobe state selection using only other available lobes in the
+    same view. All state costs, N, geometry, patches and classifier settings
+    stay frozen; no state sharing or benchmark label. Preparation ≤4 hours,
+    one Viper job ≤2 hours. Deliver complete full146 inference, exact control
+    replay, independent arithmetic and full145 paired reporting.
 
 0ao. **Does rejecting immediate-neighbor amplitude leakage improve tangent CC?**
     → **COMPLETE; NEGATIVE (Sep 23)**. Adjacent amplitudes give **671/870 correct,
@@ -13980,3 +13988,63 @@ The final source diff confirms no scientific change after **8460c08**; all 460
 output hashes and both Project/Manifest hashes remain unchanged after grading.
 Code/tests and the full outcome are committed for human review; generated
 evidence remains ignored and local. No job or next campaign is left running.
+
+## 2026-09-24 — Leave-target-out geometric-state decoding at frozen tangent costs
+
+**Deliverable and scope.** The user authorizes continuing autonomously after
+the four proposed leads. Start with the recommended low-cost state-selection
+ablation, not a blind search across settings. Preparation ≤4 hours from
+00:11 CEST and one Viper job ≤2 hours, four CPUs / 16 GB, no retry. Done means
+two complete 146-scan / 900-key arms, exact finite-tangent **679/33/852** replay,
+independent numerical checks and full145 external grading against this control,
+support **676/34/852** and history **677/36/854**. No guarantee of a global
+optimum follows from a finite comparison. The completed unknown25 workflow and
+the archived plan's scientific Must-NOT-have list remain unchanged.
+
+**Single intervention.** The existing decoder minimizes the sum of minimum
+chemical unary costs over a whole chain. For target lobe `i`, choose effective
+phase/mirror by minimizing that same sum over available `j != i` in its own
+acquisition view; then evaluate target `i` under the selected state. Accumulate
+the target-excluded sum directly, never subtract its cost from a full sum
+(avoids target-dependent rounding/cancellation). Reverse direction is redundant
+with effective phase at zero transition penalty. Keep first phase, then mirror
+for exact ties, and independent forward/backward states and chemical decisions.
+No softmax temperature, chemical-count prior, learned state weight or threshold.
+
+Missing target costs remain infinite/NaN with auxiliary `-1/?`. If no other
+available lobe remains, the CC score is explicitly unavailable, phase/mirror
+`-1/-1`; never use the held-out target as fallback. Downstream availability/vote
+rules remain unchanged. All rows survive. A different state can be selected for
+each target: output fields are `state_phase/state_mirror/training_cost`, not a
+falsely named common `global_*` state or a reconstructed global sequence. The
+audit retains all four objectives and training counts for each target/view.
+
+This is exclusion from the **state objective only**, not from the shared fit,
+overlapping patches or classifier training. It does not establish independent
+cross-validation, independent noise or calibrated probabilities. Raw NCC costs
+are unchanged; no likelihood is invented from them. Use the saved complete
+finite control from `results/tangent_neighbors_20260923/run_v1/reference`, not
+the rejected neighbor arm. No angle/neighbor columns, shared state, new physical
+gabarit, N/GCV/`n_eff` change, image refit or unknown25 rerun is included.
+
+`config/mold_leave_one_out.toml` declares all choices. The existing cached-input
+loader accepts an injected strict settings reader; its default behavior is
+unchanged. The two-arm runner reuses the existing finite decoder, feature join,
+unlabeled GMM/k-means, vote and validator without modifying their arithmetic.
+Only a single cached real scan may be decoded locally; full-cohort inference
+runs in the plain `hpc/compare_mold_loo.sbatch` job. Labels enter only the
+external report after complete inference and checks. No post-grade tuning.
+
+**Pre-run verification.** Julia 1.13.0 passes **2,491** synthetic/regression
+assertions: 874 unchanged decoder checks, 1,563 exhaustive held-out/state-
+influence checks, 14 missing/tie/schema checks and 40 runner checks, including
+independent saved-output verification in a subprocess. Changing a target's
+finite costs by up to `1e180` leaves its held-out state and objective literal;
+training sums never see those values. Empty/singleton evidence, mixed missing
+support, forbidden input, overwrite and failed-classifier paths are covered.
+
+Only lexicographic first real cached scan `240307_015.sxm` is decoded locally:
+45 checks pass and both finite-control tables replay exactly. Full-cohort
+dry-run confirms 146 scans / 900 keys without inference. Documentation builds
+without deployment, with existing size/search warnings. No setting is revised
+after the smoke; freeze the science before synchronization and the sole job.

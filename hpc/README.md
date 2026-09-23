@@ -1,5 +1,16 @@
 # Running STMFit on the MPCDF HPC cluster
 
+The September 24 leave-target-out comparison uses `hpc/compare_mold_loo.sbatch`:
+one two-hour Viper job, four CPUs / 16 GB, no retry. It reuses the saved **finite
+target-only** reference, including full-precision state audits, and runs the two
+classifiers sequentially per arm. No raw-image access or refit is needed.
+Set absolute `STMFIT_PROJECT_DIR`, `STMFIT_REFERENCE_DIR`, `STMFIT_OUTDIR` (new),
+and `JULIA_BIN` (1.13); pass all four through command-line `sbatch --export=ALL,...`.
+Sync committed code plus the ignored validated Manifest explicitly before
+login-node instantiate; verify hashes and run the script with `--dry-run` first.
+Compute only in Slurm, fetch all outputs/log, then run
+`test/verify_mold_loo_comparison.jl FINITE_REFERENCE OUTPUT` before external grading.
+
 The adjacent-amplitude tangent comparison uses
 `hpc/compare_tangent_neighbors.sbatch`: one two-hour Viper job, four CPUs / 16 GB,
 four one-thread score shards, no requeue. Set absolute `STMFIT_PROJECT_DIR`,

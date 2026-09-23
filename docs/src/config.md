@@ -1,5 +1,19 @@
 # Configuration Reference
 
+## Experimental leave-target-out state decoding (2026-09-24)
+
+`config/mold_leave_one_out.toml` fixes `state_objective="leave_target_out_unary_minima"`:
+phase/mirror for each target use only other available lobes in the same view.
+Chemical states and views remain independent, with explicit unit view weights,
+zero transition penalty, omission of both-infinite training costs and
+`state_tie="first_phase_then_mirror"`. `empty_training="unavailable"` emits no
+target CC score if no other observation remains; there is no target fallback.
+The saved target-Gaussian/affine audits are the only cost source. Neither the
+patches nor state costs are recalculated. Per-target state fields and the four
+audited objectives must not be interpreted as one common chain orientation.
+`test/run_mold_loo_comparison.jl` replays the omission-corrected control and the
+variant, with unchanged classifier/vote. Opt-in only; no production defaults.
+
 ## Experimental adjacent-amplitude tangent scoring (2026-09-23)
 
 `config/tangent_mold_finite.toml` is the target-Gaussian/affine control with

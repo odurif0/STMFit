@@ -1,5 +1,13 @@
 # Calibration: deriving parameters objectively
 
+The September 24 leave-target-out comparison changes only which lobes select
+phase/mirror, not the physical state costs or calibration. It uses other lobes
+in the same view without weighting, temperature, class-count prior or target
+fallback. Exact ties retain first phase/mirror; no remaining evidence gives an
+unavailable CC score. Geometry and overlapping patches remain shared, so this
+is not independent cross-validation or noise calibration. Settings are explicit
+in `config/mold_leave_one_out.toml`; no threshold is learned from the benchmark.
+
 The adjacent-amplitude experiment uses only the previous/next fitted lobes,
 without chemical labels, neighbor fitting or a signal-dependent selection rule.
 Their amplitude derivatives are sampled on the same native grid and target

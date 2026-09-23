@@ -32,8 +32,8 @@ function parse_cli(args)
     return o
 end
 
-function load_inputs(o)
-    ref=o["--reference-dir"]; opt=M.settings(o["--settings"])
+function load_inputs(o; read_settings=M.settings)
+    ref=o["--reference-dir"]; opt=read_settings(o["--settings"])
     cfg=load_config(o["--config"])
     cfg["model"]["mold_margin_mode"]=="absolute_cost_margin" || error("Frozen absolute margins required")
     cfg["preprocessing"]["patch_residual_filter"]=="smooth_residual" || error("Matched residual input required")
