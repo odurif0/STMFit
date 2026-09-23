@@ -17,6 +17,11 @@ surpassed overall. Source **8295965**, job **11955512**, **0:0 in 6m22s**;
 all 460 outputs/log fetched and independently checked. See the
 [tangent comparisons](docs/src/unit_assignment.md#tangent-physical-mold-scores-2026-09-23-trade-off).
 
+A subsequent read-only audit identifies periodic-substrate contamination,
+an inadequate surface-calibration bracket and signed values in the accepted
+GlcNAc observable. No new gabarit or grade is claimed; see the
+[DFT qualification](docs/src/dft_calculation_note.md#diagnostic-constant-current-observable).
+
 Earlier September 24, leave-target-out parity/mirror selection gives **670/32**
 against **679/33**, both coverage **852**: rejected without tuning. Source
 **61a56d6**, job **11955091**; `results/mold_loo_20260924/report.md`.

@@ -1,5 +1,11 @@
 # Configuration Reference
 
+`test/audit_qe_surface_calibration.jl` is a diagnostic-only companion to the
+QE-order builder: same six cube/frame/config inputs and new `--outdir`, optional
+`--dry-run`. It exports all configured height profiles, the unchanged isovalue
+response, target-plane samples and input hashes. No new scientific default,
+calibration, template-generation option or benchmark input is introduced.
+
 ## Experimental QE cube-order correction (2026-09-24)
 
 `config/qe_cube_order.toml` declares `cube_order="qe_last_axis_fast"` and

@@ -12,6 +12,10 @@ sole job **11955512**, **0:0 in 6m22s**, 1m49s queued. All 460 outputs/log are
 local/hash-checked; exact replay and independent checks pass before full145
 grading. `results/cube_order_20260924/report.md`.
 
+The subsequent surface audit does not produce new templates: periodic-substrate
+contamination, the isovalue bracket and signed GlcNAc values remain physical
+prerequisites. See [the DFT qualification](dft_calculation_note.md).
+
 Earlier September 24 comparison: leave-target-out parity/mirror selection gives
 **670/870 correct, 32/145 exact**, versus exactly replayed tangent control
 **679/33**, both coverage **852**. Two scan gains/eleven losses, one exact

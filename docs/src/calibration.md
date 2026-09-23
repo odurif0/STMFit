@@ -1,5 +1,12 @@
 # Calibration: deriving parameters objectively
 
+The September 24 read-only surface audit identifies a periodic-substrate branch,
+an isovalue lower bound above the entire GlcN target plane, and negative values
+already present in the accepted GlcNAc cube (35/289 target samples). A new root
+solver or zero-filling does not establish a physical calibration. QE's inherited
+cold-smearing weights can be signed; see [the calculation note](dft_calculation_note.md).
+No new calibration or template is promoted; existing recognition grades stand.
+
 The opt-in QE cube-order correction changes physical addressing, not calibration:
 the writer emits the third coordinate fastest, unlike the historical reader.
 Accepted cubes/frames reproduce old templates exactly under the old reader.

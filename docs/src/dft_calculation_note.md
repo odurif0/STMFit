@@ -160,9 +160,10 @@ satisfies the same acceptance criterion with its stricter `6e-8 Ry` result.
 ## LDOS quantity exported for STM molds
 
 `pp.x` uses `plot_num = 5` for the Tersoff-Hamann STM quantity. For this plot
-mode QE 7.4.1 ignores `emin`, `emax`, and `degauss_ldos`; inspection of
-`PP/src/stm.f90` confirms that it integrates states from the Fermi level to
-`E_F + sample_bias`. The production input is therefore
+mode QE 7.4.1 ignores `emin`, `emax`, and `degauss_ldos`; `PP/src/stm.f90` uses
+the window between the Fermi level and `E_F + sample_bias`, with smearing-weighted
+states outside that window (see the September 24 qualification below).
+The production input is therefore
 
 ```text
 sample_bias = -0.0220495933 Ry
@@ -183,6 +184,29 @@ orbital, tip relaxation, finite-temperature transport, solvent, or a calibrated
 constant-current feedback loop.
 
 ## Diagnostic constant-current observable
+
+**September 24 physical qualification.** The accepted GlcNAc cube contains
+**131,984 negative native values / 10,800,000** (minimum **−0.0037643**); GlcN
+contains none. On the existing 17×17 ring-frame plane at 0.50 nm, **35/289**
+GlcNAc samples are negative. This precedes normalization and is not created by
+trilinear interpolation. The [QE 7.4.1 STM source](https://github.com/QEF/q-e/blob/qe-7.4.1/PP/src/stm.f90)
+weights out-of-window states with `w0gauss`, using the SCF smearing type/width.
+Its [cold-smearing derivative](https://github.com/QEF/q-e/blob/qe-7.4.1/Modules/w0gauss.f90)
+is negative for x>√2. This observable is a potentially **signed weighted sum**,
+not a guaranteed nonnegative sum restricted to the bias window. This identifies
+a mechanism consistent with the cube; no wavefunction-level reproduction has
+yet attributed every negative value to it.
+
+The legacy surface search also includes the rise toward the periodic substrate
+image, then out-of-domain samples. At the 0.50 nm target the GlcN maximum is
+**2.48346e−7**, below the legacy isovalue lower bound **3.16228e−6**; retaining
+that bracket and interpolating cannot recover the molecular-side target.
+Ring-relative and Cu-relative heights are not interchangeable. No clipped or
+absolute-value density, arbitrary branch cutoff, new template, SCF criterion,
+registry replacement or recognition result follows this audit. The **5e−5 Ry**
+acceptance and plain/TF repeatability remain true, but neither guarantees a
+nonnegative STM observable or calibrated isosurface. Evidence:
+`results/qe_surface_audit_20260924/` and the dated journal entry.
 
 **Separate reconstructed-assignment reader warning (September 24).** Its
 historical `cc_mold_native.jl` preserves a first-index-fast token interpretation
@@ -214,8 +238,8 @@ frames, nominal and bracket heights, typed per-type nominal isovalues, z
 spacing, crossing convention, and map/mask hashes.
 The transformation leaves the common `5e-5 Ry` electronic acceptance criterion
 unchanged. It also does not turn the QE quantity into an absolute tunneling
-current: `plot_num=5` remains a discrete sum of `|psi_n(r)|^2` over the bias
-window, with no justified conversion to nA.
+current: `plot_num=5` remains a smearing-weighted (potentially signed) sum of
+`|psi_n(r)|^2` around the bias window, with no justified conversion to nA.
 
 The transformed maps use the temporary provider identity `stm_dft_cc_diag` and
 the separate config `config/joint_proxy_whole_roi_constant_current.toml`. They

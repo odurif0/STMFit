@@ -2968,6 +2968,10 @@ See `docs/src/selection.md` for the full guard specification and
    is solved. Root uniqueness is evaluated under the provenance-bound
    `--isovalue-scan-intervals` policy (default 1024 intervals), so it is a
    declared finite-resolution contract rather than a resolution-free claim.
+   September 24's separate reconstructed-mold audit also identifies a
+   periodic-substrate branch, an unsuitable legacy isovalue lower bound and
+   negative native GlcNAc values consistent with signed QE cold-smearing weights.
+   No new calibration is accepted; see `dft_calculation_note.md`.
    Multi-file diagnostic publication is now recoverable through prepared and
    committed gate-last transactions, but filesystem corruption and hostile
    concurrent sidecar mutation remain outside that bounded protocol rather than
@@ -14304,3 +14308,64 @@ hashes, log hash, template hash and Project/Manifest hashes are unchanged after
 grading. Code, tests and the measured outcome are committed for human review;
 generated evidence stays local and ignored. No job is running or queued from
 either completed loop, and no overall-optimum claim is made.
+
+## 2026-09-24 — Surface calibration audit: periodic image, bracket and signed weights
+
+The user authorizes autonomous continuation of the proposed leads. First
+deliverable: a defensible calibration followed by a fixed-method comparison,
+or a measured explanation of the unresolved physical prerequisite. Preparation
+is capped at three hours from **01:36 CEST**, at most one two-hour Viper job
+if a usable calibration exists. No new QE, label-driven tuning, unknown25 run,
+registry replacement, SCF acceptance change or arbitrary branch choice.
+
+`audit_qe_surface_calibration.jl` reuses the corrected reader and the exact
+existing grid/80-isovalue policy. It exports all 620 height profiles per type,
+the isovalue response, target-plane samples and input hashes. It never writes
+recognition templates. Local work is limited to the two existing physical
+cubes, not a multi-scan STM fit. Analytic fixtures test signs, interpolation,
+boundary support, missing target planes and exact legacy-response parity.
+
+**Measured before any grade.** The 0.50 nm target plane is completely inside
+both cubes, so its missing calibration is not due to missing target pixels.
+GlcN target min/median/max are **2.82323e−9 / 5.03694e−8 / 2.48346e−7**, all
+below the declared **3.16228e−6** isovalue lower bound. Its median falls to
+**1.07876e−9 at 0.70 nm**, then rises toward the next periodic substrate image
+to **1.93029e−3 at 1.40 nm**. The nominal full search extends beyond the cell;
+only 75/289 legacy samples remain finite at 1.50 nm and none at 1.60 nm.
+The corresponding GlcNAc median falls to **3.08400e−9 at 0.60 nm**, then rises
+to **1.28044e−3 at 1.40 nm**. The raw cube atom records place the periodic Cu
+layer at the cell ceiling (2.14863 / 2.18118 nm); molecule maxima are
+0.894665 / 0.972681 nm. Searching for the highest occupied sample over this
+domain can select another surface; these observations do not supply a uniquely
+justified new branch or setpoint.
+
+An exploratory read-only truncation at 0.7/0.9/1.1 nm (same old isovalue grid)
+does not solve calibration: the first two GlcN means are 0.2630 nm, while a
+1.1 nm cutoff returns 0.4927 nm with 279/289 support by retaining the rising
+branch. GlcNAc gives 0.2667/0.2938/0.4906 nm with 272/280/268 support. None of
+these arbitrary cutoffs is adopted, exported as a mold or benchmarked.
+
+**Further physical qualification.** GlcNAc has **131,984 negative raw grid
+values / 10,800,000**, minimum **−0.0037643**; GlcN has zero negatives. At the
+target GlcNAc has **35/289** negative samples, minimum **−9.46473e−8**; negative
+absolute sum **1.14197e−6**, positive sum **9.20855e−5**. Thus neither zero-filling
+nor a new root solver establishes a positive LDOS observable. Official QE 7.4.1
+`PP/src/stm.f90` and `Modules/w0gauss.f90` weight out-of-window states by the
+inherited cold-smearing derivative, negative for x>√2. This is a mechanism
+consistent with the signed cube, not a bit-level wavefunction reproduction.
+The earlier unqualified description as a nonnegative in-window |psi|² sum is
+corrected in the calculation note. Plain/TF cube equality and common **5e−5 Ry**
+SCF acceptance stand: numerical convergence/repeatability is not positivity or
+observable transfer.
+
+**Decision.** Calibration remains unresolved; no recognition job, grade,
+template replacement or density clipping is justified by this diagnostic.
+This is not a proof that physical calibration is impossible. A later PP-level
+observable comparison needs a stated nonnegative spectral convention and
+wavefunction provenance. Continue with the separately proposed counting link,
+not an improvised gabarit or benchmark-selected surface cutoff.
+Evidence: `results/qe_surface_audit_20260924/audit_v1/`; all old results remain.
+
+Julia 1.13 passes **31** analytical/interface checks and **592** independent
+real-cube checks using the other cube reader/interpolator; input hashes match.
+No template, prediction, count or benchmark file is changed by the audit.
