@@ -12447,3 +12447,20 @@ colon in a Julia range initially causes a parse error; using `range(...;step)`
 fixes it before any real search. The metadata-only dry-run finds base shift
 **(-35,0) pixels** without reading image values. Documentation builds with
 `--build-only`, existing size warnings and no deployment. Manifest unchanged.
+
+The earlier horizontal-registration regression suite also passes **9,221
+assertions** (total pre-run **25,067**). Source **68babd2** is committed before
+sync. Initial tracked-file-only copying omits the ignored Manifest, so remote
+Pkg starts resolving newer compatible versions. This is detected in the setup
+log, before any scientific job or image search. The precisely identified
+preparation process is terminated; local Project/Manifest are explicitly copied
+and pinned instantiation repeated, with four precompile workers. Both hashes
+remain identical before/after, including Manifest
+`617de8162fa4c7a814aacb106f145349bc57ead58ec9a6c332971a821b5974fe`.
+No local dependency file changes, manual Manifest edits or scientific retries.
+Checksummed, itemized source/input comparisons are empty. Julia **1.13.0**
+and the remote metadata-only dry-run pass. Slurm test-only **11948268** is not
+a real job; actual job **11948275** is submitted with explicit command-line
+exports, one-hour limit and `--no-requeue`. Outputs:
+`/ptmp/oldu/stmfit/image_registration_2d_20260923_v1`; local evidence:
+`results/image_registration_2d_20260923/`. No outcome is claimed at submission.
