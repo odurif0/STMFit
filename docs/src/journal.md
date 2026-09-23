@@ -13167,3 +13167,15 @@ the docs build succeeds without deployment (existing size warnings). Original
 base/split cache checksums match Viper; raw/template verification dereferences
 local symlinks. Project/Manifest hashes remain unchanged. Freeze source before
 remote computation; no job submitted yet.
+
+**Submission.** Scientific source **9d6c541** is checksum-identical at
+`/u/oldu/code/STMFit_cross_view_residual_20260923`. Raw/templates and original
+base/split inputs are also checksum-identical. Login-node instantiate/precompile
+passes with Julia **1.13.0**; the existing Manifest 1.12.6 warning does not alter
+Project or Manifest. The remote 146-file metadata dry-run succeeds.
+`sbatch --test-only` accepts resources (11952378 is a test ID, not a real job).
+The sole actual job **11952397**, submitted **18:04:47 CEST**, has four requested
+CPUs, 16 GB, a two-hour cap, `--no-requeue`, and all five path variables in the
+explicit command-line `--export=ALL,...` list. Initial state is pending.
+Output: `/ptmp/oldu/stmfit/cross_view_residual_20260923_v1`; Slurm log alongside.
+Remain through result/fetch; no retry or post-submission scientific change.
