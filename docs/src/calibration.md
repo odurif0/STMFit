@@ -653,6 +653,13 @@ initialization prevent claims of independent validation. Image agreement and
 fit improvement are not recognition improvement; no production calibration,
 noise, residual threshold or class prior changes in this pilot.
 
+The conditional `image_registered_fit.toml` arm holds the image-estimated
+translation fixed, alongside zero/free controls at unchanged physical bounds.
+Its parameter-count GCV includes both calibration coordinates; this is a
+plug-in diagnostic, not an unbiased effective-degrees-of-freedom derivation.
+It is synthetically tested but **not run on real data**, because the direct
+image estimates fail the declared identifiability/consistency checks.
+
 The September 23 `paired_shift.toml` pilot retains native N, geometry bounds,
 amplitude scale, observed pixels and noise. Four deterministic starts test the
 local minimum before a nested backward molecular translation, limited to one

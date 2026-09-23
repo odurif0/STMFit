@@ -1066,6 +1066,18 @@ estimates must all pass and agree within **0.25 px**. These are experimental
 identifiability checks, not calibrated uncertainty or production parameters.
 No new result can enlarge the window or relax a criterion automatically.
 
+`image_registered_fit.toml` is the conditional follow-up, not a production
+setting. It compares zero, image-fixed and free translation on the same native
+pixels/N with seeds **0/11/29/47**, radius **0.02**, **2,000 callbacks / 120 s**
+and unchanged solver tolerances. Window and **64-pixel** folds come from the
+image run; even fixed image coordinates count as two data-estimated parameters
+in the plug-in GCV diagnostic. Starts are chosen by training RSS alone. Full
+mean/view validity, full GCV and both heldout improvements remain required;
+free shifts must additionally stay **0.001 px** inside their window and agree
+with image estimates and across full/folds within **0.25 px**. All image
+estimates must be identified first. **Not executed on the real scan:** the
+September 23 image experiment fails identifiability and fold agreement.
+
 `paired_shift.toml` declares the September 23 multi-start/subpixel pilot on the
 saved blocking scan. Four starts use seeds `[0,11,29,47]`; zero is the native
 start, the others perturb only molecular raw coordinates by at most **0.02 of

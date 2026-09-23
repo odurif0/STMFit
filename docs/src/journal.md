@@ -12464,3 +12464,14 @@ a real job; actual job **11948275** is submitted with explicit command-line
 exports, one-hour limit and `--no-requeue`. Outputs:
 `/ptmp/oldu/stmfit/image_registration_2d_20260923_v1`; local evidence:
 `results/image_registration_2d_20260923/`. No outcome is claimed at submission.
+
+While the first job waits for the shared QOS quota, the conditional follow-up
+is implemented as `image_registered_fit.toml` / `diagnose_image_registered_fit.jl`.
+It binds the image/native observations, coordinates and original-shift hashes,
+then compares zero/image-fixed/free translation only after image identification.
+The existing saved-output writer gains optional extra columns only; its old
+defaults and original result format remain unchanged. Synthetic model recovery,
+independent arithmetic and a deliberately mocked calibration-input workflow
+pass **2,852 assertions**, plus **2,258** original writer/workflow regressions.
+The mocked input test does not validate a real image calibration. No second
+job is submitted: the real first-job result fails its scientific prerequisites.

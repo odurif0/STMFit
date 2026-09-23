@@ -37,7 +37,7 @@ function inputs(opts)
     return merge(input,(;settings,solver,step,folds))
 end
 
-function record(out,input,case,ctx,p,fit,audit,mode,fold,seed,scale)
+function record(out,input,case,ctx,p,fit,audit,mode,fold,seed,scale; extra=NamedTuple())
     id="$(case.profile).$(case.family).$mode.$fold.$seed"
     test=fold==0 ? Int[] : input.folds[fold].test
     pred=fit.predictions; d=ctx.data
@@ -55,6 +55,7 @@ function record(out,input,case,ctx,p,fit,audit,mode,fold,seed,scale)
     for k in (:agreement,:passed,:half_step_projected_gradient,:gradient_error,:gradient_tolerance,:rank,:condition)
         row["stationarity_"*string(k)]=string(getproperty(audit,k))
     end
+    for (key,value) in pairs(extra); row[string(key)]=string(value); end
     write_records(joinpath(out,"$id.fit.tsv"),[row])
     write_records(joinpath(out,"$id.parameters.tsv"),[Dict("parameter"=>string(j),"value"=>string(fit.params[j]),
         "initial"=>string(fit.diagnostic.initial[j]),"lower"=>string(fit.lower[j]),"upper"=>string(fit.upper[j]),
