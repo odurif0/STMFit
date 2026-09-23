@@ -2307,6 +2307,12 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-23. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0af. **Can deterministic starts or a residual 2D translation unblock the paired fit?**
+    → **AUTHORIZED; IN PREPARATION (Sep 23)**. One saved blocking scan, unchanged
+    N/pixels/noise/physical constraints; four starts, then a bounded two-axis
+    translation with spatial heldouts. No new recognition result yet. See the
+    dated experiment below and `config/paired_shift.toml`.
+
 0ae. **Can a different box-constrained solver resolve the nonstationary endpoints?**
     → **COMPLETE; NUMERICAL GAIN WITHOUT COMPLETE VALIDITY (Sep 23)**: unit-box
     SLSQP reduces all eight RSS objectives **0.75–6.73%** relative to exactly
@@ -12187,3 +12193,83 @@ within the unchanged limit at **199.97 KiB / 200 KiB**. The configuration page
 now emits a size warning at **101.12 KiB**; the search-index warning remains.
 Manifest SHA256 is unchanged. Validated code, tests and outcome documentation
 are committed; generated outputs remain in the ignored local results directory.
+
+### 2026-09-23 — Authorized deterministic starts and residual subpixel pilot
+
+The user authorizes the recommended sequence: a short SLSQP multi-start control,
+then a two-axis residual-registration pilot. Scientific deliverable: distinguish
+a different accessible local minimum from a supported residual displacement,
+with saved numerical evidence, or report a negative/inconclusive pilot. Start
+**09:52 CEST**; preparation at most **two hours**, then **one one-hour Viper job**,
+four requested CPUs / 16 GB, no automatic retry. A complete recognition comparison
+is conditional on a feasible pilot; an invalid pilot yields no partial grade.
+The completed unknown25 application is untouched. No class/sequence labels,
+expected N, composition prior, new count search, hidden threshold relaxation,
+pixel/scan removal, DFT, feedback-blur model, classifier change or retired
+orchestration is included. Scientific Must-NOT-have constraints remain intact.
+
+Reuse `240817_006.sxm` and its **6,496 observed registered pixels**, saved native
+N and all four shape/family starts. First fit fused and paired zero-shift models
+from four predetermined starts: original zero seed and Xoshiro seeds 11/29/47,
+perturbing molecular raw coordinates (not mean plane/acquisition coefficients)
+within **0.02 unit-box radius**, clipped to original bounds. This is a bounded
+local-start test, not a global optimum certificate or a benchmark-guided seed
+search. Lowest training RSS selects the returned start, followed by unchanged
+validity; there is no choice among starts based on heldout or chemical outcomes.
+
+The new nested model translates only backward molecular coordinates by at most
+**±1 pixel in x/y**, jointly with the original molecular, gain and plane terms.
+The forward view fixes the coordinate gauge. Both view planes are evaluated on
+their observed grid. Original accepted integer alignment remains fixed. Moving
+the continuous model instead of the data preserves every original observed
+pixel, with no interpolation or imputation. A zero displacement exactly nests
+the former paired predictor, including its floating-point arithmetic. Native
+physical checks remain; the mean residual guard uses the mean of the two
+predicted views, which need not equal the unshifted latent molecular model.
+Selection GCV uses the stacked observations and **all** fitted parameters;
+mean-only native IC values are not used/exported for acquisition-model selection.
+
+All calls use the previous SLSQP tolerances/finite differences, capped at
+**2,000 callbacks / 120 seconds**. Each start and its zero/free-shift comparison
+share the original-start RSS scale; independent stationarity uses that same
+scale and the unchanged 1e-6 threshold. The old solver helper gains an optional
+constant scale only; its existing default and production engine remain unchanged.
+No analytic background polishing is included in this scoped multi-start test.
+
+Two folds reserve alternate **16×16 pixel blocks**, with **two-pixel** boundary
+strips removed from training blocks to separate them from test blocks. Every
+pixel is scored once out of training; none is removed from the full fit. Both
+views at a pixel stay in the same fold. Each fold starts from the saved native
+vector and its predetermined perturbations, never a new full-fit endpoint.
+The saved N/support/native initialization nevertheless saw the full image, so
+this is conditional spatial prediction evidence, **not independent validation**
+or a claim of independent noise. Both folds must improve paired RSS, the full
+fit must improve paired GCV and pass the original mean/both-view validity,
+all three shifts must stay 0.001 pixel inside the bounds, and the fold shifts
+must agree within 0.25 pixel per coordinate. All criteria are explicit before
+real fits, not adjusted to clear the problematic pixels. Full Gaussian and
+split eligibility is required before considering a complete assignment run.
+
+The fixed schedule has **112 endpoints** (four families × four seeds × seven
+full/fold modes), sharded by family into four single-thread processes. Saved
+parameters, traces, residual maps, fold membership, original-start scales and
+audits permit re-reading without fitting or labels. The first synthetic test
+run exposes a test-only Julia tuple `isapprox` MethodError; broadcasting that
+comparison fixes the fixture assertion, without changing numerical settings.
+Initial SSH attempts time out; subsequent gateway/Viper access succeeds. No
+scientific job has been submitted at this preparation checkpoint.
+
+Automatic command review refuses the existing docs launcher because it contains
+`deploydocs`, even after checking Documenter's local CI autodetection. The safer
+alternative adds **`docs/make.jl --build-only`**, which skips the deployment call
+explicitly; the no-argument CI behavior stays unchanged. No publication is
+requested or performed. This is a documentation safety flag, not new scientific
+infrastructure or an authorization layer.
+
+Pre-run checks pass under Julia 1.13: **996 model/start/block tests**, **2,258
+synthetic runner/merge/independent-output assertions**, **118 previous-solver
+regressions** and **151 core-2D tests**, totaling **3,523**. The independent
+reader reconstructs peaks/view planes/shifts, objectives, heldout membership,
+full-parameter GCV, bounds and both final finite-difference stationarity checks.
+The local real-input dry-run validates all saved pixels without fitting; pixel
+steps are **0.0136986183953 nm** in both axes. The Manifest hash is unchanged.

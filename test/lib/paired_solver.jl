@@ -60,9 +60,10 @@ function from_unit(u,q0,lo,hi,tolerance)
 end
 
 "SLSQP callback counts are objective evaluations, not LM iterations."
-function solve(p,options,audit_options)
+function solve(p,options,audit_options; objective_scale=nothing)
     (;q0,lo,hi,predict,target)=p
-    scale=max(sum(abs2,predict(q0).-target),audit_options.objective_scale_floor)
+    scale=objective_scale===nothing ? max(sum(abs2,predict(q0).-target),audit_options.objective_scale_floor) : Float64(objective_scale)
+    isfinite(scale) && scale>0 || error("Positive finite objective scale required")
     width=hi.-lo; u0=(q0.-lo)./width
     from_unit(u0,q0,lo,hi,options.coordinate_roundoff_tolerance)==q0 || error("Initial vector changed")
     evaluations=Ref(0); gradient_evaluations=Ref(0); model_evaluations=Ref(0)

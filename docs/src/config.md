@@ -1053,6 +1053,26 @@ unknown25 change follows; see `results/gcv_reselection_20260922/report.md`.
 
 ## Opt-in diagnostic exploration settings (2026-09-18)
 
+`paired_shift.toml` declares the September 23 multi-start/subpixel pilot on the
+saved blocking scan. Four starts use seeds `[0,11,29,47]`; zero is the native
+start, the others perturb only molecular raw coordinates by at most **0.02 of
+their box width**, with clipping to the unchanged box. Mean/view planes, gain
+and translation always start unchanged. Each SLSQP call gets **2,000 callbacks,
+120 s**; tolerances remain those of `paired_solver.toml`. Every group shares
+the native-start RSS scale, also used by the unchanged stationarity audit.
+
+The added backward molecular translation has **±1 pixel** bounds per axis;
+planes stay on observed coordinates and no data are resampled. Full-parameter
+paired GCV counts both extra coordinates. `[preprocessing]` reserves alternating
+**16×16-pixel** blocks in two folds and removes a **two-pixel** boundary strip
+from training blocks only. All pixels remain in the full fits and each appears
+once in heldout scoring. Minimum training RSS selects starts before validation;
+neither heldout scores nor labels select starts. Pilot eligibility requires
+unchanged full mean/view validity, improved paired full GCV and RSS on each
+heldout fold, all estimated shifts at least **0.001 px** inside their bounds,
+and fold shifts agreeing within **0.25 px** per coordinate. These are fixed
+pilot criteria, not production calibration or independent-cohort validation.
+
 `paired_solver.toml` declares the September 23 one-scan LM/SLSQP comparison.
 Its `[model]` fixes method `unit_box_slsqp`, LM iterations and SLSQP objective
 callbacks at **10,000** each, a **600 s** per-optimizer limit, SLSQP relative

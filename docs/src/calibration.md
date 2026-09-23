@@ -642,6 +642,19 @@ of N or independent validation. See `results/gcv_reselection_20260922/report.md`
 
 ## Opt-in label-free exploration (2026-09-18)
 
+The September 23 `paired_shift.toml` pilot retains native N, geometry bounds,
+amplitude scale, observed pixels and noise. Four deterministic starts test the
+local minimum before a nested backward molecular translation, limited to one
+pixel in either direction. The forward view defines the molecular frame; view
+planes remain in observed coordinates to avoid trading a shifted plane for an
+intercept. At zero translation the previous paired model is reproduced exactly.
+Validity uses the predicted **observed-view mean**, not an unshifted latent
+molecule against shifted data; the original mean/view residual limit is intact.
+GCV counts all acquisition parameters. Block-heldout scoring is conditional on
+the already saved N, support and native initialization, not independent
+validation; correlated noise and shared initialization prohibit that claim.
+No parameter, noise, threshold or class composition is calibrated to labels.
+
 The September 23 `paired_solver.toml` experiment compares fresh native LM with
 SLSQP on the same fixed one-scan mean/paired objectives and native starts.
 An anchored affine unit-box parameterization and constant initial-RSS scaling

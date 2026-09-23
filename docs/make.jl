@@ -1,4 +1,5 @@
 import Pkg
+isempty(ARGS) || ARGS == ["--build-only"] || error("Usage: docs/make.jl [--build-only]")
 Pkg.activate(normpath(joinpath(@__DIR__, "..")))
 
 using Documenter, GaussianFit2D, GaussianFit1D, STMMolecularFit, STMFitCore, STMSXMIO
@@ -29,7 +30,9 @@ makedocs(
     ],
 )
 
-deploydocs(
-    repo = "github.com/odurif0/STMFit.git",
-    push_preview = true,
-)
+if "--build-only" ∉ ARGS
+    deploydocs(
+        repo = "github.com/odurif0/STMFit.git",
+        push_preview = true,
+    )
+end

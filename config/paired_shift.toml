@@ -1,0 +1,27 @@
+# Bounded numerical control, then a nested two-coordinate acquisition pilot.
+[model]
+method = "shared_shape_backward_translation"
+start_seeds = [0, 11, 29, 47]
+start_unit_box_radius = 0.02
+shift_max_px = 1.0
+slsqp_maxeval = 2000
+max_time_s = 120.0
+
+[selection]
+file = "240817_006.sxm"
+count_policy = "reuse_native_diagnostic_N"
+family_policy = "valid_minimum_full_parameter_gcv"
+start_policy = "minimum_training_rss_then_existing_validity"
+holdout_policy = "both_folds_improve_paired_rss"
+shift_interior_margin_px = 0.001
+fold_shift_agreement_px = 0.25
+failure_policy = "explicit_no_retry_no_partial_grade"
+
+[preprocessing]
+input = "verified_saved_registered_fit_pixels"
+support = "reuse_all_observed_pixels_without_resampling"
+reference_frame = "forward"
+background_coordinates = "observed_grid_in_both_views"
+noise = "reuse_native_noise"
+holdout_block_px = 16
+holdout_buffer_px = 2
