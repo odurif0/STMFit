@@ -23,6 +23,8 @@ using .PatchPreprocessing: PreprocessingSettings, load_patch_preprocessing,
     load_patch_residual_filter, patch_residual
 include(joinpath(@__DIR__, "lib", "patch_acquisition.jl"))
 using .PatchAcquisition
+include(joinpath(@__DIR__, "lib", "patch_frames.jl"))
+using .PatchFrames
 
 const DEFAULT_FEATURES = "results/unit_separability/lobe_features_selectedN_primary.tsv"
 const DEFAULT_OUT = "results/unit_separability/lobe_patches_selectedN_primary_bwd.tsv"
@@ -36,6 +38,7 @@ struct Options
     preprocessing::PreprocessingSettings
     residual_filter::String
     acquisition_shifts::Union{Nothing,String}
+    patch_frames::Union{Nothing,String}
 end
 
 function _parse_cli(args)
@@ -45,6 +48,7 @@ function _parse_cli(args)
     config_path::Union{Nothing,String} = nothing
     assignment_path::Union{Nothing,String} = nothing
     acquisition_path::Union{Nothing,String} = nothing
+    frames_path::Union{Nothing,String} = nothing
     half_nm = 0.32
     step_nm = 0.08
     i = 1
@@ -67,6 +71,10 @@ function _parse_cli(args)
             acquisition_path === nothing || error("Duplicate --acquisition-shifts")
             i < length(args) && !startswith(args[i+1], "--") || error("Missing acquisition table")
             acquisition_path = args[i+1]; i += 2
+        elseif arg == "--patch-frames"
+            frames_path === nothing || error("Duplicate --patch-frames")
+            i < length(args) && !startswith(args[i+1], "--") || error("Missing patch-frame table")
+            frames_path = args[i+1]; i += 2
         elseif arg == "--assignment-config"
             assignment_path === nothing || error("Duplicate --assignment-config option")
             i < length(args) && !startswith(args[i+1], "--") || error("Missing value for --assignment-config")
@@ -92,6 +100,7 @@ function _parse_cli(args)
               --config PATH     Optional count TOML: all three [preprocessing] fields
                                 (omitted: stride=1, flatten=plane+rows, smooth_radius_px=1)
               --acquisition-shifts PATH  Opt-in integer backward shifts and restored raw masks
+              --patch-frames PATH  Opt-in local sampling axes; model subtraction stays global
               --assignment-config PATH  TOML with [preprocessing] patch_residual_filter
                                         (omitted: legacy smooth_data_only)
               --half-nm FLOAT   Patch half-size [0.32]
@@ -107,7 +116,7 @@ function _parse_cli(args)
     isfile(features) || error("Features TSV not found: $features")
     preprocessing = load_patch_preprocessing(config_path)
     residual_filter = load_patch_residual_filter(assignment_path)
-    return Options(features, out_tsv, data_dir, half_nm, step_nm, preprocessing, residual_filter, acquisition_path)
+    return Options(features, out_tsv, data_dir, half_nm, step_nm, preprocessing, residual_filter, acquisition_path, frames_path)
 end
 
 function _eval_peak(x, y, cx, cy, ax, ay, A, spar, sperp, skew_ratio)
@@ -151,6 +160,7 @@ function main(args=ARGS)
         push!(get!(by_file, basename(row["file"]), Dict{String,String}[]), row)
     end
     shifts = read_shifts(opt.acquisition_shifts,keys(by_file))
+    frames = read_frames(opt.patch_frames, rows)
     coords = collect(-opt.half_nm:opt.step_nm:opt.half_nm)
     pix_names = [@sprintf("%03d", i) for i in 1:(length(coords)^2)]
 
@@ -222,9 +232,10 @@ function main(args=ARGS)
                     cx = _parse_f(row["x_nm"]); cy = _parse_f(row["y_nm"])
                     bwd_raw_vals = Float64[]; bwd_res_vals = Float64[]
                     diff_raw_vals = Float64[]; diff_res_vals = Float64[]
+                    pax, pay = patch_axis(frames, row, ax, ay)
                     for u in coords, t in coords
-                        x = cx + t * ax + u * (-ay)
-                        y = cy + t * ay + u * ax
+                        x = cx + t * pax + u * (-pay)
+                        y = cy + t * pay + u * pax
                         push!(bwd_raw_vals, _interp(xs_b, ys_b, z_smooth_b, x, y))
                         push!(bwd_res_vals, _interp(xs_b, ys_b, res_b, x, y))
                         push!(diff_raw_vals, _interp(xs_f, ys_f, diff_smooth, x, y))

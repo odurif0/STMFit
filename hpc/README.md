@@ -1221,6 +1221,26 @@ is complete; do not automatically resubmit or combine its candidates.
 No post-grade tuning, count refit, DFT change or unknown25 rerun follows.
 Full gains/losses: `results/scan_fisher_naming_20260922/report.md`.
 
+## Local patch-orientation comparison (September 23)
+
+`hpc/compare_local_orientation.sbatch` runs two complete arms, `reference/` and
+`local_frame/`, at identical saved base/split geometry and N. Only patch sampling
+axes rotate; the model used for subtraction and classifier settings remain fixed.
+One job, four requested CPUs, 16 GB, four hours maximum, explicit `--no-requeue`.
+Set the five absolute variables `STMFIT_PROJECT_DIR`, `STMFIT_CACHE_DIR`,
+`STMFIT_INPUT_DIR`, `STMFIT_OUTDIR`, `JULIA_BIN` and pass them explicitly with
+the actual command's `sbatch --export=ALL,...`; Viper's default export is NONE.
+Run `bash hpc/compare_local_orientation.sbatch --dry-run` first, then
+`sbatch --test-only`, then submit once. No science computation on login nodes.
+
+Inputs are `/ptmp/oldu/stmfit/fusion_comparison_20260920_v1/symmetric` and
+`/ptmp/oldu/stmfit/full146_v1_inputs`; source is a fresh committed checkout at
+`/u/oldu/code/STMFit_local_orientation_20260923`. Copy the ignored Manifest
+separately before login-node instantiate. Fetch outputs and logs to
+`results/local_orientation_20260923/`. Before external grading, verify all
+146 scans / 900 keys, literal frozen geometry, reference replay, frame geometry
+and actual finite-patch support. Do not automatically retry or change parameters.
+
 ## Factor-analyzer and Student learning comparison (September 22)
 
 `hpc/compare_factor_student_mixtures.sbatch` runs `control/`,

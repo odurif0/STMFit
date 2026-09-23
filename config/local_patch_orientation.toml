@@ -1,0 +1,9 @@
+# Experimental patch-frame ablation. Base/split fits, N and classifier stay frozen.
+[model]
+centerline_degree = 2
+
+[selection]
+centerline_fit = "ordinary_least_squares"
+
+[preprocessing]
+patch_orientation = "local_tangent"

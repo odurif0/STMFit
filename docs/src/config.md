@@ -1053,6 +1053,16 @@ unknown25 change follows; see `results/gcv_reselection_20260922/report.md`.
 
 ## Opt-in diagnostic exploration settings (2026-09-18)
 
+`local_patch_orientation.toml` declares the September 23 patch-frame ablation:
+`[model] centerline_degree = 2`, `[selection] centerline_fit = "ordinary_least_squares"`,
+and `[preprocessing] patch_orientation = "local_tangent"`. It fits the saved
+centers only, reducing the degree for short chains. `--patch-frames` is an
+explicit experimental input to the reconstructed runner and both patch exporters;
+it requires frozen base/split geometry and fresh patches. Complete keys and
+matching saved centers/axes are checked. Only sampling rotates; model subtraction,
+preprocessing and assignment settings do not. The default remains global-axis
+sampling. No angle search, label input or physical calibration change is added.
+
 `directional_response.toml` declares an image-only mirrored first-order
 response pilot, not production deconvolution. Acquisition-order quantiles
 **0/0.25/0.5/0.75/1** select five scans without grades. Mean lags

@@ -2307,6 +2307,15 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-23. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0ai. **Does a local chain-tangent patch frame improve recognition?**
+    → **AUTHORIZED, IN PREPARATION (Sep 23)**. Compare global versus quadratic
+    centerline-tangent sampling on all 146 scans / 900 keys, with the same
+    frozen base/split geometry, N, templates and assignment settings. Rotation
+    changes patches only, never Gaussian subtraction. One preparation day,
+    one Viper job capped at four hours, no parameter sweep or post-grade tuning.
+    Full-cohort inference precedes external grading; preserve **676/34** pending
+    a complete result. This is not yet a locally rotated molecular fit.
+
 0ah. **Does a small mirrored acquisition response explain more than translation?**
     → **COMPLETE; NO SUPPORT ON THE FIVE-SCAN PANEL (Sep 23)**. Four scans
     select zero response in all full/fold fits. The fifth selects **0.5/1/0 px**;
@@ -12723,3 +12732,64 @@ warnings and no deployment. No size limit, source setting or dependency
 changes after the scientific run. Code/tests and conclusions are committed;
 generated data and reports remain ignored. No further job is queued by this
 loop, and no production correction is promoted.
+
+## 2026-09-23 — Local chain-tangent patch frames: bounded recognition comparison
+
+The user authorizes continuation in a loop after the negative directional-response
+panel. The next scientific deliverable is a **complete recognition comparison**
+of global and local-tangent patch sampling, with a matched replay control.
+Definition of done: synthetic tests and one first-scan smoke pass; both arms
+finish all **146 scans / 900 lobe keys**; saved geometry/control/support are
+checked; external grading reports correct positions, exact chains and coverage;
+results are fetched, documented and source/conclusions committed for human review.
+The target remains exceeding lost historical **677/870, 36/145**, not improving
+pixel fit alone. The current saved support reference is **676/870, 34/145**,
+coverage **852/870**.
+
+**Scope/time box**, stated before implementation: one preparation day and one
+Viper job capped at **four hours**, four requested CPUs, 16 GB, no requeue/retry.
+Unknown25 is already complete and is not rerun. No new authorization/runtime
+framework, count selection, optimizer campaign, acquisition correction, DFT
+replacement, classifier tuning, composition prior or automatic combination.
+
+`config/local_patch_orientation.toml` fixes an ordinary-least-squares quadratic
+centerline through the saved Gaussian centers in their global chain frame.
+The degree reduces to one/two points as mathematically necessary (one point
+retains its global axis). Centering/scaling the longitudinal coordinate improves
+conditioning. Tangent slopes are analytic derivatives of that polynomial;
+the resulting proper rotations preserve the saved rounded axis norm. The
+same local frame samples forward 17x17, backward 17x17 and backward 9x9 patches,
+including auxiliary difference views. Geometry-bound tables require complete
+unique keys and matching centers/axes before extraction writes output.
+
+**Only sampling changes.** Frozen N, centers, amplitudes, widths, skew, baseline,
+tilt and the full-image Gaussian model remain literal cached inputs. In
+particular, subtracting a locally rotated Gaussian would be a different and
+inconsistent experiment: the saved model was fitted with a global axis.
+The raw preprocessing, matched residual filtering, templates, feature definitions,
+unlabeled training, seeds, votes and abstention rules are unchanged. Rotating
+the window can change finite-pixel coverage and therefore the existing training
+support mask; report this effect without filling/dropping pixels or tuning gates.
+
+This isolates a representation hypothesis after earlier geometric refitting
+improved RSS but degraded recognition. It is distinct from adding curvature as
+a classifier feature or freely optimizing DFT rotations against each class.
+A negative result would reject this particular patch-frame change, **not** a
+fully consistent local-orientation molecular fit. No label/grade/champion
+prediction enters either inference arm. Whole-cohort unsupervised learning is
+recomputed; this reused development benchmark is not independent validation.
+
+**Preflight, before grading:** Julia 1.13 passes **10,901 assertions** (frames
+1,131; patch extraction 416; pipeline 133; unchanged acquisition checks 9,221).
+The synthetic extractor comparison explicitly distinguishes rotating the
+sampling frame from incorrectly rotating the Gaussian subtraction model, for
+both residual policies and all forward/backward/difference views. An initial
+parenthesis error in that new test fixture is corrected before these passing
+runs; no scientific parameter is changed. The focused first-file smoke,
+`240307_015.sxm`, passes **205** additional checks. Its seven frame angles range
+from **−28.11 to +27.13 degrees**; identity frames reproduce all three patch
+exports byte-for-byte, and all keys/metadata remain unchanged. No chemical
+score is calculated for this scan. The full driver dry-run validates all
+**146/900** without reading image arrays. Docs build with existing size warnings
+and no deployment; Project/Manifest hashes remain unchanged. Existing remote
+base/split caches match local inputs under checksummed rsync dry-run.

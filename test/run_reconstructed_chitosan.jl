@@ -4,13 +4,14 @@
 include(joinpath(@__DIR__, "lib", "reconstructed_unit_assignment.jl"))
 using .ReconstructedUnitAssignment
 using TOML, Printf
+include(joinpath(@__DIR__, "lib", "patch_frames.jl"))
 
 const ROOT = dirname(@__DIR__)
 const BASE4 = "amp_prominence,amp_neighbor_ratio,integrated_prominence,amp_rel"
 const VALUE_OPTIONS = Set(["--data-dir", "--count-config", "--config", "--outdir",
     "--selected-summary", "--features", "--split-features", "--patches-fwd",
     "--patches-bwd", "--descriptor-patches", "--templates",
-    "--cube0", "--cube1", "--frame0", "--frame1", "--acquisition-shifts"])
+    "--cube0", "--cube1", "--frame0", "--frame1", "--acquisition-shifts", "--patch-frames"])
 
 function parse_options(args)
     if "--help" in args || "-h" in args
@@ -27,6 +28,8 @@ function parse_options(args)
           Matched-residual mode regenerates all patches; patch caches are rejected.
         --acquisition-shifts PATH: experimental fixed-N backward translations;
           restores raw missing masks in both views, before smoothing/subtraction.
+        --patch-frames PATH: experimental local sampling axes; frozen base/split
+          geometry and fresh patches required. Gaussian subtraction is unchanged.
         --dry-run: check supplied input paths and print the stages without computing.
 
         Production only: no benchmark labels, expected count, control sequence,
@@ -224,6 +227,14 @@ end
 function execute_pipeline(opts)
     VERSION.major == 1 && VERSION.minor == 13 || error("This reconstruction requires Julia 1.13")
     cfg = load_config(opts["--config"])
+    if haskey(opts,"--patch-frames")
+        all(haskey(opts,k) for k in ("--features","--split-features")) ||
+            error("Local patch frames require frozen base and split geometry")
+        any(haskey(opts,k) for k in ("--patches-fwd","--patches-bwd","--descriptor-patches")) &&
+            error("Local patch frames require fresh patches")
+        _, frame_base = lobe_table(opts["--features"])
+        PatchFrames.read_frames(opts["--patch-frames"], values(frame_base))
+    end
     if haskey(opts,"--acquisition-shifts")
         all(haskey(opts,k) for k in ("--features","--split-features")) ||
             error("Acquisition correction requires frozen base and split geometry")
@@ -302,7 +313,8 @@ function execute_pipeline(opts)
                 ["--features", geometry, "--data-dir", raw, "--config", abspath(opts["--count-config"]),
                  "--assignment-config", abspath(opts["--config"]),
                  "--half-nm", string(half), "--step-nm", string(step),
-                 (haskey(opts,"--acquisition-shifts") ? ["--acquisition-shifts",abspath(opts["--acquisition-shifts"])] : String[])...], outdir)
+                 (haskey(opts,"--acquisition-shifts") ? ["--acquisition-shifts",abspath(opts["--acquisition-shifts"])] : String[])...,
+                 (haskey(opts,"--patch-frames") ? ["--patch-frames",abspath(opts["--patch-frames"])] : String[])...], outdir)
             header, patchkeys = lobe_table(path; required=[prefix * lpad(string(i), 3, '0') for i in 1:side^2])
             length(filter(c -> startswith(c, prefix), header)) == side^2 || error("Unexpected patch dimensions: $path")
             require_same_keys(basekeys, patchkeys, name)

@@ -642,6 +642,15 @@ of N or independent validation. See `results/gcv_reselection_20260922/report.md`
 
 ## Opt-in label-free exploration (2026-09-18)
 
+The September 23 `local_patch_orientation.toml` experiment derives a quadratic
+centerline tangent from frozen Gaussian centers and rotates only patch sampling.
+It does **not** calibrate or refit molecular orientation: the Gaussian residual
+model retains its original global axis, N and all saved coefficients. Frame
+rotation preserves the rounded global-axis norm and applies identically to both
+scan directions. Existing finite-patch support can change with window coverage;
+it must be reported, not repaired through labels or adjusted abstention. The
+global-axis profile remains the default pending the matched full-cohort comparison.
+
 The September 23 `directional_response.toml` pilot tests relative scan-response
 phase on five acquisition-order scans. Equal forward/backward line times are
 required for the same-time-constant, mirrored first-order hypothesis. The

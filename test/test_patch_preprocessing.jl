@@ -251,6 +251,54 @@ mktempdir() do dir
             end
             @test_throws ErrorException mod._parse_cli(vcat(args,["--acquisition-shifts"]))
             @test_throws ErrorException mod._parse_cli(vcat(registered_args,["--acquisition-shifts",shifts]))
+
+            # Local axes affect sampling only, including the difference views.
+            _, base_rows = mod.ScriptUtils._read_tsv(feature_path)
+            frame_rows = mod.PatchFrames.local_frame_rows(base_rows,(degree=2,))
+            frames = mod.PatchFrames.write_frames(joinpath(dir,"$(name)_frames.tsv"),frame_rows)
+            frame_args = vcat(args,["--config",COUNT_CONFIG,"--assignment-config",MATCHED_CONFIG,"--patch-frames",frames])
+            extract_quietly(mod,frame_args)
+            @test read(output) == matched_bytes # identity is byte-identical
+            @test_throws ErrorException mod._parse_cli(vcat(args,["--patch-frames"]))
+            @test_throws ErrorException mod._parse_cli(vcat(frame_args,["--patch-frames",frames]))
+            angle = pi/6
+            frame_rows[1]["frame_axis_x"] = string(cos(angle))
+            frame_rows[1]["frame_axis_y"] = string(sin(angle))
+            frame_rows[1]["tangent_slope"] = string(tan(angle))
+            mod.PatchFrames.write_frames(frames,frame_rows)
+            for policy in (ASSIGNMENT_CONFIG,MATCHED_CONFIG)
+                extract_quietly(mod,vcat(args,["--config",COUNT_CONFIG,"--assignment-config",policy,"--patch-frames",frames]))
+                _, measured_rows = mod.ScriptUtils._read_tsv(output)
+                _, _, _, zf, sf, _, _ = mod.preprocess_channel(img,mod.get_channel(img,"Z";direction="fwd"),cfg)
+                _, _, _, zb, sb, _, _ = mod.preprocess_channel(img,mod.get_channel(img,"Z";direction="bwd"),cfg)
+                matched = policy == MATCHED_CONFIG
+                rf = matched ? _box_smooth(zf-model,1) : sf-model
+                rb = matched ? _box_smooth(zb-model,1) : sb-model
+                sources = name == "forward" ? [("raw_p",sf),("res_p",rf)] :
+                    [("bwd_raw_p",sb),("bwd_res_p",rb),("diff_raw_p",sf-sb),("diff_res_p",rf-rb)]
+                for (pixel_prefix,source) in sources
+                    samples = [mod._interp(xs,ys,source,1.2+t*cos(angle)-u*sin(angle),
+                        1.2+t*sin(angle)+u*cos(angle)) for u in coords for t in coords]
+                    want = mod._normalize_patch(samples)
+                    got = [parse(Float64,measured_rows[1][pixel_prefix*lpad(string(i),3,'0')]) for i in eachindex(want)]
+                    @test maximum(abs,got-want) < 5e-6
+                end
+                rotated_model = [begin
+                    dt = (x-1.2)*cos(angle)+(y-1.2)*sin(angle)
+                    du = -(x-1.2)*sin(angle)+(y-1.2)*cos(angle)
+                    .4+.17x+.08y+2exp(-.5*(dt/.2)^2-.5*(du/.15)^2)
+                end for y in ys,x in xs]
+                wrong = matched ? _box_smooth(z-rotated_model,1) : _box_smooth(z,1)-rotated_model
+                wrong_samples = [mod._interp(xs,ys,wrong,1.2+t*cos(angle)-u*sin(angle),
+                    1.2+t*sin(angle)+u*cos(angle)) for u in coords for t in coords]
+                actual_res = [parse(Float64,measured_rows[1][prefix*lpad(string(i),3,'0')]) for i in eachindex(wrong_samples)]
+                @test maximum(abs,actual_res-mod._normalize_patch(wrong_samples)) > 1e-3
+            end
+            # Bad frame coverage fails before an existing output can be clobbered.
+            write(output,"frame sentinel")
+            mod.PatchFrames.write_frames(frames,Dict{String,String}[])
+            @test_throws ErrorException extract_quietly(mod,frame_args)
+            @test read(output,String) == "frame sentinel"
             for (key,value) in (("stride",2),("flatten","none"),("smooth_radius_px",0))
                 config_fields = copy(defaults); config_fields[key] = value
                 cfg = write_config(joinpath(dir,"$(name)_$(key).toml"),config_fields)
