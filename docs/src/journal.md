@@ -13884,3 +13884,14 @@ Missing-cost/decoder regression adds 874 passing assertions, and reconstruction
 boundary checks add 133: 3,239 synthetic/regression assertions in total. This is
 test coverage, not a count of independent scientific experiments. Freeze and
 commit the scientific source before synchronization and the sole Slurm job.
+
+**Submitted.** Science is frozen at **8460c08**, checksum-identical in the new
+checkout `/u/oldu/code/STMFit_tangent_neighbors_20260923`. The ignored validated
+Manifest is explicitly copied before instantiate; both Project/Manifest hashes
+remain identical afterward. Julia 1.13.0 precompiles successfully (known
+1.12.6-resolution warning). All 146 raw scans, templates and both feature tables
+match by SHA256; remote metadata dry-run passes. The sole job **11953935** is
+submitted at **21:39:37 CEST**, four requested CPUs / 16 GB, two-hour limit,
+`--no-requeue`, with all five paths explicitly in command-line `--export=ALL,...`.
+Output: `/ptmp/oldu/stmfit/tangent_neighbors_20260923_v1`; Slurm log alongside.
+Follow this job through fetch/checks and the external report; do not resubmit.
