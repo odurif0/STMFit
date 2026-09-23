@@ -161,6 +161,7 @@ function main(args=ARGS)
     end
     shifts = read_shifts(opt.acquisition_shifts,keys(by_file))
     frames = read_frames(opt.patch_frames, rows)
+    model_axes = read_model_axes(rows)
     coords = collect(-opt.half_nm:opt.step_nm:opt.half_nm)
     pix_names = [@sprintf("%03d", i) for i in 1:(length(coords)^2)]
 
@@ -216,8 +217,9 @@ function main(args=ARGS)
                     spar = _parse_f(row["sigma_parallel_nm"]); sperp = _parse_f(row["sigma_perp_nm"])
                     skew = haskey(row, "skew_ratio") ? _parse_f(row["skew_ratio"]) : 1.0
                     isfinite(skew) || (skew = 1.0)
+                    maxis, mayis = patch_axis(model_axes, row, ax, ay)
                     for iy in 1:ny, ix in 1:nx
-                        model[iy, ix] += _eval_peak(xs_f[ix], ys_f[iy], cx, cy, ax, ay, A, spar, sperp, skew)
+                        model[iy, ix] += _eval_peak(xs_f[ix], ys_f[iy], cx, cy, maxis, mayis, A, spar, sperp, skew)
                     end
                 end
 

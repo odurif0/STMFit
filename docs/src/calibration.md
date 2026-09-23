@@ -642,6 +642,18 @@ of N or independent validation. See `results/gcv_reselection_20260922/report.md`
 
 ## Opt-in label-free exploration (2026-09-18)
 
+The September 23 local-Gaussian follow-up changes the **fitted base model**, not
+the patch frame. A quadratic tangent is derived at each evaluation from current
+fitted centers, with no independently optimized angles. Model axes are exported
+for both residual subtractions; the global sampling frame and split cache remain
+unchanged. Shared full-precision starts and equal 300-iteration LM limits compare
+global/local ellipses; only physically valid minimum-GCV models are eligible,
+with the original full parameter counts. Existing spacing/width/amplitude boxes,
+support, residual guard and orientation-independent overlap/κ proxies are retained,
+not reinterpreted as exact anisotropic overlaps. Circular Gaussians keep the
+exact global arithmetic. No degree/angle calibration from benchmark labels is
+allowed. Settings: `config/local_gaussian_orientation.toml`; see the journal.
+
 The September 23 `local_patch_orientation.toml` experiment derives a quadratic
 centerline tangent from frozen Gaussian centers and rotates only patch sampling.
 It does **not** calibrate or refit molecular orientation: the Gaussian residual

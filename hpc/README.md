@@ -1223,6 +1223,20 @@ Full gains/losses: `results/scan_fisher_naming_20260922/report.md`.
 
 ## Local patch-orientation comparison (September 23)
 
+The separate model follow-up uses `hpc/compare_local_gaussian.sbatch`:
+saved `reference/`, matched `global_refit/` and `gcv_orientation/`. Four
+one-thread refit shards share the job's four requested CPUs; 16 GB, four-hour
+cap, explicit `--no-requeue`, no automatic retry. Its axes affect the fitted
+Gaussian and subtraction, **not** patch sampling or the frozen split cache.
+Use the same five explicit exported path variables and existing raw/cache inputs
+below, with fresh source `/u/oldu/code/STMFit_local_gaussian_20260923` and output
+`/ptmp/oldu/stmfit/local_gaussian_20260923_v1`. Run the wrapper's metadata-only
+`--dry-run` and `sbatch --test-only` before the single submission. Copy the ignored
+Manifest separately before login-node instantiate; fits run only on compute nodes.
+Fetch all outputs to `results/local_gaussian_20260923/`. Before any external grade,
+verify reference replay, complete cohorts, fixed N/split cache, shared starts,
+native validity/full GCV, exported axes, subtraction and complete final votes.
+
 `hpc/compare_local_orientation.sbatch` runs two complete arms, `reference/` and
 `local_frame/`, at identical saved base/split geometry and N. Only patch sampling
 axes rotate; the model used for subtraction and classifier settings remain fixed.

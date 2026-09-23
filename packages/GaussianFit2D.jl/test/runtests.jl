@@ -30,3 +30,4 @@ using GaussianFit2D
 end
 
 include("fused_roi.jl")
+include("local_orientation.jl")

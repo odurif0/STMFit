@@ -2307,6 +2307,15 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-23. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0aj. **Does fitting locally oriented Gaussian lobes improve recognition?**
+    → **AUTHORIZED, PREPARATION (Sep 23)**. At saved N, compare a matched
+    global Gaussian refit with a valid-minimum-GCV pool adding locally oriented
+    elliptical Gaussians. Tangents are recomputed from current fitted centers;
+    no free angle or label is added. Exported axes reach residual subtraction,
+    while sampling stays global and the split cache stays frozen. Saved support
+    is a separate replay arm. One preparation day / one four-hour Viper job,
+    no retry, post-grade tuning, threshold relaxation or unknown25 rerun.
+
 0ai. **Does a local chain-tangent patch frame improve recognition?**
     → **COMPLETE; NEGATIVE (Sep 23)**. Local sampling gives **670/870 correct,
     30/145 exact**, versus byte-identical global replay **676/34**, both at
@@ -12877,3 +12886,89 @@ warnings (assignment page **199.95 KiB / 200 KiB**). Project/Manifest and all
 scientific code/settings are unchanged from the submitted version. The source
 and conclusions are committed; generated results remain ignored. Viper has no
 remaining job from this loop. The sampling-only experiment is closed.
+
+## 2026-09-23 — Locally oriented Gaussian model: bounded fixed-N comparison
+
+The user authorizes the next loop after sampling-only rotation regresses to
+670/30. Deliverable: a complete external recognition comparison of a genuinely
+refitted local-orientation Gaussian model against a matched global refit and the
+saved **676/870, 34/145** reference. Done requires tests, one first-file smoke,
+complete outputs on 146 scans / 900 keys, independent saved-output checks,
+external grade and paired losses/coverage, fetched artifacts, committed findings
+and human review. Historical **677/870, 36/145** remains the target.
+
+Budget stated before implementation: **one preparation day and one Viper job
+capped at four hours**, four requested CPUs / 16 GB, no requeue or automatic
+retry. No count sweep, expected-N input, class quota, label-driven angle,
+classifier change, acquisition correction, DFT replacement, unknown25 rerun or
+retired agent/activation machinery. The already completed application is not
+reopened. This is a Gaussian-base ablation: the independent asymmetric split
+cache remains literal, as in the earlier base-geometry comparisons.
+
+`config/local_gaussian_orientation.toml` declares quadratic ordinary-least-
+squares tangents derived from the **current decoded fitted centers**, recomputed
+inside every forward-model evaluation. No per-lobe orientation parameter or
+composition prior is introduced. The count and full native parameter dimensions
+are unchanged. Circular Gaussian predictions use the exact old arithmetic because
+they are rotation invariant; no duplicate circular local fit is needed. The
+global mode remains the package default. Experimental settings are consumed by
+the dedicated worker, not silently activated in production counting configs.
+
+Each scan gets one shared native global circular initialization, then the same
+circular-to-elliptical warm start with **50 LM iterations**, reused from the
+September 22 matched-geometry experiment. Two elliptical continuations share
+that full-precision vector, original ROI/tube/axis, data, physical boxes and
+**300 LM iterations**: one global, one locally oriented. Both skip a second
+global search. The control selects the valid minimum GCV among the two global
+initializations and global continuation; the expanded candidate adds the local
+continuation, with global precedence on exact ties. Initial global candidates
+are retained explicitly so a worse continuation cannot replace a better valid
+initial fit. An infeasible family is recorded, not a dropped scan; no valid
+family for a scan, or an optimizer exception, stops the complete comparison.
+Native stopping/nonconvergence and physical validity are reported separately.
+
+There is no alteration to spacing/width/amplitude limits, support, residual
+guard, the native orientation-independent overlap/κ proxies, GCV formula or
+`n_eff = n ÷ 9` placeholder. These existing overlap/κ proxies are not redefined
+as exact orientation-aware overlaps. Full original parameter counts apply to
+GCV; tangents reuse coordinates already counted, not extra fitted angles.
+GCV selection is image-only and happens before any chemical grade.
+
+Selected per-lobe model axes are exported alongside the unchanged global chain
+frame. Both patch exporters use them **only in Gaussian subtraction**, including
+the matched residual filter. All sampling windows stay global: this does not
+combine the previously rejected patch-frame rotation with the new model.
+Partial/nonfinite/inconsistent axis columns and stale patch caches are rejected.
+Standard native center/width precision is preserved; model axes keep the rounded
+global-axis norm. Both fresh arms regenerate descriptors, templates scores and
+unlabeled heads with the unchanged support config. The saved reference must
+replay independently; any new refit variability is not concealed as a local-axis
+effect. External labels are restricted to grading complete frozen predictions.
+This reused development benchmark remains distinct from independent validation.
+
+**Preflight, September 23.** Julia **1.13.0** passes **5,848 assertions**:
+GaussianFit2D 454 (including 303 new kernel/axis checks), patch preprocessing
+622, the new comparison 65, patch frames 1,131, reconstructed pipeline 133,
+matched geometry 111, frozen amplitudes 498 and variable projection 2,834.
+The actual synthetic local fit has RSS **9.23e-26**, versus **0.003324** global,
+and reports LM convergence. Two initial test-fixture bugs (a local scope and
+comparison of unchanged NaN config fields) were corrected, not model settings.
+
+The only real local fit uses the first lexicographic input, `240307_015.sxm`,
+at saved **N=7**, without labels. All four candidates are valid; the global
+continuation gives RSS **0.0607264**, GCV **7.20945e-6**, and the local gives
+**0.0591044**, **7.01688e-6** (about **2.67%** lower GCV). All four hit their
+predeclared LM iteration caps; validity is **not** convergence or stationarity.
+Eighteen smoke assertions cover both exports and all three fresh patch families.
+The independent saved-output check passes **160 assertions**, reconstructing
+the quadratic slopes by unscaled normal equations and explicit rotated Gaussian
+values, bounds, matched starts, overlap/κ, residual guard and full GCV. Its first
+version incorrectly norm-rescaled the global axis instead of reproducing the
+legacy component-wise rounding; the checker was corrected, without altering
+fits or tolerances. This is not a recognition result.
+
+Local metadata-only dry-run confirms **146 scans / 900 keys**. The docs build
+passes without deployment, with existing size warnings. Project/Manifest hashes
+remain unchanged. Checksummed dry-runs confirm the existing remote base/split,
+raw images (dereferenced local symlinks) and templates match the local inputs.
+No batch has yet been submitted. The source is committed before remote compute.

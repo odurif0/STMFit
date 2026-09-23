@@ -2,7 +2,7 @@ module PatchFrames
 
 using LinearAlgebra, Statistics, TOML
 
-export load_frame_settings, local_frame_rows, write_frames, read_frames, patch_axis
+export load_frame_settings, local_frame_rows, write_frames, read_frames, patch_axis, read_model_axes
 
 const GEOMETRY = ["x_nm", "y_nm", "axis_x", "axis_y"]
 const HEADER = vcat(["file", "lobe"], GEOMETRY,
@@ -123,5 +123,27 @@ end
 
 patch_axis(::Nothing, row, ax, ay) = (ax, ay)
 patch_axis(frames, row, ax, ay) = frames[rowkey(row)]
+
+"Optional fitted model axes are distinct from patch sampling axes."
+function read_model_axes(rows)
+    fields = ("model_axis_x", "model_axis_y", "model_orientation")
+    any(any(haskey(r, k) for k in fields) for r in rows) || return nothing
+    all(all(haskey(r, k) for k in fields) for r in rows) || error("Incomplete model-axis columns")
+    index = base_index(rows)
+    axes = Dict{Tuple{String,Int},Tuple{Float64,Float64}}()
+    modes = Dict{String,String}()
+    for (key, row) in index
+        mode = row["model_orientation"]
+        mode in ("global", "local_tangent") || error("Unknown exported model orientation")
+        get!(modes, first(key), mode) == mode || error("Mixed model orientations in a chain")
+        ax, ay = number(row,"axis_x"), number(row,"axis_y")
+        a, b = number(row,"model_axis_x"), number(row,"model_axis_y")
+        abs(hypot(a,b)-hypot(ax,ay)) <= 256eps(Float64)*hypot(ax,ay) || error("Model-axis norm mismatch")
+        a*ax+b*ay > 0 || error("Model axis reverses chain order")
+        mode == "global" && (a != ax || b != ay) && error("Global model-axis mismatch")
+        axes[key] = (a,b)
+    end
+    return axes
+end
 
 end

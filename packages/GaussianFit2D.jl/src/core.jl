@@ -891,9 +891,34 @@ function _chain_split_peak_value(dt, du, spar, sperp, skew_ratio, rmax)
     return exp(-0.5 * ((dt / sigma_t)^2 + (du / sperp)^2))
 end
 
+"Proper per-lobe axes from the CURRENT decoded centers, with no extra fit parameters."
+function _chain_peak_axes(ts, us, axisctx, ccfg::ChainSweepConfig)
+    mode = ccfg.chain_peak_orientation
+    mode in ("global", "local_tangent") || error("Unknown chain peak orientation: $mode")
+    ccfg.chain_tangent_degree in (1, 2) || error("Tangent degree must be 1 or 2")
+    length(ts) == length(us) || throw(DimensionMismatch("Center coordinates differ"))
+    ax, ay = axisctx.axis
+    n = length(ts)
+    # A circular Gaussian is exactly rotation invariant. Preserve the legacy
+    # arithmetic, not merely approximate equality after a redundant rotation.
+    if mode == "global" || n <= 1 || (ccfg.chain_circular_sigmas && !_chain_uses_split_profile(ccfg))
+        return fill((ax, ay), n)
+    end
+    all(isfinite, ts) && all(isfinite, us) && all(>(0), diff(ts)) || error("Invalid local-tangent centers")
+    degree = min(ccfg.chain_tangent_degree, n - 1)
+    centered = ts .- mean(ts)
+    scale = maximum(abs, centered)
+    xi = centered ./ scale
+    beta = hcat([xi .^ j for j in 0:degree]...) \ us
+    slopes = fill(beta[2] / scale, n)
+    degree == 2 && (slopes .+= (2beta[3] / scale) .* xi)
+    all(isfinite, slopes) || error("Nonfinite centerline tangent")
+    return [((ax - s*ay)/hypot(1, s), (ay + s*ax)/hypot(1, s)) for s in slopes]
+end
+
 function _chain_model_values(x, y, p, n::Int, axisctx, ccfg::ChainSweepConfig;
                              amp_min::Float64=NaN, amp_range::Float64=NaN)
-    b0, feats, _ts, _us, _spars, _sperps = _decode_chain(p, n, axisctx, ccfg;
+    b0, feats, ts, us, _spars, _sperps = _decode_chain(p, n, axisctx, ccfg;
                                                           amp_min=amp_min, amp_range=amp_range)
     # Tilted baseline: b0 + bx·x + by·y
     if ccfg.chain_tilted_baseline
@@ -902,10 +927,11 @@ function _chain_model_values(x, y, p, n::Int, axisctx, ccfg::ChainSweepConfig;
     else
         pred = fill(b0, length(x))
     end
-    ax, ay = axisctx.axis
+    peak_axes = _chain_peak_axes(ts, us, axisctx, ccfg)
     split_profile = _chain_uses_split_profile(ccfg)
     skew_rmax = max(ccfg.skew_ratio_max, 1.0 + EPS)
-    for f in feats
+    for (k, f) in enumerate(feats)
+        ax, ay = peak_axes[k]
         if split_profile
             for i in eachindex(pred)
                 dt = (x[i] - f.x_nm) * ax + (y[i] - f.y_nm) * ay

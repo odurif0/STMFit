@@ -194,13 +194,14 @@ end
 "Actual decoded geometry, with exactly the Gaussian forward basis (no surrogate)."
 function design_matrix(x, y, p, n, axisctx, cfg; amp_min, amp_range)
     G._chain_peak_profile(cfg) == :gaussian || error("First-pass counting diagnostic requires peak_profile=gaussian")
-    _, feats = G._decode_chain(p, n, axisctx, cfg; amp_min=amp_min, amp_range=amp_range)
+    _, feats, ts, us = G._decode_chain(p, n, axisctx, cfg; amp_min=amp_min, amp_range=amp_range)
     layout = linear_layout(n, cfg)
     A = Matrix{Float64}(undef, length(x), length(layout.names))
     A[:, 1] .= 1.0
     if cfg.chain_tilted_baseline; A[:, 2] .= x; A[:, 3] .= y; end
-    ax, ay = axisctx.axis
+    peak_axes = G._chain_peak_axes(ts, us, axisctx, cfg)
     for (j, f) in enumerate(feats)
+        ax, ay = peak_axes[j]
         A[:, length(layout.baseline)+j] .= @. exp(-0.5 *
             ((((x-f.x_nm)*ax + (y-f.y_nm)*ay)/f.sigma_x_nm)^2 +
              (((x-f.x_nm)*(-ay) + (y-f.y_nm)*ax)/f.sigma_y_nm)^2))

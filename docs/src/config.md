@@ -1053,6 +1053,19 @@ unknown25 change follows; see `results/gcv_reselection_20260922/report.md`.
 
 ## Opt-in diagnostic exploration settings (2026-09-18)
 
+`local_gaussian_orientation.toml` declares a separate fixed-N **model** test.
+`[model] chain_peak_orientation = "local_tangent"` and `chain_tangent_degree = 2`
+are consumed by `refit_local_gaussian_orientation.jl`; production counting
+configs remain global. The native forward model recomputes tangents from fitted
+centers without extra angle parameters. `[selection]` fixes `valid_min_gcv`,
+50 initial elliptical / 300 continuation LM iterations and global precedence
+on exact ties. `[preprocessing]` requires global patch sampling and
+`exported_model_axes` for residual subtraction. Saved reference, matched global
+refit and expanded-GCV candidate are three complete arms, with the same split
+cache and assignment config. Exported `model_orientation/model_axis_x/model_axis_y`
+must be complete and finite; the runner refuses stale patch caches. No physical
+bound, residual guard, GCV complexity or `n_eff` change is introduced.
+
 `local_patch_orientation.toml` declares the September 23 patch-frame ablation:
 `[model] centerline_degree = 2`, `[selection] centerline_fit = "ordinary_least_squares"`,
 and `[preprocessing] patch_orientation = "local_tangent"`. It fits the saved

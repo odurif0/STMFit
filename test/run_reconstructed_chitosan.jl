@@ -250,6 +250,11 @@ function execute_pipeline(opts)
     counts = isempty(selected) ? Dict{String,Int}() : selected_counts(selected)
     if haskey(opts, "--features")
         _, supplied = lobe_table(opts["--features"])
+        model_axes = PatchFrames.read_model_axes(values(supplied))
+        if model_axes !== nothing
+            any(haskey(opts,k) for k in ("--patches-fwd","--patches-bwd","--descriptor-patches")) &&
+                error("Exported model axes require fresh residual patches")
+        end
         if isempty(counts)
             for (file, _) in keys(supplied)
                 counts[file] = get(counts, file, 0) + 1

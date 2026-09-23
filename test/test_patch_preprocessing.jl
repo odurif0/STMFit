@@ -299,6 +299,50 @@ mktempdir() do dir
             mod.PatchFrames.write_frames(frames,Dict{String,String}[])
             @test_throws ErrorException extract_quietly(mod,frame_args)
             @test read(output,String) == "frame sentinel"
+            # A fitted MODEL rotation changes subtraction, NOT patch sampling.
+            model_feature_path = joinpath(dir,"$(name)_model_features.tsv")
+            model_rows = deepcopy(base_rows)
+            original_header = first(mod.ScriptUtils._read_tsv(feature_path))
+            model_header = vcat(original_header,["model_orientation","model_axis_x","model_axis_y"])
+            function save_model_rows()
+                open(model_feature_path,"w") do io
+                    println(io,join(model_header,'\t'))
+                    for r in model_rows; println(io,join([r[k] for k in model_header],'\t')); end
+                end
+            end
+            merge!(model_rows[1],Dict("model_orientation"=>"global","model_axis_x"=>"1","model_axis_y"=>"0"))
+            save_model_rows()
+            model_args = ["--features",model_feature_path,"--data-dir",dir,"--out",output,
+                "--config",COUNT_CONFIG,"--assignment-config",MATCHED_CONFIG]
+            extract_quietly(mod,model_args)
+            @test read(output)==matched_bytes
+            merge!(model_rows[1],Dict("model_orientation"=>"local_tangent",
+                "model_axis_x"=>string(cos(angle)),"model_axis_y"=>string(sin(angle))))
+            save_model_rows(); extract_quietly(mod,model_args)
+            _, actual_model = mod.ScriptUtils._read_tsv(output)
+            rotated_model = [begin
+                dt = (x-1.2)*cos(angle)+(y-1.2)*sin(angle)
+                du = -(x-1.2)*sin(angle)+(y-1.2)*cos(angle)
+                .4+.17x+.08y+2exp(-.5*(dt/.2)^2-.5*(du/.15)^2)
+            end for y in ys,x in xs]
+            rotated_residual = _box_smooth(z-rotated_model,1)
+            want = mod._normalize_patch([mod._interp(xs,ys,rotated_residual,1.2+t,1.2+u) for u in coords for t in coords])
+            got = [parse(Float64,actual_model[1][prefix*lpad(string(i),3,'0')]) for i in eachindex(want)]
+            @test maximum(abs,got-want)<5e-6
+            @test maximum(abs,got-expected)>1e-3 # not the original global subtraction
+            for column in original_header
+                @test model_rows[1][column] == base_rows[1][column]
+            end
+            for column in keys(actual_model[1])
+                startswith(column,name=="forward" ? "raw_p" : "bwd_raw_p") || continue
+                @test actual_model[1][column] == old[column]
+            end
+            for (field,value) in (("model_axis_x","NaN"),("model_axis_x","2"),("model_orientation","unknown"))
+                broken=deepcopy(model_rows); broken[1][field]=value
+                @test_throws ErrorException mod.PatchFrames.read_model_axes(broken)
+            end
+            broken=deepcopy(model_rows); delete!(broken[1],"model_axis_y")
+            @test_throws ErrorException mod.PatchFrames.read_model_axes(broken)
             for (key,value) in (("stride",2),("flatten","none"),("smooth_radius_px",0))
                 config_fields = copy(defaults); config_fields[key] = value
                 cfg = write_config(joinpath(dir,"$(name)_$(key).toml"),config_fields)

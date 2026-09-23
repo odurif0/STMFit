@@ -75,6 +75,10 @@ Base.@kwdef mutable struct ChainSweepConfig
     global_maxiter::Int = 5000
     global_tol::Float64 = 1e-5
     chain_circular_sigmas::Bool = false  # circular gaussians (spar=sperp per peak, fewer params)
+    # Experimental orientations are deterministic functions of fitted centers,
+    # not extra angles/parameters. Production callers retain the global default.
+    chain_peak_orientation::String = "global"
+    chain_tangent_degree::Int = 2
     shared_sigma_types::Int = 0           # 0: per-lobe sigmas; 1/2: shared widths by alternating lobe type
     chain_spacing_model::String = "free"  # "free" | "uniform" | "alternating" axial gap model
     chain_tilted_baseline::Bool = false   # add linear tilt bx·x + by·y to baseline (+2 params)

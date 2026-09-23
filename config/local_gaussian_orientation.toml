@@ -1,0 +1,14 @@
+# Fixed-N Gaussian-model comparison; no classifier or physical-bound changes.
+[model]
+chain_peak_orientation = "local_tangent"
+chain_tangent_degree = 2
+
+[selection]
+criterion = "valid_min_gcv"
+initialization_elliptical_maxiter = 50
+continuation_maxiter = 300
+tie_breaker = "global"
+
+[preprocessing]
+patch_orientation = "global"
+residual_geometry = "exported_model_axes"
