@@ -23,13 +23,14 @@ original supports replay exactly. No partial classifier or grade is produced.
 Keep saved support **676/870 correct, 34/145 exact**, below historical **677/36**.
 See the [original-support follow-up](docs/src/unit_assignment.md#original-support-registered-refit-2026-09-22-inconclusive).
 
-The **September 23 SLSQP follow-up** improves all eight diagnostic RSS
-objectives by **0.75–6.73%** versus exactly replayed LM controls. Projected
-gradients shrink **24,000–440,000-fold**, but none passes the fixed stationarity
-audit. Gaussian elliptical maxima reach **3.559 fused / 3.443 paired mean**;
-paired views **4.291/3.542** still fail 3.5. No fully valid family, benchmark
-grade or champion is added. See the
-[bounded-solver comparison](docs/src/unit_assignment.md#bounded-slsqp-2026-09-23-numerical-progress-only).
+The **September 23 multi-start/subpixel pilot** adds no fully valid paired fit.
+Four deterministic starts improve some circular fits, not eligibility. Residual
+2D translation reduces paired RSS **4.93–6.64%** and all eight block-heldout
+errors **0.53–13.47%**, but every selected shift saturates **−1 pixel in both
+axes**. The bounded pilot is inconclusive for larger shifts, not a proof that
+registration cannot help. No new recognition grade or promotion; keep **676/34**,
+below **677/36**. See the
+[subpixel pilot](docs/src/unit_assignment.md#multi-start-and-subpixel-pilot-2026-09-23-bound-limited).
 
 The preceding **registered native refit** is **inconclusive**, not a new
 benchmark result. At saved N, three scans fail the unchanged support-span

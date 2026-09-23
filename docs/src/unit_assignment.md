@@ -2391,72 +2391,52 @@ Labels remain external; this reused benchmark is not independent validation.
 
 ### Frozen-geometry amplitude profiling (2026-09-22): negative
 
-The Gaussian base amplitudes and tilted background are jointly re-estimated
-by bounded linear least squares at identical saved N, centers, widths and axes.
-Native coefficient bounds, split cache and assignment settings stay fixed.
-The profile gives **675/870 correct, 32/145 exact**, versus exactly replayed
-support **676/34**, both at **852/870 coverage**. Against control: four scan
-gains, five losses, 136 ties; zero exact gains, two losses. All 146 profiles
-satisfy KKT and reduce RSS (median **0.6814%**), without improving recognition.
-All 146 scans/900 keys remain. Source **567cdde**, job **11938782**, **0:0 in
-6m17s**; all outputs/log are fetched and checked. **Reject; retain support**,
-below historical 677/36, without post-grade tuning. The fixed cache is
-decimal-rounded geometry, not the unsaved full-precision fit. Full checks,
-losses and limits: [journal](journal.md),
-`results/frozen_amplitude_profile_20260922/report.md`. Labels remain external;
-this reused development benchmark is not independent validation.
+Bounded Gaussian amplitude/background profiling at identical saved N and
+decimal-rounded geometry gives **675/870 correct, 32/145 exact**, versus
+replayed support **676/34**, both at **852/870 coverage**. All 146 profiles
+satisfy KKT and reduce RSS, without improving recognition; no N, split or
+assignment settings change. **Reject; retain support**, below historical
+677/36. Source **567cdde**, job **11938782**, **0:0 in 6m17s**. Full cohort,
+paired losses, checks and limitations: [journal](journal.md),
+`results/frozen_amplitude_profile_20260922/report.md`.
 
 ### Matched geometric variable projection (2026-09-22): negative
 
-At saved N, joint/profiled optimization shares a native start, GCV-selected
-family, κ-penalized RSS, validity checks and LN_BOBYQA limits (800 evaluations /
-30 seconds). Split and assignment settings stay fixed. Profiled gives
-**632/870 correct, 20/145 exact**, versus joint and saved support **676/34**,
-all at **852/870 coverage**. Against joint: 18 scan gains, 44 losses, 83 ties;
-two exact gains, sixteen losses. All 146 scans/900 keys remain. RSS improves
+At saved N, matched joint/profiled searches share starts, family, objective,
+validity and budgets. Profiled gives **632/870 correct, 20/145 exact**, versus
+joint and saved support **676/34**, all at **852/870 coverage**. RSS improves
 on every scan, but 103 searches hit the cap; equal limits are not equal cost
-or proof of convergence. Source **7c5fb6c**, job **11940220**, **0:0 in 15m17s**;
-782 outputs/log fetched and checked. **Reject; retain support**, below
-historical 677/36, without post-grade tuning. Full evidence: [journal](journal.md),
+or convergence. No split/assignment change or scan exclusion. **Reject; retain
+support**, below historical 677/36. Source **7c5fb6c**, job **11940220**,
+**0:0 in 15m17s**. Full evidence and paired losses: [journal](journal.md),
 `results/geometry_profile_20260922/report.md`.
 
 ### Fixed-geometry acquisition registration (2026-09-22): negative
 
-Accepted integer-x translations move backward observations before subtraction
-of the unchanged Gaussian model. N, geometry, split cache, molds and assignment
-settings stay fixed. **104/146 scans** pass the declared gates; the others keep
-zero shift. All **629 comparable patches** improve spatial correlation (median
-**0.23→0.99**), but recognition falls to **671/870 correct, 26/145 exact**,
-against both native replay and observation-mask control **676/34**. Coverage
-falls **852→850/870**; eight exact chains are lost, none gained.
-
-**Reject this variant; retain saved support 676/34**, below historical 677/36.
-All 146 scans/900 keys remain. Source **9961973**, job **11941278**, **0:0 in
-6m52s**; 626 outputs/log fetched and checked. No post-grade tuning or chemical
-validation claim. Method, acceptance, losses and checks: [journal](journal.md),
+At frozen N/geometry/assignment, integer-x registration is accepted on
+**104/146 scans** and improves all 629 comparable patch correlations (median
+**0.23→0.99**). Recognition nevertheless falls to **671/870 correct, 26/145
+exact**, versus both controls **676/34**; coverage **852→850/870**. Eight exact
+chains are lost, none gained; no scan is excluded. **Reject; retain support**,
+below historical 677/36. Source **9961973**, job **11941278**, **0:0 in 6m52s**.
+Full methods, checks and losses: [journal](journal.md),
 `results/acquisition_registration_20260922/report.md`.
 
 ### Registered native refit (2026-09-22): inconclusive
 
-At fixed N, bounds and settings, matched registered/zero-shift Gaussian and
-split refits complete **143/146 scans**. Three fail native span constraints,
-two already in control: **574 valid, three failed, seven skipped** stages.
-No partial grade or rescue; retain **676/34**, below **677/36**. Fifteen
-reference tables replay exactly. Source **c7836f9**, job **11942091**,
-**FAILED 1:0 in 26m57s**; 549 outputs plus log fetched/checked, **22,742 checks**
-pass. Method and failure evidence:
+Matched registered/zero-shift refits complete **143/146 scans** at fixed N.
+Three fail native span constraints, two already in control. No partial grade
+or rescue; retain **676/34**, below **677/36**. Source **c7836f9**, job
+**11942091**, **FAILED 1:0 in 26m57s**. Full stage counts, replay and checks:
 [journal](journal.md), `results/registered_refit_20260922/report.md`.
 
 ### Original-support registered refit (2026-09-22): inconclusive
 
-The original native ROI/axis/tube/bounds are held fixed across the zero-shift
-and registered refits; only observed pixels enter their objectives. All 146
-supports replay exactly. The three span failures disappear, but
-`240817_006.sxm` fails the registered Gaussian residual guard; its split is
-skipped. **145/146 scans** complete all fits (**582 valid, one failed, one
-skipped**). No partial grade or rescue; retain **676/34**, below **677/36**.
-Source **98d664d**, job **11942393**, **FAILED 1:0 in 28m10s**; 706 outputs
-plus log fetched/checked. Evidence: [journal](journal.md),
+Freezing original native ROI/axis/tube/bounds resolves all three span failures.
+**145/146 scans** finish, but `240817_006.sxm` fails the registered Gaussian
+residual guard; its split is skipped. No partial grade or rescue; retain
+**676/34**, below **677/36**. Source **98d664d**, job **11942393**, **FAILED 1:0
+in 28m10s**. Complete support replay, stage counts and checks: [journal](journal.md),
 `results/registered_original_support_20260922/report.md`.
 
 ### Paired-acquisition feasibility (2026-09-22): inconclusive
@@ -2490,6 +2470,19 @@ Only fused split elliptical remains fully valid; no grade or promotion.
 Source **eec6c71**, job **11944232**, **0:0 in 11m32s**; 142 outputs plus log
 fetched/checked, **728,277 numerical assertions** pass. Keep **676/34**, below
 **677/36**. [Journal](journal.md), `results/paired_solver_20260923/report.md`.
+
+### Multi-start and subpixel pilot (2026-09-23): bound-limited
+
+Four deterministic starts improve circular RSS but add no fully valid family.
+The nested two-axis backward translation reduces paired RSS **4.93–6.64%**
+and all eight block-heldout errors **0.53–13.47%**. Every selected displacement
+saturates **−1 pixel in x/y**; this is not an identified offset or independent
+validation. Gaussian elliptical view maxima **4.144/3.660** and split elliptical
+**3.752/3.322** still fail the unchanged 3.5 limit. Only fused split elliptical
+remains valid; no bound enlargement, complete assignment run or partial grade.
+Keep **676/34**, below **677/36**. Source **b80df87**, job **11947363**,
+**0:0 in 9m52s**; 494 outputs plus log checked, **4,442 saved-output assertions**
+pass. [Journal](journal.md), `results/paired_shift_20260923/report.md`.
 
 ### Native numerical conventions
 

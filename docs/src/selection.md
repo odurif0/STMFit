@@ -1,5 +1,13 @@
 # Model Selection
 
+The September 23 **multi-start/subpixel pilot adds no admissible paired family**.
+Four fixed starts select by training RSS; paired GCV counts both added shift
+coordinates. Full RSS and all eight reserved-block errors improve, but selected
+shifts saturate **−1 pixel in both axes** and full view validity still fails.
+Only fused split elliptical stays valid. There is no N, threshold, `n_eff` or
+production-selection change, no post-result enlargement and no grade. Keep
+**676/34**, below **677/36**; `results/paired_shift_20260923/report.md`.
+
 The September 23 **SLSQP follow-up adds no fully valid family** despite lowering
 all eight diagnostic RSS objectives **0.75–6.73%**. All runs stop on
 FTOL_REACHED but fail the unchanged strict stationarity audit. Gaussian

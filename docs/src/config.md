@@ -1073,6 +1073,12 @@ heldout fold, all estimated shifts at least **0.001 px** inside their bounds,
 and fold shifts agreeing within **0.25 px** per coordinate. These are fixed
 pilot criteria, not production calibration or independent-cohort validation.
 
+The completed pilot improves all eight heldout RSS comparisons but no full
+paired validity. All twelve selected translations saturate both lower bounds;
+the interior criterion fails. No parameter is expanded or retuned. Keep saved
+support **676/34**, with no new recognition grade; see
+`results/paired_shift_20260923/report.md`.
+
 `paired_solver.toml` declares the September 23 one-scan LM/SLSQP comparison.
 Its `[model]` fixes method `unit_box_slsqp`, LM iterations and SLSQP objective
 callbacks at **10,000** each, a **600 s** per-optimizer limit, SLSQP relative

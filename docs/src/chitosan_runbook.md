@@ -1,6 +1,18 @@
 # Chitosan Benchmark and 10–20mer Runbook
 
-Latest September 23 diagnostic: **unit-box SLSQP improves optimization without
+Latest September 23 result: **the four-start/subpixel pilot remains inadmissible**.
+Source **b80df87**, job **11947363**, **0:0 in 9m52s**; all 112 endpoints finish
+without caps or exceptions. The shift reduces full paired RSS **4.93–6.64%**
+and all eight block-heldout errors **0.53–13.47%**, but all selected translations
+hit **−1 pixel in x/y** and no full paired fit passes unchanged validity.
+Do not expand bounds or claim an identified displacement from this result.
+All 494 outputs plus log are fetched/checked; **4,442 independent assertions**
+pass. No full146 classifier or partial grade: keep **676/870 correct, 34/145
+exact**, below historical **677/36**. Evidence:
+`results/paired_shift_20260923/report.md`. Use `docs/make.jl --build-only` for
+local documentation checks without invoking deployment.
+
+Earlier September 23 diagnostic: **unit-box SLSQP improves optimization without
 unblocking the paired-acquisition comparison**. All eight RSS objectives fall
 **0.75–6.73%** versus exactly replayed LM controls, but projected gradients
 **1.15e-6–2.07e-5** still exceed the unchanged `1e-6` stationarity criterion.

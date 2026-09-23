@@ -2308,10 +2308,14 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0af. **Can deterministic starts or a residual 2D translation unblock the paired fit?**
-    → **AUTHORIZED; IN PREPARATION (Sep 23)**. One saved blocking scan, unchanged
-    N/pixels/noise/physical constraints; four starts, then a bounded two-axis
-    translation with spatial heldouts. No new recognition result yet. See the
-    dated experiment below and `config/paired_shift.toml`.
+    → **COMPLETE; GAIN BUT BOUND-LIMITED, NO PROMOTION (Sep 23)**. Four starts
+    improve some circular fits, not full eligibility. Translation reduces paired
+    RSS **4.93–6.64%** and all eight block-heldout errors **0.53–13.47%**, but
+    every selected shift saturates **−1 pixel in x/y**, and no full paired fit
+    passes unchanged validity. Source **b80df87**, job **11947363**, **0:0 in
+    9m52s**; 494 outputs plus log fetched/checked, **4,442 saved-output assertions**
+    pass. No bound extension, new job or grade. Keep **676/34**, below **677/36**;
+    `results/paired_shift_20260923/report.md`. Larger shifts remain untested.
 
 0ae. **Can a different box-constrained solver resolve the nonstationary endpoints?**
     → **COMPLETE; NUMERICAL GAIN WITHOUT COMPLETE VALIDITY (Sep 23)**: unit-box
@@ -12285,3 +12289,83 @@ four requested. Preparation took about **22 minutes**, within the time box.
 The test-only number 11947362 is not a real job. Output directory:
 `/ptmp/oldu/stmfit/paired_shift_20260923_v1`; local evidence/report root:
 `results/paired_shift_20260923/`. No scientific result exists at submission.
+
+### Completed multi-start/subpixel result: predictive gain at the shift bounds
+
+Job **11947363** completes **0:0**, **10:14:33–10:24:25 CEST**, in **9m52s**
+after ten seconds queued, on `vipc2575`. Four single-thread workers run with
+eight allocated CPUs; maximum reported node memory **3.085 GB**. All **112
+endpoints** finish `FTOL_REACHED`, **151–1,067 callbacks**, **1.44–85.18 s**
+per call plus **0.007–0.748 s** setup, without exceptions, time/evaluation caps
+or retry. All 112 two-step gradient comparisons agree; six endpoints pass
+the unchanged stationarity audit, three on full training pixels. The twelve
+full-fit minimum-RSS winners themselves remain above the audit threshold;
+nearly equal alternative endpoints sometimes pass it. Solver stops, numerical
+audit, physical validity and global optimality are distinct.
+
+All eight unperturbed controls reproduce previous SLSQP parameters and RSS
+**exactly**. Multi-start improves Gaussian circular RSS **0.061% fused /
+0.099% paired**, and split circular **6.041% fused / 0.988% paired**. Elliptical
+differences are only machine-scale RSS ties. The first local start was not
+always the best accessible circular minimum; nevertheless no fully valid
+family is added. Across all 48 full-data endpoints, only the four fused split
+elliptical endpoints are valid. The one-case limitation does not establish
+global optimality or effects on other scans.
+
+After selecting each start only by training RSS, the two-coordinate translation
+reduces the four full paired objectives **4.93–6.64%**. Maximum residual/noise:
+
+| Family | Zero-shift RSS → shifted RSS | Shifted mean | Shifted forward/backward |
+|---|---:|---:|---:|
+| Gaussian circular | 0.906196 → 0.861552 | 4.000 | 4.721 / 4.143 |
+| Gaussian elliptical | 0.804992 → 0.751545 | 3.425 | 4.144 / 3.660 |
+| Split circular | 0.823428 → 0.775882 | 3.372 | 3.976 / 3.610 |
+| Split elliptical | 0.766537 → 0.718823 | 3.053 | 3.752 / 3.322 |
+
+The fixed **3.5** forward-view guard still rejects every full paired family;
+the first three also fail backward. The best fused Gaussian elliptical remains
+at **3.558737**, versus accepted fused split elliptical **3.164898**. A low-RSS
+model need not minimize the largest residual, and a fold-trained endpoint that
+passes full-view validity is not substituted after the fact for the declared
+full-training result.
+
+Heldout paired-RSS improvements, folds 1/2: Gaussian circular **6.878/2.037%**,
+Gaussian elliptical **11.780/0.526%**, split circular **5.471/3.426%**, split
+elliptical **13.467/1.249%**. All eight are positive. This conditional spatial
+prediction evidence is not a recognition grade or independent-cohort validation:
+saved N/support/native initialization still derive from the full image.
+
+All twelve selected shifts (four families × full/two folds) equal **−1 pixel
+in both x/y**, within endpoint roundoff. Of the 48 shifted endpoints, 46
+saturate both lower bounds; the other two saturate x and give y≈−0.984982.
+Agreement of saturated shifts does **not** identify the physical displacement
+or imply zero uncertainty. Every pilot family fails both full validity and
+the predeclared interior condition. The true optimum may lie outside this
+small shift box, but the experiment neither estimates it nor establishes that
+a larger correction would resolve the rejection. No bounds are enlarged.
+
+All **494 output files plus the Slurm log** are fetched and SHA256 checked.
+The real-output verifier passes **4,442 assertions** without optimization or
+labels, in addition to **3,523 pre-run tests**. Original configurations,
+Manifest hash, production fitter/assignment and unknown25 remain unchanged.
+Report and complete tables: `results/paired_shift_20260923/`.
+
+**Close this pilot without promotion or full146 grading.** Better circular
+starts and a favorable heldout translation direction are measured; no complete
+valid Gaussian/split comparison is available. Retain **676/870 correct,
+34/145 exact**, coverage **852/870**, below historical **677/870,36/145**,
+coverage **854/870**. No partial grade, chemical accuracy claim, second job,
+physical-bound relaxation, new model or automatic continuation follows.
+Older amplitude/geometric-profile summaries are shortened on the assignment
+page, retaining outcomes and full-report links, to keep its existing HTML size
+limit while adding the new result. No documentation size limit is increased.
+
+The first final build still exceeds that unchanged limit (**200.63 KiB**).
+Earlier fixed-geometry/registered-refit summaries are also condensed, preserving
+their outcomes and report links; no scientific result or size threshold changes.
+
+The final Julia 1.13 build passes with **`--build-only`**, no deployment and
+the existing warnings; assignment HTML is **199.89 KiB**, below 200 KiB.
+The Manifest remains byte-identical. All validated source, tests and conclusions
+are committed; generated reports/data remain in the ignored local result tree.
+The bounded deliverable is complete; the historical recognition target is not.

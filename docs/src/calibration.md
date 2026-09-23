@@ -655,6 +655,13 @@ the already saved N, support and native initialization, not independent
 validation; correlated noise and shared initialization prohibit that claim.
 No parameter, noise, threshold or class composition is calibrated to labels.
 
+Completed result: paired RSS and all reserved-block scores improve, but all
+selected shifts hit **−1 pixel in both axes** and full paired validity still
+fails. This is evidence of a direction worth diagnosing, not an identified
+registration correction or grounds for expanding bounds after observation.
+Native calibration and recognition reference **676/34** remain unchanged;
+`results/paired_shift_20260923/report.md`.
+
 The September 23 `paired_solver.toml` experiment compares fresh native LM with
 SLSQP on the same fixed one-scan mean/paired objectives and native starts.
 An anchored affine unit-box parameterization and constant initial-RSS scaling
