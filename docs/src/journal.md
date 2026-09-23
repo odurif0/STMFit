@@ -14048,3 +14048,14 @@ Only lexicographic first real cached scan `240307_015.sxm` is decoded locally:
 dry-run confirms 146 scans / 900 keys without inference. Documentation builds
 without deployment, with existing size/search warnings. No setting is revised
 after the smoke; freeze the science before synchronization and the sole job.
+
+**Submitted.** Science frozen at **61a56d6**, checksum-identical in
+`/u/oldu/code/STMFit_mold_loo_20260924`. The validated ignored Manifest is copied
+explicitly before login-node instantiate/precompile with Julia 1.13.0; both
+Project/Manifest hashes stay identical (known 1.12.6-resolution warning).
+All 43 top-level saved-reference files match local hashes; remote dry-run passes.
+Sole job **11955091**, submitted **00:24:36 CEST**, initially pending on shared
+CPU quota, with four requested CPUs / 16 GB, two-hour cap and `--no-requeue`.
+All four paths are explicit command-line exports. Output:
+`/ptmp/oldu/stmfit/mold_loo_20260924_v1`; Slurm log alongside. Follow this job
+through completion and full reporting; no duplicate submission.
