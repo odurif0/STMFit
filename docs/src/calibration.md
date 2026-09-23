@@ -1,5 +1,15 @@
 # Calibration: deriving parameters objectively
 
+The adjacent-amplitude experiment uses only the previous/next fitted lobes,
+without chemical labels, neighbor fitting or a signal-dependent selection rule.
+Their amplitude derivatives are sampled on the same native grid and target
+patch as the original tangent columns. `config/tangent_mold_neighbors.toml`
+differs from `config/tangent_mold_finite.toml` only by this basis extension; both
+explicitly retain the tested missing-cost omission. All numerical tolerances,
+physical widths, N and classifier settings remain frozen. Projected contrast
+energy diagnoses numerical loss, not retained experimental chemical information.
+This does not repeat the failed wider-patch experiment or change calibration.
+
 The September 23 mold-state comparison changes no physical calibration. It uses
 saved tangent costs, omits both-infinite observations from geometric-state
 selection without filling their scores, then separately tests a common

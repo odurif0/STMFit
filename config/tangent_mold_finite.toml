@@ -1,0 +1,13 @@
+# Corrected tangent control: same projection, omit unavailable unary evidence.
+[model]
+basis = "target_gaussian_affine"
+rank_rtol = 1e-12
+zero_norm_rtol = 1e-12
+
+[selection]
+minimum_observed_pixels = 5
+minimum_observed_fraction = 0.5
+missing_cost = "omit_both_infinite"
+
+[preprocessing]
+sampling = "native_box_bilinear"

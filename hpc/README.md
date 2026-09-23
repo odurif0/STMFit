@@ -1,5 +1,20 @@
 # Running STMFit on the MPCDF HPC cluster
 
+The adjacent-amplitude tangent comparison uses
+`hpc/compare_tangent_neighbors.sbatch`: one two-hour Viper job, four CPUs / 16 GB,
+four one-thread score shards, no requeue. Set absolute `STMFIT_PROJECT_DIR`,
+`STMFIT_CACHE_DIR` (original symmetric main/split features), `STMFIT_INPUT_DIR`
+(full146 raw scans/templates), `STMFIT_OUTDIR` (new), and `JULIA_BIN` (1.13).
+Sync committed source and explicitly copy the ignored validated `Manifest.toml`
+before login-node instantiate; verify Project/Manifest hashes before and after.
+Run `bash hpc/compare_tangent_neighbors.sbatch --dry-run` before submission and
+pass all five paths through command-line `sbatch --export=ALL,... --no-requeue`.
+The `reference` arm uses the target-only projection plus missing-cost omission;
+the `tangent` arm adds adjacent amplitude columns. Both rerun the complete
+assignment workflow from frozen geometry. No labels or grading in the job.
+Fetch every output/log, verify exact control replay, complete keys/N, unchanged
+upstream tables and independently recomputed scores before external reporting.
+
 The September 23 saved-cost decoder comparison uses
 `hpc/compare_mold_states.sbatch`: three sequential arms, four CPUs / 16 GB,
 two hours, no requeue. Set absolute `STMFIT_PROJECT_DIR`,

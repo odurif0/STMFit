@@ -7,10 +7,17 @@ function settings(path)
     c = TOML.parsefile(path)
     Set(keys(c)) == Set(["model", "selection", "preprocessing"]) || error("Unexpected tangent settings section")
     Set(keys(c["model"])) == Set(["basis", "rank_rtol", "zero_norm_rtol"]) || error("Unexpected tangent model key")
-    Set(keys(c["selection"])) == Set(["minimum_observed_pixels", "minimum_observed_fraction"]) || error("Unexpected tangent selection key")
+    sk = Set(keys(c["selection"]))
+    sk in (Set(["minimum_observed_pixels", "minimum_observed_fraction"]),
+           Set(["minimum_observed_pixels", "minimum_observed_fraction", "missing_cost"])) || error("Unexpected tangent selection key")
     c["preprocessing"] == Dict("sampling" => "native_box_bilinear") || error("Native tangent sampling required")
     m, s = c["model"], c["selection"]
-    m["basis"] in ("target_gaussian_affine", "target_gaussian_affine_orientation") || error("Unsupported tangent basis")
+    m["basis"] in ("target_gaussian_affine", "target_gaussian_affine_orientation",
+                   "target_gaussian_affine_adjacent_amplitudes") || error("Unsupported tangent basis")
+    # Absence preserves the historical configurations byte-for-byte. New paired
+    # experiments explicitly declare the previously tested missing-cost repair.
+    missing_cost = get(s, "missing_cost", "legacy_infinite")
+    missing_cost in ("legacy_infinite", "omit_both_infinite") || error("Unsupported missing-cost policy")
     for k in ("rank_rtol", "zero_norm_rtol")
         x = m[k]
         x isa Real && !(x isa Bool) && isfinite(x) && 0 < x < 1 || error("Invalid $k")
@@ -19,7 +26,9 @@ function settings(path)
         error("The native connected-mold observation guard is frozen")
     return (rank_rtol=Float64(m["rank_rtol"]), zero_norm_rtol=Float64(m["zero_norm_rtol"]),
             minimum_pixels=5, minimum_fraction=0.5,
-            orientation=m["basis"] == "target_gaussian_affine_orientation")
+            orientation=m["basis"] == "target_gaussian_affine_orientation",
+            adjacent_amplitudes=m["basis"] == "target_gaussian_affine_adjacent_amplitudes",
+            omit_unavailable=missing_cost == "omit_both_infinite")
 end
 
 number(r, k) = parse(Float64, r[k])
@@ -60,20 +69,32 @@ function basis_at(x,y,r; orientation::Bool=false)
 end
 
 "Native clipped box smoothing followed by the extractor's bilinear sampling."
-function native_design(xs,ys,r,coords,radius::Int; orientation::Bool=false)
+function native_design(xs,ys,r,coords,radius::Int; orientation::Bool=false, neighbors=AbstractDict[])
     validate_geometry(r)
+    foreach(validate_geometry, neighbors)
+    length(neighbors) <= 2 || error("At most two adjacent amplitude columns")
+    orientation && !isempty(neighbors) && error("Orientation/neighbor combination is outside this experiment")
     radius >= 0 || error("Negative smoothing radius")
     length(xs)>=2 && length(ys)>=2 && all(isfinite,xs) && all(isfinite,ys) &&
         all(>(0),diff(xs)) && all(>(0),diff(ys)) || error("Invalid native image grid")
     !isempty(coords) && all(isfinite,coords) || error("Invalid patch coordinates")
-    p=(r["source"]=="circ" ? 7 : 8) + Int(orientation && has_orientation(r))
+    p=(r["source"]=="circ" ? 7 : 8) + Int(orientation && has_orientation(r)) + length(neighbors)
     B=fill(NaN,length(coords)^2,p)
     cache=Dict{Tuple{Int,Int},Vector{Float64}}()
     function smoothed(ix,iy)
         get!(cache,(ix,iy)) do
             v=zeros(p); n=0
             for j in max(1,iy-radius):min(length(ys),iy+radius), i in max(1,ix-radius):min(length(xs),ix+radius)
-                v .+= basis_at(xs[i],ys[j],r;orientation); n+=1
+                b = basis_at(xs[i],ys[j],r;orientation)
+                # d(A_neighbor*G_neighbor)/dA_neighbor = G_neighbor. Evaluate
+                # on the SAME native pixels, then sample the TARGET's frame.
+                for q in neighbors
+                    dx=xs[i]-number(q,"x_nm"); dy=ys[j]-number(q,"y_nm")
+                    t=dx*number(q,"axis_x")+dy*number(q,"axis_y")
+                    u=-dx*number(q,"axis_y")+dy*number(q,"axis_x")
+                    push!(b,exp(-0.5*((t/number(q,"sigma_parallel_nm"))^2+(u/number(q,"sigma_perp_nm"))^2)))
+                end
+                v .+= b; n+=1
             end
             v/n
         end
@@ -90,6 +111,12 @@ function native_design(xs,ys,r,coords,radius::Int; orientation::Bool=false)
             (1-tx)*ty*smoothed(ix,iy+1)+tx*ty*smoothed(ix+1,iy+1)
     end
     return B
+end
+
+"Topological previous/next lobes, never chemical classes or nearest-by-signal selection."
+function adjacent_rows(base, file, lobe, n)
+    1 <= lobe <= n || error("Invalid target lobe")
+    return [base[(file,j)] for j in (lobe-1,lobe+1) if 1 <= j <= n]
 end
 
 "Unit-normalize columns before the fixed numerical SVD rank decision."

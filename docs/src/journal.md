@@ -2307,6 +2307,14 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-23. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0ao. **Does rejecting immediate-neighbor amplitude leakage improve tangent CC?**
+    → **AUTHORIZED, IN PROGRESS (Sep 23)**. Compare target-only tangent with
+    target plus previous/next amplitude columns on unchanged 17×17 patches.
+    Both arms retain the neutral missing-cost fix; no shared state, angle
+    derivative, neighbor refit or composition prior. Preparation ≤4 hours, one
+    Viper job ≤2 hours. Deliverable: complete full146 inference, exact control
+    replay, independent checks, and external145 gains/losses; not a protocol.
+
 0an. **Can missing-cost omission and then shared geometric mold states improve recognition?**
     → **COMPLETE; NEUTRAL FIX, NEGATIVE SHARING (Sep 23)**. Omission resolves
     infinite global cost and exactly preserves predictions at **679/33/852**.
@@ -13816,3 +13824,63 @@ All scientific source/settings still match **e8c9104**; local Project/Manifest
 hashes and all 63 fetched output hashes remain unchanged after external grading.
 The work and outcome are committed for human review; generated outputs stay
 ignored and locally available. No job or further campaign is left running.
+
+## 2026-09-23 — Bounded immediate-neighbor amplitude tangent comparison
+
+**Deliverable and scope.** The user authorizes another bounded loop. Determine
+whether residual amplitude errors from the immediately adjacent fitted lobes
+damage physical-mold recognition. Deliver two complete 146-scan / 900-key arms,
+an exact replay of the corrected target-only control, independent numerical
+checks, and the complete external145 paired report. Preparation is limited to
+four hours (started 21:21 CEST), followed by one Viper job of at most two hours.
+The unknown-chain application is already complete; its frozen workflow is not
+rerun or changed. The archived plan's scientific Must-NOT-have constraints stay
+in force; no process framework or additional campaign is introduced.
+
+**Fixed hypothesis.** Wider residual patches already failed (April 10 entries).
+Here the patch remains 17×17. At each frozen lobe, append only
+`d(A_j G_j)/dA_j = G_j` for topological neighbors `i-1` and `i+1` when present.
+Endpoint/singleton rules follow topology, not image intensity or chemistry.
+Evaluate each neighbor Gaussian on the same native image grid, apply the same
+box smoothing, and sample the **target** patch frame. Project the patch and
+both physical molds through this same enlarged nuisance span. Do not refit
+amplitudes, centers, widths, angles, N, patches, templates or classifier settings.
+No distance cutoff, class-count constraint, cross-view chemical/geometric state
+sharing, orientation derivative or label input. The existing SVD column
+normalization, rank/zero-norm tolerances and observed-pixel guard are unchanged.
+Contrast-energy retention is a numerical diagnostic, not chemical validation.
+
+**Control and configuration.** `config/tangent_mold_finite.toml` explicitly
+enables the previously neutral both-infinite-cost omission. The only difference
+in `config/tangent_mold_neighbors.toml` is the adjacent-amplitude basis name.
+The existing tangent scorer forwards the missing-cost flag to the tested decoder;
+old configurations preserve their legacy behavior byte-for-byte. Missing scores
+remain infinite/NaN, with unavailable assignments preserved. Existing comparison
+and production drivers are reused; `hpc/compare_tangent_neighbors.sbatch` is a
+plain two-arm Slurm wrapper with four requested CPUs / 16 GB, no retry.
+
+**Initial verification.** Under Julia 1.13.0 the projection suites pass
+546 existing plus 997 neighbor assertions. The synthetic pipeline passes
+622 existing extraction/preprocessing assertions plus 67 end-to-end assertions.
+Independent native full-grid smoothing/bilinear calculations cover circular and
+elliptical targets, angles, edge patches, radii and both endpoint rules. Original
+columns and masks are unchanged; projected scores match independent QR;
+duplicate-column rank behavior and invalid combinations are checked. Finite-only
+all-observed scores replay exactly, and sharded execution matches direct scoring.
+No benchmark grade has been used to choose or revise this variant.
+
+**Single-scan and preparation checks.** The sole real local smoke is again
+lexicographic first `240307_015.sxm` (seven frozen lobes). Both finite-control
+score tables exactly match the saved omission-corrected control. Across both
+views/arms, 17,408 independent QR/serialization/literal-span assertions pass.
+The neighbor span retains 94.9838–97.1642% of physical-template contrast energy
+(median 96.3517%); median patch retention changes 5.3405→1.0739% forward and
+6.5693→1.7974% backward. These diagnostics do not establish recognition benefit.
+Full146 metadata dry-run confirms 146 scans / 900 keys without raw computation.
+The Julia 1.13.0 documentation build passes, with existing size/search warnings;
+Project/Manifest remain hash-identical. No setting is revised after the smoke.
+
+Missing-cost/decoder regression adds 874 passing assertions, and reconstruction
+boundary checks add 133: 3,239 synthetic/regression assertions in total. This is
+test coverage, not a count of independent scientific experiments. Freeze and
+commit the scientific source before synchronization and the sole Slurm job.

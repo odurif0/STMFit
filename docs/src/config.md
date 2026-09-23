@@ -1,5 +1,21 @@
 # Configuration Reference
 
+## Experimental adjacent-amplitude tangent scoring (2026-09-23)
+
+`config/tangent_mold_finite.toml` is the target-Gaussian/affine control with
+`[selection] missing_cost="omit_both_infinite"`; the older tangent configs omit
+this optional key and preserve `legacy_infinite` behavior. The omission repair
+only affects the state objective, never fills scores or unavailable assignments.
+`config/tangent_mold_neighbors.toml` differs only by
+`[model] basis="target_gaussian_affine_adjacent_amplitudes"`. It adds the frozen
+Gaussian amplitude columns of the previous/next topological lobes: one at an
+endpoint, two inside a chain, none for a singleton. These columns use the same
+native smoothing and the target's unchanged 17×17 patch frame. Both patch and
+physical molds use the enlarged projector. No neighbor refit, distance cutoff,
+orientation derivative, cross-view state sharing or composition prior. Rank,
+zero-norm and support tolerances remain fixed. This bounded comparison is opt-in;
+no production default or physical calibration changes.
+
 ## Experimental mold-state decoding (2026-09-23)
 
 `config/mold_state_comparison.toml` fixes two ablations over saved full-precision
