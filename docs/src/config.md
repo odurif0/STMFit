@@ -1071,6 +1071,11 @@ full/fold lag/shift spreads are at most **0.5/1 px**. At least **three of five**
 complete scans must support the hypothesis. These are exploratory rules, not
 confidence intervals, chemistry thresholds or an automatic champion change.
 
+Completed pilot: **0/5** supported scans. Four select zero response throughout;
+the fifth's full gain **0.0341%** does not transfer to both heldout folds.
+No setting is promoted or retuned, and the benchmark remains **676/34**.
+See `results/directional_response_20260923/report.md`.
+
 `image_registration_2d.toml` declares the September 23 image-only residual
 registration experiment. Around the saved integer-x transform, the residual
 window is **±0.16 nm** per axis (rounded inward, capped at one quarter of image

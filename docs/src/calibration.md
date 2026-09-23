@@ -658,6 +658,12 @@ response direction is a matched negative control. No molecular geometry, N,
 unit assignment, physical calibration or champion parameter changes follow
 automatically, even from a positive image-only result.
 
+The completed panel supports **no correction (0/5)**. Four scans select the
+zero-response control; the fifth's tiny full-image gain is not stable across
+folds. Reverse-sign fits saturate the 4-pixel limit and are not a calibration.
+No physical parameter, direction convention or threshold is changed. See
+`results/directional_response_20260923/report.md`.
+
 The September 23 `image_registration_2d.toml` follow-up estimates displacement
 from observed images without a molecular shape, count or template. Its fixed
 **±0.16 nm** residual window is an exploratory hypothesis, not a newly measured

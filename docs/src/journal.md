@@ -2308,16 +2308,18 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0ah. **Does a small mirrored acquisition response explain more than translation?**
-    → **AUTHORIZED IMAGE-ONLY PANEL PILOT (Sep 23)**. Five acquisition-order
-    quantiles, selected without recognition errors, compare translation with
-    a centered first-order relative response and a reversed-direction control.
-    The response transfer is all-pass before the common interpolation; this
-    avoids a cross-smoothing objective that can improve by erasing signal.
-    Buffered row folds, actual-source masks and training-only gains are fixed
-    in `directional_response.toml`. One preparation day / one four-hour Viper
-    job maximum. No molecular deformation, N change, labels or deconvolved
-    production image. A positive diagnostic is not a recognition gain; retain
-    **676/34**, below **677/36**, pending evidence.
+    → **COMPLETE; NO SUPPORT ON THE FIVE-SCAN PANEL (Sep 23)**. Four scans
+    select zero response in all full/fold fits. The fifth selects **0.5/1/0 px**;
+    its full RSS gain is **0.0341%**, while one heldout fold worsens **4.69%**.
+    A descriptive replay at the control shift gives only **+0.0223%**,
+    not a new accepted variant. Reverse-sign controls favor the
+    **4-px boundary**, not an identified physical correction. Source **705f296**,
+    job **11949936**, **0:0 in 1m13s**; all 47 outputs/log fetched and SHA256
+    checked, **496,792** saved-output assertions pass. No threshold extension,
+    deconvolution, molecular fit or grade. This rejects the bounded single-pole
+    hypothesis as a useful next correction, not all instrumental effects or a
+    possible recognition gain from another method. Keep **676/34**, below
+    **677/36**; `results/directional_response_20260923/report.md`.
 
 0ag. **Is the model-preferred residual shift present directly in the two images?**
     → **COMPLETE; IMAGE PEAKS AMBIGUOUS, NO FOLLOW-UP FIT (Sep 23)**. All peaks
@@ -7997,7 +7999,6 @@ both transferred source trees. Each remote import resolves GaussianFit2D inside
 its own checkout under Julia 1.13.0; both metadata-only dry-runs identify 146
 files and create no output. Both dependency locks retain SHA-256
 `617de8162fa4c7a814aacb106f145349bc57ead58ec9a6c332971a821b5974fe`.
-
 Scheduler test-only 11878486 is not a scientific job. Actual **job 11878491**
 was submitted once, with all six required path variables explicitly exported
 in `sbatch --export=ALL,...`. Its result root is
@@ -12657,3 +12658,68 @@ does not execute the experiment; actual job **11949936** is submitted at
 `--no-requeue`. Initial state: **PENDING (QOSGrpCpuLimit)**. Results target:
 `/ptmp/oldu/stmfit/directional_response_20260923_v1`; local evidence will be
 `results/directional_response_20260923/`. No result is claimed while queued.
+
+### Completed directional-response result: no supported correction
+
+Job **11949936** waits **38 seconds** for the shared quota, then runs on
+`vipc2400` from **14:09:10 to 14:10:23 CEST**, **COMPLETED 0:0 in 1m13s**.
+Four CPUs requested / eight allocated; reported node peak memory **0.899 GB**.
+All five scans complete, with **79,394 / 101,520 / 102,384 / 102,816 / 107,568**
+common observed pixels. The conservative horizontal/vertical source radii are
+**123/5 px**. No scan is dropped or retried. All **47 outputs and the Slurm log**
+are fetched and SHA256 checked. Raw-input hashes match the local files.
+
+| Scan | Mean lag, full/fold1/fold2 (px) | Full RSS gain vs translation | Heldout gains, both directions/folds |
+|---|---|---:|---:|
+| 240307_015 | 0 / 0 / 0 | 0% | 0% |
+| 240814_024 | 0 / 0 / 0 | 0% | 0% |
+| 240817_054 | 0 / 0 / 0 | 0% | 0% |
+| 240817_094 | 0 / 0 / 0 | 0% | 0% |
+| 241114_046 | 0.5 / 1 / 0 | +0.034128% | −4.7453% to 0% |
+
+Thus **0/5 scans** support the declared response hypothesis. This is not merely
+a marginal miss of the 1% acceptance rule: four scans select the exact nested
+translation model, while the fifth's nonzero response is unstable. Its first
+heldout fold worsens **4.6286% forward / 4.7453% backward**, pooled **4.6867%**;
+the second selects zero and is unchanged. Full/fold translation spreads are
+**1 / 6 / 2.5 / 1.5 / 2 px**; these disagreements do not establish line drift.
+All positive gains remain interior; no gain-sign rescue is involved.
+
+The reverse-sign negative control selects the upper **4-px** lag on all five
+full scans, with full RSS gains **2.2666 / 0.7107 / 2.7117 / 2.2771 / 2.5425%**.
+That is a boundary-limited fit in the wrong direction for the tested causal
+single-pole hypothesis, not a replacement calibration. No sign flip, larger
+kernel, wider translation or relaxed criterion follows from these outcomes.
+
+A **descriptive post-hoc saved-grid check**, without new fitting or selection,
+holds the fifth scan's fold-1 displacement at the translation control's
+coordinates while retaining its training-selected 1-px lag. Its pooled heldout
+gain is only **+0.022309%** (second fold **0%**). Therefore the −4.69% above
+must not be attributed solely to the kernel: the joint displacement changes
+matter. This check neither changes the declared result nor supplies an accepted
+correction. Script/table: `results/directional_response_20260923/`.
+
+The on-node saved-output verifier passes **496,792 assertions**: complete
+**47,685 full/fold score rows** (15,895 candidate configurations), unmodified
+integer alignment, independently eroded observed-source masks, source-safe
+folds, independent matrix convolution / centered residual sums for all selected
+models, training-score rankings and final decisions. It does not recompute
+every grid objective independently. Full native preprocessing and base shifts
+remain full-image, and heldout row means are conditioned on. These are not
+independent-noise likelihoods, calibrated intervals or chemical validation.
+
+**Close this bounded loop without a molecular/recognition campaign.** The
+pilot provides no supported response to carry into production. No label has
+been read, no N or molecular geometry changed, and no external benchmark has
+been rerun. Retain **676/870 correct units, 34/145 exact chains**, coverage
+**852/870**, below the lost historical **677/870, 36/145**, coverage **854/870**.
+This limited 0–4-px same-pole model does not rule out other controller dynamics,
+larger responses, local acquisition differences or improvements from different
+molecular representations. The historical objective remains unmet. Report:
+`results/directional_response_20260923/report.md`.
+
+The final Julia 1.13 documentation build passes with the existing size
+warnings and no deployment. No size limit, source setting or dependency
+changes after the scientific run. Code/tests and conclusions are committed;
+generated data and reports remain ignored. No further job is queued by this
+loop, and no production correction is promoted.
