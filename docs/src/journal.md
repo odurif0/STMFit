@@ -14369,3 +14369,48 @@ Evidence: `results/qe_surface_audit_20260924/audit_v1/`; all old results remain.
 Julia 1.13 passes **31** analytical/interface checks and **592** independent
 real-cube checks using the other cube reader/interpolator; input hashes match.
 No template, prediction, count or benchmark file is changed by the audit.
+
+## 2026-09-24 — Connect saved promoted counts to unchanged recognition
+
+**Deliverable/scope, stated before implementation.** The same autonomous
+authorization covers the separately proposed counting link. Preparation ≤3h,
+one Viper job ≤4h, four requested CPUs / 16 GB, no retry. Compare saved raw-GCV
+counts with the existing promoted `support_midpoint_hybrid` counts, with fresh
+base/split fits in **both** arms and unchanged support assignment. Done means
+complete outputs, independent count/key/vote and geometry checks, full145
+external grades with paired gains/losses and a committed decision. Preserve
+all scientific Must-NOT-have constraints; no unknown25 or new QE calculation.
+
+This is **not** another raw-GCV reselection or a fresh reproduction of counting
+performance. The saved promoted summary is
+`results/experiments/6mer_full146/pm2_confirm/summary_overlap060_hard.tsv`;
+control counts are the original 900-key cache counts, preserved in
+`results/gcv_reselection_20260922/run_v1/control_counts.tsv`. Their complete
+cohorts match: **146 scans**, **28 changed counts**, **900→871** selected lobes.
+Only their label-free counts enter new fitting. Reject mixed policies, failed
+counts, adaptive-support substitutions and cohort differences. The original
+summaries and input hashes are retained; no benchmark membership, expected N,
+sequence, class proportion, grade or reference prediction is an inference input.
+
+`run_promoted_count_assignment.jl` passes each complete count vector into
+`run_reconstructed_chitosan.jl`, without supplying any geometry/patch cache.
+Both arms reconstruct circular/elliptical base geometry, split geometry, all
+patches, Fisher, classifiers, vote, QC and maps. Counts are not attached to
+old lobes, nor are rows trimmed or synthetic lobes appended. The configs remain
+`chitosan.toml` and `unit_assignment_patch_support.toml`; original empirical
+templates stay fixed. No tangent, DFT-calibration or acquisition correction is
+bundled. The just-completed physical audit does not validate these old templates.
+
+The existing timed optimizer may produce different fixed-N geometries even
+when counts agree; report this rather than claiming an isolated causal N effect
+or substituting a better cached control. Whole-cohort unsupervised learning may
+also change predictions on unchanged-N scans. Labels remain external, opened
+only after complete outputs/checks; this reused benchmark is development evidence,
+not independent validation. No post-grade threshold, hybrid or parameter search.
+
+**Preflight.** Julia 1.13 passes **1,455** focused assertions: 47 new handoff/job
+checks, 54 raw-GCV regression checks, 935 selected-support checks, 133 pipeline
+checks and 286 support/score checks. Both full-cohort metadata dry-runs pass.
+The single local raw scan is lexicographic first `240307_015.sxm`; its promoted
+N=6 produces six finite elliptical lobes (GCV approximately **1.069e−5**), with
+no grade or configuration adjustment. All other real fitting stays on Viper.

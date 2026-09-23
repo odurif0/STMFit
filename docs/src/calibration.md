@@ -1,5 +1,10 @@
 # Calibration: deriving parameters objectively
 
+The opt-in promoted-count assignment comparison uses two saved label-free
+count vectors and rebuilds both geometries at fixed N. It changes neither GCV,
+the counting thresholds nor the assignment calibration. It is not a fresh
+count-policy benchmark; timed-optimizer variability is reported separately.
+
 The September 24 read-only surface audit identifies a periodic-substrate branch,
 an isovalue lower bound above the entire GlcN target plane, and negative values
 already present in the accepted GlcNAc cube (35/289 target samples). A new root

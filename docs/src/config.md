@@ -1,5 +1,12 @@
 # Configuration Reference
 
+`test/run_promoted_count_assignment.jl` compares two explicit saved label-free
+count summaries with fresh base/split geometry in both arms. The promoted
+summary must contain only `selection_policy="support_midpoint_hybrid"`; failed,
+mixed-policy, adaptive-support and mismatched cohorts are rejected. Existing
+count/assignment TOMLs and templates are unchanged. No geometry cache, new
+selection knob, counting sweep, benchmark input or default promotion is added.
+
 `test/audit_qe_surface_calibration.jl` is a diagnostic-only companion to the
 QE-order builder: same six cube/frame/config inputs and new `--outdir`, optional
 `--dry-run`. It exports all configured height profiles, the unchanged isovalue
