@@ -14210,3 +14210,16 @@ support or isovalue after seeing this diagnostic or the forthcoming grade.
 
 Documentation builds with Julia 1.13 `--build-only`, no deployment or size-limit
 change. Freeze the tested source before the one paired recognition comparison.
+
+**Submitted.** Scientific source frozen at **8295965**. All 691 tracked files
+match the dedicated `/u/oldu/code/STMFit_cube_order_20260924` copy. Explicitly
+copy the ignored validated Manifest; login-node Julia 1.13 instantiate/precompile
+finishes with unchanged Project/Manifest hashes (the known 1.12.6-resolution
+warning remains). Both saved geometry hashes, old template hash and corrected
+template hash match remotely. Metadata dry-run passes for 146 scans / 900 keys.
+Scheduler test-only ID 11955511 is not a job. Sole real job **11955512**, submitted
+**01:05:21 CEST**, initially **PENDING / QOSGrpCpuLimit**. Four requested CPUs,
+16 GB, two-hour cap, `--no-requeue`, six paths exported explicitly on the
+`sbatch` command line. Output `/ptmp/oldu/stmfit/cube_order_20260924_v1` and log
+`/ptmp/oldu/stmfit/cube_order_20260924-11955512.log`. Follow through complete
+fetch, independent checks and external grade; no duplicate job or retuning.
