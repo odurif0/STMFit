@@ -13514,3 +13514,18 @@ templates match Viper by SHA256. Documentation builds without deployment; root
 Project/Manifest hashes are unchanged. No formula, threshold or setting is
 adjusted after the smoke. Freeze and commit this source before synchronization
 and the sole job. No job has yet been submitted.
+
+**Submitted.** Scientific source **0b7a4cf** is checksum-identical at
+`/u/oldu/code/STMFit_tangent_orientation_20260923`; login-node instantiate and
+precompile finish with Julia **1.13.0**. The existing 1.12.6 Manifest warning
+does not change either Project or Manifest. Remote metadata dry-run passes.
+Slurm resource test **11953256** is a `--test-only` response, not a real job.
+The sole actual job **11953258** is submitted **19:53:20 CEST**, initially pending,
+with four requested CPUs / 16 GB, a two-hour cap and `--no-requeue`. All five
+paths are passed in the explicit command-line `--export=ALL,...` list; output
+is `/ptmp/oldu/stmfit/tangent_orientation_20260923_v1`, log alongside.
+
+Support/Fisher regression suites finish too: **286 + 229** assertions, bringing
+the synthetic/regression total to **1,869**, all passing. No scientific source
+or configuration changes after **0b7a4cf**. Continue to the one job's result,
+fetch/checksum and full external comparison; no retry or other method campaign.
