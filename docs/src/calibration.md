@@ -642,6 +642,18 @@ of N or independent validation. See `results/gcv_reselection_20260922/report.md`
 
 ## Opt-in label-free exploration (2026-09-18)
 
+The September 23 cross-view residual experiment profiles only amplitudes and
+tilted backgrounds independently on the two acquisitions. Original fused
+geometry, support, q05 offset and amplitude bounds remain shared. Profile tables
+change subtraction only: raw patches, windows, main amplitudes and split features
+are fixed. Same-view and opposite-view subtraction use the exact same profile
+pair. KKT convergence and native validity of their fused mean are required;
+individual-view errors are diagnostics, not a new calibrated noise or chemical
+validity criterion. This is conditional cross subtraction, **not independent
+cross-validation**: both views already informed geometry/support/bounds and
+shared chemical contrast can be fitted away in both. No new physical threshold
+or class prior; settings are in `config/cross_view_residual.toml`. See the journal.
+
 The September 23 local-Gaussian follow-up changes the **fitted base model**, not
 the patch frame. A quadratic tangent is derived at each evaluation from current
 fitted centers, with no independently optimized angles. Model axes are exported

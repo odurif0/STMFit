@@ -1053,6 +1053,21 @@ unknown25 change follows; see `results/gcv_reselection_20260922/report.md`.
 
 ## Opt-in diagnostic exploration settings (2026-09-18)
 
+`cross_view_residual.toml` declares the bounded September 23 subtraction-only
+experiment. Its empty `[model]`, `[selection]`, `[preprocessing]` sections cannot
+override the unchanged counting/assignment configs. `[cross_view_residual]
+validity = "native_fused_mean"` requires native overlap, endpoint, residual-peak
+and finite CV guards on the average of two view-specific coefficient vectors.
+`[counting_variable_projection]` copies the existing numerical controls unchanged;
+only the bounded linear solver is called, never its outer optimizer. Both views
+use the original fused geometry/support, common q05 offset and native fused
+amplitude bounds; own/cross residual errors and full-complexity GCV are diagnostics.
+The two `--residual-features-fwd/bwd` paths specify models for the **target**
+directions, not necessarily the training directions. They require complete,
+literal frozen geometry plus a distinct `profile_view` tag, fresh patches and
+unchanged main/split features. No shifts, local frames or local model axes may
+be combined. Default behavior remains unchanged. See the journal for stop rules.
+
 `local_gaussian_orientation.toml` declares a separate fixed-N **model** test.
 `[model] chain_peak_orientation = "local_tangent"` and `chain_tangent_degree = 2`
 are consumed by `refit_local_gaussian_orientation.jl`; production counting

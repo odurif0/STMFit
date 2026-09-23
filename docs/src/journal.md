@@ -2307,6 +2307,16 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-23. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0ak. **Can opposite-view amplitude profiles improve residual recognition?**
+    → **AUTHORIZED; BOUNDED (Sep 23)**. Three arms: unchanged saved support,
+    same-view subtraction, opposite-view subtraction. Literal saved geometry,
+    N, main features, split cache and classifier remain fixed. Two native-box
+    linear profiles per scan; no nonlinear fit or registration. Preparation
+    limited to half a day, then one two-hour Viper job, no retry or adjustment.
+    Full comparison only if every solve and native fused-mean guard passes;
+    otherwise report feasibility failure without partial grading. See the
+    dated cross-view residual entry below. No independent validation claim.
+
 0aj. **Does fitting locally oriented Gaussian lobes improve recognition?**
     → **COMPLETE; NEGATIVE (Sep 23)**. GCV-local gives **664/870 correct,
     30/145 exact**, versus matched global **674/31** and exactly replayed saved
@@ -13078,3 +13088,82 @@ No scientific code or parameter changed after submission or grading. Source,
 tests and conclusions are versioned; generated outputs remain ignored and are
 present locally for human review. This one-job loop is closed, not the broader
 historical objective.
+
+## 2026-09-23 — Bounded cross-view residual subtraction
+
+**Deliverable and stop rule, before pixels or labels.** The user authorizes the
+distinct residual hypothesis following the negative local-Gaussian campaign.
+Prepare within half a day and submit at most one two-hour Viper job (four
+requested CPUs, 16 GB; four one-thread profile shards). Finish with a verified
+full146/900 comparison or an explicit feasibility failure. No partial-cohort
+grade, fallback, retry, parameter search, budget increase or unknown25 rerun.
+This loop does not authorize another campaign after this deliverable.
+
+Three arms use the original symmetric cache and support classifier: exact saved
+reference; subtract each view's own fixed-geometry profile; swap the same two
+profiles and subtract the opposite view's model. Only bounded Gaussian
+amplitudes and tilted background are solved. N, literal centers/widths/global
+axes/skew, main feature amplitudes, local features, split cache, windows, support,
+templates, preprocessing and classifier configuration remain fixed. Profile
+tables are **subtraction-only**, never the main classifier feature table.
+All downstream unlabeled learners are rebuilt separately on the full cohort.
+
+Both solves reuse the native fused ROI/tube/support and fused amplitude scale,
+with the common native q05 offset subtracted from each unsmoothed view. Require
+both actual Z directions and identical grids. Preserve native preprocessing and
+missingness; no mask restoration, registration, shift, local axis or nonlinear
+refit. Existing bounded-LS controls are copied unchanged to
+`config/cross_view_residual.toml`; KKT convergence, finite native boxes and
+nonincreasing own-view RSS are mandatory. Full original parameter count is used
+in GCV diagnostics; no N/model selection or iid information-criterion change.
+
+Predeclared validity is **native_fused_mean**: average the two fitted coefficient
+vectors and enforce the existing fused residual-peak/noise, overlap, endpoint
+and finite CV-diagnostic guards. Keep conservative native max(view noise).
+Own- and opposite-view errors are recorded, not new per-view acceptance or
+selection criteria. This is not the earlier nonlinear paired-acquisition model
+with per-view molecular-validity claims. Every file must pass; failures retain
+diagnostics and prevent model-table export and any recognition grade.
+
+Test synthetic algebra/CLI/pipeline isolation first, then only lexicographic
+first scan `240307_015.sxm` locally. Metadata-only whole-cohort dry-run, source
+commit, checksummed sync, login-node instantiate, one explicit-export sbatch,
+poll, fetch and verify. Grade externally only after complete inference and
+independent saved-output checks, retaining every loss and historical comparison.
+No thresholds or decision rules may be changed using these grades.
+
+This tests sensitivity to view-specific fitting, not independent cross-validation:
+geometry, support and coefficient bounds already depend on both acquisitions,
+and learners are transductive. Shared chemical contrast may be absorbed in both
+views; cross subtraction is not guaranteed to restore it. Reused development
+benchmark scores are not chemical validation of unknown 10–20mers.
+
+**Local verification before submission.** Julia **1.13.0** passes **6,307**
+synthetic/regression assertions: cross-view profiles/driver 116, patch exporters
+including legacy tests 2,726, frozen amplitudes 498, pipeline 133 and bounded
+variable projection 2,834. Swapping views swaps profiles; perturbing one view
+does not change the other solve conditional on the fixed design. Synthetic SXM
+tests independently reconstruct both residuals and their difference under both
+filter policies, enforce frozen metadata/raw pixels and reject malformed or
+mixed-scope inputs before output creation. One initial test incorrectly used a
+matrix-norm tolerance intended per pixel; it was corrected to an elementwise
+four-ULP bound for the independent summation order, with no scientific change.
+
+The sole real local scan is lexicographic first **240307_015.sxm**, saved **N=7**.
+Both bounded solves converge (5/3 active-set iterations); own RSS is
+**1.3437475 / 1.5655089**, down **88.51% / 86.63%** from saved coefficients on
+each view. Opposite-view RSS is **41.5297948 / 39.7337868**; corresponding maximum
+residual/noise **8.096 / 8.105** is diagnostic, not per-view molecular validity.
+The mean passes unchanged fused validity, residual/noise **0.8497941**. This
+strong acquisition difference is retained, not adjusted away. Export checks
+pass 229 assertions; all nine patch exports pass 90, reproducing saved reference
+patches and keeping all raw pixels, metadata and missingness identical. An
+independent saved-only reconstruction passes **306** checks of the literal
+Gaussian basis, native endpoints, gradients, KKT, full GCV and fused guards.
+No recognition grade has been read or inferred from these diagnostics.
+
+The wrapper's local metadata-only dry-run confirms **146 scans / 900 keys**;
+the docs build succeeds without deployment (existing size warnings). Original
+base/split cache checksums match Viper; raw/template verification dereferences
+local symlinks. Project/Manifest hashes remain unchanged. Freeze source before
+remote computation; no job submitted yet.

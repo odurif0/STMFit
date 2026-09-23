@@ -1223,6 +1223,22 @@ Full gains/losses: `results/scan_fisher_naming_20260922/report.md`.
 
 ## Local patch-orientation comparison (September 23)
 
+The distinct cross-view residual comparison uses
+`bash hpc/compare_cross_view_residuals.sbatch --dry-run` first. It profiles native
+bounded amplitudes/backgrounds on each view at literal saved geometry, then runs
+`reference/`, `same_view/`, `cross_view/` with unchanged main/split features.
+All profiles must converge and their means pass native fused validity before
+any inference; no partial cohort, retry or fallback. One job, four requested
+CPUs, 16 GB, **two-hour** cap. Use fresh source
+`/u/oldu/code/STMFit_cross_view_residual_20260923` and output
+`/ptmp/oldu/stmfit/cross_view_residual_20260923_v1`, Julia 1.13, the same original
+symmetric cache and full146 inputs below. Explicitly pass all five environment
+variables with command-line `sbatch --export=ALL,...`; dry-run and `--test-only`
+do not check the compute-node environment. Fetch results and log to
+`results/cross_view_residual_20260923/`, checksum them and verify full keys,
+literal main/split/raw-patch invariance, KKT/guards and reference replay before
+external grading. Scope and limitations: journal, dated cross-view entry.
+
 The separate model follow-up uses `hpc/compare_local_gaussian.sbatch`:
 saved `reference/`, matched `global_refit/` and `gcv_orientation/`. Four
 one-thread refit shards share the job's four requested CPUs; 16 GB, four-hour

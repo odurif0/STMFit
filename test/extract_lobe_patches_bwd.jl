@@ -25,6 +25,8 @@ include(joinpath(@__DIR__, "lib", "patch_acquisition.jl"))
 using .PatchAcquisition
 include(joinpath(@__DIR__, "lib", "patch_frames.jl"))
 using .PatchFrames
+include(joinpath(@__DIR__, "lib", "residual_features.jl"))
+using .ResidualFeatures
 
 const DEFAULT_FEATURES = "results/unit_separability/lobe_features_selectedN_primary.tsv"
 const DEFAULT_OUT = "results/unit_separability/lobe_patches_selectedN_primary_bwd.tsv"
@@ -39,6 +41,8 @@ struct Options
     residual_filter::String
     acquisition_shifts::Union{Nothing,String}
     patch_frames::Union{Nothing,String}
+    residual_fwd::Union{Nothing,String}
+    residual_bwd::Union{Nothing,String}
 end
 
 function _parse_cli(args)
@@ -49,6 +53,7 @@ function _parse_cli(args)
     assignment_path::Union{Nothing,String} = nothing
     acquisition_path::Union{Nothing,String} = nothing
     frames_path::Union{Nothing,String} = nothing
+    residual_paths = Dict{String,String}()
     half_nm = 0.32
     step_nm = 0.08
     i = 1
@@ -75,6 +80,10 @@ function _parse_cli(args)
             frames_path === nothing || error("Duplicate --patch-frames")
             i < length(args) && !startswith(args[i+1], "--") || error("Missing patch-frame table")
             frames_path = args[i+1]; i += 2
+        elseif arg in ("--residual-features-fwd", "--residual-features-bwd")
+            haskey(residual_paths,arg) && error("Duplicate residual model option")
+            i < length(args) && !startswith(args[i+1],"--") || error("Missing residual model table")
+            residual_paths[arg]=args[i+1]; i+=2
         elseif arg == "--assignment-config"
             assignment_path === nothing || error("Duplicate --assignment-config option")
             i < length(args) && !startswith(args[i+1], "--") || error("Missing value for --assignment-config")
@@ -101,6 +110,8 @@ function _parse_cli(args)
                                 (omitted: stride=1, flatten=plane+rows, smooth_radius_px=1)
               --acquisition-shifts PATH  Opt-in integer backward shifts and restored raw masks
               --patch-frames PATH  Opt-in local sampling axes; model subtraction stays global
+              --residual-features-fwd PATH --residual-features-bwd PATH
+                                Subtraction-only models for each target view; both required
               --assignment-config PATH  TOML with [preprocessing] patch_residual_filter
                                         (omitted: legacy smooth_data_only)
               --half-nm FLOAT   Patch half-size [0.32]
@@ -116,7 +127,8 @@ function _parse_cli(args)
     isfile(features) || error("Features TSV not found: $features")
     preprocessing = load_patch_preprocessing(config_path)
     residual_filter = load_patch_residual_filter(assignment_path)
-    return Options(features, out_tsv, data_dir, half_nm, step_nm, preprocessing, residual_filter, acquisition_path, frames_path)
+    return Options(features, out_tsv, data_dir, half_nm, step_nm, preprocessing, residual_filter, acquisition_path, frames_path,
+        get(residual_paths,"--residual-features-fwd",nothing),get(residual_paths,"--residual-features-bwd",nothing))
 end
 
 function _eval_peak(x, y, cx, cy, ax, ay, A, spar, sperp, skew_ratio)
@@ -162,6 +174,8 @@ function main(args=ARGS)
     shifts = read_shifts(opt.acquisition_shifts,keys(by_file))
     frames = read_frames(opt.patch_frames, rows)
     model_axes = read_model_axes(rows)
+    residual_models = read_residual_models(opt.residual_fwd,opt.residual_bwd,rows;
+        acquisition_shifts=opt.acquisition_shifts,patch_frames=opt.patch_frames)
     coords = collect(-opt.half_nm:opt.step_nm:opt.half_nm)
     pix_names = [@sprintf("%03d", i) for i in 1:(length(coords)^2)]
 
@@ -223,12 +237,19 @@ function main(args=ARGS)
                     end
                 end
 
-                # Residuals for each channel
-                res_f = patch_residual(z_f, z_smooth_f, model, opt.preprocessing, opt.residual_filter)
-                res_b = patch_residual(z_b, z_smooth_b, model, opt.preprocessing, opt.residual_filter)
+                # Default common model is unchanged; opt-in models affect ONLY subtraction.
+                model_f=model; model_b=model
+                if residual_models !== nothing
+                    require_direction(ch_fwd,"fwd"); require_direction(ch_bwd,"bwd")
+                    xs_f==xs_b && ys_f==ys_b || error("Acquisition grids differ")
+                    model_f=subtraction_model(residual_models.fwd[file],xs_f,ys_f,_eval_peak)
+                    model_b=subtraction_model(residual_models.bwd[file],xs_b,ys_b,_eval_peak)
+                end
+                res_f = patch_residual(z_f, z_smooth_f, model_f, opt.preprocessing, opt.residual_filter)
+                res_b = patch_residual(z_b, z_smooth_b, model_b, opt.preprocessing, opt.residual_filter)
                 # Forward-backward difference (removes static topography)
                 diff_smooth = z_smooth_f .- z_smooth_b
-                diff_res = res_f .- res_b  # = diff_smooth (model cancels)
+                diff_res = res_f .- res_b  # Model cancels only in the default common-model path.
 
                 for row in rs
                     cx = _parse_f(row["x_nm"]); cy = _parse_f(row["y_nm"])
