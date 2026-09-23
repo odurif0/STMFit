@@ -13710,3 +13710,25 @@ metadata dry-runs confirm **146 scans / 900 keys**, without output/inference.
 Documentation builds successfully without deployment, with existing size/search
 warnings. Project and Manifest hashes are unchanged. Commit this tested source,
 then sync and verify source/cache bytes before the sole Slurm submission.
+
+**Preparation-only environment correction.** Source **e8c9104** and 24 cached
+input files match Viper. The tracked-files-only transfer omitted the ignored
+root `Manifest.toml`; first login-node instantiate therefore generated a new
+dependency resolution. The remote hash check catches this before any Slurm
+submission or scientific inference. Preserve that unused generated Manifest
+locally, explicitly sync the validated local Project/Manifest pair, instantiate
+again without resolution changes and repeat hashes/dry-run. This is a bootstrap
+correction, not a method change or scientific-job retry. Local Project/Manifest
+remain untouched; the same frozen package versions are required for the job.
+
+**Submitted.** Explicit Project/Manifest transfer restores the exact local hashes;
+Julia **1.13.0** instantiate/precompile preserves them (known 1.12.6 Manifest
+warning only). Repeated remote dry-run confirms 146/900. The unused generated
+Manifest is retained at `results/mold_states_20260923/Manifest.unfrozen_preparation.toml`.
+The sole actual job **11953490** is submitted **20:40:29 CEST**, initially pending,
+with all four paths explicitly exported on the command line, four requested
+CPUs / 16 GB, two-hour limit and `Requeue=0`. Source:
+`/u/oldu/code/STMFit_mold_states_20260923`, science frozen at **e8c9104**; output:
+`/ptmp/oldu/stmfit/mold_states_20260923_v1`, Slurm log alongside. Follow this job
+through completion, fetch and verify before any external grading; no other
+candidate, post-grade adjustment or automatic resubmission.

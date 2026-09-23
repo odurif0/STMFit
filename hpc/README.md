@@ -6,6 +6,10 @@ two hours, no requeue. Set absolute `STMFIT_PROJECT_DIR`,
 `STMFIT_REFERENCE_DIR` (the completed tangent control, including all cost audits),
 `STMFIT_OUTDIR` (new) and `JULIA_BIN` (1.13). Run the script with `--dry-run`
 first; pass all four paths explicitly in command-line `sbatch --export=ALL,...`.
+Also sync the validated local `Manifest.toml` explicitly: it is ignored by Git
+and is not included in a tracked-files-only source transfer. Verify its hash
+before and after login-node instantiate; do not resolve a new environment for
+the comparison.
 It performs no image refit or raw-data access: the previous four score shards
 are reused, then cohort-wide GMM/k-means learning runs on a compute node only.
 Fetch all output tables/logs. Run `test/verify_mold_state_comparison.jl
