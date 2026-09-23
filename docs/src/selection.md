@@ -1,5 +1,14 @@
 # Model Selection
 
+The September 23 **mold-state decoder** comparison leaves all N/GCV/`n_eff`,
+physical guards and geometry unchanged. Missing-cost omission exactly preserves
+tangent predictions (**679/870 correct, 33/145 exact**, coverage **852**);
+shared parity/mirror gives **675/32/852** and is rejected. Keep the opt-in
+correctness fix without a recognition-gain claim or production-default change.
+Counting stays **106/145 exact**, 16 missing/38 extra lobes. Historical
+**677/36/854** is not surpassed overall. Source **e8c9104**, job **11953490**;
+`results/mold_states_20260923/report.md`.
+
 Adding the ellipse-angle derivative to tangent CC is **negative**: **678/870
 correct, 30/145 exact**, versus tangent replay **679/33**, both coverage **852**.
 No N, GCV, `n_eff`, physical guard or fitted geometry changes. Counts remain

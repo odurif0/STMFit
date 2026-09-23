@@ -2308,11 +2308,15 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0an. **Can missing-cost omission and then shared geometric mold states improve recognition?**
-    → **AUTHORIZED, IN PROGRESS (Sep 23)**. Compare saved tangent **679/33/852**
-    against omission-only and omission plus equal-cost shared parity/mirror.
-    Frozen full146 / 900-key inputs, exact reference replay, external full145
-    grading; no labels or composition prior in inference, no N/geometry refit.
-    Four-hour preparation and one two-hour Viper job; details in the dated entry.
+    → **COMPLETE; NEUTRAL FIX, NEGATIVE SHARING (Sep 23)**. Omission resolves
+    infinite global cost and exactly preserves predictions at **679/33/852**.
+    Shared states give **675/32/852**: five scan gains/nine losses, one exact
+    gain/two losses. Retain the opt-in correctness fix, reject sharing; defaults
+    and references stay unchanged, historical **677/36/854** is not surpassed
+    overall. Source **e8c9104**, job **11953490**, **0:0 in 1m46s**, 63 outputs/log
+    fetched/checksummed. Three full146 / 900-key arms, exact replay and independent
+    checks pass; no retuning, refit, further job or unknown25 rerun. Full report:
+    `results/mold_states_20260923/report.md`.
 
 0am. **Does adding the elliptical orientation derivative improve tangent CC?**
     → **COMPLETE; NEGATIVE (Sep 23)**. Added orientation gives **678/870 correct,
@@ -13732,3 +13736,83 @@ CPUs / 16 GB, two-hour limit and `Requeue=0`. Source:
 `/ptmp/oldu/stmfit/mold_states_20260923_v1`, Slurm log alongside. Follow this job
 through completion, fetch and verify before any external grading; no other
 candidate, post-grade adjustment or automatic resubmission.
+
+**Complete calculation and verification.** Job **11953490** starts **20:41:02**
+after 33 seconds queued and ends **20:42:48 CEST**, **COMPLETED 0:0 in 1m46s**,
+on `vipc2048`. Four CPUs requested/eight allocated, 16 GB, MaxRSS **1,027,640 K**.
+This is cached decoding/classification time, not the full raw-image pipeline.
+All **63 regular outputs plus the Slurm log** are local and SHA256-verified;
+source, fixed settings and Project/Manifest are unchanged. All three arms contain
+146 scans / 900 keys, with the same four unavailable final assignments.
+
+The independent checker passes **131,136** assertions (mostly repeated table
+cell checks, not independent scientific tests): seven byte-identical reference
+replays, ten unchanged upstream/k-means tables per arm, no changed non-CC
+predictor columns, finite-state objectives independently recomputed, unchanged
+raw missing costs/margins, consistent shared states, complete keys and availability.
+Membership-only external grade copies pass **2,685** row/schema/cohort checks;
+all original full146 predictions remain untouched. The complete report passes
+**51** aggregate checks and retains **1,450 paired scan rows** for all ten
+profile comparisons. Historical, support and tangent-control per-file grades
+are byte-identical to the previous saved grades.
+
+**Measured correction.** For `240818_019`, forward phase/mirror moves from `0/0`
+to `1/0`, using its two observed lobes; backward retains `0/0`. Per-view totals
+become **−0.17460561948 / −0.18682853372**, rather than infinity. The unsupported
+two lobes retain infinite costs, NaN margins and auxiliary `-1/?`; nothing is
+imputed. Final predictions **and reported confidences are byte-identical** to
+the tangent control. This establishes a correctness repair, not recognition gain.
+
+**External result.** Grading uses 145 scans / 892 predictions / 870 truth
+positions. Counts remain **106/145 exact**, 14 short/25 long, 16 missing/38 extra.
+
+| Profile | Correct /870 | Exact chains /145 | Coverage /870 | Emitted errors |
+|---|---:|---:|---:|---:|
+| Historical saved reference | 677 | 36 | 854 | 177 |
+| Saved support | 676 | 34 | 852 | 176 |
+| Tangent control, exact replay | 679 | 33 | 852 | 173 |
+| Missing-cost omission | 679 | 33 | 852 | 173 |
+| Omission plus shared geometric state | 675 | 32 | 852 | 177 |
+
+Sharing changes **14 final decisions on 14 scans**. Against tangent/omission:
+native flips are thirteen `0→1` and one `1→0`, with fifteen changed reported
+confidences. States change on 60 forward / 59 backward scans, with 362/368
+changed CC margins. Omission alone changes only two forward margins on its
+single affected scan, with zero final-confidence changes. The external tally is
+**5 scans gain / 9 lose / 131 tie**, net **−4** correct positions, **one exact
+gain / two losses**. Gain: `240818_020`; losses: `240817_075`, `240817_081`.
+Two external grading alignments change; they are not measured spatial matches.
+Confusion `(TN,FP,FN,TP)` changes **(522,43,130,157)→(514,51,126,161)**: eight
+more false positives, four fewer false negatives. Against support: **7/8/130**,
+net −1, two exact gains/four losses, no grading-alignment change. Against history:
+**22/24/99**, net −2, five exact gains/nine losses, eight alignment changes and
+two fewer covered positions. All gains/losses are retained, not selected out.
+
+**Decision.** Retain the **opt-in missing-cost correctness fix**, without a
+recognition-gain claim or changed production default. **Reject this equal-cost
+shared-state variant.** Keep saved tangent **679/33/852** and support
+**676/34/852** intact; no overall historical champion is established. The
+observed state disagreement did not justify this particular sharing rule as a
+recognition improvement; this is not evidence that physical geometry actually
+differs between acquisitions or that every cross-view model must fail.
+No weight, state-confidence threshold, score calibration, hybrid, extra feature,
+new fit, retry, neighbor/noise/tip experiment or unknown25 rerun follows.
+This bounded two-lead loop is complete; the broader historical objective is not.
+Scientific sources/settings remain **e8c9104**. Reused benchmark evidence remains
+development, not independent validation or unknown-chain chemical proof.
+
+Full report: `results/mold_states_20260923/report.md`; paired results and all
+outputs are local for human review. README, runbook, selection, assignment,
+configuration/calibration and HPC documentation are updated consistently.
+
+The first final docs build reaches **200.43 KiB / 200 KiB** on the assignment
+page. Fold the new decoder paragraph into the existing tangent subsection and
+condense its summary, keeping full evidence here and in the report; do not raise
+the documentation limit or alter any scientific source/result.
+
+The final Julia **1.13.0** documentation build passes without deployment;
+assignment HTML is **199.88 KiB / 200 KiB**, with existing size/search warnings.
+All scientific source/settings still match **e8c9104**; local Project/Manifest
+hashes and all 63 fetched output hashes remain unchanged after external grading.
+The work and outcome are committed for human review; generated outputs stay
+ignored and locally available. No job or further campaign is left running.

@@ -15,6 +15,10 @@ requires saved target-Gaussian/affine costs, without the rejected angle column.
 `test/run_mold_state_comparison.jl` compares legacy, omission-only and shared
 states. Reference replay must be byte-identical; no production default changes.
 N, geometry, pixel support, Fisher, classifier settings and vote remain frozen.
+Completed: omission alone exactly preserves **679/870 correct, 33/145 exact**;
+shared states give **675/32**, both coverage **852**. Retain the opt-in omission
+fix, reject sharing without retuning; no production-default change. Full result:
+`results/mold_states_20260923/report.md`.
 
 ## Experimental tangent physical-mold scoring (2026-09-23)
 

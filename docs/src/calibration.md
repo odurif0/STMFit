@@ -7,8 +7,12 @@ parity/mirror using fixed equal view weights. Chemical states remain independent
 between views. These NCC costs are not likelihoods; sharing a state is a testable
 hypothesis, not proof of identical acquisition contrast. No weight, missing-data
 threshold, geometry, composition or vote rule may be tuned against labels.
-Settings are explicit in `config/mold_state_comparison.toml`; production defaults
-remain unchanged pending the bounded comparison and human review.
+Settings are explicit in `config/mold_state_comparison.toml`. Completed result:
+omission preserves all predictions at **679/870 correct, 33/145 exact**, while
+sharing gives **675/32**, both coverage **852**. Retain the opt-in correctness
+fix, reject sharing without weight/threshold adjustment. Production defaults
+remain unchanged; the complete comparison is available for human review at
+`results/mold_states_20260923/report.md`.
 
 The subsequent orientation test adds only the analytic ellipse-angle derivative
 at fixed pixels/frame (`config/tangent_mold_orientation.toml`). Exactly isotropic

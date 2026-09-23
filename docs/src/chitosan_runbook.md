@@ -1,6 +1,17 @@
 # Chitosan Benchmark and 10–20mer Runbook
 
-Latest September 23 comparison: adding the ellipse-angle derivative gives
+Latest September 23 comparison: omitting both-infinite unary costs from state
+selection fixes the unsupported-lobe blockage, but preserves all final predictions
+at tangent **679/870 correct, 33/145 exact**, coverage **852**. Sharing only
+geometric parity/mirror across acquisitions then gives **675/32/852**: five scan
+gains/nine losses, one exact gain/two losses. Keep the opt-in correctness fix,
+reject shared states; neither surpasses history **677/36/854** overall. No default,
+N, geometry, support, classifier setting or post-grade change. Source **e8c9104**,
+job **11953490**, **0:0 in 1m46s** after 33 seconds queued. All 63 outputs plus
+log are local and checksum-verified; complete replay and independent checks pass.
+Full report: `results/mold_states_20260923/report.md`. No unknown25 rerun.
+
+Earlier September 23 comparison: adding the ellipse-angle derivative gives
 **678/870 correct, 30/145 exact**, versus exact tangent replay **679/33**,
 both at **852/870 coverage**. Three scans gain, four lose; no exact chain gained,
 three lost. Reject this variant; retain the earlier tangent candidate and

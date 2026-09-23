@@ -15,6 +15,13 @@ are reused, then cohort-wide GMM/k-means learning runs on a compute node only.
 Fetch all output tables/logs. Run `test/verify_mold_state_comparison.jl
 SAVED_TANGENT_DIR COMPARISON_DIR` before the separate benchmark report.
 No benchmark labels, grading or orchestration runs inside the job.
+Completed source **e8c9104**, job **11953490**, **0:0 in 1m46s**, 33 seconds queued;
+four CPUs requested/eight allocated, 16 GB, MaxRSS **1,027,640 K**. All 63 outputs
+and log are fetched/checksummed. Omission preserves **679/33/852**; shared states
+regress to **675/32/852**. No retry or follow-up job. Preparation initially missed
+the ignored Manifest; it was restored and hash-verified before submission, with
+no scientific inference under the unused resolution. Full report:
+`results/mold_states_20260923/report.md`.
 
 The completed original-support follow-up uses
 `hpc/compare_registered_refit_original_support.sbatch` and

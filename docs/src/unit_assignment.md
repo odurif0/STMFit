@@ -2434,23 +2434,19 @@ six lost. Reject this ablation, not all local molecular models. Source
 
 ### Locally oriented Gaussian model (2026-09-23): negative
 
-Quadratic tangents now rotate the fitted Gaussians, not patch sampling; N and
-split cache remain fixed. Local/global ellipses share starts, pixels, bounds
-and 300 LM iterations. Full-parameter GCV selects local models on **87/146**
-scans, but recognition falls to **664/870 correct, 30/145 exact**, versus global
-**674/31** and exact saved replay **676/34**, all at **852/870 coverage**.
-All 584 fits pass validity but hit iteration caps: not converged optima.
-Reject without tuning. Source **c692958**, job **11951208**. Full method,
-stopping diagnostics, checks and all 725 paired scan comparisons:
-[journal](journal.md), `results/local_gaussian_20260923/report.md`.
+GCV selects local models on **87/146** scans, but gives **664/870 correct,
+30/145 exact**, versus global **674/31** and replay **676/34**, all coverage
+**852**. N/split remain fixed; 584 valid fits hit iteration caps, not converged
+optima. Reject without tuning. Source **c692958**, job **11951208**; full shared
+settings, diagnostics and losses: `results/local_gaussian_20260923/report.md`.
 
 ### Cross-view residual subtraction (2026-09-23): negative
 
-Subtraction-only amplitude/background profiles give **675/870 correct, 30/145
-exact** (same view), **673/30** (opposite), versus replay **676/34**, all with
-**852/870 coverage**. N/main features stay fixed. All 292 solves converge and
-146 fused means pass validity, not independent per-view validation. Reject. Source
-**9d6c541**, job **11952397**; [journal](journal.md), `results/cross_view_residual_20260923/report.md`.
+Subtraction-only profiles give **675/870 correct, 30/145 exact** (same view),
+**673/30** (opposite), versus replay **676/34**, all coverage **852**. N/main
+features stay fixed; 292 solves converge, 146 fused means pass validity, not
+per-view validation. Reject. Source **9d6c541**, job **11952397**;
+`results/cross_view_residual_20260923/report.md`.
 
 ### Tangent physical-mold scores (2026-09-23): trade-off
 
@@ -2463,6 +2459,11 @@ Adding only the ellipse-angle derivative regresses to **678/30**, coverage
 Source **0b7a4cf**, job **11953258**. N/geometry/patches/Fisher and classifier
 settings stay fixed; GMM is relearned without labels. No promotion or tuning.
 Details: [journal](journal.md), `results/tangent_orientation_20260923/report.md`.
+
+Subsequent missing-cost omission preserves **679/870 correct, 33/145 exact**;
+shared parity/mirror regresses to **675/32**, both coverage **852**. Keep the
+opt-in correctness fix, reject sharing; defaults unchanged. Source **e8c9104**,
+job **11953490**; full checks/gains/losses: `results/mold_states_20260923/report.md`.
 
 ### Native numerical conventions
 
