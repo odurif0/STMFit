@@ -4,17 +4,22 @@ Analysis pipeline for STM images of molecular chains (chitosan on Cu(100) and
 similar systems). Detects and fits a chain-of-Gaussians model to count the
 number of monomer units (lobes) per chain, label-free.
 
-**Latest comparison, September 24: leaving the target out of state selection regresses.**
-Choosing parity/mirror from only the other lobes gives **670/870 correct,
-32/145 exact chains**, versus byte-identical tangent control **679/33**, both
-coverage **852/870**. Two scans gain, eleven lose; one exact chain gained, two
-lost. Reject this variant; retain the target-only candidate and neutral
-missing-cost fix, with unchanged production defaults. Historical **677/36/854**
-is still not surpassed overall. Physical costs, N, geometry, patches, Fisher
-and classifier settings stay fixed; labels enter only the external grade,
-without post-grade tuning. Source **61a56d6**, sole job **11955091**, **0:0 in
-1m26s**; all outputs fetched and independently checked. See the
+**Latest comparison, September 24: correct QE cube addressing does not improve recognition.**
+With the remaining surface calibration unchanged, corrected templates give
+**676/870 correct, 27/145 exact chains**, versus byte-identical legacy tangent
+control **679/33**, both coverage **852/870**. Six scans gain, nine lose; one
+exact chain gained, seven lost. Keep the opt-in reader correction, but do not
+promote this assignment variant. QE writes the last grid index fastest; old
+outputs remain empirical references, not validation of the old coordinates.
+N, geometry, patches, Fisher and classifier settings stay fixed; labels enter
+only external grading, with no retuning. Historical **677/36/854** is not
+surpassed overall. Source **8295965**, job **11955512**, **0:0 in 6m22s**;
+all 460 outputs/log fetched and independently checked. See the
 [tangent comparisons](docs/src/unit_assignment.md#tangent-physical-mold-scores-2026-09-23-trade-off).
+
+Earlier September 24, leave-target-out parity/mirror selection gives **670/32**
+against **679/33**, both coverage **852**: rejected without tuning. Source
+**61a56d6**, job **11955091**; `results/mold_loo_20260924/report.md`.
 
 **Stable support reference (saved inputs):** complete-disk support improves
 **675 → 676 correct / 870** and **33 → 34 exact chains / 145**. Use the opt-in

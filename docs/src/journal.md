@@ -2308,13 +2308,15 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0aq. **Does correcting QE cube-token order improve the reconstructed assignment?**
-    → **IN PROGRESS (Sep 24)**. QE writes the third index fastest; the legacy
-    assignment reader preserves first-index-fast addresses. Accepted cubes and
-    frames reproduce the old templates exactly. Test the input-order correction
-    at fixed finite tangent scores and all other settings, keeping the old
-    reader for reproducibility. File-format correctness is not chosen by grade.
-    Preparation ≤2 hours from 00:47 CEST, one Viper job ≤2 hours; complete
-    full146 inference and full145 external paired report, no unknown25 rerun.
+    → **COMPLETE; CORRECTNESS FIX, NEGATIVE RECOGNITION (Sep 24)**. Correct
+    QE addressing gives **676/870 correct, 27/145 exact**, versus exact legacy
+    tangent **679/33**, both coverage **852**. Six scan gains/nine losses,
+    one exact gain/seven losses. Retain the opt-in correct reader, without
+    assignment promotion or validating the legacy coordinates. Remaining
+    surface calibration is sparse/discontinuous; no retuning. Source **8295965**,
+    job **11955512**, **0:0 in 6m22s**; all 460 outputs/log fetched/hash-checked.
+    Historical **677/36/854** remains unexceeded overall. No default change or
+    unknown25 rerun. `results/cube_order_20260924/report.md`.
 
 0ap. **Does leave-target-out parity/mirror selection improve physical CC scores?**
     → **COMPLETE; NEGATIVE (Sep 24)**. Other-lobe state selection gives
@@ -14223,3 +14225,82 @@ Scheduler test-only ID 11955511 is not a job. Sole real job **11955512**, submit
 `sbatch` command line. Output `/ptmp/oldu/stmfit/cube_order_20260924_v1` and log
 `/ptmp/oldu/stmfit/cube_order_20260924-11955512.log`. Follow through complete
 fetch, independent checks and external grade; no duplicate job or retuning.
+
+**Completed.** Job **11955512** starts **01:07:10 CEST**, after **1m49s** queued,
+and ends **01:13:32**, **COMPLETED 0:0**, elapsed **6m22s** on `vipc2575`.
+Four CPUs requested/eight allocated, 16 GB requested, MaxRSS **2,451,393 K**.
+All 460 output files plus the Slurm log are fetched; every remote SHA256 matches
+locally. Both arms cover all 146 scans / 900 keys, with no failed scan or retry.
+
+Before grading, independent checks pass: **36,251** cohort/control/input checks,
+**eight** identical-design checks, **four** score-shard count checks and
+**4 × 557,348** QR/score/state checks, then **8,076** separate availability/vote
+assertions. The fifteen reference feature/score/classifier tables and all saved
+reference basis/audit shards replay exactly. The ten invariant upstream/k-means
+tables remain byte-identical between arms; all non-CC predictor columns and
+selected N remain unchanged. Every per-view audit has 3,592 valid / 3,600 states
+(898 / 900 available lobes). All 900 fitted shapes remain elliptical, rank eight.
+Patch-projection energy is unchanged; the new templates' retained contrast
+fraction is **0.859385–0.915709**, versus legacy **0.941304–0.973130**. This is
+numerical template energy, not experimentally validated chemical information.
+
+Forward/backward global states change on **94 / 91** scans; all **898** finite
+CC margins in each view change. Fifteen final native decisions change on fifteen
+scans (**two `0→1`, thirteen `1→0`**), and **198** confidences change. Of changed
+decisions, thirteen old/one new confidences are zero; available zero-confidence
+votes go **45→35** under the unchanged rule. The same four unavailable keys
+remain: `240310_Cu100009` lobe 8, `240818_015` lobe 1, `240818_019` lobes 1/2.
+No post-grade abstention, tie or missing-component adjustment is introduced.
+
+**External full145/own-N result.** Membership filtering passes **1,790** row
+checks, preserving the 892 predictions for the 145 benchmark scans per arm;
+**41** aggregate checks verify grade arithmetic and count invariance. Historical,
+support and legacy-control per-scan grade files match the preceding comparison
+byte-for-byte. Labels enter only this report, after all inference/checks.
+
+| Profile | Correct /870 | Exact /145 | Coverage /870 | Emitted errors |
+|---|---:|---:|---:|---:|
+| Historical reference | 677 | 36 | 854 | 177 |
+| Saved support | 676 | 34 | 852 | 176 |
+| Legacy finite tangent control | 679 | 33 | 852 | 173 |
+| Correct QE order, unchanged surface calibration | 676 | 27 | 852 | 176 |
+
+Against the exact legacy control, **six scans gain, nine lose, 130 tie**: net
+**−3 correct positions** at unchanged coverage. One exact chain gained
+(`240817_003`), seven lost (`240307_016`, `240307_017`, `240814_011`,
+`240817_006`, `240817_007`, `240817_080`, `240817_081`). The grader changes
+alignment on `240817_083` only. TN/FP/FN/TP move **522/43/130/157 →
+526/39/137/150**. All profiles keep **106/145 exact counts**, 14 short-N scans,
+25 extra-N scans, 16 missing/38 extra positions. Versus support: same correct
+positions/coverage, seven fewer exact chains. Versus history: one fewer correct
+position, nine fewer exact chains and two fewer covered positions.
+
+**Decision: retain the opt-in file-format correction, no assignment promotion.**
+QE output order, not benchmark labels, determines the correct coordinates. A
+better legacy recognition score does not make its physical addressing valid.
+Keep saved **679/33/852** and support **676/34/852** as empirical working
+references and leave defaults unchanged. Historical **677/36/854** is still not
+surpassed overall. This is a correction-only comparison with an unchanged
+deficient surface calibration, not a verdict on correctly calibrated DFT molds.
+
+The next concrete physical issue is the sparse/discontinuous surface calibration
+already measured **before grading**. Neither a new target/branch/support rule
+nor a noise/uncertainty scale is invented here; no third campaign, new QE or
+unknown25 run follows this bounded comparison. Scientific source stays frozen
+at **8295965**. Both autonomous loops are complete; the global historical
+objective is not achieved. Reused development grades and visual plausibility
+are not independent validation or proof of unknown-chain chemistry.
+
+Full paired evidence: `results/cube_order_20260924/report.md`. The original
+height figure uses a 0–0.9 nm color range; the added
+`template_heights_fullrange.png` displays the full declared −0.5–2.6 nm range
+and is the quantitative visual-QC reference. This affects display only, never
+templates or scores. All old generated artifacts are preserved.
+
+Final Julia 1.13 docs build passes without deployment. Assignment HTML is
+**199.60 KiB / 200 KiB** under the unchanged limit; only existing size/search
+warnings remain. Scientific diff from **8295965** is empty. All 460 output
+hashes, log hash, template hash and Project/Manifest hashes are unchanged after
+grading. Code, tests and the measured outcome are committed for human review;
+generated evidence stays local and ignored. No job is running or queued from
+either completed loop, and no overall-optimum claim is made.

@@ -1,6 +1,18 @@
 # Chitosan Benchmark and 10–20mer Runbook
 
-Latest September 24 comparison: leave-target-out parity/mirror selection gives
+Latest September 24 comparison: correcting QE cube-token order gives
+**676/870 correct, 27/145 exact**, versus exact legacy tangent **679/33**, both
+coverage **852**. Six scans gain/nine lose, one exact gain/seven losses. Keep
+the opt-in correct reader, but do not promote this assignment pipeline or claim
+that a better legacy grade validates its coordinates. All surface settings, N,
+geometry, patches and classifier settings stay fixed. The remaining surface
+calibration is sparse/discontinuous; no post-grade retuning or unknown25 rerun.
+Historical **677/36/854** is still not surpassed overall. Source **8295965**,
+sole job **11955512**, **0:0 in 6m22s**, 1m49s queued. All 460 outputs/log are
+local/hash-checked; exact replay and independent checks pass before full145
+grading. `results/cube_order_20260924/report.md`.
+
+Earlier September 24 comparison: leave-target-out parity/mirror selection gives
 **670/870 correct, 32/145 exact**, versus exactly replayed tangent control
 **679/33**, both coverage **852**. Two scan gains/eleven losses, one exact
 gain/two losses. Reject this variant; keep target-only scores and neutral

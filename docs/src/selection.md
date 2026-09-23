@@ -1,5 +1,15 @@
 # Model Selection
 
+The September 24 **QE cube-order correction** gives **676/870 correct, 27/145
+exact**, versus byte-identical legacy tangent **679/33**, both coverage **852**.
+Six scan gains/nine losses, one exact gain/seven losses. Keep the explicit
+correct reader for physical work, but no recognition promotion or default
+change. This leaves N/GCV/`n_eff`, geometry and counting guards literal:
+**106/145 exact counts**, 16 missing/38 extra positions. Correct token order
+does not validate the unchanged surface calibration; its sparse surfaces were
+observed before grading. Historical **677/36/854** remains unexceeded overall.
+Source **8295965**, job **11955512**; `results/cube_order_20260924/report.md`.
+
 The September 24 **leave-target-out geometric-state** test gives **670/870
 correct, 32/145 exact**, versus exact tangent replay **679/33**, both coverage
 **852**. Only other lobes select a target's parity/mirror; its physical costs

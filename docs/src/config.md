@@ -13,6 +13,11 @@ grid/normalization conventions. No production reader or registry is replaced.
 different template file only to the second arm. Both arms use the same finite
 target-only tangent config; no neighbor, angle or leave-target-out change.
 
+Completed: **676/870 correct, 27/145 exact**, versus exact legacy **679/33**,
+both coverage **852**. Keep the correct reader, without promoting the changed
+assignment pipeline or choosing file order by benchmark. Surface calibration
+and production defaults remain unchanged. `results/cube_order_20260924/report.md`.
+
 ## Experimental leave-target-out state decoding (2026-09-24)
 
 `config/mold_leave_one_out.toml` fixes `state_objective="leave_target_out_unary_minima"`:

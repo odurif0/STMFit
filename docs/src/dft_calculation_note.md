@@ -194,6 +194,10 @@ constant-height/constant-current helpers below, which already use last-index-
 fast addresses. Numerical Python/Julia parity of the historical reader was not
 validation of its physical coordinates. Benchmark comparison is separate from
 this file-format correctness decision; see the September 24 journal entry.
+The completed fixed-calibration comparison gives **676/870 correct, 27/145
+exact**, versus exact legacy **679/33**, both coverage **852**. This does not
+promote the changed assignment pipeline or validate the legacy coordinates.
+The corrected reader remains opt-in; no SCF, height or support retuning follows.
 
 The accepted GlcN and GlcNAc cubes can also be transformed into a
 constant-current-like **diagnostic** with

@@ -10,6 +10,11 @@ check hashes, instantiate on login and run `--dry-run` before one `sbatch`.
 Both arms use `tangent_mold_finite.toml`; only the second gets the corrected
 templates. No QE computation, label, new fit or grading in the job. Fetch and
 verify every output, exact control and independent scores before external grade.
+Completed source **8295965**, job **11955512**, **0:0 in 6m22s**, 1m49s queued;
+MaxRSS **2,451,393 K** on `vipc2575`. All 460 files plus log are local and
+checksum-verified. Corrected templates **676/27/852**, exact legacy **679/33/852**:
+no assignment promotion, while retaining the opt-in file-format correction.
+No retry or retuning. `results/cube_order_20260924/report.md`.
 
 The September 24 leave-target-out comparison uses `hpc/compare_mold_loo.sbatch`:
 one two-hour Viper job, four CPUs / 16 GB, no retry. It reuses the saved **finite

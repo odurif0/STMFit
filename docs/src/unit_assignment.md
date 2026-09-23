@@ -2454,22 +2454,21 @@ Gaussian/affine projection gives **679/870 correct, 33/145 exact**, versus
 support **676/34**, both coverage **852**. Historical **677/36/854** is exceeded
 per unit only. Keep this opt-in candidate, not an overall champion.
 
-Fixed-geometry ablations regress: ellipse angle **678/30**, shared states
-**675/32**, adjacent amplitudes **671/29**, leave-target-out states (Sep 24)
-**670/32**, all coverage **852**. Reject; retain neutral missing-cost omission
-**679/33**. The latest test gives two scan gains/eleven losses, one exact gain/two
-losses. N, geometry, patches, Fisher and classifier settings stay fixed; GMM is
-relearned without labels. No default change or retuning. Source **61a56d6**, job
-**11955091**; checks/gains/losses: [journal](journal.md),
-`results/mold_loo_20260924/report.md`.
+Fixed-geometry ablations regress; see [journal](journal.md). Correct QE cube
+addressing (Sep 24) gives **676/27/852**, versus exact legacy **679/33/852**:
+six scan gains/nine losses, one exact gain/seven losses. Keep the correct reader,
+not a recognition promotion. The unchanged surface calibration remains sparse
+and discontinuous. N, geometry, patches, Fisher and classifier settings stay
+fixed; no labels in learning or post-grade tuning. Source **8295965**, job
+**11955512**; `results/cube_order_20260924/report.md`.
 
 ### Native numerical conventions
 
-The constant-current port retains the old first-axis-fast cube index, sampling
-grid increments, highest occupied z, and first-isovalue-below-target rule. Its
-actual GlcN/GlcNAc template TSV is byte-identical to the Python reference on the
-fixed inputs/settings. Target height is explicitly 0.50 nm, not the 0.55 nm
-field found in the frame files. The Python implementation is used only in tests.
+Historical CC replay preserves first-axis-fast cube tokens, grid increments,
+highest occupied z and first-isovalue-below-target at 0.50 nm, not frame-file
+0.55 nm. Native/Python templates match, but QE writes last-axis-fast. The opt-in
+correction above changes only addressing; parity is not physical validation.
+Python remains test-only. See [DFT note](dft_calculation_note.md).
 
 The Fisher port retains PCA10, full-covariance/free-weight GMM2, amplitude sign
 mapping, sample latent covariance plus ridge, opposite even/odd-lobe folds,

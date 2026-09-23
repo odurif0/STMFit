@@ -8,6 +8,11 @@ Accepted cubes/frames reproduce old templates exactly under the old reader.
 height, support or isovalue search is selected by benchmark labels. This does
 not establish an explicit tip, calibrated current or physical adequacy of the
 remaining legacy surface policy. See the dated journal comparison.
+Completed: **676/870 correct, 27/145 exact**, versus legacy **679/33**, coverage
+**852** in both. Correct-order mean heights **0.255375/0.292328 nm** and support
+**40/289, 58/289** expose a discontinuous remaining calibration before any
+grade. No height/branch/support adjustment follows; retain the correct reader,
+not a recognition promotion. `results/cube_order_20260924/report.md`.
 
 The September 24 leave-target-out comparison changes only which lobes select
 phase/mirror, not the physical state costs or calibration. It uses other lobes
