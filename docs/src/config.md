@@ -16,6 +16,11 @@ orientation derivative, cross-view state sharing or composition prior. Rank,
 zero-norm and support tolerances remain fixed. This bounded comparison is opt-in;
 no production default or physical calibration changes.
 
+Completed: adjacent amplitudes give **671/870 correct, 29/145 exact**, versus
+exact finite-control replay **679/33**, both coverage **852**. Reject the basis
+extension without retuning; retain configs only for reproducibility. Keep the
+target-only candidate and omission fix. `results/tangent_neighbors_20260923/report.md`.
+
 ## Experimental mold-state decoding (2026-09-23)
 
 `config/mold_state_comparison.toml` fixes two ablations over saved full-precision

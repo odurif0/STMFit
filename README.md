@@ -4,17 +4,17 @@ Analysis pipeline for STM images of molecular chains (chitosan on Cu(100) and
 similar systems). Detects and fits a chain-of-Gaussians model to count the
 number of monomer units (lobes) per chain, label-free.
 
-**Latest comparison, September 23: missing-cost correction is neutral; shared
-mold geometry regresses.** The correction exactly preserves tangent predictions
-at **679/870 correct, 33/145 exact chains**. Sharing parity/mirror across views
-gives **675/870, 32/145**, all at **852/870 coverage**: five scans gain, nine lose,
-one exact chain gained/two lost. Retain the opt-in correctness fix, reject the
-shared-state variant; production defaults and saved references stay unchanged.
-Historical **677/36/854** is not surpassed overall. All geometry, state costs,
-patches, Fisher and classifier settings are fixed; labels enter only external
-grading, with no post-grade tuning. Source **e8c9104**, job **11953490**, **0:0
-in 1m46s** (cached decoding/classification only). See the
-[mold-state result](docs/src/unit_assignment.md#tangent-physical-mold-scores-2026-09-23-trade-off).
+**Latest comparison, September 23: projecting out adjacent amplitudes regresses.**
+Adding only the previous/next Gaussian amplitude columns gives **671/870 correct,
+29/145 exact chains**, versus byte-identical tangent control **679/33**, both
+coverage **852/870**. One scan gains, nine lose; no exact chain gained, four lost.
+Reject this variant; retain the target-only candidate and neutral missing-cost
+fix, with unchanged production defaults. Historical **677/36/854** is still not
+surpassed overall. N, geometry, 17×17 patches, Fisher and classifier settings stay
+fixed; labels enter only the external grade, without post-grade tuning. Source
+**8460c08**, sole job **11953935**, **0:0 in 5m24s**; all outputs fetched and
+independently checked. See the
+[tangent comparisons](docs/src/unit_assignment.md#tangent-physical-mold-scores-2026-09-23-trade-off).
 
 **Stable support reference (saved inputs):** complete-disk support improves
 **675 → 676 correct / 870** and **33 → 34 exact chains / 145**. Use the opt-in

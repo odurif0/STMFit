@@ -1,5 +1,13 @@
 # Model Selection
 
+The September 23 **adjacent-amplitude tangent** test gives **671/870 correct,
+29/145 exact**, versus byte-identical target-only **679/33**, both coverage
+**852**. One scan gains/nine lose, zero exact gains/four losses. All N/GCV/`n_eff`,
+geometry, patch support, Fisher and classifier settings remain fixed. Reject
+these extra nuisance columns without retuning; retain the earlier candidate and
+neutral missing-cost fix. Historical **677/36/854** is not surpassed overall.
+Source **8460c08**, job **11953935**; `results/tangent_neighbors_20260923/report.md`.
+
 The September 23 **mold-state decoder** comparison leaves all N/GCV/`n_eff`,
 physical guards and geometry unchanged. Missing-cost omission exactly preserves
 tangent predictions (**679/870 correct, 33/145 exact**, coverage **852**);

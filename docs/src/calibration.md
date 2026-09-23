@@ -9,6 +9,10 @@ explicitly retain the tested missing-cost omission. All numerical tolerances,
 physical widths, N and classifier settings remain frozen. Projected contrast
 energy diagnoses numerical loss, not retained experimental chemical information.
 This does not repeat the failed wider-patch experiment or change calibration.
+Completed: **671/870 correct, 29/145 exact**, versus target-only **679/33**, both
+coverage **852**. Reject the adjacent-amplitude basis without a new cutoff or
+strength adjustment. Retaining over 93.97% of template contrast energy did not
+guarantee retained recognition. `results/tangent_neighbors_20260923/report.md`.
 
 The September 23 mold-state comparison changes no physical calibration. It uses
 saved tangent costs, omits both-infinite observations from geometric-state

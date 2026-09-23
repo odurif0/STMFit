@@ -1,6 +1,16 @@
 # Chitosan Benchmark and 10–20mer Runbook
 
-Latest September 23 comparison: omitting both-infinite unary costs from state
+Latest September 23 comparison: adjacent-amplitude tangent columns give
+**671/870 correct, 29/145 exact**, versus exactly replayed target-only control
+**679/33**, both coverage **852**. One scan gains/nine lose, no exact gain/four
+losses. Reject this variant; keep the target-only candidate and the neutral
+missing-cost fix. Historical **677/36/854** is not surpassed overall. Frozen N,
+geometry, 17×17 patches, Fisher and classifier settings; labels only in external
+grading. Source **8460c08**, job **11953935**, **0:0 in 5m24s**, 1m59s queued.
+All 460 outputs plus log are local/checksummed; independent checks pass. No
+retuning, default change or unknown25 rerun. `results/tangent_neighbors_20260923/report.md`.
+
+Earlier September 23 comparison: omitting both-infinite unary costs from state
 selection fixes the unsupported-lobe blockage, but preserves all final predictions
 at tangent **679/870 correct, 33/145 exact**, coverage **852**. Sharing only
 geometric parity/mirror across acquisitions then gives **675/32/852**: five scan

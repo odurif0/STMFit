@@ -14,6 +14,11 @@ the `tangent` arm adds adjacent amplitude columns. Both rerun the complete
 assignment workflow from frozen geometry. No labels or grading in the job.
 Fetch every output/log, verify exact control replay, complete keys/N, unchanged
 upstream tables and independently recomputed scores before external reporting.
+Completed source **8460c08**, sole job **11953935**, **0:0 in 5m24s**, 1m59s
+queued; four CPUs requested/eight allocated, 16 GB, MaxRSS **2,736,196 K**.
+All 460 outputs/log are local and checksum-verified; complete independent checks
+pass. Neighbor variant **671/29/852**, exact control **679/33/852**: rejected,
+no tuning or further job. `results/tangent_neighbors_20260923/report.md`.
 
 The September 23 saved-cost decoder comparison uses
 `hpc/compare_mold_states.sbatch`: three sequential arms, four CPUs / 16 GB,

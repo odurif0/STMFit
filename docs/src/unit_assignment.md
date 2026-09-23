@@ -2454,16 +2454,14 @@ Gaussian/affine projection gives **679/870 correct, 33/145 exact**, versus
 support **676/34**, both coverage **852**. Historical **677/36/854** is exceeded
 per unit only. Keep this opt-in candidate, not an overall champion.
 
-Adding only the ellipse-angle derivative regresses to **678/30**, coverage
-**852**: no exact gain, three losses. **Reject the orientation addition.**
-Source **0b7a4cf**, job **11953258**. N/geometry/patches/Fisher and classifier
-settings stay fixed; GMM is relearned without labels. No promotion or tuning.
-Details: [journal](journal.md), `results/tangent_orientation_20260923/report.md`.
-
-Subsequent missing-cost omission preserves **679/870 correct, 33/145 exact**;
-shared parity/mirror regresses to **675/32**, both coverage **852**. Keep the
-opt-in correctness fix, reject sharing; defaults unchanged. Source **e8c9104**,
-job **11953490**; full checks/gains/losses: `results/mold_states_20260923/report.md`.
+Fixed-geometry ablations regress: ellipse-angle derivative **678/30**, shared
+parity/mirror **675/32**, adjacent-amplitude columns **671/29**, all coverage
+**852**. Reject these additions; retain neutral missing-cost omission **679/33**.
+Neighbor projection gives one scan gain/nine losses, no exact gain/four losses.
+N, geometry, patches, Fisher and classifier settings stay fixed; GMM is relearned
+without labels. No default change or retuning. Latest source **8460c08**, job
+**11953935**; complete checks/gains/losses: [journal](journal.md),
+`results/tangent_neighbors_20260923/report.md`.
 
 ### Native numerical conventions
 

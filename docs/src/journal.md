@@ -2308,12 +2308,15 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0ao. **Does rejecting immediate-neighbor amplitude leakage improve tangent CC?**
-    → **AUTHORIZED, IN PROGRESS (Sep 23)**. Compare target-only tangent with
-    target plus previous/next amplitude columns on unchanged 17×17 patches.
-    Both arms retain the neutral missing-cost fix; no shared state, angle
-    derivative, neighbor refit or composition prior. Preparation ≤4 hours, one
-    Viper job ≤2 hours. Deliverable: complete full146 inference, exact control
-    replay, independent checks, and external145 gains/losses; not a protocol.
+    → **COMPLETE; NEGATIVE (Sep 23)**. Adjacent amplitudes give **671/870 correct,
+    29/145 exact**, versus exact target-only replay **679/33**, both coverage
+    **852**. One scan gains/nine lose, no exact gain/four losses. Reject this
+    basis extension; keep the target-only candidate and neutral missing-cost
+    fix, with unchanged defaults. Historical **677/36/854** is not surpassed
+    overall. Source **8460c08**, sole job **11953935**, **0:0 in 5m24s**;
+    all 460 outputs/log local and hash-checked. Full146/900-key checks and
+    external145 grading pass; no tuning, extra job or unknown25 rerun.
+    `results/tangent_neighbors_20260923/report.md`.
 
 0an. **Can missing-cost omission and then shared geometric mold states improve recognition?**
     → **COMPLETE; NEUTRAL FIX, NEGATIVE SHARING (Sep 23)**. Omission resolves
@@ -13837,7 +13840,7 @@ The unknown-chain application is already complete; its frozen workflow is not
 rerun or changed. The archived plan's scientific Must-NOT-have constraints stay
 in force; no process framework or additional campaign is introduced.
 
-**Fixed hypothesis.** Wider residual patches already failed (April 10 entries).
+**Fixed hypothesis.** Wider residual patches already failed (August 2 entries).
 Here the patch remains 17×17. At each frozen lobe, append only
 `d(A_j G_j)/dA_j = G_j` for topological neighbors `i-1` and `i+1` when present.
 Endpoint/singleton rules follow topology, not image intensity or chemistry.
@@ -13895,3 +13898,85 @@ submitted at **21:39:37 CEST**, four requested CPUs / 16 GB, two-hour limit,
 `--no-requeue`, with all five paths explicitly in command-line `--export=ALL,...`.
 Output: `/ptmp/oldu/stmfit/tangent_neighbors_20260923_v1`; Slurm log alongside.
 Follow this job through fetch/checks and the external report; do not resubmit.
+
+**Complete inference and independent checks.** Job **11953935** starts at
+**21:41:36 CEST** after **1m59s** queued and completes at **21:47:00**, **0:0 in
+5m24s**, on `vipc2109`. Four CPUs requested/eight allocated, 16 GB, MaxRSS
+**2,736,196 K**. All **460 regular output files plus the Slurm log** are fetched
+and SHA256 verified. Source and Project/Manifest are unchanged; no job remains.
+Both arms finish all 146 scans / 900 keys. Fifteen corrected-control tables and
+16 target-only basis/audit shard files replay byte-for-byte. Ten upstream,
+Fisher and k-means tables stay literal between arms; only the two CC predictor
+columns and downstream learned GMM/vote can change. The 898 available CC margins
+per view change; missing scores remain unavailable.
+
+The saved-output check passes **2,547,330 assertions**, plus **900** unchanged
+availability checks (mostly repeated pixel/cell checks, not independent science).
+Independent normalized/pivoted QR agrees with the SVD scores; independent state
+enumeration confirms objective optimality. All 900 geometries are elliptical:
+292 endpoints gain one column, 608 interiors gain two. Each arm/view has 3,592
+valid / 3,600 template states; the same eight lack native support. No rank loss,
+annihilated contrast/template, zero projected patch or new abstention occurs.
+Variant rank is nine/ten as specified. Forward/backward bases are byte-identical.
+
+Template contrast energy retained changes from median **96.9919%** (minimum
+94.1304%) to **96.6330%** (minimum 93.9717%); patch medians change
+**4.7499→2.0593% forward / 3.6605→1.7159% backward**. This is numerical retention,
+not evidence that experimental chemistry is preserved. Ten final decisions
+change across the cohort; complete external grading follows, with no retuning.
+
+**External result and decision.** The grade uses 145 scans / 892 predictions /
+870 truth positions, after full inference and independent checks. Membership-
+only grade copies pass 1,790 checks; all original predictions stay untouched.
+Aggregate arithmetic passes 41 checks, and all 870 paired scan rows for six
+profile comparisons are retained. Historical, support and corrected-control
+per-file grades are byte-identical to the previous saved grades. Counts remain
+106/145 exact, 14 short/25 long, 16 missing/38 extra positions.
+
+| Profile | Correct /870 | Exact chains /145 | Coverage /870 | Emitted errors |
+|---|---:|---:|---:|---:|
+| Historical saved reference | 677 | 36 | 854 | 177 |
+| Saved support | 676 | 34 | 852 | 176 |
+| Target-only tangent + missing-cost fix, exact replay | 679 | 33 | 852 | 173 |
+| Adjacent-amplitude tangent columns | 671 | 29 | 852 | 181 |
+
+Against the corrected control: **1 scan gain / 9 losses / 135 ties**, net **−8**;
+**zero exact gains / four losses**, with no external grading-alignment change.
+Exact losses: `240307_017.sxm`, `240814_011.sxm`, `240817_075.sxm`,
+`240817_081.sxm`. Confusion TN/FP/FN/TP changes
+**522/43/130/157 → 516/49/132/155**: six more false positives and two more false
+negatives. Against support: 6 gains/11 losses, net −5, one exact gain/six losses,
+two grading-alignment changes. Against history: 20 gains/26 losses, net −6,
+five exact gains/twelve losses, six grading-alignment changes and coverage −2.
+All gains/losses are retained, not selected out; no grade alignment changes
+between the two new arms explains their measured regression.
+
+Native decisions change on ten scans: seven `0→1`, three `1→0`; 280 reported
+confidences change. Global states change on 54 forward / 47 backward scans.
+Among changed decisions, three old/six new confidences are zero; valid zero-
+confidence votes rise 45→48 under the unchanged rule. The same four unavailable
+keys remain (`240310_Cu100009` lobe 8, `240818_015` lobe 1, `240818_019` lobes
+1/2). No unavailable observation is filled, and no post-grade vote cutoff is
+introduced to hide these regressions.
+
+**Reject this adjacent-amplitude projection.** Keep target-only **679/33/852**,
+the opt-in neutral missing-cost repair, and saved support **676/34/852** intact.
+Historical **677/36/854** is still not surpassed overall. The numerical retention
+diagnostic did not predict recognition improvement; this negative result does
+not disprove every possible neighbor model. No distance/strength/rank cutoff,
+new feature, hybrid, noise/tip campaign, retry or unknown25 rerun follows.
+Science remains frozen at **8460c08**. This bounded loop is complete; the broader
+historical objective remains open. Reused benchmark evidence is development,
+not independent validation or unknown-chain chemical proof.
+
+Full evidence: `results/tangent_neighbors_20260923/report.md`; paired results
+and all outputs are local for human review. Update README, runbook, selection,
+assignment, configuration/calibration and HPC headlines consistently, while
+keeping the assignment page below the unchanged documentation size limit.
+
+The final Julia **1.13.0** docs build passes without deployment, with the
+assignment page at **199.71 KiB / 200 KiB** and existing size/search warnings.
+The final source diff confirms no scientific change after **8460c08**; all 460
+output hashes and both Project/Manifest hashes remain unchanged after grading.
+Code/tests and the full outcome are committed for human review; generated
+evidence remains ignored and local. No job or next campaign is left running.
