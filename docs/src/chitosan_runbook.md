@@ -1,6 +1,17 @@
 # Chitosan Benchmark and 10–20mer Runbook
 
-Latest September 23 result: **cross-view residual subtraction is negative**.
+Latest September 23 result: **tangent physical-mold scores reach 679/870 correct,
+33/145 exact**, versus byte-identical support **676/34**, both at **852/870
+coverage**. Historical **677/36**, coverage **854**, is exceeded per unit only:
+not an overall champion. Against support: 11 scan gains/eight losses, three
+exact gains/four losses. N, geometry, patches and Fisher are unchanged; only
+both CC descriptors and downstream unlabeled GMM learning change. Source
+**92cce55**, job **11952883**, **0:0 in 5m34s**; all 430 outputs plus log fetched
+and checksummed. Tests, exact replay and independent QR checks pass. Retain as
+an opt-in per-unit candidate without replacing support, tuning or rerunning
+unknown25. Full gains/losses: `results/tangent_molds_20260923/report.md`.
+
+Earlier September 23 result: **cross-view residual subtraction is negative**.
 Same-view gives **675/870 correct, 30/145 exact**, opposite-view **673/30**,
 versus byte-identical support replay **676/34**, all at **852/870 coverage**.
 N, main/split features and raw patches remain literal. All 292 linear profiles

@@ -2308,9 +2308,17 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0al. **Can native-sampled local Gaussian tangent rejection improve physical mold scores?**
-    → **IN PROGRESS (Sep 23)**. One authorized bounded comparison, reference
-    versus projection of both physical CC scores; N, all geometry, patches,
-    empirical Fisher and classifier settings stay fixed. See the dated entry.
+    → **COMPLETE; TRADE-OFF (Sep 23)**. Tangent CC gives **679/870 correct,
+    33/145 exact**, versus exactly replayed support **676/34**, both at
+    **852/870 coverage**. It exceeds historical **677/36** by two correct
+    positions, but loses three exact chains and two covered positions: not an
+    overall champion. All N/geometry/patches/Fisher stay fixed; only both CC
+    descriptors and consequent unlabeled GMM learning change. Retain this
+    per-unit candidate, without replacing the support reference or tuning.
+    Source **92cce55**, sole job **11952883**, **0:0 in 5m34s**; 430 outputs/log
+    fetched and SHA256 checked. Full QR/invariance checks pass; 22 decisions
+    change. No retry, combination or unknown25 rerun.
+    `results/tangent_molds_20260923/report.md`.
 
 0ak. **Can opposite-view amplitude profiles improve residual recognition?**
     → **COMPLETE; NEGATIVE (Sep 23)**. Same-view subtraction gives **675/870
@@ -13362,3 +13370,83 @@ It requests four CPUs / 16 GB, receives eight CPUs, has a two-hour limit and
 list. Output is `/ptmp/oldu/stmfit/tangent_molds_20260923_v1`, with the Slurm
 log alongside. Continue through completion, fetch and external comparison;
 no second job, post-submission scientific change or other campaign.
+
+**Completed comparison: per-unit gain, exact-chain loss.** Job **11952883**
+ends **19:16:43 CEST**, **COMPLETED 0:0 in 5m34s**, on `vipc2575`; MaxRSS
+**2,112,434 K**, four CPUs requested/eight allocated. Both arms finish all
+**146 scans / 900 keys**. All **430 regular output files plus Slurm log** are
+fetched and SHA256-identical; no user job remains. Project/Manifest and all
+scientific sources/settings remain unchanged from **92cce55** (submission
+record **4f2ab54**). The sole job and preparation stay within the declared budget.
+
+Before grading, **1,143,143 assertions** pass: 36,229 full-pipeline/input checks,
+553,456 independent QR/serialized-score checks per direction, and two shard-count
+checks. The large count includes repeated scalar checks of the saved pixel
+designs, not that many independent scientific tests. All fifteen reference
+scientific tables replay byte-for-byte. Ten upstream/Fisher/k-means tables are
+byte-identical across arms; predictor features differ only in the two CC columns.
+All 900 designs are byte-identical between directions. At each direction's
+3,600 parity/mirror states, **3,592** are valid; eight retain the existing
+insufficient-support status (two lobes × four states). There is no annihilated
+contrast, zero projected patch or numerical rank loss. Independent QR reproduces
+the projection's costs and retained energies. Only **898** CC values change per
+direction; the two insufficient-support scores remain unavailable.
+
+Retained standardized physical contrast energy spans **94.1304–97.3130%**,
+median **96.9919%**, in both views. Retained patch energy medians are **4.7499% /
+3.6605%**, with ranges **0.2641–93.1733% / 0.1527–80.7689%**. The smallest
+singular value of unit-normalized designs is at least **0.0035384**, far above
+the fixed numerical rank cutoff. These descriptors are not calibrated chemical
+likelihoods; retained DFT-template contrast is not proof of preserved experimental
+chemical information.
+
+Both arms retain the same four unavailable keys, **896** usable classifier rows,
+and Fisher's converged 434/462-row folds. Final `(0,1,?)` populations change
+**(673,223,4) → (689,207,4)**, outputs rather than composition constraints.
+There are **22** changed decisions: three `0→1`, nineteen `1→0`; sixteen have
+zero old vote confidence and three zero new confidence. Do not tune tie handling.
+
+External grading then passes **31 aggregate checks** on **145 scans /
+892 predictions / 870 truth positions**:
+
+| Profile | Correct /870 | Exact chains /145 | Coverage /870 | Emitted errors |
+|---|---:|---:|---:|---:|
+| Historical saved reference | 677 | 36 | 854 | 177 |
+| Saved support, exact replay | 676 | 34 | 852 | 176 |
+| Native-sampled tangent CC | **679** | **33** | 852 | **173** |
+
+Against support: **11 scan gains / 8 losses / 126 ties**, net **+3** positions;
+**three exact gains / four losses**, two externally selected orientation changes.
+Exact gains: `240307_016`, `240814_011`, `240817_075`. Losses:
+`240310_Cu100007`, `240817_003`, `240817_044`, `240818_020`. Confusion
+`(TN,FP,FN,TP)` changes **(513,52,124,163) → (522,43,130,157)**: nine fewer false
+positives but six more false negatives. Thus the per-unit gain does not mean
+improved sensitivity to both chemical types. Against history: **26 gains /
+24 losses / 95 ties**, net **+2** positions; seven exact gains/ten losses, six
+external orientation changes, two fewer covered positions. These grading
+alignments are not input to inference or independently observed correspondence.
+All **435 paired scan rows**, including every loss and the historical/control
+comparison, are retained. Counts stay **106/145 exact**, 14 short/25 long,
+16 missing truth positions and 38 extra lobes. Non-correct positions are 173
+emitted errors + 16 missing + two aligned abstentions, not 191 abstentions.
+
+**Retain as a per-unit candidate, not an overall champion.** This crosses the
+historical per-unit score but does not meet its exact-chain or coverage result.
+Do not overwrite either the saved history or the **676/34 support reference**,
+and do not change production defaults. No threshold/rank/column adjustment,
+truth-selected hybrid, other campaign, retry or unknown25 rerun follows.
+The small gain on this reused development benchmark is not independent
+validation or evidence of chemical accuracy on unknown 10–20mers. The bounded
+comparison is complete; the broader historical objective remains open.
+Full report: `results/tangent_molds_20260923/report.md`, with all outputs local.
+
+The first final docs build exceeds the existing assignment-page limit
+(**200.16 KiB / 200 KiB**). Condense its latest summaries, keeping every result
+and limitation in this journal and the local report; do not increase the limit.
+No scientific code or setting changes after source freeze or grading.
+
+The final Julia **1.13.0** documentation build passes without deployment, with
+existing size/search warnings; assignment HTML is **199.84 KiB / 200 KiB**.
+Tests, full outputs, gains/losses and limitations are ready for human review.
+Only documentation changed after **92cce55**; validated source and conclusions
+are versioned, generated outputs remain ignored/local, and no job is left queued.

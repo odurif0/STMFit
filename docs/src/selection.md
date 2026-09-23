@@ -1,5 +1,14 @@
 # Model Selection
 
+The September 23 **tangent physical-mold scores** give **679/870 correct,
+33/145 exact**, versus support **676/34**, both at **852/870 coverage**. This
+exceeds historical **677/36** per unit, not on exact chains or coverage (854).
+It changes no N, GCV, physical guard, `n_eff`, geometry, patch or Fisher result;
+only both CC descriptors and subsequent unlabeled GMM learning change. Counts
+remain **106/145 exact**, 16 missing/38 extra lobes. Retain this experimental
+per-unit candidate without replacing support or claiming an overall champion.
+Source **92cce55**, job **11952883**; `results/tangent_molds_20260923/report.md`.
+
 The September 23 **cross-view residual comparison is negative**: own-view
 subtraction **675/870 correct, 30/145 exact**, opposite-view **673/30**, versus
 exact saved support replay **676/34**, all at **852/870 coverage**. N, geometry,

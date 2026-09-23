@@ -14,6 +14,11 @@ No pixel filling, N selection, new templates, calibrated likelihood or productio
 default change. Requires fresh matched-residual patches and frozen main/split
 features; rejects combination with other acquisition/geometry experiments.
 The dated journal entry records the bounded comparison and its outcome.
+Completed result: **679/870 correct, 33/145 exact**, versus support **676/34**,
+both at **852/870 coverage**. Historical **677/36**, coverage **854**, is exceeded
+per unit only. Retain this opt-in candidate without replacing the support config
+or tuning tolerances. The two arms share the assignment config's model tag;
+the explicit projection option and separate output roots identify the variant.
 
 ## User-facing TOML calibration
 

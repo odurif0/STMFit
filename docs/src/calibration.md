@@ -8,6 +8,10 @@ Native smoothing/interpolation, finite-pixel requirements, physical templates
 and classifier calibration remain unchanged. Projecting out shape errors can
 also remove chemistry; retained contrast energy is diagnostic only. No rank,
 support, threshold or tangent column may be chosen using benchmark labels.
+The fixed comparison gives **679/870 correct, 33/145 exact**, against support
+**676/34**, both with coverage **852/870**. It exceeds historical **677/36** only
+per unit, not on exact chains or coverage (854); no calibration/default changes
+follow this result. Full evidence is in the dated journal entry.
 
 The pipeline has ~25 calibration parameters. Most can be **measured** from a
 single clean scan rather than hand-tuned, which makes the analysis generalizable

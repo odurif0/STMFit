@@ -1295,7 +1295,7 @@ Local frames give **670/870 correct, 30/145 exact**, versus **676/34** global,
 both at **852/870 coverage**. Reject; no retry, angle/degree search, promotion
 or unknown25 rerun. Full evidence: `results/local_orientation_20260923/report.md`.
 
-## Factor-analyzer and Student learning comparison (September 22)
+## Tangent physical-mold comparison (September 23)
 
 The September 23 tangent-mold comparison uses
 `bash hpc/compare_tangent_molds.sbatch --dry-run` before submission. One job,
@@ -1317,6 +1317,17 @@ the unchanged ignored Manifest, instantiate on the login node, dry-run,
 control replay, unchanged non-CC features and independent QR score arithmetic
 before external grading. Numerical contrast annihilation prevents partial
 scoring. No retries, threshold search, composition prior or unknown25 rerun.
+
+Completed source **92cce55**, job **11952883**, **0:0 in 5m34s** after 3s queued,
+MaxRSS **2,112,434 K**, on `vipc2575`. All **430 outputs plus log** are local and
+SHA256 checked; all 146/900 keys, exact reference replay and independent QR
+checks pass. Result **679/870 correct, 33/145 exact**, versus support **676/34**,
+both at **852/870 coverage**. Historical **677/36**, coverage **854**, is exceeded
+per unit only. Retain as an opt-in candidate, without replacing support or
+claiming an overall champion. No resubmission or post-grade changes. Report:
+`results/tangent_molds_20260923/report.md`.
+
+## Factor-analyzer and Student learning comparison (September 22)
 
 `hpc/compare_factor_student_mixtures.sbatch` runs `control/`,
 `factor_analyzer/` and `student_t/` sequentially at the same cached geometry

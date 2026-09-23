@@ -2425,48 +2425,44 @@ checks pass. [Journal](journal.md), `results/image_registration_2d_20260923/repo
 
 ### Local chain-tangent patch frames (2026-09-23): negative
 
-Quadratic-centerline tangents rotate only patch sampling; saved N/base/split
-fits, Gaussian subtraction, templates and assignment settings stay fixed.
-All **146 scans / 900 keys** finish. The result is **670/870 correct, 30/145
-exact**, versus byte-identical global replay **676/34**, with unchanged
-**852/870 coverage**. Two exact chains are gained, six lost; 22 decisions
-change. Full-square support rises 893→894/900, a diagnostic rather than a new
-training gate (`all_admissible` stays fixed). Reject this ablation, not all
-local-orientation molecular fits; keep support below historical **677/36**.
-Source **87235dc**, job **11950305**, **0:0 in 9m01s**; complete checks and
-paired losses: [journal](journal.md), `results/local_orientation_20260923/report.md`.
+Sampling-only quadratic-tangent rotation gives **670/870 correct, 30/145
+exact**, versus exact global replay **676/34**, both with **852/870 coverage**.
+N/base/split fits and subtraction stay fixed; two exact chains are gained,
+six lost. Reject this ablation, not all local molecular models. Source
+**87235dc**, job **11950305**; full support/checks and all losses:
+[journal](journal.md), `results/local_orientation_20260923/report.md`.
 
 ### Locally oriented Gaussian model (2026-09-23): negative
 
-Unlike sampling-only rotation, this refits the Gaussian base with quadratic
-tangents recomputed from current centers at every evaluation, without extra
-angle parameters. Local/global ellipses share an initialization, pixels, bounds
-and 300-iteration LM budget. Valid minimum full-parameter GCV adds the local
-candidate to the global pool; patch sampling and the split cache stay fixed.
-
-All **146 scans / 900 keys** finish. Local models win GCV on **87 scans**, but
-recognition gives **664/870 correct, 30/145 exact**, versus global refit
-**674/31** and byte-identical saved reference **676/34**, all at **852/870
-coverage**. Against global: 10 scan gains, 21 losses, 114 ties; two exact chains
-gained, three lost. The GCV reduction has median 0.604%, not a chemistry gain.
-All **584 fits** pass native validity but hit their iteration caps; this does
-not establish converged optima. Reject this version, retain support below
-historical **677/36**; no post-grade tuning or unknown25 rerun.
-
-Source **c692958**, job **11951208**, **0:0 in 26m58s**. All 775 outputs plus log are
-fetched and checked; **62,464 pre-grade and 41 aggregate checks** pass. Full
-method, stopping diagnostics and all 725 paired scan comparisons:
+Quadratic tangents now rotate the fitted Gaussians, not patch sampling; N and
+split cache remain fixed. Local/global ellipses share starts, pixels, bounds
+and 300 LM iterations. Full-parameter GCV selects local models on **87/146**
+scans, but recognition falls to **664/870 correct, 30/145 exact**, versus global
+**674/31** and exact saved replay **676/34**, all at **852/870 coverage**.
+All 584 fits pass validity but hit iteration caps: not converged optima.
+Reject without tuning. Source **c692958**, job **11951208**. Full method,
+stopping diagnostics, checks and all 725 paired scan comparisons:
 [journal](journal.md), `results/local_gaussian_20260923/report.md`.
 
 ### Cross-view residual subtraction (2026-09-23): negative
 
-Only native-box amplitudes/backgrounds change subtraction; N, geometry,
-main/split features, raw patches and classifier settings stay fixed. Same-view
-gives **675/870 correct, 30/145 exact**, opposite-view **673/30**, versus replay
-**676/34**, all at **852/870 coverage**. Cross gains two exact chains, loses six.
-All 292 solves converge; 146 fused means pass native guards, not independent
-per-view validation. Reject both; retain support below **677/36**. Source
+Subtraction-only amplitude/background profiles give **675/870 correct, 30/145
+exact** (same view), **673/30** (opposite), versus replay **676/34**, all with
+**852/870 coverage**. N/main features stay fixed. All 292 solves converge and
+146 fused means pass validity, not independent per-view validation. Reject. Source
 **9d6c541**, job **11952397**; [journal](journal.md), `results/cross_view_residual_20260923/report.md`.
+
+### Tangent physical-mold scores (2026-09-23): trade-off
+
+Native-sampled Gaussian/affine projection of CC patches/templates gives
+**679/870 correct, 33/145 exact**, versus exact
+support replay **676/34**, both at **852/870 coverage**. Historical **677/36**,
+coverage **854**, is exceeded per unit only: not an overall champion.
+Three exact chains are gained, four lost. N/geometry/patches/Fisher stay fixed;
+GMM is relearned without labels. Opt-in: `--mold-tangent-settings
+config/tangent_mold_projection.toml` with the support config. No promotion or
+tuning. Source **92cce55**, job **11952883**; full evidence:
+[journal](journal.md), `results/tangent_molds_20260923/report.md`.
 
 ### Native numerical conventions
 

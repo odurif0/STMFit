@@ -4,12 +4,23 @@ Analysis pipeline for STM images of molecular chains (chitosan on Cu(100) and
 similar systems). Detects and fits a chain-of-Gaussians model to count the
 number of monomer units (lobes) per chain, label-free.
 
-**Latest working candidate, September 22 (saved inputs):** complete-disk support improves
+**Latest comparison, September 23: a per-unit gain, not an overall champion.**
+Native-sampled Gaussian tangent projection of the two physical mold scores gives
+**679/870 correct and 33/145 exact chains**, versus exactly replayed support
+**676/34**, both at **852/870 coverage**. Historical **677/36**, coverage **854**,
+is exceeded by two correct positions, but not on exact chains or coverage.
+Keep this opt-in per-unit candidate and the unchanged support reference; no
+production promotion or post-grade tuning. N, geometry, patches and Fisher stay
+fixed; labels enter only the external development grade. See the
+[tangent-score result](docs/src/unit_assignment.md#tangent-physical-mold-scores-2026-09-23-trade-off).
+
+**Stable support reference (saved inputs):** complete-disk support improves
 **675 → 676 correct / 870** and **33 → 34 exact chains / 145**. Use the opt-in
 `config/unit_assignment_patch_support.toml`. Coverage rises **849 → 852 / 870**;
 classified accuracy is **676/852 (79.3%)**. Three newly available predictions
 are correct, but two formerly correct decisions regress. This is **not a new
-champion**: historical 677/870 and 36/145 still lead, with higher coverage (854).
+champion**: this support reference trails historical 677/870 and 36/145,
+with higher historical coverage (854).
 The independent final Gaussian-score arm regresses to **666/870 and 32/145**
 and is rejected. All 900 keys and selected counts remain; the support rule imputes no patch pixels,
 no variants combined and no settings tuned after grading. Labels are used only
