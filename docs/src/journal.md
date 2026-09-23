@@ -13349,3 +13349,16 @@ Documentation builds without deployment (existing size warnings); Project and
 Manifest are unchanged. Viper has the expected Julia and inputs, with no current
 user job. No rank, column, energy cutoff or template changed after the single
 scan. Commit this tested source before sync/submission; no job submitted yet.
+
+**Submitted.** Scientific source **92cce55** is checksum-identical at
+`/u/oldu/code/STMFit_tangent_molds_20260923`; original geometry, raw images and
+templates also match local bytes. Login-node instantiate/precompile succeeds
+with Julia **1.13.0**; the Manifest's 1.12.6 warning does not change Project or
+Manifest hashes. Remote metadata dry-run succeeds. Slurm test **11952882** is
+only a resource check, not a submitted job. Actual job **11952883**, submitted
+**19:11:06 CEST**, starts **19:11:09** on `vipc2575`, after **3 s** queued.
+It requests four CPUs / 16 GB, receives eight CPUs, has a two-hour limit and
+`--no-requeue`; all five path variables are in the explicit `--export=ALL,...`
+list. Output is `/ptmp/oldu/stmfit/tangent_molds_20260923_v1`, with the Slurm
+log alongside. Continue through completion, fetch and external comparison;
+no second job, post-submission scientific change or other campaign.
