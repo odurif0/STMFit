@@ -2198,31 +2198,14 @@ vote changes seven hard decisions, all 0→1; raw `(0,1,?)` totals move
 
 Against control: **3 scan gains, 4 losses, 138 ties**, net **−1 correct**;
 **2 exact chains gained, none lost**, without any grading-orientation change.
-Exact chains are gained on `240307_016` and `240814_011`; `240817_017` gains
-one correct truth position but still has an extra predicted lobe. Losses occur
-on `240817_058`, `240817_059`, `241114_011` and `241114_022`. All seven changed
-decisions land exactly at the existing vote tie (`probability_1=0.5`, zero
-margin), emitted as 1 by the unchanged `>=0.5` rule. This is not evidence of
-calibrated chemical confidence, and no tie or abstention rule is adjusted.
-
-Confusion `(TN,FP,FN,TP)` changes `(513,52,124,163)→(509,56,121,166)`:
-three fewer false negatives but four more false positives. Coverage stays
-852/870; emitted errors rise 176→177. Counts remain 16 missing positions,
-38 extra lobes and two aligned abstentions. Against history: 23 scan gains,
-24 losses, 98 ties, net −2 correct; six exact chains gained and six lost,
-with eight grading-orientation changes. Grade alignment is not an independently
-established spatial monomer correspondence.
-
-**Retain the 676/34 support candidate as the primary working reference.**
-Weighting gives a tradeoff, not a uniformly better result: neither arm dominates
-on both correct-position and exact-chain counts. Historical 677/36 is still
-unexceeded, with two more correct and classified positions than this variant.
-The weighted config remains a documented experiment, not a promoted champion.
-No weight, seed, threshold, naming-rule or combined-variant search follows;
-counting, DFT and unknown25 remain untouched. Learning and inference are
-label-free, but this reused benchmark is development evidence, not independent
-validation. All 290 paired scan rows and seven changed decisions are preserved
-in `results/scan_weighting_20260921/report.md` and its linked tables.
+All seven changed decisions land at the unchanged zero-margin vote tie,
+emitted as 1 by `>=0.5`; this is not calibrated chemical confidence. Coverage
+stays 852/870 and emitted errors rise 176→177. **Retain support 676/34**:
+weighting is a tradeoff, still below historical 677/36, not a promoted champion.
+No post-grade adjustment, combination, counting/DFT change or unknown25 rerun
+follows. This reused benchmark is development evidence, not independent
+validation. Full confusion, every changed decision and all 290 paired scan
+rows remain in [journal](journal.md) and `results/scan_weighting_20260921/report.md`.
 
 ### Continuous GMM seed vote (2026-09-21): negative
 
@@ -2479,6 +2462,19 @@ three supports. No unique translation is accepted; the conditional molecular
 fit is not run. No new recognition grade; keep **676/34**, below **677/36**.
 Source **68babd2**, job **11948275**, **0:0 in 2m47s**; **305,523** saved-output
 checks pass. [Journal](journal.md), `results/image_registration_2d_20260923/report.md`.
+
+### Local chain-tangent patch frames (2026-09-23): negative
+
+Quadratic-centerline tangents rotate only patch sampling; saved N/base/split
+fits, Gaussian subtraction, templates and assignment settings stay fixed.
+All **146 scans / 900 keys** finish. The result is **670/870 correct, 30/145
+exact**, versus byte-identical global replay **676/34**, with unchanged
+**852/870 coverage**. Two exact chains are gained, six lost; 22 decisions
+change. Full-square support rises 893→894/900, a diagnostic rather than a new
+training gate (`all_admissible` stays fixed). Reject this ablation, not all
+local-orientation molecular fits; keep support below historical **677/36**.
+Source **87235dc**, job **11950305**, **0:0 in 9m01s**; complete checks and
+paired losses: [journal](journal.md), `results/local_orientation_20260923/report.md`.
 
 ### Native numerical conventions
 

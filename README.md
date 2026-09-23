@@ -16,6 +16,14 @@ no variants combined and no settings tuned after grading. Labels are used only
 by external grading; this reused development benchmark is not independent
 validation. See the [support/score comparison](docs/src/unit_assignment.md#complete-disk-support-and-final-gaussian-score-2026-09-21).
 
+The **September 23 local patch-frame comparison** is negative: **670/870
+correct, 30/145 exact**, versus exactly replayed global support **676/34**,
+at unchanged **852/870 coverage**. Two exact chains are gained, six lost.
+Only patch sampling rotates along a label-free quadratic centerline; N and
+both saved molecular fits remain unchanged. Keep support, below historical
+677/36; no angle tuning or promotion. This does not test a locally rotated
+molecular fit. See the [local-frame result](docs/src/unit_assignment.md#local-chain-tangent-patch-frames-2026-09-23-negative).
+
 The **original-support registered refit** resolves the three earlier span
 failures, but remains **inconclusive**: 145/146 scans complete all four fits;
 a different scan fails the unchanged residual guard after registration. All

@@ -1062,6 +1062,9 @@ it requires frozen base/split geometry and fresh patches. Complete keys and
 matching saved centers/axes are checked. Only sampling rotates; model subtraction,
 preprocessing and assignment settings do not. The default remains global-axis
 sampling. No angle search, label input or physical calibration change is added.
+The completed comparison is negative: **670/870 correct, 30/145 exact**, versus
+global replay **676/34**, at **852/870 coverage** in both arms. Reject this
+variant without parameter adjustment; `results/local_orientation_20260923/report.md`.
 
 `directional_response.toml` declares an image-only mirrored first-order
 response pilot, not production deconvolution. Acquisition-order quantiles

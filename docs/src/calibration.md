@@ -649,7 +649,11 @@ model retains its original global axis, N and all saved coefficients. Frame
 rotation preserves the rounded global-axis norm and applies identically to both
 scan directions. Existing finite-patch support can change with window coverage;
 it must be reported, not repaired through labels or adjusted abstention. The
-global-axis profile remains the default pending the matched full-cohort comparison.
+global-axis profile remains the default: the complete comparison gives
+**670/870 correct, 30/145 exact**, versus global replay **676/34**, with unchanged
+**852/870 coverage**. This rejects patch-frame rotation alone, not a consistently
+refitted locally oriented molecular model. No post-grade angle/degree adjustment
+or calibration change follows; `results/local_orientation_20260923/report.md`.
 
 The September 23 `directional_response.toml` pilot tests relative scan-response
 phase on five acquisition-order scans. Equal forward/backward line times are

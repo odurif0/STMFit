@@ -1,6 +1,16 @@
 # Chitosan Benchmark and 10–20mer Runbook
 
-Latest September 23 result: **the four-start/subpixel pilot remains inadmissible**.
+Latest September 23 result: **local-tangent patch frames regress to 670/870
+correct units, 30/145 exact chains**, versus exactly replayed global support
+**676/34**, at unchanged **852/870 coverage**. All 146 scans / 900 keys finish;
+two exact chains are gained and six lost. N, base/split geometry, subtraction
+model and classifier settings stay fixed; only sampling rotates. Source
+**87235dc**, job **11950305**, **0:0 in 9m01s**. All 401 outputs/log are
+fetched/checksummed; 36,344 pre-grade and 31 aggregate checks pass. Retain
+support, below historical **677/36**; no post-grade angle search or unknown25
+rerun. Evidence: `results/local_orientation_20260923/report.md`.
+
+Earlier September 23 result: **the four-start/subpixel pilot remains inadmissible**.
 Source **b80df87**, job **11947363**, **0:0 in 9m52s**; all 112 endpoints finish
 without caps or exceptions. The shift reduces full paired RSS **4.93–6.64%**
 and all eight block-heldout errors **0.53–13.47%**, but all selected translations

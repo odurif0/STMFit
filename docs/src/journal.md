@@ -2308,13 +2308,15 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0ai. **Does a local chain-tangent patch frame improve recognition?**
-    → **AUTHORIZED, IN PREPARATION (Sep 23)**. Compare global versus quadratic
-    centerline-tangent sampling on all 146 scans / 900 keys, with the same
-    frozen base/split geometry, N, templates and assignment settings. Rotation
-    changes patches only, never Gaussian subtraction. One preparation day,
-    one Viper job capped at four hours, no parameter sweep or post-grade tuning.
-    Full-cohort inference precedes external grading; preserve **676/34** pending
-    a complete result. This is not yet a locally rotated molecular fit.
+    → **COMPLETE; NEGATIVE (Sep 23)**. Local sampling gives **670/870 correct,
+    30/145 exact**, versus byte-identical global replay **676/34**, both at
+    **852/870 coverage**. All 146 scans / 900 keys finish at unchanged N and
+    base/split fits; 22 decisions change. Two exact chains are gained, six lost.
+    Source **87235dc**, job **11950305**, **0:0 in 9m01s**; all 401 outputs/log
+    fetched and checksummed, 36,344 pre-grade and 31 aggregate checks pass.
+    No angle/degree adjustment, retry or promotion. Keep support below **677/36**.
+    This rejects patch rotation alone, not a locally rotated molecular fit;
+    `results/local_orientation_20260923/report.md`.
 
 0ah. **Does a small mirrored acquisition response explain more than translation?**
     → **COMPLETE; NO SUPPORT ON THE FIVE-SCAN PANEL (Sep 23)**. Four scans
@@ -12768,8 +12770,10 @@ particular, subtracting a locally rotated Gaussian would be a different and
 inconsistent experiment: the saved model was fitted with a global axis.
 The raw preprocessing, matched residual filtering, templates, feature definitions,
 unlabeled training, seeds, votes and abstention rules are unchanged. Rotating
-the window can change finite-pixel coverage and therefore the existing training
-support mask; report this effect without filling/dropping pixels or tuning gates.
+the window can change finite-pixel coverage and the existing disk-support/feature
+availability checks; report this effect without filling/dropping pixels or tuning
+gates. The assignment config retains `all_admissible` training: **no complete-square
+training gate** is enabled. Full-square support counts are diagnostics only.
 
 This isolates a representation hypothesis after earlier geometric refitting
 improved RSS but degraded recognition. It is distinct from adding curvature as
@@ -12806,3 +12810,70 @@ paths in the command-line export list, four-hour limit and `--no-requeue`.
 Output: `/ptmp/oldu/stmfit/local_orientation_20260923_v1`; local results:
 `results/local_orientation_20260923/`. Submission is not a scientific result;
 external grading is deferred until complete outputs and matched-control checks.
+
+### Completed local-frame result: reject the sampling-only change
+
+Job **11950305** starts at **14:45:57 CEST** after **30 seconds** queued and
+ends at **14:54:58**, **COMPLETED 0:0 in 9m01s**, on `vipc2294`. Four requested
+CPUs/eight allocated, 16 GB requested, MaxRSS **1,474,395 K**. Both arms finish
+all **146 scans / 900 keys**. All **401 regular outputs and the Slurm log**
+are fetched locally and SHA256 checked; the 146 raw-input hashes match.
+No retry or additional job is submitted.
+
+Before grading, **36,344 saved-output checks** pass: complete cohort/input
+hashes; independently recomputed quadratic derivatives via centered normal
+equations (not the generator's scaled QR); literal frozen centers/axes/base/split
+caches; finite-pixel counts; summaries/maps; independent final vote arithmetic;
+and byte-identical replay of all **fifteen reference scientific tables**.
+No scientific code or setting changes after commit **87235dc**.
+
+Angles have absolute median **7.8188°**, 95th percentile **25.8610°**, maximum
+**43.7678°**. Median centerline residual is **0.11396 nm**. Full-square complete
+patches increase **893→894/900** in each family, but this is diagnostic:
+`all_admissible` training and `complete_disk_symmetric` feature support remain
+unchanged. Both GMM arms retain **896 available rows**; both Fisher folds
+converge with **434/462** training rows. Four final predictions remain
+unavailable. Raw `(0,1,?)` counts move **(673,223,4)→(683,213,4)**;
+**22 final decisions change**. Populations are outputs, never composition targets.
+
+Only then does the existing external `--full145-own-n` grade run on **145
+scans / 892 predictions / 870 truth positions**. All **31 aggregate checks** pass.
+
+| Profile | Correct /870 | Exact /145 | Classified /870 | Emitted errors |
+|---|---:|---:|---:|---:|
+| Historical saved reference | 677 | 36 | 854 | 177 |
+| Replayed global support | 676 | 34 | 852 | 176 |
+| Local-tangent patches | 670 | 30 | 852 | 182 |
+
+Against control: **8 scan gains, 13 losses, 124 ties**, net **−6 correct**;
+**2 exact chains gained, 6 lost**. Exact gains: `240307_016`, `241113_086`.
+Exact losses: `240310_Cu100007`, `240314_Cu100_025`, `240817_006`, `240817_044`,
+`240817_080`, `240818_020`. Confusion `(TN,FP,FN,TP)` changes
+**(513,52,124,163)→(515,50,132,155)**: two fewer false positives, eight more
+false negatives. Three external grading orientations change, not inference
+alignments or accepted physical registrations. Against historical predictions:
+**20 gains, 26 losses, 99 ties**, net **−7 correct**; six exact gains, twelve
+losses, seven grading-orientation changes. All **290 paired scan rows** are saved.
+N stays **106/145 exact**, 14 short/25 long, 16 missing positions/38 extra lobes.
+
+**Reject this version; retain saved support 676/34.** Historical **677/36**
+remains unexceeded. The slightly higher window coverage is not a recognition
+gain. No angle clipping/selection, degree change, class-dependent frame,
+threshold search, combination or unknown25 rerun follows. The next distinct
+hypothesis would be a consistently fitted local-orientation molecular model,
+not merely rotating the sampling window; it has **not** been tested here.
+The bounded deliverable is complete, not the broader historical objective.
+Label-free learning/inference plus a repeatedly reused development benchmark
+is not independent validation or chemical proof for unknown 10–20mers.
+
+Full report and evidence: `results/local_orientation_20260923/report.md`.
+README, runbook, selection, assignment, config/calibration and HPC instructions
+are updated consistently. The old scan-weighting narrative is condensed on
+the assignment page while retaining its method, headline and full-report/journal
+links; the documentation size limit is not raised.
+
+The final Julia 1.13 docs build passes without deployment, with the existing
+warnings (assignment page **199.95 KiB / 200 KiB**). Project/Manifest and all
+scientific code/settings are unchanged from the submitted version. The source
+and conclusions are committed; generated results remain ignored. Viper has no
+remaining job from this loop. The sampling-only experiment is closed.

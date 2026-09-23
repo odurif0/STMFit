@@ -1241,6 +1241,14 @@ separately before login-node instantiate. Fetch outputs and logs to
 146 scans / 900 keys, literal frozen geometry, reference replay, frame geometry
 and actual finite-patch support. Do not automatically retry or change parameters.
 
+Completed source **87235dc**, job **11950305**, **0:0 in 9m01s**, after 30s
+queued; four CPUs requested/eight allocated, MaxRSS **1,474,395 K**. All
+**401 outputs plus log** are fetched/checksummed. Fifteen reference tables
+replay byte-for-byte; **36,344 pre-grade** and **31 aggregate** checks pass.
+Local frames give **670/870 correct, 30/145 exact**, versus **676/34** global,
+both at **852/870 coverage**. Reject; no retry, angle/degree search, promotion
+or unknown25 rerun. Full evidence: `results/local_orientation_20260923/report.md`.
+
 ## Factor-analyzer and Student learning comparison (September 22)
 
 `hpc/compare_factor_student_mixtures.sbatch` runs `control/`,
