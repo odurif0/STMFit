@@ -9071,15 +9071,6 @@ pixel support details, formulas and replay commands are in
 arithmetic checks agree with every headline, coverage and confusion count. The
 bounded comparison is complete; the broader historical objective remains open.
 
-The final Julia **1.13.0** documentation build succeeds without deployment
-(existing size/search warnings; assignment page **199.85 KiB / 200 KiB**).
-All 460 fetched files still match their remote hashes after reporting. The
-historical, support and tangent-control per-file grade tables are byte-identical
-to their previous saved grades. Project/Manifest and scientific source remain
-unchanged; only documentation follows the scientific freeze. Commit the complete
-results and decision for human review, retaining the interrupted first report
-and every loss. No job, uncommitted validated implementation or next campaign
-is left running.
 Prediction SHA-256: control `2a4e386ed21c324b1fb0fa73fa0b2cb031cf2908d2d6fec646befd2a13a9cb26`,
 support `eb8d69b8cebcd607b0244db5c65104347e6bcd24acee06f64748cf0e6ec310e3`,
 volume `a465521eb546d13241a27a2a23a4954e926076d972a7c38d9ae73394313749b1`.
@@ -13628,3 +13619,13 @@ All gains/losses, diagnostics and the reporting-only correction are retained in
 `results/tangent_orientation_20260923/report.md`. README, runbook, selection,
 assignment, configuration/calibration and HPC documentation are updated. The
 bounded comparison is complete; the broader historical objective remains open.
+
+The final Julia **1.13.0** documentation build succeeds without deployment
+(existing size/search warnings; assignment page **199.85 KiB / 200 KiB**).
+All 460 fetched files still match their remote hashes after reporting. The
+historical, support and tangent-control per-file grade tables are byte-identical
+to their previous saved grades. Project/Manifest and scientific source remain
+unchanged; only documentation follows the scientific freeze. Complete results
+and the decision are committed for human review, retaining the interrupted
+first report and every loss. No job, uncommitted validated implementation or
+next campaign is left running.
