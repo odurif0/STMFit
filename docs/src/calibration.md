@@ -653,6 +653,13 @@ initialization prevent claims of independent validation. Image agreement and
 fit improvement are not recognition improvement; no production calibration,
 noise, residual threshold or class prior changes in this pilot.
 
+The measured full/fold peaks are interior but ambiguous and disagree by up
+to **2 px**. The previous model-preferred (-1,-1) px decreases direct image
+correlation on all three supports. This does not identify a physical correction
+or distinguish model compensation from local view differences. No calibration
+is accepted and the conditional real fit is not run; report:
+`results/image_registration_2d_20260923/report.md`.
+
 The conditional `image_registered_fit.toml` arm holds the image-estimated
 translation fixed, alongside zero/free controls at unchanged physical bounds.
 Its parameter-count GCV includes both calibration coordinates; this is a

@@ -2308,11 +2308,17 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0ag. **Is the model-preferred residual shift present directly in the two images?**
-    → **AUTHORIZED, IN PROGRESS (Sep 23)**: image-only 2D registration on the
-    blocking scan, with a predeclared residual ±0.16 nm window, observed common
-    support, four spatial bands and source-safe conditional folds. No new count,
-    chemistry or benchmark label enters estimation. A second, bounded fit job
-    is conditional on image identifiability; no window/threshold retry.
+    → **COMPLETE; IMAGE PEAKS AMBIGUOUS, NO FOLLOW-UP FIT (Sep 23)**. All peaks
+    are interior, but full/fold global peak gaps **0.00652/0.00801/0.00405**
+    fail 0.01; estimates differ by up to **2 px**, above 0.25. The old model's
+    **(-1,-1) px** lowers direct image correlation on all three supports.
+    No unique residual translation is identified; model compensation versus
+    spatially varying acquisition remains unresolved. Source **68babd2**, job
+    **11948275**, **0:0 in 2m47s**; 31 outputs/log fetched/checked, **305,523
+    independent-output assertions** pass. Conditional fit source **46f35d8**
+    is synthetic-tested only; its real dry-run refuses the ambiguous estimates.
+    No second job, threshold/bound change or grade. Keep **676/34**, below
+    **677/36**; `results/image_registration_2d_20260923/report.md`.
 
 0af. **Can deterministic starts or a residual 2D translation unblock the paired fit?**
     → **COMPLETE; GAIN BUT BOUND-LIMITED, NO PROMOTION (Sep 23)**. Four starts
@@ -2322,7 +2328,8 @@ See `docs/src/selection.md` for the full guard specification and
     passes unchanged validity. Source **b80df87**, job **11947363**, **0:0 in
     9m52s**; 494 outputs plus log fetched/checked, **4,442 saved-output assertions**
     pass. No bound extension, new job or grade. Keep **676/34**, below **677/36**;
-    `results/paired_shift_20260923/report.md`. Larger shifts remain untested.
+    `results/paired_shift_20260923/report.md`. Larger molecular-fit shifts
+    remain untested; the separate direct-image search is reported above.
 
 0ae. **Can a different box-constrained solver resolve the nonstationary endpoints?**
     → **COMPLETE; NUMERICAL GAIN WITHOUT COMPLETE VALIDITY (Sep 23)**: unit-box
@@ -12475,3 +12482,65 @@ independent arithmetic and a deliberately mocked calibration-input workflow
 pass **2,852 assertions**, plus **2,258** original writer/workflow regressions.
 The mocked input test does not validate a real image calibration. No second
 job is submitted: the real first-job result fails its scientific prerequisites.
+
+### Completed direct-image result: interior but ambiguous peaks
+
+Job **11948275** waits **6m17s** for `QOSGrpCpuLimit`, then completes **0:0**
+on `vipc2488`, **11:25:34–11:28:21 CEST**, in **2m47s**, eight allocated CPUs
+for four requested; three single-thread image searches. Maximum reported
+memory **1.488 GB**. The residual window becomes **±11 pixels** per coordinate
+(±0.150685 nm). No source/settings changes occur while queued or running.
+
+| Image support | Pixels | Residual peak (x,y), px | Correlation | Distant peak gap |
+|---|---:|---:|---:|---:|
+| Full image | 222,950 | +1.125, −0.500 | 0.987715626 | 0.006516232 |
+| Training fold 1 | 41,192 | +1.375, +1.500 | 0.987258167 | 0.008009999 |
+| Training fold 2 | 41,192 | +2.750, +0.500 | 0.986637645 | 0.004048482 |
+
+All **15 global/band maxima** are interior and have sufficient support and
+correlation; all global/band displacement differences pass 0.08 nm. However,
+**10/15**, including every global peak, fail the fixed **0.01** distant-gap
+criterion. Full/fold displacement spread is **1.625 px in x / 2 px in y**,
+above **0.25**; the two folds alone differ by **1.375/1 px**. Full-image distant
+x/y gaps are **0.011974/0.006516**: the global ambiguity in this metric is
+principally vertical, not a saturated search boundary. These broad peaks do
+not define calibrated uncertainty, prove a line drift or exclude a real shift.
+
+At zero residual shift, full/fold correlations are
+**0.985989529 / 0.984705523 / 0.984275874**. At the preceding molecular fit's
+**(-1,-1) px** endpoint, all decrease to
+**0.984666388 / 0.982498946 / 0.982272617**. Thus that RSS-improving model shift
+is not corroborated as an image registration correction on these supports.
+Model compensation and spatially varying view differences remain possible;
+image and molecular supports differ, so this does not establish their cause.
+
+All **31 outputs plus Slurm log** are fetched and SHA256 checked. The on-node
+independent reader passes **305,523 assertions**, including direct mask/source
+checks, grid completeness, extrema, selected/zero/distant correlation arithmetic
+and acceptance rules. It checks saved score ordering, not every candidate's
+correlation independently. Searches take **103.22/22.42/21.88 s** for full/folds.
+All **7,935 coarse + 4,335 fine scores** are retained. No labels or fitting enter
+the image estimator. The real follow-up dry-run fails, as required, with
+`Image registration is not identified`; no fit output directory is created.
+
+**Close this scoped loop without the second job, new fit, partial grade or
+promotion.** No window enlargement, threshold/noise retuning, line-dependent
+warp, new acquisition kernel or classifier follows automatically. Local
+synthetic/regression checks total **30,177 assertions**. Preserve **676/870
+correct, 34/145 exact**, coverage **852/870**, below historical **677/870,
+36/145**, coverage **854/870**. The broader target is still unmet. Full report:
+`results/image_registration_2d_20260923/report.md`.
+
+The three (-1,-1) correlations are also independently recomputed locally
+from the saved pixels, without search/fitting, and agree with the saved grid.
+The first final docs build exceeds the unchanged assignment HTML limit
+(**200.25 KiB**). Earlier negative amplitude/geometry summaries are shortened,
+preserving their benchmark outcomes, limits and full-report links; no size
+threshold or scientific setting is relaxed.
+
+The final Julia 1.13 docs build passes with `--build-only`, no deployment and
+the existing size warnings; assignment HTML is **199.83 KiB**. Manifest remains
+byte-identical. All validated source/tests and conclusions are committed;
+generated evidence remains under ignored `results/`. One of the two permitted
+compute jobs was used; the image-only deliverable is complete, while the
+historical recognition target remains unmet.

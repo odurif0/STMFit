@@ -2391,24 +2391,19 @@ Labels remain external; this reused benchmark is not independent validation.
 
 ### Frozen-geometry amplitude profiling (2026-09-22): negative
 
-Bounded Gaussian amplitude/background profiling at identical saved N and
-decimal-rounded geometry gives **675/870 correct, 32/145 exact**, versus
-replayed support **676/34**, both at **852/870 coverage**. All 146 profiles
-satisfy KKT and reduce RSS, without improving recognition; no N, split or
-assignment settings change. **Reject; retain support**, below historical
-677/36. Source **567cdde**, job **11938782**, **0:0 in 6m17s**. Full cohort,
-paired losses, checks and limitations: [journal](journal.md),
+At saved N/geometry, bounded amplitude/background profiling gives **675/870
+correct, 32/145 exact**, versus **676/34**, both at **852/870 coverage**.
+All 146 profiles pass KKT and lower RSS; recognition does not improve. Reject.
+Source **567cdde**, job **11938782**; full checks/limitations: [journal](journal.md),
 `results/frozen_amplitude_profile_20260922/report.md`.
 
 ### Matched geometric variable projection (2026-09-22): negative
 
-At saved N, matched joint/profiled searches share starts, family, objective,
-validity and budgets. Profiled gives **632/870 correct, 20/145 exact**, versus
-joint and saved support **676/34**, all at **852/870 coverage**. RSS improves
-on every scan, but 103 searches hit the cap; equal limits are not equal cost
-or convergence. No split/assignment change or scan exclusion. **Reject; retain
-support**, below historical 677/36. Source **7c5fb6c**, job **11940220**,
-**0:0 in 15m17s**. Full evidence and paired losses: [journal](journal.md),
+Matched joint/profiled searches at saved N give profiled **632/870 correct,
+20/145 exact**, versus joint/support **676/34**, all at **852/870 coverage**.
+RSS improves everywhere, but 103 searches hit the cap; equal limits do not
+establish equal convergence. Reject. Source **7c5fb6c**, job **11940220**;
+full methods, losses and checks: [journal](journal.md),
 `results/geometry_profile_20260922/report.md`.
 
 ### Fixed-geometry acquisition registration (2026-09-22): negative
@@ -2460,29 +2455,30 @@ pass. [Journal](journal.md),
 
 ### Bounded SLSQP (2026-09-23): numerical progress only
 
-At the same native starts and physics, SLSQP lowers all eight RSS objectives
-**0.75–6.73%** versus exactly replayed LM. Projected gradients shrink
-**24,000–440,000-fold**, but remain above the fixed `1e-6` audit threshold.
-FTOL_REACHED is not strict stationarity. Gaussian elliptical maxima become
-**3.559 fused / 3.443 paired mean**, with views **4.291/3.542** still failing.
-Only fused split elliptical remains fully valid; no grade or promotion.
-
-Source **eec6c71**, job **11944232**, **0:0 in 11m32s**; 142 outputs plus log
-fetched/checked, **728,277 numerical assertions** pass. Keep **676/34**, below
-**677/36**. [Journal](journal.md), `results/paired_solver_20260923/report.md`.
+SLSQP lowers all eight RSS objectives **0.75–6.73%** versus replayed LM but
+passes neither strict stationarity nor new full validity. Gaussian elliptical
+view maxima **4.291/3.542** still fail 3.5. No grade/promotion; retain **676/34**.
+Source **eec6c71**, job **11944232**, **0:0 in 11m32s**. Full gradients,
+checks and replay: [journal](journal.md), `results/paired_solver_20260923/report.md`.
 
 ### Multi-start and subpixel pilot (2026-09-23): bound-limited
 
-Four deterministic starts improve circular RSS but add no fully valid family.
-The nested two-axis backward translation reduces paired RSS **4.93–6.64%**
-and all eight block-heldout errors **0.53–13.47%**. Every selected displacement
-saturates **−1 pixel in x/y**; this is not an identified offset or independent
-validation. Gaussian elliptical view maxima **4.144/3.660** and split elliptical
-**3.752/3.322** still fail the unchanged 3.5 limit. Only fused split elliptical
-remains valid; no bound enlargement, complete assignment run or partial grade.
-Keep **676/34**, below **677/36**. Source **b80df87**, job **11947363**,
-**0:0 in 9m52s**; 494 outputs plus log checked, **4,442 saved-output assertions**
-pass. [Journal](journal.md), `results/paired_shift_20260923/report.md`.
+Four starts improve circular RSS, not full validity. Translation improves
+paired RSS **4.93–6.64%** and all eight heldout comparisons, but every selected
+shift saturates **−1 px in x/y** and both elliptical families still fail a
+view guard. No grade/promotion; keep **676/34**, below **677/36**. Source
+**b80df87**, job **11947363**, **0:0 in 9m52s**. Full bounds, residuals and
+checks: [journal](journal.md), `results/paired_shift_20260923/report.md`.
+
+### Direct-image 2D registration (2026-09-23): ambiguous
+
+All global/band peaks are interior, but full/fold global separation gaps
+**0.00652/0.00801/0.00405** fail 0.01 and shifts differ by up to **2 px**,
+above 0.25. The prior model's **(-1,-1) px** lowers image correlation on all
+three supports. No unique translation is accepted; the conditional molecular
+fit is not run. No new recognition grade; keep **676/34**, below **677/36**.
+Source **68babd2**, job **11948275**, **0:0 in 2m47s**; **305,523** saved-output
+checks pass. [Journal](journal.md), `results/image_registration_2d_20260923/report.md`.
 
 ### Native numerical conventions
 

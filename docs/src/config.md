@@ -1066,6 +1066,11 @@ estimates must all pass and agree within **0.25 px**. These are experimental
 identifiability checks, not calibrated uncertainty or production parameters.
 No new result can enlarge the window or relax a criterion automatically.
 
+Completed image result: all global peaks are interior but fail the fixed
+0.01 separation criterion, and full/fold shifts disagree by up to **2 px**.
+No uniquely accepted translation or molecular follow-up; retain **676/34**.
+See `results/image_registration_2d_20260923/report.md`.
+
 `image_registered_fit.toml` is the conditional follow-up, not a production
 setting. It compares zero, image-fixed and free translation on the same native
 pixels/N with seeds **0/11/29/47**, radius **0.02**, **2,000 callbacks / 120 s**
