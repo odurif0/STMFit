@@ -6,6 +6,10 @@ rows have no angle derivative; every nonzero derivative is normalized with the
 same rank tolerance, without an ellipticity threshold. Near-isotropic behavior
 is therefore a nuisance-span convention, not calibrated angular uncertainty.
 No physical bound, fitted angle, patch support or classifier setting changes.
+It gives **678/870 correct, 30/145 exact**, versus tangent **679/33** at the same
+**852** coverage. Reject this orientation ablation without adjusting calibration
+or introducing a near-isotropy cutoff. Neither result beats historical **677/36**
+and coverage **854** on all criteria.
 
 The September 23 tangent-mold experiment is not a new physical calibration.
 `config/tangent_mold_projection.toml` fixes the affine/target-Gaussian derivative

@@ -1304,6 +1304,13 @@ and adds only the angle derivative in `tangent/`. New paths are
 `/u/oldu/code/STMFit_tangent_orientation_20260923` and
 `/ptmp/oldu/stmfit/tangent_orientation_20260923_v1`; inputs and Julia stay the
 same. Fetch to `results/tangent_orientation_20260923/`. One job, no retries.
+Completed source **0b7a4cf**, job **11953258**, **0:0 in 5m20s** after **47s**
+queued, node `vipc2262`, MaxRSS **2,723,255 K**. All **460 outputs plus log**
+fetched and SHA256 checked. Added orientation gives **678/870 correct, 30/145
+exact**, versus exact tangent replay **679/33**, both coverage **852**. Reject;
+no promotion or resubmission. The complete external report is `grade_v2/` after
+correcting only grader-side membership input; full146 inference is unchanged.
+See `results/tangent_orientation_20260923/report.md`.
 
 The September 23 tangent-mold comparison uses
 `bash hpc/compare_tangent_molds.sbatch --dry-run` before submission. One job,

@@ -4,14 +4,14 @@ Analysis pipeline for STM images of molecular chains (chitosan on Cu(100) and
 similar systems). Detects and fits a chain-of-Gaussians model to count the
 number of monomer units (lobes) per chain, label-free.
 
-**Latest comparison, September 23: a per-unit gain, not an overall champion.**
-Native-sampled Gaussian tangent projection of the two physical mold scores gives
-**679/870 correct and 33/145 exact chains**, versus exactly replayed support
-**676/34**, both at **852/870 coverage**. Historical **677/36**, coverage **854**,
-is exceeded by two correct positions, but not on exact chains or coverage.
-Keep this opt-in per-unit candidate and the unchanged support reference; no
-production promotion or post-grade tuning. N, geometry, patches and Fisher stay
-fixed; labels enter only the external development grade. See the
+**Latest comparison, September 23: the added orientation derivative regresses.**
+It gives **678/870 correct and 30/145 exact chains**, versus exactly replayed
+tangent **679/33**, both at **852/870 coverage**. Reject this added-angle variant:
+three exact chains lost, none gained. Keep the earlier tangent per-unit candidate
+and unchanged support **676/34**. Historical **677/36**, coverage **854**, still
+is not surpassed overall. N, geometry, patches, Fisher and classifier settings
+stay fixed; labels enter only external grading. No promotion or post-grade tuning.
+Source **0b7a4cf**, job **11953258**, completed in **5m20s**. See the
 [tangent-score result](docs/src/unit_assignment.md#tangent-physical-mold-scores-2026-09-23-trade-off).
 
 **Stable support reference (saved inputs):** complete-disk support improves

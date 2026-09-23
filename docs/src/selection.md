@@ -1,5 +1,13 @@
 # Model Selection
 
+Adding the ellipse-angle derivative to tangent CC is **negative**: **678/870
+correct, 30/145 exact**, versus tangent replay **679/33**, both coverage **852**.
+No N, GCV, `n_eff`, physical guard or fitted geometry changes. Counts remain
+**106/145 exact**, 16 missing/38 extra lobes. Reject this ablation; keep the
+earlier tangent candidate and support reference. Historical **677/36/854**
+is not surpassed overall. Source **0b7a4cf**, job **11953258**;
+`results/tangent_orientation_20260923/report.md`.
+
 The September 23 **tangent physical-mold scores** give **679/870 correct,
 33/145 exact**, versus support **676/34**, both at **852/870 coverage**. This
 exceeds historical **677/36** per unit, not on exact chains or coverage (854).

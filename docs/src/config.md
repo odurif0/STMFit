@@ -10,6 +10,10 @@ exactly equal-width elliptical rows keep seven/eight. No anisotropy cutoff or
 angle fitting. `run_tangent_mold_comparison.jl --reference-settings TOML` replays
 an explicit tangent control instead of the default unprojected support control.
 This experiment is opt-in, not a production or calibration change.
+Completed result **678/870 correct, 30/145 exact**, versus tangent control
+**679/33**, both coverage **852**. Reject the added-angle variant; keep its
+configuration for reproducibility, not recommended production use. No rank,
+ellipticity threshold or other setting changes after grading.
 
 `run_reconstructed_chitosan.jl --mold-tangent-settings
 config/tangent_mold_projection.toml` changes only both physical CC scores at

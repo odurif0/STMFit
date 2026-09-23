@@ -2454,15 +2454,15 @@ exact** (same view), **673/30** (opposite), versus replay **676/34**, all with
 
 ### Tangent physical-mold scores (2026-09-23): trade-off
 
-Native-sampled Gaussian/affine projection of CC patches/templates gives
-**679/870 correct, 33/145 exact**, versus exact
-support replay **676/34**, both at **852/870 coverage**. Historical **677/36**,
-coverage **854**, is exceeded per unit only: not an overall champion.
-Three exact chains are gained, four lost. N/geometry/patches/Fisher stay fixed;
-GMM is relearned without labels. Opt-in: `--mold-tangent-settings
-config/tangent_mold_projection.toml` with the support config. No promotion or
-tuning. Source **92cce55**, job **11952883**; full evidence:
-[journal](journal.md), `results/tangent_molds_20260923/report.md`.
+Gaussian/affine projection gives **679/870 correct, 33/145 exact**, versus
+support **676/34**, both coverage **852**. Historical **677/36/854** is exceeded
+per unit only. Keep this opt-in candidate, not an overall champion.
+
+Adding only the ellipse-angle derivative regresses to **678/30**, coverage
+**852**: no exact gain, three losses. **Reject the orientation addition.**
+Source **0b7a4cf**, job **11953258**. N/geometry/patches/Fisher and classifier
+settings stay fixed; GMM is relearned without labels. No promotion or tuning.
+Details: [journal](journal.md), `results/tangent_orientation_20260923/report.md`.
 
 ### Native numerical conventions
 

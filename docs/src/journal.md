@@ -2308,11 +2308,15 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0am. **Does adding the elliptical orientation derivative improve tangent CC?**
-    → **AUTHORIZED, IN PREPARATION (Sep 23)**. One reference/variant comparison
-    against tangent **679/33**, saved support **676/34** and history **677/36**.
-    Only add the fixed-pixel orientation derivative to the projected nuisance
-    span. No refit, patch rotation, neighbor columns or new classifier settings.
-    Four-hour preparation and one two-hour Viper job; see the dated entry below.
+    → **COMPLETE; NEGATIVE (Sep 23)**. Added orientation gives **678/870 correct,
+    30/145 exact**, versus byte-identical tangent replay **679/33**, both coverage
+    **852**. Three scans gain/four lose; no exact gain, three losses. Reject this
+    addition, retain the earlier tangent candidate and support **676/34**; history
+    **677/36/854** is not surpassed overall. Source **0b7a4cf**, sole job
+    **11953258**, **0:0 in 5m20s**, 460 outputs/log local and SHA256 checked.
+    Tests, exact replay, independent QR and full145 reporting pass. No refit,
+    post-grade tuning, further job or unknown25 rerun. Full evidence:
+    `results/tangent_orientation_20260923/report.md`.
 
 0al. **Can native-sampled local Gaussian tangent rejection improve physical mold scores?**
     → **COMPLETE; TRADE-OFF (Sep 23)**. Tangent CC gives **679/870 correct,
@@ -9066,6 +9070,16 @@ pixel support details, formulas and replay commands are in
 `results/patch_support_score_20260921/report.md` and its linked tables. Paired
 arithmetic checks agree with every headline, coverage and confusion count. The
 bounded comparison is complete; the broader historical objective remains open.
+
+The final Julia **1.13.0** documentation build succeeds without deployment
+(existing size/search warnings; assignment page **199.85 KiB / 200 KiB**).
+All 460 fetched files still match their remote hashes after reporting. The
+historical, support and tangent-control per-file grade tables are byte-identical
+to their previous saved grades. Project/Manifest and scientific source remain
+unchanged; only documentation follows the scientific freeze. Commit the complete
+results and decision for human review, retaining the interrupted first report
+and every loss. No job, uncommitted validated implementation or next campaign
+is left running.
 Prediction SHA-256: control `2a4e386ed21c324b1fb0fa73fa0b2cb031cf2908d2d6fec646befd2a13a9cb26`,
 support `eb8d69b8cebcd607b0244db5c65104347e6bcd24acee06f64748cf0e6ec310e3`,
 volume `a465521eb546d13241a27a2a23a4954e926076d972a7c38d9ae73394313749b1`.
@@ -13529,3 +13543,88 @@ Support/Fisher regression suites finish too: **286 + 229** assertions, bringing
 the synthetic/regression total to **1,869**, all passing. No scientific source
 or configuration changes after **0b7a4cf**. Continue to the one job's result,
 fetch/checksum and full external comparison; no retry or other method campaign.
+
+**Complete inference and pre-grade checks.** Job **11953258** starts
+**19:54:07 CEST** after **47 seconds** queued, and ends **19:59:27**, **COMPLETED
+0:0 in 5m20s** on `vipc2262`. Four CPUs requested/eight allocated, 16 GB,
+MaxRSS **2,723,255 K**. All **460 regular output files plus Slurm log** are
+local and SHA256 verified. Scientific sources and Project/Manifest are unchanged;
+no job remains queued. Both arms finish **146 scans / 900 keys**.
+
+All **2,531,770 pre-grade assertions** pass: 36,258 complete-pipeline/replay
+checks, 281,684 literal-column and nested-span checks, four times 553,456
+independent QR checks and four shard-count assertions. Repeated per-pixel
+checks account for most of this number; it is not a count of independent
+scientific hypotheses. Fifteen control tables plus all 24 shard score/audit/basis
+files replay the earlier tangent run byte-for-byte. Ten upstream/Fisher/k-means
+tables are identical between arms. Only the two CC predictor columns change.
+
+All 900 stored rows are elliptical: **839** have unequal widths and gain a ninth
+column; **61** have exactly equal widths and keep eight. Each arm/view has
+**3,592 valid / 3,600** parity/mirror states; eight retain insufficient support.
+No numerical rank loss, annihilated template or zero projected patch. Added-angle
+contrast energy retention is **94.1302–97.3082%**, median **96.9890%**, versus
+**94.1304–97.3130%**, median **96.9919%**, before. Patch energy medians fall
+**4.7499→2.2796% forward / 3.6605→1.7882% backward**. These are uncalibrated
+descriptors, not estimates of retained experimental chemical information.
+
+Both CC margins change on **846 forward / 847 backward** rows. An additional
+**1,390 saved-output checks** verify the same four unavailable assignments and
+exactly unchanged costs for every zero-angle row/state. Global decoding states
+change on **21 / 20 scans** and account for changed decoded margins on **9 / 10**
+zero-angle rows. This is the existing chain-level enumeration, not a modified
+rule. Both Fisher folds converge at 434/462 rows; **896** classifier rows remain
+usable. Final `(0,1,?)` populations are **(689,207,4)→(692,204,4)**, not priors.
+Seven decisions change across seven scans: two `0→1`, five `1→0`; five have zero
+old confidence, one zero new confidence. No vote/tie tuning follows.
+
+**Reporting-only correction.** The first report invocation supplies full146
+outputs directly to the strict full145 grader. It grades the historical file,
+then rejects the support input's extra technical scan `240310_Cu100009.sxm`,
+before grading a new candidate. Keep `grade_v1/` and its error log intact. Use
+the existing external `compare_reconstructed_champion.jl --benchmark-manifest`
+filter to make the required 145-file reporting copies, then grade to `grade_v2/`.
+All original 146/900 predictions, scientific sources and settings remain intact;
+no inference or HPC retry. Manifest membership is read only after inference,
+in the external reporting path, never for fitting or learning.
+
+**External result and decision.** The membership-only copies pass **2,686**
+row-identity assertions. The complete `grade_v2/` then passes **41 aggregate
+checks**, with **870 paired scan rows** covering all six comparisons. Grading
+uses **145 scans / 892 predictions / 870 truth positions**, never a truncated-N
+inference. Counts remain **106/145 exact**, 14 short/25 long, 16 missing and
+38 extra lobes.
+
+| Profile | Correct /870 | Exact chains /145 | Coverage /870 | Emitted errors |
+|---|---:|---:|---:|---:|
+| Historical saved reference | 677 | 36 | 854 | 177 |
+| Saved support | 676 | 34 | 852 | 176 |
+| Tangent control, exact replay | **679** | **33** | 852 | **173** |
+| Tangent plus ellipse orientation | 678 | 30 | 852 | 174 |
+
+Against tangent: **3 scans gain / 4 lose / 138 tie**, net **−1** correct unit;
+**no exact gain / three losses**, `240814_011`, `240817_007`, `240817_081`.
+No external alignment changes. Confusion `(TN,FP,FN,TP)` goes
+**(522,43,130,157)→(523,42,132,155)**: one fewer false positive, two more false
+negatives. Against support: **12/10/123**, net **+2**, two exact gains/six losses,
+two external alignment changes. Against history: **23/24/98**, net **+1**, five
+exact gains/eleven losses, six external alignment changes and two fewer covered
+positions. These grader-selected alignments are not independently observed
+spatial correspondences or inputs to inference. Variant non-correct positions
+are 174 emitted errors + 16 missing + two aligned abstentions, not 192 abstentions.
+
+**Reject this fixed orientation addition.** Retain tangent **679/33** as the
+per-unit candidate and support **676/34** as the unchanged reference; neither
+the candidate nor this new ablation is an overall historical champion. The
+extra local invariance is algebraically verified, but does not improve this
+recognition comparison. This does not exhaust every treatment of orientation,
+or identify a causal explanation for the chemical errors. No near-isotropy
+cutoff, score/vote/rank threshold, truth-selected hybrid, count refit, retry,
+neighbor/noise campaign or unknown25 rerun follows. Scientific sources/settings
+stay frozen at **0b7a4cf**. This remains a reused development benchmark, not
+independent validation or chemical proof for unknown 10–20mers.
+
+All gains/losses, diagnostics and the reporting-only correction are retained in
+`results/tangent_orientation_20260923/report.md`. README, runbook, selection,
+assignment, configuration/calibration and HPC documentation are updated. The
+bounded comparison is complete; the broader historical objective remains open.

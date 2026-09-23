@@ -1,6 +1,15 @@
 # Chitosan Benchmark and 10–20mer Runbook
 
-Latest September 23 result: **tangent physical-mold scores reach 679/870 correct,
+Latest September 23 comparison: adding the ellipse-angle derivative gives
+**678/870 correct, 30/145 exact**, versus exact tangent replay **679/33**,
+both at **852/870 coverage**. Three scans gain, four lose; no exact chain gained,
+three lost. Reject this variant; retain the earlier tangent candidate and
+support reference, without claiming historical **677/36/854** is surpassed
+overall. Source **0b7a4cf**, job **11953258**, **0:0 in 5m20s** after 47s queued;
+460 outputs plus log fetched/checksummed. No parameter change or HPC retry.
+Full evidence: `results/tangent_orientation_20260923/report.md`.
+
+Earlier September 23 result: **tangent physical-mold scores reach 679/870 correct,
 33/145 exact**, versus byte-identical support **676/34**, both at **852/870
 coverage**. Historical **677/36**, coverage **854**, is exceeded per unit only:
 not an overall champion. Against support: 11 scan gains/eight losses, three
