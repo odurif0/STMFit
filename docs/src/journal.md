@@ -7997,6 +7997,7 @@ both transferred source trees. Each remote import resolves GaussianFit2D inside
 its own checkout under Julia 1.13.0; both metadata-only dry-runs identify 146
 files and create no output. Both dependency locks retain SHA-256
 `617de8162fa4c7a814aacb106f145349bc57ead58ec9a6c332971a821b5974fe`.
+
 Scheduler test-only 11878486 is not a scientific job. Actual **job 11878491**
 was submitted once, with all six required path variables explicitly exported
 in `sbatch --export=ALL,...`. Its result root is
@@ -12644,3 +12645,15 @@ preserve the five preselected scans. Documentation builds with `--build-only`
 and existing size warnings; assignment HTML remains **199.83 KiB**. Project
 and ignored Manifest hashes remain unchanged, including Manifest
 `617de8162fa4c7a814aacb106f145349bc57ead58ec9a6c332971a821b5974fe`.
+
+Directional-response submission: source **705f296** is committed before sync
+to `/u/oldu/code/STMFit_directional_response_20260923`. Checksummed source,
+Manifest and five-scan input dry-runs are empty after transfer. The ignored
+Manifest is copied explicitly before login-node instantiation; before/after
+hash assertions pass on Julia **1.13.0**, retaining the expected 1.12.6 Manifest
+warning. Remote metadata-only dry-run passes. Slurm test-only **11949935**
+does not execute the experiment; actual job **11949936** is submitted at
+**14:08:32 CEST**, with explicit command-line exports, four-hour limit and
+`--no-requeue`. Initial state: **PENDING (QOSGrpCpuLimit)**. Results target:
+`/ptmp/oldu/stmfit/directional_response_20260923_v1`; local evidence will be
+`results/directional_response_20260923/`. No result is claimed while queued.
