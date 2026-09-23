@@ -1297,6 +1297,27 @@ or unknown25 rerun. Full evidence: `results/local_orientation_20260923/report.md
 
 ## Factor-analyzer and Student learning comparison (September 22)
 
+The September 23 tangent-mold comparison uses
+`bash hpc/compare_tangent_molds.sbatch --dry-run` before submission. One job,
+two-hour cap, four requested CPUs / 16 GB, `--no-requeue`; four one-thread score
+shards per direction. It compares `reference/` and `tangent/`, changing only
+both physical CC descriptors through a common native-sampled Gaussian tangent
+projection of patches/templates. N, patches, main/split geometry, Fisher and
+classifier settings remain fixed. No science on login nodes.
+
+Set all five absolute paths explicitly in `sbatch --export=ALL,...`:
+`STMFIT_PROJECT_DIR=/u/oldu/code/STMFit_tangent_molds_20260923`,
+`STMFIT_CACHE_DIR=/ptmp/oldu/stmfit/fusion_comparison_20260920_v1/symmetric`,
+`STMFIT_INPUT_DIR=/ptmp/oldu/stmfit/full146_v1_inputs`,
+`STMFIT_OUTDIR=/ptmp/oldu/stmfit/tangent_molds_20260923_v1`, and
+`JULIA_BIN=/u/oldu/software/julia-1.13.0/bin/julia`. Sync committed source plus
+the unchanged ignored Manifest, instantiate on the login node, dry-run,
+`sbatch --test-only`, submit once, poll and fetch. Save outputs/log locally under
+`results/tangent_molds_20260923/`; verify input/output hashes, all keys/N, exact
+control replay, unchanged non-CC features and independent QR score arithmetic
+before external grading. Numerical contrast annihilation prevents partial
+scoring. No retries, threshold search, composition prior or unknown25 rerun.
+
 `hpc/compare_factor_student_mixtures.sbatch` runs `control/`,
 `factor_analyzer/` and `student_t/` sequentially at the same cached geometry
 and selected N. The two learning families are independent candidates with

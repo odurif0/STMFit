@@ -6,6 +6,7 @@ using .ReconstructedUnitAssignment
 using TOML, Printf
 include(joinpath(@__DIR__, "lib", "patch_frames.jl"))
 include(joinpath(@__DIR__, "lib", "residual_features.jl"))
+include(joinpath(@__DIR__, "lib", "tangent_mold_projection.jl"))
 
 const ROOT = dirname(@__DIR__)
 const BASE4 = "amp_prominence,amp_neighbor_ratio,integrated_prominence,amp_rel"
@@ -13,7 +14,7 @@ const VALUE_OPTIONS = Set(["--data-dir", "--count-config", "--config", "--outdir
     "--selected-summary", "--features", "--split-features", "--patches-fwd",
     "--patches-bwd", "--descriptor-patches", "--templates",
     "--cube0", "--cube1", "--frame0", "--frame1", "--acquisition-shifts", "--patch-frames",
-    "--residual-features-fwd", "--residual-features-bwd"])
+    "--residual-features-fwd", "--residual-features-bwd", "--mold-tangent-settings"])
 
 function parse_options(args)
     if "--help" in args || "-h" in args
@@ -35,6 +36,9 @@ function parse_options(args)
         --residual-features-fwd PATH --residual-features-bwd PATH: experimental
           subtraction-only models for the two TARGET views. Frozen main/split
           features and fresh patches required; no shifts or local axes.
+        --mold-tangent-settings TOML: experimental native-sampled Gaussian tangent
+          projection of both physical CC scores only; frozen geometry, fresh
+          matched patches, no other acquisition/geometry experiment.
         --dry-run: check supplied input paths and print the stages without computing.
 
         Production only: no benchmark labels, expected count, control sequence,
@@ -232,6 +236,15 @@ end
 function execute_pipeline(opts)
     VERSION.major == 1 && VERSION.minor == 13 || error("This reconstruction requires Julia 1.13")
     cfg = load_config(opts["--config"])
+    if haskey(opts,"--mold-tangent-settings")
+        TangentMoldProjection.settings(opts["--mold-tangent-settings"])
+        all(haskey(opts,k) for k in ("--features","--split-features")) || error("Tangent scoring requires frozen main/split features")
+        any(haskey(opts,k) for k in ("--acquisition-shifts","--patch-frames","--residual-features-fwd","--residual-features-bwd")) &&
+            error("Tangent scoring excludes other acquisition/geometry experiments")
+        cfg["preprocessing"]["patch_residual_filter"]=="smooth_residual" || error("Tangent scoring requires matched residuals")
+        _, tangent_geometry=lobe_table(opts["--features"])
+        for row in values(tangent_geometry); TangentMoldProjection.validate_geometry(row); end
+    end
     if any(haskey(opts,k) for k in ("--residual-features-fwd","--residual-features-bwd"))
         all(haskey(opts,k) for k in ("--features","--split-features","--residual-features-fwd","--residual-features-bwd")) ||
             error("Residual profiles require both model tables and frozen main/split features")
@@ -358,8 +371,15 @@ function execute_pipeline(opts)
         stage = "mold_scores"
         for (key, name, prefix) in (("--patches-fwd", "score_fwd", "res"), ("--patches-bwd", "score_bwd", "bwd_res"))
             path = joinpath(outdir, name * ".tsv")
-            run_stage(outdir, name, "score_connected_mold_templates.jl", ["--patches", paths[key], "--templates", templates,
-                "--template-mode", "contrast", "--prefix", prefix, "--out", path])
+            if haskey(opts,"--mold-tangent-settings")
+                export_features(outdir,name,"score_tangent_mold_templates.jl",
+                    ["--patches",paths[key],"--templates",templates,"--prefix",prefix,
+                     "--features",geometry,"--data-dir",raw,"--count-config",abspath(opts["--count-config"]),
+                     "--config",abspath(opts["--config"]),"--settings",abspath(opts["--mold-tangent-settings"])],path;nfiles=length(files))
+            else
+                run_stage(outdir, name, "score_connected_mold_templates.jl", ["--patches", paths[key], "--templates", templates,
+                    "--template-mode", "contrast", "--prefix", prefix, "--out", path])
+            end
             push!(score_paths, path)
         end
         stage = "fisher"

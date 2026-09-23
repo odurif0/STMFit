@@ -2307,6 +2307,11 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-23. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0al. **Can native-sampled local Gaussian tangent rejection improve physical mold scores?**
+    → **IN PROGRESS (Sep 23)**. One authorized bounded comparison, reference
+    versus projection of both physical CC scores; N, all geometry, patches,
+    empirical Fisher and classifier settings stay fixed. See the dated entry.
+
 0ak. **Can opposite-view amplitude profiles improve residual recognition?**
     → **COMPLETE; NEGATIVE (Sep 23)**. Same-view subtraction gives **675/870
     correct, 30/145 exact**, opposite-view **673/30**, versus byte-identical
@@ -13275,3 +13280,72 @@ size/search warnings; assignment HTML is **199.91 KiB / 200 KiB**. No scientific
 source or setting changed after submission or grading. Source, tests and
 conclusions are versioned; generated results remain ignored and locally
 available for human review. This one-job loop is closed.
+
+## 2026-09-23 — Bounded local Gaussian tangent projection of physical mold scores
+
+**Deliverable fixed before real diagnostics.** Following the user's authorization
+to continue in a loop, test the first recommended lead only. Start **18:46 CEST**;
+preparation capped at half a day (four hours), at most one **two-hour Viper job**,
+four requested CPUs / 16 GB. Done means all 146 scans / 900 keys in a checked
+reference/variant comparison, followed by external full145 grading against saved
+support **676/870,34/145** and history **677/870,36/145**, or an explicit numerical
+feasibility failure. No retry, sweep, other proposed campaign, unknown25 rerun,
+count refit, benchmark-selected mask/column, composition prior or vote change.
+The completed unknown25 application and retired process framework remain untouched.
+
+Change only the forward and backward physical mold scores. Keep the native
+contrast templates and global direction/phase/mirror enumeration, NCC costs and
+absolute margin convention. At each frozen target lobe, form the tangent span
+of affine background, Gaussian amplitude, two center displacements and Gaussian
+width(s): seven columns for circular, eight for elliptical. Evaluate these
+analytic derivatives on the actual SXM coordinate grid, then apply the same
+clipped native box smoother and bilinear patch sampler as the matched residual.
+Do not approximate image smoothing by smoothing the already extracted patch.
+This is target-lobe first-order robustness, not invariance to all neighboring
+lobes, axes, skew, large geometry errors or instrumental effects.
+
+On the unchanged pairwise-finite CC support, unit-normalize the design columns
+and use SVD to project both the residual patch and both physical contrasts onto
+the complement. `config/tangent_mold_projection.toml` fixes numerical rank and
+relative zero-norm tolerances at **1e-12**. The observation guard remains
+`max(5,ceil(n_pixels/2))`. Missing pixels are not filled or newly admitted.
+Numerically annihilated physical contrast/molds fail the complete comparison;
+a numerically zero projected patch is unavailable, with a recorded reason.
+Audit every parity/mirror's retained patch/contrast energy, rank and costs, and
+save the actual sampled design for independent QR checking. Energy retention
+is not chemical validation or a parameter-selection criterion. No per-file
+fallback to the unprojected score. Original amplitude features remain available.
+
+The algebra is motivated by Scharf and Friedlander, *Matched Subspace Detectors*
+(IEEE TSP, 1994), not by a claim that STM residuals satisfy its Gaussian/noise
+assumptions. These remain NCC descriptors, not calibrated likelihoods. Projection
+can remove useful chemistry along with nuisance. All main/split features,
+preprocessing, patch support, empirical Fisher, GMM/k-means configuration and
+vote stay fixed; changed CC inputs require a fresh full-cohort unsupervised GMM.
+Reference replay and all changed decisions must be retained. Labels enter only
+the separate final grader; this reused benchmark is development evidence.
+
+Tests precede the single lexicographically first real scan (`240307_015.sxm`).
+Then metadata-only full-cohort dry-run, source commit/sync, login instantiate,
+one explicit-export sbatch, poll, fetch and checksum. The initial synthetic test
+file has an ambiguous Julia dotted-expression parse error; corrected whitespace
+does not change the declared formulas or scientific settings. No real diagnostic
+or job has run at this checkpoint.
+
+**Local checks complete.** Julia **1.13.0** passes **1,527** synthetic/regression
+assertions: projection 220, scorer/driver including legacy patch checks 659,
+pipeline 133, support/score 286 and native Fisher 229. The only real scan is
+lexicographic first **240307_015.sxm**, seven frozen lobes. All 56 direction/
+parity/mirror states retain **96.41–97.20%** of the standardized physical contrast
+energy (median **97.08%**). Retained patch energy medians are **5.34% forward /
+6.57% backward**; this does not establish which experimental component is chemical.
+Both native scorer replays are byte-identical. An independent QR calculation
+passes **8,618** saved arithmetic/serialization/replay checks. Its first invocation
+stopped on an extra parenthesis in the checker before reading a real scan; that
+test-only syntax was corrected without changing science or settings.
+
+The full metadata dry-run confirms **146 scans / 900 keys** without computing.
+Documentation builds without deployment (existing size warnings); Project and
+Manifest are unchanged. Viper has the expected Julia and inputs, with no current
+user job. No rank, column, energy cutoff or template changed after the single
+scan. Commit this tested source before sync/submission; no job submitted yet.

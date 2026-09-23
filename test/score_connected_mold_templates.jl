@@ -299,7 +299,8 @@ function _viterbi(costs::Matrix{Float64}, records, direction::Int, phase::Int, m
     return labels, minimum(dp[n, :])
 end
 
-function _decode_file(records, templates, bond_templates, opt::Options)
+function _decode_file(records, templates, bond_templates, opt::Options;
+                      scorer=(rec,templ)->_score_patch(rec.patch,templ,opt.score))
     n = length(records)
     best = nothing
     for direction in (0, 1), phase in (0, 1), mirror in (0, 1)
@@ -307,7 +308,7 @@ function _decode_file(records, templates, bond_templates, opt::Options)
         for (i, rec) in enumerate(records)
             parity = _parity_for_lobe(rec.lobe, n, direction, phase)
             for typ in (0, 1)
-                costs[i, typ+1] = _score_patch(rec.patch, templates[(typ, parity, mirror)], opt.score)
+                costs[i, typ+1] = scorer(rec, templates[(typ, parity, mirror)])
             end
         end
         labels, total = _viterbi(costs, records, direction, phase, mirror, bond_templates,
@@ -320,6 +321,20 @@ function _decode_file(records, templates, bond_templates, opt::Options)
     end
     return best
 end
+
+function write_decoded(io, file, records, best)
+    for (i, rec) in enumerate(records)
+        c0, c1 = best.costs[i, 1], best.costs[i, 2]
+        label = best.labels[i]
+        println(io, join([file, rec.lobe, label, @sprintf("%.8g", rec.amplitude), label == 1 ? "GlcNAc" : "GlcN",
+                          @sprintf("%.8g", c0), @sprintf("%.8g", c1),
+                          @sprintf("%.8g", abs(c0 - c1)), best.direction,
+                          best.phase, best.mirror, @sprintf("%.8g", best.total)], '\t'))
+    end
+end
+
+const SCORE_HEADER = ["file", "lobe", "predicted", "amplitude", "physical_label", "cost_GlcN", "cost_GlcNAc",
+                      "cost_margin", "global_direction", "global_phase", "global_mirror", "file_cost"]
 
 function main()
     opt = _parse_cli(ARGS)
@@ -335,19 +350,11 @@ function main()
     mkpath(dirname(opt.out_tsv))
 
     open(opt.out_tsv, "w") do io
-        println(io, join(["file", "lobe", "predicted", "amplitude", "physical_label", "cost_GlcN", "cost_GlcNAc",
-                          "cost_margin", "global_direction", "global_phase", "global_mirror", "file_cost"], '\t'))
+        println(io, join(SCORE_HEADER, '\t'))
         for file in sort(collect(keys(by_file)))
             records = by_file[file]
             best = _decode_file(records, templates, bond_templates, opt)
-            for (i, rec) in enumerate(records)
-                c0, c1 = best.costs[i, 1], best.costs[i, 2]
-                label = best.labels[i]
-                println(io, join([file, rec.lobe, label, @sprintf("%.8g", rec.amplitude), label == 1 ? "GlcNAc" : "GlcN",
-                                  @sprintf("%.8g", c0), @sprintf("%.8g", c1),
-                                  @sprintf("%.8g", abs(c0 - c1)), best.direction,
-                                  best.phase, best.mirror, @sprintf("%.8g", best.total)], '\t'))
-            end
+            write_decoded(io, file, records, best)
         end
     end
 
@@ -374,4 +381,4 @@ function main()
     end
 end
 
-main()
+abspath(PROGRAM_FILE) == abspath(@__FILE__) && main()

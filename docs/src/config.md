@@ -1,5 +1,20 @@
 # Configuration Reference
 
+## Experimental tangent physical-mold scoring (2026-09-23)
+
+`run_reconstructed_chitosan.jl --mold-tangent-settings
+config/tangent_mold_projection.toml` changes only both physical CC scores at
+frozen Gaussian geometry. `[model] basis="target_gaussian_affine"` uses seven
+circular/eight elliptical tangent columns; `rank_rtol=1e-12` applies after column
+normalization and `zero_norm_rtol=1e-12` rejects numerical annihilation.
+`[preprocessing] sampling="native_box_bilinear"` inherits the count config's
+stride and smoothing, on the native image grid. `[selection]` explicitly retains
+the existing CC `minimum_observed_pixels=5` and `minimum_observed_fraction=0.5`.
+No pixel filling, N selection, new templates, calibrated likelihood or production
+default change. Requires fresh matched-residual patches and frozen main/split
+features; rejects combination with other acquisition/geometry experiments.
+The dated journal entry records the bounded comparison and its outcome.
+
 ## User-facing TOML calibration
 
 Batch runs are configured from TOML files. The default calibration is

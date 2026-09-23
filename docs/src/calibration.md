@@ -1,5 +1,14 @@
 # Calibration: deriving parameters objectively
 
+The September 23 tangent-mold experiment is not a new physical calibration.
+`config/tangent_mold_projection.toml` fixes the affine/target-Gaussian derivative
+span before grading, respecting circular versus elliptical widths. The two
+`1e-12` tolerances concern numerical rank/annihilation, not chemical confidence.
+Native smoothing/interpolation, finite-pixel requirements, physical templates
+and classifier calibration remain unchanged. Projecting out shape errors can
+also remove chemistry; retained contrast energy is diagnostic only. No rank,
+support, threshold or tangent column may be chosen using benchmark labels.
+
 The pipeline has ~25 calibration parameters. Most can be **measured** from a
 single clean scan rather than hand-tuned, which makes the analysis generalizable
 to a new molecule on the same STM. This page documents which parameters are
