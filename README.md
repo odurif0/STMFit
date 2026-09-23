@@ -4,16 +4,16 @@ Analysis pipeline for STM images of molecular chains (chitosan on Cu(100) and
 similar systems). Detects and fits a chain-of-Gaussians model to count the
 number of monomer units (lobes) per chain, label-free.
 
-**Latest comparison, September 23: projecting out adjacent amplitudes regresses.**
-Adding only the previous/next Gaussian amplitude columns gives **671/870 correct,
-29/145 exact chains**, versus byte-identical tangent control **679/33**, both
-coverage **852/870**. One scan gains, nine lose; no exact chain gained, four lost.
-Reject this variant; retain the target-only candidate and neutral missing-cost
-fix, with unchanged production defaults. Historical **677/36/854** is still not
-surpassed overall. N, geometry, 17×17 patches, Fisher and classifier settings stay
-fixed; labels enter only the external grade, without post-grade tuning. Source
-**8460c08**, sole job **11953935**, **0:0 in 5m24s**; all outputs fetched and
-independently checked. See the
+**Latest comparison, September 24: leaving the target out of state selection regresses.**
+Choosing parity/mirror from only the other lobes gives **670/870 correct,
+32/145 exact chains**, versus byte-identical tangent control **679/33**, both
+coverage **852/870**. Two scans gain, eleven lose; one exact chain gained, two
+lost. Reject this variant; retain the target-only candidate and neutral
+missing-cost fix, with unchanged production defaults. Historical **677/36/854**
+is still not surpassed overall. Physical costs, N, geometry, patches, Fisher
+and classifier settings stay fixed; labels enter only the external grade,
+without post-grade tuning. Source **61a56d6**, sole job **11955091**, **0:0 in
+1m26s**; all outputs fetched and independently checked. See the
 [tangent comparisons](docs/src/unit_assignment.md#tangent-physical-mold-scores-2026-09-23-trade-off).
 
 **Stable support reference (saved inputs):** complete-disk support improves

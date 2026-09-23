@@ -7,6 +7,9 @@ fallback. Exact ties retain first phase/mirror; no remaining evidence gives an
 unavailable CC score. Geometry and overlapping patches remain shared, so this
 is not independent cross-validation or noise calibration. Settings are explicit
 in `config/mold_leave_one_out.toml`; no threshold is learned from the benchmark.
+Completed: **670/870 correct, 32/145 exact**, versus tangent control **679/33**,
+both coverage **852**. Reject this state-selection ablation without changing
+physical calibration or the vote rule. `results/mold_loo_20260924/report.md`.
 
 The adjacent-amplitude experiment uses only the previous/next fitted lobes,
 without chemical labels, neighbor fitting or a signal-dependent selection rule.

@@ -2308,12 +2308,15 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0ap. **Does leave-target-out parity/mirror selection improve physical CC scores?**
-    → **AUTHORIZED, IN PROGRESS (Sep 24)**. Compare finite target-only control
-    against per-lobe state selection using only other available lobes in the
-    same view. All state costs, N, geometry, patches and classifier settings
-    stay frozen; no state sharing or benchmark label. Preparation ≤4 hours,
-    one Viper job ≤2 hours. Deliver complete full146 inference, exact control
-    replay, independent arithmetic and full145 paired reporting.
+    → **COMPLETE; NEGATIVE (Sep 24)**. Other-lobe state selection gives
+    **670/870 correct, 32/145 exact**, versus exact finite tangent **679/33**,
+    both coverage **852**. Two scan gains/eleven losses, one exact gain/two
+    losses. Reject without retuning; keep target-only scores and neutral
+    missing-cost omission, with unchanged defaults. Costs, N, geometry,
+    patches and classifier settings stay fixed. Source **61a56d6**, sole job
+    **11955091**, **0:0 in 1m26s**; all 43 outputs/log local and hash-checked.
+    Full146/900-key checks and external145 grading pass. Historical
+    **677/36/854** is not surpassed overall. `results/mold_loo_20260924/report.md`.
 
 0ao. **Does rejecting immediate-neighbor amplitude leakage improve tangent CC?**
     → **COMPLETE; NEGATIVE (Sep 23)**. Adjacent amplitudes give **671/870 correct,
@@ -14059,3 +14062,80 @@ CPU quota, with four requested CPUs / 16 GB, two-hour cap and `--no-requeue`.
 All four paths are explicit command-line exports. Output:
 `/ptmp/oldu/stmfit/mold_loo_20260924_v1`; Slurm log alongside. Follow this job
 through completion and full reporting; no duplicate submission.
+
+**Completed.** Job **11955091** starts **00:32:10 CEST** after **7m34s** on the
+shared CPU quota, finishes **00:33:36**, **COMPLETED 0:0**, elapsed **1m26s** on
+`vipc2472`. Four CPUs requested/eight allocated, 16 GB requested, MaxRSS
+**1,028,966 K**. Both complete 146-scan/900-key arms and all 43 output files plus
+Slurm log are fetched; every remote SHA256 matches locally. No retry or raw fit.
+
+Before opening the grade, Julia 1.13 independent saved-output verification
+passes **149,669** assertions: **72,114** exact-control/cohort/invariant checks
+and **77,555** direct target-excluded state/margin/audit checks. A separate
+**8,077** assertions check native key coverage and reconstruct the unchanged
+two-classifier vote. All seven reference score/classification tables replay
+byte-for-byte; frozen upstream tables, selected N, k-means and non-CC predictor
+columns remain unchanged. The checker enumerates the four states directly from
+the original full-precision audit, not through the production decoder.
+
+Per-target states and margins change on **200 forward / 198 backward** keys;
+no target lacks all other-lobe evidence. There are **13** final decisions changed
+on **13** scans (**12 `0→1`, one `1→0`**) and **16** changed confidences. Of the
+changed decisions, one old and ten new confidences are zero; valid zero-
+confidence votes rise **45→54** under the unchanged rule. The same four final
+unavailable keys remain: `240310_Cu100009` lobe 8, `240818_015` lobe 1,
+`240818_019` lobes 1/2. No replacement, omission or tie cutoff is introduced.
+
+**External result, full145/own-N.** Membership-only filtering passes **1,790**
+row checks (145 scans, 892 unchanged prediction rows per arm); **41** aggregate
+checks verify the grade arithmetic and unchanged counts. Historical, support
+and tangent-control per-file grade tables are byte-identical to their previous
+full145 grades. Labels never entered either state/classifier calculation.
+
+| Profile | Correct /870 | Exact /145 | Coverage /870 | Emitted errors |
+|---|---:|---:|---:|---:|
+| Historical saved reference | 677 | 36 | 854 | 177 |
+| Saved support | 676 | 34 | 852 | 176 |
+| Finite target-only control | 679 | 33 | 852 | 173 |
+| Leave-target-out states | 670 | 32 | 852 | 182 |
+
+Against the exact control, **two scans gain, eleven lose, 132 tie**: net
+**−9 correct positions**, same coverage. One exact chain is gained
+(`240817_003`), two lost (`240817_075`, `240817_081`); the external grader changes
+its alignment on one scan (`240314_Cu100_024`). TN/FP/FN/TP change from
+**522/43/130/157** to **512/53/129/158**. All profiles retain **106/145 exact
+counts**, 14 short-N scans, 25 extra-N scans, 16 missing/38 extra positions.
+Against support, the variant loses six correct positions/two exact chains;
+against history, seven correct positions/four exact chains/two covered positions.
+
+**Reject leave-target-out state selection.** Retain tangent **679/33/852**,
+the neutral missing-cost repair, saved support **676/34/852**, and unchanged
+production defaults. Historical **677/36/854** remains unexceeded overall.
+This result tests a fixed state-objective exclusion, not every treatment of
+geometric uncertainty. Shared fitted geometry, overlapping patches and GMM
+training prevent an independent-cross-validation claim. Reused benchmark
+evidence is development, not independent validation or unknown-chain chemistry.
+No post-grade threshold, state weight, temperature, hybrid, refit or unknown25
+rerun. Scientific code/settings remain frozen at **61a56d6**.
+
+Full evidence: `results/mold_loo_20260924/report.md`, with six paired-profile
+comparisons and all 870 scan-pair records. This bounded numerical comparison
+is complete; the overall historical objective remains open.
+
+The final Julia 1.13 documentation build passes with `--build-only`; assignment
+HTML stays at **199.70 KiB / 200 KiB**, with only existing size/search warnings.
+No scientific source/configuration differs from **61a56d6**. The 43 output
+hashes, Slurm-log hash and Project/Manifest hashes still match after grading.
+The validated outcome is committed for human review; generated evidence stays
+ignored and local. No job remains running from this comparison.
+
+**Next-lead prerequisite review (read-only).** Reinspect the existing four-case
+September 18 background diagnostics before proposing noise-weighted physical
+scores. All 16 off-footprint view/axis correlations at lag 16 are still
+**0.703123–0.999473**; the code explicitly marks them as unverified pure noise
+and all correlation lengths as right-censored. These observations do not
+identify a stationary noise covariance, independent block size or finite
+geometric-uncertainty scale. Do not substitute the fitted residual, relax
+`n_eff`, or introduce a benchmark-fitted whitening/regularization strength.
+This is a review of saved diagnostics, not a fresh noise experiment or a proof
+that the full146 cohort has identical background behavior.

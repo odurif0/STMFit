@@ -14,6 +14,11 @@ audited objectives must not be interpreted as one common chain orientation.
 `test/run_mold_loo_comparison.jl` replays the omission-corrected control and the
 variant, with unchanged classifier/vote. Opt-in only; no production defaults.
 
+Completed: **670/870 correct, 32/145 exact**, versus exact finite-control replay
+**679/33**, both coverage **852**. Reject without retuning; retain this config
+only for reproduction. No threshold, weighting or target fallback is added.
+`results/mold_loo_20260924/report.md`.
+
 ## Experimental adjacent-amplitude tangent scoring (2026-09-23)
 
 `config/tangent_mold_finite.toml` is the target-Gaussian/affine control with

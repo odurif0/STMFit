@@ -1,6 +1,17 @@
 # Chitosan Benchmark and 10–20mer Runbook
 
-Latest September 23 comparison: adjacent-amplitude tangent columns give
+Latest September 24 comparison: leave-target-out parity/mirror selection gives
+**670/870 correct, 32/145 exact**, versus exactly replayed tangent control
+**679/33**, both coverage **852**. Two scan gains/eleven losses, one exact
+gain/two losses. Reject this variant; keep target-only scores and neutral
+missing-cost omission. Historical **677/36/854** is not surpassed overall.
+Frozen costs, N, geometry, patches, Fisher and classifier settings; external
+labels only after inference, no retuning. Source **61a56d6**, sole job **11955091**,
+**0:0 in 1m26s**, 7m34s queued. All 43 outputs plus log are local/checksummed;
+157,746 saved-output checks pass before grading. No default change or unknown25
+rerun. `results/mold_loo_20260924/report.md`.
+
+Earlier September 23 comparison: adjacent-amplitude tangent columns give
 **671/870 correct, 29/145 exact**, versus exactly replayed target-only control
 **679/33**, both coverage **852**. One scan gains/nine lose, no exact gain/four
 losses. Reject this variant; keep the target-only candidate and the neutral

@@ -1,5 +1,14 @@
 # Model Selection
 
+The September 24 **leave-target-out geometric-state** test gives **670/870
+correct, 32/145 exact**, versus exact tangent replay **679/33**, both coverage
+**852**. Only other lobes select a target's parity/mirror; its physical costs
+stay unchanged. Two scans gain/eleven lose, one exact gain/two losses. Reject
+without retuning; retain target-only scores and the neutral missing-cost fix.
+N/GCV/`n_eff`, geometry and all counting guards remain fixed: **106/145 exact
+counts**, 16 missing/38 extra lobes. Historical **677/36/854** is not surpassed
+overall. Source **61a56d6**, job **11955091**; `results/mold_loo_20260924/report.md`.
+
 The September 23 **adjacent-amplitude tangent** test gives **671/870 correct,
 29/145 exact**, versus byte-identical target-only **679/33**, both coverage
 **852**. One scan gains/nine lose, zero exact gains/four losses. All N/GCV/`n_eff`,

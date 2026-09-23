@@ -10,6 +10,11 @@ Sync committed code plus the ignored validated Manifest explicitly before
 login-node instantiate; verify hashes and run the script with `--dry-run` first.
 Compute only in Slurm, fetch all outputs/log, then run
 `test/verify_mold_loo_comparison.jl FINITE_REFERENCE OUTPUT` before external grading.
+Completed source **61a56d6**, sole job **11955091**, **0:0 in 1m26s**, 7m34s
+queued; four CPUs requested/eight allocated, 16 GB, MaxRSS **1,028,966 K**.
+All 43 outputs plus log are fetched/checksummed; complete independent checks
+pass. Variant **670/32/852**, exact control **679/33/852**: rejected, no tuning
+or retry. `results/mold_loo_20260924/report.md`.
 
 The adjacent-amplitude tangent comparison uses
 `hpc/compare_tangent_neighbors.sbatch`: one two-hour Viper job, four CPUs / 16 GB,
