@@ -2308,13 +2308,15 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0aj. **Does fitting locally oriented Gaussian lobes improve recognition?**
-    → **AUTHORIZED, PREPARATION (Sep 23)**. At saved N, compare a matched
+    → **RUNNING CAMPAIGN, QUEUED (Sep 23)**. At saved N, compare a matched
     global Gaussian refit with a valid-minimum-GCV pool adding locally oriented
     elliptical Gaussians. Tangents are recomputed from current fitted centers;
     no free angle or label is added. Exported axes reach residual subtraction,
     while sampling stays global and the split cache stays frozen. Saved support
     is a separate replay arm. One preparation day / one four-hour Viper job,
     no retry, post-grade tuning, threshold relaxation or unknown25 rerun.
+    Source **c692958**, sole job **11951208**, submitted **16:17:08 CEST**;
+    initially pending under the shared `QOSGrpCpuLimit`, not a result.
 
 0ai. **Does a local chain-tangent patch frame improve recognition?**
     → **COMPLETE; NEGATIVE (Sep 23)**. Local sampling gives **670/870 correct,
@@ -12972,3 +12974,16 @@ passes without deployment, with existing size warnings. Project/Manifest hashes
 remain unchanged. Checksummed dry-runs confirm the existing remote base/split,
 raw images (dereferenced local symlinks) and templates match the local inputs.
 No batch has yet been submitted. The source is committed before remote compute.
+
+**Submission.** Scientific source **c692958** is synced and checksum-identical
+at `/u/oldu/code/STMFit_local_gaussian_20260923`. Login-node instantiate and
+precompile succeed with Julia **1.13.0**; the existing 1.12.6 Manifest warning
+does not change either Project or Manifest. The remote 146-file dry-run passes.
+`sbatch --test-only` accepts resources (its ID 11951201 is not a real job).
+The sole actual job **11951208** is submitted **16:17:08 CEST**, with all five
+variables in the explicit command-line `--export=ALL,...` list, four requested
+CPUs, 16 GB, four-hour limit and `--no-requeue`. It initially waits under
+`QOSGrpCpuLimit`. Output is `/ptmp/oldu/stmfit/local_gaussian_20260923_v1`,
+with Slurm log alongside; local results go to `results/local_gaussian_20260923/`.
+No labels or downstream grade have been read for candidate selection. Remain
+with this job through completion and fetch; do not tune or resubmit on failure.
