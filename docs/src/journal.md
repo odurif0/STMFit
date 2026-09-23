@@ -12273,3 +12273,15 @@ reader reconstructs peaks/view planes/shifts, objectives, heldout membership,
 full-parameter GCV, bounds and both final finite-difference stationarity checks.
 The local real-input dry-run validates all saved pixels without fitting; pixel
 steps are **0.0136986183953 nm** in both axes. The Manifest hash is unchanged.
+
+Source **b80df87** is committed before sync. Checksummed source and native/
+reference input comparisons are empty. Remote Julia **1.13.0** instantiates on
+the login node without changing the Manifest; only metadata/saved-pixel dry-runs
+run there. The documentation builds successfully with `--build-only` (existing
+size warnings; no deployment). Following Slurm test-only, actual job **11947363**
+is submitted **10:14:23 CEST**, with explicit command-line exports and
+`--no-requeue`, and starts **10:14:33** on `vipc2575`, eight allocated CPUs for
+four requested. Preparation took about **22 minutes**, within the time box.
+The test-only number 11947362 is not a real job. Output directory:
+`/ptmp/oldu/stmfit/paired_shift_20260923_v1`; local evidence/report root:
+`results/paired_shift_20260923/`. No scientific result exists at submission.
