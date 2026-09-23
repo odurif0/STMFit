@@ -2307,6 +2307,15 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-24. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0aq. **Does correcting QE cube-token order improve the reconstructed assignment?**
+    → **IN PROGRESS (Sep 24)**. QE writes the third index fastest; the legacy
+    assignment reader preserves first-index-fast addresses. Accepted cubes and
+    frames reproduce the old templates exactly. Test the input-order correction
+    at fixed finite tangent scores and all other settings, keeping the old
+    reader for reproducibility. File-format correctness is not chosen by grade.
+    Preparation ≤2 hours from 00:47 CEST, one Viper job ≤2 hours; complete
+    full146 inference and full145 external paired report, no unknown25 rerun.
+
 0ap. **Does leave-target-out parity/mirror selection improve physical CC scores?**
     → **COMPLETE; NEGATIVE (Sep 24)**. Other-lobe state selection gives
     **670/870 correct, 32/145 exact**, versus exact finite tangent **679/33**,
@@ -14139,3 +14148,65 @@ geometric-uncertainty scale. Do not substitute the fitted residual, relax
 `n_eff`, or introduce a benchmark-fitted whitening/regularization strength.
 This is a review of saved diagnostics, not a fresh noise experiment or a proof
 that the full146 cohort has identical background behavior.
+
+## 2026-09-24 — Verify QE cube ordering before a second bounded comparison
+
+**Deliverable and scope.** The user's autonomous continuation authorizes the
+next concrete numerical lead found during physical-input review. From
+**00:47 CEST**, preparation ≤2 hours and at most one Viper job ≤2 hours,
+four CPUs / 16 GB, no retry. Confirm the accepted cube/frame pair reproduces
+the current template TSV, then compare legacy-template and corrected-order
+templates at identical finite tangent settings. Done means complete full146
+inference, exact **679/33/852** control, independent template/score checks and
+full145 external reporting. Keep N, geometry, all patches, Fisher, classifier
+settings, surface calibration, support conventions and production defaults.
+No new QE calculation, tip-orbital assumption, noise calibration or unknown25 run.
+
+**Evidence, before implementation or grading.** The historical Python builder
+and its literal Julia port sample raw cube tokens as first-axis-fast. The
+official [QE 7.4.1 cube writer](https://gitlab.com/QEF/q-e/-/raw/qe-7.4.1/PP/src/cube.f90)
+writes the third grid index fastest, inside loops over the first and second.
+The repo's separate constant-height/joint-proxy cube path already uses this
+last-axis-fast convention. Native/Python parity only validated preservation of
+the historical calculation, not agreement with the QE file layout. This is
+a specific physical-coordinate error hypothesis, independent of class labels.
+The production acceptance criterion and joint-proxy registry remain untouched.
+
+Only reorder the read-only input buffer for an explicit new template builder;
+preserve the legacy reader and interpolation arithmetic for exact replay.
+No change to signed-axis units, boundary weighting, height grid, first-below-
+target isovalue rule, normalization or parity/mirror convention is bundled.
+Correct ordering is determined by the writer, not by which benchmark score
+wins. A negative grade would reject promotion of the changed assignment
+pipeline, not justify claiming the legacy coordinates are physically correct.
+
+**Preflight.** The accepted pair is verified by SHA256 against the DFT note:
+GlcN `80cd1d1f…88863`, GlcNAc `40649ccd…b5bf`. With their existing `frame.tsv`
+files, the old builder reproduces `full146_v1_inputs/templates_cc.tsv`
+byte-for-byte (**five** provenance/replay checks). No source/frame replacement.
+
+Julia 1.13 passes **948** synthetic/regression assertions: **252** cube/builder
+checks (including all 143 legacy port tests, 77 coordinate/order checks and 32
+surface/provenance/CLI checks), plus **696** pipeline checks (622 preprocessing,
+74 scorer/runner). Noncubic skew-axis analytic fields validate QE addresses;
+equivalent first-fast/last-fast synthetic files produce identical entire
+surfaces and serialized templates. Old default behavior stays literal.
+An independent direct last-index address calculation over both real cubes
+passes **5,212** surface/isovalue/serialization/hash checks. Single real scan
+`240307_015.sxm` then passes **17,356** independent QR/score/design assertions
+and exact old-score replay. Full146 shell dry-run passes without computation.
+
+The new template SHA256 is
+`82f4c1a90f43101b605c80221b4d1764b4a364d4b97745844f935a79c2328c76`.
+The unchanged first-below-target rule now picks mean heights **0.255375 /
+0.292328 nm**, with only **40/289 and 58/289** supported columns, versus
+legacy **0.496389 / 0.381404 nm**, **72/289 and 235/289**. Missing template
+heights retain the old zero-after-zscore convention; this fills no experimental
+patch. Visual QC in `results/cube_order_20260924/template_heights.png` confirms
+the fragmented/sparse surfaces, not resolved molecular morphology. Correct
+addressing does not validate this discontinuous remaining calibration or the
+physical usefulness of the templates. Do not adjust height, branch selection,
+support or isovalue after seeing this diagnostic or the forthcoming grade.
+
+Documentation builds with Julia 1.13 `--build-only`, no deployment or size-limit
+change. Freeze the tested source before the one paired recognition comparison.

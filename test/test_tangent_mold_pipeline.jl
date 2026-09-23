@@ -139,6 +139,22 @@ const COUNT=joinpath(ROOT,"config/chitosan.toml")
         @test first.(calls)==["reference","tangent"]
         @test calls[1][3][findfirst(==("--mold-tangent-settings"),calls[1][3])+1]==FINITE_SETTINGS
         @test calls[2][3][findfirst(==("--mold-tangent-settings"),calls[2][3])+1]==NEIGHBOR_SETTINGS
+        empty!(calls)
+        tc=joinpath(dir,"template_comparison")
+        alt=joinpath(dir,"different_templates.tsv"); cp(templ,alt)
+        td=vcat(replace.(replace.(ds,comparison=>tc),SETTINGS=>FINITE_SETTINGS),
+            ["--reference-settings",FINITE_SETTINGS,"--variant-templates",alt])
+        Driver.tangent_comparison(vcat(td,["--dry-run"]))
+        @test !ispath(tc)
+        Driver.tangent_comparison(td;runner)
+        @test first.(calls)==["reference","tangent"]
+        @test calls[1][3][findfirst(==("--templates"),calls[1][3])+1]==templ
+        @test calls[2][3][findfirst(==("--templates"),calls[2][3])+1]==alt
+        @test all(c[3][findfirst(==("--mold-tangent-settings"),c[3])+1]==FINITE_SETTINGS for c in calls)
+        _,ht=Driver.read_table(joinpath(tc,"input_hashes.tsv"))
+        @test "--variant-templates" in [r["input"] for r in ht]
+        @test_throws ErrorException Driver.tangent_comparison(vcat(replace.(ds,comparison=>joinpath(dir,"bad_template")),
+            ["--variant-templates",joinpath(dir,"absent.tsv"),"--dry-run"]))
         @test_throws ErrorException Driver.tangent_comparison(replace.(ds,comparison=>fail);runner=(a...)->error("intentional"))
         @test isfile(joinpath(fail,"failures.tsv")) && !ispath(joinpath(fail,"tangent"))
         opts=Dict("--config"=>CONFIG,"--count-config"=>COUNT,"--data-dir"=>raw,"--features"=>features,

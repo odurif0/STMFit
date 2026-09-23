@@ -1,5 +1,18 @@
 # Configuration Reference
 
+## Experimental QE cube-order correction (2026-09-24)
+
+`config/qe_cube_order.toml` declares `cube_order="qe_last_axis_fast"` and
+`cube_units="bohr"`. `test/build_qe_order_molds.jl` reorders QE's third-index-fast
+tokens for the unchanged legacy interpolation routine. It requires the two
+cubes/frames, assignment config, order config and a new output directory; writes
+templates, surface audit and input/output hashes. `surface_policy` explicitly
+keeps the assignment config's existing first-below-target isovalue rule and all
+grid/normalization conventions. No production reader or registry is replaced.
+`run_tangent_mold_comparison.jl --variant-templates TSV` supplies an explicit
+different template file only to the second arm. Both arms use the same finite
+target-only tangent config; no neighbor, angle or leave-target-out change.
+
 ## Experimental leave-target-out state decoding (2026-09-24)
 
 `config/mold_leave_one_out.toml` fixes `state_objective="leave_target_out_unary_minima"`:

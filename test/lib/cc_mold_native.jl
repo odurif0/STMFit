@@ -315,11 +315,12 @@ directories, and a destination created concurrently. Returns (type0, type1).
 """
 function build_molds(; cube0::AbstractString, cube1::AbstractString,
                      frame0::AbstractString, frame1::AbstractString,
-                     config::AbstractString, out::AbstractString)
+                     config::AbstractString, out::AbstractString,
+                     cube_reader=read_cube)
     _check_new_output(out)
     settings = load_settings(config)
-    type0 = build_templates(cube0, frame0, settings)
-    type1 = build_templates(cube1, frame1, settings)
+    type0 = build_templates(cube_reader(cube0), read_frame(frame0), settings)
+    type1 = build_templates(cube_reader(cube1), read_frame(frame1), settings)
     buffer = IOBuffer()
     npixels = size(type0.variants, 2)
     println(buffer, join(vcat(["name", "type", "parity", "mirror"],

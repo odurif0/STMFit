@@ -184,6 +184,17 @@ constant-current feedback loop.
 
 ## Diagnostic constant-current observable
 
+**Separate reconstructed-assignment reader warning (September 24).** Its
+historical `cc_mold_native.jl` preserves a first-index-fast token interpretation
+to replay the lost champion lineage. The QE 7.4.1 writer emits the third index
+fastest. An opt-in correction in `qe_cube_molds.jl` now adapts that input order;
+`config/qe_cube_order.toml` leaves all other legacy surface settings unchanged.
+This does not alter the accepted cubes, SCF criterion, registry, or the separate
+constant-height/constant-current helpers below, which already use last-index-
+fast addresses. Numerical Python/Julia parity of the historical reader was not
+validation of its physical coordinates. Benchmark comparison is separate from
+this file-format correctness decision; see the September 24 journal entry.
+
 The accepted GlcN and GlcNAc cubes can also be transformed into a
 constant-current-like **diagnostic** with
 `test/build_constant_current_stm_maps.jl`. For each lateral column, the

@@ -4,11 +4,11 @@ include(joinpath(@__DIR__,"run_reconstructed_chitosan.jl"))
 using SHA
 const TANGENT_OPTIONS=Set(["--data-dir","--count-config","--config","--settings",
     "--features","--split-features","--templates","--outdir"])
-const TANGENT_OPTIONAL=Set(["--reference-settings"])
+const TANGENT_OPTIONAL=Set(["--reference-settings","--variant-templates"])
 
 function tangent_comparison(args=ARGS;runner=run_stage)
     if "--help" in args
-        println("run_tangent_mold_comparison.jl: ",join(sort(collect(TANGENT_OPTIONS))," VALUE ")," VALUE [--reference-settings TOML] [--dry-run]")
+        println("run_tangent_mold_comparison.jl: ",join(sort(collect(TANGENT_OPTIONS))," VALUE ")," VALUE [--reference-settings TOML] [--variant-templates TSV] [--dry-run]")
         return
     end
     opts=Dict{String,String}(); filtered=String[]; i=1
@@ -16,12 +16,13 @@ function tangent_comparison(args=ARGS;runner=run_stage)
         k=args[i]; haskey(opts,k) && error("Repeated comparison option")
         if k=="--dry-run"; opts[k]="true"; push!(filtered,k); i+=1; continue; end
         k in union(TANGENT_OPTIONS,TANGENT_OPTIONAL) && i<length(args) && !startswith(args[i+1],"--") || error("Missing/forbidden comparison option")
-        opts[k]=args[i+1]; k in ("--settings","--reference-settings") || append!(filtered,args[i:i+1]); i+=2
+        opts[k]=args[i+1]; k in ("--settings","--reference-settings","--variant-templates") || append!(filtered,args[i:i+1]); i+=2
     end
     all(haskey(opts,k) for k in TANGENT_OPTIONS) || error("All comparison inputs required")
     parse_options(filtered); cfg=load_config(opts["--config"])
     TangentMoldProjection.settings(opts["--settings"])
     haskey(opts,"--reference-settings") && TangentMoldProjection.settings(opts["--reference-settings"])
+    haskey(opts,"--variant-templates") && !isfile(opts["--variant-templates"]) && error("Missing variant templates")
     cfg["preprocessing"]["patch_residual_filter"]=="smooth_residual" || error("Matched residual required")
     _,base=lobe_table(opts["--features"]); _,splitrows=lobe_table(opts["--split-features"])
     require_same_keys(base,splitrows,"split geometry")
@@ -46,7 +47,11 @@ function tangent_comparison(args=ARGS;runner=run_stage)
         reference=haskey(opts,"--reference-settings") ? ["--mold-tangent-settings",abspath(opts["--reference-settings"])] : String[]
         for (arm,extras) in (("reference",reference),("tangent",["--mold-tangent-settings",abspath(opts["--settings"])]))
             stage=arm
-            runner(out,stage,"run_reconstructed_chitosan.jl",vcat(common,extras,["--outdir",joinpath(out,arm)]))
+            inputs=copy(common)
+            if arm=="tangent" && haskey(opts,"--variant-templates")
+                inputs[findfirst(==("--templates"),inputs)+1]=abspath(opts["--variant-templates"])
+            end
+            runner(out,stage,"run_reconstructed_chitosan.jl",vcat(inputs,extras,["--outdir",joinpath(out,arm)]))
             cp(basepath,joinpath(out,arm,"features.tsv")); cp(splitpath,joinpath(out,arm,"features_split.tsv"))
             check_counts(joinpath(out,arm,"predictions.tsv"),counts)
         end

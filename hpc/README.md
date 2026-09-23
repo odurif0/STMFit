@@ -1,5 +1,16 @@
 # Running STMFit on the MPCDF HPC cluster
 
+The September 24 cube-order comparison uses `hpc/compare_cube_order.sbatch`:
+one two-hour Viper job, four CPUs / 16 GB, four score shards, no retry. Explicit
+command-line exports: `STMFIT_PROJECT_DIR`, `STMFIT_CACHE_DIR` (frozen symmetric
+geometry), `STMFIT_INPUT_DIR` (full146 raw and legacy templates),
+`STMFIT_TEMPLATE_DIR` (verified corrected template pair), `STMFIT_OUTDIR` (new),
+`JULIA_BIN` (1.13). Sync source plus the validated ignored Manifest explicitly,
+check hashes, instantiate on login and run `--dry-run` before one `sbatch`.
+Both arms use `tangent_mold_finite.toml`; only the second gets the corrected
+templates. No QE computation, label, new fit or grading in the job. Fetch and
+verify every output, exact control and independent scores before external grade.
+
 The September 24 leave-target-out comparison uses `hpc/compare_mold_loo.sbatch`:
 one two-hour Viper job, four CPUs / 16 GB, no retry. It reuses the saved **finite
 target-only** reference, including full-precision state audits, and runs the two

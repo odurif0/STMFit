@@ -1,5 +1,14 @@
 # Calibration: deriving parameters objectively
 
+The opt-in QE cube-order correction changes physical addressing, not calibration:
+the writer emits the third coordinate fastest, unlike the historical reader.
+Accepted cubes/frames reproduce old templates exactly under the old reader.
+`config/qe_cube_order.toml` selects only the corrected input layout. Keep the
+0.50 nm target, existing first-below-target rule, grid and normalization; no
+height, support or isovalue search is selected by benchmark labels. This does
+not establish an explicit tip, calibrated current or physical adequacy of the
+remaining legacy surface policy. See the dated journal comparison.
+
 The September 24 leave-target-out comparison changes only which lobes select
 phase/mirror, not the physical state costs or calibration. It uses other lobes
 in the same view without weighting, temperature, class-count prior or target
