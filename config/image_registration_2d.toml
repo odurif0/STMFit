@@ -1,0 +1,28 @@
+# Image-only residual registration around the previously accepted integer x shift.
+[model]
+method = "signed_row_centered_2d_translation"
+reference_frame = "forward"
+interpolation = "bilinear_observed_corners"
+refinement_step_px = 0.125
+refinement_radius_px = 1
+
+[selection]
+file = "240817_006.sxm"
+bands = 4
+min_band_pixels = 256
+min_band_rows = 8
+min_row_pixels = 16
+min_correlation = 0.60
+min_distant_peak_gap = 0.01
+peak_neighborhood_nm = 0.08
+max_band_disagreement_nm = 0.08
+max_fold_disagreement_px = 0.25
+unresolved_policy = "report_no_molecular_fit_no_retry"
+
+[preprocessing]
+residual_window_nm = 0.16
+max_lag_width_fraction = 0.25
+missing_policy = "restore_raw_mask_before_smoothing"
+support = "fixed_for_all_displacements_and_interpolation_corners"
+holdout_block_px = 64
+holdout_buffer_px = 2

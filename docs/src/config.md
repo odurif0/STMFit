@@ -1053,6 +1053,19 @@ unknown25 change follows; see `results/gcv_reselection_20260922/report.md`.
 
 ## Opt-in diagnostic exploration settings (2026-09-18)
 
+`image_registration_2d.toml` declares the September 23 image-only residual
+registration experiment. Around the saved integer-x transform, the residual
+window is **±0.16 nm** per axis (rounded inward, capped at one quarter of image
+width/height); every integer pair is scored, then a **±1 px / 0.125 px** grid
+around each region's maximum. Signed row-centered correlation uses a fixed
+observed support including every backward interpolation corner. Four y bands
+reuse the explicit **256 pixels / 8 rows / 16 pixels per row**, **0.60**
+correlation, **0.01** distant gap, **0.08 nm** neighborhood/agreement checks.
+The global/full and two source-safe **64×64 px**, **2 px buffered** fold
+estimates must all pass and agree within **0.25 px**. These are experimental
+identifiability checks, not calibrated uncertainty or production parameters.
+No new result can enlarge the window or relax a criterion automatically.
+
 `paired_shift.toml` declares the September 23 multi-start/subpixel pilot on the
 saved blocking scan. Four starts use seeds `[0,11,29,47]`; zero is the native
 start, the others perturb only molecular raw coordinates by at most **0.02 of

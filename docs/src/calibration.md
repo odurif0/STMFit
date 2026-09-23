@@ -642,6 +642,17 @@ of N or independent validation. See `results/gcv_reselection_20260922/report.md`
 
 ## Opt-in label-free exploration (2026-09-18)
 
+The September 23 `image_registration_2d.toml` follow-up estimates displacement
+from observed images without a molecular shape, count or template. Its fixed
+**±0.16 nm** residual window is an exploratory hypothesis, not a newly measured
+vertical calibration. All candidate interpolation sources share an observed
+mask; each training fold also excludes every possible heldout backward source.
+Global/band/fold agreement and peak separation are engineering checks, not
+confidence intervals. Native full-image preprocessing and saved molecular
+initialization prevent claims of independent validation. Image agreement and
+fit improvement are not recognition improvement; no production calibration,
+noise, residual threshold or class prior changes in this pilot.
+
 The September 23 `paired_shift.toml` pilot retains native N, geometry bounds,
 amplitude scale, observed pixels and noise. Four deterministic starts test the
 local minimum before a nested backward molecular translation, limited to one

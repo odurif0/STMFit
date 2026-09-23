@@ -2307,6 +2307,13 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-23. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0ag. **Is the model-preferred residual shift present directly in the two images?**
+    → **AUTHORIZED, IN PROGRESS (Sep 23)**: image-only 2D registration on the
+    blocking scan, with a predeclared residual ±0.16 nm window, observed common
+    support, four spatial bands and source-safe conditional folds. No new count,
+    chemistry or benchmark label enters estimation. A second, bounded fit job
+    is conditional on image identifiability; no window/threshold retry.
+
 0af. **Can deterministic starts or a residual 2D translation unblock the paired fit?**
     → **COMPLETE; GAIN BUT BOUND-LIMITED, NO PROMOTION (Sep 23)**. Four starts
     improve some circular fits, not full eligibility. Translation reduces paired
@@ -12369,3 +12376,74 @@ the existing warnings; assignment HTML is **199.89 KiB**, below 200 KiB.
 The Manifest remains byte-identical. All validated source, tests and conclusions
 are committed; generated reports/data remain in the ignored local result tree.
 The bounded deliverable is complete; the historical recognition target is not.
+
+### 2026-09-23 — Authorized direct-image 2D registration loop
+
+The user authorizes continuation of the recommended direct-image registration
+path. Scientific deliverable: determine whether a residual translation is
+identified by the observed trace/retrace images independently of any molecular
+model, then, only if identified, compare image-fixed and freely fitted shifts
+on the saved blocking-scan molecular objectives. Done means saved, independently
+checked image estimates and their fit comparison, or an explicit unresolved
+image estimate. Start **10:54 CEST**; at most **four hours of preparation** and
+**two one-hour Viper jobs**, no automatic retry. This is not a new open-ended
+method campaign. Unknown25, production counting/assignment, physical residual
+limits, DFT, class priors, expected N and benchmark labels remain out of scope.
+No line-dependent warp, feedback kernel or classifier variant is authorized by
+this loop. The previous ±1 pixel result is not itself a displacement estimate.
+
+`image_registration_2d.toml` fixes an image-only search around the previous
+accepted integer-x transform of `240817_006.sxm`. Each residual coordinate is
+bounded by **±0.16 nm**, rounded inward to integer pixels and capped at one
+quarter of its image dimension. This is a declared exploratory scale, twice
+the preceding image-registration **0.08 nm** neighborhood, not an established
+vertical calibration or a bound chosen after observing the new image scores.
+All integer pairs are scored, followed by one **±1 pixel / 0.125 pixel** grid
+around each region's best integer pair. There is no subsequent enlargement.
+Signed within-row centered correlation uses unsmoothed native-preprocessed Z;
+actual raw masks are restored. Bilinear interpolation uses observed corners
+only, with the same forward support for every displacement, including all
+potential backward source pixels. No molecule, N, template or label is supplied
+to the estimator; SXM reading/preprocessing remain owned by STMSXMIO.
+
+The global image and four contiguous y bands must each have **256 pixels /
+eight rows**, at least **16 pixels per retained row**, correlation **≥0.60**,
+an interior peak and a **≥0.01** gap from integer candidates more than
+**0.08 nm** away in either coordinate. Band displacements must be within
+**0.08 nm** per coordinate of the global result. These inherited engineering
+checks are not confidence intervals; interpolation resolution is not accuracy.
+
+Two conditional folds use alternating **64×64** pixel blocks with a **two-pixel**
+training buffer. Unlike the earlier small-shift experiment's 16-pixel blocks,
+these leave room for erosion by the entire broader displacement window. Every
+candidate backward source must itself belong to training in the registered
+frame: no heldout source can leak through displacement/interpolation. Full
+and fold global shifts must agree within **0.25 pixel** per coordinate and all
+three image registrations must pass before molecular follow-up. Native global
+preprocessing and saved molecular N/support/initialization already saw the full
+image, so this remains **conditional spatial evidence**, not independent noise
+samples or independent-cohort validation. No pixel is discarded from full
+molecular fits.
+
+If image identification passes, the second job compares zero shift, image-fixed
+shift and a free shift in the same predeclared physical window, with four
+unchanged deterministic starts per family, full data and the same two folds.
+All 144 endpoints use the existing SLSQP tolerances and at most 2,000 callbacks /
+120 seconds each. Training RSS alone chooses starts. All modes share the
+zero-shift native-start objective scale. Full validity and both heldout RSS
+gains remain necessary. GCV counts the two image-estimated coordinates also
+for the image-fixed arm; this plug-in parameter-count diagnostic is not claimed
+to be an unbiased risk estimate. Free shifts are diagnostic of compensation;
+they are not accepted as physical registration unless within 0.25 pixel of the
+corresponding image estimate. The existing mean/both-view 3.5 residual guard,
+geometric constraints, noise and all original observed fit pixels remain fixed.
+No partial recognition grade or new champion can follow from RSS alone.
+
+Pre-run Julia 1.13 checks pass: **15,846 synthetic assertions**, including an
+independent saved-output reader, known subpixel/sign recovery, fixed-mask
+brute-force comparison, periodic/constant/boundary failures and exact
+invariance to changed heldout source values. A line break after the second
+colon in a Julia range initially causes a parse error; using `range(...;step)`
+fixes it before any real search. The metadata-only dry-run finds base shift
+**(-35,0) pixels** without reading image values. Documentation builds with
+`--build-only`, existing size warnings and no deployment. Manifest unchanged.
