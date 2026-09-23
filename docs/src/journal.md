@@ -12793,3 +12793,16 @@ score is calculated for this scan. The full driver dry-run validates all
 **146/900** without reading image arrays. Docs build with existing size warnings
 and no deployment; Project/Manifest hashes remain unchanged. Existing remote
 base/split caches match local inputs under checksummed rsync dry-run.
+
+**Submitted:** scientific source **87235dc** is committed before transfer to
+`/u/oldu/code/STMFit_local_orientation_20260923`. Checksummed source/input
+dry-runs are identical; all 146 raw files/templates are already present remotely.
+The ignored Manifest is explicitly copied and remains SHA256
+`617de8162fa4c7a814aacb106f145349bc57ead58ec9a6c332971a821b5974fe`
+after login-node Julia 1.13 instantiate/precompile (expected 1.12.6 Manifest
+warning, no dependency edits). Remote metadata dry-run and `sbatch --test-only`
+pass. Actual job **11950305** is submitted at **14:45:27 CEST**, with all five
+paths in the command-line export list, four-hour limit and `--no-requeue`.
+Output: `/ptmp/oldu/stmfit/local_orientation_20260923_v1`; local results:
+`results/local_orientation_20260923/`. Submission is not a scientific result;
+external grading is deferred until complete outputs and matched-control checks.
