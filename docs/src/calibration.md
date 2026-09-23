@@ -1,5 +1,15 @@
 # Calibration: deriving parameters objectively
 
+The September 23 mold-state comparison changes no physical calibration. It uses
+saved tangent costs, omits both-infinite observations from geometric-state
+selection without filling their scores, then separately tests a common
+parity/mirror using fixed equal view weights. Chemical states remain independent
+between views. These NCC costs are not likelihoods; sharing a state is a testable
+hypothesis, not proof of identical acquisition contrast. No weight, missing-data
+threshold, geometry, composition or vote rule may be tuned against labels.
+Settings are explicit in `config/mold_state_comparison.toml`; production defaults
+remain unchanged pending the bounded comparison and human review.
+
 The subsequent orientation test adds only the analytic ellipse-angle derivative
 at fixed pixels/frame (`config/tangent_mold_orientation.toml`). Exactly isotropic
 rows have no angle derivative; every nonzero derivative is normalized with the

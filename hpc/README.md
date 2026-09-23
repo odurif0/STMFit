@@ -1,5 +1,17 @@
 # Running STMFit on the MPCDF HPC cluster
 
+The September 23 saved-cost decoder comparison uses
+`hpc/compare_mold_states.sbatch`: three sequential arms, four CPUs / 16 GB,
+two hours, no requeue. Set absolute `STMFIT_PROJECT_DIR`,
+`STMFIT_REFERENCE_DIR` (the completed tangent control, including all cost audits),
+`STMFIT_OUTDIR` (new) and `JULIA_BIN` (1.13). Run the script with `--dry-run`
+first; pass all four paths explicitly in command-line `sbatch --export=ALL,...`.
+It performs no image refit or raw-data access: the previous four score shards
+are reused, then cohort-wide GMM/k-means learning runs on a compute node only.
+Fetch all output tables/logs. Run `test/verify_mold_state_comparison.jl
+SAVED_TANGENT_DIR COMPARISON_DIR` before the separate benchmark report.
+No benchmark labels, grading or orchestration runs inside the job.
+
 The completed original-support follow-up uses
 `hpc/compare_registered_refit_original_support.sbatch` and
 `config/registered_refit_original_support.toml`: one two-hour Viper job,

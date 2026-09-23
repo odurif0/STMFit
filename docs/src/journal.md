@@ -2307,6 +2307,13 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-23. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0an. **Can missing-cost omission and then shared geometric mold states improve recognition?**
+    → **AUTHORIZED, IN PROGRESS (Sep 23)**. Compare saved tangent **679/33/852**
+    against omission-only and omission plus equal-cost shared parity/mirror.
+    Frozen full146 / 900-key inputs, exact reference replay, external full145
+    grading; no labels or composition prior in inference, no N/geometry refit.
+    Four-hour preparation and one two-hour Viper job; details in the dated entry.
+
 0am. **Does adding the elliptical orientation derivative improve tangent CC?**
     → **COMPLETE; NEGATIVE (Sep 23)**. Added orientation gives **678/870 correct,
     30/145 exact**, versus byte-identical tangent replay **679/33**, both coverage
@@ -13629,3 +13636,77 @@ unchanged; only documentation follows the scientific freeze. Complete results
 and the decision are committed for human review, retaining the interrupted
 first report and every loss. No job, uncommitted validated implementation or
 next campaign is left running.
+
+## 2026-09-23 — Missing unary costs and shared mold states: two bounded ablations
+
+**Scientific deliverable.** User authorizes the proposed loop after the negative
+orientation test. Preparation is capped at four hours from authorization; one
+Viper job, at most two hours, four requested CPUs / 16 GB, no automatic retry.
+Done means three complete **146-scan / 900-key** arms, exact saved tangent replay,
+independent arithmetic/availability checks, full145 external grading against
+saved tangent **679/870,33/145,852/870**, support **676/34/852** and historical
+**677/36/854**, then a documented retain/reject decision. Unknown25 is already
+complete and is not rerun. No neighbor, noise or tip-model campaign is included.
+
+**Read-only finding and fixed interventions.** Effective parity/mirror differ
+between saved forward/backward tangent scores on **105/146** scans (73 parity,
+69 mirror disagreements, overlapping); direction/phase equivalences are removed
+using `phase_eff = mod(phase + direction*(N-1), 2)`. This is model disagreement,
+not independently observed physical geometry or proof of a recognition defect.
+For `240818_019`, two unsupported lobes have `[Inf,Inf]` costs in both views.
+Every chain-state total becomes infinite and the legacy decoder retains its
+first state; the other two observed lobes cannot select a different state.
+The auxiliary missing-label problem was already noted on September 18; its
+global-state consequence is now tested, without relaxing any observation guard.
+
+Three arms are fixed before new real calculations:
+
+- `reference`: replay legacy eight-state enumeration and unchanged classifier.
+- `finite`: replace both-infinite unary pairs by zero **only for state selection**;
+  retain raw infinite costs / NaN margins and auxiliary unavailable labels `-1/?`.
+  Preserve all rows and final missingness; only observed evidence selects states.
+- `shared`: same omission, but a common effective parity/mirror minimizes the
+  **sum of the two per-view minimum unary costs**, with fixed weights `[1,1]`.
+  Chemical labels remain independent between views, no common sequence or prior.
+  Keep two distinct CC margins for the unchanged unlabeled GMM and final vote.
+
+Without bond costs or transition penalties, the eight direction/phase/mirror
+states reduce to four distinct parity/mirror states. Strict first-state tie order
+is retained; if both views have no evidence the state is arbitrary and all
+scores stay unavailable. State-dependent missing support, mixed finite/infinite
+type pairs, NaNs and unexpected scoring failures are rejected, not repaired.
+This is a narrow decoder ablation, not joint nonlinear image fitting, averaging
+channel margins, a calibrated posterior or a restored historical method.
+
+`config/mold_state_comparison.toml` fixes all new choices. The runner consumes
+the previous tangent control's full-precision per-state audits, not rounded
+selected scores; all image fitting, tangent projection, patch supports,
+main/split descriptors and Fisher remain literally cached. Each arm freshly
+runs the existing unsupervised GMM and k-means programs with the same settings,
+then the same soft vote and validator. Seven reference score/classification
+tables must replay exactly. The correction is opt-in; default production
+behavior and old experiment outputs remain unchanged.
+
+Tests include exhaustive independent chemical enumeration on synthetic small
+chains, view exchange, parity equivalence, missing views, missing whole chains,
+unchanged finite scores, unavailable-label serialization and forbidden inputs.
+Only the lexicographically first real saved scan is decoded locally; the complete
+cohort calculation belongs on Viper. Metadata dry-run, committed source sync,
+login-node instantiate, explicit command-line export, one sbatch, poll and fetch.
+External labels enter only after complete inference and invariant checks; no
+post-grade parameter change or truth-selected per-file combination. The archived
+application's scientific Must-NOT-have list remains; no retired process framework
+is revived. Repeated benchmark reuse remains development, not independent or
+unknown-chain chemical validation.
+
+**Before submission.** Julia **1.13.0** passes **874** new synthetic/driver
+assertions, including a separate-process saved-output checker, plus **675**
+tangent/preprocessing and **133** reconstruction regression assertions. The only
+real local decode is the lexicographically first cached scan, `240307_015.sxm`:
+both legacy score views reproduce exactly; finite omission changes nothing;
+shared selection uses phase/mirror `0/1` in both views (previous backward `1/0`).
+No label is consulted and this is not a recognition result. Both Julia and shell
+metadata dry-runs confirm **146 scans / 900 keys**, without output/inference.
+Documentation builds successfully without deployment, with existing size/search
+warnings. Project and Manifest hashes are unchanged. Commit this tested source,
+then sync and verify source/cache bytes before the sole Slurm submission.

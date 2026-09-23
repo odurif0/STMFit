@@ -299,8 +299,34 @@ function _viterbi(costs::Matrix{Float64}, records, direction::Int, phase::Int, m
     return labels, minimum(dp[n, :])
 end
 
+function _decode_state(costs, records, direction, phase, mirror, bond_templates, opt;
+                       omit_unavailable::Bool=false)
+    selection_costs = costs
+    unavailable = falses(size(costs, 1))
+    if omit_unavailable
+        bond_templates === nothing && iszero(opt.transition_penalty) ||
+            error("Missing-cost omission is defined only for independent unary costs")
+        selection_costs = copy(costs)
+        for i in axes(costs, 1)
+            if all(==(Inf), costs[i, :])
+                unavailable[i] = true
+                selection_costs[i, :] .= 0.0
+            else
+                all(isfinite, costs[i, :]) || error("Unexpected nonfinite unary cost")
+            end
+        end
+    end
+    labels, total = _viterbi(selection_costs, records, direction, phase, mirror, bond_templates,
+                            opt.score, opt.transition_penalty, opt.bond_weight)
+    labels[unavailable] .= -1
+    # Preserve unavailable raw costs/margins; neutral evidence is NOT imputation.
+    margin = mean(abs.(costs[:, 1] .- costs[:, 2]))
+    return (;total, labels, costs, direction, phase, mirror, margin)
+end
+
 function _decode_file(records, templates, bond_templates, opt::Options;
-                      scorer=(rec,templ)->_score_patch(rec.patch,templ,opt.score))
+                      scorer=(rec,templ)->_score_patch(rec.patch,templ,opt.score),
+                      omit_unavailable::Bool=false)
     n = length(records)
     best = nothing
     for direction in (0, 1), phase in (0, 1), mirror in (0, 1)
@@ -311,12 +337,10 @@ function _decode_file(records, templates, bond_templates, opt::Options;
                 costs[i, typ+1] = scorer(rec, templates[(typ, parity, mirror)])
             end
         end
-        labels, total = _viterbi(costs, records, direction, phase, mirror, bond_templates,
-                                 opt.score, opt.transition_penalty, opt.bond_weight)
-        margin = mean(abs.(costs[:, 1] .- costs[:, 2]))
-        if best === nothing || total < best.total
-            best = (total=total, labels=labels, costs=costs, direction=direction,
-                    phase=phase, mirror=mirror, margin=margin)
+        candidate = _decode_state(costs, records, direction, phase, mirror, bond_templates, opt;
+                                  omit_unavailable)
+        if best === nothing || candidate.total < best.total
+            best = candidate
         end
     end
     return best
@@ -326,7 +350,8 @@ function write_decoded(io, file, records, best)
     for (i, rec) in enumerate(records)
         c0, c1 = best.costs[i, 1], best.costs[i, 2]
         label = best.labels[i]
-        println(io, join([file, rec.lobe, label, @sprintf("%.8g", rec.amplitude), label == 1 ? "GlcNAc" : "GlcN",
+        physical_label = label < 0 ? "?" : label == 1 ? "GlcNAc" : "GlcN"
+        println(io, join([file, rec.lobe, label, @sprintf("%.8g", rec.amplitude), physical_label,
                           @sprintf("%.8g", c0), @sprintf("%.8g", c1),
                           @sprintf("%.8g", abs(c0 - c1)), best.direction,
                           best.phase, best.mirror, @sprintf("%.8g", best.total)], '\t'))

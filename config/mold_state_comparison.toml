@@ -1,0 +1,13 @@
+# Two fixed decoder ablations; not a new production assignment calibration.
+[model]
+state_objective = "sum_of_per_view_unary_minima"
+chemical_states = "independent_per_view"
+view_weights = [1.0, 1.0]
+
+[selection]
+missing_cost = "omit_both_infinite_keep_unavailable"
+state_tie = "first_phase_then_mirror"
+transition_penalty = 0.0
+
+[preprocessing]
+cost_source = "saved_target_gaussian_affine_audit"

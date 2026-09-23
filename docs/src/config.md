@@ -1,5 +1,21 @@
 # Configuration Reference
 
+## Experimental mold-state decoding (2026-09-23)
+
+`config/mold_state_comparison.toml` fixes two ablations over saved full-precision
+tangent costs. `[selection] missing_cost="omit_both_infinite_keep_unavailable"`
+omits unsupported lobes only from the state objective; original infinite costs,
+NaN margins and final unavailability remain. This is restricted to independent
+unary costs (`transition_penalty=0.0`), with state-independent missing support.
+`[model] state_objective="sum_of_per_view_unary_minima"`,
+`chemical_states="independent_per_view"`, `view_weights=[1.0,1.0]` share only
+parity/mirror, not chemical assignments. Ties use the first phase, then mirror;
+reverse direction is redundant for these unary scores. `[preprocessing]`
+requires saved target-Gaussian/affine costs, without the rejected angle column.
+`test/run_mold_state_comparison.jl` compares legacy, omission-only and shared
+states. Reference replay must be byte-identical; no production default changes.
+N, geometry, pixel support, Fisher, classifier settings and vote remain frozen.
+
 ## Experimental tangent physical-mold scoring (2026-09-23)
 
 The separately authorized orientation test uses
