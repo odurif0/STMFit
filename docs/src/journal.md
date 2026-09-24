@@ -14661,3 +14661,19 @@ initially pending on compute-node availability. Results will be under
 `/ptmp/oldu/stmfit/hybrid_reproduction_20260924_v1`; log
 `/ptmp/oldu/stmfit/hybrid_reproduction_20260924-11959377.log`.
 The 1,455 existing checks have now all completed successfully as well.
+
+Job 11959377 starts on `vipc2063`, eight CPUs allocated for four requested.
+The local GaussianFit2D suite additionally passes **534** assertions, including
+148 directional-symmetry checks and 80 exact-arithmetic/allocation checks.
+Documentation builds under the unchanged size limits (assignment 199.62 KiB).
+The archived saved counts predate directional-fusion repair **d12283a**; fresh
+old/new differences cannot automatically be attributed to optimizer timing.
+The two current repetitions, not equality to old counting bytes, isolate
+current-run reproducibility. No asymmetric-filter rollback is proposed.
+
+The existing calibration bootstrap is not a strict-provenance remedy as-is:
+it emits the robust-guard 0.05 threshold explicitly annotated as benchmark
+measured, with fallback widths/spacing when peak measurements fail. A later
+independent calibration needs separate measured/fallback provenance and
+label-independent selection justification; no such calibration is invented
+or benchmark-tuned during this reproduction.
