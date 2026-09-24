@@ -1,6 +1,26 @@
 # Chitosan Benchmark and 10–20mer Runbook
 
-Latest September 24 comparison: correcting QE cube-token order gives
+Latest September 24 result: connecting saved promoted hybrid counts to unchanged
+support assignment gives **694/870 correct, 43/145 exact, 855/870 coverage**,
+versus historical **677/36/854** and matched fresh control **676/34/852**.
+This is the new measured development reference, with **129/145 exact counts**
+from the saved count vector (control 106). Both full146 arms reconstruct their
+own base/split geometry, patches and unlabeled predictors. Against control:
+25 scan gains/15 losses, 12 exact-chain gains/three losses; missing/extras
+**16/38 → 13/6**, emitted errors **176 → 161**. No labels enter inference.
+
+Source **71de012**, job **11956079**, **0:0 in 35m20s**, two seconds queued;
+433 outputs plus the log are local and verified. The earlier job **11955899** was
+cancelled before grading after a demonstrated split-kernel performance
+regression; its partial files remain separate. Both fresh arms use the repaired
+kernel and unchanged scientific settings. Counts were **not recomputed**;
+timed-fit variability and reused development labels preclude claims of a global
+optimum or independent validation. No unknown25 rerun or application-default
+replacement. Evidence: `results/promoted_counts_20260924/report.md` and
+[unit assignment](unit_assignment.md#saved-promoted-counts-and-recognition-2026-09-24).
+Earlier entries below describe the reference status at their experiment dates.
+
+Earlier September 24 comparison: correcting QE cube-token order gives
 **676/870 correct, 27/145 exact**, versus exact legacy tangent **679/33**, both
 coverage **852**. Six scans gain/nine lose, one exact gain/seven losses. Keep
 the opt-in correct reader, but do not promote this assignment pipeline or claim

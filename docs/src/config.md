@@ -6,6 +6,11 @@ summary must contain only `selection_policy="support_midpoint_hybrid"`; failed,
 mixed-policy, adaptive-support and mismatched cohorts are rejected. Existing
 count/assignment TOMLs and templates are unchanged. No geometry cache, new
 selection knob, counting sweep, benchmark input or default promotion is added.
+Completed: **694/870 correct, 43/145 exact, 855/870 coverage**, versus fresh
+control **676/34/852** and historical **677/36/854**. Retain as the measured
+development reference, without replacing application defaults. Source **71de012**
+also repairs split-kernel allocations without changing its formula or settings;
+both timed-fit arms use that repair. `results/promoted_counts_20260924/report.md`.
 
 `test/audit_qe_surface_calibration.jl` is a diagnostic-only companion to the
 QE-order builder: same six cube/frame/config inputs and new `--outdir`, optional

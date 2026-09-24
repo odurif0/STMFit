@@ -4,6 +4,12 @@ The opt-in promoted-count assignment comparison uses two saved label-free
 count vectors and rebuilds both geometries at fixed N. It changes neither GCV,
 the counting thresholds nor the assignment calibration. It is not a fresh
 count-policy benchmark; timed-optimizer variability is reported separately.
+The completed comparison gives **694/870 correct, 43/145 exact, coverage 855**,
+versus fresh control **676/34/852** and history **677/36/854**: a new measured
+development reference, not an independent calibration validation. The repaired
+split kernel preserves model arithmetic, but time-limited fits are not assumed
+identical. No new physical parameter, threshold or composition prior is used.
+Full evidence: `results/promoted_counts_20260924/report.md`.
 
 The September 24 read-only surface audit identifies a periodic-substrate branch,
 an isovalue lower bound above the entire GlcN target plane, and negative values

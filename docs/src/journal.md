@@ -2307,6 +2307,22 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-24. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0ar. **Does connecting saved promoted counts improve recognition?**
+    → **COMPLETE; NEW MEASURED DEVELOPMENT REFERENCE (Sep 24)**. Fresh support
+    assignment at saved hybrid counts gives **694/870 correct, 43/145 exact,
+    855/870 coverage**, exceeding history **677/36/854** and matched fresh
+    control **676/34/852**. Saved exact counts are **129/145**, not a new count
+    sweep. Against control: 25 scan gains/15 losses, 12 exact gains/three losses;
+    missing/extras **16/38→13/6**, emitted errors **176→161**. No label-driven
+    tuning, composition prior, unknown25 rerun or application-default change.
+    Source **71de012**, job **11956079**, **0:0 in 35m20s**; all 433 outputs and
+    the log are local and verified. It replaces pre-grade cancelled **11955899** after a
+    demonstrated split-kernel allocation repair, within the original runtime
+    allowance. Both arms use the repair; timed-fit variability is documented.
+    Full paired evidence: `results/promoted_counts_20260924/report.md`.
+    Reproduce the complete counting front end and seek separate validation
+    before claiming a general-purpose champion or a global optimum.
+
 0aq. **Does correcting QE cube-token order improve the reconstructed assignment?**
     → **COMPLETE; CORRECTNESS FIX, NEGATIVE RECOGNITION (Sep 24)**. Correct
     QE addressing gives **676/870 correct, 27/145 exact**, versus exact legacy
@@ -14498,3 +14514,90 @@ command-line **03:30:00** limit, four requested CPUs / 16 GB. Output:
 `/ptmp/oldu/stmfit/promoted_counts_fast_20260924-11956079.log`. No further
 replacement, partial-result grade, cached-control substitution or tuning is
 planned. Follow through completion, independent verification and external grade.
+
+### Completed comparison: historical benchmark reference exceeded
+
+Replacement **11956079** starts **02:39:20 CEST**, two seconds after submission,
+and ends **03:14:40**, **COMPLETED 0:0 in 35m20s**, on `vipc2310`. Four CPUs
+requested/eight allocated, 16 GB requested, MaxRSS **3,926,287 K**. Combined
+elapsed compute time with the cancelled first attempt is **1h00m17s**, below
+the original four-hour allowance. The 433 regular outputs and Slurm log are
+fetched; every SHA256 matches. All 698 remote source hashes and the original
+Project/Manifest pair remain unchanged. No further job or fitting follows.
+
+Both arms complete all **146 scans**, all fifteen scientific tables, QC and
+146 standalone maps each, with no failure or excluded scan. Control/hybrid
+retain **900/871** keys and their exact input counts. Before grading,
+**23,527** independent cohort/geometry/naming/vote checks plus **309** frozen
+input checks pass. All raw-file hashes match local originals. Native output
+populations `(0,1,?)` are **(673,223,4)** and **(649,219,3)**; these are results,
+never target compositions. Unavailable control keys are `240310_Cu100009` lobe
+8, `240818_015` lobe 1, `240818_019` lobes 1/2. Hybrid lists only the first
+three unavailable keys; no missing component is filled.
+
+**Measured refit variability, before labels.** Versus saved geometry, control
+base and split each change six rows in one scan. Maximum position shifts are
+**0.0302753 / 0.000316319 nm**; maximum absolute relative GCV changes
+**0.672952% / 0.000970594%**. Among the 118 full-cohort same-N scans (703 keys),
+fresh arms differ on six base rows in one scan, max shift **0.0302753 nm**,
+relative GCV **0.677512%**; split rows are identical. Timed fits are therefore
+not exact replays. Control nevertheless preserves **all 900 saved-support
+decisions**, with 215 changed prediction rows/confidences. Its training-support
+table is byte-identical; all other compared tables have some numerical change.
+Whole-cohort unsupervised learning can propagate the changed input distribution;
+this is an end-to-end comparison, not an isolated causal estimate of N alone.
+
+**External full145/own-N grade.** Only after complete inference and integrity
+checks are benchmark membership and labels opened. **3,555** membership-only
+assertions preserve all original selected rows (892 per old/control profile,
+863 for hybrid); **46** aggregate checks and **580** paired rows verify the
+five-profile report. Historical, saved-support and finite-tangent grade files
+reproduce the preceding report byte-for-byte. Fresh control's per-scan grade
+is byte-identical to saved support as well.
+
+| Profile | Exact N /145 | Correct /870 | Exact /145 | Coverage /870 | Missing / extra | Emitted errors |
+|---|---:|---:|---:|---:|---:|---:|
+| Historical reference | 106 | 677 | 36 | 854 | 16 / 38 | 177 |
+| Saved support | 106 | 676 | 34 | 852 | 16 / 38 | 176 |
+| Legacy finite tangent | 106 | 679 | 33 | 852 | 16 / 38 | 173 |
+| Fresh control | 106 | 676 | 34 | 852 | 16 / 38 | 176 |
+| Saved hybrid counts, fresh support assignment | 129 | 694 | 43 | 855 | 13 / 6 | 161 |
+
+Versus fresh control: **25 scans gain, 15 lose, 105 tie**; twelve exact chains
+are gained and three lost (`240314_Cu100_025`, `240817_007`, `240818_020`).
+Count agreement gains on 24 scans and loses only on `240816_005`. The 28
+changed-N scans gain **23** correct positions; 117 same-N benchmark scans lose
+**five**, net **+18**. The grader changes alignment on eight scans; its lobe
+indices are not an independently measured spatial correspondence.
+
+Versus history: **+17 correct positions, +7 exact chains, +1 covered position,
+16 fewer emitted errors**. Thirty-four scans gain, 27 lose, 84 tie; fifteen
+exact chains are gained, eight lost. Against finite tangent: **+15 correct,
++10 exact, +3 covered**. All gains/losses, including unchanged-N regressions,
+are retained in `results/promoted_counts_20260924/paired_v2/`.
+
+**Decision: retain 694/43/855 as the new measured development-benchmark
+reference.** The historical lower-bound objective is exceeded on this saved
+count-vector comparison; no global-optimum, independent-validation or
+unknown-chain chemistry claim follows. The promoted counts are reused, not
+freshly selected under Julia 1.13. Do not replace the frozen unknown25
+application or splice old predictions into losing cases. No new threshold,
+classifier, tangent combination or physical mold is introduced after grading.
+Retain the numerical allocation repair regardless of this grade. The separate
+surface audit still supplies no accepted physical calibration or new template.
+
+Headlines are updated in README, runbook, selection, assignment, config and
+calibration docs. The obsolete phase-planning overview is condensed (entrypoints
+and scientific distinctions retained) to leave the assignment page under its
+unchanged documentation-size limit. Complete evidence and reproduction inputs:
+`results/promoted_counts_20260924/report.md`.
+
+Final documentation verification initially stops at **200.96 KiB / 200 KiB**
+for the assignment page. Condensing the dated continuous-vote and bagging
+summaries, while retaining their methods, numerical results and full journal
+references, resolves it without raising the limit. Julia 1.13 documentation
+then builds successfully at **199.62 KiB**, without deployment; only existing
+size/search warnings remain. After grading, all 433 output hashes still match,
+as do prediction, Project/Manifest and frozen scientific-source checks. Both
+jobs are terminal; validated code and measured conclusions are committed for
+human review, while generated artifacts remain local and ignored.

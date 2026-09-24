@@ -4,7 +4,26 @@ Analysis pipeline for STM images of molecular chains (chitosan on Cu(100) and
 similar systems). Detects and fits a chain-of-Gaussians model to count the
 number of monomer units (lobes) per chain, label-free.
 
-**Latest comparison, September 24: correct QE cube addressing does not improve recognition.**
+**New measured benchmark reference, September 24: saved promoted counts improve recognition.**
+Connecting the saved label-free `support_midpoint_hybrid` counts to unchanged
+support assignment gives **694/870 correct units, 43/145 exact chains and
+855/870 coverage**. This exceeds historical **677/36/854** on all three measures;
+the matched fresh control gives **676/34/852**. Exact counts are **129/145**
+versus 106; missing/extra positions fall **16/38 → 13/6**, emitted errors
+**176 → 161** against control. Both arms rebuild all geometry and descriptors;
+no labels, composition prior or post-grade tuning enter inference.
+
+This is the new **development-benchmark reference**, not a proven optimum,
+independent validation or a fresh reproduction of the saved counting policy.
+The unknown25 application and its frozen outputs are unchanged. Source
+**71de012**, job **11956079**, **0:0 in 35m20s**; all 433 outputs plus the log
+are local and verified. A split-kernel allocation regression was repaired before this
+matched comparison; timed-fit variability is reported, not assumed absent.
+See [the counting-to-recognition result](docs/src/unit_assignment.md#saved-promoted-counts-and-recognition-2026-09-24)
+and `results/promoted_counts_20260924/report.md`. Older comparisons below retain
+their dated conclusions, not the current reference status.
+
+**Earlier comparison, September 24: correct QE cube addressing does not improve recognition.**
 With the remaining surface calibration unchanged, corrected templates give
 **676/870 correct, 27/145 exact chains**, versus byte-identical legacy tangent
 control **679/33**, both coverage **852/870**. Six scans gain, nine lose; one
@@ -26,7 +45,7 @@ Earlier September 24, leave-target-out parity/mirror selection gives **670/32**
 against **679/33**, both coverage **852**: rejected without tuning. Source
 **61a56d6**, job **11955091**; `results/mold_loo_20260924/report.md`.
 
-**Stable support reference (saved inputs):** complete-disk support improves
+**Previous support reference (saved inputs):** complete-disk support improves
 **675 → 676 correct / 870** and **33 → 34 exact chains / 145**. Use the opt-in
 `config/unit_assignment_patch_support.toml`. Coverage rises **849 → 852 / 870**;
 classified accuracy is **676/852 (79.3%)**. Three newly available predictions

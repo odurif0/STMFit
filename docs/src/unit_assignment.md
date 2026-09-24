@@ -1,11 +1,35 @@
 # Unit Assignment (GlcNAc/GlcN per lobe)
 
+## Saved promoted counts and recognition (2026-09-24)
+
+Freshly rebuilding support assignment from saved `support_midpoint_hybrid`
+counts establishes the new measured **development-benchmark reference**:
+
+| Profile | Exact N /145 | Correct /870 | Exact chains /145 | Coverage /870 |
+|---|---:|---:|---:|---:|
+| Historical | 106 | 677 | 36 | 854 |
+| Fresh control | 106 | 676 | 34 | 852 |
+| Saved hybrid counts, fresh assignment | 129 | 694 | 43 | 855 |
+
+Both arms rebuild all 146 scans; 28 counts differ, 900→871 lobes. Missing/extra
+positions fall **16/38→13/6**. Against control: 25 scan gains/15 losses,
+12 exact-chain gains/three losses, 15 fewer emitted errors. No labels,
+composition prior or post-grade tuning enter inference. Source **71de012**,
+job **11956079**, **0:0 in 35m20s**; outputs and independent checks are complete.
+
+Both arms use the repaired split-kernel allocation path with unchanged formula
+and settings; timed-fit variability remains. This is **not a fresh count sweep,
+independent validation, proven optimum or unknown-chain accuracy claim**.
+Keep the frozen unknown25 application unchanged. Full provenance, paired losses
+and checks: [journal](journal.md), `results/promoted_counts_20260924/report.md`.
+Older dated sections retain their conclusions at the time, not current status.
+
 ## Motivation
 
 Chitosan is a (1,4)-β-linked polysaccharide composed of two monomer units:
 **GlcNAc** (N-acetyl-glucosamine) and **GlcN** (glucosamine). The fitted
-Gaussian lobes correspond to individual monomer units, but the current pipeline
-only counts them (N_selected) — it does not identify which lobe is which unit.
+Gaussian lobes model individual units. Counting (`N_selected`) and diagnostic
+chemical assignment remain separate tasks.
 
 The goal is to assign each fitted lobe a type (0 = GlcN, 1 = GlcNAc) to produce
 a **deacetylation map** per chain: the ordered sequence of GlcNAc/GlcN along
@@ -32,55 +56,25 @@ The same label-free rule that applies to N also applies to unit assignment:
 
 ## Pipeline overview
 
-The unit-assignment investigation proceeds in phases. **Phases 0–2a are
-implemented as diagnostics; Phases 2–5 remain research directions** pending a
-robust label-free unit-identity signal.
+The early phase roadmap is historical, not the status of the reconstructed
+workflow documented below. Its diagnostic entrypoints remain:
 
-```
-Phase 0: Grading framework (grade_unit_assignment.jl)
-   │     Truth TSV + predictions → accuracy, confusion, edit distance
-   │     4 alignments (identity/reverse/flip/reverse+flip)
-   │     2 conventions (physical label-free + oracle supervised)
-   │
-Phase 1: Gaussian feature separability (analyze_unit_separability.jl)
-   │     extract_lobe_features.jl → per-lobe (A, σ∥, σ⟂, integrated)
-   │     Unimodal vs bimodal test (kmeans k=1 vs k=2, BIC)
-   │     With --with-truth: AUC per feature, clustering accuracy
-   │
-Phase 1b: Non-Gaussian residual features — REMOVED (added noise: ΔBIC +184→+4.3)
-   │
-Phase 1c: Local/envelope-corrected features (augment_lobe_local_features.jl)
-   │     Per-chain z-scores, local prominence, envelope residuals
-   │     No truth and no composition constraint
-   │
-Phase 1d: Aligned patch diagnostics (extract_lobe_patches.jl)
-   │     Raw and residual patches aligned to chain axis
-   │     PCA/kmeans + optional supervised train/test diagnostic
-   │
-Phase 1e: Split-width Gaussian forward model (GaussianFit2D peak_profile=:split)
-   │     σ∥ is split left/right around each lobe center
-   │     skew_ratio = σright / σleft, fitted per lobe
-   │     Tests whether STM resolves any lobe asymmetry before DFT-STM molds
-   │
-Phase 2a: Connected mold-template decoding (score_connected_mold_templates.jl)
-    │     Apply GlcN/GlcNAc patch molds with global direction/phase/mirror states
-    │     Enforces glycosidic connectivity/orientation, not composition
-    │     refine_geometric_mold.jl searches local acetyl-site transforms label-free
-    │
-Phase 2: 1-type vs 2-type model selection [planned]
-   │     shared_sigma_types ∈ {0,1,2} × spacing_model ∈ {free, alternating}
-   │     GCV comparison → does a 2-type structure exist?
-   │
-Phase 3: Per-blob clustering assignment [planned]
-   │     GMM 2-component on Phase 1+1b features → sequence 0/1 per chain
-   │     Physical mapping {A,B} → {GlcN,GlcNAc}
-   │
-Phase 4: Template supervised validation [planned]
-   │     Train/test split → nearest-centroid → generalization measure
-   │
-Phase 5: DFT-STM simulation [optional, planned]
-         LDOS on Cu(100) → physical template
-```
+- Phase 0: `grade_unit_assignment.jl`, external accuracy/confusion/edit distance;
+  physical and explicitly supervised oracle conventions across four alignments.
+- Phase 1: `extract_lobe_features.jl` and `analyze_unit_separability.jl`;
+  amplitude/width/integral features, kmeans unimodality/BIC diagnostics, supervised
+  AUC only with `--with-truth`. Phase 1b residual features were removed
+  (separation ΔBIC +184→+4.3).
+- Phases 1c/1d: `augment_lobe_local_features.jl` and `extract_lobe_patches.jl`;
+  local/envelope normalization, aligned raw/residual patches and PCA/kmeans.
+- Phase 1e: per-lobe split widths, detailed below.
+- Phase 2a: `score_connected_mold_templates.jl` and `refine_geometric_mold.jl`;
+  connectivity/orientation and local acetyl transforms, never composition.
+
+The original later directions were GCV comparison of one/two width types and
+free/alternating spacing, two-component GMM with physical class naming,
+supervised held-out template validation, and DFT LDOS-derived templates. Their
+subsequent implementations and measured limits appear in the dated sections.
 
 ## Split-width asymmetry test (Phase 1e)
 
@@ -2169,58 +2163,41 @@ rows remain in [journal](journal.md) and `results/scan_weighting_20260921/report
 
 ### Continuous GMM seed vote (2026-09-21): negative
 
-`unit_assignment_continuous_vote.toml` copies the 676/34 support control, changing
-only its name and `gmm_seed_aggregation="mean_membership"`. Ten normalized
-seed scores `log(weight) - Mahalanobis_distance²/2` replace binary argmax votes
-within the GMM head. Learning, naming, covariance, normalization, support,
-Fisher, k-means, N, abstentions, eight-decimal serialization and final `>=0.5`
-soft-vote rule remain fixed. No Gaussian-volume term, temperature, composition
-prior or probability calibration is added.
+`unit_assignment_continuous_vote.toml` changes only the profile name and
+`gmm_seed_aggregation="mean_membership"`: ten normalized scores
+`log(weight) - Mahalanobis_distance²/2` replace binary seed argmax votes.
+Learning, naming, covariance, normalization, support, Fisher, k-means, N,
+abstentions, serialization and final `>=0.5` vote remain fixed. No volume
+term, temperature or composition prior is introduced.
 
-The result is **671/870 correct, 671/852 (78.8%), 26/145 exact**, against
-exactly replayed support **676/34**, at unchanged **852/870 coverage**.
-Against control: **8 scan gains, 13 losses, 124 ties; one exact gain, nine
-losses**. Errors rise **176→181**. All **24 final changes are 1→0**, leaving
-old GMM=1/k-means=0 zero-margin ties; exact ties fall **58→34**. The group
-learning is unchanged. This is a fusion effect, not calibrated confidence;
-no tie or precision adjustment follows.
-
-Source **bef315f**, job **11922389**, **0:0 in 7m19s**, after 36m23s queued.
-All **392 outputs and Slurm log** are fetched/checksummed; **2,199 tests** and
-**7,240 pre-grade checks** pass. Twelve control tables replay exactly; all
-146 scans/900 keys, N, 896 usable GMM rows and four unavailable predictions
-remain. **Reject this variant; retain support 676/34**, below historical
-677/36. Full method, confusion, 290 paired rows, exact-chain losses and score
-details remain in the [journal](journal.md) and
-`results/continuous_vote_20260921/report.md`. This reused benchmark is
-development evidence, not independent validation or a verdict on every
-continuous-score method. Counting, DFT and unknown25 are untouched.
+Result: **671/870 correct (671/852, 78.8%), 26/145 exact**, versus replayed
+support **676/34**, coverage **852**. Eight scan gains/13 losses/124 ties;
+one exact gain/nine losses. Errors **176→181**; all 24 changed decisions
+are 1→0, leaving old GMM=1/k-means=0 ties (**58→34**). Reject this fusion
+variant, not every continuous-score method; it does not calibrate confidence.
+Source **bef315f**, job **11922389**; all 146 scans/900 keys and four unavailable
+rows remain. Full checks, confusion and paired losses: [journal](journal.md),
+`results/continuous_vote_20260921/report.md`. No post-grade tuning or unknown25
+rerun; development evidence only.
 
 ### Whole-scan GMM bagging (2026-09-21): negative
 
-`unit_assignment_scan_bagging.toml` copies the 676/34 support control, changing
-its name and enabling `gmm_resampling="whole_scans"` with **20 replicates**.
-Draw seeds 0–19 resample entire usable scans with replacement, preserving their
-natural lengths; each bag uses the ten original initialization seeds. Naming
-uses duplicated training amplitudes. The candidate equally averages bag means
-of valid binary seed votes. There is no best-bag selection, out-of-bag validation,
-composition constraint or change to normalization, other heads, N or final fusion.
+`unit_assignment_scan_bagging.toml` enables `gmm_resampling="whole_scans"`,
+20 replicates with draw seeds 0–19 and ten original initialization seeds each.
+Resampling preserves natural scan lengths; naming uses duplicated amplitudes.
+Valid binary seed-vote bag means receive equal weight. No best-bag selection,
+out-of-bag validation, composition constraint or change to other heads,
+normalization, N or fusion.
 
-The result is **665/870 correct, 665/852 (78.1%), 10/145 exact**, versus
-exactly replayed support **676/34**, at unchanged **852/870 coverage**.
-Against control: **22 scan gains, 33 losses, 90 ties; zero exact gains,
-24 losses**. Of 62 final changes, all 1→0, 57 leave old GMM=1/k-means=0
-vote ties. Errors rise **176→187**; lower false positives do not offset higher
-false negatives. No tie-rule or threshold adjustment follows.
-
-Source **da886ce**, job **11925188**, **0:0 in 7m17s**, after 29s queued.
-All **393 outputs and Slurm log** are fetched/checksummed; **2,471 tests,
-21,927 pre-grade checks**, seven component checks and 290 paired rows pass.
-All **200/200 fits** are accepted; all 146 scans/900 keys and four unavailable
-rows remain. **Reject this variant; retain support 676/34**, below historical
-677/36. Full method, draws, confusion and losses: [journal](journal.md),
-`results/scan_bagging_20260921/report.md`. This reused benchmark supplies
-development evidence, not independent validation or a verdict on all bagging.
+Result: **665/870 correct (665/852, 78.1%), 10/145 exact**, versus replayed
+support **676/34**, coverage **852**. Twenty-two scan gains/33 losses/90 ties;
+zero exact gains/24 losses. All 62 changed decisions are 1→0; 57 leave old
+vote ties. Errors **176→187**: lower false positives do not offset more false
+negatives. All 200 fits are accepted, 146 scans/900 keys and four unavailable
+rows retained. Reject this variant without retuning.
+Source **da886ce**, job **11925188**; full draws, checks, confusion and losses:
+[journal](journal.md), `results/scan_bagging_20260921/report.md`.
+This reused benchmark is development evidence, not a verdict on all bagging.
 
 ### Tied GMM covariance throughout learning (2026-09-22): negative
 

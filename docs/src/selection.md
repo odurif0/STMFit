@@ -462,6 +462,15 @@ rule, not the endpoint of selector research.
 These numbers are validation evidence, not fitting priors. Benchmark labels are
 used only by grading scripts after the batch run has written `N_selected`.
 
+On September 24, linking this **saved** promoted vector to freshly rebuilt
+support assignment gives **694/870 correct units, 43/145 exact chains and
+855/870 coverage**, versus fresh control at saved raw-GCV counts **676/34/852** and
+historical **677/36/854**. It changes 28/146 counts, 900→871 lobes, without
+rerunning selection or changing GCV/thresholds. This new measured recognition
+reference is therefore **not a fresh reproduction of the counting benchmark**.
+See [unit assignment](unit_assignment.md#saved-promoted-counts-and-recognition-2026-09-24)
+and `results/promoted_counts_20260924/report.md`.
+
 ---
 
 ## Archive: experimental selectors (not default, not recommended)
