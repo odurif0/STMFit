@@ -6,7 +6,17 @@ known-count benchmark grades. Fresh reproduction cannot remove that dependence;
 strict label-free calibration and independent validation are not established.
 See [calibration](calibration.md) and [the audit](journal.md#2026-09-24-—-Fresh-hybrid-reproduction-and-historical-label-use-audit).
 
-The latest frozen-learning diagnostic makes **no fit or N decision**. Its
+The latest complete scan-exclusion diagnostic also makes **no fit or N
+decision**. Excluding each target before Fisher and both classifier learners
+degrades control **678/28 → 672/19** and observed inputs **680/35 → 673/29**,
+with coverage **848/870** in all cases. Two repetitions are byte-identical,
+captured predictive states included; **446,680** saved-state assertions pass
+before grading. No exact chain is gained; nine/six are lost. Retain this as a
+sensitivity check, not a recognition improvement or new champion. Counts,
+GCV, guards, `n_eff`, physical calibration and unknown25 remain unchanged.
+See [journal](journal.md), `results/scan_exclusion_20260924/conclusion.md`.
+
+The earlier frozen-learning diagnostic makes **no fit or N decision**. Its
 ordered local/Fisher/normalization/classifier replacements give **678/28 →
 671/25 → 665/17 → 674/21 → 680/35**, all coverage **848/870**. The reverse
 frozen-input control gives **680/36**, not a production successor. Both saved-

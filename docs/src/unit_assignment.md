@@ -2,7 +2,7 @@
 
 ## Saved promoted counts and recognition (2026-09-24)
 
-Neither raw repetitions nor fixed-N diagnostics **justify champion promotion**:
+Raw repetitions and fixed-N diagnostics **do not justify champion promotion**:
 
 | Profile | Exact N /145 | Correct /870 | Exact chains /145 | Coverage /870 |
 |---|---:|---:|---:|---:|
@@ -10,19 +10,18 @@ Neither raw repetitions nor fixed-N diagnostics **justify champion promotion**:
 | Saved hybrid counts, fresh assignment | 129 | 694 | 43 | 855 |
 | Fresh counts and assignment, both repeats | 123 | 679 | 29 | 848 |
 | Observed-only at saved N, both repeats | 123 | 680 | 35 | 848 |
-| Reverse diagnostic, both repeats | 123 | 680 | 36 | 848 |
+| Scan-excluded control, both repeats | 123 | 672 | 19 | 848 |
+| Scan-excluded observed, both repeats | 123 | 673 | 29 | 848 |
 
-The ordered path gives **678/28 → 671/25 → 665/17 → 674/21 → 680/35**:
-local inputs, Fisher, normalization, classifiers. Coverage stays 848; N is fixed.
-Saved-input outputs and captured predictive parameters repeat byte for byte.
-These are diagnostics, not independent effects or promoted methods. Earlier
-image-refit repeats share assignments, but sixteen confidences vary by 0.4.
-Saved 694/43 is not reproduced end to end; history covers six more positions.
+Scan exclusion loses nine/six exact chains versus native **678/28** and
+**680/35**, gaining none. Both repeats are byte-identical; **446,680** checks
+pass before grading. Reverse frozen inputs give **680/36**, not promoted.
+Saved 694/43 is not reproduced end to end. All diagnostic N remain fixed.
 
-Inference reads no labels. Historical calibration and hybrid thresholds used
-known-count grades; strict label-free provenance and independent validation
-remain unestablished. Unknown25 stays frozen. See [journal](journal.md) and
-`results/frozen_learning_20260924/conclusion.md`. Older sections are dated findings.
+Inference reads no labels; historical calibration/rules used known-count
+grades. Strict label-free provenance and independent validation remain open.
+Unknown25 stays frozen. See [journal](journal.md) and
+`results/scan_exclusion_20260924/conclusion.md`. Older findings are dated.
 
 ## Motivation
 

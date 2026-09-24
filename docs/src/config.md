@@ -1693,3 +1693,9 @@ Per-scan normalization still uses each scan's own unlabelled features. There
 is no composition prior, missing-feature imputation, N sweep or automatic
 best-arm choice. No production configuration is changed. Incomplete fold
 execution blocks complete grading rather than enabling a favorable subset.
+
+The complete test is negative in both byte-identical repetitions: **672/870
+correct, 19/145 exact** versus native control **678/28**, and **673/29** versus
+native observed **680/35**, all coverage **848/870**. No exact chain is gained;
+nine/six are lost. The diagnostic remains available, but no configuration or
+production replacement is selected from these grades. See the journal.

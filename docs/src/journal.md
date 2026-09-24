@@ -2312,12 +2312,17 @@ of the current learners, with no feature/threshold choice from grades. This is
 not an untested concept: earlier 35-file LOFO GMM results were mixed, while
 whole-scan Fisher and equal-scan weighting also have negative/mixed results.
 The current full146 representation and coupled learners need their own check.
-**IN PROGRESS (Sep 24, renewed user authorization):** complete leave-one-scan-out
-learning of both saved local-input arms, with two repetitions. Preparation,
-execution and interpretation are capped at two hours from 16:35 UTC; one
-four-CPU Viper job capped at one hour, no automatic retry. Exact native replay,
-complete saved-state verification and external full-cohort grading define done.
-No benefit is promised. Independent physical
+**COMPLETE; NEGATIVE (Sep 24):** both repetitions reproduce byte-identical
+captured parameters and outputs. Scan exclusion gives **672/870 correct, 19/145
+exact** versus control **678/28**, and **673/29** versus observed **680/35**.
+Coverage stays **848/870**; no exact chain is gained, nine/six are lost.
+Source **236999b**, Viper **11964835**, **0:0 in 15m04s**. All 4,748 outputs/logs
+plus Slurm log are local; **446,680** saved-state checks pass before grading.
+The two-hour loop and single one-hour-limited job are complete, without a new
+champion. Next hypothesis: fully acquired scans only for all shared learners,
+with the evaluated scan still excluded and target-local normalization retained.
+This is not the previously negative lobe-completeness rule (which left k-means
+unchanged), nor a promised gain. No new job follows. Independent physical
 calibration remains a separate prerequisite for strict label-free promotion.
 
 0aw. **Frozen-learning attribution of the observed-pixel gain.**
@@ -15444,3 +15449,102 @@ pass the real-cohort metadata-only launcher dry-run (146 scans/863 lobes),
 without fitting or output. Shell syntax and `git diff --check` pass.
 Project and Manifest SHA256 remain unchanged. These checks are not a real-data
 recognition result; the single declared Viper comparison follows.
+
+### 2026-09-24 — Full146 scan-exclusion execution and saved-state reproduction
+
+Frozen source **236999b**, Viper job **11964835**, completed **0:0 in 15m04s**.
+Submitted **18:52:10 CEST**, started **18:53:14**, ended **19:08:18**: 64 seconds
+queued. Four requested/eight allocated logical CPUs, 16 GB, node `vipc2257`;
+reported batch MaxRSS **3,356,915 KiB**. No requeue, restart or duplicate job.
+All **584** excluded-scan calculations finish: 146 scans × two unchanged
+local-input arms × two repetitions, plus four native references. Every arm
+retains all **863** scientific lobe keys and the same saved N.
+
+All **4,748** regular outputs/logs plus the Slurm log are fetched locally and
+content-verified against Viper. All **723** tracked remote source blobs match
+the frozen commit before/after execution; Project/Manifest SHA256 are unchanged.
+Julia **1.13.0** is used, with one thread per worker and BLAS thread. Setup and
+metadata-only dry-runs run on login; real-cohort learning runs only in Slurm.
+
+The two complete repetition directories are byte-identical, including captured
+predictive parameters and all 146 training/target partitions per arm. Both
+native references reproduce earlier Fisher scores, features, component outputs
+and final predictions exactly. Their parameter-bank hashes also exactly match
+the preceding frozen-learning experiment:
+
+- control: `2bedf24d1dd377821224cb665a352bb0435f3efd393c1abe57c27bded4490811`;
+- observed: `07278d653cf8201b2da64552b9795bf3aaf8d65dfd0372865b6816ae520b1b55`.
+
+Per arm and repetition, all **292** saved Fisher mixture fits report convergence
+(control 15–32 EM iterations, observed 11–26), as do all **11,680** k-means fits.
+This does not assert convergence of the downstream Gaussian mixture EM, whose
+termination flag is not captured, or of the earlier image fits. Fisher captures
+preserve predictive vectors/origins and fold indices, not every latent PCA/GMM
+training parameter. Same-input reproducibility is not robustness to changed
+measurements, independent validation, or proof of label-free calibration lineage.
+
+**Complete verification and grading.** All four arm/repetition verifications
+pass **111,670 assertions each (446,680 total)** before external full145 own-N
+grading. The verifier only applies saved states; it performs no learner/image
+fit. Both repetitions' external grade tables are byte-identical:
+
+| Profile | Correct /870 | Exact /145 | Coverage /870 |
+|---|---:|---:|---:|
+| Native control | 678 | 28 | 848 |
+| Excluded-scan control | 672 | 19 | 848 |
+| Native observed inputs | 680 | 35 | 848 |
+| Excluded-scan observed inputs | 673 | 29 | 848 |
+
+All retain **123/145 exact N**, 855 benchmark predictions, 20 missing positions,
+five extras and two aligned abstentions. Scientific availability is 860/863.
+Control has **4 scan gains /10 losses /131 ties**, net −6 correct; observed
+has **4 /11 /130**, net −7. **No exact chain is gained**; nine/six are lost.
+One/two external grading orientations change; alignment is not independently
+verified spatial monomer correspondence. All 290 paired scan rows are retained.
+
+Only **14/863 control decisions** and **16/863 observed decisions** change
+under exclusion, despite losing nine and six exact chains. Changes on fully
+observed/partial scientific scans are **9/5** and **11/5**. GMM/k-means change
+14/15 control decisions and 26/3 observed decisions. These are sensitivity
+counts, not counts of corrections or calibrated chemical probabilities.
+
+Raw-observation-defined grading strata (110 fully acquired, 35 labelled
+partial scans) are:
+
+| Profile | Fully observed correct /exact | Partial correct /exact |
+|---|---:|---:|
+| Native control | 508 /20 | 170 /8 |
+| Excluded control | 507 /15 | 165 /4 |
+| Native observed | 513 /27 | 167 /8 |
+| Excluded observed | 508 /22 | 165 /7 |
+
+The 36th partial scan is unlabelled and remains in every scientific computation.
+**Decision:** reject exclusion as a recognition-improving replacement; retain
+the diagnostic and all losses. Native same-cohort results exceed these transfer
+results; unsupervised transductive learning is not itself label leakage.
+Neither historical **677/36/854** nor saved unreproduced **694/43/855** is
+surpassed. No threshold, feature, seed, fallback, production/champion, physical
+calibration, count selection or unknown25 change follows. This repeatedly used
+development benchmark does not become independent validation through LOFO.
+
+The next distinct hypothesis is whole-scan observation eligibility across
+Fisher AND both final learners, retaining target-local normalization and outer
+scan exclusion. Earlier complete-patch training was negative and left k-means
+unchanged; do not present it as an untested remedy or promise a gain. A new
+comparison would need its scope fixed before grading. Independent physical
+calibration remains unresolved. No further job is launched in this completed
+bounded loop. Full evidence: `results/scan_exclusion_20260924/conclusion.md`,
+both complete grade reports, paired tables and verification logs.
+
+The first post-result documentation build exceeds the assignment-page size
+limit by **63 bytes** (204,863 versus 204,800). Condense the existing opening
+without removing result rows or changing any size limit; scientific source,
+parameters and outputs are untouched. This is a documentation-size repair,
+not another experiment or a numerical retry.
+
+The condensed documentation build passes (assignment page **204,759 bytes**),
+without deployment or changed limits; existing size/search warnings remain.
+`git diff --check` passes. Scientific code stays frozen at **236999b**; conclusions
+and all cited current headlines are updated together. The bounded loop is
+complete, while the broader independent-calibration/new-champion objective
+remains open. Generated evidence stays local and Git-ignored.

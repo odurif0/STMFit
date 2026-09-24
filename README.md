@@ -4,7 +4,19 @@ Analysis pipeline for STM images of molecular chains (chitosan on Cu(100) and
 similar systems). Detects and fits a chain-of-Gaussians model to count the
 number of monomer units (lobes) per chain from the images.
 
-**Latest September 24: frozen learning isolates cohort effects, without a new champion.**
+**Latest September 24: complete scan exclusion is reproducibly negative.**
+Excluding each target from Fisher, GMM, k-means and class naming gives
+**672/870 correct, 19/145 exact chains** versus control **678/28**, and
+**673/29** versus observed-pixel **680/35**. Coverage stays **848/870**;
+no exact chain is gained, nine/six are lost. Both repetitions' outputs and
+captured predictive parameters are byte-identical. Source **236999b**, Viper
+**11964835**, **0:0 in 15m04s**; **446,680** saved-state checks pass before
+complete external grading. No new champion, count/default or unknown25 change;
+inherited calibration is still not certified strictly label-free. See
+[conclusion](results/scan_exclusion_20260924/conclusion.md) and
+[journal](docs/src/journal.md).
+
+**Earlier September 24: frozen learning isolates cohort effects, without a new champion.**
 Two identical-input repetitions reproduce all outputs and captured predictive parameters
 byte for byte. The declared fixed-N path gives **678/28 → 671/25 → 665/17 →
 674/21 → 680/35** (correct positions / exact chains), replacing local inputs,

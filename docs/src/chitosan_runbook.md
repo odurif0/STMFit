@@ -1,6 +1,17 @@
 # Chitosan Benchmark and 10–20mer Runbook
 
-Latest saved-input diagnostic: the ordered frozen-learning path gives
+Latest complete scan-exclusion test is **negative and reproduced**: control
+**678/28 → 672/19** and observed inputs **680/35 → 673/29** (correct /870,
+exact /145), all coverage **848/870**. Exclusion occurs before Fisher and both
+classifiers, including class naming; target-only normalization is retained.
+No exact chain is gained; nine/six are lost. All scientific outputs and captured
+predictive states repeat byte for byte. Source **236999b**, job **11964835**,
+**0:0 in 15m04s**, **446,680** saved-state assertions before external grading.
+No champion/count/default/unknown25 change, and no certification of inherited
+calibration. See [journal](journal.md),
+`results/scan_exclusion_20260924/conclusion.md`.
+
+Earlier saved-input diagnostic: the ordered frozen-learning path gives
 **678/28 → 671/25 → 665/17 → 674/21 → 680/35**, replacing local inputs, Fisher,
 normalization, then classifiers; all coverage is **848/870**. Two repetitions
 are byte-identical, captured predictive parameters included. The reverse frozen-input

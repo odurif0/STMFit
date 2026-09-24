@@ -1214,3 +1214,10 @@ the current statistical learners to an excluded scan, not an independent
 physical recalibration or a newly collected holdout. Inherited sigma, spacing,
 overlap, support and count-selection choices are unchanged; successful replay
 or an improved external grade cannot certify their label-free provenance.
+
+That exclusion test is now complete and negative: control **678/28 → 672/19**,
+observed **680/35 → 673/29** (correct /870, exact /145), coverage **848/870**.
+The two repetitions agree byte for byte, including captured predictive states.
+No exact chain is gained. This demonstrates sensitivity to target participation
+in unlabelled cohort learning, not evidence of label leakage in the learner or
+a physical recalibration. The historical calibration limitation remains separate.
