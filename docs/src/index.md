@@ -12,7 +12,7 @@ see [Calibration](calibration.md) for the provenance limit.
 The pipeline has also been **applied** to unknown 10–20mer chains. Without
 external labels, processing and visual QC do not validate chemical assignment.
 Other molecules require their own physical calibration and validation; the
-auto-calibration script is a bootstrap, not evidence of generalization.
+measurement diagnostic does not automatically establish a physical calibration.
 
 ## Quick Start
 
@@ -24,7 +24,7 @@ STMFIT_DATA_DIR=/path/to/data julia --project=. test/inspect_one_file.jl 240817_
 STMFIT_DATA_DIR=/path/to/data julia -t 4 --project=. test/batch_full.jl 48 \
   --config config/chitosan.toml
 
-# Auto-calibrate for a new molecule from one clean scan
+# Audit apparent widths/spacings and missing measurements, without fitting
 julia --project=. test/measure_calibration.jl path/to/clean_scan.sxm
 
 # Raw GCV baseline (no guard) for comparison
@@ -45,14 +45,14 @@ validation are documented in [Model Selection](selection.md).
 
 ## Calibration
 
-Auto-calibration (`test/measure_calibration.jl`) derives σ, spacing, fit width,
-support, and n_max from one clean scan. See
-[**Calibration**](calibration.md) for the parameter classification (measured /
-principled / free) and why GCV is the canonical criterion (not BIC/AICc).
+`test/measure_calibration.jl` reports apparent widths/spacings in both views and
+exposes the old bootstrap's fallback values. It no longer derives physical fit
+bounds or writes a production TOML automatically. See [**Calibration**](calibration.md)
+for the measurement limits and why GCV remains the canonical criterion.
 
 The default `config/chitosan.toml` is the historical hand-tuned reference.
-`config/chitosan_auto.toml` is an auto-derived comparison, not independent
-validation or a certificate of label-free calibration.
+`config/chitosan_auto.toml` is a historical bootstrap output, including values
+matching the old fallbacks, not independent validation or label-free calibration.
 
 For the chitosan reference set, `benchmarks/chitosan_240817.toml` records
 evaluation-only quality classes. It is **not** used by fitting code and must not

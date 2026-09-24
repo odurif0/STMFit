@@ -2308,7 +2308,12 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0at. **Can independent calibration recover performance without label-informed rules?**
-    → **OPEN (Sep 24)**. Replace benchmark-selected support/width and hybrid-rule
+    → **MEASUREMENT EXPERIMENT IN PROGRESS (Sep 24)**. After human authorization,
+    audit apparent widths/spacings in both raw views, distinguish legacy defaults
+    from measurements, and test a full-strip half-prominence measurement without
+    producing a physical calibration from unresolved peaks. One hour of Viper,
+    four CPUs, no count/assignment/benchmark input. Then address independently
+    justified support/width and hybrid-rule
     choices with justified measurements or label-independent selection, without
     treating silent bootstrap fallbacks as measurements. Also examine whole-cohort
     assignment sensitivity: twelve of fifteen lost exact chains keep the same N.
@@ -14811,3 +14816,92 @@ warnings remain. Ordinary local suites total **2,110** passing assertions
 source/config diff against submitted **d2a0714** remains empty. The bounded
 reproduction is complete; validated code and the negative promotion decision
 are committed for human review, with generated evidence kept local and ignored.
+
+## 2026-09-24 — Calibration measurement provenance and two-view observability
+
+**Deliverable and definition of done before real-data execution.** The user
+authorizes the independent-calibration and assignment-stability leads. Begin
+with the prerequisite measurement: identify which apparent widths/spacings can
+actually be obtained from raw images, instead of silently substituting old
+defaults. Preparation is capped at two hours, then one Viper job capped at one
+hour, four CPUs / 16 GB, four ordinary Julia shards, no retry. Done means
+synthetic and boundary tests, one lexicographically first raw scan checked
+locally, all 146 scans/directions retained in measurement reports, outputs
+fetched/verified, forward/backward agreement quantified and a committed
+scientific conclusion. No count fit, classifier, benchmark membership/label,
+old geometry or prediction input; no QE, unknown25 rerun or production default
+change. An apparent measurement is not a physical calibration certificate.
+
+**Source findings.** The old bootstrap marks FWHM [0.3,1.0] nm and spacing
+0.5 nm as measured even when no qualifying peaks exist. It constructs the
+profile only from bright pixels and fills empty bins with zero, measures a
+local seven-bin half-height span rather than an isolated-lobe FWHM, and uses
+weights twice in its axis SVD. Its printed high-frequency noise is actually
+the fit preprocessor's smoothed-image dispersion. The stored auto TOML contains
+the exact fallback triplet; that alone is not proof of its original execution,
+but it is not independent measurement evidence either. The emitted 0.05 robust
+guard also carries its benchmark-informed provenance. The old config is kept
+as historical evidence, not overwritten or recertified.
+
+**Change.** `measure_calibration.jl` becomes a diagnostic-only measurement
+entrypoint. It preserves the legacy arithmetic as an explicit comparison,
+with unavailable observed quantities and separately named former fallback
+values. The new full-strip profile retains dim pixels, leaves empty bins missing,
+and uses a correctly weighted covariance axis. Peak widths are measured at
+half topographic prominence with linear crossings; they are apparent, not
+automatically converted to Gaussian sigma. Plateaus, gaps, missing/ambiguous
+directions, nonfinite raw data and non-length channels are handled explicitly.
+The high-frequency MAD and the unchanged pipeline dispersion are separate
+columns; neither is certified as an independent background-noise estimate.
+No direction fallback, known peak count, composition, FWHM/spacing substitution,
+`n_max` derivation, production TOML or correlation-based n_eff estimate occurs.
+
+`config/calibration_measurements.toml` exposes all measurement choices: the
+legacy 0.70 bright-axis quantile, three-pixel strip/bin, 25/95 width quantiles,
+legacy comparison constants, and the new descriptive prominence/HF-MAD ratio
+of three with width exceeding two pixels. These are fixed before raw outputs,
+not claimed as calibrated significance or physically derived confidence bounds.
+No threshold sweep will follow the measured availability/agreement. Peak
+prominence/width semantics follow the primary SciPy documentation (linked in
+source and calibration docs), implemented independently without a new package.
+
+Initial synthetic tests expose an overly strict fixture assumption: a narrow
+strip can lie entirely in the brightest 30% of an elongated Gaussian. The
+fixture now explicitly masks its tails to test clipping; no measurement setting
+is changed. All initial **130** measurement/CLI assertions then pass, including
+overlap examples where half-prominence width is not the component FWHM.
+
+**Single-file preflight and missing-data amendment.** The lexicographically
+first scan, `240307_015.sxm`, has 36,016 nonfinite forward pixels and 36,352
+backward pixels. The first strict implementation rejects both whole views;
+those outputs are retained in `focus_first/`. Rejecting also their observed
+pixels is unnecessarily restrictive. Before cohort execution, add a diagnostic
+observed-only preprocessor in the owning `STMSXMIO` package: fit backgrounds
+on finite pixels, preserve holes and empty rows, and accept only smoothing
+windows whose entire in-image footprint is observed. No imputation or fitted
+count is used by this arm. Keep legacy median imputation only in its explicitly
+flagged comparison rows. All-finite arithmetic and production fitter behavior
+are unchanged; the same first file is the only real local recheck.
+
+Synthetic boundary tests expose a numerical rank-check failure on one observed
+row: subtracting the mean of repeated coordinates leaves rounding-sized fake
+variation. Translate coordinates before centering so constant dimensions are
+exactly zero; test both axis-aligned and oblique collinear observations. The
+new `plane_rank_rtol=1e-12` is a numerical degeneracy tolerance, not a physical
+cutoff. No peak threshold or width/spacing choice is tuned to these raw data.
+
+**Preflight results.** The observed-only recheck has apparent median widths
+0.311639 / 0.140233 nm and spacings 1.268101 / 1.761252 nm (forward/backward).
+Neither old view yields a qualifying width or spacing: both would substitute
+[0.3,1.0] nm and 0.5 nm. This single scan already warns against equating
+availability with two-view consistency, or apparent widths with physical sigma.
+No threshold adjustment follows. All **187** diagnostic/report assertions,
+**21** shared-I/O assertions and **534** GaussianFit2D assertions pass; docs
+build under Julia 1.13 without deployment or size-limit changes. A syntax typo
+in the first report implementation is corrected before these successful tests.
+The two existing Project/Manifest hashes remain unchanged. Metadata-only
+preflight partitions all 146 raw scans as 37/37/36/36. The comparison utility
+checks raw hashes, complete rows, missing bins, width crossings, frozen filters,
+fallback separation and serialized summary arithmetic, then reports paired
+differences without fitting or external grades. Validated work is committed
+before the one-job Viper run.

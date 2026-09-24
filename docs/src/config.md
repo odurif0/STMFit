@@ -1,5 +1,30 @@
 # Configuration Reference
 
+## Diagnostic calibration measurements
+
+`config/calibration_measurements.toml` configures only `measure_calibration.jl`;
+it is not a replacement for `chitosan.toml` and contains no selection policy.
+The script emits apparent measurements and explicit legacy fallback columns,
+not production fit bounds or a ready-to-use calibration. All keys are required;
+unknown keys, including benchmark/expected-count fields, are rejected.
+
+| Section | Keys and meaning |
+|---|---|
+| `[model]` | `axis_bright_quantile=0.70` for the axis only; `strip_halfwidth_pixels=3`, `bin_width_pixels=3`; `axis_degeneracy_rtol=1e-12` numerical tie handling; `width_quantiles=[0.25,0.95]` for observed-width summaries |
+| `[selection]` | `prominence_hf_mad_multiplier=3` descriptive contrast filter; `min_width_pixels=2` sampling filter, not chemical confidence |
+| `[preprocessing]` | `channel="Z"`, `stride=1`, `flatten="plane+rows"`, `smooth_radius_px=1`; `plane_rank_rtol=1e-12` for the observed-only background plane's geometric rank check; both actual directions are measured separately |
+| Legacy audit only | `legacy_weight_floor=1e-12`, `legacy_fwhm_fallback_nm=[0.3,1.0]`, `legacy_spacing_fallback_nm=0.5`, `legacy_height_std_multiplier=2`, `legacy_width_window_bins=3`, `legacy_max_width_nm=5` reproduce former arithmetic/defaults; never fill observed columns |
+
+The observed-only diagnostic keeps missing pixels missing, fits plane/row
+backgrounds on observed values, and rejects smoothing footprints touching holes.
+Its helper is owned by shared `STMSXMIO`, without changing fitter preprocessing.
+The legacy arm retains median imputation and explicitly flags affected rows.
+Missing directions remain unavailable, with no fwd→bwd substitution.
+The former unused `--n-lobe` option is removed. Measurements must not be mistaken
+for a new count or unit-assignment score. See [calibration](calibration.md).
+
+## Fresh hybrid reproduction and saved-count comparison
+
 `test/run_hybrid_reproduction.jl` runs two independent raw-to-prediction repeats
 of the unchanged hybrid/support configuration. Only raw images, the two TOMLs,
 templates and a new output directory are accepted; saved counts, geometry and

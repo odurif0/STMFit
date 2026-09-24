@@ -1,5 +1,15 @@
 # Running STMFit on the MPCDF HPC cluster
 
+`hpc/audit_calibration_measurements.sbatch` runs diagnostic apparent-width/spacing
+measurements on both actual views with four one-thread Julia shards, one hour,
+four requested CPUs / 16 GB. Explicitly export `STMFIT_PROJECT_DIR`,
+`STMFIT_DATA_DIR` (raw SXMs only), `STMFIT_OUTDIR` (new) and `JULIA_BIN` (1.13).
+Sync committed code and the original ignored Manifest, instantiate on login,
+run `--dry-run` (metadata only), then one `sbatch --export=ALL,... --no-requeue`.
+No fitting, benchmark, templates, production calibration or unknown25 run.
+Fetch all four shard outputs and compare view availability/agreement, without
+selecting scans or changing thresholds after measurements.
+
 Fresh hybrid reproduction uses `hpc/reproduce_hybrid_champion.sbatch`: two
 independent raw-to-prediction executions in one four-hour job, four requested
 CPUs / 16 GB. Explicitly export `STMFIT_PROJECT_DIR`, `STMFIT_INPUT_DIR`

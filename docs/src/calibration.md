@@ -1,4 +1,82 @@
-# Calibration: deriving parameters objectively
+# Calibration: measurements, assumptions and limits
+
+## Two-view measurement audit (2026-09-24)
+
+`test/measure_calibration.jl` now reports observed apparent widths/spacings,
+missing measurements and the former bootstrap's fallback usage. **It no longer
+emits a ready-to-use production TOML.** A local-window or half-prominence width
+is not automatically an isolated monomer FWHM; overlap, smoothing and baseline
+affect it. The existing `config/chitosan_auto.toml` remains historical evidence,
+not a certified measurement-derived calibration. Full146 two-view measurement
+is in progress; no new recognition score or production parameter is claimed.
+
+```bash
+julia --project=. test/measure_calibration.jl scan.sxm \
+    --config config/calibration_measurements.toml --outdir results/my_measurement
+```
+
+The directory must be new. Without `--outdir`, a single-file run uses
+`results/calibration_measurements/<scan-stem>/`. Directory input requires
+`--data-dir RAW --outdir NEW`; `--chunk I/N` supports the four-shard HPC audit.
+`--dry-run` reads metadata/config only. Expected counts, truth, benchmark
+manifests, old features and predictions are not accepted inputs; the formerly
+unused `--n-lobe` argument is rejected.
+
+Outputs are `measurements.tsv` (both actual directions and both methods),
+`profiles.tsv` (bin values and pixel counts), `peaks.tsv` (accepted and rejected
+measurements), raw hashes and an exact copy of measurement settings. Missing
+observations remain `NA`; all scan/direction rows remain present. No substitution
+of the forward channel for a missing backward channel is allowed. The new
+method fits the background to observed pixels only, preserves the missing-pixel
+mask, and accepts a smoothed pixel only when its entire in-image box footprint
+is observed. No interpolation fills holes. Empty rows stay missing; an
+unidentifiable background plane or wholly unobserved view stays unavailable.
+This diagnostic helper belongs to shared `STMSXMIO`; fitter preprocessing is
+unchanged. `observed_pixels` and `smoothed_observed_pixels` describe this
+observational coverage for both comparison rows, not the legacy imputed support.
+
+The legacy method preserves the old bright-pixel-only, local-window arithmetic
+for audit, including the old preprocessing's median filling of missing pixels.
+Rows affected by that filling are explicitly marked `legacy_imputed_*`; they
+are not measurements based solely on observed pixels. Its `legacy_reported_*`
+columns explicitly show what the old writer
+would have returned, including defaults; the observed columns never contain
+those fallback substitutions. The new method uses weighted covariance once,
+all observed pixels in the axis strip, missing empty bins, plateau-centred peaks,
+and interpolated widths at half topographic prominence. This follows the
+definitions of [peak prominence](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.peak_prominences.html)
+and [relative peak width](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.peak_widths.html),
+without depending on SciPy. Spacing is between accepted apparent peaks in the
+same finite profile segment, not an established chemical repeat length.
+
+`pipeline_dispersion_nm` preserves the original fit preprocessor's smoothed-image
+dispersion as a reference, including for the new method; it is not an
+observed-mask estimate. `hf_mad_nm` measures 1.4826·MAD of flattened minus
+smoothed pixels in each method, using only complete observed footprints in the
+new method.
+The previous tool mislabeled the former as the latter. Neither is certified as
+pure background noise; the new contrast filter is descriptive, not a 3-sigma
+false-positive guarantee. Pixel steps follow the shared I/O coordinate grid
+(`range/(pixels−1)` before stride), not the old printed `range/pixels` estimate.
+
+All choices are explicit in `config/calibration_measurements.toml`; see
+[configuration](config.md#Diagnostic-calibration-measurements). Descriptive
+thresholds preceded raw measurements; missing-data handling was amended after
+the first-file preflight and then frozen before cohort execution. No setting
+is optimized to recover known counts. Apparent
+availability and forward/backward agreement still do not establish physical
+Gaussian bounds, fit-tube width, support padding or calibrated uncertainty.
+
+After fetching the four shards, run the label-free comparison and serialized
+measurement checks (no image fitting):
+
+```bash
+julia --project=. test/summarize_calibration_measurements.jl \
+    results/my_measurement_batch /path/to/raw config/calibration_measurements.toml
+```
+
+This writes `comparison.md` and `paired_measurements.tsv`, retaining unavailable
+pairs instead of substituting defaults or selecting only agreeing scans.
 
 **Historical provenance audit (2026-09-24).** Label-free inference does not
 establish label-free calibration. The archived support-padding and fit-width
@@ -114,61 +192,23 @@ The fixed comparison gives **679/870 correct, 33/145 exact**, against support
 per unit, not on exact chains or coverage (854); no calibration/default changes
 follow this result. Full evidence is in the dated journal entry.
 
-The pipeline has ~25 calibration parameters. Most can be **measured** from a
-single clean scan rather than hand-tuned, which makes the analysis generalizable
-to a new molecule on the same STM. This page documents which parameters are
-objective, which are principled choices, and which remain free.
-
-## Auto-calibration
-
-```bash
-julia --project=. test/measure_calibration.jl path/to/clean_scan.sxm
-```
-
-This measures the objectivable quantities and emits a ready-to-use TOML.
-Evaluate it externally on the benchmark *after* generating the TOML — do not
-adjust measured parameters to recover benchmark labels:
-
-```bash
-STMFIT_DATA_DIR=/path/to/data julia -t 4 --project=. test/batch_full.jl 48 \
-    --config chitosan_auto.toml
-```
-
 ## Parameter classification
 
-### Measured from a single scan [objective]
+The former bootstrap's "measured / principled / free" table overstated what a
+single STM image established. The useful distinction is now:
 
-| Parameter | Measurement method |
+| Quantity | What the current evidence establishes |
 |---|---|
-| `noise σ` | 1.4826·MAD of (raw − smoothed) high-frequency band, via the standard preprocessing pipeline |
-| `pixel resolution` | `range_nm / width` (from the SXM header) |
-| `FWHM range [lo, hi]` | Detect peaks in the chain-axis profile (weighted PCA → bright-pixel strip), fit half-max width per peak, take [25%, 95%] quantiles (25% excludes under-resolved outliers that would starve the fit) |
-| `repeat spacing` | Median peak-to-peak distance along the chain axis |
-| `spatial correlation range` | 2D isotropic autocorrelation on the full preprocessed image; first lag where ρ(h) drops to 1/e. Descriptive image correlation, not necessarily noise-only correlation. |
+| Pixel coordinates | Shared SXM header/grid convention, not independent instrument calibration |
+| Profile width and spacing | Apparent, preprocessing- and peak-selection-dependent measurements, or explicitly unavailable |
+| High-frequency MAD / image dispersion | Different descriptive scales, not automatically background-noise sigma |
+| Gaussian `sigma_parallel_*` | FWHM/2.355 only for an appropriate isolated Gaussian; not justified by arbitrary local or overlapping peak spans |
+| Fit width, support padding, spacing bounds, overlap | Physical/model choices requiring separate justification; ±30%, three repeats or a fixed padding multiplier are assumptions, not measurements |
+| GCV, model form, optimizer budget | Explicit selection/numerical choices, not physically calibrated from the benchmark |
 
-### Derived from a physical/numerical principle [principled, one fixed choice]
-
-| Parameter | Derivation |
-|---|---|
-| `sigma_parallel_*` | `FWHM / 2.355` (Gaussian width relation) |
-| `spacing_min/max` | `±30%` around the measured repeat spacing |
-| `fit_width_nm` | `= 1.25 × σ_min` (tube half-width; the margin avoids lateral truncation of the narrowest lobe) |
-| `support_min_length_nm` | `3 × spacing` (at least 3 repeats to call it a chain) |
-| `n_max` | `longest_image_axis / spacing_min + 2` (generous cap; the chain may orient along either image axis) |
-| `max_overlap` | 0.60 (Gaussian pair-overlap floor; sets the spacing lower bound) |
-| `support_noise_k` | 2.5 (SNR threshold k·σ on the support envelope) |
-| `support_padding_nm` | `= fit_width_nm` (pad by one tube half-width to avoid edge truncation) |
-| `selection_criterion` | `gcv` (canonical practical score, with correlation/nonlinearity limits — see §Effective sample size) |
-| `flatten` | `plane+rows` (STM scan-line + plane correction) |
-
-### Free (not objectively measurable; left to default)
-
-| Parameter | Why free |
-|---|---|
-| `global_maxtime`, `global_maxiter`, `max_iter` | Optimizer budget (numerical, not physical) |
-| `chain_tilted_baseline`, `chain_circular_sigmas` | Model-form switches (domain choice) |
-| `channel`, `direction` | Acquisition-dependent (Z topography by convention) |
-| `selection_policy`, `gcv_ambiguity_rel_threshold`, `robust_guard_nu` | Selection-rule knobs (validated robust on [0.03, 0.06]) |
+Historical auto-calibration experiments remain in the journal. Their old output
+files are not rewritten and their externally graded results are not new
+measurement validation. No automatic replacement config is generated here.
 
 ### Structured diagnostic policy
 
@@ -217,14 +257,15 @@ count used in GCV.
 
 ## Calibrating a new molecule
 
-1. Pick **one** clean, well-resolved scan of the new molecule.
-2. Run `test/measure_calibration.jl <scan>` → produces `<scan>_calibration.toml`.
-3. Inspect the measured values (especially FWHM and spacing — sanity-check
-   against the visible structure).
-4. Run the batch with the auto-calibrated TOML; spot-check N_selected on a few
-   files visually.
-5. If a parameter looks off (e.g. FWHM under-estimated on a noisy scan), measure
-   on 2–3 scans and take the median.
+1. Inspect raw scans and both acquisition directions with the diagnostic above.
+2. Separate unavailable values, apparent measurements and independent physical
+   evidence; do not take a median of silently substituted defaults.
+3. Establish a model linking observed shape to the intended physical parameters,
+   including overlap, tip/preprocessing effects and measurement uncertainty.
+4. Record independently justified bounds in a separate explicit TOML, without
+   benchmark labels. The diagnostic does not perform this step automatically.
+5. Freeze that candidate before fitting and external grading; visual QC and
+   repeated old benchmark scores do not establish unknown-chain chemistry.
 
 Noise scale and correlation depend on acquisition, tip/feedback state and
 preprocessing. They should not be assumed identical across sessions merely

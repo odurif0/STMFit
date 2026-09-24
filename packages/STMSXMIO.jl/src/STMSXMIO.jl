@@ -218,6 +218,70 @@ function _box_smooth(z::Matrix{Float64}, radius::Int)
     return out
 end
 
+"""
+    preprocess_observed_channel(img, ch; stride, flatten, smooth_radius_px, plane_rank_rtol)
+
+Diagnostic metrology only. Fit background to observed pixels, keep missing
+pixels missing, and only smooth windows whose in-image footprint is observed.
+Existing fitter preprocessing and its median-imputation convention are unchanged.
+All-finite images use the existing arithmetic. Partial images do not acquire
+fabricated observations through plane/row correction or smoothing.
+"""
+function preprocess_observed_channel(img::SXMImage, ch::SXMChannel;
+        stride::Int, flatten::String, smooth_radius_px::Int, plane_rank_rtol::Real)
+    stride>=1 && smooth_radius_px>=0 && 0<plane_rank_rtol<1 || error("Invalid measurement preprocessing")
+    flatten in ("none","plane","rows","plane+rows") || error("Unknown flattening")
+    xs,ys=_coordinate_vectors(img;stride)
+    scale,unit=_value_scale(ch.unit)
+    raw=ch.data[1:stride:end,1:stride:end].*scale
+    observed=isfinite.(raw); z=copy(raw); z[.!observed].=NaN
+    empty_result(reason)=(;xs,ys,raw,z=fill(NaN,size(z)),z_smooth=fill(NaN,size(z)),
+        unit,observed,smoothed_observed=falses(size(z)),status=reason)
+    any(observed) || return empty_result("no_observed_pixels")
+    if occursin("plane",flatten)
+        if all(observed)
+            z .-= _plane_fit(xs,ys,z)
+        else
+            xv=repeat(xs,inner=length(ys))[vec(observed)]
+            yv=repeat(ys,outer=length(xs))[vec(observed)]
+            length(xv)>=3 || return empty_result("background_plane_unidentifiable")
+            # Translate before averaging: a repeated coordinate must centre
+            # to exact zero, not a rounding-sized fictitious second dimension.
+            xrel=xv.-first(xv); yrel=yv.-first(yv)
+            xc=xrel.-mean(xrel); yc=yrel.-mean(yrel)
+            xx=sum(abs2,xc); yy=sum(abs2,yc); xy=sum(xc.*yc)
+            xx>0 && yy>0 && xx*yy-xy^2>plane_rank_rtol*xx*yy || return empty_result("background_plane_unidentifiable")
+            coeff=hcat(ones(length(xv)),xv,yv) \ z[observed]
+            all(isfinite,coeff) || return empty_result("background_plane_unidentifiable")
+            z .-= [coeff[1]+coeff[2]*x+coeff[3]*y for y in ys,x in xs]
+        end
+    end
+    if occursin("rows",flatten)
+        if all(observed)
+            z=_row_median_flatten_global(z)
+        else
+            global_med=median(z[observed])
+            for iy in axes(z,1)
+                valid=@view observed[iy,:]
+                any(valid) || continue
+                row=@view z[iy,:]
+                row .-= median(row[valid])-global_med
+            end
+        end
+    end
+    if all(observed) || smooth_radius_px==0
+        zs=_box_smooth(z,smooth_radius_px)
+    else
+        zs=fill(NaN,size(z)); ny,nx=size(z); r=smooth_radius_px
+        for iy in 1:ny,ix in 1:nx
+            observed[iy,ix] || continue
+            box=@view z[max(1,iy-r):min(ny,iy+r),max(1,ix-r):min(nx,ix+r)]
+            all(isfinite,box) && (zs[iy,ix]=mean(box))
+        end
+    end
+    (;xs,ys,raw,z,z_smooth=zs,unit,observed,smoothed_observed=isfinite.(zs),status="observed_only")
+end
+
 # Otsu's automatic threshold: maximizes inter-class variance.
 function _otsu_threshold(signal::AbstractMatrix{Float64})
     v = vec(signal)

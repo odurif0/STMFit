@@ -349,7 +349,7 @@ how to organize them).
 |---|---|
 | `batch_full.jl [N] [--chunk i/n]` | Full 2D batch: fits, plots, enriched summary. `--skip-1d` (default) for speed; `--no-skip-1d` to add the 1D diagnostic. |
 | `inspect_one_file.jl <file.sxm>` | Deep 2D ell vs circ on a single file. |
-| `measure_calibration.jl <scan.sxm>` | **Auto-calibrate**: derive all objectivable parameters from one clean scan → emits a ready-to-use TOML. |
+| `measure_calibration.jl <scan.sxm>` | Audit apparent widths/spacings in both views and expose legacy fallbacks; no automatic production TOML. |
 | `sensitivity_thresholds.jl {generate\|submit\|local\|compare}` | Measure robustness of N_selected to the selection threshold. |
 | `diagnose_neff.jl`, `diagnose_fullimg_autocorr.jl` | Effective-sample-size and spatial-correlation diagnostics. |
 | `summarize.jl [summary.tsv]` | Print stats from a summary TSV. |
@@ -364,14 +364,14 @@ how to organize them).
 |---|---|
 | `chitosan.toml` | Default 6mer chitosan (hand-tuned reference). |
 | `chitosan_10_20mer_adaptive_support_rescue.toml` | 10–20mer production (long chains, adaptive support rescue). |
-| `chitosan_auto.toml` | Auto-calibrated chitosan (zero hand-tuning, validates the objective method). |
+| `chitosan_auto.toml` | Historical bootstrap output, including values matching old fallbacks; not validated physical calibration. |
 | `template.toml` | Annotated template for calibrating a new molecule. |
 | `*_rescue*.toml` | Variants with adaptive support rescue / aggressive settings. |
 
 Each config has `[model]` (physical calibration), `[selection]` (selection
 thresholds), and `[preprocessing]` (SXM channel/flatten) sections. See
 [**Calibration**](docs/src/calibration.md) for the parameter classification
-(measured / principled / free) and the auto-calibration workflow.
+(observed / assumed / unavailable) and the measurement workflow.
 
 ## HPC (MPCDF — Raven / Viper)
 
@@ -394,7 +394,7 @@ Full docs in `docs/src/` (built with Documenter):
 
 - [**Pipeline & architecture**](docs/src/pipeline.md) — data flow, component roles.
 - [**Selection**](docs/src/selection.md) — the label-free selection rule (GCV + robust-AICc guard + support-midpoint hybrid).
-- [**Calibration**](docs/src/calibration.md) — parameter objectivation, auto-calibration, GCV rationale.
+- [**Calibration**](docs/src/calibration.md) — measurement provenance and limits, physical assumptions, GCV rationale.
 - [**Config reference**](docs/src/config.md) — every parameter and flag.
 - [**Unit assignment**](docs/src/unit_assignment.md) — GlcNAc/GlcN per-lobe assignment pipeline (label-free, work in progress).
 - [**DFT-STM molds**](docs/src/qe_stm_molds.md) — Quantum ESPRESSO LDOS mold workflow for unit assignment.

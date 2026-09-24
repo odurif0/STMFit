@@ -1,0 +1,28 @@
+# Diagnostic image measurements only. Not a fitting/selection calibration.
+# Descriptive thresholds fixed before raw outputs; legacy choices NOT requalified.
+# Missing-data rank check added during the single-file preflight, before the cohort.
+[model]
+axis_bright_quantile = 0.70
+strip_halfwidth_pixels = 3.0
+bin_width_pixels = 3.0
+axis_degeneracy_rtol = 1e-12
+width_quantiles = [0.25, 0.95]
+# Reproduce/report the former bootstrap, never substitute these as measurements.
+legacy_weight_floor = 1e-12
+legacy_fwhm_fallback_nm = [0.3, 1.0]
+legacy_spacing_fallback_nm = 0.5
+
+[selection]
+# A descriptive contrast filter, NOT a calibrated noise significance threshold.
+prominence_hf_mad_multiplier = 3.0
+min_width_pixels = 2.0
+legacy_height_std_multiplier = 2.0
+legacy_width_window_bins = 3
+legacy_max_width_nm = 5.0
+
+[preprocessing]
+channel = "Z"
+stride = 1
+flatten = "plane+rows"
+smooth_radius_px = 1
+plane_rank_rtol = 1e-12
