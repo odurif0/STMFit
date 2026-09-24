@@ -25,7 +25,7 @@ historical calibration: padding, fit width and hybrid-rule choices used known
 count grades. Strict label-free calibration is not certified. Job **11959377**
 now repeats fresh counting and assignment twice, without saved counts; no
 unqualified champion promotion or application-default change follows yet.
-See [the audit](journal.md#2026-09-24--fresh-hybrid-reproduction-and-historical-label-use-audit).
+See [the audit](journal.md#2026-09-24-—-Fresh-hybrid-reproduction-and-historical-label-use-audit).
 
 Earlier September 24 comparison: correcting QE cube-token order gives
 **676/870 correct, 27/145 exact**, versus exact legacy tangent **679/33**, both

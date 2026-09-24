@@ -4,7 +4,7 @@ The September 24 audit separates **label-free inference** from parameter
 provenance: historical support/width calibration and hybrid-rule choices used
 known-count benchmark grades. Fresh reproduction cannot remove that dependence;
 strict label-free calibration and independent validation are not established.
-See [calibration](calibration.md) and [the audit](journal.md#2026-09-24--fresh-hybrid-reproduction-and-historical-label-use-audit).
+See [calibration](calibration.md) and [the audit](journal.md#2026-09-24-—-Fresh-hybrid-reproduction-and-historical-label-use-audit).
 
 The September 24 **QE cube-order correction** gives **676/870 correct, 27/145
 exact**, versus byte-identical legacy tangent **679/33**, both coverage **852**.

@@ -5,7 +5,7 @@ establish label-free calibration. The archived support-padding and fit-width
 choices explicitly used known `N_ell=6` gains. The hybrid rule, its 0.30 upshift
 threshold and the gap>=2 extension were also compared using full146 count
 grades. See [the historical record](journal_archive.md) and
-[the current audit](journal.md#2026-09-24--fresh-hybrid-reproduction-and-historical-label-use-audit).
+[the current audit](journal.md#2026-09-24-—-Fresh-hybrid-reproduction-and-historical-label-use-audit).
 These settings remain frozen for reproducibility, not certified as
 benchmark-independent calibration. A strict-label-free successor needs a
 separately justified calibration/selection procedure without those labels;

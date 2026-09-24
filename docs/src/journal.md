@@ -14677,3 +14677,8 @@ measured, with fallback widths/spacing when peak measurements fail. A later
 independent calibration needs separate measured/fallback provenance and
 label-independent selection justification; no such calibration is invented
 or benchmark-tuned during this reproduction.
+
+The independent verifier is exercised on the older complete hybrid outputs in
+a temporary two-repeat fixture (not new inference): **22,881** assertions pass.
+Internal audit links are corrected to the actual generated Documenter anchor;
+no scientific source or job setting changes while execution is active.
