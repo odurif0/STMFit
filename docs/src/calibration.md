@@ -21,6 +21,29 @@ champion. Historical benchmark-informed width/support provenance remains an
 independent limitation; no apparent profile median or expected N calibrates
 this coupling. Settings and failure rules are in [configuration](config.md).
 
+### What crystallography can and cannot supply
+
+A September 24 literature check finds an independent structural reference,
+not ready-to-use STM bounds. Hydrated chitosan has a twofold helical structure
+with an axial crystal repeat of 10.34(4) Å
+([Okuyama et al., 1997](https://doi.org/10.1021/ma970509n)); the anhydrous
+structure has a 10.311(7) Å axial repeat
+([Naito et al., 2016](https://doi.org/10.1002/bip.22818)). Dividing the twofold
+repeat by two gives an **inferred crystal-axis advance of about 0.516–0.517 nm
+per residue**, not a measured spacing between STM maxima on Cu(100).
+Chitosan salts also exhibit distinct helical conformations
+([Lertworasirikul et al., 2003](https://doi.org/10.1016/S0008-6215(03)00145-9)).
+
+The transfer from atomic structure to apparent STM shape needs separate
+justification. For example, the surface-specific sucrose study combines
+subunit-resolved Cu(100) imaging and molecular modeling
+([Abb et al., 2019](https://doi.org/10.1002/anie.201901340)); it does not
+calibrate chitosan lobe widths. None of these papers supplies this pipeline's
+Gaussian sigma range, support padding or uncertainty. No crystal period,
+ad hoc tolerance around it, or known chain length is inserted into the frozen
+comparison. An independently justified surface/contrast calibration remains
+open.
+
 ## Two-view measurement audit (2026-09-24)
 
 `test/measure_calibration.jl` now reports observed apparent widths/spacings,

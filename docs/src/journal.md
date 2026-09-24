@@ -15941,3 +15941,25 @@ Preparation/submission takes about forty minutes, within the three-hour cap.
 No other campaign or chemical assignment is launched. Generated tests, dry-runs,
 first-file metadata and submission record are retained locally under
 `results/local_sigma_counting_20260924/`; final grades remain pending.
+
+**Literature check while the frozen job runs (20:21–20:28 UTC).** This read-only
+check addresses independent calibration, not another method or parameter
+campaign. The primary hydrated-chitosan structure reports a twofold helix and
+10.34(4) Å crystal-axis repeat
+([Okuyama et al., 1997](https://doi.org/10.1021/ma970509n)); the anhydrous
+structure reports 10.311(7) Å
+([Naito et al., 2016](https://doi.org/10.1002/bip.22818)). Half a twofold repeat
+is an inferred axial advance near 0.516–0.517 nm per residue **in those crystal
+structures**. It is not an observed Cu(100) STM lobe spacing, Gaussian width,
+support extent or hard bound. Distinct helices in chitosan salts further limit
+unqualified structural transfer
+([Lertworasirikul et al., 2003](https://doi.org/10.1016/S0008-6215(03)00145-9)).
+Surface-resolved sucrose imaging/modeling on Cu(100)
+([Abb et al., 2019](https://doi.org/10.1002/anie.201901340)) is relevant to the
+need for an explicit structure-to-STM link, but supplies no chitosan-specific
+Gaussian calibration. The brief search establishes no suitable direct
+chitosan-on-Cu(100) calibration source; this is not proof that none exists.
+Do not manufacture bounds by adding a percentage tolerance to a crystal
+period. No numerical config, fitted domain, inference input, job or production
+behavior changes. Scientific job source remains **5d27c28**; the independent
+calibration limitation remains unresolved irrespective of its future grade.
