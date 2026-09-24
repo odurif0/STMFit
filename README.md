@@ -2,32 +2,38 @@
 
 Analysis pipeline for STM images of molecular chains (chitosan on Cu(100) and
 similar systems). Detects and fits a chain-of-Gaussians model to count the
-number of monomer units (lobes) per chain, label-free.
+number of monomer units (lobes) per chain from the images.
 
-**New measured benchmark reference, September 24: saved promoted counts improve recognition.**
-Connecting the saved `support_midpoint_hybrid` counts to unchanged
-support assignment gives **694/870 correct units, 43/145 exact chains and
-855/870 coverage**. This exceeds historical **677/36/854** on all three measures;
-the matched fresh control gives **676/34/852**. Exact counts are **129/145**
-versus 106; missing/extra positions fall **16/38 → 13/6**, emitted errors
-**176 → 161** against control. Both arms rebuild all geometry and descriptors;
-no labels, composition prior or post-grade tuning enter inference.
+**September 24: fresh reproduction is stable, but does not confirm the proposed champion.**
+Two independent raw-to-prediction executions give identical final predictions:
 
-This is the new **development-benchmark reference**, not a proven optimum,
-independent validation or a fresh reproduction of the saved counting policy.
-The unknown25 application and its frozen outputs are unchanged. Source
-**71de012**, job **11956079**, **0:0 in 35m20s**; all 433 outputs plus the log
-are local and verified. A split-kernel allocation regression was repaired before this
-matched comparison; timed-fit variability is reported, not assumed absent.
-See [the counting-to-recognition result](docs/src/unit_assignment.md#saved-promoted-counts-and-recognition-2026-09-24)
-and `results/promoted_counts_20260924/report.md`. Older comparisons below retain
-their dated conclusions, not the current reference status.
+| Development-benchmark result | Exact N /145 | Correct /870 | Exact chains /145 | Coverage /870 |
+|---|---:|---:|---:|---:|
+| Historical reference | 106 | 677 | 36 | 854 |
+| Saved hybrid counts, fresh assignment | 129 | 694 | 43 | 855 |
+| Fresh counting and assignment, both repetitions | 123 | 679 | 29 | 848 |
+
+The saved **694/43/855** result is not reproduced end to end. Fresh inference
+changes ten counts, 871→863 lobes across all 146 scans. Against the saved result:
+13 scan gains/22 losses, one exact-chain gain/15 losses; missing/extra positions
+are **20/5**, emitted errors **169**. Against history, +2 correct positions does
+not offset seven fewer exact chains and six fewer covered positions.
+**No champion promotion or unknown25 application change.**
+
+Source **d2a0714**, job **11959377**, **0:0 in 2h40m03s**; all 1,322 outputs and
+the log are local/hash-verified. Independent counts, geometry, naming and vote
+checks pass before grading. Timed fits vary slightly, but all 863 final
+prediction rows are byte-identical between repetitions. See
+[the comparison](docs/src/unit_assignment.md#saved-promoted-counts-and-recognition-2026-09-24)
+and `results/hybrid_reproduction_20260924/report.md`. Earlier comparisons retain
+their dated conclusions, not an unqualified current-champion status.
 
 **Provenance caveat (September 24 audit):** inference reads no labels, but the
 historical support/width calibration and hybrid thresholds were selected using
 known-count benchmark grades. This is not a wholly label-free calibration or an
-independent validation. Two fresh raw-to-prediction repetitions are in progress;
-unqualified champion promotion is withheld. See the [audit](docs/src/journal.md#2026-09-24--fresh-hybrid-reproduction-and-historical-label-use-audit).
+independent validation. Repetition does not erase that dependence. The next
+scientific prerequisite is independently justified calibration, not tuning
+thresholds to recover these known cases. See the [audit](docs/src/journal.md#2026-09-24--fresh-hybrid-reproduction-and-historical-label-use-audit).
 
 **Earlier comparison, September 24: correct QE cube addressing does not improve recognition.**
 With the remaining surface calibration unchanged, corrected templates give
@@ -265,10 +271,11 @@ independent validation. That comparison kept the affine-descriptor candidate at 
 historical **677/36** remains the target. No combined variant or post-grade
 tuning follows. See the [signal comparison](docs/src/unit_assignment.md#signed-cc-and-affine-fisher-candidates-2026-09-21-both-negative).
 
-**Benchmark (6mer):** the robust-AICc guard validates at 39/39 primary 240817
-files exact (N=6), reproducible. The frozen pre-correction chitosan reference was promoted for
+**Benchmark (6mer):** the historical robust-AICc guard run gave 39/39 primary
+240817 files exact (N=6). The frozen pre-correction chitosan reference was promoted for
 the expanded 145-file external counting grade: 129/145 exact, 143/145 within one
-lobe. The 0/1/? unit-assignment benchmark uses the same 145 files; its external
+lobe; the two current raw repetitions instead give 123/145 exact (see above).
+The 0/1/? unit-assignment benchmark uses the same 145 files; its external
 control sequence is NKNNKN (010010/101101 by convention) for grading only, never
 for fitting, selection, thresholding, abstention, or method calibration.
 **Historical counting application (10–20mer):** 25/25 files processed, without

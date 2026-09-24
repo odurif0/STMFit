@@ -1,11 +1,11 @@
 # STMFit — STM Molecular Chain Fitting
 
 Automated pipeline for detecting and fitting 2D Gaussian chain models
-to STM images of molecular chains. Historical saved counting runs give 39/39
-exact for the robust-AICc guard on the primary benchmark and 129/145 exact
-(143/145 within one lobe) for the current support-midpoint hybrid on the expanded
-benchmark. Fresh raw-to-prediction reproduction is in progress on September 24;
-these saved grades do not establish the current corrected pipeline's score.
+to STM images of molecular chains. Two fresh raw-to-prediction repetitions on
+September 24 agree: **123/145 exact counts** (143/145 within one lobe),
+**679/870 correct units, 29/145 exact chains, 848/870 coverage**. The saved-count
+129/145 and 694/43/855 results are not reproduced end to end. Historical
+677/36/854 is not surpassed overall; no new champion is promoted.
 Inference reads no labels, but historical calibration used known-count grades;
 see [Calibration](calibration.md) for the provenance limit.
 

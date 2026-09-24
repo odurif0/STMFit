@@ -9,8 +9,13 @@ CPUs / 16 GB. Explicitly export `STMFIT_PROJECT_DIR`, `STMFIT_INPUT_DIR`
 `--dry-run`, then submit once with `--no-requeue`. Each repeat has four
 single-thread counting shards and fresh base/split fits. No saved counts,
 geometry, benchmark or grade is an input. Job **11959377** (source **d2a0714**)
-is running; fetch/check both complete outputs before external grading. Historical
-calibration provenance prevents an unqualified strict-label-free promotion;
+completes **0:0 in 2h40m03s**, after 49 seconds queued, on `vipc2063`; MaxRSS
+**4,619,111 K**. All 1,322 outputs and the log are fetched/hash-verified; 701
+source hashes, 146 raw inputs and Project/Manifest remain unchanged. Independent
+checks precede external grading: both repetitions give **679/29/848** and
+**123/145 exact N**, with identical final predictions. The saved 694/43/855
+result is not reproduced. Historical calibration provenance also prevents
+an unqualified strict-label-free promotion;
 see the journal and `results/hybrid_reproduction_20260924/report.md`.
 
 The September 24 cube-order comparison uses `hpc/compare_cube_order.sbatch`:

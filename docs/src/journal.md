@@ -2307,16 +2307,28 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-24. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0at. **Can independent calibration recover performance without label-informed rules?**
+    → **OPEN (Sep 24)**. Replace benchmark-selected support/width and hybrid-rule
+    choices with justified measurements or label-independent selection, without
+    treating silent bootstrap fallbacks as measurements. Also examine whole-cohort
+    assignment sensitivity: twelve of fifteen lost exact chains keep the same N.
+    Equal-scan weighting was already a mixed result (Sep 21), not an untested cure.
+    No new threshold sweep, fusion rollback, QE or unknown25 run is launched by
+    the bounded reproduction experiment.
+
 0as. **Does the hybrid-count candidate reproduce from raw images?**
-    → **IN PROGRESS (Sep 24)**. Two complete fresh counting/assignment runs,
-    one Viper job capped at four hours, frozen parameters and no count caches.
-    Audit inference isolation separately from historical parameter provenance:
-    the archived calibration and hybrid-rule sweeps used known-count grades.
-    Thus strict label-free calibration is not established, even if fresh
-    predictions reproduce 694/43/855. No conditional production promotion yet.
+    → **COMPLETE; NO CHAMPION PROMOTION (Sep 24)**. Two independent full146 runs
+    agree on N and byte-identical final predictions: **679/870 correct, 29/145
+    exact chains, 848/870 coverage**, **123/145 exact N**, not saved 694/43/855
+    and 129/145. Historical 677/36/854 is not surpassed overall. Small geometry
+    drift is measured; all 1,322 outputs/log are fetched and verified, followed
+    by external grading. Source **d2a0714**, job **11959377**, **0:0 in 2h40m03s**.
+    Inference reads no labels, but archived calibration/rule sweeps used known
+    counts: strict label-free provenance fails independently of repeatability.
+    Evidence: `results/hybrid_reproduction_20260924/report.md`.
 
 0ar. **Does connecting saved promoted counts improve recognition?**
-    → **COMPLETE; NEW MEASURED DEVELOPMENT REFERENCE (Sep 24)**. Fresh support
+    → **COMPLETE; SAVED-COUNT DEVELOPMENT RESULT (Sep 24)**. Fresh support
     assignment at saved hybrid counts gives **694/870 correct, 43/145 exact,
     855/870 coverage**, exceeding history **677/36/854** and matched fresh
     control **676/34/852**. Saved exact counts are **129/145**, not a new count
@@ -2328,8 +2340,8 @@ See `docs/src/selection.md` for the full guard specification and
     demonstrated split-kernel allocation repair, within the original runtime
     allowance. Both arms use the repair; timed-fit variability is documented.
     Full paired evidence: `results/promoted_counts_20260924/report.md`.
-    Reproduce the complete counting front end and seek separate validation
-    before claiming a general-purpose champion or a global optimum.
+    The subsequent complete counting reproduction (0as) does not retain that
+    grade; this remains a saved-count comparison, not a general-purpose champion.
 
 0aq. **Does correcting QE cube-token order improve the reconstructed assignment?**
     → **COMPLETE; CORRECTNESS FIX, NEGATIVE RECOGNITION (Sep 24)**. Correct
@@ -14709,3 +14721,93 @@ count-decision reproducibility, not a claim of byte-identical fitting or
 completed chemical assignment. First-repeat outputs are already fetched;
 second-repeat fresh geometry and assignment are running. Evidence:
 `progress_repeat_count_agreement.log`, `progress_repeat_selection_drift.log`.
+
+### Completed reproduction: stable current output, proposed promotion rejected
+
+Job **11959377** runs **10:13:45–12:53:48 CEST**, after **49 seconds** queued,
+and finishes **COMPLETED 0:0 in 2h40m03s** on `vipc2063`. Four CPUs requested,
+eight allocated, 16 GB requested, MaxRSS **4,619,111 K**. Both raw-to-prediction
+repetitions complete all 146 scans, fresh base/split geometry, fifteen scientific
+tables, native validation, QC and 146 standalone maps. No retry or omitted scan.
+All **1,322** regular outputs and the Slurm log are fetched and SHA256-verified.
+All **701** remote source hashes, **146** raw-file hashes, templates and the
+original Project/Manifest remain unchanged after execution.
+
+Before grading, **22,673** independent input/cohort/count/geometry/naming/vote
+assertions pass. Both native populations `(0,1,?)` are **(679,181,3)**, without
+a composition target. Unavailable keys remain `240310_Cu100009` lobe 8,
+`240818_015` lobe 1 and `240818_019` lobe 1. Every final prediction row is
+byte-identical between repeats; SHA256:
+`dfd8d907690cc74b13f1adf6924f80653c8afba9cc2112a253f1669cebb4d48f`.
+
+**Repeat drift, not assumed determinism.** Base geometry differs on 14 rows in
+two scans; split geometry on eight rows in one scan. Maximum position shifts
+are **0.00169871 / 0.0000579741 nm**, maximum absolute relative GCV changes
+**0.00146022% / 0.00202694%**. Among the fifteen scientific tables, only training
+support and final predictions are byte-identical; neither full fitting nor
+all intermediate predictors are claimed identical. Against saved hybrid output,
+both fresh repeats change N on ten scans and change **30 decisions among 811
+same-N keys**. Changed cohort features can affect assignments elsewhere through
+unsupervised learning; this is not an isolated causal estimate of N.
+
+**External full145/own-N grade, after integrity verification.** All **2,585**
+membership-only assertions pass without changing selected prediction rows;
+**37** independent aggregate checks and **725** paired rows verify the report.
+Historical and saved-hybrid grade files reproduce the preceding report exactly;
+the two new grade files are byte-identical. Independent counting grades agree:
+**123/145 exact**, **143/145 within one**, 17 short-N and five extra-N scans.
+
+| Profile | Exact N /145 | Correct /870 | Exact chains /145 | Coverage /870 | Missing / extra | Emitted errors |
+|---|---:|---:|---:|---:|---:|---:|
+| Historical reference | 106 | 677 | 36 | 854 | 16 / 38 | 177 |
+| Saved hybrid counts, fresh assignment | 129 | 694 | 43 | 855 | 13 / 6 | 161 |
+| Fresh repetition 1 | 123 | 679 | 29 | 848 | 20 / 5 | 169 |
+| Fresh repetition 2 | 123 | 679 | 29 | 848 | 20 / 5 | 169 |
+
+Against saved hybrid: **13 scans gain, 22 lose, 110 tie**; one exact chain
+gained (`240817_075`), fifteen lost. Exact counts gain on two scans and lose
+on eight. The ten changed-N scans account for **−13** correct positions; the
+135 unchanged-N scans account for **−2**, net **−15**. Of the fifteen lost
+exact chains, **twelve have unchanged N**, three changed N; the one gain has
+unchanged N. Two grader alignments change. This rules out describing the chain
+regression solely as ten local count changes, but does not isolate a particular
+learning stage or prove an alternative weighting/calibration would help.
+
+Against history: **+2 correct positions, −7 exact chains, −6 covered positions**,
+eight fewer emitted errors. Thirty-five scans gain, 34 lose, 76 tie; nine exact
+chains gained, sixteen lost. Exact-count agreement gains 26 scans and loses
+nine; ten grading alignments change. Neither repetition dominates history on
+the reported recognition measures. Grader alignment is still not an independent
+spatial correspondence or unknown-chain chemical validation.
+
+One auxiliary report initially reused the inference TSV reader, which correctly
+rejected `N_truth`. The failure is retained in `exact_chain_drift.log`; a separate
+external-only parser produces `exact_chain_drift_external.log`. No inference
+guard is relaxed, and neither predictions nor official grade files change.
+
+**Decision: no champion promotion.** The saved-count **694/43/855** result is
+real for those saved inputs, but not a reproduced end-to-end score of the current
+corrected pipeline. Both current repetitions instead establish **679/29/848**.
+The old saved counts predate symmetric-fusion correction, and time-bounded
+optimization also varies; this experiment does not separate those historical
+causes. Do not undo the symmetry repair, tune 0.30 to recover known cases, pick
+a better repetition, splice predictions or replace the frozen unknown25 result.
+The calibration-provenance failure is an additional independent obstacle to
+strict-label-free promotion. Independent support/width/selection calibration,
+with explicit measured-versus-fallback provenance, is the next scientific
+prerequisite; whole-cohort assignment sensitivity also remains open. No further
+method campaign is launched within this bounded reproduction.
+
+README, index, runbook, selection, assignment, config, calibration and HPC
+headlines are updated. Historical counting grades are qualified, and the old
+blanket determinism claim is replaced by the measured repeat differences.
+Complete evidence: `results/hybrid_reproduction_20260924/report.md` and
+`paired_v1/summary.md` beneath that directory.
+
+Final Julia 1.13 documentation build succeeds without deployment or size-limit
+changes; assignment HTML is **199.61 KiB / 200 KiB**. Only existing size/search
+warnings remain. Ordinary local suites total **2,110** passing assertions
+(121 new runner, 1,455 existing workflow, 534 GaussianFit2D). The scientific
+source/config diff against submitted **d2a0714** remains empty. The bounded
+reproduction is complete; validated code and the negative promotion decision
+are committed for human review, with generated evidence kept local and ignored.

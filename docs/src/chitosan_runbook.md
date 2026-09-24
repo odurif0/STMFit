@@ -1,30 +1,31 @@
 # Chitosan Benchmark and 10–20mer Runbook
 
-Latest September 24 result: connecting saved promoted hybrid counts to unchanged
-support assignment gives **694/870 correct, 43/145 exact, 855/870 coverage**,
-versus historical **677/36/854** and matched fresh control **676/34/852**.
-This is the new measured development reference, with **129/145 exact counts**
-from the saved count vector (control 106). Both full146 arms reconstruct their
-own base/split geometry, patches and unlabeled predictors. Against control:
-25 scan gains/15 losses, 12 exact-chain gains/three losses; missing/extras
-**16/38 → 13/6**, emitted errors **176 → 161**. No labels enter inference.
+Latest September 24 result: two independent full146 raw-to-prediction runs give
+**679/870 correct, 29/145 exact chains, 848/870 coverage**, with **123/145 exact
+counts** (143/145 within one). Their N vectors and final prediction files are
+identical; slight timed-fit geometry differences remain. The saved-count
+**694/43/855**, 129/145 exact-N result is **not reproduced end to end**.
+Historical **677/36/854** is not surpassed overall either. No champion promotion,
+unknown25 rerun or application-default replacement.
 
-Source **71de012**, job **11956079**, **0:0 in 35m20s**, two seconds queued;
-433 outputs plus the log are local and verified. The earlier job **11955899** was
-cancelled before grading after a demonstrated split-kernel performance
-regression; its partial files remain separate. Both fresh arms use the repaired
-kernel and unchanged scientific settings. Counts were **not recomputed**;
-timed-fit variability and reused development labels preclude claims of a global
-optimum or independent validation. No unknown25 rerun or application-default
-replacement. Evidence: `results/promoted_counts_20260924/report.md` and
+Fresh counting changes ten scans, 871→863 lobes. Against the saved result:
+13 scan gains/22 losses, one exact-chain gain/15 losses; missing/extras **20/5**,
+emitted errors **169**. Twelve exact-chain losses occur at unchanged N: the
+whole-cohort learning comparison is not an isolated causal estimate of N.
+
+Source **d2a0714**, job **11959377**, **0:0 in 2h40m03s**, 49 seconds queued;
+all 1,322 outputs and the log are local/hash-verified. Independent input,
+count/geometry/naming/vote checks pass before external grading. Both repetitions
+are retained, without retuning or selecting the better one. Evidence:
+`results/hybrid_reproduction_20260924/report.md` and
 [unit assignment](unit_assignment.md#saved-promoted-counts-and-recognition-2026-09-24).
 Earlier entries below describe the reference status at their experiment dates.
 
 The September 24 provenance audit distinguishes inference without labels from
 historical calibration: padding, fit width and hybrid-rule choices used known
-count grades. Strict label-free calibration is not certified. Job **11959377**
-now repeats fresh counting and assignment twice, without saved counts; no
-unqualified champion promotion or application-default change follows yet.
+count grades. Strict label-free calibration is not certified. Reproducing the
+fresh outputs does not erase that provenance; independent calibration is a
+prerequisite for a strict-label-free successor.
 See [the audit](journal.md#2026-09-24-—-Fresh-hybrid-reproduction-and-historical-label-use-audit).
 
 Earlier September 24 comparison: correcting QE cube-token order gives
@@ -573,25 +574,27 @@ julia --project=. test/grade_chitosan_benchmark.jl \
   --column N_selected
 ```
 
-Known validation from the current development pass: the robust-AICc guard alone
-reaches `N_selected = 39/39` exact on the 240817 primary benchmark, with all four
+Historical development result: the robust-AICc guard alone
+reached `N_selected = 39/39` exact on the 240817 primary benchmark, with all four
 `clean_target` files (`017`, `019`, `043`, `058`) reporting `N_selected = 6`.
 `043` is recovered by the up-when-ambiguous guard branch (its `N_eff = 5`, but
 `robust_AICc_N = 6` on an ambiguous file; see the Research Journal §2026-06-17).
-The promoted `config/chitosan.toml` default is now `support_midpoint_hybrid`
-because it improves the expanded 145-file external counting grade from `106/145`
+The `config/chitosan.toml` default became `support_midpoint_hybrid`
+after it improved the expanded 145-file external counting grade from `106/145`
 exact to `129/145` exact (`143/145` within one lobe), confirmed by a full Viper
 batch run with 146 `ok` rows and grading against the 145-file manifest.
-Re-measure any time with the grade script below.
+These are saved historical scores, not the September 24 raw-reproduction score.
+Both current repetitions give **123/145 exact**, 143/145 within one.
 
-Reproducibility note: the batch is deterministic run-to-run on a given machine
-(verified identical `N_selected` across 3 consecutive runs on 2026-06-17).
-Divergences between a past recorded number and a fresh run indicate intervening
-code changes, not run-to-run noise.
+Reproducibility note: three June 17 runs agreed on `N_selected`; the two current
+runs agree as well. This does not establish byte-identical fitting: small
+timed-optimizer differences are measured. Old/fresh differences may also reflect
+intervening corrections, including symmetric directional fusion; they cannot
+automatically be assigned to a single cause.
 
 ### Expanded counting benchmark
 
-The canonical 240817 benchmark above remains the reproducible validation set.
+The 240817 benchmark above remains an external historical comparison set.
 For broader external counting grades, use:
 
 ```text
@@ -610,7 +613,10 @@ julia --project=. test/grade_chitosan_benchmark.jl \
     --out results/benchmark_grades/confirmed145_promoted_N_selected.tsv
 ```
 
-Expected report: 129/145 exact and 143/145 within one lobe. The nearby
+Expected **saved-summary** report: 129/145 exact and 143/145 within one lobe.
+For current fresh inference, grade either fetched
+`results/hybrid_reproduction_20260924/run_v1/repeat{1,2}/counting_summary.tsv`:
+both give 123/145 exact and 143/145 within one lobe. The nearby
 `adaptive_support_rescue` directory contains a historical policy, not this
 production regression input.
 

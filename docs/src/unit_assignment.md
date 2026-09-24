@@ -2,27 +2,27 @@
 
 ## Saved promoted counts and recognition (2026-09-24)
 
-Freshly rebuilding support assignment from saved `support_midpoint_hybrid`
-counts establishes the new measured **development-benchmark reference**:
+Two complete raw-to-prediction repetitions agree, but **do not reproduce the
+saved-count result or justify champion promotion**:
 
 | Profile | Exact N /145 | Correct /870 | Exact chains /145 | Coverage /870 |
 |---|---:|---:|---:|---:|
 | Historical | 106 | 677 | 36 | 854 |
-| Fresh control | 106 | 676 | 34 | 852 |
 | Saved hybrid counts, fresh assignment | 129 | 694 | 43 | 855 |
+| Fresh counts and assignment, both repeats | 123 | 679 | 29 | 848 |
 
-Both arms rebuild all 146 scans; 28 counts differ, 900→871 lobes. Missing/extra
-positions fall **16/38→13/6**. Against control: 25 scan gains/15 losses,
-12 exact-chain gains/three losses, 15 fewer emitted errors. No labels,
-composition prior or post-grade tuning enter inference. Source **71de012**,
-job **11956079**, **0:0 in 35m20s**; outputs and independent checks are complete.
+Both rebuild all 146 scans independently: identical N and 863 byte-identical
+final predictions, despite slight timed-fit variation. Ten counts differ from
+the saved 871-lobe vector. Against saved assignment: 13 scan gains/22 losses,
+one exact-chain gain/15 losses; missing/extras **20/5**, emitted errors **169**.
+Twelve exact-chain losses have unchanged N, so this is not only a local count
+effect. Source **d2a0714**, job **11959377**, **0:0 in 2h40m03s**; all outputs
+are local/verified, independent checks precede external grading.
 
-Timed-fit variability remains; this is **not fresh counting or independent
-validation**. The September 24 audit finds historical count calibration and
-hybrid thresholds were chosen using known-count grades: inference is label-free,
-calibration provenance is not. Two fresh repetitions are in progress; strict
-champion promotion is withheld. Unknown25 stays frozen. See [journal](journal.md),
-`results/promoted_counts_20260924/report.md`. Older sections are dated findings.
+Inference reads no labels; historical calibration and hybrid thresholds did use
+known-count grades. Neither strict label-free provenance nor independent
+validation follows. Unknown25 remains frozen. See [journal](journal.md),
+`results/hybrid_reproduction_20260924/report.md`. Older sections are dated findings.
 
 ## Motivation
 

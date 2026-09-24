@@ -451,19 +451,19 @@ When the policy is enabled, batch summaries include:
   `ell_robust_aicc` when the integrated guard moved the count.
 - `robust_aicc_N`: the auxiliary robust-AICc-selected count.
 
-### Current validation status
+### Historical grades and current reproduction
 
-The robust-AICc guard alone remains the no-regression result on the original
+The saved robust-AICc guard result was a no-regression result on the original
 240817 primary benchmark: it improved exact agreement from `N_eff = 35/39` to
-`N_selected = 39/39` in the 2026-06-17 validation pass. The current chitosan
-default is promoted for the expanded counting benchmark: the support-midpoint
+`N_selected = 39/39` in the 2026-06-17 validation pass. The chitosan
+default was promoted for the expanded counting benchmark: the support-midpoint
 hybrid rule (including the gap≥2 down-to-midpoint extension) improved the full
 145-file external grade from `106/145` exact (`138/145` within one lobe) to
 `129/145` exact (`143/145` within one lobe). This was first reproduced by
 offline replay on frozen fit data and then confirmed by a full Viper batch run
-with 146 `ok` rows, graded against the 145-file manifest. That promotion is
-empirical and provisional: it is the best current label-free full145 counting
-rule, not the endpoint of selector research.
+with 146 `ok` rows, graded against the 145-file manifest. That historical
+promotion is empirical and provisional, not the current corrected pipeline's
+fresh score or the endpoint of selector research.
 
 These numbers are development evidence, not per-image fitting priors. Labels
 are absent from the current inference path, but historical calibration and rule
@@ -477,6 +477,16 @@ rerunning selection or changing GCV/thresholds. This new measured recognition
 reference is therefore **not a fresh reproduction of the counting benchmark**.
 See [unit assignment](unit_assignment.md#saved-promoted-counts-and-recognition-2026-09-24)
 and `results/promoted_counts_20260924/report.md`.
+
+The subsequent two complete raw-to-prediction runs agree on all 146 counts
+(863 lobes), but change ten saved counts. Both grade **123/145 exact N**,
+**143/145 within one**, 17 short-N and five extra-N scans. Recognition is
+**679/870 correct, 29/145 exact chains, 848/870 coverage**, not saved 694/43/855.
+Final predictions are byte-identical across the fresh repeats despite small
+timed-fit variation. Do not retune the 0.30 upshift threshold or undo symmetric
+fusion to recover known benchmark cases. No champion promotion follows;
+independent calibration remains the scientific prerequisite. Source **d2a0714**,
+job **11959377**; `results/hybrid_reproduction_20260924/report.md`.
 
 ---
 

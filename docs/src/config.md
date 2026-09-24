@@ -8,6 +8,11 @@ then assignment fits on the whole cohort. No new scientific knob is added.
 `hpc/reproduce_hybrid_champion.sbatch --dry-run` checks metadata only; the real
 job requires a compute allocation and explicitly exported paths. Historical
 count calibration used benchmark grades; see [provenance](calibration.md).
+Completed source **d2a0714**, job **11959377**: both fresh repetitions give
+**679/870 correct, 29/145 exact, 848/870 coverage**, **123/145 exact N**,
+with byte-identical final predictions. The saved-count result below is not
+reproduced end to end; no default promotion or parameter change follows.
+`results/hybrid_reproduction_20260924/report.md`.
 
 `test/run_promoted_count_assignment.jl` compares two explicit saved
 count summaries with fresh base/split geometry in both arms. The promoted
@@ -16,8 +21,8 @@ mixed-policy, adaptive-support and mismatched cohorts are rejected. Existing
 count/assignment TOMLs and templates are unchanged. No geometry cache, new
 selection knob, counting sweep, benchmark input or default promotion is added.
 Completed: **694/870 correct, 43/145 exact, 855/870 coverage**, versus fresh
-control **676/34/852** and historical **677/36/854**. Retain as the measured
-development reference, without replacing application defaults. Source **71de012**
+control **676/34/852** and historical **677/36/854**. Retain as a saved-count
+development comparison, without replacing application defaults. Source **71de012**
 also repairs split-kernel allocations without changing its formula or settings;
 both timed-fit arms use that repair. `results/promoted_counts_20260924/report.md`.
 
