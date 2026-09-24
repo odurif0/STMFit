@@ -1,6 +1,15 @@
 # Configuration Reference
 
-`test/run_promoted_count_assignment.jl` compares two explicit saved label-free
+`test/run_hybrid_reproduction.jl` runs two independent raw-to-prediction repeats
+of the unchanged hybrid/support configuration. Only raw images, the two TOMLs,
+templates and a new output directory are accepted; saved counts, geometry and
+benchmark inputs are rejected. Counting uses at most four one-thread shards,
+then assignment fits on the whole cohort. No new scientific knob is added.
+`hpc/reproduce_hybrid_champion.sbatch --dry-run` checks metadata only; the real
+job requires a compute allocation and explicitly exported paths. Historical
+count calibration used benchmark grades; see [provenance](calibration.md).
+
+`test/run_promoted_count_assignment.jl` compares two explicit saved
 count summaries with fresh base/split geometry in both arms. The promoted
 summary must contain only `selection_policy="support_midpoint_hybrid"`; failed,
 mixed-policy, adaptive-support and mismatched cohorts are rejected. Existing

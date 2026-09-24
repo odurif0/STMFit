@@ -14649,3 +14649,15 @@ fresh-repeat and failure-handling checks; the existing handoff/GCV/support/
 pipeline suites pass **1,455** checks. Metadata-only local CLI and job dry-runs
 see all 146 raw scans; the job uses four shards without reading pixels. Source
 and scientific settings are unchanged apart from the new reproduction entrypoint.
+
+**Submitted.** All **701** source hashes match in the new
+`/u/oldu/code/STMFit_hybrid_reproduction_20260924` copy (source **d2a0714**).
+The ignored original Manifest is explicitly synced before instantiate/precompile;
+Project/Manifest and all frozen scientific-input hashes remain unchanged. Both
+local and remote job dry-runs pass. Slurm test-only **11959372** is not a job.
+Real job **11959377** is submitted **10:12:56 CEST**, four explicit exported
+paths, `--no-requeue`, **04:00:00** limit, four requested CPUs / 16 GB. It is
+initially pending on compute-node availability. Results will be under
+`/ptmp/oldu/stmfit/hybrid_reproduction_20260924_v1`; log
+`/ptmp/oldu/stmfit/hybrid_reproduction_20260924-11959377.log`.
+The 1,455 existing checks have now all completed successfully as well.

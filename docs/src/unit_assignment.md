@@ -17,12 +17,12 @@ positions fall **16/38→13/6**. Against control: 25 scan gains/15 losses,
 composition prior or post-grade tuning enter inference. Source **71de012**,
 job **11956079**, **0:0 in 35m20s**; outputs and independent checks are complete.
 
-Both arms use the repaired split-kernel allocation path with unchanged formula
-and settings; timed-fit variability remains. This is **not a fresh count sweep,
-independent validation, proven optimum or unknown-chain accuracy claim**.
-Keep the frozen unknown25 application unchanged. Full provenance, paired losses
-and checks: [journal](journal.md), `results/promoted_counts_20260924/report.md`.
-Older dated sections retain their conclusions at the time, not current status.
+Timed-fit variability remains; this is **not fresh counting or independent
+validation**. The September 24 audit finds historical count calibration and
+hybrid thresholds were chosen using known-count grades: inference is label-free,
+calibration provenance is not. Two fresh repetitions are in progress; strict
+champion promotion is withheld. Unknown25 stays frozen. See [journal](journal.md),
+`results/promoted_counts_20260924/report.md`. Older sections are dated findings.
 
 ## Motivation
 

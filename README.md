@@ -5,7 +5,7 @@ similar systems). Detects and fits a chain-of-Gaussians model to count the
 number of monomer units (lobes) per chain, label-free.
 
 **New measured benchmark reference, September 24: saved promoted counts improve recognition.**
-Connecting the saved label-free `support_midpoint_hybrid` counts to unchanged
+Connecting the saved `support_midpoint_hybrid` counts to unchanged
 support assignment gives **694/870 correct units, 43/145 exact chains and
 855/870 coverage**. This exceeds historical **677/36/854** on all three measures;
 the matched fresh control gives **676/34/852**. Exact counts are **129/145**
@@ -22,6 +22,12 @@ matched comparison; timed-fit variability is reported, not assumed absent.
 See [the counting-to-recognition result](docs/src/unit_assignment.md#saved-promoted-counts-and-recognition-2026-09-24)
 and `results/promoted_counts_20260924/report.md`. Older comparisons below retain
 their dated conclusions, not the current reference status.
+
+**Provenance caveat (September 24 audit):** inference reads no labels, but the
+historical support/width calibration and hybrid thresholds were selected using
+known-count benchmark grades. This is not a wholly label-free calibration or an
+independent validation. Two fresh raw-to-prediction repetitions are in progress;
+unqualified champion promotion is withheld. See the [audit](docs/src/journal.md#2026-09-24--fresh-hybrid-reproduction-and-historical-label-use-audit).
 
 **Earlier comparison, September 24: correct QE cube addressing does not improve recognition.**
 With the remaining surface calibration unchanged, corrected templates give

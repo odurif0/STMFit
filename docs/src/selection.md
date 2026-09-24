@@ -1,5 +1,11 @@
 # Model Selection
 
+The September 24 audit separates **label-free inference** from parameter
+provenance: historical support/width calibration and hybrid-rule choices used
+known-count benchmark grades. Fresh reproduction cannot remove that dependence;
+strict label-free calibration and independent validation are not established.
+See [calibration](calibration.md) and [the audit](journal.md#2026-09-24--fresh-hybrid-reproduction-and-historical-label-use-audit).
+
 The September 24 **QE cube-order correction** gives **676/870 correct, 27/145
 exact**, versus byte-identical legacy tangent **679/33**, both coverage **852**.
 Six scan gains/nine losses, one exact gain/seven losses. Keep the explicit
@@ -459,8 +465,9 @@ with 146 `ok` rows, graded against the 145-file manifest. That promotion is
 empirical and provisional: it is the best current label-free full145 counting
 rule, not the endpoint of selector research.
 
-These numbers are validation evidence, not fitting priors. Benchmark labels are
-used only by grading scripts after the batch run has written `N_selected`.
+These numbers are development evidence, not per-image fitting priors. Labels
+are absent from the current inference path, but historical calibration and rule
+selection did use these grades; this is not independent validation.
 
 On September 24, linking this **saved** promoted vector to freshly rebuilt
 support assignment gives **694/870 correct units, 43/145 exact chains and

@@ -1,6 +1,18 @@
 # Calibration: deriving parameters objectively
 
-The opt-in promoted-count assignment comparison uses two saved label-free
+**Historical provenance audit (2026-09-24).** Label-free inference does not
+establish label-free calibration. The archived support-padding and fit-width
+choices explicitly used known `N_ell=6` gains. The hybrid rule, its 0.30 upshift
+threshold and the gap>=2 extension were also compared using full146 count
+grades. See [the historical record](journal_archive.md) and
+[the current audit](journal.md#2026-09-24--fresh-hybrid-reproduction-and-historical-label-use-audit).
+These settings remain frozen for reproducibility, not certified as
+benchmark-independent calibration. A strict-label-free successor needs a
+separately justified calibration/selection procedure without those labels;
+resetting arbitrary defaults or reproducing old scores would not provide one.
+No numerical parameter is changed by this audit.
+
+The opt-in promoted-count assignment comparison uses two saved
 count vectors and rebuilds both geometries at fixed N. It changes neither GCV,
 the counting thresholds nor the assignment calibration. It is not a fresh
 count-policy benchmark; timed-optimizer variability is reported separately.

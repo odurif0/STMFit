@@ -20,6 +20,13 @@ replacement. Evidence: `results/promoted_counts_20260924/report.md` and
 [unit assignment](unit_assignment.md#saved-promoted-counts-and-recognition-2026-09-24).
 Earlier entries below describe the reference status at their experiment dates.
 
+The September 24 provenance audit distinguishes inference without labels from
+historical calibration: padding, fit width and hybrid-rule choices used known
+count grades. Strict label-free calibration is not certified. Job **11959377**
+now repeats fresh counting and assignment twice, without saved counts; no
+unqualified champion promotion or application-default change follows yet.
+See [the audit](journal.md#2026-09-24--fresh-hybrid-reproduction-and-historical-label-use-audit).
+
 Earlier September 24 comparison: correcting QE cube-token order gives
 **676/870 correct, 27/145 exact**, versus exact legacy tangent **679/33**, both
 coverage **852**. Six scans gain/nine lose, one exact gain/seven losses. Keep
