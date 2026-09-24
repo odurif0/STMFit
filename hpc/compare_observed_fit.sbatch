@@ -5,6 +5,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=16000MB
+#SBATCH --no-requeue
 set -euo pipefail
 # Viper requires an explicit sbatch --export=... list for these variables.
 if [[ $# -gt 1 ]] || [[ $# -eq 1 && "$1" != "--dry-run" ]]; then

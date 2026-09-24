@@ -205,7 +205,7 @@ end
     sbatch=joinpath(ROOT,"hpc","compare_observed_fit.sbatch")
     @test success(`bash -n $sbatch`)
     source=read(sbatch,String)
-    for key in ("--time=02:00:00","--cpus-per-task=4","--mem=16000MB","SLURM_JOB_ID","STMFIT_SELECTED_SUMMARY")
+    for key in ("--time=02:00:00","--cpus-per-task=4","--mem=16000MB","--no-requeue","SLURM_JOB_ID","STMFIT_SELECTED_SUMMARY")
         @test occursin(key,source)
     end
 end

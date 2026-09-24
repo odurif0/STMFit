@@ -2313,7 +2313,10 @@ or physical recalibration. Fully observed images must share exactly the same
 fit. Preparation is capped at two hours; one four-CPU Viper job at two hours.
 All fits must be valid before cohort-wide assignment and external grading.
 This preserves label-free inference, not the inherited calibration's provenance.
-Result pending; no champion or unknown25 change.
+First run complete: **680/870 correct, 35/145 exact, 848/870 coverage** versus
+fresh control **678/28/848**. All 584 fits pass. However 23 assignments change
+on exactly reused local inputs, and no LM run declares convergence. One frozen
+reproduction is pending; no champion or unknown25 change.
 
 > Updated 2026-09-24. Questions from earlier sessions are archived in
 > `journal_archive.md`.
@@ -15051,3 +15054,70 @@ neither recognition evidence nor an optimizer reproduction. The saved count
 summary SHA256 is `a98b7460f0726e9a38e30693d03197865f8c1377460edad6bc7c44c88815a06f`;
 Project and Manifest hashes remain unchanged. Full-cohort execution follows
 only after committing this tested implementation.
+
+### 2026-09-24 — Observed-pixel comparison: complete cohort, modest recognition gain
+
+Frozen source **e87c744**, job **11963678**, submitted at 16:08:36 CEST,
+queued **31 seconds**, **COMPLETED 0:0 in 24m21s**, 16:09:07–16:33:28 CEST.
+Four requested CPUs, eight logical CPUs allocated, 16 GB requested, batch
+MaxRSS **4,676,375 KiB**. Slurm's default `Requeue=1` was discovered during
+monitoring and changed to zero; **Restarts=0** throughout. The launcher now
+states `--no-requeue` explicitly for later uses. No retry or new method setting.
+Preparation/submission took less than half an hour of its two-hour allowance.
+
+All **1,005 regular output files plus the Slurm log** are local and identical
+by content comparison. All **711 tracked source files** and the additional
+Manifest match the frozen source/environment after computation. The independent
+saved-output verifier passes **21,367 assertions**, including all 146 raw hashes,
+same N, full-parameter GCV/family choice, decoded physical bounds, independent
+RSS/residual guards, exact data/fit reuse and complete assignment tables.
+
+All **584/584 Gaussian/split arm fits are valid**, with zero failure rows and
+all 146 scans/863 predicted lobes retained. The **110 fully observed scans**
+reuse **220 fits exactly**. The remaining **36 partial scans** are freshly
+fitted in both arms. For each profile, common-observed-pixel RSS improves on
+**17**, worsens on **19**, and is identical on **110** scans. There is no
+uniform residual improvement. None of the **728 recorded LM fits** reports
+convergence; validity is not a converged optimum, and increased LM budgets or
+whole-scan Fisher are already documented failed/mixed leads, not new cures.
+
+The independent vote/coverage check passes, as do **13 new saved-only report
+tests**. On the 110 complete scans, Gaussian/split/local features, all three
+patch tables, descriptors, support and forward/backward mold scores are exactly
+unchanged. Fisher/predictor rows change on **644/645** lobes, GMM decisions on
+40, k-means decisions on two, and final assignments on **23 lobes in 23 scans**.
+On partial scans, **24 assignments in 16 scans** change. This locates an effect
+downstream of identical local inputs; it does not identify one uniquely
+responsible training stage or exclude learner nondeterminism without repeats.
+
+Only then is the external full145-own-N grade run:
+
+| Profile | Correct / 870 | Exact chains / 145 | Coverage / 870 |
+|---|---:|---:|---:|
+| Historical saved reference | 677 | 36 | 854 |
+| Latest twice-reproduced raw pipeline | 679 | 29 | 848 |
+| Fresh native control | 678 | 28 | 848 |
+| Observed-pixel candidate, first run | 680 | 35 | 848 |
+
+Candidate versus matched control: **20 scan gains, 17 losses, 108 ties**;
+**ten exact chains gained, three lost**. `(TN, FP, FN, TP)` changes from
+`(530,30,140,148)` to `(517,43,125,163)`: fifteen fewer false negatives but
+thirteen more false positives, for only two more correct positions. Both arms
+have 855 benchmark predictions, 20 missing positions, five extras, and two
+aligned abstentions. The fresh control differs from the last raw reproduction
+by one final decision, losing one correct position and one exact chain; the
+timed-fit reference is not represented as byte-identical.
+
+**Decision and bounded follow-up.** Retain this as a promising development
+candidate, not a champion. It remains one exact chain and six covered positions
+behind history, despite three more correct positions. The strict label-free
+calibration-provenance limitation also remains. No parameters are selected from
+this grade. Under the user's standing authorization to continue autonomously,
+add **one strictly frozen reproduction**, not a new method or failure retry.
+It uses the same source, inputs, seeds and N, with a **45-minute cap** and no
+requeue. The aggregate compute allowance is therefore at most **69m21s**, below
+the original two-hour calculation envelope. Both outcomes will be kept; no
+third run, threshold sweep or application-default change is part of this step.
+
+Evidence: `results/observed_fit_20260924/report.md`, `effects/report.md`, and
+`benchmark/report.md`. Reports, full arrays, maps and logs remain ignored/local.
