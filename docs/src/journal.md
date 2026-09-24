@@ -14477,3 +14477,24 @@ identities** across profile/orientation/shape/baseline/amplitude cases and
 `240307_015.sxm` passes a split-profile smoke check at fixed N=6, with six
 finite elliptical lobes and GCV approximately **8.052e−6**. This is not a
 grade or evidence that optimizer endpoints are unchanged.
+
+**Replacement submitted.** The **1,455** workflow/selection/support assertions
+also pass after the repair. Source **71de012** is copied into the separate
+`/u/oldu/code/STMFit_promoted_counts_fast_20260924` directory; all **698** tracked
+hashes match after preparation. Initial rsync process substitution fails locally
+(`/proc/self/fd/11` unavailable); an explicit generated file list succeeds.
+The first copy omits ignored `Manifest.toml`, so Pkg creates a new environment.
+Preflight catches this before any fit; that provisional Project/Manifest is
+saved locally, then the original pair is restored and instantiated with Pkg.
+Final Project/Manifest hashes match the original run exactly. No scientific
+computation uses the provisional environment. The known Julia 1.12.6 Manifest
+warning remains under the explicitly required Julia 1.13.0.
+
+Local and remote metadata dry-runs pass, still **146 / 28 / 900→871**.
+Slurm test-only ID **11956078** is not a job. Replacement **11956079** is
+submitted **02:39:18 CEST**, explicit six-variable export, `--no-requeue`,
+command-line **03:30:00** limit, four requested CPUs / 16 GB. Output:
+`/ptmp/oldu/stmfit/promoted_counts_20260924_v2`; log:
+`/ptmp/oldu/stmfit/promoted_counts_fast_20260924-11956079.log`. No further
+replacement, partial-result grade, cached-control substitution or tuning is
+planned. Follow through completion, independent verification and external grade.
