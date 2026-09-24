@@ -7,8 +7,26 @@ missing measurements and the former bootstrap's fallback usage. **It no longer
 emits a ready-to-use production TOML.** A local-window or half-prominence width
 is not automatically an isolated monomer FWHM; overlap, smoothing and baseline
 affect it. The existing `config/chitosan_auto.toml` remains historical evidence,
-not a certified measurement-derived calibration. Full146 two-view measurement
-is in progress; no new recognition score or production parameter is claimed.
+not a certified measurement-derived calibration. The full146 measurement audit
+is complete; no new recognition score or production parameter is claimed.
+
+**Result:** old widths require fallback on **245/292 views (83.9%)**, spacings
+on **261/292 (89.4%)**. The observed-only diagnostic yields apparent widths on
+292 views and spacings on 245. This greater availability does not establish
+better agreement: on the same 18 available width pairs, median relative
+forward/backward difference is **14.97% legacy versus 35.26% new**; on the same
+nine spacing pairs it is **28.57% versus 31.72%**. Relative difference is
+`2|fwd-bwd|/(fwd+bwd)`. On all 146 new width pairs the median is 17.33%, and
+on 117 new spacing pairs it is 12.50%; these larger subsets are not a direct
+comparison to the sparse legacy pairs. Forty-seven views yield a single
+apparent peak, not isolated monomer evidence. **No automatic physical
+calibration is justified by this experiment.**
+
+Source **76934a6**, job **11962552**, **0:0 in 55s**; all 146 scans, 584 rows and
+25 outputs/logs are local/hash-verified. Measurements and comparison read no
+benchmark labels, expected N or saved geometry. Historical choice provenance
+is not erased by this diagnostic. Complete results and limits:
+`results/calibration_measurements_20260924/report.md` and the dated journal.
 
 ```bash
 julia --project=. test/measure_calibration.jl scan.sxm \

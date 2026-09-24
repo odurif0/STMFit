@@ -23,6 +23,11 @@ Missing directions remain unavailable, with no fwd→bwd substitution.
 The former unused `--n-lobe` option is removed. Measurements must not be mistaken
 for a new count or unit-assignment score. See [calibration](calibration.md).
 
+Completed audit, source **76934a6**, job **11962552**: old width/spacing fallback
+flags occur on **245/292 and 261/292 views**. The new apparent measurements are
+not promoted to fit bounds; paired agreement on common available subsets does
+not improve. All production TOMLs and recognition results remain unchanged.
+
 ## Fresh hybrid reproduction and saved-count comparison
 
 `test/run_hybrid_reproduction.jl` runs two independent raw-to-prediction repeats

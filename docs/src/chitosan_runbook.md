@@ -28,6 +28,12 @@ fresh outputs does not erase that provenance; independent calibration is a
 prerequisite for a strict-label-free successor.
 See [the audit](journal.md#2026-09-24-—-Fresh-hybrid-reproduction-and-historical-label-use-audit).
 
+The completed measurement diagnostic additionally finds legacy width/spacing
+defaults on **245/292 and 261/292 raw views**. Its corrected profile preserves
+missing pixels and reports apparent quantities, not a ready-to-use calibration.
+Common-pair agreement does not improve; no production bounds, count/assignment
+score or unknown25 output changes. See [measurement limits](calibration.md).
+
 Earlier September 24 comparison: correcting QE cube-token order gives
 **676/870 correct, 27/145 exact**, versus exact legacy tangent **679/33**, both
 coverage **852**. Six scans gain/nine lose, one exact gain/seven losses. Keep

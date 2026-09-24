@@ -49,6 +49,8 @@ validation are documented in [Model Selection](selection.md).
 exposes the old bootstrap's fallback values. It no longer derives physical fit
 bounds or writes a production TOML automatically. See [**Calibration**](calibration.md)
 for the measurement limits and why GCV remains the canonical criterion.
+The completed raw-view audit finds legacy width/spacing fallbacks on 245/292
+and 261/292 views; the new diagnostic is not a promoted physical calibration.
 
 The default `config/chitosan.toml` is the historical hand-tuned reference.
 `config/chitosan_auto.toml` is a historical bootstrap output, including values

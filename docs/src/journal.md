@@ -2308,14 +2308,19 @@ See `docs/src/selection.md` for the full guard specification and
 > `journal_archive.md`.
 
 0at. **Can independent calibration recover performance without label-informed rules?**
-    → **MEASUREMENT EXPERIMENT IN PROGRESS (Sep 24)**. After human authorization,
-    audit apparent widths/spacings in both raw views, distinguish legacy defaults
-    from measurements, and test a full-strip half-prominence measurement without
-    producing a physical calibration from unresolved peaks. One hour of Viper,
-    four CPUs, no count/assignment/benchmark input. Then address independently
-    justified support/width and hybrid-rule
-    choices with justified measurements or label-independent selection, without
-    treating silent bootstrap fallbacks as measurements. Also examine whole-cohort
+    → **MEASUREMENT AUDIT COMPLETE; PHYSICAL CALIBRATION STILL OPEN (Sep 24)**.
+    Source **76934a6**, job **11962552**, **0:0 in 55s**: all 146 scans / 292
+    views. Legacy widths/spacings use defaults on **245/292 and 261/292** views.
+    The observed-only profile yields widths on 292 views, spacing on 245, but
+    paired agreement is not improved on the same available legacy subsets:
+    width median relative difference **14.97%→35.26%** (18 pairs), spacing
+    **28.57%→31.72%** (nine). Keep explicit measurement/fallback separation;
+    reject automatic physical bounds or any claimed recognition gain. No fit,
+    assignment, benchmark input/grade or production change. Complete local,
+    hash-verified evidence: `results/calibration_measurements_20260924/report.md`.
+    Independently justified support/width and hybrid-rule choices remain open;
+    neither silent fallbacks nor medians of unresolved profiles justify them.
+    Also examine whole-cohort
     assignment sensitivity: twelve of fifteen lost exact chains keep the same N.
     Equal-scan weighting was already a mixed result (Sep 21), not an untested cure.
     No new threshold sweep, fusion rollback, QE or unknown25 run is launched by
@@ -14914,3 +14919,62 @@ The final suite has **190** diagnostic/report assertions (**745** with I/O and
 fit-engine suites). On the single preflight raw scan, functions extracted from
 the archived source also reproduce both legacy profiles and all three legacy
 reported width/spacing values exactly. No old TOML writer is executed.
+
+**Completed on Viper.** Frozen source **76934a6**, one job **11962552**, queued
+2m35s and **COMPLETED 0:0 in 55s**, 14:41:33–14:42:28 CEST. Four requested
+CPUs, four one-thread Julia processes, 16 GB, one-hour cap; Slurm allocated
+eight logical CPUs and reports 2,463,241 KiB batch MaxRSS. No retry. Preparation
+and submission finished within the two-hour cap. Project/Manifest and all
+706 source/environment checksums match after login instantiate/precompile and
+again after computation. All **24 outputs/shard logs plus the Slurm log** are
+local and hash-verified. No scientific computation ran on login.
+
+The four partitions retain every raw scan and both actual directions:
+**584 measurement rows, 96,834 profile bins, 7,410 peak records**. The report
+utility verifies all 146 raw hashes, exact measurement settings, complete/unique
+rows, missing-bin support, interpolated crossings, frozen descriptive filters,
+fallback flags, width quantiles and spacing summaries. These consistency checks
+do not turn apparent profile quantities into physical measurements of monomers.
+The first-file local and Viper summary rows also agree byte for byte in all
+four view/method combinations; this is a focused repeat, not a second full run.
+
+| Quantity | Legacy bootstrap | Observed-only full profile |
+|---|---:|---:|
+| Views with a width | 47/292 | 292/292 |
+| Views with spacing | 31/292 | 245/292 |
+| Width pairs available | 18/146 | 146/146 |
+| Spacing pairs available | 9/146 | 117/146 |
+| Width relative pair difference, median of available pairs | 14.97% | 17.33% |
+| Spacing relative pair difference, median of available pairs | 28.57% | 12.50% |
+
+Relative difference is `2|fwd-bwd|/(fwd+bwd)`. The legacy fallback flags occur
+on **245/292 widths (83.9%)** and **261/292 spacings (89.4%)**. Their defaults
+never enter observed-column summaries. Both methods retain all views, rather
+than conditioning the cohort on successful peak extraction or known counts.
+
+The available-pair rows in the table have different denominators and must not
+be presented as a paired improvement. On exactly the **18 common width pairs**,
+the median relative difference is **14.97% legacy versus 35.26% new**; on the
+**nine common spacing pairs**, **28.57% versus 31.72%**. The common subsets are
+small and legacy-availability-selected. Preprocessing, axis and profile/peak
+definitions also change together: this is not an isolated causal ablation.
+
+The new view-level median widths are **1.15686 nm**, range
+**0.0295469–4.02038 nm**; median spacing is **1.44423 nm**, range
+**0.117417–8.27788 nm**. Forty-seven views have only one accepted apparent peak
+and therefore no spacing. A broad envelope can supply an apparent width without
+isolating a monomer; synthetic overlap tests also invalidate a universal sigma
+conversion. **72 views** contain nonfinite raw pixels, 36 per direction; their
+minimum observed fraction is 58.77% (cohort median 100%). The new arm preserves
+holes and rejects incomplete smoothing windows; the old imputation is flagged.
+
+**Scientific decision.** Keep the explicit diagnostic and provenance correction;
+do not promote its widths/spacings to production calibration or claim improved
+recognition. Increased measurement availability does not imply better paired
+agreement or a physically identified fit model. No threshold sweep, conversion
+to sigma/n_max, fit, assignment, QE, external grade or unknown25 rerun follows.
+The last reproduced benchmark remains **679/870, 29/145, 848/870**, not remeasured
+in this experiment; no champion promotion. Independent physical calibration
+and the separate geometry-versus-cohort-learning sensitivity lead remain open.
+Full evidence: `results/calibration_measurements_20260924/report.md`, including
+same-subset comparisons; generated files stay ignored and retained locally.

@@ -35,6 +35,12 @@ independent validation. Repetition does not erase that dependence. The next
 scientific prerequisite is independently justified calibration, not tuning
 thresholds to recover these known cases. See the [audit](docs/src/journal.md#2026-09-24--fresh-hybrid-reproduction-and-historical-label-use-audit).
 
+The subsequent raw measurement audit finds silent width/spacing defaults on
+**245/292 and 261/292 views** in the old bootstrap. The corrected diagnostic
+exposes them and preserves missing pixels, but does **not** establish physical
+calibration or better paired agreement. No production parameter or recognition
+score changes. See [measurement results](docs/src/calibration.md#two-view-measurement-audit-2026-09-24).
+
 **Earlier comparison, September 24: correct QE cube addressing does not improve recognition.**
 With the remaining surface calibration unchanged, corrected templates give
 **676/870 correct, 27/145 exact chains**, versus byte-identical legacy tangent
@@ -350,6 +356,7 @@ how to organize them).
 | `batch_full.jl [N] [--chunk i/n]` | Full 2D batch: fits, plots, enriched summary. `--skip-1d` (default) for speed; `--no-skip-1d` to add the 1D diagnostic. |
 | `inspect_one_file.jl <file.sxm>` | Deep 2D ell vs circ on a single file. |
 | `measure_calibration.jl <scan.sxm>` | Audit apparent widths/spacings in both views and expose legacy fallbacks; no automatic production TOML. |
+| `summarize_calibration_measurements.jl OUTPUT_ROOT RAW_DIR SETTINGS.toml` | Verify complete measurement outputs and compare actual views, without labels or fitting. |
 | `sensitivity_thresholds.jl {generate\|submit\|local\|compare}` | Measure robustness of N_selected to the selection threshold. |
 | `diagnose_neff.jl`, `diagnose_fullimg_autocorr.jl` | Effective-sample-size and spatial-correlation diagnostics. |
 | `summarize.jl [summary.tsv]` | Print stats from a summary TSV. |

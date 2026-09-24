@@ -9,6 +9,10 @@ run `--dry-run` (metadata only), then one `sbatch --export=ALL,... --no-requeue`
 No fitting, benchmark, templates, production calibration or unknown25 run.
 Fetch all four shard outputs and compare view availability/agreement, without
 selecting scans or changing thresholds after measurements.
+Completed source **76934a6**, job **11962552**, **0:0 in 55s**, queued 2m35s.
+Four CPUs requested, eight logical CPUs allocated by Slurm; no retry. All
+24 shard outputs/logs plus the Slurm log are local/hash-verified. Measurements
+do not support automatic physical calibration; no recognition run followed.
 
 Fresh hybrid reproduction uses `hpc/reproduce_hybrid_champion.sbatch`: two
 independent raw-to-prediction executions in one four-hour job, four requested
