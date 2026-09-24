@@ -1197,3 +1197,12 @@ statistical transformations, not independently validated physical bounds or
 chemical labels. Holding them fixed separates a local-input intervention from
 cohort re-estimation in a declared order; it does not certify strict label-free
 calibration, independent validation or a transferable optimum.
+
+Its completed ordered comparison gives **678/28 → 671/25 → 665/17 → 674/21 →
+680/35**, coverage **848/870** throughout. New local inputs alone lose seven
+correct positions and three exact chains under the fixed control bank; changing
+classifiers after Fisher/scaling gains fourteen exact chains. The reverse
+frozen-input control is **680/36**. These order-dependent results do not validate
+new geometry or any physical recalibration. Exact same-input repeatability of
+captured predictive parameters is established for two executions, not calibration
+independence, generalization or stability to changed measurements.

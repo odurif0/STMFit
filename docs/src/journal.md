@@ -2304,6 +2304,17 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
+0ax. **Measure out-of-scan influence in the current full-cohort assignment.**
+Frozen local-input changes are negative at the control learner; the subsequent
+classifier-bank replacement contributes +14 exact chains along the declared
+path. Prioritize scan-exclusion sensitivity and genuinely held-out application
+of the current learners, with no feature/threshold choice from grades. This is
+not an untested concept: earlier 35-file LOFO GMM results were mixed, while
+whole-scan Fisher and equal-scan weighting also have negative/mixed results.
+The current full146 representation and coupled learners need their own check;
+no benefit is promised and no further job is run here. Independent physical
+calibration remains a separate prerequisite for strict label-free promotion.
+
 0aw. **Frozen-learning attribution of the observed-pixel gain.**
 The next user-authorized bounded diagnostic reuses the first complete observed-
 fit execution, all 146 scans and saved N. Capture native Fisher folds, per-scan
@@ -2315,6 +2326,12 @@ of interactions or a method-selection sweep. Complete native reapplication,
 saved-state verification and external grading define completion. Preparation
 is capped at two hours from 15:41 UTC; one two-CPU Viper job at one hour.
 No image refit, count selection, threshold/calibration change or unknown25 run.
+**COMPLETE:** both repetitions' captured predictive parameters and outputs are byte-identical;
+native branches exactly match previous exports. Ordered correct/exact results
+are **678/28 → 671/25 → 665/17 → 674/21 → 680/35**, coverage **848** throughout.
+Reverse frozen inputs give **680/36**, not a promoted method. Source **884b909**,
+job **11964521**, **0:0 in 1m01s**; all 100 outputs/logs plus Slurm log are local,
+with **57,078** saved-state checks passing before complete external grading.
 
 0av. **Separate geometry changes from cohort re-estimation before another fit family.**
 The observed-pixel experiment gives a direct unchanged-input control: 110 scans
@@ -2322,8 +2339,10 @@ have exactly identical fits, patches, descriptors and mold scores across arms,
 yet 22–23 final assignments change after Fisher/classifier re-estimation. The
 net gain of six/seven exact chains occurs entirely in this group. A useful next
 bounded diagnostic is a frozen-learning counterfactual separating local input
-changes from refitting projections, scaling and classifiers. It is not executed
-here and is not a claim that any one stage is solely responsible. Whole-scan
+changes from refitting projections, scaling and classifiers. **Completed in
+0aw**: fixed-learning local changes are negative; the final classifier change
+gains fourteen exact chains in the declared order. No unique, order-independent
+contribution is claimed. Whole-scan
 Fisher (Sep 22) and equal-scan weighting (Sep 21) are already negative/mixed
 results, not fresh untested remedies. No label-selected threshold or composition
 prior may enter a follow-up.
@@ -15284,3 +15303,82 @@ changes scientific settings. Documentation builds with existing size warnings;
 assignment HTML remains 199.77 KiB. Shell syntax and no-requeue/compute-node
 guards pass. The metadata-only dry-run retains **146 scans / 863 lobes** and
 performs no learning locally. Project/Manifest hashes are unchanged.
+
+### 2026-09-24 — Frozen learning: exact repeatability, negative local-only change
+
+Scientific source **884b909**, one Viper job **11964521**, submitted
+**18:08:02 CEST**, started **18:08:37**, ended **18:09:38**, **COMPLETED 0:0 in
+1m01s** after 35 seconds queued. Two requested/four allocated logical CPUs,
+16 GB, MaxRSS **1,452,488 KiB**, no requeue or restart. No scientific computation
+ran on login; only setup and metadata dry-run. All **718 tracked source blobs**
+match the commit before and after the job; Project/Manifest remain unchanged.
+All **100 regular outputs/logs plus the Slurm log** are fetched and identical
+by content comparison. The two repetition directories are byte-identical,
+including all six sets of predictions, both learned banks and normalization
+states. Each verifier passes **28,539 assertions**, **57,078 total**.
+
+Both native branches reproduce every previous Fisher score, joined feature,
+component prediction and final prediction exactly. Thus this new realization
+matches the saved exports; that does not prove unique historical coefficients.
+Fitting and scoring use no labels, expected N or composition. Counts remain
+the same 146 scans / 863 predicted lobes, and all six arms preserve all keys.
+
+Only after verification are both repetitions externally graded. Every grade
+TSV repeats byte for byte; all arms have **848/870 coverage**, 855 benchmark
+predictions, 20 missing positions, five extras, two aligned abstentions and
+unchanged **123/145 exact N**.
+
+| Ordered counterfactual | Correct /870 | Exact chains /145 | Change from preceding step |
+|---|---:|---:|---|
+| Native control | 678 | 28 | reference |
+| Observed local inputs, all learning frozen | 671 | 25 | −7 correct, −3 exact |
+| Then replace Fisher | 665 | 17 | −6 correct, −8 exact |
+| Then replace normalization | 674 | 21 | +9 correct, +4 exact |
+| Then replace classifiers/names (native observed) | 680 | 35 | +6 correct, +14 exact |
+| Reverse local-input control, observed learning frozen | 680 | 36 | 0 correct, +1 exact versus observed |
+
+The first intervention is negative, not evidence of a better fit representation
+at fixed learning. Re-estimating classifiers after the other changes has the
+largest positive exact-chain transition. The ordering matters: these coupled
+blocks cannot be assigned independent causal contributions from this path.
+The reverse control is a useful consistency check, not a method selected for
+promotion because of its favorable grade.
+
+Observation-defined external strata:
+
+| Arm | Fully observed correct / exact (110 scans) | Partial correct / exact (35 scans) |
+|---|---|---|
+| control | 508 / 20 | 170 / 8 |
+| local_only | 508 / 20 | 163 / 5 |
+| fisher | 504 / 13 | 161 / 4 |
+| normalization | 507 / 17 | 167 / 4 |
+| observed | 513 / 27 | 167 / 8 |
+| reverse_local_only | 513 / 27 | 167 / 9 |
+
+The unlabelled 36th partial scan remains in every scientific calculation.
+Frozen local changes preserve every value on the 110 fully observed scans in
+both directions. Successive final-decision changes on fully observed/partial
+scientific lobes are **0/27**, **10/2**, **5/17**, **30/12**; the reverse check
+changes **0/22**. The final head transition changes GMM decisions on **46/17**
+lobes and k-means decisions on **2/0**. These numbers count decisions, not
+correctness; they identify downstream sensitivity without interpreting the
+vote frequency as a calibrated posterior.
+
+**Decision.** Retain the tested capture/application diagnostic and evidence;
+do not change production, counting, thresholds, physical calibration or
+unknown25. No learner nondeterminism is detected in these two exact-input
+executions; this does not establish cross-platform determinism or robustness
+to the changed measurements in the preceding image-refit repetitions. The
+reverse 680/36 matches historical exact chains and adds three correct positions,
+but still covers six fewer positions than 677/36/854 and retains the unresolved
+calibration provenance. No champion or independent-validation claim follows.
+The next justified check is current-representation scan-exclusion sensitivity,
+not another label-ranked feature/threshold sweep; the earlier 35-file LOFO
+results must inform it. No second job or new method campaign follows this loop.
+Full evidence: `results/frozen_learning_20260924/conclusion.md`, both
+`benchmark_repeat*/report.md`, captured banks and verification logs.
+
+The Fisher bank preserves the scoring vector and origin, not every latent
+PCA/GMM training variable. Parameter-repeat claims refer to the captured
+predictive state. Final documentation builds without deployment or size-limit
+changes; existing page/search warnings remain. `git diff --check` passes.

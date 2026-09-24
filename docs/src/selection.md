@@ -6,6 +6,16 @@ known-count benchmark grades. Fresh reproduction cannot remove that dependence;
 strict label-free calibration and independent validation are not established.
 See [calibration](calibration.md) and [the audit](journal.md#2026-09-24-—-Fresh-hybrid-reproduction-and-historical-label-use-audit).
 
+The latest frozen-learning diagnostic makes **no fit or N decision**. Its
+ordered local/Fisher/normalization/classifier replacements give **678/28 →
+671/25 → 665/17 → 674/21 → 680/35**, all coverage **848/870**. The reverse
+frozen-input control gives **680/36**, not a production successor. Both saved-
+input repetitions, including captured predictive parameters, are byte-identical. Native branches
+also reproduce the previous exports exactly. This localizes sensitivity to
+cohort learning without changing GCV, physical guards or `n_eff`, and does not
+establish a global optimum or independent validation. See [journal](journal.md)
+and `results/frozen_learning_20260924/conclusion.md`.
+
 The subsequent observed-only preprocessing comparison keeps those saved N and
 all physical/selection settings fixed. Both repetitions yield **680/870 correct,
 35/145 exact chains, 848/870 coverage**, versus native **678/28** and **679/29**.

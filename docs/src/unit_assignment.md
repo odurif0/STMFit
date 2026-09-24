@@ -2,8 +2,7 @@
 
 ## Saved promoted counts and recognition (2026-09-24)
 
-The raw repetitions and a subsequent fixed-N candidate **do not justify champion
-promotion**:
+Neither raw repetitions nor fixed-N diagnostics **justify champion promotion**:
 
 | Profile | Exact N /145 | Correct /870 | Exact chains /145 | Coverage /870 |
 |---|---:|---:|---:|---:|
@@ -11,19 +10,19 @@ promotion**:
 | Saved hybrid counts, fresh assignment | 129 | 694 | 43 | 855 |
 | Fresh counts and assignment, both repeats | 123 | 679 | 29 | 848 |
 | Observed-only at saved N, both repeats | 123 | 680 | 35 | 848 |
+| Reverse diagnostic, both repeats | 123 | 680 | 36 | 848 |
 
-Raw repetitions agree on N and all 863 prediction rows; saved 694/43 is not
-reproduced end to end. The observed-only experiment reuses these N, changes
-background/fit/patch observation handling, and passes all 584 fits in each run.
-Its matched controls give **678/28** and **679/29**. Candidate assignments repeat
-exactly, but sixteen confidences differ by 0.4. Net exact-chain gains occur on
-unchanged local inputs, exposing downstream cohort sensitivity. Counting is not
-rerun, and the historical chain/coverage result is not surpassed overall.
+The ordered path gives **678/28 → 671/25 → 665/17 → 674/21 → 680/35**:
+local inputs, Fisher, normalization, classifiers. Coverage stays 848; N is fixed.
+Saved-input outputs and captured predictive parameters repeat byte for byte.
+These are diagnostics, not independent effects or promoted methods. Earlier
+image-refit repeats share assignments, but sixteen confidences vary by 0.4.
+Saved 694/43 is not reproduced end to end; history covers six more positions.
 
-Inference reads no labels; historical calibration and hybrid thresholds did use
-known-count grades. Neither strict label-free provenance nor independent
-validation follows. Unknown25 remains frozen. See [journal](journal.md) and
-`results/observed_fit_20260924/conclusion.md`. Older sections are dated findings.
+Inference reads no labels. Historical calibration and hybrid thresholds used
+known-count grades; strict label-free provenance and independent validation
+remain unestablished. Unknown25 stays frozen. See [journal](journal.md) and
+`results/frozen_learning_20260924/conclusion.md`. Older sections are dated findings.
 
 ## Motivation
 

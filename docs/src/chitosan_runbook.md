@@ -1,6 +1,17 @@
 # Chitosan Benchmark and 10–20mer Runbook
 
-Latest fixed-N experiment: observed-only background correction, fitting and
+Latest saved-input diagnostic: the ordered frozen-learning path gives
+**678/28 → 671/25 → 665/17 → 674/21 → 680/35**, replacing local inputs, Fisher,
+normalization, then classifiers; all coverage is **848/870**. Two repetitions
+are byte-identical, captured predictive parameters included. The reverse frozen-input
+control reaches **680/36**, but remains a diagnostic, not a promoted method;
+history still covers six more positions. No count fit, threshold change or
+unknown25 run. Source **884b909**, job **11964521**, **0:0 in 1m01s**, with
+57,078 saved-state checks before grading. See [journal](journal.md) and
+`results/frozen_learning_20260924/conclusion.md` for the order-dependent effects
+and inherited calibration limitation.
+
+Earlier fixed-N experiment: observed-only background correction, fitting and
 residual patches give **680/870 correct, 35/145 exact, 848/870 coverage** in two
 independent executions. Matched controls give **678/28** then **679/29**, with
 the same coverage. All 584 fits pass each time; all 863 candidate assignments

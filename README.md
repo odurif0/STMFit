@@ -4,7 +4,23 @@ Analysis pipeline for STM images of molecular chains (chitosan on Cu(100) and
 similar systems). Detects and fits a chain-of-Gaussians model to count the
 number of monomer units (lobes) per chain from the images.
 
-**Latest September 24: observed-only preprocessing reproduces a fixed-N improvement, not a new champion.**
+**Latest September 24: frozen learning isolates cohort effects, without a new champion.**
+Two identical-input repetitions reproduce all outputs and captured predictive parameters
+byte for byte. The declared fixed-N path gives **678/28 → 671/25 → 665/17 →
+674/21 → 680/35** (correct positions / exact chains), replacing local inputs,
+Fisher, normalization, then classifiers. Every arm has **848/870 coverage**.
+Changing local inputs alone loses seven correct positions and three exact
+chains; replacing the classifier bank at the end gains fourteen exact chains.
+These are order-dependent counterfactuals, not independent causal contributions.
+
+The reverse frozen-input control gives **680/870 correct, 36/145 exact**, still
+six covered positions below history. It is not promoted as a new method.
+Inference reads no labels; historical calibration provenance remains unresolved.
+Source **884b909**, Viper **11964521**, **0:0 in 1m01s**; all outputs are local,
+with **57,078** saved-state checks passing before external grading. See the
+[journal](docs/src/journal.md) and `results/frozen_learning_20260924/conclusion.md`.
+
+**Earlier September 24: observed-only preprocessing reproduces a fixed-N improvement, not a new champion.**
 Two independent refit/assignment executions give **680/870 correct, 35/145 exact
 chains, 848/870 coverage**. Matched native controls give **678/28** and **679/29**,
 at the same coverage. All 584 fits pass in each execution. All 863 candidate

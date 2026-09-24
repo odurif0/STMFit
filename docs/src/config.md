@@ -1675,3 +1675,9 @@ classifier/Fisher parameters are captured at full precision and reused; missing
 features retain native abstention. The declared order is local inputs, Fisher,
 normalization, classifiers, plus a reverse local-input control. There is no
 automatic best-arm selection. See the journal for the bounded job and limits.
+
+The complete diagnostic is reproduced: the ordered path yields **678/28 →
+671/25 → 665/17 → 674/21 → 680/35**, all coverage **848/870**; reverse frozen
+inputs give **680/36**. All six arms and their learned states repeat byte for
+byte, and both native branches match their earlier saved exports. No config,
+threshold or production default is selected from these external grades.
