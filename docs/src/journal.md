@@ -2304,6 +2304,18 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
+0av. **Separate geometry changes from cohort re-estimation before another fit family.**
+The observed-pixel experiment gives a direct unchanged-input control: 110 scans
+have exactly identical fits, patches, descriptors and mold scores across arms,
+yet 22–23 final assignments change after Fisher/classifier re-estimation. The
+net gain of six/seven exact chains occurs entirely in this group. A useful next
+bounded diagnostic is a frozen-learning counterfactual separating local input
+changes from refitting projections, scaling and classifiers. It is not executed
+here and is not a claim that any one stage is solely responsible. Whole-scan
+Fisher (Sep 22) and equal-scan weighting (Sep 21) are already negative/mixed
+results, not fresh untested remedies. No label-selected threshold or composition
+prior may enter a follow-up.
+
 0au. **Does preserving observations before background correction improve fitting?**
 The user authorized the next bounded iteration after the calibration audit.
 Compare native imputation with finite-only background correction, native fixed-N
@@ -2313,10 +2325,12 @@ or physical recalibration. Fully observed images must share exactly the same
 fit. Preparation is capped at two hours; one four-CPU Viper job at two hours.
 All fits must be valid before cohort-wide assignment and external grading.
 This preserves label-free inference, not the inherited calibration's provenance.
-First run complete: **680/870 correct, 35/145 exact, 848/870 coverage** versus
-fresh control **678/28/848**. All 584 fits pass. However 23 assignments change
-on exactly reused local inputs, and no LM run declares convergence. One frozen
-reproduction is pending; no champion or unknown25 change.
+**COMPLETE, FIXED-N DECISIONS REPRODUCED:** **680/870 correct, 35/145 exact,
+848/870 coverage** in both executions versus controls **678/28/848** and
+**679/29/848**. All 584 fits pass per run. All 863 candidate assignments repeat,
+but sixteen confidences differ by 0.4; no LM run declares convergence. The net
+exact-chain gain occurs on exactly reused local inputs (see 0av). No champion,
+counting/default or unknown25 change; strict calibration provenance remains open.
 
 > Updated 2026-09-24. Questions from earlier sessions are archived in
 > `journal_archive.md`.
@@ -15133,3 +15147,70 @@ third run, threshold sweep or application-default change is part of this step.
 
 Evidence: `results/observed_fit_20260924/report.md`, `effects/report.md`, and
 `benchmark/report.md`. Reports, full arrays, maps and logs remain ignored/local.
+
+### 2026-09-24 — Frozen observed-pixel reproduction: stable decisions, variable confidence
+
+The second and final job **11963852** uses the original **e87c744** scientific
+source and all original inputs, seeds and optimizer budgets. Only the job-level
+cap changes to 45 minutes; `--no-requeue` is explicit. Submitted 16:47:57 CEST,
+queued **eight seconds**, **COMPLETED 0:0 in 23m09s**, 16:48:05–17:11:14 CEST,
+on another Viper node. Four requested/eight allocated logical CPUs, 16 GB,
+MaxRSS **4,755,746 KiB**, no restart. The two jobs total **47m30s**, below the
+original two-hour computation envelope. No third job or new method follows.
+
+All **1,035 regular outputs and the Slurm log** are fetched and identical by
+content comparison. All 711 remote source blobs match `git ls-tree e87c744`
+directly, independently of later local reporting commits. Project/Manifest
+hashes remain unchanged. The second saved-output verifier again passes
+**21,367 assertions**, for **42,734 across the two runs**, with 584 valid fits,
+zero failures and 220 exact same-run reuses each time. Both final cohorts,
+independent vote arithmetic, fixed N, maps and observation-defined groups pass.
+
+Between runs, the candidate changes **14 Gaussian feature rows in two scans**;
+its split table is byte-identical. Maximum Gaussian center displacement is
+**0.000235287 nm**, maximum relative GCV difference **2.18783e-5**. Control
+Gaussian rows change on two scans (14 rows), max displacement **0.0302445 nm**
+and relative GCV difference **0.00672583**; control split changes eight rows in
+one scan, max displacement **0.00849721 nm**. Thus neither numerical geometry
+nor timed optimization is claimed identical or globally optimal.
+
+Nevertheless, **all 863 candidate assignments are identical** across runs.
+Sixteen final confidence values change, each by **0.4**; these are not cosmetic
+roundoff differences, and the final TSV hashes differ. The control changes one
+assignment, returning byte-for-byte to the latest twice-reproduced raw pipeline
+(SHA256 `dfd8d907690cc74b13f1adf6924f80653c8afba9cc2112a253f1669cebb4d48f`).
+The candidate's two TSV hashes are
+`d14775c39358c8afca08ecd05f134ef4e0cac5fb59538f377e3b1bc880791820` and
+`dd6f356abcba311c8aa37f3537bc8edd13721d6fcf3a3cdbb0778de16e9444a6`.
+
+External grading, after verification, confirms the candidate's **680/870,
+35/145, 848/870** in both runs. Controls are **678/28/848** and **679/29/848**.
+No better repetition is selected. The second control's one recovered exact
+chain reduces the candidate's paired net exact gain from seven to six. All
+these net exact gains remain in the fully observed, same-local-input group;
+the partially observed benchmark group's candidate result remains **167 correct,
+eight exact**, versus native **170 correct, eight exact**. Between arms,
+Fisher and downstream predictions change despite unchanged local inputs;
+between repetitions, tiny input changes also alter confidence materially.
+
+The second paired grade is **19 scan gains / 17 losses / 109 ties**, with
+**nine exact gains / three losses**. Its fully observed group has native
+**509 correct / 21 exact**, versus candidate **513 correct / 27 exact**.
+
+**Conclusion.** Retain an opt-in, fixed-N development candidate with reproduced
+discrete decisions. It has **three more correct positions**, but **one fewer
+exact chain and six fewer covered positions**, than historical 677/36/854:
+the minimum historical target is not beaten overall. No strict label-free
+calibration certification, independent holdout claim, new count result,
+production/champion promotion or unknown25 change. The evidence prioritizes a
+frozen-learning attribution diagnostic over another unstructured parameter
+sweep. Full linked conclusions: `results/observed_fit_20260924/conclusion.md`.
+
+**Final verification.** The observed-fit suite now passes **1,028 assertions**,
+including the explicit no-requeue check; the effects report passes **13**.
+Together with the earlier registered-refit, GaussianFit2D and STMSXMIO checks,
+that is **5,983 assertions**, excluding duplicate invocations and the separate
+42,734 saved-output checks. Documentation builds with existing size warnings;
+the unit-assignment page is **199.77 KiB**, below its unchanged 200 KiB limit.
+`git diff --check` passes. Generated evidence remains ignored/local, with
+conclusions and headline updates committed; no push or production activation.

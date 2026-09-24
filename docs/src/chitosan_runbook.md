@@ -1,6 +1,17 @@
 # Chitosan Benchmark and 10–20mer Runbook
 
-Latest September 24 result: two independent full146 raw-to-prediction runs give
+Latest fixed-N experiment: observed-only background correction, fitting and
+residual patches give **680/870 correct, 35/145 exact, 848/870 coverage** in two
+independent executions. Matched controls give **678/28** then **679/29**, with
+the same coverage. All 584 fits pass each time; all 863 candidate assignments
+repeat, but sixteen confidences change by 0.4. No N reselection or physical
+recalibration is performed. The net exact-chain gain lies in the unchanged-local-
+input group; downstream cohort sensitivity remains a concern. This is not a new
+champion or application default: history retains one more exact chain and six
+more covered positions. See [journal](journal.md) and
+`results/observed_fit_20260924/conclusion.md`.
+
+Latest end-to-end September 24 result: two independent full146 raw-to-prediction runs give
 **679/870 correct, 29/145 exact chains, 848/870 coverage**, with **123/145 exact
 counts** (143/145 within one). Their N vectors and final prediction files are
 identical; slight timed-fit geometry differences remain. The saved-count

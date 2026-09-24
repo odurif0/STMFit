@@ -1181,3 +1181,12 @@ change together. Shared-pixel residuals and optimizer termination are retained
 as diagnostics, without selecting a method or retuning controls from benchmark
 labels. A missing valid fit is a negative completeness result, not permission to
 relax physical guards or grade a favorable subset.
+
+Both complete fixed-N executions give **680/870 correct, 35/145 exact chains,
+848/870 coverage**. This does not validate a physical recalibration: all bounds
+are inherited, common-pixel RSS is lower on 17 partial scans and higher on 19
+for each profile, and no LM fit declares convergence. The net exact-chain gain
+occurs on fully observed scans with identical local inputs between arms; the
+downstream Fisher/classifier dependence on the rest of the cohort must be
+separated from local geometry quality. All 863 candidate decisions repeat,
+but sixteen confidences change by 0.4. No champion or application promotion.

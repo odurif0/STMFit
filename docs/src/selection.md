@@ -6,6 +6,16 @@ known-count benchmark grades. Fresh reproduction cannot remove that dependence;
 strict label-free calibration and independent validation are not established.
 See [calibration](calibration.md) and [the audit](journal.md#2026-09-24-—-Fresh-hybrid-reproduction-and-historical-label-use-audit).
 
+The subsequent observed-only preprocessing comparison keeps those saved N and
+all physical/selection settings fixed. Both repetitions yield **680/870 correct,
+35/145 exact chains, 848/870 coverage**, versus native **678/28** and **679/29**.
+All 584 fits pass per run; full-parameter GCV still selects the valid circular
+or elliptical family. This is not a new counting result or a converged optimum:
+all recorded LM fits hit their caps. Candidate decisions repeat, but sixteen
+confidences differ by 0.4. The gain occurs downstream of unchanged local inputs
+on the fully observed scans; no selector/default/champion change follows.
+See [journal](journal.md), `results/observed_fit_20260924/conclusion.md`.
+
 The September 24 **QE cube-order correction** gives **676/870 correct, 27/145
 exact**, versus byte-identical legacy tangent **679/33**, both coverage **852**.
 Six scan gains/nine losses, one exact gain/seven losses. Keep the explicit

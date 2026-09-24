@@ -2,27 +2,28 @@
 
 ## Saved promoted counts and recognition (2026-09-24)
 
-Two complete raw-to-prediction repetitions agree, but **do not reproduce the
-saved-count result or justify champion promotion**:
+The raw repetitions and a subsequent fixed-N candidate **do not justify champion
+promotion**:
 
 | Profile | Exact N /145 | Correct /870 | Exact chains /145 | Coverage /870 |
 |---|---:|---:|---:|---:|
 | Historical | 106 | 677 | 36 | 854 |
 | Saved hybrid counts, fresh assignment | 129 | 694 | 43 | 855 |
 | Fresh counts and assignment, both repeats | 123 | 679 | 29 | 848 |
+| Observed-only at saved N, both repeats | 123 | 680 | 35 | 848 |
 
-Both rebuild all 146 scans independently: identical N and 863 byte-identical
-final predictions, despite slight timed-fit variation. Ten counts differ from
-the saved 871-lobe vector. Against saved assignment: 13 scan gains/22 losses,
-one exact-chain gain/15 losses; missing/extras **20/5**, emitted errors **169**.
-Twelve exact-chain losses have unchanged N, so this is not only a local count
-effect. Source **d2a0714**, job **11959377**, **0:0 in 2h40m03s**; all outputs
-are local/verified, independent checks precede external grading.
+Raw repetitions agree on N and all 863 prediction rows; saved 694/43 is not
+reproduced end to end. The observed-only experiment reuses these N, changes
+background/fit/patch observation handling, and passes all 584 fits in each run.
+Its matched controls give **678/28** and **679/29**. Candidate assignments repeat
+exactly, but sixteen confidences differ by 0.4. Net exact-chain gains occur on
+unchanged local inputs, exposing downstream cohort sensitivity. Counting is not
+rerun, and the historical chain/coverage result is not surpassed overall.
 
 Inference reads no labels; historical calibration and hybrid thresholds did use
 known-count grades. Neither strict label-free provenance nor independent
-validation follows. Unknown25 remains frozen. See [journal](journal.md),
-`results/hybrid_reproduction_20260924/report.md`. Older sections are dated findings.
+validation follows. Unknown25 remains frozen. See [journal](journal.md) and
+`results/observed_fit_20260924/conclusion.md`. Older sections are dated findings.
 
 ## Motivation
 

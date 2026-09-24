@@ -4,7 +4,21 @@ Analysis pipeline for STM images of molecular chains (chitosan on Cu(100) and
 similar systems). Detects and fits a chain-of-Gaussians model to count the
 number of monomer units (lobes) per chain from the images.
 
-**September 24: fresh reproduction is stable, but does not confirm the proposed champion.**
+**Latest September 24: observed-only preprocessing reproduces a fixed-N improvement, not a new champion.**
+Two independent refit/assignment executions give **680/870 correct, 35/145 exact
+chains, 848/870 coverage**. Matched native controls give **678/28** and **679/29**,
+at the same coverage. All 584 fits pass in each execution. All 863 candidate
+assignments repeat exactly, but 16 reported confidences change by 0.4.
+
+Counts are reused from the latest raw reproduction, not reselected. The net
+exact-chain gain occurs on scans with unchanged local fits/patches, implicating
+downstream cohort sensitivity rather than demonstrating better partial-scan
+geometry. Historical **677/36/854** still has one more exact chain and six more
+covered positions. Production defaults and unknown25 stay frozen; inherited
+calibration is not certified strictly label-free. See the [journal](docs/src/journal.md)
+and `results/observed_fit_20260924/conclusion.md`.
+
+**Earlier September 24: fresh raw reproduction does not confirm the saved-count champion.**
 Two independent raw-to-prediction executions give identical final predictions:
 
 | Development-benchmark result | Exact N /145 | Correct /870 | Exact chains /145 | Coverage /870 |

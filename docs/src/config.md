@@ -1655,3 +1655,10 @@ failed fits; incomplete geometry blocks both downstream assignments and any
 partial benchmark. Native RSS/GCV values have arm-specific supports. Additional
 RSS comparisons retain exactly common observed pixels and each arm's removed
 background; lower RSS is not evidence of better chemical recognition.
+
+Two frozen executions are complete: **680/870 correct, 35/145 exact chains,
+848/870 coverage**, versus controls **678/28** and **679/29**. Candidate decisions
+repeat, not every confidence or fitted coordinate. The experiment remains
+opt-in; it does not reselect N or certify inherited physical calibration.
+No new production default follows. See the journal for the cohort-sensitivity
+finding and limitations.
