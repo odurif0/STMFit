@@ -2315,6 +2315,14 @@ job, one-hour limit. Compare with both all-admissible exclusion (672/19, 673/29)
 and native references (678/28, 680/35), not only the weaker excluded baseline.
 This is a bounded hypothesis, not a promise of improvement or independent
 label-free calibration. Unknown25 and production remain frozen.
+**INCOMPLETE, ACCESS BLOCKED (Sep 24, 18:22 UTC):** tested source **d83e4ac**
+is committed; job **11965427** was submitted once and started. At the last
+confirmed poll (18:08:16 UTC), one worker had completed 146/146 folds, the
+others were at 106, 138 and 135. Shared SSH sessions then disappeared and the
+gate refused noninteractive authentication. Final Slurm state, complete
+verification, repetition equality, retrieval and grades are **not established**.
+Do not resubmit or promote; restore the user's authenticated connection and
+fetch the existing job. The two-hour loop is not claimed complete.
 
 0ax. **Measure out-of-scan influence in the current full-cohort assignment.**
 Frozen local-input changes are negative at the control learner; the subsequent
@@ -15637,3 +15645,63 @@ no-overwrite/Slurm guards, retained partial targets, correct eligible counts,
 exact cross-arm banks/predictions and partial/held-out mutation invariance.
 Shell syntax and `git diff --check` pass; Project and Manifest SHA256 remain
 unchanged. The source is committed before the single declared Viper execution.
+
+### 2026-09-24 — Complete-observation job submitted; retrieval blocked by SSH authentication
+
+Scientific source **d83e4ac** is committed. All **726** tracked source blobs
+match `/u/oldu/code/STMFit_complete_observation_20260924` before execution.
+Julia **1.13.0** dependency setup and both metadata-only dry-runs pass remotely;
+Project/Manifest SHA256 remain unchanged. Setup reports the existing
+1.12.6-generated Manifest warning; it is not hand-edited or re-resolved.
+
+Submit exactly one job, **11965427**, at **20:00:12 CEST** (18:00:12 UTC), with
+explicit command-line `sbatch --export=ALL,STMFIT_PROJECT_DIR=...,
+STMFIT_INPUT_DIR=...,STMFIT_OUTDIR=...,JULIA_BIN=...` and `--no-requeue`.
+After 60 seconds queued, including `QOSGrpCpuLimit`, it starts at
+**20:01:12 CEST**, node `vipc2257`: four requested/eight allocated logical CPUs,
+16 GB, one-hour limit. No duplicate, requeue or scientific retry is submitted.
+All four workers pass exact native-table replay before their fold loops.
+
+**Last confirmed progress, 18:08:16 UTC:** Slurm RUNNING, elapsed 7m04s.
+Repeat1/control is at fold 106/146; repeat1/observed has completed all 146
+folds and retained 863 target lobes, then enters saved-state verification.
+Repeat2/control and repeat2/observed are at folds 138 and 135. Two earlier
+read-only spot checks match the first learned bank across arms and the second
+fully observed target's prediction across arms. These are not substitutes for
+all-fold/cross-arm verification or complete repetition equality. No external
+grade of any new output has been run.
+
+**Access incident, not an observed scientific failure.** The next SSH poll
+does not return. A bounded attempt times out during banner exchange. Existing
+Viper, gate and Raven control sockets are absent. A local configuration check
+also encounters an automatic-permission-review timeout; its one permitted
+retry succeeds. Standard batch authentication to `gate1.mpcdf.mpg.de` then
+returns `Permission denied (gssapi-with-mic,password)`; enabling only existing
+GSSAPI authentication for one read-only attempt gives the same result. No
+password, credential file, new identity or SSH configuration is changed.
+Only the two identified local clients of the blocked read-only poll are
+terminated; **no `scancel` or other job change occurs**. The user is asked to
+restore the usual authenticated `ssh viper` connection, never to send a password.
+
+**Resume this job, do not resubmit.** Once access returns, query Slurm state and
+fetch the existing outputs and log:
+
+- source: `/u/oldu/code/STMFit_complete_observation_20260924`;
+- input: `/ptmp/oldu/stmfit/observed_fit_20260924_v1`;
+- output: `/ptmp/oldu/stmfit/complete_observation_20260924_v1`;
+- Slurm log: `/ptmp/oldu/stmfit/complete_observation_20260924_11965427.log`;
+- local evidence: `results/complete_observation_20260924/` (synthetic test and
+  documentation logs only at this interruption).
+
+Require all four saved-state verifications, both cross-arm checks, full
+repetition byte equality, exact native banks/tables versus prior evidence,
+unchanged input/source hashes and complete local retrieval before external
+full145 own-N grading. Compare new profiles to both the saved all-admissible
+exclusions and freshly reproduced native references, retaining every scan.
+The job's final state, verification result and recognition metrics remain
+**unknown**. This bounded loop's scientific deliverable is **incomplete**;
+there is no new result, optimum, champion, production or unknown25 change.
+
+The local interruption documentation builds successfully with Julia 1.13,
+without deployment or changed size limits; existing warnings remain.
+`git diff --check` passes. This local check does not establish remote completion.
