@@ -31,3 +31,4 @@ end
 
 include("fused_roi.jl")
 include("local_orientation.jl")
+include("chain_kernel_allocations.jl")

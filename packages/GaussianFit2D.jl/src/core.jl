@@ -916,6 +916,25 @@ function _chain_peak_axes(ts, us, axisctx, ccfg::ChainSweepConfig)
     return [((ax - s*ay)/hypot(1, s), (ay + s*ax)/hypot(1, s)) for s in slopes]
 end
 
+# The polynomial tangent solve can leave _chain_peak_axes inferred as Vector.
+# Specialize this pixel loop on its concrete runtime element type, preserving
+# the operation order while avoiding per-pixel dynamic dispatch/allocations.
+function _accumulate_chain_peaks!(pred, x, y, feats, peak_axes, split_profile, skew_rmax)
+    for (k, f) in enumerate(feats)
+        ax, ay = peak_axes[k]
+        if split_profile
+            for i in eachindex(pred)
+                dt = (x[i] - f.x_nm) * ax + (y[i] - f.y_nm) * ay
+                du = (x[i] - f.x_nm) * (-ay) + (y[i] - f.y_nm) * ax
+                pred[i] += f.amplitude * _chain_split_peak_value(dt, du, f.sigma_x_nm, f.sigma_y_nm, f.skew_ratio, skew_rmax)
+            end
+        else
+            @. pred += f.amplitude * exp(-0.5 * ((((x - f.x_nm)*ax + (y - f.y_nm)*ay)/f.sigma_x_nm)^2 + (((x - f.x_nm)*(-ay) + (y - f.y_nm)*ax)/f.sigma_y_nm)^2))
+        end
+    end
+    return pred
+end
+
 function _chain_model_values(x, y, p, n::Int, axisctx, ccfg::ChainSweepConfig;
                              amp_min::Float64=NaN, amp_range::Float64=NaN)
     b0, feats, ts, us, _spars, _sperps = _decode_chain(p, n, axisctx, ccfg;
@@ -930,19 +949,7 @@ function _chain_model_values(x, y, p, n::Int, axisctx, ccfg::ChainSweepConfig;
     peak_axes = _chain_peak_axes(ts, us, axisctx, ccfg)
     split_profile = _chain_uses_split_profile(ccfg)
     skew_rmax = max(ccfg.skew_ratio_max, 1.0 + EPS)
-    for (k, f) in enumerate(feats)
-        ax, ay = peak_axes[k]
-        if split_profile
-            for i in eachindex(pred)
-                dt = (x[i] - f.x_nm) * ax + (y[i] - f.y_nm) * ay
-                du = (x[i] - f.x_nm) * (-ay) + (y[i] - f.y_nm) * ax
-                pred[i] += f.amplitude * _chain_split_peak_value(dt, du, f.sigma_x_nm, f.sigma_y_nm, f.skew_ratio, skew_rmax)
-            end
-        else
-            @. pred += f.amplitude * exp(-0.5 * ((((x - f.x_nm)*ax + (y - f.y_nm)*ay)/f.sigma_x_nm)^2 + (((x - f.x_nm)*(-ay) + (y - f.y_nm)*ax)/f.sigma_y_nm)^2))
-        end
-    end
-    return pred
+    return _accumulate_chain_peaks!(pred, x, y, feats, peak_axes, split_profile, skew_rmax)
 end
 
 function _nearest_values_on_grid(xs, ys, zimg, feats::Vector{MolecularFeature}; observed_only::Bool=false)

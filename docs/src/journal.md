@@ -14428,3 +14428,52 @@ exported paths. Outputs `/ptmp/oldu/stmfit/promoted_counts_20260924_v1`, log
 `/ptmp/oldu/stmfit/promoted_counts_20260924-11955899.log`. Follow through fetch,
 independent checks and reporting; no duplicate submission or tuning. Local
 preparation documentation builds successfully with existing warnings.
+
+### Split-kernel performance regression and explicit replacement decision
+
+Job **11955899** starts **02:00:12 CEST**. Its base extraction completes, but
+after 24 minutes only 14/146 split fits are written. The process is computing,
+not waiting or out of memory. A synthetic inspection finds that the optional
+local-tangent implementation leaves `_chain_peak_axes` inferred as abstract
+`Vector`, including the global path; indexing these axes inside the split
+pixel loop causes dynamic dispatch and allocation on every pixel.
+
+Before touching production code, a separate synthetic function-barrier trial
+preserves all values exactly for global/local × Gaussian/split ×
+circular/elliptical profiles. For six lobes and 10,000 pixels the four split
+cases fall from **19.29–19.33 MB** to **0.088–0.126 MB** per evaluation and
+from **19–21 ms** to **1.0–1.5 ms** locally. These are kernel measurements,
+not end-to-end fit speedups or benchmark gains.
+
+The previously stated one-job/no-retry execution plan is explicitly revised,
+before any grade: cancel the inefficient run, retain its evidence, fix this
+demonstrated implementation regression, then execute **one replacement** of
+both fresh arms with a **3h30** cap. The scientific comparison and every input
+stay fixed; this is not a parameter retry or a new method campaign. Job
+11955899 is **CANCELLED** at **02:25:09**, elapsed **24m57s**, MaxRSS
+**3,824,030 K**. All partial files and the Slurm log are fetched and checked;
+local evidence is `results/promoted_counts_20260924/aborted_v1/`. Combined
+requested runtime remains below the original four-hour compute allowance.
+No partial prediction is graded or spliced into the replacement.
+
+The repair isolates the unchanged peak-accumulation arithmetic behind a
+function boundary specialized on the runtime axis-array type. It changes no
+scientific formula, operation order, parameter, count, filter or classifier.
+Nevertheless the optimizer has a wall-time limit: faster evaluation can change
+its endpoint, so **prediction neutrality is not assumed**. Both count arms
+must be refitted with the repaired engine, and control drift must be measured.
+The old remote source is left untouched; no loaded job is patched.
+
+The independent output verifier is also exercised on a completed older
+comparison: **23,875** checks pass. Its first fixture points at an incomplete
+reference directory lacking `training_support.tsv`; correcting the fixture to
+the complete, prediction-byte-identical tangent reference resolves that input
+error without changing the verifier. This is verifier coverage, not a new
+scientific result.
+
+Julia 1.13 passes all **534** GaussianFit2D assertions, including **64 bitwise
+identities** across profile/orientation/shape/baseline/amplitude cases and
+**16** warmed allocation ceilings. The same lexicographic single raw scan
+`240307_015.sxm` passes a split-profile smoke check at fixed N=6, with six
+finite elliptical lobes and GCV approximately **8.052e−6**. This is not a
+grade or evidence that optimizer endpoints are unchanged.
