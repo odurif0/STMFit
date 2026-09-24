@@ -14905,3 +14905,12 @@ checks raw hashes, complete rows, missing bins, width crossings, frozen filters,
 fallback separation and serialized summary arithmetic, then reports paired
 differences without fitting or external grades. Validated work is committed
 before the one-job Viper run.
+
+A final source review preserves the exact legacy SVD sign convention also for
+an exactly horizontal axis (no extra x-sign tie-break in the comparison arm).
+An independent historical SVD check is added before submission; this does not
+change the new method, its thresholds, or any production behavior.
+The final suite has **190** diagnostic/report assertions (**745** with I/O and
+fit-engine suites). On the single preflight raw scan, functions extracted from
+the archived source also reproduce both legacy profiles and all three legacy
+reported width/spacing values exactly. No old TOML writer is executed.

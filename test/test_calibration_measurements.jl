@@ -111,6 +111,20 @@ end
     transformed=M.axis_frame(xs,ys,3z.+2,C)
     @test abs(dot(transformed.axis,f.axis))≈1 atol=1e-12
     @test transformed.origin≈f.origin atol=1e-12
+    # Exact historical SVD sign rule, including the horizontal-axis tie.
+    horizontal=zeros(3,9); horizontal[2,:].=1:9
+    for (xgrid,ygrid,field) in ((xs,ys,z),(collect(-4.:4.),[-1.,0.,1.],horizontal))
+        oldframe=M.axis_frame(xgrid,ygrid,field,C;legacy=true)
+        inds=[CartesianIndex(iy,ix) for iy in eachindex(ygrid) for ix in eachindex(xgrid) if oldframe.mask[iy,ix]]
+        xb=[xgrid[i[2]] for i in inds]; yb=[ygrid[i[1]] for i in inds]
+        w=field[inds].-minimum(field[inds]).+C["model"]["legacy_weight_floor"]
+        X=hcat(xb.-sum(xb.*w)/sum(w),yb.-sum(yb.*w)/sum(w))
+        _,_,V=svd(Diagonal(w./maximum(w))*X)
+        expected=collect(V[:,1]); expected./=max(norm(expected),1e-12)
+        expected[2]<0 && (expected.*=-1)
+        @test oldframe.axis==expected
+        length(ygrid)==3 && @test expected[2]==0
+    end
     p=M.strip_profile(xs,ys,z,f,C)
     old=M.strip_profile(xs,ys,z,f,C;legacy=true)
     @test length(p.t)>=length(old.t)

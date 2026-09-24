@@ -78,7 +78,7 @@ function axis_frame(xs,ys,z,c; legacy=false)
         axis=collect(eig.vectors[:,2])
     end
     axis ./= norm(axis)
-    (axis[2]<0 || (axis[2]==0 && axis[1]<0)) && (axis .*= -1)
+    (axis[2]<0 || (!legacy && axis[2]==0 && axis[1]<0)) && (axis .*= -1)
     (;origin,axis,threshold,mask,eigenvalues)
 end
 
