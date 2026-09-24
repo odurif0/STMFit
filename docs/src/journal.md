@@ -15065,7 +15065,7 @@ monitoring and changed to zero; **Restarts=0** throughout. The launcher now
 states `--no-requeue` explicitly for later uses. No retry or new method setting.
 Preparation/submission took less than half an hour of its two-hour allowance.
 
-All **1,005 regular output files plus the Slurm log** are local and identical
+All **1,035 regular output files plus the Slurm log** are local and identical
 by content comparison. All **711 tracked source files** and the additional
 Manifest match the frozen source/environment after computation. The independent
 saved-output verifier passes **21,367 assertions**, including all 146 raw hashes,
@@ -15107,6 +15107,18 @@ have 855 benchmark predictions, 20 missing positions, five extras, and two
 aligned abstentions. The fresh control differs from the last raw reproduction
 by one final decision, losing one correct position and one exact chain; the
 timed-fit reference is not represented as byte-identical.
+
+External stratification uses the already frozen observation/reuse groups,
+not a label-chosen subset. On **110 fully observed benchmark scans**, correct
+positions increase **508→513** and exact chains **20→27**. On **35 partially
+observed benchmark scans**, correct positions decrease **170→167** and exact
+chains remain **8→8** (the 36th partial science scan is not benchmark-labelled).
+Thus the entire net gain of seven exact chains occurs at unchanged local
+inputs. This is not evidence that partial-image geometry improved chemically.
+The saved-only effects report identifies a downstream/global-learning
+sensitivity, without proving one uniquely responsible numerical stage. The
+regular-file count above includes thirty logs hidden by the initial `rg` file
+listing; `find -type f` corrects the count, with no missing transfer.
 
 **Decision and bounded follow-up.** Retain this as a promising development
 candidate, not a champion. It remains one exact chain and six covered positions
