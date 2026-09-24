@@ -1,14 +1,18 @@
 # STMFit — STM Molecular Chain Fitting
 
 Automated pipeline for detecting and fitting 2D Gaussian chain models
-to STM images of molecular chains. The robust-AICc guard is **validated** on the
-6mer chitosan/Cu(100) primary benchmark (39/39 exact); the current chitosan
-default is the support-midpoint hybrid promoted for the expanded 145-file
-external counting grade (129/145 exact, 143/145 within one lobe). The pipeline is
-also **applied** to the 10–20mer production system (no ground-truth labels —
-visual validation is the arbiter). Generalizable to other chain-like molecules on
-the same STM via auto-calibration
-(see [Calibration](calibration.md)).
+to STM images of molecular chains. Historical saved counting runs give 39/39
+exact for the robust-AICc guard on the primary benchmark and 129/145 exact
+(143/145 within one lobe) for the current support-midpoint hybrid on the expanded
+benchmark. Fresh raw-to-prediction reproduction is in progress on September 24;
+these saved grades do not establish the current corrected pipeline's score.
+Inference reads no labels, but historical calibration used known-count grades;
+see [Calibration](calibration.md) for the provenance limit.
+
+The pipeline has also been **applied** to unknown 10–20mer chains. Without
+external labels, processing and visual QC do not validate chemical assignment.
+Other molecules require their own physical calibration and validation; the
+auto-calibration script is a bootstrap, not evidence of generalization.
 
 ## Quick Start
 
@@ -46,8 +50,9 @@ support, and n_max from one clean scan. See
 [**Calibration**](calibration.md) for the parameter classification (measured /
 principled / free) and why GCV is the canonical criterion (not BIC/AICc).
 
-The default `config/chitosan.toml` is the hand-tuned reference; an auto-derived
-equivalent (`config/chitosan_auto.toml`) validates the objective method.
+The default `config/chitosan.toml` is the historical hand-tuned reference.
+`config/chitosan_auto.toml` is an auto-derived comparison, not independent
+validation or a certificate of label-free calibration.
 
 For the chitosan reference set, `benchmarks/chitosan_240817.toml` records
 evaluation-only quality classes. It is **not** used by fitting code and must not

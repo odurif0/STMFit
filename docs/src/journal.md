@@ -14682,3 +14682,19 @@ The independent verifier is exercised on the older complete hybrid outputs in
 a temporary two-repeat fixture (not new inference): **22,881** assertions pass.
 Internal audit links are corrected to the actual generated Documenter anchor;
 no scientific source or job setting changes while execution is active.
+
+**First complete pass, before any grade.** Fresh counts succeed on all 146
+scans and select **863** lobes, versus **871** saved, with **ten** count changes.
+Six coincide with changed raw GCV `N_eff`; three retain it but change robust/
+upshift decisions; one retains raw/refined N but changes the support-midpoint
+branch. Six changed scans have support-length differences below 7e-6 nm;
+four change by 0.043–0.087 nm. These are descriptive, not isolated causal effects.
+One relative GCV gap moves 0.2916461→0.3034246 across the fixed 0.30 threshold;
+it is not retuned. The complete assignment, native validation, QC and maps then
+finish for all 146 scans. The second raw counting pass starts independently.
+No external grade is opened yet. Evidence: first-pass count/selection-drift
+tables in `results/hybrid_reproduction_20260924/`.
+
+The documentation index now qualifies the old 39/39 and 129/145 scores as saved
+historical results, and removes the unsupported suggestion that visual QC or
+the auto-calibration bootstrap establishes chemical accuracy or generalization.

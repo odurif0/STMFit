@@ -1,5 +1,18 @@
 # Running STMFit on the MPCDF HPC cluster
 
+Fresh hybrid reproduction uses `hpc/reproduce_hybrid_champion.sbatch`: two
+independent raw-to-prediction executions in one four-hour job, four requested
+CPUs / 16 GB. Explicitly export `STMFIT_PROJECT_DIR`, `STMFIT_INPUT_DIR`
+(containing `full146_raw/` and the frozen `templates_cc.tsv`), `STMFIT_OUTDIR`
+(new), and `JULIA_BIN` (1.13) on the `sbatch` command line. Sync committed code
+**and the ignored original Manifest**, instantiate on login, check hashes, run
+`--dry-run`, then submit once with `--no-requeue`. Each repeat has four
+single-thread counting shards and fresh base/split fits. No saved counts,
+geometry, benchmark or grade is an input. Job **11959377** (source **d2a0714**)
+is running; fetch/check both complete outputs before external grading. Historical
+calibration provenance prevents an unqualified strict-label-free promotion;
+see the journal and `results/hybrid_reproduction_20260924/report.md`.
+
 The September 24 cube-order comparison uses `hpc/compare_cube_order.sbatch`:
 one two-hour Viper job, four CPUs / 16 GB, four score shards, no retry. Explicit
 command-line exports: `STMFIT_PROJECT_DIR`, `STMFIT_CACHE_DIR` (frozen symmetric
