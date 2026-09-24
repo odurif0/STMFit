@@ -2304,6 +2304,18 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
+0aw. **Frozen-learning attribution of the observed-pixel gain.**
+The next user-authorized bounded diagnostic reuses the first complete observed-
+fit execution, all 146 scans and saved N. Capture native Fisher folds, per-scan
+normalizations and GMM/k-means parameters plus physical names, then replace
+local inputs, Fisher, normalization and classifiers in that fixed order. A
+reverse frozen-input check and two identical-input repetitions are included.
+This is an ordered counterfactual, not a unique decomposition in the presence
+of interactions or a method-selection sweep. Complete native reapplication,
+saved-state verification and external grading define completion. Preparation
+is capped at two hours from 15:41 UTC; one two-CPU Viper job at one hour.
+No image refit, count selection, threshold/calibration change or unknown25 run.
+
 0av. **Separate geometry changes from cohort re-estimation before another fit family.**
 The observed-pixel experiment gives a direct unchanged-input control: 110 scans
 have exactly identical fits, patches, descriptors and mold scores across arms,
@@ -15214,3 +15226,61 @@ that is **5,983 assertions**, excluding duplicate invocations and the separate
 the unit-assignment page is **199.77 KiB**, below its unchanged 200 KiB limit.
 `git diff --check` passes. Generated evidence remains ignored/local, with
 conclusions and headline updates committed; no push or production activation.
+
+### 2026-09-24 — Frozen-learning counterfactual: implementation and declared scope
+
+**Deliverable.** The user authorizes continuing the proposed attribution lead.
+Separate changed local observations from cohort learning on the first observed-
+fit comparison's unchanged saved tables. Done means synthetic/regression tests,
+one bounded Viper job, both identical-input repetitions retained, complete
+saved-state reapplication, local fetched evidence and external full145-own-N
+grading after verification. Preparation starts **15:41 UTC**, capped at two
+hours; compute is one **one-hour, two-CPU/16-GB job**, two one-thread repetitions,
+no requeue or retry. The completed unknown25 application stays frozen. No image
+fit, new N, physical bound, threshold, composition prior, QE or seed search.
+
+**Why.** The previous candidate improves net exact chains only in the fully
+observed group, despite unchanged local fit/patch inputs. Its two image-refit
+repetitions changed tiny upstream values and sixteen confidences. This new
+diagnostic therefore repeats exactly the same saved inputs, not another image
+fit, to distinguish cohort learning from learner variability.
+
+`config/frozen_learning.toml` declares a single six-arm comparison. Native
+control/observed banks each capture the opposite-parity Fisher vectors and
+origins, actual per-scan/per-feature centers and scales, all GMM means,
+covariances, free weights and amplitude-ordered names, and all four k-means
+views/seed centers and names. Target amplitudes never rename frozen clusters.
+The parameters are saved as full-precision TOML and loaded back before use.
+Optional capture arguments in the existing predictors leave their default
+arithmetic unchanged; k-means gains the same include-safe main guard as GMM.
+
+| Arm | Local input | Fisher | Normalization | Classifier parameters/names |
+|---|---|---|---|---|
+| control | control | control | control | control |
+| local_only | observed | control | control | control |
+| fisher | observed | observed | control | control |
+| normalization | observed | observed | observed | control |
+| observed | observed | observed | observed | observed |
+| reverse_local_only | control | observed | observed | observed |
+
+The sequence fixes the attribution order in advance. Effects may interact;
+the transition sizes are not order-independent causal contributions. Both
+native banks must exactly reapply their own probabilities and exported tables.
+On fully observed local inputs, frozen forward/reverse checks must preserve
+every final value. Any failed invariant prevents a complete experiment; no
+favorable subset is graded. Matching old exports is measured afterwards, not
+enforced by retries, and does not recover unique historical learned parameters.
+Labels remain external; the inherited calibration's benchmark provenance is
+not certified away by this diagnostic.
+
+**Preflight.** Julia 1.13 passes **3,086** new synthetic/serialization/CLI/
+saved-state assertions, **299** existing Fisher/naming regression assertions
+and **154** complete-training assertions (**3,539 total**, excluding repeats).
+Each seed's native memberships, not only the final average, must reapply.
+The initial synthetic test supplied a nonexistent placeholder path to the
+existing strict parser; it now writes an actual synthetic table. An ambiguous
+numeric-coefficient fixture expression is also made explicit. Neither repair
+changes scientific settings. Documentation builds with existing size warnings;
+assignment HTML remains 199.77 KiB. Shell syntax and no-requeue/compute-node
+guards pass. The metadata-only dry-run retains **146 scans / 863 lobes** and
+performs no learning locally. Project/Manifest hashes are unchanged.

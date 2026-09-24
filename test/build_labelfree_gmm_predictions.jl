@@ -451,7 +451,8 @@ function _default_views(records::Vector{LobeRecord})
 end
 
 function _standardized_matrix(records::Vector{LobeRecord}, features::Vector{String}; interactions::Bool=false,
-                              training_mask=nothing, normalization::String, scale_fallback::Real)
+                              training_mask=nothing, normalization::String, scale_fallback::Real,
+                              normalization_state=nothing)
     normalization in ("mean_sample_std", "median_iqr") || throw(ArgumentError("unknown GMM normalization"))
     !(scale_fallback isa Bool) && isfinite(scale_fallback) && scale_fallback > 0 ||
         throw(ArgumentError("scale fallback must be positive and finite"))
@@ -477,6 +478,7 @@ function _standardized_matrix(records::Vector{LobeRecord}, features::Vector{Stri
         for j in 1:p
             vals = raw[fit_idxs, j]
             good = filter(isfinite, vals)
+            μ, σ = NaN, NaN
             if isempty(good)
                 z[idxs, j] .= NaN
             else
@@ -495,6 +497,8 @@ function _standardized_matrix(records::Vector{LobeRecord}, features::Vector{Stri
                     z[i, j] = isfinite(raw[i, j]) ? (raw[i, j] - μ) / σ : NaN
                 end
             end
+            normalization_state === nothing || push!(normalization_state,
+                (file=file, feature=features[j], center=μ, scale=σ))
         end
     end
 
@@ -922,10 +926,13 @@ function _bootstrap_view_probability(records, X, idxs, score_idxs, opt;
 end
 
 function _view_probability(records::Vector{LobeRecord}, features::Vector{String}, opt::Options;
-                           diagnostics=nothing, training_mask=nothing, audit=nothing, view_name="")
+                           diagnostics=nothing, training_mask=nothing, audit=nothing, view_name="",
+                           normalization_state=nothing, model_state=nothing)
+    model_state !== nothing && opt.resampling != "none" &&
+        error("Model capture requires the non-resampled native path")
     eligible = validate_training_mask(opt.training_policy, training_mask, length(records))
     X, valid = _standardized_matrix(records, features; interactions=opt.interactions, training_mask,
-        normalization=opt.normalization, scale_fallback=opt.scale_fallback)
+        normalization=opt.normalization, scale_fallback=opt.scale_fallback, normalization_state)
     idxs = findall(valid .& eligible)
     score_idxs = findall(valid)
     length(idxs) >= 2 || return fill(NaN, length(records))
@@ -1011,6 +1018,9 @@ function _view_probability(records::Vector{LobeRecord}, features::Vector{String}
             " covariance_maxdiff=", maximum(abs.(covs[1] - covs[2])),
             " component_weights=", join(weights, ','), " named=", length(mean_amp) == 2)
         high_cluster = length(mean_amp) == 2 ? first(sort(collect(keys(mean_amp)); by=c -> mean_amp[c], rev=true)) : 0
+        model_state === nothing || push!(model_state,
+            (seed=seed, means=copy(means), covariances=deepcopy(covs), weights=copy(weights),
+             high_cluster=high_cluster, indices=copy(score_idxs), assignments=copy(assignments)))
         println("GMM naming seed ", seed, " mode=", opt.cluster_naming,
             " naming_means=", join((get(mean_amp,c,NaN) for c in 1:2), ','), " high_cluster=", high_cluster,
             " fit_sha256=", bytes2hex(sha256(reinterpret(UInt8,

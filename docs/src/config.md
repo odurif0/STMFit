@@ -1662,3 +1662,16 @@ repeat, not every confidence or fitted coordinate. The experiment remains
 opt-in; it does not reselect N or certify inherited physical calibration.
 No new production default follows. See the journal for the cohort-sensitivity
 finding and limitations.
+
+### Frozen-learning attribution (2026-09-24)
+
+`config/frozen_learning.toml` declares two identical-input repetitions of six
+saved-input counterfactuals, not new physical settings or classifier tuning.
+`test/diagnose_frozen_learning.jl --help` documents the strict input/settings/
+new-output interface. All native seeds, interactions, regularizers, thresholds
+and training policies come unchanged from the input assignment config, which
+must match `unit_assignment_patch_support.toml`. Learned normalizations and
+classifier/Fisher parameters are captured at full precision and reused; missing
+features retain native abstention. The declared order is local inputs, Fisher,
+normalization, classifiers, plus a reverse local-input control. There is no
+automatic best-arm selection. See the journal for the bounded job and limits.

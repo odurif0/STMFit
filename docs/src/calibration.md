@@ -1190,3 +1190,10 @@ occurs on fully observed scans with identical local inputs between arms; the
 downstream Fisher/classifier dependence on the rest of the cohort must be
 separated from local geometry quality. All 863 candidate decisions repeat,
 but sixteen confidences change by 0.4. No champion or application promotion.
+
+The subsequent frozen-learning diagnostic changes no physical calibration.
+Its captured per-scan centers/scales and amplitude-based cluster names are
+statistical transformations, not independently validated physical bounds or
+chemical labels. Holding them fixed separates a local-input intervention from
+cohort re-estimation in a declared order; it does not certify strict label-free
+calibration, independent validation or a transferable optimum.

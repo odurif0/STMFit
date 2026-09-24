@@ -294,7 +294,8 @@ function _default_views(records::Vector{LobeRecord})
     return views
 end
 
-function _standardized_matrix(records::Vector{LobeRecord}, features::Vector{String}; interactions::Bool=false)
+function _standardized_matrix(records::Vector{LobeRecord}, features::Vector{String}; interactions::Bool=false,
+                              normalization_state=nothing)
     n = length(records)
     p = length(features)
     raw = fill(NaN, n, p)
@@ -314,6 +315,7 @@ function _standardized_matrix(records::Vector{LobeRecord}, features::Vector{Stri
         for j in 1:p
             vals = raw[idxs, j]
             good = filter(isfinite, vals)
+            μ, σ = NaN, NaN
             if isempty(good)
                 z[idxs, j] .= NaN
             else
@@ -324,6 +326,8 @@ function _standardized_matrix(records::Vector{LobeRecord}, features::Vector{Stri
                     z[i, j] = isfinite(raw[i, j]) ? (raw[i, j] - μ) / σ : NaN
                 end
             end
+            normalization_state === nothing || push!(normalization_state,
+                (file=file, feature=features[j], center=μ, scale=σ))
         end
     end
 
@@ -343,8 +347,9 @@ function _standardized_matrix(records::Vector{LobeRecord}, features::Vector{Stri
     return z, valid
 end
 
-function _view_probability(records::Vector{LobeRecord}, features::Vector{String}, opt::Options)
-    X, valid = _standardized_matrix(records, features; interactions=opt.interactions)
+function _view_probability(records::Vector{LobeRecord}, features::Vector{String}, opt::Options;
+                           normalization_state=nothing, model_state=nothing)
+    X, valid = _standardized_matrix(records, features; interactions=opt.interactions, normalization_state)
     idxs = findall(valid)
     length(idxs) >= 2 || return fill(NaN, length(records))
 
@@ -360,8 +365,11 @@ function _view_probability(records::Vector{LobeRecord}, features::Vector{String}
             push!(cluster_amp[km.assignments[j]], records[i].amplitude)
         end
         mean_amp = Dict(c => mean(vals) for (c, vals) in cluster_amp if !isempty(vals))
-        length(mean_amp) == 2 || continue
-        high_cluster = first(sort(collect(keys(mean_amp)); by=c -> mean_amp[c], rev=true))
+        high_cluster = length(mean_amp) == 2 ? first(sort(collect(keys(mean_amp)); by=c -> mean_amp[c], rev=true)) : 0
+        model_state === nothing || push!(model_state,
+            (seed=seed, centers=copy(km.centers), high_cluster=high_cluster,
+             indices=copy(idxs), assignments=copy(km.assignments), converged=km.converged))
+        high_cluster == 0 && continue
         for (j, i) in enumerate(idxs)
             label = km.assignments[j] == high_cluster ? 1.0 : 0.0
             votes[i] += label
@@ -440,4 +448,4 @@ function main(args=ARGS)
     println("  views:      ", join(first.(views), ", "))
 end
 
-main()
+abspath(PROGRAM_FILE) == abspath(@__FILE__) && main()
