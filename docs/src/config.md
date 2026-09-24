@@ -1681,3 +1681,15 @@ The complete diagnostic is reproduced: the ordered path yields **678/28 →
 inputs give **680/36**. All six arms and their learned states repeat byte for
 byte, and both native branches match their earlier saved exports. No config,
 threshold or production default is selected from these external grades.
+
+### Whole-scan exclusion diagnostic (2026-09-24)
+
+`config/scan_exclusion.toml` fixes the two saved local-input arms and two
+repetitions. `test/diagnose_scan_exclusion.jl --help` documents its strict
+input/settings/arm/new-output interface. Each target file is excluded before
+Fisher and classifier learning, including amplitude naming; native inner
+lobe-parity folds, seeds, regularizers and thresholds remain unchanged.
+Per-scan normalization still uses each scan's own unlabelled features. There
+is no composition prior, missing-feature imputation, N sweep or automatic
+best-arm choice. No production configuration is changed. Incomplete fold
+execution blocks complete grading rather than enabling a favorable subset.

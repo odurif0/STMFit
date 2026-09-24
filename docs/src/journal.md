@@ -2311,8 +2311,13 @@ path. Prioritize scan-exclusion sensitivity and genuinely held-out application
 of the current learners, with no feature/threshold choice from grades. This is
 not an untested concept: earlier 35-file LOFO GMM results were mixed, while
 whole-scan Fisher and equal-scan weighting also have negative/mixed results.
-The current full146 representation and coupled learners need their own check;
-no benefit is promised and no further job is run here. Independent physical
+The current full146 representation and coupled learners need their own check.
+**IN PROGRESS (Sep 24, renewed user authorization):** complete leave-one-scan-out
+learning of both saved local-input arms, with two repetitions. Preparation,
+execution and interpretation are capped at two hours from 16:35 UTC; one
+four-CPU Viper job capped at one hour, no automatic retry. Exact native replay,
+complete saved-state verification and external full-cohort grading define done.
+No benefit is promised. Independent physical
 calibration remains a separate prerequisite for strict label-free promotion.
 
 0aw. **Frozen-learning attribution of the observed-pixel gain.**
@@ -15382,3 +15387,60 @@ The Fisher bank preserves the scoring vector and origin, not every latent
 PCA/GMM training variable. Parameter-repeat claims refer to the captured
 predictive state. Final documentation builds without deployment or size-limit
 changes; existing page/search warnings remain. `git diff --check` passes.
+
+### 2026-09-24 — Whole-scan exclusion: declared full146 learning comparison
+
+**Deliverable and done.** Under renewed user authorization, compare the two
+unchanged local-input cohorts from the first observed-fit execution using
+leave-one-scan-out learning. Retain all 146 scans, saved N and all lobe keys,
+including the unlabelled scan. Two identical-input repetitions of each arm,
+exact native reference reproduction, complete saved-state verification and
+external grading of the complete outputs define completion. Total time box:
+two hours from **16:35 UTC**; one ordinary four-CPU Viper job with a **one-hour**
+limit and no automatic retry. Unknown25 and production defaults stay frozen.
+
+**Scientific definition.** For each target file, remove all its rows before
+Fisher PCA, mixture fitting and amplitude naming. Within the remaining cohort,
+retain the native opposite-lobe-parity Fisher folds. Apply those same vectors
+to both training and target rows; rebuild predictor features using the native
+serialization and sign conventions. Fit the unchanged GMM and four k-means
+views using only the other files, and name clusters from their amplitudes only.
+Predict the complete target scan using its own per-feature local normalization.
+This last step is unlabelled within-image preprocessing, not shared learning;
+the scan cannot affect another scan's normalizer or the fitted global bank.
+It is not lobe-wise independence within a scan, or an independently collected
+test set. Existing benchmark-informed physical calibration remains inherited.
+
+`config/scan_exclusion.toml` fixes scope, both arms and repetition count.
+`test/diagnose_scan_exclusion.jl` reuses tested native capture/application
+primitives without changing any production learner. Saved Fisher indices refer
+to the sorted training-only patch table; classifier indices similarly refer to
+training-only records. Store predictive parameters, training normalizers,
+target-only normalizers, full Fisher/predictor tables and held-out predictions.
+The native full-cohort reference must match the earlier saved exports exactly.
+Unavailable learning or a missing fold blocks complete grading, not permission
+to drop that scan or substitute the native reference.
+
+`test/verify_scan_exclusion.jl` only reapplies saved parameters: input hashes,
+complete target/train partitions, all seeds and training memberships, physical
+names from training amplitudes, covariance validity, local scaling, Fisher
+scores, native replay, final vote and merged-key completeness are checked.
+Synthetic tests also change held-out pixels/amplitudes/features and require
+byte-identical learned banks; target scaling may change. No real-data learner
+runs locally. No new feature, threshold, seed choice, composition prior, image
+refit, GCV/count rule, `n_eff`, QE source or physical calibration is introduced.
+
+**Prior evidence.** The old 35-file unsupervised LOFO GMM test was mixed and
+used different representations; its label-ranked feature preferences are not
+reused. Whole-scan Fisher and equal-scan weighting also have negative/mixed
+results. This experiment tests current full146 coupled learning; it promises
+neither improved recognition nor a remedy for historical calibration provenance.
+
+**Preflight complete.** Julia 1.13 passes **11,106 assertions** on the final
+source: 3,086 frozen-learning regressions plus 8,020 exclusion assertions.
+The earlier pass had 8,018 exclusion assertions; the final pass also checks
+retained target keys and abstention for a missing feature. Both input arms
+pass the real-cohort metadata-only launcher dry-run (146 scans/863 lobes),
+without fitting or output. Shell syntax and `git diff --check` pass.
+Project and Manifest SHA256 remain unchanged. These checks are not a real-data
+recognition result; the single declared Viper comparison follows.

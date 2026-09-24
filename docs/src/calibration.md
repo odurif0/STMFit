@@ -1206,3 +1206,11 @@ frozen-input control is **680/36**. These order-dependent results do not validat
 new geometry or any physical recalibration. Exact same-input repeatability of
 captured predictive parameters is established for two executions, not calibration
 independence, generalization or stability to changed measurements.
+
+The subsequent whole-scan exclusion diagnostic removes each target from
+Fisher/PCA, mixture, k-means and amplitude-based class naming. Its own local
+normalization remains input-dependent preprocessing. This tests transfer of
+the current statistical learners to an excluded scan, not an independent
+physical recalibration or a newly collected holdout. Inherited sigma, spacing,
+overlap, support and count-selection choices are unchanged; successful replay
+or an improved external grade cannot certify their label-free provenance.
