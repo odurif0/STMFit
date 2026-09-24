@@ -72,7 +72,8 @@ end
 
 function verify(input,output)
     D.BLAS.set_num_threads(1)
-    data=D.inputs(input); S.settings(joinpath(output,"settings.toml"))
+    data=D.inputs(input); setting=S.settings(joinpath(output,"settings.toml"))
+    eligible=S.eligible_files(setting,data)
     @testset "Complete scan-exclusion saved-output verification" begin
         @test TOML.parsefile(joinpath(output,"assignment.toml"))==data.cfg
         @test D.Pipeline.selected_counts(joinpath(output,"selected_summary.tsv"))==data.counts
@@ -96,11 +97,15 @@ function verify(input,output)
             for fold in jobs
                 excluded=fold["file"]; dir=joinpath(output,fold["fold"])
                 replay=joinpath(tmp,fold["fold"]); mkdir(replay)
-                training=S.training_patches(patches,excluded)
+                training_files=isempty(excluded) ? nothing : eligible
+                training=S.training_patches(patches,excluded;training_files)
                 if !isempty(excluded)
                     @test all(k[1]!=excluded for k in training.keys)
-                    @test parse(Int,fold["training_scans"])==length(files)-1==length(unique(first.(training.keys)))
-                    @test parse(Int,fold["training_lobes"])==length(training.keys)==sum(values(data.counts))-data.counts[excluded]
+                    expected=Set(f for f in files if f!=excluded &&
+                        (!haskey(setting["selection"],"training_cohort") || data.groups[f]=="fully_observed"))
+                    @test Set(first.(training.keys))==expected
+                    @test parse(Int,fold["training_scans"])==length(expected)==length(unique(first.(training.keys)))
+                    @test parse(Int,fold["training_lobes"])==length(training.keys)==sum(data.counts[f] for f in expected)
                     @test parse(Int,fold["target_lobes"])==data.counts[excluded]
                 end
                 saved=D.load_bank(joinpath(dir,"models.toml"))
@@ -118,11 +123,12 @@ function verify(input,output)
                 D.joined(input,arm,joinpath(replay,"fisher_cv.tsv"),ft,data.cfg)
                 @test read(ft)==read(joinpath(dir,"features_predictor.tsv"))
                 pp=joinpath(input,arm,"patches_bwd17.tsv"); rec=D.head_records(ft,pp)
-                train,target=S.split_records(rec,excluded)
+                train,target=S.split_records(rec,excluded;training_files)
                 opt=D.options(ft,pp,joinpath(replay,"unused.tsv"),data.cfgpath,data.cfg)
                 verify_bank(saved.bank,train,opt,data.cfg)
                 if !isempty(excluded)
                     @test all(r.file!=excluded for r in train.g) && all(r.file!=excluded for r in train.k)
+                    @test Set(r.file for r in train.g)==Set(r.file for r in train.k)==expected
                     @test all(r.file==excluded for r in target.g) && all(r.file==excluded for r in target.k)
                 end
                 header,table=RU.lobe_table(ft)
@@ -152,8 +158,39 @@ function verify(input,output)
     nothing
 end
 
+"No grade: observation eligibility makes both arms' training banks identical."
+function verify_complete_pair(input,control,observed)
+    data=D.inputs(input)
+    @testset "Complete-observation training: cross-arm invariants" begin
+        c=S.settings(joinpath(control,"settings.toml")); o=S.settings(joinpath(observed,"settings.toml"))
+        @test c==o
+        @test get(c["selection"],"training_cohort","")=="fully_observed_fwd_bwd"
+        @test last(RU.read_table(joinpath(control,"arm.tsv")))==[Dict("arm"=>"control")]
+        @test last(RU.read_table(joinpath(observed,"arm.tsv")))==[Dict("arm"=>"observed")]
+        @test read(joinpath(control,"folds.tsv"))==read(joinpath(observed,"folds.tsv"))
+        _,folds=RU.read_table(joinpath(control,"folds.tsv"))
+        @test [r["file"] for r in folds]==sort(collect(keys(data.counts)))
+        partial_bank=nothing
+        for fold in folds
+            dirs=[joinpath(root,fold["fold"]) for root in (control,observed)]
+            banks=[read(joinpath(dir,"models.toml")) for dir in dirs]
+            @test banks[1]==banks[2]
+            if data.groups[fold["file"]]=="fully_observed"
+                for stage in ("target_features","target_scales",S.STAGES...)
+                    @test read(joinpath(dirs[1],stage*".tsv"))==read(joinpath(dirs[2],stage*".tsv"))
+                end
+            else
+                partial_bank===nothing && (partial_bank=banks[1])
+                @test banks[1]==partial_bank
+            end
+        end
+    end
+    nothing
+end
+
 function main(args=ARGS)
-    args==["--help"] && return println("verify_scan_exclusion.jl LOCAL_INPUT ONE_ARM_RUN (saved-state application only)")
+    args==["--help"] && return println("verify_scan_exclusion.jl LOCAL_INPUT ONE_ARM_RUN OR --complete-pair LOCAL_INPUT CONTROL_RUN OBSERVED_RUN (saved-state application only)")
+    length(args)==4 && first(args)=="--complete-pair" && return verify_complete_pair(args[2:end]...)
     length(args)==2 || error("Provide local input and one arm/repetition directory")
     verify(args...)
 end

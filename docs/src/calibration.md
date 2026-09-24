@@ -1221,3 +1221,14 @@ The two repetitions agree byte for byte, including captured predictive states.
 No exact chain is gained. This demonstrates sensitivity to target participation
 in unlabelled cohort learning, not evidence of label leakage in the learner or
 a physical recalibration. The historical calibration limitation remains separate.
+
+The next declared diagnostic restricts all shared learning to fully observed
+acquisitions, still excluding the target. Eligibility requires both raw views
+finite at every acquisition-grid pixel and comes from the saved observation
+audit, not known sequence, count or composition. It is not a guarantee of
+artifact-free images, complete extracted boundary patches or independent
+chemical calibration. All target scans keep their own unlabelled local
+normalization. This differs from the earlier negative complete-patch rule,
+which used eligible-row normalization and left k-means unchanged. The new
+`selection.training_cohort` policy does not modify any physical/selection
+parameter or repair inherited benchmark-informed calibration provenance.

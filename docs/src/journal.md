@@ -2304,6 +2304,18 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
+0ay. **Can fully observed training scans improve excluded-scan recognition?**
+Under renewed user authorization, test one observation-defined training cohort:
+both raw views entirely finite, target scan still excluded from Fisher and both
+final learners. Keep every target, including partial acquisitions, and its own
+unlabelled local normalization. Two repetitions of both unchanged saved-input
+arms, native reference replay, full verification and external grading define
+completion. Time box: two hours from **17:40 UTC, Sep 24**; one four-CPU Viper
+job, one-hour limit. Compare with both all-admissible exclusion (672/19, 673/29)
+and native references (678/28, 680/35), not only the weaker excluded baseline.
+This is a bounded hypothesis, not a promise of improvement or independent
+label-free calibration. Unknown25 and production remain frozen.
+
 0ax. **Measure out-of-scan influence in the current full-cohort assignment.**
 Frozen local-input changes are negative at the control learner; the subsequent
 classifier-bank replacement contributes +14 exact chains along the declared
@@ -15548,3 +15560,80 @@ without deployment or changed limits; existing size/search warnings remain.
 and all cited current headlines are updated together. The bounded loop is
 complete, while the broader independent-calibration/new-champion objective
 remains open. Generated evidence stays local and Git-ignored.
+
+### 2026-09-24 — Fully observed scans for all shared learning: declared test
+
+**Deliverable and done.** Following renewed user authorization, evaluate the
+previously proposed complete-observation training hypothesis on every saved
+target. Two repetitions of both input arms, complete native replay, saved-state
+and cross-arm verification, full external grades and a documented decision are
+required. Two-hour time box starts **17:40 UTC**; one four-CPU Viper job with a
+one-hour limit, no requeue or automatic retry. No counting/image refit,
+unknown25 execution, production change, feature sweep or threshold adjustment.
+
+**Definition fixed before grades.** In `refit_observed_geometry.jl`, acquisition
+completeness means `isfinite.(raw_fwd) & isfinite.(raw_bwd)` at every pixel of
+the shared acquisition grid, before filling. The saved audit records the count
+of this intersection and total grid size. Require positive total counts,
+0 <= observed <= total, agreement across both arms/profiles and consistency
+with exact observed/control fit reuse. This is whole-image acquisition
+eligibility, not complete support for every extracted patch: boundary patches
+can still be invalid and retain native availability rules.
+
+The resulting eligible cohort contains 110 scans/645 saved lobes; all 146 scans
+and 863 lobes remain targets, including 36 partial acquisitions/218 lobes.
+Remove the evaluated scan before learning, whether or not it is eligible.
+Complete targets train on the other 109 complete scans; partial targets train
+on all 110. Subset before Fisher PCA/mixture/naming, then subset the joined
+features before GMM and all four k-means views. Keep the native inner
+lobe-parity rule, all seeds, interactions, regularizers, physical class naming,
+per-file scaling and abstention. Target-local scaling uses its own features;
+no fallback to a training scan and no filled missing feature is introduced.
+
+`config/scan_exclusion_complete_observed.toml` declares the sole additional
+`selection.training_cohort = "fully_observed_fwd_bwd"` policy. The original
+all-admissible config and native full-cohort reference remain supported
+unchanged. The launcher runs four one-thread workers, followed by saved-state
+verification on the compute node. No grade/sequence/expected count enters this
+path. Retain the previous complete, repeated all-admissible excluded outputs as
+the comparison reference; freshly refitted native banks must reproduce their
+saved native tables exactly. All numerical parameters are unchanged.
+
+**Diagnostic predictions fixed in advance.** Both arms have exactly identical
+local input rows on complete scans. Thus every eligible learned bank must agree
+byte for byte across arms for a given target. All complete targets must also
+have identical features, local scaling and predictions across arms. Every
+partial target uses the same bank within an arm. Check these invariants before
+grading. Synthetic mutations of a partial training-ineligible scan, then of
+the excluded complete target, must not affect learned banks; retain target
+keys and abstention when a target feature becomes unavailable.
+
+**Prior evidence and limits.** The earlier complete-patch training experiment
+was negative (674/33 versus 676/34), changed eligible-row GMM normalization,
+left k-means training unchanged and lost availability. It is not rerun here:
+this test uses whole-scan eligibility for every learner, preserved target-local
+normalization and outer scan exclusion. The more recent all-admissible exclusion
+also lost exact chains. Compare against both that result and native controls;
+a recovery of a loss is not a new champion. Reused benchmark grades and
+inherited physical/count-selection calibration cannot establish strict
+label-free lineage or independent validation, whatever the measured gain.
+
+**Preflight correction, before real-data learning.** The first synthetic run
+passes 3,086 frozen-learning and 8,036 exclusion assertions, then stops when a
+new fixture mutation calls the no-overwrite table writer on its existing audit.
+Correct the fixture by writing a fresh temporary table and explicitly replacing
+only its disposable copy. Keep the production writer's protection unchanged;
+this is a test-fixture error, not a scientific failure or numerical retry.
+Both real-input metadata-only dry-runs confirm 146/863 target scans/lobes and
+110 eligible scans. Local observation/count tables independently confirm
+110/645 complete and 36/218 partial scans/lobes. The inherited acquisition
+preprocessing uses stride 1. No output directory or learner is created by these
+dry-runs. Documentation builds locally without deployment or size-limit changes.
+
+**Final preflight passes:** Julia 1.13 completes **19,195 assertions**: 3,086
+frozen-learning regressions, 8,036 all-scan exclusion assertions and 8,073
+complete-observation assertions. This includes malformed acquisition audits,
+no-overwrite/Slurm guards, retained partial targets, correct eligible counts,
+exact cross-arm banks/predictions and partial/held-out mutation invariance.
+Shell syntax and `git diff --check` pass; Project and Manifest SHA256 remain
+unchanged. The source is committed before the single declared Viper execution.

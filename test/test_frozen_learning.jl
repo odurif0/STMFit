@@ -90,7 +90,8 @@ end
     @test_throws ErrorException D.frozen_fisher(p,Dict())
 end
 
-function whole_fixture(root)
+function whole_fixture(root; fully_observed=2)
+    0<=fully_observed<=4 || error("Fixture observation count out of range")
     mkpath(root); cfg=D.RU.load_config(CFG); cp(CFG,joinpath(root,"assignment.toml"))
     _,p,full=patches_fixture(); rng=MersenneTwister(553)
     rows=Dict{String,String}[]; splits=Dict{String,String}[]; scores=Dict{String,String}[]
@@ -104,7 +105,7 @@ function whole_fixture(root)
     for arm in ("control","observed")
         dir=joinpath(root,arm); mkdir(dir); localrows=deepcopy(rows); localfull=copy(full)
         if arm=="observed"
-            for i in 25:48
+            for i in (12fully_observed+1):48
                 localrows[i]["amp_rel"]=string(parse(Float64,localrows[i]["amp_rel"])+.13randn(rng))
                 localfull[i,:].+=.1randn(rng,size(full,2))
             end
@@ -126,8 +127,8 @@ function whole_fixture(root)
     end
     files=sort(unique(first.(p.keys)))
     D.RU.write_table(joinpath(root,"selected_summary.tsv"),["filepath","N_selected"],[Dict("filepath"=>f,"N_selected"=>"12") for f in files])
-    audits=[Dict("file"=>f,"arm"=>a,"profile"=>pr,"valid"=>"true","reused_control"=>string(a=="observed" && f in files[1:2]),
-        "observed_pixels"=>f in files[1:2] ? "100" : "90","total_pixels"=>"100") for f in files for a in ("control","observed") for pr in ("gaussian","split")]
+    audits=[Dict("file"=>f,"arm"=>a,"profile"=>pr,"valid"=>"true","reused_control"=>string(a=="observed" && f in files[1:fully_observed]),
+        "observed_pixels"=>f in files[1:fully_observed] ? "100" : "90","total_pixels"=>"100") for f in files for a in ("control","observed") for pr in ("gaussian","split")]
     D.RU.write_table(joinpath(root,"refit_chunk1.tsv.fits.tsv"),["file","arm","profile","valid","reused_control","observed_pixels","total_pixels"],audits)
     root
 end

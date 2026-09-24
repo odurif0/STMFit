@@ -84,10 +84,15 @@ function inputs(root)
     all(r["valid"]=="true" for r in rows) || error("Invalid input geometry")
     groups=Dict{String,String}()
     for f in keys(counts)
+        allrows=filter(r->r["file"]==f,rows)
+        masks=[(parse(Int,r["observed_pixels"]),parse(Int,r["total_pixels"])) for r in allrows]
+        all(0<=n<=total && total>0 for (n,total) in masks) || error("Invalid acquisition pixel counts")
+        length(unique(masks))==1 || error("Acquisition counts differ across arms/profiles")
+        all(r["reused_control"]=="false" for r in allrows if r["arm"]=="control") || error("Invalid control reuse")
         rs=filter(r->r["file"]==f && r["arm"]=="observed",rows)
         reuse=all(r["reused_control"]=="true" for r in rs)
         all((r["reused_control"]=="true")==reuse for r in rs) || error("Mixed reuse")
-        all((r["observed_pixels"]==r["total_pixels"])==reuse for r in rs) || error("Mask/reuse mismatch")
+        all((n==total)==reuse for (n,total) in masks) || error("Mask/reuse mismatch")
         groups[f]=reuse ? "fully_observed" : "partial"
     end
     # Check the local-input control, before any learning or external grading.

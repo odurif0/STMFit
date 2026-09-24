@@ -1699,3 +1699,22 @@ correct, 19/145 exact** versus native control **678/28**, and **673/29** versus
 native observed **680/35**, all coverage **848/870**. No exact chain is gained;
 nine/six are lost. The diagnostic remains available, but no configuration or
 production replacement is selected from these grades. See the journal.
+
+### Observation-defined training cohort (2026-09-24)
+
+`config/scan_exclusion_complete_observed.toml` adds the explicit
+`selection.training_cohort = "fully_observed_fwd_bwd"` policy to the same
+scan-exclusion diagnostic. Only scans with both raw views finite over the full
+acquisition grid may teach Fisher/PCA, GMM, all four k-means views or amplitude
+class naming; the target itself is always removed. Eligibility is read from
+the checked acquisition audit, never benchmark metadata or a chosen file list.
+All targets remain, including partial scans; their own local feature scaling
+and native missing-feature abstention are unchanged. Full acquisition does
+not guarantee complete extracted patches near image boundaries.
+
+The original `scan_exclusion.toml` still means all native-admissible training
+scans, and the native reference always uses that full cohort. Neither config
+changes production. `hpc/diagnose_complete_observation.sbatch --dry-run` checks
+both arms without fitting. The job verifies saved banks and the expected
+cross-arm equality before any external grade. Only this fixed cohort policy
+is added; arbitrary thresholds/cohorts and partial-cohort grades are unsupported.
