@@ -628,10 +628,40 @@ function _effective_spacing_min_nm(ccfg::ChainSweepConfig)
     Adjacent axial spacings are parameterized with this lower bound. Since lateral
     offsets only increase Euclidean peak distance, this guarantees that even at
     the largest allowed sigma the pairwise overlap cannot exceed `max_overlap`.
+    The opt-in local_sigma_cap mode instead uses the minimum permitted width
+    here and enforces the same pair envelope through gap-conditioned widths.
     """
+    mode = ccfg.overlap_constraint
+    mode in ("global_sigma_max", "local_sigma_cap") || error("Unknown overlap constraint: $mode")
+    if mode == "local_sigma_cap"
+        _chain_peak_profile(ccfg) == :gaussian || error("Local sigma caps are Gaussian-only")
+        0 < ccfg.max_overlap < 1 || error("Local sigma caps require 0 < max_overlap < 1")
+        for (lo, hi) in ((ccfg.sigma_parallel_min_nm, ccfg.sigma_parallel_max_nm),
+                         (ccfg.sigma_perp_min_nm, ccfg.sigma_perp_max_nm))
+            isfinite(lo) && isfinite(hi) && 0 < lo <= hi || error("Invalid sigma bounds")
+        end
+        sigma_min = ccfg.chain_circular_sigmas ? ccfg.sigma_parallel_min_nm :
+            max(ccfg.sigma_parallel_min_nm, ccfg.sigma_perp_min_nm)
+        spacing = max(ccfg.spacing_min_nm, sqrt(-2log(ccfg.max_overlap)) * sigma_min)
+        0 < spacing <= ccfg.spacing_max_nm || error("No feasible spacing at minimum sigma")
+        return spacing
+    end
     sigma_max = ccfg.chain_circular_sigmas ? ccfg.sigma_parallel_max_nm :
         max(ccfg.sigma_parallel_max_nm, ccfg.sigma_perp_max_nm)
     return effective_spacing_min(ccfg.spacing_min_nm, ccfg.spacing_max_nm, sigma_max, ccfg.max_overlap)
+end
+
+"Per-width-type caps from adjacent AXIAL gaps, never a measured physical calibration."
+function _chain_local_sigma_caps(n::Int, deltas, ccfg::ChainSweepConfig)
+    length(deltas) == max(n-1, 0) || throw(DimensionMismatch("Wrong number of gaps"))
+    caps = fill(Inf, _chain_sigma_param_count(n, ccfg))
+    scale = sqrt(-2log(ccfg.max_overlap))
+    for i in 1:n
+        cap = min(i > 1 ? deltas[i-1]/scale : Inf, i < n ? deltas[i]/scale : Inf)
+        k = _chain_lobe_type(i, length(caps))
+        caps[k] = min(caps[k], cap)
+    end
+    return caps
 end
 
 function _chain_support_length(axisctx)
@@ -863,7 +893,21 @@ function _decode_chain(p::AbstractVector, n::Int, axisctx, ccfg::ChainSweepConfi
         j += 1
     end
     n_sigma_types = _chain_sigma_param_count(n, ccfg)
-    if ccfg.chain_circular_sigmas
+    if ccfg.overlap_constraint == "local_sigma_cap"
+        caps = _chain_local_sigma_caps(n, deltas, ccfg)
+        parhi = max.(ccfg.sigma_parallel_min_nm, min.(ccfg.sigma_parallel_max_nm, caps))
+        spar_types = [ccfg.sigma_parallel_min_nm + (parhi[k]-ccfg.sigma_parallel_min_nm)*_rsigmoid(p[j+k-1]) for k in 1:n_sigma_types]
+        j += n_sigma_types
+        spars = [spar_types[_chain_lobe_type(k, n_sigma_types)] for k in 1:n]
+        if ccfg.chain_circular_sigmas
+            sperps = spars
+        else
+            perphi = max.(ccfg.sigma_perp_min_nm, min.(ccfg.sigma_perp_max_nm, caps))
+            sperp_types = [ccfg.sigma_perp_min_nm + (perphi[k]-ccfg.sigma_perp_min_nm)*_rsigmoid(p[j+k-1]) for k in 1:n_sigma_types]
+            j += n_sigma_types
+            sperps = [sperp_types[_chain_lobe_type(k, n_sigma_types)] for k in 1:n]
+        end
+    elseif ccfg.chain_circular_sigmas
         sigma_types = [ccfg.sigma_parallel_min_nm + (ccfg.sigma_parallel_max_nm - ccfg.sigma_parallel_min_nm) * _rsigmoid(p[j+k-1]) for k in 1:n_sigma_types]
         j += n_sigma_types
         sigmas = [sigma_types[_chain_lobe_type(k, n_sigma_types)] for k in 1:n]
@@ -1236,7 +1280,24 @@ function _pack_chain_initial(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConf
         clamp(0.35 * spacing0, ccfg.sigma_perp_min_nm, ccfg.sigma_perp_max_nm)
     end
     n_sigma_types = _chain_sigma_param_count(n, ccfg)
-    if ccfg.chain_circular_sigmas
+    if ccfg.overlap_constraint == "local_sigma_cap"
+        # Decode actually encoded gaps, including sigmoid clipping and grouped
+        # spacing, then encode native initial widths wherever feasible.
+        ns = n_sigma_types * (ccfg.chain_circular_sigmas ? 1 : 2)
+        probe = vcat(p, zeros(ns))
+        _, _, ts_probe, _, _, _ = _decode_chain(probe, n, axisctx, ccfg)
+        caps = _chain_local_sigma_caps(n, diff(ts_probe), ccfg)
+        for cap in caps
+            hi = max(ccfg.sigma_parallel_min_nm, min(ccfg.sigma_parallel_max_nm, cap))
+            push!(p, _rlogit((clamp(spar0, ccfg.sigma_parallel_min_nm, hi)-ccfg.sigma_parallel_min_nm)/max(hi-ccfg.sigma_parallel_min_nm, EPS)))
+        end
+        if !ccfg.chain_circular_sigmas
+            for cap in caps
+                hi = max(ccfg.sigma_perp_min_nm, min(ccfg.sigma_perp_max_nm, cap))
+                push!(p, _rlogit((clamp(sperp0, ccfg.sigma_perp_min_nm, hi)-ccfg.sigma_perp_min_nm)/max(hi-ccfg.sigma_perp_min_nm, EPS)))
+            end
+        end
+    elseif ccfg.chain_circular_sigmas
         sigma_trans = _rlogit((spar0 - ccfg.sigma_parallel_min_nm) / max(ccfg.sigma_parallel_max_nm - ccfg.sigma_parallel_min_nm, EPS))
         for _ in 1:n_sigma_types
             push!(p, sigma_trans)
@@ -1431,6 +1492,17 @@ function _chain_overlap(feats::Vector{MolecularFeature}, spar::Float64, sperp::F
     return ov
 end
 
+"Maximum Gaussian radial-envelope value at another center, using actual pair widths."
+function _chain_pair_overlap(feats::Vector{MolecularFeature}, spars, sperps)
+    length(feats) == length(spars) == length(sperps) || throw(DimensionMismatch("Wrong widths"))
+    ov = 0.0
+    for i in 1:length(feats)-1, j in i+1:length(feats)
+        s = max(spars[i], spars[j], sperps[i], sperps[j], EPS)
+        ov = max(ov, exp(-0.5 * (_dist(feats[i], feats[j])/s)^2))
+    end
+    return ov
+end
+
 function _chain_metrics!(r::ChainModelResult, axisctx, ccfg::ChainSweepConfig)
     (!r.success || isempty(r.params)) && return
     if r.n == 0
@@ -1446,7 +1518,8 @@ function _chain_metrics!(r::ChainModelResult, axisctx, ccfg::ChainSweepConfig)
     r.max_lateral_nm = maximum(abs.(us))
     r.sigma_parallel_nm = mean(spars)
     r.sigma_perp_nm = mean(sperps)
-    r.overlap = _chain_overlap(feats, mean(spars), mean(sperps))
+    r.overlap = ccfg.overlap_constraint == "local_sigma_cap" ?
+        _chain_pair_overlap(feats, spars, sperps) : _chain_overlap(feats, mean(spars), mean(sperps))
     r.kappa_max_adj = isempty(ds) ? 1.0 : adjacent_kappa_max(ds, max.(spars, sperps))
     r.endpoint_overrun_nm = endpoint_overrun(ts, axisctx.tmin, axisctx.tmax)
     near(v, lo, hi) = (v - lo) / max(hi - lo, EPS) < 0.03 || (hi - v) / max(hi - lo, EPS) < 0.03

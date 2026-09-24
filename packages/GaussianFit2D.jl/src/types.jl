@@ -65,6 +65,9 @@ Base.@kwdef mutable struct ChainSweepConfig
     fuse_z_bwd::Bool = true
     residual_peak_snr_threshold::Float64 = 3.5
     max_overlap::Float64 = 0.60
+    # Diagnostic Gaussian-only alternative; production retains the historical
+    # worst-width spacing envelope. No overlap threshold is changed.
+    overlap_constraint::String = "global_sigma_max"
     kappa_max::Float64 = 10.0     # condition-number penalty threshold (0 = disabled)
     kappa_weight::Float64 = 1.0   # penalty strength
     peak_profile::Symbol = :gaussian  # :gaussian | :split for 2D chain fits

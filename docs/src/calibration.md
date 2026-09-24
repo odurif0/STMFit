@@ -1,5 +1,26 @@
 # Calibration: measurements, assumptions and limits
 
+## Width-conditioned counting is not recalibration
+
+The September 24 counting diagnostic keeps all historical numerical physical
+bounds. Its hypothesis is narrower than independent calibration: the existing
+gap floor protects against **maximum allowed** width even when the fitted
+lobes are narrower. With `c=sqrt(-2log(max_overlap))`, the alternative floor is
+`max(spacing_min, c*sigma_min)` and each lobe's parallel/perpendicular sigma is
+bounded above by its nearest adjacent axial gap divided by `c`, as well as the
+original maximum. Shared width types use the tightest member cap.
+
+For Gaussians this guarantees that the radial envelope evaluated at another
+center is at most the unchanged overlap limit. It is conservative about
+anisotropy and lateral displacement, not an integrated overlap probability or
+a measured STM response. The local arm uses actual pair widths for this
+diagnostic; legacy mean-width reporting stays unchanged in the default arm.
+Both arms use common pixels/support and exhaustive full-parameter GCV counting.
+The bounded two-repeat test does not run chemical assignment or promote a
+champion. Historical benchmark-informed width/support provenance remains an
+independent limitation; no apparent profile median or expected N calibrates
+this coupling. Settings and failure rules are in [configuration](config.md).
+
 ## Two-view measurement audit (2026-09-24)
 
 `test/measure_calibration.jl` now reports observed apparent widths/spacings,

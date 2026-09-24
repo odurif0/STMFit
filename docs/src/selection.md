@@ -6,7 +6,12 @@ known-count benchmark grades. Fresh reproduction cannot remove that dependence;
 strict label-free calibration and independent validation are not established.
 See [calibration](calibration.md) and [the audit](journal.md#2026-09-24-—-Fresh-hybrid-reproduction-and-historical-label-use-audit).
 
-The latest diagnostic also makes **no fit or N decision**. Restricting all
+The authorized follow-up tests width-conditioned overlap constraints with two
+exhaustive Gaussian GCV counting arms and two repetitions. Physical numbers,
+pixels and support stay fixed. It is counting-only, not independent physical
+calibration or a chemical champion; see [configuration](config.md#Diagnostic-width-conditioned-counting).
+
+The completed learning diagnostic makes **no fit or N decision**. Restricting all
 shared learning to fully observed scans, still excluding the evaluated scan,
 gives control **670/870 correct, 16/145 exact** and observed inputs **670/15**.
 Native references are **678/28**, **680/35**; all-admissible exclusion gives

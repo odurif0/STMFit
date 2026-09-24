@@ -2403,6 +2403,12 @@ counting/default or unknown25 change; strict calibration provenance remains open
 > `journal_archive.md`.
 
 0at. **Can independent calibration recover performance without label-informed rules?**
+    → **FOLLOW-UP AUTHORIZED, Sep 24:** first isolate the worst-width spacing
+    envelope from genuine physical exclusion, using Gaussian width caps
+    conditional on neighboring fitted axial gaps. All numeric physical bounds
+    remain unchanged; this cannot repair their historical provenance. Compare
+    two exhaustive GCV counting arms twice on the full raw cohort, then grade
+    counts externally. No chemical assignment or promotion is implied.
     → **MEASUREMENT AUDIT COMPLETE; PHYSICAL CALIBRATION STILL OPEN (Sep 24)**.
     Source **76934a6**, job **11962552**, **0:0 in 55s**: all 146 scans / 292
     views. Legacy widths/spacings use defaults on **245/292 and 261/292** views.
@@ -15844,3 +15850,70 @@ warnings remain. `git diff --check` passes. All changed tracked files in this
 resume are result documentation only; scientific source stays frozen at
 **d83e4ac**, and generated evidence remains Git-ignored. Conclusions and current
 headlines are committed together; no validated work is left uncommitted.
+
+### 2026-09-24 — Width-conditioned spacing: bounded counting comparison
+
+**Deliverable and done definition.** The user authorizes the independent-
+calibration/counting direction. First test a concrete model-domain restriction,
+not another benchmark-selected physical bound. Preparation starts 19:21 UTC,
+capped at three hours; one Viper job, four requested CPUs / 16 GB, four hours,
+no requeue or automatic retry. Done: synthetic constraint/default regressions,
+two full146 raw counting repetitions of both arms, complete fetched candidate
+and selected-state checks, external full145 count grades, and a committed
+decision. This counting-only experiment produces no chemical assignment or
+champion promotion. Unknown25, production defaults and physical numbers stay
+frozen; no new measurement-derived calibration is claimed.
+
+**Hypothesis before computation.** The current axial gap floor uses the maximum
+allowed sigma even if fitted lobes are narrower. Instead, allow gaps down to
+the existing spacing floor (or the minimum-width overlap floor if larger), and
+cap each Gaussian width by its smallest adjacent axial gap divided by
+`sqrt(-2log(max_overlap))`. Shared width types take the tightest member cap.
+This guarantees the same radial Gaussian overlap envelope for every actual
+pair without assuming every lobe has the widest permitted sigma. It remains
+conservative about lateral offsets and anisotropy; it is not an integrated
+overlap probability, STM tip model, new physical measurement or exact complete
+feasible domain. The opt-in Gaussian-only arm reports actual-pair envelope
+overlap, not the old mean-width proxy. The legacy arm is unchanged.
+
+Both arms use exactly the same native fused pixels, axis and support. Each
+exhaustively fits all feasible N in the existing 2..14 numerical range, then
+selects minimum valid full-parameter GCV across circular and refined elliptical
+fits. No BIC early stop, support-midpoint/hybrid rule, expected N, benchmark
+membership, known sequence, class prior or saved count enters inference. Both
+repetitions and all unsuccessful candidates are retained; unavailable whole
+scan selection blocks grading, not the remaining inference or failure report.
+This paired exhaustive baseline is not a replay of the intelligent hybrid
+production selector. The experiment changes the domain/coordinates and the
+optimizer's trajectory together, not a uniquely causal estimate of calibration.
+Each raw scan is preprocessed once, then both fresh-fit repetitions use those
+same saved pixels; no fit/parameters are reused between repetitions. Arm order
+is reversed on the second pass. This checks fresh-fitting repeatability at
+fixed inputs, not independent re-acquisition or a second preprocessing audit.
+
+Sigma/spacing/support/overlap values retain their documented historical
+benchmark-informed lineage. Deriving the new coupling without labels does not
+erase that limitation. No bound or threshold is chosen after seeing grades,
+and no optimizer, acquisition preprocessing, residual feature, classifier,
+DFT source or unknown-chain result is changed by this experiment.
+
+**Acceptance declared before grades.** Retain the local-width arm as a counting
+lead only if both complete repetitions improve exact-N agreement against their
+matched exhaustive controls, without decreasing within-one agreement or
+increasing summed absolute count error. Report every repeated decision change;
+do not pick the better repetition. Even passing these external criteria cannot
+promote a chemical or strict-provenance champion. Failed criteria end this
+comparison without a bound, threshold, solver-budget or support sweep.
+
+**Preflight checks.** The Gaussian package passes **18,104** assertions:
+534 existing regressions and 17,570 new width/cap/pair-envelope checks, including
+grouped widths, spacing modes, rotated axes, extreme parameters and circular
+nesting. The small synthetic pipeline and saved-output verifier pass **3,340**
+more assertions (**21,444 total**), including complete candidate accounting,
+raw missing-observation counts, independent Gaussian residual/GCV calculation,
+strict label/saved-count CLI exclusion and retained unavailable selections.
+An initial ambiguous Julia broadcast syntax in the verifier is corrected before
+these passing checks; its failed log is preserved. These fixtures validate the
+implementation, not performance or physical calibration on STM acquisitions.
+All local metadata checks see 146 raw scans. Viper access is functional; the
+user queue is empty. No new real-data fit or benchmark grade has run yet.

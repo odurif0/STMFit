@@ -1,0 +1,18 @@
+# Bounded counting-only diagnostic. Physical values come unchanged from the
+# explicitly supplied original count config; this is NOT a new calibration.
+[model]
+arms = ["global_sigma_max", "local_sigma_cap"]
+profile = "gaussian"
+native_elliptical_maxiter = 50
+repetitions = 2
+n_min = 2
+n_max = 14
+
+[selection]
+policy = "exhaustive_valid_full_parameter_gcv"
+tie_break = "smaller_N_then_elliptical"
+failure_policy = "retain_all_candidates_no_partial_grade"
+
+[preprocessing]
+policy = "unchanged_native_fused"
+shared_data = true

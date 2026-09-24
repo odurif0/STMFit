@@ -1,5 +1,25 @@
 # Configuration Reference
 
+## Diagnostic width-conditioned counting
+
+`config/local_sigma_counting.toml` belongs only to
+`test/diagnose_local_sigma_counting.jl`, not the production batch driver. It
+declares two Gaussian arms (`global_sigma_max`, `local_sigma_cap`), two raw
+repetitions, the existing numerical range 2..14 and 50-iteration elliptical
+refinement. Both arms exhaust the feasible range and select minimum valid
+full-parameter GCV; exact ties prefer smaller N, then elliptical. Failed
+candidates remain visible; an unavailable scan blocks external grading.
+
+The engine's opt-in `ChainSweepConfig.overlap_constraint="local_sigma_cap"`
+couples width ceilings to neighboring axial gaps. Every numeric physical bound
+comes unchanged from the separately supplied `--count-config`; this is not a
+measurement-derived calibration. The default `"global_sigma_max"` preserves
+the historical worst-width gap floor and arithmetic. Local caps reject split
+profiles, invalid overlap fractions and incompatible minimum widths/spacings.
+No assignment, hybrid guard, 1D initializer, expected count or benchmark input
+is accepted by the diagnostic. Native imputation and support remain unchanged.
+See [calibration](calibration.md#Width-conditioned-counting-is-not-recalibration).
+
 ## Diagnostic calibration measurements
 
 `config/calibration_measurements.toml` configures only `measure_calibration.jl`;
