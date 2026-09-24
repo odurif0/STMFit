@@ -6,15 +6,19 @@ known-count benchmark grades. Fresh reproduction cannot remove that dependence;
 strict label-free calibration and independent validation are not established.
 See [calibration](calibration.md) and [the audit](journal.md#2026-09-24-—-Fresh-hybrid-reproduction-and-historical-label-use-audit).
 
-The latest complete scan-exclusion diagnostic also makes **no fit or N
-decision**. Excluding each target before Fisher and both classifier learners
-degrades control **678/28 → 672/19** and observed inputs **680/35 → 673/29**,
-with coverage **848/870** in all cases. Two repetitions are byte-identical,
-captured predictive states included; **446,680** saved-state assertions pass
-before grading. No exact chain is gained; nine/six are lost. Retain this as a
-sensitivity check, not a recognition improvement or new champion. Counts,
-GCV, guards, `n_eff`, physical calibration and unknown25 remain unchanged.
-See [journal](journal.md), `results/scan_exclusion_20260924/conclusion.md`.
+The latest diagnostic also makes **no fit or N decision**. Restricting all
+shared learning to fully observed scans, still excluding the evaluated scan,
+gives control **670/870 correct, 16/145 exact** and observed inputs **670/15**.
+Native references are **678/28**, **680/35**; all-admissible exclusion gives
+**672/19**, **673/29**. Coverage remains **848/870**. Both repetitions and
+captured predictive states are byte-identical; **449,324** saved-output checks
+pass before grading. No exact chain is gained versus native; 12/20 are lost.
+Reject this as a replacement. With 20 missing control positions at these
+fixed counts, even eliminating all abstentions permits only **850/870** coverage,
+below historical **854/870**. This external count audit must not become a
+known-N input to selection. GCV, guards, `n_eff`, physical calibration, count
+rules and unknown25 are unchanged. See [journal](journal.md),
+`results/complete_observation_20260924/conclusion.md`.
 
 The earlier frozen-learning diagnostic makes **no fit or N decision**. Its
 ordered local/Fisher/normalization/classifier replacements give **678/28 →

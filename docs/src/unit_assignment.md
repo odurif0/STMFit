@@ -7,36 +7,31 @@ Raw repetitions and fixed-N diagnostics **do not justify champion promotion**:
 | Profile | Exact N /145 | Correct /870 | Exact chains /145 | Coverage /870 |
 |---|---:|---:|---:|---:|
 | Historical | 106 | 677 | 36 | 854 |
-| Saved hybrid counts, fresh assignment | 129 | 694 | 43 | 855 |
-| Fresh counts and assignment, both repeats | 123 | 679 | 29 | 848 |
-| Observed-only at saved N, both repeats | 123 | 680 | 35 | 848 |
-| Scan-excluded control, both repeats | 123 | 672 | 19 | 848 |
-| Scan-excluded observed, both repeats | 123 | 673 | 29 | 848 |
+| Saved hybrid snapshot | 129 | 694 | 43 | 855 |
+| Raw reruns | 123 | 679 | 29 | 848 |
+| Observed inputs | 123 | 680 | 35 | 848 |
+| Excluded control | 123 | 672 | 19 | 848 |
+| Excluded observed | 123 | 673 | 29 | 848 |
+| Complete-only control | 123 | 670 | 16 | 848 |
+| Complete-only observed | 123 | 670 | 15 | 848 |
 
-Scan exclusion loses nine/six exact chains versus native **678/28** and
-**680/35**, gaining none. Both repeats are byte-identical; **446,680** checks
-pass before grading. Reverse frozen inputs give **680/36**, not promoted.
-Saved 694/43 is not reproduced end to end. All diagnostic N remain fixed.
+Complete-only learning excludes the target and loses 12/20 exact chains versus
+native **678/28**, **680/35**, gaining none. Both repeats are byte-identical;
+**449,324** checks pass. Saved 694/43 lacks end-to-end reproduction; reverse
+frozen 680/36 is not promoted. Diagnostic N stay fixed.
 
-Inference reads no labels; historical calibration/rules used known-count
-grades. Strict label-free provenance and independent validation remain open.
-Unknown25 stays frozen. See [journal](journal.md) and
-`results/scan_exclusion_20260924/conclusion.md`. Older findings are dated.
+Inference reads no labels; inherited calibration used benchmark grades.
+Strict label-free lineage remains open. Unknown25 stays frozen.
+See [journal](journal.md), `results/complete_observation_20260924/conclusion.md`.
 
 ## Motivation
 
-Chitosan is a (1,4)-β-linked polysaccharide composed of two monomer units:
-**GlcNAc** (N-acetyl-glucosamine) and **GlcN** (glucosamine). The fitted
-Gaussian lobes model individual units. Counting (`N_selected`) and diagnostic
-chemical assignment remain separate tasks.
-
-The goal is to assign each fitted lobe a type (0 = GlcN, 1 = GlcNAc) to produce
-a **deacetylation map** per chain: the ordered sequence of GlcNAc/GlcN along
-the molecular backbone.
+Chitosan is a (1,4)-β-linked polysaccharide of **GlcNAc** (N-acetyl-glucosamine)
+and **GlcN** (glucosamine). Assigning fitted lobes 0 = GlcN or 1 = GlcNAc gives
+an ordered deacetylation map. Counting (`N_selected`) and diagnostic chemical
+assignment remain separate tasks.
 
 ## Label-free constraint (extended)
-
-The same label-free rule that applies to N also applies to unit assignment:
 
 - The **ground-truth/control sequence** for the 6mer benchmark is `NKNNKN`, encoded
   as `010010` or `101101` depending on the 0/1 identity convention, across the
@@ -55,8 +50,7 @@ The same label-free rule that applies to N also applies to unit assignment:
 
 ## Pipeline overview
 
-The early phase roadmap is historical, not the status of the reconstructed
-workflow documented below. Its diagnostic entrypoints remain:
+Historical diagnostic entrypoints, not the current workflow status:
 
 - Phase 0: `grade_unit_assignment.jl`, external accuracy/confusion/edit distance;
   physical and explicitly supervised oracle conventions across four alignments.
@@ -70,10 +64,8 @@ workflow documented below. Its diagnostic entrypoints remain:
 - Phase 2a: `score_connected_mold_templates.jl` and `refine_geometric_mold.jl`;
   connectivity/orientation and local acetyl transforms, never composition.
 
-The original later directions were GCV comparison of one/two width types and
-free/alternating spacing, two-component GMM with physical class naming,
-supervised held-out template validation, and DFT LDOS-derived templates. Their
-subsequent implementations and measured limits appear in the dated sections.
+Later work tested GCV width/spacing alternatives, physically named GMMs,
+supervised held-out templates and DFT LDOS templates; see the dated results.
 
 ## Split-width asymmetry test (Phase 1e)
 

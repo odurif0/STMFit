@@ -1222,7 +1222,7 @@ No exact chain is gained. This demonstrates sensitivity to target participation
 in unlabelled cohort learning, not evidence of label leakage in the learner or
 a physical recalibration. The historical calibration limitation remains separate.
 
-The next declared diagnostic restricts all shared learning to fully observed
+The subsequent diagnostic restricts all shared learning to fully observed
 acquisitions, still excluding the target. Eligibility requires both raw views
 finite at every acquisition-grid pixel and comes from the saved observation
 audit, not known sequence, count or composition. It is not a guarantee of
@@ -1232,3 +1232,12 @@ normalization. This differs from the earlier negative complete-patch rule,
 which used eligible-row normalization and left k-means unchanged. The new
 `selection.training_cohort` policy does not modify any physical/selection
 parameter or repair inherited benchmark-informed calibration provenance.
+
+Its completed, repeated comparison is negative: **670/870 correct, 16/145
+exact** on control inputs and **670/15** on observed inputs, versus native
+**678/28**, **680/35**, at the same **848/870** coverage. No native exact chain
+is gained. Acquisition completeness alone does not improve this learning
+cohort, nor validate physical calibration. Counts remain fixed: their 20
+missing benchmark positions cap abstention-free coverage at **850/870**, below
+historical **854/870**. This external diagnostic motivates independently
+justified calibration/counting, not selecting parameters from expected N.

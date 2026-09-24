@@ -1,15 +1,18 @@
 # Chitosan Benchmark and 10–20mer Runbook
 
-Latest complete scan-exclusion test is **negative and reproduced**: control
-**678/28 → 672/19** and observed inputs **680/35 → 673/29** (correct /870,
-exact /145), all coverage **848/870**. Exclusion occurs before Fisher and both
-classifiers, including class naming; target-only normalization is retained.
-No exact chain is gained; nine/six are lost. All scientific outputs and captured
-predictive states repeat byte for byte. Source **236999b**, job **11964835**,
-**0:0 in 15m04s**, **446,680** saved-state assertions before external grading.
-No champion/count/default/unknown25 change, and no certification of inherited
-calibration. See [journal](journal.md),
-`results/scan_exclusion_20260924/conclusion.md`.
+Latest complete-acquisition training test is **negative and reproduced**:
+control **670/870 correct, 16/145 exact**, observed inputs **670/15**, versus
+native **678/28**, **680/35** and all-admissible exclusion **672/19**, **673/29**.
+All cover **848/870**. Only 110 fully observed scans may teach Fisher and both
+classifiers; the evaluated scan is excluded, while all 146 targets retain
+their own normalization. No exact chain is gained versus native; 12/20 are
+lost. Both repetitions' outputs and captured states are byte-identical.
+Source **d83e4ac**, job **11965427**, **0:0 in 10m45s**, **449,324** saved-output
+assertions before grading. SSH restoration allowed complete retrieval without
+resubmission. No champion/count/default/unknown25 or calibration change.
+Fixed counts cap even abstention-free coverage at 850/870, below historical
+854/870. See [journal](journal.md),
+`results/complete_observation_20260924/conclusion.md`.
 
 Earlier saved-input diagnostic: the ordered frozen-learning path gives
 **678/28 → 671/25 → 665/17 → 674/21 → 680/35**, replacing local inputs, Fisher,

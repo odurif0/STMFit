@@ -1718,3 +1718,11 @@ changes production. `hpc/diagnose_complete_observation.sbatch --dry-run` checks
 both arms without fitting. The job verifies saved banks and the expected
 cross-arm equality before any external grade. Only this fixed cohort policy
 is added; arbitrary thresholds/cohorts and partial-cohort grades are unsupported.
+
+The completed comparison is negative: complete-only control **670/870 correct,
+16/145 exact** and observed **670/15**, versus native **678/28**, **680/35** and
+all-admissible exclusion **672/19**, **673/29**. All cover **848/870**; no exact
+chain is gained versus native. Both repetitions' files and learned banks agree
+byte for byte, with **449,324** saved-output checks before external grading.
+Reject this opt-in training policy as a replacement; no production config,
+parameter, threshold or seed changes follow. See the journal for full losses.

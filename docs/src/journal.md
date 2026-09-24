@@ -2315,14 +2315,20 @@ job, one-hour limit. Compare with both all-admissible exclusion (672/19, 673/29)
 and native references (678/28, 680/35), not only the weaker excluded baseline.
 This is a bounded hypothesis, not a promise of improvement or independent
 label-free calibration. Unknown25 and production remain frozen.
-**INCOMPLETE, ACCESS BLOCKED (Sep 24, 18:22 UTC):** tested source **d83e4ac**
-is committed; job **11965427** was submitted once and started. At the last
-confirmed poll (18:08:16 UTC), one worker had completed 146/146 folds, the
-others were at 106, 138 and 135. Shared SSH sessions then disappeared and the
-gate refused noninteractive authentication. Final Slurm state, complete
-verification, repetition equality, retrieval and grades are **not established**.
-Do not resubmit or promote; restore the user's authenticated connection and
-fetch the existing job. The two-hour loop is not claimed complete.
+**COMPLETE; NEGATIVE (Sep 24):** after user-restored SSH access, retrieve the
+existing job **11965427**, **0:0 in 10m45s**, source **d83e4ac**; no resubmission.
+Both repetitions and all captured predictive states are byte-identical;
+**449,324** saved-output checks pass before grading. Complete-only learning
+gives control **670/870 correct, 16/145 exact** and observed **670/15**, coverage
+**848/870**. Native references are **678/28**, **680/35**; no exact chain is gained
+against them, 12/20 are lost. The policy also loses versus all-admissible
+exclusion **672/19**, **673/29**. All 4,748 outputs/logs plus Slurm log are local.
+Reject replacement; no champion/default, count, calibration or unknown25 change.
+With these fixed counts, the 20 missing positions cap abstention-free coverage
+at **850/870**, below historical **854/870**. Prioritize independent calibration
+and counting/observability over another label-ranked learner/cohort sweep; do
+not turn this external count audit into expected-N input. No further job is
+launched in this completed loop. The broader champion objective remains open.
 
 0ax. **Measure out-of-scan influence in the current full-cohort assignment.**
 Frozen local-input changes are negative at the control learner; the subsequent
@@ -15705,3 +15711,136 @@ there is no new result, optimum, champion, production or unknown25 change.
 The local interruption documentation builds successfully with Julia 1.13,
 without deployment or changed size limits; existing warnings remain.
 `git diff --check` passes. This local check does not establish remote completion.
+
+### 2026-09-24 — Retrieved complete-observation comparison: reproduced losses
+
+**Access restored; resume without resubmission.** The user confirms restored
+SSH access. At **18:42 UTC**, resume retrieval of existing job **11965427**.
+An initial `squeue -j` returns "Invalid job id" because the job is no longer
+active; `sacct` confirms **COMPLETED, 0:0 in 10m45s**, ending **20:11:57 CEST**
+(18:11:57 UTC), before the retrieval interruption. Submission/start remain
+20:00:12/20:01:12 CEST, node `vipc2257`, four requested/eight allocated logical
+CPUs, 16 GB; batch MaxRSS **3,326,840 KiB**. No retry, requeue, restart, extra
+learning or new job is needed. The user's Slurm queue is empty at retrieval.
+
+All **4,748** regular outputs/logs plus the Slurm log are local under
+`results/complete_observation_20260924/` and content-verified by rsync checksums.
+Each repetition has **2,372** scientific files; complete directory comparisons
+show byte equality. All **726** tracked remote source blobs still match
+**d83e4ac** after execution. Project/Manifest SHA256 are unchanged. Local
+input hashes, settings, all 863 target keys and availability are checked again.
+Both native directories, including all tables and captured predictive banks,
+exactly match the previous all-admissible exclusion experiment. No source or
+parameter is changed in response to the result.
+
+**Whole-output verification before grading.** Each of four arm/repetition
+workers passes **111,962 saved-state assertions**, **447,848** total, on the
+compute node. Both pair verifications pass **738** additional assertions each:
+**449,324** saved-output checks overall. These checks reapply saved parameters,
+not refit learners. Every corresponding learned bank agrees across arms; all
+complete target features/scaling/predictions agree across arms; every partial
+target uses the same bank within an arm. Thus the observation-defined
+invariants declared before execution hold on the complete cohort, not just
+the earlier spot checks. Original preflight remains **19,195** passing
+synthetic/regression assertions; no scientific code has changed since it.
+
+For each candidate arm/repetition, all **292 Fisher mixture fits** report
+convergence in **6–25 iterations**, and all **11,680 k-means fits** converge.
+Downstream GMM EM termination flags are not captured; no convergence claim
+is made for them or for the earlier image fits. Fisher banks preserve scoring
+vectors/origins and fold indices, not all latent PCA/GMM training variables.
+
+**Complete external grade, two identical repetitions.** All six full145 own-N
+profiles are graded only after verification. Grade tables match byte for byte
+between repetitions; fresh native and saved exclusion grades also match the
+earlier complete report exactly:
+
+| Profile | Correct /870 | Exact /145 | Coverage /870 |
+|---|---:|---:|---:|
+| Native control | 678 | 28 | 848 |
+| All-admissible exclusion, control | 672 | 19 | 848 |
+| Complete-only exclusion, control | **670** | **16** | **848** |
+| Native observed inputs | 680 | 35 | 848 |
+| All-admissible exclusion, observed | 673 | 29 | 848 |
+| Complete-only exclusion, observed | **670** | **15** | **848** |
+
+Every profile retains **123/145 exact N**, 855 benchmark predictions, 20
+missing positions, five extra lobes and two aligned abstentions. All 146
+scientific scans/863 lobes remain, with **860/863** final decisions available;
+the unlabelled partial scan is not dropped. No extra abstention explains the
+loss. There is no oracle class convention or favorable-repetition choice.
+
+| Complete-only profile versus reference | Scan gains /losses /ties | Net correct | Exact gains /losses | Grade alignment changes |
+|---|---:|---:|---:|---:|
+| Control vs excluded control | 8 /10 /127 | -2 | 2 /5 | 1 |
+| Control vs native control | 9 /15 /121 | -8 | **0 /12** | 0 |
+| Observed vs excluded observed | 16 /19 /110 | -3 | 0 /14 | 1 |
+| Observed vs native observed | 19 /29 /97 | -10 | **0 /20** | 3 |
+| Observed vs complete-only control | 6 /6 /133 | 0 | 2 /3 | 1 |
+
+All **725** paired rows are retained. Two exact-chain gains against the weaker
+excluded control are not gains against native control. Alignment chosen by
+external grading is not independently verified spatial monomer correspondence.
+
+Raw-observation-defined strata, complete / partial correct-and-exact, are:
+
+| Profile | Fully observed (110 scans) | Partial (35 labelled scans) |
+|---|---:|---:|
+| Native control | 508 /20 | 170 /8 |
+| Excluded control | 507 /15 | 165 /4 |
+| Complete-only control | **503 /10** | **167 /6** |
+| Native observed | 513 /27 | 167 /8 |
+| Excluded observed | 508 /22 | 165 /7 |
+| Complete-only observed | **503 /10** | **167 /5** |
+
+The complete-only arms' shared 503/10 follows the verified unchanged local
+inputs and banks. Under their identical learned bank, partial-input changes
+give zero net correct gain and one net exact-chain loss. This does not isolate
+individual background, geometry, patch or local-normalization contributions.
+
+Versus previous exclusion, final decisions change **20/863 control** and
+**40/863 observed** lobes (complete/partial splits **18/2**, **33/7**); versus
+native, **28/863 (25/3)** and **54/863 (44/10)**. GMM/k-means change totals are
+**13/21**, **54/9** versus exclusion and **21/8**, **78/8** versus native.
+These are sensitivity counts, not corrections or calibrated probabilities.
+
+**Decision.** Reject complete-acquisition-only learning as a recognition-
+improving replacement. Acquisition completeness alone is not sufficient to
+improve this training cohort. Do not infer that partial scans are intrinsically
+better or that all quality-aware learning is refuted: eligible sample size and
+population also change. Neither historical **677/36/854** nor saved,
+unreproduced-end-to-end **694/43/855** is surpassed. Keep all losses; no new
+champion/default, threshold, seed, physical bound, count rule, QE source or
+unknown25 change. Eligibility and exclusion use no labels, but inherited
+benchmark-informed calibration/count-selection lineage remains unresolved.
+This repeatedly used development benchmark is not independent validation,
+and identical-input replay is not robustness to changed measurements/platforms.
+
+**Next priority, not a new submitted campaign.** With 20 missing control
+positions at the fixed saved N, removing both aligned abstentions could raise
+coverage only to **850/870**, below historical **854/870**. Classifier-only
+changes cannot remove that count/observability deficit. Independent physical
+calibration and counting deserve priority; no expected N or benchmark-selected
+threshold may be introduced as a shortcut. Any next comparison needs its own
+approved scope/time box. This loop is now complete within its original
+two-hour window; the broader optimum/new-champion objective remains open.
+
+Evidence: `results/complete_observation_20260924/conclusion.md`, both complete
+benchmark reports, all five paired tables, `observation_strata.tsv`,
+`decision_changes.tsv`, `local_pregrade_checks.log` and the retrieved Viper logs.
+Prediction SHA256 are `d00522145a7e9b846588fd11314f5ca634c6c723837d3753e240202835ca0c09`
+(control) and `70f3e9536defbf40afaeb733229f1220a236f2c4b299b14ab1ce07108292c7ab`
+(observed). Native bank hashes remain the earlier `2bedf24d...` / `07278d65...`.
+
+The first final documentation build exceeds the assignment-page limit by
+**6 bytes** (204,806 versus 204,800). Condense its historical introduction
+without removing benchmark rows or scientific invariants; do not raise the
+size limit. This documentation-only repair changes no scientific source,
+parameter, prediction, grade or experiment decision.
+
+The condensed documentation build passes without deployment or changed limits;
+the assignment page is **204,500 bytes**, below 204,800. Existing size/search
+warnings remain. `git diff --check` passes. All changed tracked files in this
+resume are result documentation only; scientific source stays frozen at
+**d83e4ac**, and generated evidence remains Git-ignored. Conclusions and current
+headlines are committed together; no validated work is left uncommitted.

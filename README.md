@@ -4,16 +4,20 @@ Analysis pipeline for STM images of molecular chains (chitosan on Cu(100) and
 similar systems). Detects and fits a chain-of-Gaussians model to count the
 number of monomer units (lobes) per chain from the images.
 
-**Latest September 24: complete scan exclusion is reproducibly negative.**
-Excluding each target from Fisher, GMM, k-means and class naming gives
-**672/870 correct, 19/145 exact chains** versus control **678/28**, and
-**673/29** versus observed-pixel **680/35**. Coverage stays **848/870**;
-no exact chain is gained, nine/six are lost. Both repetitions' outputs and
-captured predictive parameters are byte-identical. Source **236999b**, Viper
-**11964835**, **0:0 in 15m04s**; **446,680** saved-state checks pass before
-complete external grading. No new champion, count/default or unknown25 change;
-inherited calibration is still not certified strictly label-free. See
-[conclusion](results/scan_exclusion_20260924/conclusion.md) and
+**Latest September 24: complete-acquisition training is reproducibly negative.**
+Training Fisher, GMM and k-means only on fully observed scans, still excluding
+the target, gives **670/870 correct, 16/145 exact chains** on control inputs and
+**670/15** on observed-pixel inputs. Native references are **678/28** and
+**680/35**; previous all-admissible exclusion gives **672/19** and **673/29**.
+All cover **848/870**. No exact chain is gained versus native; 12/20 are lost.
+Both repetitions' outputs and captured predictive parameters are byte-identical.
+Source **d83e4ac**, Viper **11965427**, **0:0 in 10m45s**; **449,324** saved-output
+checks pass before complete external grading. All outputs are local after the
+user restored SSH access; no job was resubmitted. No champion/default/count or
+unknown25 change. Inherited calibration remains uncertified as strictly
+label-free. With these fixed counts, even abstention-free coverage is capped
+at **850/870**, below historical **854/870**. See
+[conclusion](results/complete_observation_20260924/conclusion.md) and
 [journal](docs/src/journal.md).
 
 **Earlier September 24: frozen learning isolates cohort effects, without a new champion.**
