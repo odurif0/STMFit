@@ -1623,3 +1623,35 @@ corrected images, masks and estimator diagnostics for saved-only checks. Load
 only trusted files using Julia 1.13. No missing sample is turned into an observed
 one. The existing native reader incidentally preprocesses auxiliary Current
 arrays; the comparison discards them and computes no Current evidence.
+
+## Observed-pixel fixed-N comparison (2026-09-24)
+
+`config/observed_fit.toml` declares one opt-in experiment, invoked with
+`test/run_observed_fit_comparison.jl --help`. Physical settings still come from
+`config/chitosan.toml`; assignment settings and templates are unchanged.
+The saved predicted-N summary is required and must match the entire raw cohort.
+There is no N sweep, expected-N input or composition prior.
+
+The control uses native median filling before background subtraction. The
+candidate uses `STMSXMIO.preprocess_observed_channel` for finite-only plane/row
+correction and complete-window smoothing. Both actual directions are required.
+Only common observed samples enter fusion; the existing finite-aware ROI,
+axis/tube construction, physical bounds and native circular-to-elliptical
+Gaussian/split fitting are used. Full-parameter GCV chooses the valid family.
+The native noise formula is retained, evaluated on finite smoothed samples.
+The numeric rank check `plane_rank_rtol = 1e-12` is the existing metrology
+setting, not a chemical threshold or an effective sample-size estimate.
+
+For downstream patches only, the runner writes a copy of the physical config
+with `[preprocessing] missing_pixel_policy = "observed_only"` and the explicit
+rank tolerance. This routes both patch extractors through the same background
+correction used by the fit. Omission retains `"median_fill"`; unknown policies
+or an observed-only policy without a valid explicit rank tolerance are errors.
+The ordinary counting driver is not connected to this opt-in policy.
+
+Fully observed inputs must give exactly identical fit data and reuse the same
+control fit in both arms. Every partially observed input is retained, including
+failed fits; incomplete geometry blocks both downstream assignments and any
+partial benchmark. Native RSS/GCV values have arm-specific supports. Additional
+RSS comparisons retain exactly common observed pixels and each arm's removed
+background; lower RSS is not evidence of better chemical recognition.

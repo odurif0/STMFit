@@ -20,7 +20,7 @@ using .ScriptUtils: _parse_f, _read_tsv
 
 include(joinpath(@__DIR__, "lib", "patch_preprocessing.jl"))
 using .PatchPreprocessing: PreprocessingSettings, load_patch_preprocessing,
-    load_patch_residual_filter, patch_residual
+    load_patch_residual_filter, patch_residual, preprocess_patch_channel
 include(joinpath(@__DIR__, "lib", "patch_acquisition.jl"))
 using .PatchAcquisition
 include(joinpath(@__DIR__, "lib", "patch_frames.jl"))
@@ -199,7 +199,7 @@ function main(args=ARGS)
                     stride=opt.preprocessing.stride, flatten=opt.preprocessing.flatten,
                     smooth_radius_px=opt.preprocessing.smooth_radius_px,
                     output_dir=dirname(opt.out_tsv), no_plot=true)
-                xs_f, ys_f, raw_f, z_f, z_smooth_f, su_f, noise_f = preprocess_channel(img, ch_fwd, pcfg_fwd)
+                xs_f, ys_f, raw_f, z_f, z_smooth_f, su_f, noise_f = preprocess_patch_channel(img, ch_fwd, pcfg_fwd, opt.preprocessing)
 
                 # Backward channel
                 ch_bwd = get_channel(img, "Z"; direction="bwd")
@@ -207,7 +207,7 @@ function main(args=ARGS)
                     stride=opt.preprocessing.stride, flatten=opt.preprocessing.flatten,
                     smooth_radius_px=opt.preprocessing.smooth_radius_px,
                     output_dir=dirname(opt.out_tsv), no_plot=true)
-                xs_b, ys_b, raw_b, z_b, z_smooth_b, su_b, noise_b = preprocess_channel(img, ch_bwd, pcfg_bwd)
+                xs_b, ys_b, raw_b, z_b, z_smooth_b, su_b, noise_b = preprocess_patch_channel(img, ch_bwd, pcfg_bwd, opt.preprocessing)
                 if shifts !== nothing
                     require_direction(ch_fwd,"fwd"); require_direction(ch_bwd,"bwd")
                     xs_f == xs_b && ys_f == ys_b || error("Acquisition grids differ")

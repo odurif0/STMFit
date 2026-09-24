@@ -1,0 +1,19 @@
+# One fixed-N experiment, not a new production calibration.
+[model]
+method = "native_circular_to_elliptical"
+profiles = ["gaussian", "split"]
+native_elliptical_maxiter = 50
+one_dimensional_initialization = false
+
+[selection]
+count_policy = "reuse_saved_N"
+family_policy = "valid_minimum_full_parameter_gcv"
+identical_data_policy = "reuse_control_fit_exactly"
+failure_policy = "report_and_stop_no_partial_grade"
+
+[preprocessing]
+missing_pixel_policy = "observed_only"
+plane_rank_rtol = 1e-12
+fusion = "mean_unsmoothed_observed_views"
+roi = "native_finite_statistics_and_observed_mask"
+patch_background = "same_as_fit"

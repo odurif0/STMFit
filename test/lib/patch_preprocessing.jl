@@ -2,14 +2,26 @@ module PatchPreprocessing
 
 using TOML
 using STMSXMIO: _box_smooth
+import GaussianFit2D
 
 export PreprocessingSettings, load_patch_preprocessing, load_patch_residual_filter,
-       patch_residual
+       patch_residual, preprocess_patch_channel
 
 struct PreprocessingSettings
     stride::Int
     flatten::String
     smooth_radius_px::Int
+    missing_pixel_policy::String
+    plane_rank_rtol::Union{Nothing,Float64}
+end
+PreprocessingSettings(stride::Int, flatten::String, radius::Int) =
+    PreprocessingSettings(stride, flatten, radius, "median_fill", nothing)
+
+function preprocess_patch_channel(img, ch, cfg, settings::PreprocessingSettings)
+    settings.missing_pixel_policy == "median_fill" && return GaussianFit2D.preprocess_channel(img, ch, cfg)
+    settings.missing_pixel_policy == "observed_only" || error("Unknown missing-pixel policy")
+    settings.plane_rank_rtol === nothing && error("Observed preprocessing requires explicit plane_rank_rtol")
+    return GaussianFit2D.preprocess_observed_fit_channel(img, ch, cfg; plane_rank_rtol=settings.plane_rank_rtol)
 end
 
 """
@@ -35,7 +47,16 @@ function load_patch_preprocessing(path::Union{Nothing,AbstractString}=nothing)
     flatten = get(preproc, "flatten", nothing)
     flatten isa AbstractString && lowercase(strip(flatten)) in ("none", "plane", "rows", "plane+rows") ||
         throw(ArgumentError("[preprocessing] flatten must be none, plane, rows, or plane+rows"))
-    return PreprocessingSettings(stride, String(flatten), radius)
+    policy = get(preproc, "missing_pixel_policy", "median_fill")
+    policy in ("median_fill", "observed_only") || throw(ArgumentError("Unknown missing_pixel_policy"))
+    rank = get(preproc, "plane_rank_rtol", nothing)
+    if policy == "observed_only"
+        rank isa Real && !(rank isa Bool) && isfinite(rank) && 0 < rank < 1 ||
+            throw(ArgumentError("Observed preprocessing requires explicit 0 < plane_rank_rtol < 1"))
+    else
+        rank === nothing || throw(ArgumentError("plane_rank_rtol requires observed_only policy"))
+    end
+    return PreprocessingSettings(stride, String(flatten), radius, policy, rank)
 end
 
 "Load the explicit assignment policy; omitted standalone option keeps legacy extraction."

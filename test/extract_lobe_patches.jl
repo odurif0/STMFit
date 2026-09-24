@@ -13,7 +13,7 @@ using .ScriptUtils: _parse_f, _read_tsv
 
 include(joinpath(@__DIR__, "lib", "patch_preprocessing.jl"))
 using .PatchPreprocessing: PreprocessingSettings, load_patch_preprocessing,
-    load_patch_residual_filter, patch_residual
+    load_patch_residual_filter, patch_residual, preprocess_patch_channel
 include(joinpath(@__DIR__, "lib", "patch_acquisition.jl"))
 using .PatchAcquisition
 include(joinpath(@__DIR__, "lib", "patch_frames.jl"))
@@ -192,7 +192,7 @@ function main(args=ARGS)
                     stride=opt.preprocessing.stride, flatten=opt.preprocessing.flatten,
                     smooth_radius_px=opt.preprocessing.smooth_radius_px,
                     output_dir=dirname(opt.out_tsv), no_plot=true)
-                xs, ys, raw, z, z_smooth, scaled_unit, noise = preprocess_channel(img, ch, pcfg)
+                xs, ys, raw, z, z_smooth, scaled_unit, noise = preprocess_patch_channel(img, ch, pcfg, opt.preprocessing)
                 if shifts !== nothing
                     require_direction(ch,"fwd")
                     z,z_smooth = observed_shift(z,ch,opt.preprocessing,0)

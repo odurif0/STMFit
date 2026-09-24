@@ -221,7 +221,7 @@ end
 """
     preprocess_observed_channel(img, ch; stride, flatten, smooth_radius_px, plane_rank_rtol)
 
-Diagnostic metrology only. Fit background to observed pixels, keep missing
+Opt-in metrology and fixed-N fit experiments. Fit background to observed pixels, keep missing
 pixels missing, and only smooth windows whose in-image footprint is observed.
 Existing fitter preprocessing and its median-imputation convention are unchanged.
 All-finite images use the existing arithmetic. Partial images do not acquire

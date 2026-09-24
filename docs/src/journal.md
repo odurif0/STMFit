@@ -2304,6 +2304,17 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
+0au. **Does preserving observations before background correction improve fitting?**
+The user authorized the next bounded iteration after the calibration audit.
+Compare native imputation with finite-only background correction, native fixed-N
+Gaussian/split refits and consistently preprocessed residual patches, on all
+146 raw scans. Reuse the first latest reproduced predicted-N vector; no N sweep
+or physical recalibration. Fully observed images must share exactly the same
+fit. Preparation is capped at two hours; one four-CPU Viper job at two hours.
+All fits must be valid before cohort-wide assignment and external grading.
+This preserves label-free inference, not the inherited calibration's provenance.
+Result pending; no champion or unknown25 change.
+
 > Updated 2026-09-24. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
@@ -14978,3 +14989,65 @@ in this experiment; no champion promotion. Independent physical calibration
 and the separate geometry-versus-cohort-learning sensitivity lead remain open.
 Full evidence: `results/calibration_measurements_20260924/report.md`, including
 same-subset comparisons; generated files stay ignored and retained locally.
+
+### 2026-09-24 — Observed-pixel fixed-N fit comparison, implementation
+
+**Scientific deliverable.** The user authorized continuing the proposed missing-
+pixel lead. Determine whether carrying the observation mask from background
+correction through native fitting and residual extraction improves recognition
+on the complete cohort, without tuning to its labels. Definition of done:
+tested implementation, one bounded Viper comparison, fetched/verified outputs,
+and a complete external grade only if every required geometry is available.
+An invalid fit remains a reported negative result. Preparation starts at
+13:40 UTC and is capped at two hours; the single job is capped at two hours,
+four requested CPUs, four one-thread fit shards and 16 GB. No automatic retry,
+new optimizer, threshold relaxation, subset grading or new method campaign.
+
+**Reason.** The measurement audit exposed 72 partial views. Earlier registered
+refits restored the mask only after imputed background correction and failed
+full-cohort validity. This experiment instead calls the shared STMSXMIO
+observed-only plane/row correction before fitting; no foreground exclusion,
+robust background model, registration or physical-width conversion is added.
+The candidate retains missing samples and requires complete smoothing windows.
+Both actual directions are required and fused on their common observed support.
+The finite-aware native ROI/axis/tube and nearest-observed initialization are
+reused. Initialization does not turn a missing sample into fit data.
+
+**Controls.** `config/observed_fit.toml` declares the experiment. Counts are the
+first raw reproduction's saved predictions in
+`results/hybrid_reproduction_20260924/run_v1/repeat1/counting_summary.tsv`;
+the second reproduction had exactly the same N vector. Physical and assignment
+configs, templates, Gaussian/split models, validity checks, full-parameter GCV,
+noise formula, `n_eff`, optimization budgets and 1D exclusion remain fixed.
+Fully acquired inputs must match bit-for-bit and reuse the exact control fit.
+The opt-in patch preprocessing fields use the same corrected background as the
+candidate geometry; omission preserves the legacy patch path. This tests the
+complete observation treatment, not just fitting against a changed background
+while subtracting the model from the old background.
+
+Every successful fit retains parameters, family validity/GCV, optimizer status,
+fit samples and common-observed-pixel residual evidence. Each profile/arm is
+attempted even when another profile fails. Failed shards retain diagnostic
+outputs but emit no incomplete feature table; any failure prevents both
+cohort-wide assignment runs. A lower native RSS on different supports is not a
+paired improvement, and even shared-pixel improvement is not chemical validation.
+No benchmark labels are inputs; historical benchmark-informed physical and
+support calibration remains an explicit unresolved provenance limitation.
+
+**Preflight.** Julia 1.13 passes **1,027** observed-fit/patch/verification
+assertions, **4,387** registered-refit regression assertions, **534** GaussianFit2D
+and **21** STMSXMIO assertions (**5,969 total**, excluding repeated test runs).
+Documentation builds; its pre-existing unit-assignment page remains 199.61 KiB
+under the 200 KiB limit. The first two test-only failures exposed an omitted
+fixture stride and an attempted overwrite of a fixture table; both fixtures
+were corrected without changing scientific controls.
+
+The metadata dry-run retains all **146 scans / 863 predicted lobes**. The only
+local real-image fit uses lexicographically first `240307_015.sxm` at its saved
+N=6, not a benchmark-selected case. All four fits are valid. On **8,437 common
+observed fit pixels**, Gaussian RSS is 0.0891026 control versus 0.0893115 observed;
+split RSS is 0.0737773 versus 0.0576878. This is a focused execution check,
+neither recognition evidence nor an optimizer reproduction. The saved count
+summary SHA256 is `a98b7460f0726e9a38e30693d03197865f8c1377460edad6bc7c44c88815a06f`;
+Project and Manifest hashes remain unchanged. Full-cohort execution follows
+only after committing this tested implementation.

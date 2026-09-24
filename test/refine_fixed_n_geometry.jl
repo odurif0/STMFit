@@ -42,8 +42,10 @@ function evaluate(p, n, data, cfg, amp_min, amp_range)
 end
 
 "Shared fresh native circular→elliptical fit, selected by existing GCV at fixed N."
-function initialize(n, data, circ, ell, options; observed_only::Bool=false)
-    rc = G._fit_chain_n(data.xs, data.ys, data.zimg, data.x, data.y, data.z, data.noise, n, data.axisctx, circ; observed_only)
+function initialize(n, data, circ, ell, options; observed_only::Bool=false, diagnostics=nothing)
+    circdiag = diagnostics === nothing ? nothing : row -> diagnostics("circ", row)
+    elldiag = diagnostics === nothing ? nothing : row -> diagnostics("ell", row)
+    rc = G._fit_chain_n(data.xs, data.ys, data.zimg, data.x, data.y, data.z, data.noise, n, data.axisctx, circ; observed_only, diagnostics=circdiag)
     VP.finalize_native!(rc, data, circ)
     re = G.ChainModelResult(n=n, success=false, reason="circular initialization failed")
     if rc.success
@@ -52,7 +54,7 @@ function initialize(n, data, circ, ell, options; observed_only::Bool=false)
         localell.max_iter = options.native_elliptical_maxiter
         pe = VP.circular_to_elliptical(rc.params, n, localell)
         re = G._fit_chain_n(data.xs, data.ys, data.zimg, data.x, data.y, data.z, data.noise, n,
-            data.axisctx, localell; starts=1, warm_start=pe, observed_only)
+            data.axisctx, localell; starts=1, warm_start=pe, observed_only, diagnostics=elldiag)
         VP.finalize_native!(re, data, localell)
     end
     best, source = F.Extractor._best_for_n(F.Extractor._best_by_n([re], "gcv"),

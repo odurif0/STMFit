@@ -1155,3 +1155,29 @@ show that molecular contrast was preserved on real images. The exclusion and
 fit support still depend on the old native preprocessing and saved geometry.
 No new count, chemical fit, noise covariance, independent-sample estimate,
 benchmark grade or production-default change is part of this pilot.
+
+## Observed pixels from background correction through fitting (2026-09-24)
+
+The full-profile measurement audit found nonfinite samples in 72 of 292 actual
+acquisition views. Restoring their masks after native median-filled background
+subtraction does not undo the fill's influence on acquired pixels. The authorized
+next comparison therefore carries the raw observation mask through background
+correction, smoothing, fixed-N fitting and residual patches. Its explicit
+settings are in `config/observed_fit.toml`; production defaults are unchanged.
+
+This is not a physical recalibration. Sigma, spacing, overlap, native optimizer
+budgets, GCV selection, the `n_eff = max(10, ndata ÷ 9)` diagnostic placeholder,
+and all chemical thresholds remain unchanged. N is taken from the first of the
+two identical latest raw-count reproductions, not from expected chain length.
+The input physical configuration still has benchmark-informed historical
+provenance: label-free inference in this experiment does not establish a
+strictly label-free calibration lineage.
+
+The experiment tests consistent observation handling, including the background
+used for residual patches; it is not an isolated optimizer comparison. On fully
+acquired images preprocessing and fit inputs must be identical, and the fit is
+reused exactly. On partial images background, ROI, geometry and descriptors may
+change together. Shared-pixel residuals and optimizer termination are retained
+as diagnostics, without selecting a method or retuning controls from benchmark
+labels. A missing valid fit is a negative completeness result, not permission to
+relax physical guards or grade a favorable subset.

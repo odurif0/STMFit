@@ -31,6 +31,20 @@ function preprocess_channel(img::SXMImage, ch::SXMChannel, cfg::PatternConfig)
     return xs, ys, raw, z, z_smooth, scaled_unit, noise
 end
 
+"Opt-in observed-only background correction; keep the native noise formula."
+function preprocess_observed_fit_channel(img::SXMImage, ch::SXMChannel, cfg::PatternConfig;
+                                         plane_rank_rtol::Real)
+    lowercase(ch.direction) == lowercase(cfg.direction) || error("Actual requested acquisition direction is missing")
+    lowercase(ch.name) == lowercase(cfg.channel) || error("Actual requested channel is missing")
+    v = STMSXMIO.preprocess_observed_channel(img, ch; stride=cfg.stride,
+        flatten=lowercase(strip(cfg.flatten)), smooth_radius_px=cfg.smooth_radius_px, plane_rank_rtol)
+    v.status == "observed_only" || error("Observed preprocessing failed: $(v.status)")
+    values = v.z_smooth[isfinite.(v.z_smooth)]
+    length(values) >= 2 || error("Insufficient observed smoothed pixels for native noise estimate")
+    noise = max(1.4826 * median(abs.(values .- median(values))), std(values) * 0.1, EPS)
+    return v.xs, v.ys, v.raw, v.z, v.z_smooth, v.unit, noise
+end
+
 _artifact_mad(v) = 1.4826 * median(abs.(v .- median(v)))
 
 function _line_discontinuity_score(z::AbstractMatrix{<:Real})

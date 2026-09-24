@@ -95,13 +95,14 @@ end
     @test_throws ArgumentError patch_residual(model,model,model,PreprocessingSettings(1,"none",1),"unknown")
 end
 
-function synthetic_sxm(path)
+function synthetic_sxm(path; missing=false)
     n = 33
     xs = range(0, 2.4; length=n)
     fwd = [0.4 + 0.17x + 0.08y + 2exp(-((x-1.2)^2/0.07 + (y-1.2)^2/0.04)) +
            0.25cos(8x+3y) + 0.14sin(9y) for y in xs, x in xs]
     bwd = [0.4 + 0.17x + 0.08y + 1.8exp(-((x-1.2)^2/0.07 + (y-1.2)^2/0.04)) +
            0.16cos(6x+2y) - 0.11sin(7y) for y in xs, x in xs]
+    missing && (fwd[16,16]=NaN; bwd[17,17]=Inf)
     open(path, "w") do io
         println(io, ":SCAN_PIXELS:\n$n $n\n:SCAN_RANGE:\n2.4e-9 2.4e-9")
         println(io, ":DATA_INFO:\nChannel Name Unit Direction Calibration Offset\n0 Z nm both 1 0")
