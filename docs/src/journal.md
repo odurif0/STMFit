@@ -14414,3 +14414,17 @@ checks and 286 support/score checks. Both full-cohort metadata dry-runs pass.
 The single local raw scan is lexicographic first `240307_015.sxm`; its promoted
 N=6 produces six finite elliptical lobes (GCV approximately **1.069e−5**), with
 no grade or configuration adjustment. All other real fitting stays on Viper.
+
+**Submitted.** Scientific source **1b15977**, all **697** tracked files matched
+in `/u/oldu/code/STMFit_promoted_counts_20260924`. Julia 1.13.0 instantiate and
+precompile finish on the login node; Project/Manifest hashes are unchanged
+(the known Manifest resolution-version warning remains). Both summary hashes,
+the original template and the configs match locally/remotely. Remote metadata
+dry-run passes. Slurm test-only ID **11955894** is not a job.
+
+Sole real job **11955899**, submitted **01:59:26 CEST**, initially pending,
+four CPUs requested / 16 GB, four-hour cap, `--no-requeue`, six explicitly
+exported paths. Outputs `/ptmp/oldu/stmfit/promoted_counts_20260924_v1`, log
+`/ptmp/oldu/stmfit/promoted_counts_20260924-11955899.log`. Follow through fetch,
+independent checks and reporting; no duplicate submission or tuning. Local
+preparation documentation builds successfully with existing warnings.
