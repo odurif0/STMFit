@@ -15917,3 +15917,27 @@ these passing checks; its failed log is preserved. These fixtures validate the
 implementation, not performance or physical calibration on STM acquisitions.
 All local metadata checks see 146 raw scans. Viper access is functional; the
 user queue is empty. No new real-data fit or benchmark grade has run yet.
+
+**Final preflight and submission.** Source is frozen at **5d27c28**. The final
+combined suite adds two exact shared-input checks and passes **21,446**
+assertions (18,104 engine, 3,342 workflow/saved-state). Documentation builds
+without deployment or raised limits; assignment HTML remains 204,500 bytes.
+The first lexicographic raw scan is checked locally for input construction only:
+225,792/262,144 jointly finite raw pixels, 8,499 shared fit pixels, support
+3.6614891303335444 nm. Both input bundles are exactly equal; feasible ranges
+are 2..8 and 2..11. No local raw fit or label/grade is used.
+
+All **732 tracked source blobs** match in
+`/u/oldu/code/STMFit_local_sigma_20260924`; the original Project/Manifest
+SHA256 remain `5e3cd8f2...` / `617de816...` after instantiate/precompile.
+Local and remote metadata-only four-shard dry-runs pass (37/37/36/36).
+Slurm test-only **11966215** is not a submitted job. The sole real job is
+**11966219**, submitted September 24 around **22:01 CEST / 20:01 UTC**, with
+four explicit exported paths, `--no-requeue`, four requested CPUs, 16 GB and
+**04:00:00** limit. It will write
+`/ptmp/oldu/stmfit/local_sigma_counting_20260924_v1`; log
+`/ptmp/oldu/stmfit/local_sigma_counting_20260924-11966219.log`.
+Preparation/submission takes about forty minutes, within the three-hour cap.
+No other campaign or chemical assignment is launched. Generated tests, dry-runs,
+first-file metadata and submission record are retained locally under
+`results/local_sigma_counting_20260924/`; final grades remain pending.
