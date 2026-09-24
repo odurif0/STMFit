@@ -2307,6 +2307,14 @@ See `docs/src/selection.md` for the full guard specification and
 > Updated 2026-09-24. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
+0as. **Does the hybrid-count candidate reproduce from raw images?**
+    → **IN PROGRESS (Sep 24)**. Two complete fresh counting/assignment runs,
+    one Viper job capped at four hours, frozen parameters and no count caches.
+    Audit inference isolation separately from historical parameter provenance:
+    the archived calibration and hybrid-rule sweeps used known-count grades.
+    Thus strict label-free calibration is not established, even if fresh
+    predictions reproduce 694/43/855. No conditional production promotion yet.
+
 0ar. **Does connecting saved promoted counts improve recognition?**
     → **COMPLETE; NEW MEASURED DEVELOPMENT REFERENCE (Sep 24)**. Fresh support
     assignment at saved hybrid counts gives **694/870 correct, 43/145 exact,
@@ -14601,3 +14609,43 @@ size/search warnings remain. After grading, all 433 output hashes still match,
 as do prediction, Project/Manifest and frozen scientific-source checks. Both
 jobs are terminal; validated code and measured conclusions are committed for
 human review, while generated artifacts remain local and ignored.
+
+## 2026-09-24 — Fresh hybrid reproduction and historical label-use audit
+
+**Deliverable and definition of done, before implementation.** The user permits
+conditional promotion only after confirmation, reproduction and label-free
+verification, and continued autonomous iterations. First reproduce the frozen
+candidate twice from all 146 raw images, including fresh counting, on one
+Viper job capped at four hours (four requested CPUs, 16 GB; no retry).
+Preparation is bounded to three hours. Done means both complete outputs fetched,
+independent cohort/count/vote and repeat-drift checks, external full145 grades,
+an explicit audit conclusion and a committed decision. No selection of the
+better repeat, replacement of losing scans, new parameters, masks, features,
+templates, QE calculation or unknown25 rerun. Scientific Must-NOT-have
+constraints from the completed application remain in force.
+
+The simple runner uses four independent one-thread `batch_full.jl` shards per
+repeat, merges only complete successful summaries with the unchanged hybrid
+policy, then invokes the existing full-cohort assignment with fresh fixed-N
+base/split fits. It disables the driver's legacy triage input by explicitly
+naming a nonexistent path. No previous summary, geometry, benchmark membership,
+expected count, sequence, grade or reference prediction is an inference input.
+Both repeats are retained regardless of variability from timed optimization.
+
+**Historical provenance caveat, identified before new computation.** The old
+`config/chitosan.toml` comments and `journal_archive.md` sections 12 and May 26
+explicitly select support padding and fit width by known `N_ell=6` improvements.
+The June/July support-midpoint rule and its 0.30 upshift threshold were compared
+and chosen using full146 exact-count grades; the July 3 gap>=2 extension also
+followed such replay. These are not label inputs at inference, but they are
+benchmark-informed method/calibration choices. Earlier blanket "label-free"
+claims must be read as inference-only, not label-free development provenance or
+unbiased held-out validation. Freezing or reproducing those parameters cannot
+erase this dependence. This audit prevents an unqualified strict-label-free
+promotion; no thresholds are retuned and the historical evidence is preserved.
+
+**Preflight.** Julia 1.13 passes **121** new synthetic boundary, shard/merge,
+fresh-repeat and failure-handling checks; the existing handoff/GCV/support/
+pipeline suites pass **1,455** checks. Metadata-only local CLI and job dry-runs
+see all 146 raw scans; the job uses four shards without reading pixels. Source
+and scientific settings are unchanged apart from the new reproduction entrypoint.
