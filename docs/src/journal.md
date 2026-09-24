@@ -14698,3 +14698,14 @@ tables in `results/hybrid_reproduction_20260924/`.
 The documentation index now qualifies the old 39/39 and 129/145 scores as saved
 historical results, and removes the unsupported suggestion that visual QC or
 the auto-calibration bootstrap establishes chemical accuracy or generalization.
+
+**Second counting pass, still before grading.** Both fresh vectors select
+exactly the same N on all **146** scans, **863** lobes each. Raw `N_eff`, refined
+N, selection branch, circular/elliptical candidate N and elliptical support
+length also match. The relative-GCV gap differs numerically on two scans:
+`240310_Cu100009` (0.0186894205→0.0186584577) and `240817_050`
+(0.1869545419→0.1869308526), without changing the chosen branch or N. This is
+count-decision reproducibility, not a claim of byte-identical fitting or
+completed chemical assignment. First-repeat outputs are already fetched;
+second-repeat fresh geometry and assignment are running. Evidence:
+`progress_repeat_count_agreement.log`, `progress_repeat_selection_drift.log`.
