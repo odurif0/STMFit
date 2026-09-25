@@ -1,5 +1,15 @@
 # Model Selection
 
+The September 25 background-conditioning diagnostic makes **no N/family
+selection**: four numerically chosen saved elliptical fits are continued twice.
+Both SLSQP coordinate systems attain the same RSS, **10.42–29.25% below** their
+time-capped LM controls, but **0/24 endpoints** pass the fixed stationarity
+audit. Centering adds 21.39% optimizer time and is not retained. All fits stay
+natively valid; no benchmark grade or recognition gain is inferred. Source
+**a706593**, job **11974388**, **0:0 in 14m43s**; 1,063 independent saved-output
+checks pass. Production selection and its numerical calibration remain unchanged.
+`results/background_conditioning_20260925/report.md`.
+
 The September 24 audit separates **label-free inference** from parameter
 provenance: historical support/width calibration and hybrid-rule choices used
 known-count benchmark grades. Fresh reproduction cannot remove that dependence;

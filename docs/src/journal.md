@@ -2315,6 +2315,15 @@ physical domain and RSS unchanged. Six linear inequalities preserve the original
 background box after its non-diagonal transformation. The deliverable is a
 complete stationarity/stability/cost comparison, verified and fetched locally;
 not a count search, calibration, recognition grade or champion promotion.
+**COMPLETE; CENTERED COORDINATES NOT RETAINED:** source **a706593**, job
+**11974388**, **0:0 in 14m43s**. All 24 endpoints pass native validity but none
+passes the unchanged `1e-6` stationarity audit. Both SLSQP arms repeat exactly
+and reach the same RSS (maximum relative difference `5.55e-16`); centering
+improves the projected gradient on one scan, worsens it on three, and costs
+**21.39%** more optimizer time in this run. SLSQP lowers RSS **10.42–29.25%**
+versus time-capped LM, not a recognition result. All **1,063** output checks
+pass; 186 outputs plus Slurm log are local/hash-verified. No grade, new count,
+parameter/default, calibration, unknown25 or champion change; no follow-up job.
 
 0ay. **Can fully observed training scans improve excluded-scan recognition?**
 Under renewed user authorization, test one observation-defined training cohort:
@@ -16163,3 +16172,69 @@ Source: `/u/oldu/code/STMFit_background_20260925`; saved inputs:
 `/ptmp/oldu/stmfit/background_conditioning_20260925_v1`. Configuration SHA256:
 `a788d4a9e913aad6c13bf115e885fcd839edb040f2e132b6bb1825052be49d71`.
 No other fit job or grade is submitted; follow this existing job to its result.
+
+### 2026-09-25 — Background conditioning complete: same RSS, no stationary endpoint
+
+The single job **11974388** finishes **COMPLETED, 0:0 in 14m43s**, from
+**11:17:02 to 11:31:45 CEST** on `vipc2257`, after **1m58s** queued. Four CPUs
+requested/eight logical CPUs allocated, 16 GB, four one-thread Julia processes,
+one-hour hard limit; no retry, extra fit or grade. Total CPU is **38m56.174s**;
+batch `MaxRSS=3119729K`. Ignore the site's inconsistent footer utilization
+percentage, not these sacct counters. Source stays **a706593** throughout.
+
+All **24 endpoints** are present and natively valid; **none** passes the
+unchanged original-coordinate stationarity threshold **1e-6**. The two-step
+gradients agree for all 24. Eight LM calls reach the 180-second internal timer
+(actual 180.06–180.60 s, 2,508–7,541 iterations); all sixteen SLSQP calls stop
+on `FTOL_REACHED` before their budgets. A tolerance stop is not stationarity.
+
+First-repeat RSS and projected gradients (the SLSQP values repeat exactly):
+
+| Scan (saved predicted N) | LM RSS | Both SLSQP RSS | Unit-box gradient | Centered gradient |
+|---|---:|---:|---:|---:|
+| 240307_015 (7) | 0.0578652683 | 0.0494374830 | 4.49450e-6 | 1.92104e-5 |
+| 240817_005 (6) | 0.0756018637 | 0.0677033065 | 2.74966e-5 | 3.19939e-6 |
+| 240817_082 (6) | 0.0707396064 | 0.0500514664 | 1.79647e-5 | 2.54487e-5 |
+| 240817_050 (6) | 0.1987941999 | 0.1760003357 | 2.36392e-6 | 1.10460e-5 |
+
+The two SLSQP RSS values differ only on `240817_082`, by `5.55e-16` relatively.
+Maximum raw-parameter difference between the two methods is **1.79e-7**,
+maximum x/y difference **6.28e-9 / 5.58e-9 nm**. The centered coordinates thus
+reach a numerically near-identical endpoint, with lower projected gradient on
+one scan but higher on three, in both repetitions. All six transformed plane
+constraints are retained; no infeasible trial or endpoint clipping occurs.
+
+Centering also costs more: optimizer time totals **403.83 versus 332.68 s**
+(**+21.39%**), full solve calls **405.08 versus 337.07 s** (+20.18%), model
+evaluations **339,202 versus 290,510** (+16.76%). It improves neither the
+attained RSS nor stationary-fit count and is **not retained as a replacement**.
+The algebraic reduction of plane condition to one and of the full Jacobian's
+condition does not imply improved solver endpoints or molecular information.
+
+Both SLSQP methods lower RSS **10.42–29.25%** versus their matched LM controls.
+The gain comes with an algorithm/derivative change; only the two SLSQP arms
+isolate affine coordinates. No equal-work or general-speed claim follows.
+Each SLSQP's physical parameter vectors and RSS repeat exactly on all four
+scans. LM RSS varies **0.03584–2.25723%**, with different iteration counts under
+the wall timer; maximum raw-parameter drift **0.49308**, not an nm displacement.
+
+The compute-node verifier passes **1,063/1,063** assertions in **19.0 s**:
+complete inputs/configs/endpoints, exact physical boxes, independent Gaussian
+decode/forward predictions, native RSS/full GCV/validity, two-step gradients,
+traces/checkpoints and repetitions. The **186 outputs plus Slurm log** are
+fetched; checksum-based transfer dry-runs show no differences. All **738 source
+blobs** still match **a706593** afterward. Source Project/Manifest/config hashes
+are unchanged. Light local TSV arithmetic reproduces all totals and paired
+differences; no local multi-file optimization or new physical analysis runs.
+
+No N/family reselection, raw reconstruction, chemical assignment, benchmark
+grade, tolerance relaxation, restart or additional experiment follows. All
+four cases, including the three gradient regressions, stay in the conclusion.
+This small numerically selected sample does not validate benchmark performance;
+inherited benchmark-informed calibration is not recertified label-free.
+Production and unknown25 remain unchanged; no champion is promoted. The wider
+goal remains open, while this bounded diagnostic is complete.
+
+Full numerical evidence and limits:
+`results/background_conditioning_20260925/report.md`, `analysis.log`,
+`paired_details.log`, all 24 native endpoints and the fetched verification log.

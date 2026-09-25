@@ -37,6 +37,14 @@ coordinates or a constant target fail without fallback. All settings and inputs,
 traces, checkpoints, physical endpoints and diagnostics are retained. The single
 four-shard Viper job is limited to one hour. Production settings stay unchanged.
 
+Completed September 25: **24/24** natively valid, **0/24** stationary at the
+unchanged `1e-6` audit threshold. Both SLSQP arms repeat exactly and attain the
+same RSS; centered coordinates worsen the gradient on three of four scans and
+cost **21.39%** more optimizer time in this run. Reject this coordinate change
+as a replacement, without adjusting its settings. Source **a706593**, job
+**11974388**, **0:0 in 14m43s**, **1,063** saved-output checks. No new N, grade
+or production change. `results/background_conditioning_20260925/report.md`.
+
 ## Diagnostic width-conditioned counting
 
 `config/local_sigma_counting.toml` belongs only to

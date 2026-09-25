@@ -19,6 +19,15 @@ recognition. Existing inherited calibration provenance remains benchmark-informe
 this diagnostic cannot certify strict label-free calibration or an optimum.
 No full-cohort benchmark or production change is included in this experiment.
 
+Completed result: the two SLSQP bases reach the same RSS, with no endpoint
+passing the unchanged stationarity audit. Centering improves that gradient on
+one scan, worsens it on three and costs 21.39% more optimizer time; it is not
+retained. SLSQP's 10.42–29.25% RSS improvement over time-capped LM is a numerical
+result on four saved-count cases, not calibration or recognition validation.
+All 24 fits are natively valid and both SLSQP repetitions match exactly. Source
+**a706593**, job **11974388**, **0:0 in 14m43s**; 1,063 output checks pass.
+No parameter, production or champion change follows.
+
 ## Width-conditioned counting is not recalibration
 
 The September 24 counting diagnostic keeps all historical numerical physical
