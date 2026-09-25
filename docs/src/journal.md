@@ -16145,3 +16145,21 @@ gain. All checks total **19,473** assertions. Both source Project/Manifest hashe
 remain unchanged. The documentation builds without deployment or relaxed limits;
 an initial sandbox-only Pkg usage-log write fails before the build, then the
 authorized cache-writing build passes. Generated logs stay local and ignored.
+
+Scientific source **a706593** is committed before sync. Local and Viper
+metadata-only dry-runs choose the same four cases; checksum rsync dry-runs find
+no source or selected-input differences. Julia 1.13 instantiate/precompile on
+login leaves both Project/Manifest hashes unchanged. Sandbox SSH-config
+permission failures are resolved through the normal tool escalation, without
+requesting credentials or changing SSH configuration. The first failed copy
+does not create a source checkout; the subsequent verified copy succeeds.
+
+`sbatch --test-only` reserves no work (its printed **11974386** is not a submitted
+job). The sole real job is **11974388**, submitted at **11:15 CEST** with all
+four custom variables explicitly passed in `sbatch --export`, `--no-requeue`,
+four requested CPUs, 16 GB and **01:00:00**. It initially reports `PENDING`.
+Source: `/u/oldu/code/STMFit_background_20260925`; saved inputs:
+`/ptmp/oldu/stmfit/local_sigma_counting_20260924_v1`; new outputs:
+`/ptmp/oldu/stmfit/background_conditioning_20260925_v1`. Configuration SHA256:
+`a788d4a9e913aad6c13bf115e885fcd839edb040f2e132b6bb1825052be49d71`.
+No other fit job or grade is submitted; follow this existing job to its result.
