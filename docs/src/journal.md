@@ -16544,3 +16544,12 @@ changing numerical criteria. Native PP-only preflight, shell syntax, source
 patch dry-application and launcher dry-run pass. Documentation builds with the
 existing warnings and without increasing limits. The source code and launch
 inputs are committed before the single submission.
+
+**Submission.** Source **09d6217**, all prepared inputs and Manifest are
+checksum-identical in `/u/oldu/code/STMFit_gamma_20260925/STMFit`. The separate
+QE source/dependency transfer also has zero checksum differences. Julia
+**1.13.0**, the Intel MPI Fortran wrapper, offline dependency initialization
+and patch dry-application pass on Viper. Slurm's test-only ID **11975969** was
+not submitted. The existing QE launcher submits one real job, **11975972**,
+with explicit Julia/module exports, eight ranks (16 allocated hardware threads),
+96 GB, one hour and no requeue. No calculation is run on the login node.
