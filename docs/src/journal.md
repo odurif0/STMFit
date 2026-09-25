@@ -17569,3 +17569,13 @@ The sole real job is **11978725**, with explicit command-line Julia/project/data
 output exports, four requested CPUs, 16 GB, two hours and no requeue. No further
 job is included in this cycle. No predictive or recognition result is claimed
 at submission.
+
+Job **11978725** starts at **15:34:48 UTC** on `vipc2306` (eight hardware CPUs
+allocated for four requested Julia threads). The separate read-only result
+checker passes **177/177** synthetic assertions, alongside a fresh **942/942**
+workflow rerun. It independently interpolates selected physical predictions,
+checks residual arithmetic and finite-dictionary ordering at the saved common
+offset, target-row separation and complete case retention. It does not refit
+real images, reconstruct every unchosen candidate cost, or claim an independent
+proof of every global dictionary minimum. The submitted scientific sources
+and settings remain unchanged.
