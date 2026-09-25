@@ -18018,3 +18018,15 @@ background/border locations; anchor membership does not count molecular units.
 The first plot's contour was not visible, so the display-only overlay now
 draws the actual boundary pixels explicitly, without changing masks or heights.
 No parameter is changed after this inspection.
+
+**Single submission.** Scientific code is committed as **517b2b9**. The local
+documentation build (`--build-only`), shell syntax and diff checks pass with
+the existing documentation-size warnings and unchanged limits. Rsync dry-run,
+actual sync and a checksum-only second dry-run confirm identical tracked code;
+the unchanged Project/Manifest hashes also match Viper. Its metadata-only
+dry-run checks all 146 raw inputs. `sbatch --test-only` succeeds, followed by
+the sole real job **11979519**, observed running on **vipc2129** at **17:41 UTC**.
+The Julia/root/data/output variables are explicitly exported on the sbatch
+command line. Four requested CPUs map to eight allocated hardware threads;
+the Julia batch uses four static file shards, 16 GB and the one-hour bound.
+No compute is run on the login node, no retry or new scientific arm is added.
