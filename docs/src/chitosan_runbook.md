@@ -1,6 +1,18 @@
 # Chitosan Benchmark and 10–20mer Runbook
 
-Latest complete-acquisition training test is **negative and reproduced**:
+September 25 width-conditioned counting is **negative and reproduced**:
+both repeats give **42/145 exact N**, versus exhaustive GCV control **101/145**;
+within-one agreement **105 versus 133/145**, summed absolute error **165 versus
+58**. The candidate gains seven exact counts and loses 66. All 146 N/family
+choices repeat within each arm; fitted values vary and no LM fit declares
+convergence. Source **5d27c28**, job **11966219**, **0:0 in 3h37m51s**, with
+458,907 pre-grade saved-output checks. Reject this count-only candidate; no
+chemical score, production/default, unknown25 or champion change. Numeric
+calibration provenance remains unresolved. The paired exhaustive control is
+not the hybrid selector. See [journal](journal.md),
+`results/local_sigma_counting_20260924/report.md`.
+
+Earlier complete-acquisition training test is **negative and reproduced**:
 control **670/870 correct, 16/145 exact**, observed inputs **670/15**, versus
 native **678/28**, **680/35** and all-admissible exclusion **672/19**, **673/29**.
 All cover **848/870**. Only 110 fully observed scans may teach Fisher and both

@@ -6,10 +6,18 @@ known-count benchmark grades. Fresh reproduction cannot remove that dependence;
 strict label-free calibration and independent validation are not established.
 See [calibration](calibration.md) and [the audit](journal.md#2026-09-24-—-Fresh-hybrid-reproduction-and-historical-label-use-audit).
 
-The authorized follow-up tests width-conditioned overlap constraints with two
-exhaustive Gaussian GCV counting arms and two repetitions. Physical numbers,
-pixels and support stay fixed. It is counting-only, not independent physical
-calibration or a chemical champion; see [configuration](config.md#Diagnostic-width-conditioned-counting).
+The September 25 width-conditioned overlap comparison is **rejected**. Both
+fresh-fit repeats give **42/145 exact N**, versus the matched exhaustive GCV
+control **101/145**; within-one agreement falls **133→105/145** and summed
+absolute error rises **58→165**. Seven exact counts are gained, 66 lost. All
+146 N/family choices repeat within each arm, but none of 10,244 LM fits declares
+convergence. Physical numbers, shared pixels and support stay fixed; no hybrid
+rule, BIC early stop, 1D initializer or expected count enters selection.
+Source **5d27c28**, job **11966219**, **0:0 in 3h37m51s**; 458,907 saved-output
+checks pass before grading. This exhaustive control is not the hybrid pipeline;
+no chemical score or default/champion change follows. See
+[configuration](config.md#Diagnostic-width-conditioned-counting),
+`results/local_sigma_counting_20260924/report.md`.
 
 The completed learning diagnostic makes **no fit or N decision**. Restricting all
 shared learning to fully observed scans, still excluding the evaluated scan,

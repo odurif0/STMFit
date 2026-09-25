@@ -4,7 +4,19 @@ Analysis pipeline for STM images of molecular chains (chitosan on Cu(100) and
 similar systems). Detects and fits a chain-of-Gaussians model to count the
 number of monomer units (lobes) per chain from the images.
 
-**Latest September 24: complete-acquisition training is reproducibly negative.**
+**Latest September 25: width-conditioned counting is reproducibly negative.**
+Both fresh-fit repetitions give **42/145 exact N**, versus **101/145** for
+the matched exhaustive GCV control. Within-one agreement falls **133→105/145**;
+summed absolute count error rises **58→165**. Seven exact counts are gained,
+66 lost. All 146 N/family decisions repeat in each arm, but no selected LM fit
+declares convergence. Source **5d27c28**, Viper **11966219**, **0:0 in 3h37m51s**;
+**458,907** saved-output checks pass before full external grading. Reject this
+counting lead. No chemical assignment, default, unknown25 or champion change;
+historical calibration still lacks strict label-free provenance. See
+[report](results/local_sigma_counting_20260924/report.md) and
+[journal](docs/src/journal.md). This exhaustive control is not the hybrid selector.
+
+**Earlier September 24: complete-acquisition training is reproducibly negative.**
 Training Fisher, GMM and k-means only on fully observed scans, still excluding
 the target, gives **670/870 correct, 16/145 exact chains** on control inputs and
 **670/15** on observed-pixel inputs. Native references are **678/28** and

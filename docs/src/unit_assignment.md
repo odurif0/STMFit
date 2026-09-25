@@ -24,6 +24,9 @@ Inference reads no labels; inherited calibration used benchmark grades.
 Strict label-free lineage remains open. Unknown25 stays frozen.
 See [journal](journal.md), `results/complete_observation_20260924/conclusion.md`.
 
+Sep 25 width-cap counting regresses **101→42/145 exact N** in both repeats.
+No assignment run or promotion; see [selection](selection.md).
+
 ## Motivation
 
 Chitosan is a (1,4)-β-linked polysaccharide of **GlcNAc** (N-acetyl-glucosamine)

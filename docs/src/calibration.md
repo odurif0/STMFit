@@ -21,6 +21,13 @@ champion. Historical benchmark-informed width/support provenance remains an
 independent limitation; no apparent profile median or expected N calibrates
 this coupling. Settings and failure rules are in [configuration](config.md).
 
+The completed September 25 comparison is negative: both repeats give **42/145
+exact N**, versus exhaustive control **101/145**; summed count error increases
+**58→165**. The envelope checks pass, but the candidate mostly increases
+overcounting under the fixed solver budgets. No LM fit declares convergence.
+Reject it as a counting replacement; no post-grade bounds or calibration are
+introduced. `results/local_sigma_counting_20260924/report.md`.
+
 ### What crystallography can and cannot supply
 
 A September 24 literature check finds an independent structural reference,

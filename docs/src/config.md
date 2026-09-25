@@ -4,10 +4,10 @@
 
 `config/local_sigma_counting.toml` belongs only to
 `test/diagnose_local_sigma_counting.jl`, not the production batch driver. It
-declares two Gaussian arms (`global_sigma_max`, `local_sigma_cap`), two raw
-repetitions, the existing numerical range 2..14 and 50-iteration elliptical
-refinement. Both arms exhaust the feasible range and select minimum valid
-full-parameter GCV; exact ties prefer smaller N, then elliptical. Failed
+declares two Gaussian arms (`global_sigma_max`, `local_sigma_cap`), two fresh-fit
+repetitions on shared preprocessing, the existing numerical range 2..14 and
+50-iteration elliptical refinement. Both arms exhaust the feasible range and
+select minimum valid full-parameter GCV; exact ties prefer smaller N, then elliptical. Failed
 candidates remain visible; an unavailable scan blocks external grading.
 
 The engine's opt-in `ChainSweepConfig.overlap_constraint="local_sigma_cap"`
@@ -19,6 +19,11 @@ profiles, invalid overlap fractions and incompatible minimum widths/spacings.
 No assignment, hybrid guard, 1D initializer, expected count or benchmark input
 is accepted by the diagnostic. Native imputation and support remain unchanged.
 See [calibration](calibration.md#Width-conditioned-counting-is-not-recalibration).
+
+The completed test rejects local caps: **42 versus 101/145 exact N** in both
+repeats; within-one agreement **105 versus 133/145**, summed absolute error
+**165 versus 58**. No setting is retuned and the default remains unchanged.
+See `results/local_sigma_counting_20260924/report.md` and [journal](journal.md).
 
 ## Diagnostic calibration measurements
 

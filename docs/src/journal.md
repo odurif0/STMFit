@@ -2399,16 +2399,21 @@ but sixteen confidences differ by 0.4; no LM run declares convergence. The net
 exact-chain gain occurs on exactly reused local inputs (see 0av). No champion,
 counting/default or unknown25 change; strict calibration provenance remains open.
 
-> Updated 2026-09-24. Questions from earlier sessions are archived in
+> Updated 2026-09-25. Questions from earlier sessions are archived in
 > `journal_archive.md`.
 
 0at. **Can independent calibration recover performance without label-informed rules?**
-    → **FOLLOW-UP AUTHORIZED, Sep 24:** first isolate the worst-width spacing
-    envelope from genuine physical exclusion, using Gaussian width caps
-    conditional on neighboring fitted axial gaps. All numeric physical bounds
-    remain unchanged; this cannot repair their historical provenance. Compare
-    two exhaustive GCV counting arms twice on the full raw cohort, then grade
-    counts externally. No chemical assignment or promotion is implied.
+    → **WIDTH-CAP COMPARISON COMPLETE AND REJECTED, Sep 25:** both fresh-fit
+    repeats give **42/145 exact N**, versus exhaustive GCV control **101/145**;
+    within-one agreement **105 versus 133/145**, summed absolute error **165
+    versus 58**. Seven exact counts gained, 66 lost. All 146 N/family choices
+    repeat within each arm, but no LM fit declares convergence. Source
+    **5d27c28**, job **11966219**, **0:0 in 3h37m51s**, 458,907 saved-output
+    checks before full external grading. The Gaussian envelope guarantee
+    passes; that is not chemical-spacing or STM calibration. No parameter
+    retuning, chemical assignment, default/unknown25 or champion change.
+    Independent physical calibration remains open; crystal repeats do not
+    supply STM Gaussian bounds. `results/local_sigma_counting_20260924/report.md`.
     → **MEASUREMENT AUDIT COMPLETE; PHYSICAL CALIBRATION STILL OPEN (Sep 24)**.
     Source **76934a6**, job **11962552**, **0:0 in 55s**: all 146 scans / 292
     views. Legacy widths/spacings use defaults on **245/292 and 261/292** views.
@@ -15963,3 +15968,80 @@ Do not manufacture bounds by adding a percentage tolerance to a crystal
 period. No numerical config, fitted domain, inference input, job or production
 behavior changes. Scientific job source remains **5d27c28**; the independent
 calibration limitation remains unresolved irrespective of its future grade.
+
+### 2026-09-25 — Width-conditioned counting: reproducible overcounting, rejected
+
+The bounded comparison completes without changing its scope, bounds, budgets,
+cohort or acceptance rule. Viper **11966219** ends **COMPLETED 0:0** in
+**3h37m51s**, from September 24 22:03:09 to September 25 01:41:00 CEST, within
+the four-hour limit. No extension, retry or new job is used. Scientific source
+stays **5d27c287b50a9d3780770b65a8c31abf8bcce97e**; all **732** remote source
+blobs still match after fitting, and Project/Manifest remain unchanged.
+
+All **146 scans**, **10,244 candidate families**, **62,556 exported lobes** and
+**584 available selections** are retained and fetched. The compute-node
+saved-output verifier passes **458,907 assertions** in 44.9s before grading:
+raw/config hashes, complete feasible-N accounting, native parameter bounds,
+decoded widths, independent Gaussian predictions/RSS/full GCV, actual-pair
+envelopes, validity and minimum-score selection. Checksum-based rsync reports
+no differences; local checks confirm all 146 raw SHA256 and four complete
+146-row grading inputs. The first local merge command fails on Julia
+soft-scope counters before producing a grading input or reading labels; a
+lexical scope corrects that bookkeeping error, with the original log retained.
+No fit or scientific source is changed or rerun.
+
+Only after those checks, the existing external count grader reads the complete
+145-scan manifest. `240310_Cu100009.sxm` remains in inference but outside that
+manifest. All 145 grade rows are present, with no missing count. Results are
+the same in both fresh-fit repetitions:
+
+| Arm | Exact N /145 | Within one /145 | Sum absolute count error | Under / over scans |
+|---|---:|---:|---:|---:|
+| Exhaustive worst-width control | 101 | 133 | 58 | 17 / 27 |
+| Width-conditioned caps | 42 | 105 | 165 | 5 / 98 |
+
+The candidate gains **7** exact counts and loses **66**. Absolute error improves
+on eight scans, worsens on 81 and is unchanged on 56. Count deficit drops
+19→7, but count excess rises 39→158. These are counting discrepancies, not
+recognition coverage. The pre-grade criterion fails on every component in
+both repeats: exact-N agreement, within-one agreement and total error.
+**Reject this candidate as a counting replacement; do not retune after grading.**
+
+Each arm repeats all 146 N decisions and family choices; all 584 selections
+are elliptical. Fitted states are not byte-identical: maximum relative
+selected-GCV drift is **0.00672953** for control and **0.0000212310** for local
+caps. Maximum x/y drift is 0.0302599/0.0256288 nm and
+0.000916952/0.00152224 nm respectively. None of **10,244 LM fits** declares
+convergence, including none of 584 selected fits: circular/elliptical LM use
+their complete 300/50-iteration budgets. There are 8,784 eligible candidate
+states; invalid candidates remain visible. Repeatable decisions and physical
+envelope checks do not certify an optimization optimum.
+
+Across all 146 inference scans, local caps select a higher/equal/lower N on
+**92/51/3** scans and a lower/higher GCV on **116/30**, in each repeat. The
+larger admissible domain frequently improves the available fitted score while
+worsening counting here. Domain, parameterization and finite-budget optimizer
+trajectories change together; this is not unique causal attribution, nor proof
+about every possible width-coupled model. This exhaustive GCV control is not
+the hybrid production selector, and its grade carries no old chemical score.
+
+No numerical calibration, GCV definition, `n_eff`, guard, preprocessing,
+assignment, production/default, unknown25 or champion change follows.
+Inference reads no benchmark labels; historical numerical width/support
+provenance remains benchmark-informed. Neither these repeatable results nor
+the crystallographic literature check establish independent STM calibration.
+The reused benchmark is not new independent validation. The broader
+calibration/new-champion objective remains open; no other campaign is launched.
+
+Complete evidence: `results/local_sigma_counting_20260924/report.md`, four
+external grade tables/logs, `count_metrics.tsv`, both paired-count and both
+repeatability tables, `analysis.log`, local pre-grade logs, accounting and the
+retrieved Slurm log. All generated results remain ignored; result summaries
+and the decision are maintained in the tracked documentation.
+
+Independent AWK arithmetic agrees with all four complete grades; N/family
+columns and entire grade TSVs compare exactly across repetitions. The first
+shell recount shadows zsh's special `path` parameter and fails command lookup;
+removing that binding fixes only the local bookkeeping, without changing any
+fit, grade or parameter. The documentation build passes without deployment or
+raised limits; existing size/search warnings remain. `git diff --check` passes.
