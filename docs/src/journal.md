@@ -19035,3 +19035,24 @@ The first documentation build stops at `Pkg.activate` because its usage log
 is outside the writable sandbox. Its log is preserved; a temporary first
 depot under `/tmp`, with the existing depot still available read-only, is
 used for the build retry. This changes no package version or project file.
+
+**Next-route feasibility, source inspection only.** The official
+[QE `pp.x` description](https://www.quantum-espresso.org/Doc/INPUT_PP.html)
+(currently version 7.5) distinguishes the total local potential
+`V_bare + V_H + V_xc` (`plot_num=1`) from the electrostatic-only potential
+(`plot_num=11`) and documents potential energies in Rydberg units. The saved
+QE source bundle's 7.4-era description and `PP/src/punch_plot.f90` branches
+confirm that distinction for our source lineage. A future vacuum-propagation
+study must not substitute electrostatic potential alone for the local
+effective potential or confuse these energies with volts/eigenvalue units.
+This is only a feasibility check: no export, plane choice, decay criterion,
+propagation or new batch is performed in the present experiment.
+
+**Closure, approximately 22:06 UTC.** The temporary-depot documentation build
+completes successfully under Julia 1.13, `--build-only`, without deployment.
+HTTP's optional precompile workload reports a nonfatal sandbox socket-bind
+warning; documentation rendering completes, with the existing page/search
+size warnings and no altered limits. `git diff --check` passes. The scientific
+result and rejection are committed as **34faa1c** after preparation **4eda39a**;
+all generated geometry, tables, plots, repeats and logs remain untracked.
+No scientific calculation or cluster job remains running from this cycle.
