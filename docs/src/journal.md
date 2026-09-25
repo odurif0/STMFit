@@ -17764,3 +17764,15 @@ usable views, with every upstream unsupported case retained. Shell syntax and
 `git diff --check` pass. Project and the Julia-1.13 Pkg-generated Manifest are
 unchanged; no dependency update is required. Control config SHA256:
 `b8e202a6d8964016b4bf4dc8caccca9671780baf179f9c1d32e774ec3fea9ba7`.
+
+**Submission.** Scientific source **9300406** is synced to the existing
+`/u/oldu/code/STMFit_surface_transfer_20260925/STMFit` tree, keeping the previous
+run untouched. Code and all 2.9 GB of upstream outputs are checksum-identical
+locally/remotely. The unchanged ignored Manifest is copied explicitly; login-node
+instantiate and the metadata-only dry-run pass under Julia **1.13.0**, with
+Project/Manifest/control-config hashes unchanged. Documentation builds with
+`--build-only`, existing size warnings and no adjusted limits. Slurm test-only
+**11979007** is not submitted. The sole real job is **11979008**, with explicit
+command-line Julia/project/output exports, four requested CPUs, 16 GB, one hour
+and no requeue. New outputs belong in `results/vacuum_surface_controls_20260925/`;
+no predictive or chemical result is asserted at submission.
