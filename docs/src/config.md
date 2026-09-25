@@ -22,6 +22,19 @@ is `test/qe_substrate_reference.jl --help`; `prepare` is geometry/metadata-only,
 and `witness` uses only the first geometry-eligible column. The full diagnostic
 is a single one-hour Viper job. Production configs are unchanged.
 
+Job **11980577** completes in **19m02s**. All **8,532** outcomes are retained;
+**582,693** independent checks pass and no leaf remains unresolved. The Cu-half
+paired supports are **424/436/453** out of 474 geometric sites. Background
+differences have spatial SD **64.51/66.74/72.66 pm**, versus about **21 pm**
+original mean molecular contrast. Reference choice can change the contrast's
+sign, so no scalar offset or domain/isovalue is adopted. Atomic PAW projections
+do not identify a clean-Cu exterior. The reader is
+`test/verify_qe_substrate_reference.jl SAVED_RUN NEW_REPORT`; the descriptive
+plot is `test/plot_qe_substrate_reference.jl SAVED_RUN VERIFIED_REPORT NEW_PNG`.
+The latter plots every paired Cu-half reference against geometric clearance,
+without fitting a trend, choosing a cutoff or clipping points. All three
+domains remain in the saved tables; the figure alone is not their comparison.
+
 ## Shared whole-image envelope diagnostic
 
 `config/shared_image_envelope.toml` declares a chemistry-free tensor cubic

@@ -2305,13 +2305,20 @@ See `docs/src/selection.md` for the full guard specification and
 ## Open Questions
 
 0bl. **Is there a consistent off-molecule DFT height reference at the saved
-isovalues?** A bounded geometry-only-prepared diagnostic is underway. It will
-account for every site of a common 32x24 cell-center grid, retaining sites
-outside the union of both periodic molecular PAW projections and testing all
-three saved isovalues in all three declared domains. Off-projection does not
-mean clean Cu: lateral molecular tails, periodic adsorbates, finite basis/cell
-and unknown experimental current remain. No reference or production change
-is adopted; numerical root failures must remain visible.
+isovalues?** **Numerically verified roots, but no supported scalar reference.**
+Job **11980577** completes all **8,532** outcomes on 474/768 paired geometric
+sites, with **582,693** independent checks and no unresolved leaves. The
+Cu-half domain has **424/436/453** paired valid sites at the three unchanged
+isovalues. Their inter-state background differences have spatial standard
+deviations **64.51/66.74/72.66 pm**, exceeding the original molecular mean
+contrast of about **21 pm**; choosing a reference site can reverse its sign.
+Full-gap multiple roots and restricted-domain absences remain. Off-projection
+does not mean clean Cu and can include spaces within the molecular footprint.
+No scalar offset, domain, isovalue, chemical calibration or champion is adopted.
+Next, use the saved outputs to examine dependence on the whole molecular
+footprint/common geometric distance, without selecting a favorable point or
+label-tuned cutoff. The separate potential/vacuum-tail route needs physical
+qualification before any propagation; no further job was run in this cycle.
 
 0bk. **Can a shared full-image envelope predict repeat views without absorbing
 the local physical contrast?** **Prediction improves, but substantial probe
@@ -18725,3 +18732,138 @@ potential, not asserting that our remaining structure is numerical noise.
 No propagation, new potential export, cutoff change or density replacement is
 performed in this cycle. The numerical series and current-map results remain
 what was actually calculated.
+
+### 2026-09-25 — Off-projection roots verified; scalar background remains unsupported
+
+**Completed bounded result.** Viper **11980577**, scientific source **f85d69f**,
+finishes **20:52:38--21:11:40 UTC**, **COMPLETED (0:0)**, elapsed **19m02s**,
+on `vipc2149`. Four Julia threads use eight allocated hardware CPUs; maximum
+RSS is **1,689,722 KiB**, below the requested 32 GB. Stderr is empty. There is
+no retry, requeue, new QE calculation, parameter change or second job.
+The diagnostic deliverable is complete; the full recognition objective is not.
+
+**Numerical evidence.** All **8,532** site/domain/isovalue outcomes are present,
+**4,266** per state. There are **zero unresolved leaves**. All searches repeat
+exactly in serial. The **19,300** full-3D Fourier queries (**9,926 / 9,374**)
+repeat exactly and lie strictly inside their grouped-series enclosures, with
+**zero** distance to those enclosures. These queries cover each domain's
+endpoints/midpoint and every isolated root, including ascending/multiple-root
+cases. They do not independently reconstruct the entire continuous signal.
+The accepted wavefunction hashes are unchanged before/after the job.
+
+The independent saved reader passes **582,693/582,693** assertions in **38.1s**
+test-set time, excluding initial loading/compilation. It checks all 768 geometry
+sites, all 2,844 complete-segment clearances using explicit neighboring-cell
+enumeration, complete root partitions/node counts, all root statuses and
+independent-query coordinates, and reconstructs the saved coefficient
+enclosures at all direct-query heights. It recomputes the conditional
+reference arithmetic; it is not a third WFC calculation or a physical
+convergence test. Both fixed first-site witnesses are byte-identical between
+local and Viper in **every coefficient, leaf, root and direct-query row**.
+The complete **118,542,814-byte** run, including inputs/witnesses/logs, is local
+with zero checksum differences.
+
+**Domain accounting.** Unique descending roots require one root in the entire
+declared domain and no unresolved region; no favorable branch is silently
+selected. Each state/domain/isovalue has 474 geometric candidates:
+
+| domain | isovalue index | GlcN valid | GlcNAc valid | paired valid |
+|---|---:|---:|---:|---:|
+| Cu half | 1 | 464 | 429 | 424 |
+| Cu half | 2 | 468 | 440 | 436 |
+| Cu half | 3 | 474 | 453 | 453 |
+| old molecular half | 1 | 474 | 334 | 334 |
+| old molecular half | 2 | 474 | 319 | 319 |
+| old molecular half | 3 | 462 | 279 | 279 |
+
+All **2,844 full-gap** cases have multiple roots, including ascent toward the
+next periodic slab. This is expected to be possible in a periodic gap, not
+evidence by itself that the lower physical branch is wrong. There is exactly
+one descending full-gap root everywhere except **two GlcNAc sites at isovalue
+3**, which have more than one descending root. The same two Cu-half cases
+(grid IDs **73, 105**) each have two descending roots and one ascending root;
+other invalid restricted-domain cases are absent, not unresolved. GlcN
+Cu-half absences are **10/6/0** and old-half absences **0/0/12**; GlcNAc Cu-half
+absences are **45/34/19** and old-half absences **140/155/195**. No domain or
+isovalue is selected using these completeness differences.
+
+**Reference dependence on matched sites.** For a common valid lateral site
+`p`, define only for this report
+`delta_background(p) = z_GlcNAc(p) - z_GlcN(p)` and
+`delta_referenced(p) = mean(H_GlcNAc) - mean(H_GlcN) - delta_background(p)`.
+The molecular means use the unchanged complete 17x17 central maps. The
+statistics below use the **same paired sites** for both states, not subtraction
+of marginal means from differing supports. This is a counterfactual reference
+comparison, not an adopted correction or a chemical prediction.
+
+| fixed isovalue index, Cu-half domain | 1 | 2 | 3 |
+|---|---:|---:|---:|
+| paired sites / 474 | 424 | 436 | 453 |
+| original mean molecular contrast (pm) | 20.7915 | 20.6265 | 21.0142 |
+| mean background difference (pm) | 37.5452 | 39.4514 | 41.9507 |
+| spatial SD of background difference (pm) | 64.5064 | 66.7422 | 72.6568 |
+| mean hypothetical referenced contrast (pm) | -16.7536 | -18.8249 | -20.9365 |
+| referenced range (pm) | -234.269 to 132.456 | -235.434 to 130.864 | -260.652 to 121.185 |
+| negative / positive referenced sites | 232 / 192 | 242 / 194 | 245 / 208 |
+
+For the fixed first site chosen before density access, referenced contrasts
+are instead **+47.7774 / +52.8669 / +55.4911 pm**. The sign and size therefore
+cannot be justified by choosing that convenient point. On the old
+molecular-half paired subsets the hypothetical means are
+**-54.7304 / -59.2450 / -69.9644 pm**, with different, much smaller supports;
+these are not like-for-like domain-effect estimates. The spatial SDs are
+descriptions of this fixed sampled grid, not statistical standard errors,
+experimental noise estimates or calibrated uncertainty intervals.
+
+**Decision and limits.** The current experiment does **not** establish a
+single transferable Cu background level or chemical mean-height contrast.
+Do not subtract a chosen site's height, average these support-dependent values
+into a production class offset, select an isovalue/domain, or infer real-image
+composition. Numerical root precision is not the limiting uncertainty exposed
+here. The retained set is outside **atomic PAW projections**, not an identified
+clean-Cu region: spaces between atoms and inside a molecular footprint may
+remain, as may lateral molecular tails and effects of periodically repeated
+adsorbates. No attribution among geometry, periodicity, finite basis and
+electronic background is proved by the spread alone. In particular, the
+experiment does not disprove the existence of a better defined substrate
+reference or establish vacuum-tail noise as its cause.
+
+The next economical question is whether the **already saved** results contain
+a physically justified common exterior/background region when the whole
+molecular footprint is considered, reporting all original points and distance
+dependence. Any such follow-up must declare its geometry rule before comparing
+its conditional heights, preserve this broad result, and avoid selecting a
+point/cutoff from labels or a desired contrast sign. A separate potential/
+continuation test is only a later possibility, not automatically adopted.
+A reference alone still cannot resolve non-affine shape mismatch, unit
+positions/counts, tip effects or experimental-current conversion. Future image
+comparisons need the fixed-shape and height-only controls, with a joint
+constrained envelope rather than unconstrained subtraction.
+
+No image, benchmark label, expected N, composition or grade is read by this
+diagnostic. No production fitting, N_selected, assignment, calibration,
+accepted DFT state/criterion, mold provider, unknown25 output or champion
+changes. No recognition grade is run, and **694/43/855 remains unmet**.
+Evidence is under `qe/substrate_reference_20260925/` and
+`results/substrate_reference_20260925/`, including all preparation failures,
+three synthetic logs, witnesses, final `report/summary.tsv` and `paired.tsv`,
+checksum/accounting logs and the full saved-output test log. Generated
+evidence stays untracked.
+
+**Display and final checks.** The saved-table figure
+`reference_site_dependence_readable.png` is inspected after correcting only
+clipped axis-label margins in the first rendering (both files/logs remain).
+It shows every paired Cu-half point at all three isovalues, with common
+unclipped scales, against minimum projected PAW clearance. No trend, plateau,
+distance threshold or reference is fitted. The visually narrower spread at
+larger clearances motivates the geometry question above; it does not establish
+a clean-Cu plateau or an acceptable cutoff. The complete other-domain tables
+are retained, not replaced by this illustration.
+
+An independent TSV check additionally confirms that all **19,300** direct
+values are strictly between their saved enclosure bounds, not merely within
+the numerical allowance. Final documentation builds under Julia **1.13.0**
+with `--build-only`, without deployment; existing size warnings/limits remain.
+Project/Manifest and all production benchmark headlines stay unchanged.
+`git diff --check` passes. Source, plotting helper and scientific decisions
+are committed; no generated evidence or raw state is committed.

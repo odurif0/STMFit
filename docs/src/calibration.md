@@ -21,6 +21,23 @@ offset or chemical confidence is inferred here. Even a supported reference
 cannot cure the shape mismatch left after free local affine profiling. No
 production map, current, count, assignment or champion is changed.
 
+The completed diagnostic **11980577** passes **582,693** independent checks.
+On paired Cu-half valid sites, background-difference spatial SD is
+**64.51--72.66 pm**, larger than the original mean molecular contrast
+(**20.63--21.01 pm**). Hypothetically referencing each map to the same lateral
+site can produce either contrast sign. The first site gives **+47.78 to +55.49
+pm**, while averages across their paired valid supports give
+**-20.94 to -16.75 pm**. Neither is adopted as chemical calibration. These
+different counterfactual references are not experimental uncertainties or
+evidence for composition. The old molecular-half domain has different and
+smaller supports, and all full-gap cases have multiple roots.
+
+The geometric screen excludes atomic PAW disks, not the entire molecular
+footprint or its electronic tails. Further examination should use the existing
+outputs and a declared whole-footprint/common-exterior geometry rule, keeping
+all original outcomes. The observed distance dependence does not authorize
+picking a favorable clearance threshold or a desired chemical-contrast sign.
+
 ## A shared envelope must not silently remove chemical contrast
 
 The September 25 shared-image diagnostic fits one source-only spline surface
