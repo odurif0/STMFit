@@ -16994,3 +16994,11 @@ build pass, with existing size/deployment warnings and unchanged limits.
 No real density reconstruction is run locally. Prepared evidence is under
 `qe/vacuum_wavefunctions_20260925/`, logs under
 `results/qe_vacuum_wavefunctions_20260925/`.
+
+**Submission.** Frozen source **a014e7e**, unchanged Manifest and all
+**291,507,847 bytes** of prepared physical inputs have zero checksum differences
+in `/u/oldu/code/STMFit_vacuum_wfc_20260925/STMFit`. Remote Julia **1.13.0**,
+the native CLI load, shell syntax, matching batch copy and Slurm test-only pass.
+Test-only **11977498** is not a submitted calculation. The sole real job is
+**11977502**, submitted with an explicit Julia export, four Julia threads,
+32 GB, one hour and no requeue. No additional job is allowed in this cycle.
