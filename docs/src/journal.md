@@ -17557,3 +17557,15 @@ syntax and `git diff --check` pass. Documentation builds locally under Julia
 1.13 with `--build-only`, existing size warnings and no changed limits. The
 Project and Pkg-generated Manifest are unchanged. Config SHA256:
 `58fe1a262213ea8cc1e09a983d207a0114a6d3061a5a5af8d61387ff1ff95ea6`.
+
+**Submission.** Source **bae6586**, the ignored Manifest, six physical input
+files and all **146** raw scans are copied to the new
+`/u/oldu/code/STMFit_surface_transfer_20260925/STMFit` directory. Code, physical
+input and raw checksum comparisons are empty. Login-node instantiate/precompile
+finishes under Julia **1.13.0**; Project/Manifest/config hashes remain identical.
+The remote metadata-only dry-run again sees 146 scans, 142 matching the bias.
+Shell syntax and Slurm test-only pass; test-only **11978724** is not submitted.
+The sole real job is **11978725**, with explicit command-line Julia/project/data/
+output exports, four requested CPUs, 16 GB, two hours and no requeue. No further
+job is included in this cycle. No predictive or recognition result is claimed
+at submission.
