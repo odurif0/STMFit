@@ -1,5 +1,31 @@
 # Configuration Reference
 
+## Independent vacuum-wavefunction diagnostic
+
+`config/qe_vacuum_wavefunctions.toml` declares
+`gamma_wavefunction_sum_outside_paw`, using the same accepted states and sharp
+bias window as the component experiment. No inference provider is activated.
+The native QE binary reader accepts only unscaled scalar Gamma checkpoints
+with four-byte little-endian Fortran record markers. It reconstructs omitted
+conjugate vectors and counts the G=0 coefficient once.
+
+`[selection]` requires pinned inputs, exact serial/parallel repetition and
+strictly positive PAW clearance for every plane point and interpolation vertex.
+Direct Fourier density is compared with native smooth-cube samples using half
+their five-significant-digit quantum plus `numeric_roundoff_atol=1e-13`.
+The integral comparison uses Parseval's coefficient norm and the sum of the
+cube's printing bounds; it does not normalize to the full state weight.
+`cube_header_decimal_places=6` checks coordinate printing separately;
+`geometry_rtol=1e-12` checks XML/WFC cell consistency, not chemical accuracy.
+
+`[preprocessing].plane_coordinates="accepted_xml_cell"` uses full-precision
+geometry for native indices and interpolation. The old rounded-header
+interpolation is also reported, not silently overwritten. The existing 17x17
+grid and all three heights remain fixed. `fourier_block_points=32` is only an
+execution/memory block size; clipping and component normalization are forbidden.
+Off-grid interpolation error and the two height-to-height decay ratios are
+descriptive outcomes, not post-hoc acceptance thresholds or height selectors.
+
 ## Diagnostic PAW component decomposition
 
 `config/qe_paw_decomposition.toml` keeps the accepted states, sharp bias window,

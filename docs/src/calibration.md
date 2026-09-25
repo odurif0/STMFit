@@ -1,5 +1,25 @@
 # Calibration: measurements, assumptions and limits
 
+## Direct wavefunctions check the vacuum observable, not the current setpoint
+
+The bounded September 25 WFC diagnostic independently reconstructs the smooth
+sharp-window density from the accepted reciprocal-space coefficients, without
+calling QE's `local_dos` or a density FFT. Its amplitude follows the stored
+wavefunction normalization, spin/k-point weights and cell volume; neither a
+whole-cell renormalization nor a fit to experimental contrast is permitted.
+All queries and their native interpolation vertices must lie outside the
+periodically repeated PAW spheres. This never removes augmentation from an
+inside-sphere observable.
+
+Full-precision XML geometry, not the six-decimal printed cube coordinates,
+defines native-grid point locations. Their numerical agreement is checked
+before scientific comparison; both interpolation conventions are retained in
+the diagnostic. All three previously declared ring-relative heights are
+reported, including zero or rising density if present. Agreement with native
+QE samples and plausible vacuum decay would not establish cutoff convergence,
+a tip model, an absolute current conversion or a benchmark improvement. No
+constant-current isovalue or experimental height is calibrated in this cycle.
+
 ## PAW component attribution precedes any new observable calibration
 
 The September 25 component test compares the unchanged corrected total with

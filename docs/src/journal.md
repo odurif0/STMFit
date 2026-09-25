@@ -2304,6 +2304,22 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
+0bd. **Does the smooth vacuum signal agree with an independent WFC reconstruction?**
+The preceding component cycle is progress: it attributes the negative vacuum
+samples to augmentation on unchanged accepted states. Under the standing
+autonomous label-free search, the next bounded test permits two hours of
+preparation from **September 25 13:00 UTC**, followed by one four-CPU / 32 GB /
+one-hour Viper job, no retry. Reconstruct the selected-state density directly
+from collected Gamma coefficients, compare every native vertex needed by the
+six declared planes with the saved smooth cubes, check the Parseval integral
+and exact serial/parallel repeat, then report interpolation error and both
+height-to-height decay ratios. All plane points and interpolation vertices
+must be outside PAW spheres. No QE calculation, cutoff/window/height change,
+clipping, renormalization, isovalue calibration, new mold, fit, grade, unknown25
+rerun or promotion is included. Done means fetched independently reconstructed
+values and a defensible physical conclusion, even if the reconstruction fails
+or the decay is not useful. This is not completion of the **694/43/855** goal.
+
 0bc. **What causes the remaining negative density outside the PAW spheres?**
 **Component attribution resolved for the two audited states:** job **11976981**
 completed **12:37:06–12:48:03 UTC**, `0:0`, with **27,992/27,992** independent
@@ -16915,3 +16931,66 @@ after their execution. Documentation builds with the existing size/deployment
 warnings and unchanged limits. Fetch/build/check logs are retained under
 `results/qe_paw_decomposition_20260925/`. The attribution deliverable is
 achieved, but the strict label-free **694/43/855** recognition objective is not.
+
+### 2026-09-25 — Independent vacuum wavefunction reconstruction: preparation
+
+**Scientific deliverable.** Establish whether the previously isolated smooth
+vacuum density agrees with an independent reciprocal-space reconstruction,
+then describe its decay and interpolation error at the fixed 0.40/0.50/0.60 nm
+planes. This continues toward a usable label-free forward observable; it is not
+a current calibration or recognition result. Preparation is limited to two
+hours from **13:00 UTC**, then one four-CPU, 32 GB, one-hour Viper job, no retry.
+No new electronic state or production input is created.
+
+**Independent route.** Pinned QE 7.4.1 `punch_plot.f90` shows that plot_num=7
+also calls `local_dos`; it would not supply an independent density path. The
+new Julia reader instead follows the documented records in `io_base.f90` and
+the actual `write_collected_wfc` call: reciprocal vectors already contain
+`2*pi/alat`. It accepts only the audited scalar Gamma, scale=1, little-endian
+four-byte-record format, verifies conjugate-pair uniqueness and real G=0, and
+reads exactly the bands selected by the accepted XML spectrum. The direct
+Fourier series reconstructs conjugates, counts G=0 once, and squares the
+wavefunctions with the existing spin/k weights and volume. Analytic complex
+exponential fixtures supply a separately written mathematical reference.
+
+**Geometry and numerical comparisons, fixed before physical results.** Cube
+headers round axis increments to six decimals. Native-index comparisons use
+the precise accepted XML cell, checked against the WFC reciprocal basis;
+comparing direct density at the rounded coordinates would mix coordinate and
+density errors. Every queried point and every required native vertex has an
+explicit periodic PAW clearance check. The native density bound is half the
+printed five-significant-digit quantum plus the existing **1e-13** roundoff
+allowance. Parseval's smooth norm is compared with the cube integral using the
+exact cell volume and summed print-precision bounds, not with 24/26 and not by
+rescaling. Rounded-header integrals/interpolation remain in the output for
+comparison. Off-grid error and decay are retained at all heights; no favorable
+sign, decay rate or interpolation threshold is imposed after the result.
+
+**Initial test corrections.** The first run passes all twenty reader/Fourier
+checks but exposes two wrong fixture assertions: adjacent cells share one of
+their sixteen listed vertices (fifteen unique), and QE writes `tpiba*bg`, not
+the commuted textual string `bg*tpiba`. Correcting those expectations changes
+no algorithm or physical setting. The expanded analytic cube/WFC fixture also
+retains a flat-in-height signal as a valid diagnostic outcome, ensuring a
+desired vacuum decay is not manufactured by acceptance criteria.
+
+**Execution distinction.** This is a four-thread Julia analysis, not a new QE
+mold calculation. The existing QE preflight correctly requires MPI-only
+`cpus-per-task=1` and an actual `pp.x` command; neither describes this job.
+Leave that launcher and its checks unchanged. Use the ordinary isolated-code
+sync, one explicit `sbatch --export=ALL,JULIA_BIN=...` after shell/dry-run
+checks, read-only scheduler polling and result fetch. The prepared
+`run_fourier.sbatch` performs no `pw.x`, `pp.x` or nested submission; the copied
+SCF/PP inputs serve only as source provenance. No new launch framework is added.
+
+**Preparation verified.** Julia 1.13 passes **912/912** reader, analytic-series,
+periodic-norm, strict-policy and end-to-end cube/WFC assertions, plus **17/17**
+existing periodic-PAW geometry checks. Both real inputs pass accepted-state,
+fixed-reference, exact-cell domain and all-vertex PAW-clearance preparation.
+The settings SHA256 is
+`7db6f8983d0a8c3831b9ff2110b141b5fea78ce42b56d9c56abe6a9ab51801a3`.
+The prepared batch file matches its tracked source; shell syntax and documentation
+build pass, with existing size/deployment warnings and unchanged limits.
+No real density reconstruction is run locally. Prepared evidence is under
+`qe/vacuum_wavefunctions_20260925/`, logs under
+`results/qe_vacuum_wavefunctions_20260925/`.
