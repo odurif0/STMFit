@@ -17776,3 +17776,10 @@ Project/Manifest/control-config hashes unchanged. Documentation builds with
 command-line Julia/project/output exports, four requested CPUs, 16 GB, one hour
 and no requeue. New outputs belong in `results/vacuum_surface_controls_20260925/`;
 no predictive or chemical result is asserted at submission.
+
+Job **11979008** starts at **16:35:53 UTC** on `vipc2088`. The read-only checker
+also reports per-patch agreement of the old chemical hypothesis with the
+height-only and plane-profiled hypotheses. These are post-fit state comparisons,
+not ground-truth accuracy, and cannot feed the submitted fit. The expanded
+synthetic suite passes **1,882/1,882** assertions (four added reader/report
+checks); the scientific source and job configuration remain **9300406**.

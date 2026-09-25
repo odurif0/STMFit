@@ -34,6 +34,10 @@ function verify_direction(dir, input, maps, base, c)
     modelby=Dict((i(r,"interval"),r["arm"])=>r for r in models)
     patchby=Dict((i(r,"interval"),r["arm"],i(r,"patch"))=>r for r in patches)
     old=t(joinpath(input,"models.tsv")); cal=TOML.parsefile(joinpath(input,"calibration.toml"))
+    # Post-fit hypothesis agreement is descriptive, never a fitting input or truth.
+    oldpatches=t(joinpath(input,"patches.tsv"))
+    oldtypes=Dict((i(r,"interval"),i(r,"patch"))=>i(r,"type") for r in oldpatches if r["arm"]=="chemical")
+    comparisons=NamedTuple[]
     hashes=t(joinpath(dir,"input_hashes.tsv"))
     @test Set(r["file"] for r in hashes)==Set(["observations.tsv","models.tsv","calibration.toml"])
     @test length(hashes)==3 && all(R.sha(joinpath(input,r["file"]))==r["sha256"] for r in hashes)
@@ -41,6 +45,8 @@ function verify_direction(dir, input, maps, base, c)
     @test Set(keys(modelby))==Set((j,a) for j in 1:3 for a in c["model"]["arms"])
     @test length(patches)==length(patchby)==15length(grouped)
     @test Set(keys(patchby))==Set((j,a,k) for j in 1:3 for a in c["model"]["arms"] for k in keys(grouped))
+    @test Set(keys(oldtypes))==Set((interval,j) for interval in 1:3 for j in keys(grouped))
+    @test all(k in (0,1) for k in values(oldtypes))
     replay=t(joinpath(dir,"common_replay.tsv"))
     @test i.(replay,"interval")==[1,2,3]
     ss=R.F.states(base,"common"); hs=R.F.states(base,"chemical")
@@ -124,12 +130,17 @@ function verify_direction(dir, input, maps, base, c)
                 @test abs(residualsum)<1e-10length(obs)
             end
         end
+        for j in sort(collect(keys(grouped)))
+            push!(comparisons,(;interval,patch=j,old_type=oldtypes[(interval,j)],
+                height_type=i(patchby[(interval,"height_contrast",j)],"type"),
+                plane_type=i(patchby[(interval,"plane_chemical",j)],"type")))
+        end
     end
     for arm in ("local_constant","local_plane"), j in keys(grouped), interval in (2,3)
         a=patchby[(1,arm,j)]; b=patchby[(interval,arm,j)]
         @test all(a[k]==b[k] for k in keys(a) if k!="interval")
     end
-    (;models,cal,patches=length(grouped))
+    (;models,cal,patches=length(grouped),comparisons)
 end
 
 function verify(root,run)
@@ -165,10 +176,13 @@ function verify(root,run)
                     common=only(r for r in bm if i(r,"interval")==interval && r["arm"]=="common")
                     chemical=only(r for r in bm if i(r,"interval")==interval && r["arm"]=="chemical")
                     arms=Dict(r["arm"]=>n(r,"test_sse_nm2") for r in got.models if i(r,"interval")==interval)
+                    comparison=filter(r->r.interval==interval,got.comparisons)
                     push!(cases,(;file,view,interval,identified=got.cal["identified"],pixels=i(common,"test_pixels"),
                         common=n(common,"test_sse_nm2"),chemical=n(chemical,"test_sse_nm2"),source_copy=n(common,"source_copy_sse_nm2"),
                         height_contrast=arms["height_contrast"],local_constant=arms["local_constant"],local_plane=arms["local_plane"],
-                        plane_common=arms["plane_common"],plane_chemical=arms["plane_chemical"]))
+                        plane_common=arms["plane_common"],plane_chemical=arms["plane_chemical"],
+                        patches=length(comparison),height_old_agree=count(r->r.height_type==r.old_type,comparison),
+                        plane_old_agree=count(r->r.plane_type==r.old_type,comparison)))
                 end
             end
             println("CONTROLS_CHECKED ",file); flush(stdout)
@@ -184,7 +198,10 @@ function verify(root,run)
             rms_pm=Dict(a=>1000sqrt(v/np) for (a,v) in losses),
             chemical_gain_vs_height=1-losses[:chemical]/losses[:height_contrast],
             plane_chemical_gain=1-losses[:plane_chemical]/losses[:plane_common],
-            plane_view_wins=count(r->r.plane_chemical<r.plane_common,rows)))
+            plane_view_wins=count(r->r.plane_chemical<r.plane_common,rows),
+            diagnostic_patches=sum(r.patches for r in rows),
+            height_old_agreement=sum(r.height_old_agree for r in rows)/sum(r.patches for r in rows),
+            plane_old_agreement=sum(r.plane_old_agree for r in rows)/sum(r.patches for r in rows)))
     end
     (;cases,statuses,sourcepatches)
 end

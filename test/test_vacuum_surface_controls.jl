@@ -85,6 +85,8 @@ end
         out=joinpath(dir,"controls"); result=L.one_direction(upstream,maps,C,CONTROL,out)
         verified=Q.verify_direction(out,upstream,maps,C,CONTROL)
         @test verified.patches==result.patches && length(verified.models)==15
+        @test length(verified.comparisons)==3result.patches
+        @test all(r.height_type in (0,1) && r.plane_type in (0,1) for r in verified.comparisons)
         rows=L.t(joinpath(out,"models.tsv")); patches=L.t(joinpath(out,"patches.tsv"))
         @test result.status=="ok" && result.patches>=2
         @test length(rows)==15 && length(patches)==15result.patches
