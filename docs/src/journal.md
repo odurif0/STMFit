@@ -2305,13 +2305,18 @@ See `docs/src/selection.md` for the full guard specification and
 ## Open Questions
 
 0bm. **Does a common exterior of the complete molecular footprints support a
-less ambiguous height reference?** In progress: a two-hour, saved-output-only
-diagnostic starting 2026-09-25 at approximately 21:27 UTC. Use the convex hull
-of all non-Cu atomic centers, dilated by the largest active molecular PAW
-radius, with periodic copies. Freeze membership before conditional height
-statistics; retain all original points and the removed complement. This is
-geometric exclusion, not an electronic clean-Cu criterion. No new job, density
-calculation, clearance threshold or scalar-reference adoption is included.
+less ambiguous height reference?** **No improvement from whole-footprint
+exclusion alone.** The geometry-fixed common exterior retains 325 of 474 old
+sites. On paired valid Cu-half subsets (307/312/317 sites), background-
+difference spatial SD is **65.42/68.17/73.94 pm**, versus
+**64.51/66.74/72.66 pm** before exclusion; both contrast signs remain. All
+original outcomes and the 149-site removed complement are retained. A
+strictly geometric exterior is not clean Cu. No further clearance cutoff,
+scalar correction, isovalue/domain, grade or champion is selected. The next
+physical question is whether the accepted states have a potential-qualified
+vacuum matching region for a separately tested tail construction. This is
+not an attribution of the current spread to numerical error or authorization
+to replace the physical maps without validation.
 
 0bl. **Is there a consistent off-molecule DFT height reference at the saved
 isovalues?** **Numerically verified roots, but no supported scalar reference.**
@@ -2324,10 +2329,9 @@ contrast of about **21 pm**; choosing a reference site can reverse its sign.
 Full-gap multiple roots and restricted-domain absences remain. Off-projection
 does not mean clean Cu and can include spaces within the molecular footprint.
 No scalar offset, domain, isovalue, chemical calibration or champion is adopted.
-Next, use the saved outputs to examine dependence on the whole molecular
-footprint/common geometric distance, without selecting a favorable point or
-label-tuned cutoff. The separate potential/vacuum-tail route needs physical
-qualification before any propagation; no further job was run in this cycle.
+The whole-footprint follow-up (0bm) also fails to stabilize the scalar
+reference. The separate potential/vacuum-tail route needs physical
+qualification before any propagation; no further job was run in either cycle.
 
 0bk. **Can a shared full-image envelope predict repeat views without absorbing
 the local physical contrast?** **Prediction improves, but substantial probe
@@ -18927,3 +18931,107 @@ conditional heights. Plot contours are rounded for display only; membership
 is exact relative to the accepted input floats. Membership SHA256 is
 `f58a8a905c84a521021ee7a267c6052fd680292d61faf99629490d46d239339c`.
 No height aggregation or reference selection has yet occurred in this cycle.
+
+### 2026-09-25 — Whole-footprint exclusion does not stabilize the reference
+
+**Completed scientific result.** Scientific implementation **4eda39a** saves
+the geometry before decoding conditional heights. The diagnostic finishes
+within its two-hour bound with **no HPC job, no new density calculation and
+no root/isovalue/domain change**. All 8,532 previous distinct root outcomes
+remain, now partitioned into 5,850 exterior and 2,682 removed outcomes. The
+all-prior arm is also retained, not counted as new evidence. Every one of the
+2,245 old paired contrast rows replays **exactly**. Exterior and complement
+contain respectively 1,448 and 797 paired rows across all domains/isovalues.
+
+The first analysis process never starts because automatic permission review
+times out. A sandboxed Juliaup retry then fails to create its configuration
+lock. Running the already installed **Julia 1.13.0** executable directly
+succeeds without environment changes or further access escalation. The
+launcher failure log and successful analysis log are retained separately.
+Neither failure changes scientific inputs, geometry or thresholds.
+
+**Paired Cu-half result.** Each row below compares both states at the same
+valid lateral sites. SD is the population spatial SD of the background
+difference (equivalently the hypothetical referenced contrast), not a standard
+error, experimental noise or calibrated physical uncertainty.
+
+| fixed isovalue index | 1 | 2 | 3 |
+|---|---:|---:|---:|
+| exterior paired valid / 325 | 307 | 312 | 317 |
+| prior paired valid / 474 | 424 | 436 | 453 |
+| prior spatial SD (pm) | 64.5064 | 66.7422 | 72.6568 |
+| exterior spatial SD (pm) | 65.4200 | 68.1664 | 73.9432 |
+| exterior hypothetical referenced mean (pm) | -17.5721 | -19.8044 | -20.3783 |
+| exterior referenced median (pm) | -1.18575 | -2.37443 | 1.92481 |
+| exterior referenced range (pm) | -234.269 to 99.6259 | -235.434 to 98.1484 | -260.652 to 101.869 |
+| exterior negative / positive | 156 / 151 | 160 / 152 | 155 / 162 |
+| removed paired valid / 149 | 117 | 124 | 136 |
+| removed spatial SD (pm) | 61.9938 | 62.9493 | 69.5488 |
+| removed hypothetical referenced mean (pm) | -14.6060 | -16.3603 | -22.2378 |
+
+The unchanged original molecular means differ by **20.7915 / 20.6265 /
+21.0142 pm**. Removing intramolecular/interatomic spaces does **not** reduce
+the observed reference ambiguity. Even the most negative Cu-half values
+remain in the common exterior; sign changes cannot be attributed solely to
+the sites removed by this envelope. The most distant samples visually have
+narrower spread, but no further distance threshold, plateau fit or selected
+reference is introduced from that observation.
+
+**Other domains and invalid cases remain visible.** Every exterior full-gap
+case is multiple-root: **1,950/1,950**, with no unique-root height substituted.
+Exterior GlcN Cu-half roots are valid at all 325 sites and three isovalues.
+GlcNAc has **18/13/7** absent roots and **0/0/1** multiple-root case. The latter
+is old grid site **73**, which is exterior; site **105** is in the removed
+complement. Both old problematic sites therefore remain accounted for.
+
+| old molecular-half domain, exterior | isovalue 1 | isovalue 2 | isovalue 3 |
+|---|---:|---:|---:|
+| GlcN valid / 325 | 325 | 325 | 313 |
+| GlcNAc valid / 325 | 190 | 177 | 145 |
+| paired valid / 325 | 190 | 177 | 145 |
+| hypothetical referenced mean (pm) | -72.1249 | -78.4236 | -93.7325 |
+| negative / positive | 163 / 27 | 156 / 21 | 137 / 8 |
+
+These smaller conditional supports do not supply a like-for-like domain
+effect or a preferred physical branch. No unresolved case appears. The full
+54-row state table, 27-row paired summary and 4,490 paired rows (prior plus
+its two complementary subsets) remain under
+`results/molecular_exterior_20260925/report/`.
+
+**Decision.** Reject whole-footprint exclusion **as a sufficient repair of
+the scalar-reference ambiguity**, not as a geometry tool and not as proof
+that no physical substrate reference exists. It cannot justify a class-height
+offset, chemical assignment, current conversion or source-map replacement.
+The next physically distinct question is whether the local effective
+potential of the accepted states admits a PAW-free vacuum matching region
+for a separately tested evanescent continuation. Qualification must precede
+propagation, and neither a flat region nor a numerical cause of the current
+spread is assumed. No such potential export or continuation occurs here.
+
+No STM image or benchmark label is read. No production fit, count, unit
+assignment, calibration, DFT acceptance criterion, mold registry or champion
+changes; unknown25 is not rerun. The diagnostic is finished, while the full
+**694 correct / 43 exact / 855 covered** raw-to-assignment objective remains
+unachieved. A future physical candidate still needs blind image prediction
+against fixed-shape/height-only controls before recognition evaluation.
+
+**Verification and repeat.** Julia **1.13.0** passes **33,324/33,324** final
+assertions: 1,465 synthetic geometry, 8,460 independently reconstructed
+memberships and 23,399 saved-height/group/arithmetic checks. The reader checks
+complete state/group/domain/isovalue key sets, every paired row against saved
+roots and original central molecular maps, statuses, partition counts and
+statistics recomputed in BigFloat. This verifies saved-result arithmetic,
+not a new wavefunction calculation or physical convergence. A second complete
+aggregation produces **byte-identical** state, paired, summary TSVs and TOML.
+
+Geometry and all-paired-site figures are inspected. A second reference plot
+moves legends outside the data area; it changes no point, axis range or
+scientific selection, and both renderings remain. The diagnostic's inputs
+are accepted atomic/PAW metadata and previously verified DFT root/report
+tables, not experimental images or labels. Membership hash, production
+configuration and Project/Manifest remain unchanged.
+
+The first documentation build stops at `Pkg.activate` because its usage log
+is outside the writable sandbox. Its log is preserved; a temporary first
+depot under `/tmp`, with the existing depot still available read-only, is
+used for the build retry. This changes no package version or project file.

@@ -48,6 +48,8 @@ function clearance(xy,f)
     d2=minimum(distance2((p[1]+ix*f.cell[1],p[2]+iy*f.cell[2]),f.poly) for ix in -1:1 for iy in -1:1)
     comparison=sign(d2-f.radius^2)
     # Rounded distance is report-only. Exact squared comparisons define support.
+    # Inside the undilated hull this margin saturates at -radius; it is not
+    # the full signed penetration depth into the rounded envelope.
     (;distance2=d2,exterior=comparison>0,boundary=comparison==0,
         margin_nm=sqrt(Float64(d2))-Float64(f.radius))
 end

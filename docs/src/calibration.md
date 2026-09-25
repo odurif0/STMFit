@@ -33,10 +33,10 @@ evidence for composition. The old molecular-half domain has different and
 smaller supports, and all full-gap cases have multiple roots.
 
 The geometric screen excludes atomic PAW disks, not the entire molecular
-footprint or its electronic tails. Further examination should use the existing
-outputs and a declared whole-footprint/common-exterior geometry rule, keeping
-all original outcomes. The observed distance dependence does not authorize
-picking a favorable clearance threshold or a desired chemical-contrast sign.
+footprint or its electronic tails. This motivated a saved-output follow-up
+with a declared whole-footprint/common-exterior geometry rule, keeping all
+original outcomes. The observed distance dependence does not authorize picking
+a favorable clearance threshold or a desired chemical-contrast sign.
 
 The saved-output follow-up defines the whole footprint as the convex hull of
 all non-Cu atomic centers plus a disk of the largest active molecular PAW
@@ -46,6 +46,14 @@ domain/isovalue remain. This deliberately covers intramolecular spaces, but
 PAW radius is not an electronic decay scale. Exterior membership or lower
 spatial spread alone cannot establish a clean-Cu plateau, transferability,
 chemical calibration or physical uncertainty.
+
+This follow-up is now complete: **325** common exterior candidates yield
+**307/312/317** paired valid Cu-half roots. Background-difference spatial SD
+remains **65.42/68.17/73.94 pm**, and hypothetical referenced contrasts still
+span both signs. The geometric exclusion alone does not stabilize the
+reference. No extra clearance, scalar class offset, domain or isovalue is
+selected. Testing a potential-qualified vacuum continuation is a distinct
+future hypothesis, not a demonstrated cause or an adopted replacement.
 
 ## A shared envelope must not silently remove chemical contrast
 

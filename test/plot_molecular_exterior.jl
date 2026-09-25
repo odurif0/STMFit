@@ -42,7 +42,7 @@ else
     for interval in 1:3
         p=plot(;title="isovalue $interval",xlabel="minimum envelope clearance (nm)",
             ylabel="hypothetical referenced contrast (pm)",ylims=(lo-pad,hi+pad),xlims=(xmin-xpad,xmax+xpad),
-            legend=interval==1 ? :bottomright : false,left_margin=12Plots.mm,bottom_margin=12Plots.mm,right_margin=5Plots.mm)
+            legend=:outerbottom,left_margin=12Plots.mm,bottom_margin=12Plots.mm,right_margin=5Plots.mm)
         for (keep,label,color) in ((true,"common exterior",:royalblue),(false,"removed complement",:darkorange))
             rr=filter(r->i(r,"interval")==interval && b(gg[i(r,"pixel")],"common_exterior")==keep,rows)
             scatter!(p,margin.(rr),1000n.(rr,"referenced_contrast_nm");color,markersize=2.5,alpha=.65,markerstrokewidth=0,label)
@@ -53,6 +53,6 @@ else
         vline!(p,[0.];color=:gray,linewidth=.7,label="")
         push!(panels,p)
     end
-    savefig(plot(panels...;layout=(1,3),size=(1650,620),
+    savefig(plot(panels...;layout=(1,3),size=(1650,780),
         plot_title="All paired Cu-half sites retained — geometric exterior is not a calibrated background"),out)
 end

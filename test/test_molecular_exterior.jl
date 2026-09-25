@@ -127,6 +127,10 @@ if !isempty(ARGS)
         @testset "Saved-height grouping, complements and paired arithmetic" begin
             @test length(states)==2length(groups)*length(domains)*3
             @test length(summary)==length(groups)*length(domains)*3
+            @test Set((r["group"],r["molecule"],r["domain"],M.i(r,"interval")) for r in states)==
+                Set((g,m,d,j) for g in groups for m in M.R.MOLECULES for d in domains for j in 1:3)
+            @test Set((r["group"],r["domain"],M.i(r,"interval")) for r in summary)==
+                Set((g,d,j) for g in groups for d in domains for j in 1:3)
             roots=Dict(m=>M.tsv(joinpath(g.src.run,m,"diagnostic/roots.tsv")) for m in M.R.MOLECULES)
             central=Dict(m=>M.tsv(joinpath(g.src.run,m,"molecular_surfaces.tsv")) for m in M.R.MOLECULES)
             ids=Dict(group=>Set(M.i(r,"pixel") for r in g.rows if M.b(r,group=="all_prior" ? "prior_eligible" : group)) for group in groups)
@@ -149,6 +153,11 @@ if !isempty(ARGS)
                 @test M.i(s,"absent")==count(r->M.i(r,"root_count")==0 && M.i(r,"unresolved")==0,rr)
                 @test M.i(s,"multiple")==count(r->M.i(r,"root_count")>1,rr)
                 @test M.i(s,"unresolved")==count(r->M.i(r,"unresolved")>0,rr)
+                @test M.i(s,"one_descending")==count(r->M.i(r,"descending")==1,rr)
+                values=BigFloat.([M.n(r,"z_nm") for r in rr if M.b(r,"valid")])
+                for (key,fun) in (("mean_nm",mean),("median_nm",median),("min_nm",minimum),("max_nm",maximum),("std_nm",x->std(x;corrected=false)))
+                    @test isempty(values) ? isnan(M.n(s,key)) : isapprox(M.n(s,key),Float64(fun(values));atol=1e-15,rtol=1e-14)
+                end
             end
             for s in summary
                 rr=filter(r->all(r[k]==s[k] for k in ("group","domain","interval")),paired)
