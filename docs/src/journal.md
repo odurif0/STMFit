@@ -2304,6 +2304,14 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
+0bj. **Does selecting between the two physical shapes beat either fixed shape?**
+The next bounded replay compares each saved chemical candidate with the saved
+source-selected candidate at exactly the same plane-common geometry and source
+nuisance coefficients. Both foreground masks, all isovalues, rejected anchors
+and full/unresolved cohorts stay visible. No candidate is refitted, geometry
+revisited or target-based selector introduced. A better generic physical shape
+must not be reported as chemically specific discrimination.
+
 0bi. **Can image-only support make the physical-shape comparison informative?**
 Job **11979519** completes all **146 scans / 292 views**, with **1,621,783** saved
 output checks passing. On 141 identified-registration views, source-only joint
@@ -18146,3 +18154,58 @@ without deployment, with the existing size warnings and unchanged limits.
 `git diff --check` passes. The hypothesis reader succeeds on both the fixed
 witness and the full verified run, checking old hashes and exact population
 totals; it does not rerun or alter predictions. No benchmark headline is replaced.
+
+### 2026-09-25 — Fixed physical shapes versus the source-selected shape
+
+**Previous turn: progress.** Commit **1508cd8** records the completed foreground
+test and the small retained-support gain, with almost all plane-profiled choices
+still GlcN. The worktree is clean. Current Viper accounting confirms job
+**11979519** terminal **0:0** and no live user job. The complete strict label-free
+**694/43/855** objective is still unmet; unknown25 remains the completed frozen
+application. No existing job is restarted.
+
+**Scientific deliverable and done.** Determine whether the two-shape source
+selector has predictive value beyond using either fixed physical shape on
+every diagnostic patch. Done means tested saved-coefficient replay, complete
+case-preserving target errors, an independent arithmetic check, retained and
+rejected support summaries and a documented decision. Preparation starts
+**18:06 UTC**, at most two hours. At most one Viper job uses four Julia threads
+with four static file shards, 16 GB, one hour and no retry/requeue. One fixed
+first-file local replay is allowed, plus synthetic tests and saved-output
+verification. No new fit, mask, coefficient estimation, geometry, isovalue,
+current/height gain, threshold, confidence rule, count, assignment, benchmark
+grade, QE calculation, registry replacement or champion promotion is included.
+
+**Matched comparison.** The previous surface-control run saved both candidate
+planes at the common-shape source-optimal rotation/translation for every patch
+and isovalue, not just the chosen candidate. Reconstruct both predictions using
+those coefficients and the unchanged physical height maps. Replay the chosen
+candidate against its old source/target SSE; then compare the selector with
+fixed GlcN-plus-plane and fixed GlcNAc-plus-plane. Those fixed names define
+counterfactual model arms, not a composition constraint on the data. No new
+source or target criterion selects a preferred arm. The source-only initial
+and joint-background masks annotate the same old patch centers after scoring;
+patch pixels are not clipped or refitted. All 146 input statuses remain,
+including the four unsupported biases and one unsupported patch resolution.
+The former local-plane/common-shape controls remain visible. Both all-scored
+and identified-registration populations are reported, without dropping difficult
+or non-foreground cases. This is an adaptive comparison on the already inspected
+cohort/holdout, not new independent validation or evidence of true chemistry.
+
+**Synthetic preflight.** The first new test fails because its fixture accesses
+the private `chemical_choices` field, which the existing control fitter does
+not return. Read the exported `fits["plane_chemical"][j].choice` instead; no
+model or tolerance changes. The initial log remains. The expanded suite then
+passes **2,835/2,835** checks under Julia **1.13.0**, including the upstream
+regression, both fixed candidates, identical/swapped maps, missing/changed
+target values, corrupted coefficients/geometry and independent export checks.
+Changing mask membership alters only report annotations, not any source/target
+error or prediction. The metadata/maps-only dry-run confirms **146** input
+scans and **282** supported views without making patch predictions.
+
+The fixed witness **240307_015.sxm** completes its saved-coefficient replay in
+both views and passes **12,243/12,243** independent checks. The old selected and
+plain/common controls reproduce their saved errors without changing support.
+The documentation build (`--build-only`) and shell/diff checks pass with the
+existing size warnings and unchanged limits. No parameter changes after the
+real witness; the full cohort comparison is still pending.

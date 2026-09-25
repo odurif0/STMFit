@@ -1,5 +1,19 @@
 # Calibration: measurements, assumptions and limits
 
+## Chemical choice versus one fixed physical shape
+
+A gain from a two-shape dictionary over a plain local plane does not by itself
+establish useful chemical selection. The fixed-shape replay compares both
+saved candidate predictions with the saved source-selected prediction, at the
+same geometry, gain, nuisance coefficients and pixel support. Neither fixed
+candidate is an estimated composition or an assignment to the real molecule.
+Masks are post-scoring annotations only; source/target pixels, geometry,
+isovalue and type are not chosen again. Exact prior selected/control error
+replay and independent interpolation check the comparison. Both fixed arms,
+both masks, all isovalues, all failed input statuses and the unfiltered and
+rejected groups remain. No new physical/chemical calibration is inferred from
+this reused-cohort diagnostic, and no confidence cutoff is introduced.
+
 ## Bright support is not molecular identity
 
 The two-pass image-foreground diagnostic estimates a source-only bright mask,

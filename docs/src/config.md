@@ -1,5 +1,22 @@
 # Configuration Reference
 
+## Fixed physical shapes versus the saved selector
+
+`config/fixed_shape_replay.toml` pins the prior transfer, control and foreground
+settings plus their common file list. It reconstructs both saved chemical
+candidates at the unchanged plane-common source geometry, with their existing
+source-fitted plane coefficients and unit physical height gain. There is no
+optimization, new selector, refiltering, patch clipping or target-based choice.
+The arms are `fixed_glcn`, `fixed_glcnac`, `source_selected`, `local_plane` and
+`plane_common`; fixed-shape names denote counterfactual prediction controls,
+not a composition assumption or unit assignment. Both source-only masks and
+all three inherited isovalues are retained, with all/retained/rejected/
+unavailable groups. Replay tolerances are inherited numerical checks
+(`1e-10` relative, `1e-14 nm` coefficient and `1e-18 nm2` SSE absolute), not
+chemical-confidence thresholds. `test/diagnose_fixed_shape_replay.jl --help`
+describes execution; the independent reader is
+`test/verify_fixed_shape_replay.jl REPO SAVED_RUN NEW_REPORT_DIR`.
+
 ## Source-only bright support
 
 `config/image_foreground.toml` is a two-pass diagnostic, not production ROI or
