@@ -16825,3 +16825,17 @@ are checked before creating the new run directory. The launcher remains the
 existing QE PP-only workflow; eighteen PP steps are sequential within one
 allocation. Config, calibration documentation and the journal are updated
 before submission. No inference input or external grade is read.
+
+**Submission.** Source **cb00345**, the Manifest, pristine QE/dependencies and
+all inputs have zero checksum differences after transfer to
+`/u/oldu/code/STMFit_paw_components_20260925/STMFit`. Julia **1.13.0**, the MKL
+module, offline dependency initialization, patch dry-application, native
+preflight, shell checks and launcher dry-run pass. Documentation builds with
+the existing warnings and unchanged limits. Test-only **11976979** was not
+submitted. The single real job is **11976981**, initially pending, with
+explicit Julia/module exports and no requeue. Settings SHA256 is
+`438820c143636986e90af005ed0ef6e31975177af1cc91f9c36d0383268a8592`;
+smooth/augmentation patch SHA256s are
+`c3eac3aab33883fb6110cc43a4aea0567740e7cb5325c0bf44ef57998dd5e39e`
+and `58db60430dd7267e4773ac832bb2163d4fd1a059d00c423e851b5b02d2419b34`.
+Follow this job to its terminal result; do not submit another in this cycle.
