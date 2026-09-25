@@ -2305,24 +2305,30 @@ See `docs/src/selection.md` for the full guard specification and
 ## Open Questions
 
 0bf. **Do all six representative surfaces have unique descending roots in the continuous WFC signal?**
-A bounded interval-enclosed Fourier diagnostic is being prepared at the three
-saved common midpoint isovalues, with the same lateral grid and molecular-half
-native endpoints. It will retain every unresolved or additional root and export
-refined surfaces only at certified pixels. This is not a new current search,
-experimental calibration, production change or benchmark grade. See the scope
-below; no continuous physical result is claimed before the calculation.
+**Resolved in the fixed finite-basis model at the three saved representatives.**
+Job **11978192** completes in **7m40s (0:0)**: all **1,734** roots are unique and
+descending, with zero unresolved leaves and exact search/query repetitions.
+All six maps remain complete. The maximum independent relative density error
+is **0.00001779%**, down from **2.089%** for linear-profile roots; the largest
+height correction is **0.668041 pm**. Saved-table checks pass **307,949/307,949**.
+This does not certify every isovalue in the three earlier intervals or physical
+slab/tip convergence. The next consequential question is transfer to experimental
+images with common label-free calibration, not further numerical root precision.
+There is no production change, benchmark grade or champion promotion.
 
 0be. **Is there a common, unambiguous constant-current surface in a geometry-defined vacuum domain?**
-**Resolved for the sampled profiles, not the continuous or isolated-surface
-limit.** Job **11977798** completes in **7m00s (0:0)**. The full periodic PAW gap
+**Resolved for the sampled profiles; continuous representatives are verified
+in 0bf, not the complete intervals or isolated-surface limit.** Job **11977798**
+completes in **7m00s (0:0)**. The full periodic PAW gap
 admits no common interval; its geometry-defined molecular half admits **three**
 joint open intervals across all 578 columns, using both cube and direct-WFC
 profiles. Six complete maps are exported. All 68,493 native-z query values and
 1,734 off-grid surface values repeat exactly; saved independent checks pass
 **361,279/361,279**. Maximum off-grid isovalue error is **2.089%**.
 
-**Remaining question:** do the common intervals survive continuous-WFC crossing
-analysis, and what periodic-image/experimental-current uncertainty remains?
+**Remaining question:** what periodic-image/experimental-current uncertainty
+remains, and can these surfaces predict experimental images? Continuous-WFC
+uniqueness is now established at all three representatives only (0bf).
 Every half-gap profile contains at least one rising segment; four GlcNAc columns
 have multiple admissible intervals. No column, interval or error is hidden.
 The midpoint remains a geometry convention, not isolated-slab convergence.
@@ -17361,3 +17367,79 @@ afterwards. Remote CLI load, shell/batch identity and Slurm test-only pass.
 Test-only **11978186** is not a submitted calculation. The sole real job is
 **11978192**, explicitly exporting Julia 1.13, with four Julia threads, 32 GB,
 one hour and no requeue. No additional job is included in this bounded cycle.
+
+### 2026-09-25 — Six continuous constant-current maps verified at fixed isovalues
+
+**Completed experiment: numerical progress, not a recognition result.** Source
+**145c748**, Viper job **11978192**, finishes **14:42:40–14:50:20 UTC**,
+`COMPLETED (0:0)`, elapsed **7m40s**, on `vipc2310`. The run uses the same
+accepted Gamma checkpoints, sharp spectral window, three midpoint isovalues,
+17x17 lateral grid and molecular-half native endpoints. No QE, SCF, PP, fitting
+or external grading is run. No setting is retuned after seeing the result.
+
+**Continuous crossings.** GlcN and GlcNAc each have **867/867** valid roots:
+289 pixels at every one of the three common representative isovalues. All
+**1,734** roots are unique and descending over the complete declared domains,
+with **zero** unresolved leaves. The domains remain GlcN
+**0.9625840347279828–1.4782540533322595 nm**, GlcNAc
+**1.0469649807732644–1.5355486384674546 nm**. Search results repeat exactly
+between parallel and serial execution. All six maps remain complete; no pixel
+or problematic interval is masked. Only these three representatives are
+certified, not all isovalues in the earlier open intervals.
+
+**Independent signal comparison.** All **68,493** saved native-z direct-WFC
+values fall inside the grouped-series density enclosures. At the refined
+heights, all **1,734** fresh full-3D Fourier queries also fall inside the strict
+point enclosures and repeat exactly in parallel/serial execution. Every
+distance to these enclosures is zero; the **1e-13** comparison allowance is not
+needed. This independent query path does not use the grouped vertical series.
+Grouped coefficients themselves are constructed once, with outward rounding,
+not independently reconstructed twice.
+
+| Molecule | Fixed representative | Max relative density error (fraction) | Max correction from linear direct-profile height (pm) | Max root-enclosure width (nm) |
+|---|---:|---:|---:|---:|
+| GlcN | 1 | 1.778667e-7 | 0.668041 | 9.91906e-8 |
+| GlcN | 2 | 1.573001e-7 | 0.576094 | 9.78799e-8 |
+| GlcN | 3 | 1.618650e-7 | 0.382685 | 8.70083e-8 |
+| GlcNAc | 1 | 1.210446e-7 | 0.598630 | 9.98622e-8 |
+| GlcNAc | 2 | 1.293018e-7 | 0.467871 | 8.74530e-8 |
+| GlcNAc | 3 | 1.383018e-7 | 0.615850 | 9.89786e-8 |
+
+The overall maximum is **0.00001779%**, compared with **2.089%** for the
+previous linear roots. The largest height correction is **0.668041 pm**. This
+is a different comparison from the prior **1.427 pm** cube/direct-profile
+discrepancy. Every numerical root width is below the declared **1e-7 nm**
+limit; none of these numbers estimates physical or experimental accuracy.
+
+**Verification and retention.** All **70,165,825 bytes** of this run are fetched
+locally with zero checksum differences. The accepted WFC hashes remain
+unchanged. The new read-only `test/verify_qe_vacuum_continuous.jl` passes
+**307,949/307,949** saved-table checks: target completeness, gap-free domain
+partitions, exclusion/derivative/root consistency, exact source-profile
+identity, enclosure distances, surface/root identity and residual arithmetic.
+It does not recompute WFC signals or Taylor enclosures. Grouped coefficients,
+all leaves, profiles, roots, surfaces, summaries and logs are preserved under
+`qe/vacuum_continuous_20260925/` and
+`results/qe_vacuum_continuous_20260925/`. The submitted scientific code,
+settings, batch and synthetic tests are unchanged relative to **145c748**.
+
+**Scientific decision and next step.** Continuous numerical ambiguity at these
+representatives is resolved. The next useful test is experimental transfer
+with a common label-free observation/calibration model, retaining all three
+physical candidates and testing predictive agreement between forward/backward
+scans. No candidate may be chosen using benchmark labels. The existing
+per-class normalization and additive height-template assembly cannot silently
+stand in for this model: separate normalization removes predicted chemical
+contrast, and constant-current heights are nonlinear density roots, not
+additive density kernels. This is an integration question, not a demonstrated
+experimental failure or a reason to seek more root digits.
+
+Periodic-image, cutoff, k-point, spectral and tip/current uncertainties remain.
+No complete-isovalue-interval or isolated-slab convergence is asserted. Counting,
+assignment, calibration, registry, unknown25 and champion remain unchanged;
+the strict label-free **694/43/855** objective is still open. No further job is
+part of this completed cycle.
+
+Final documentation builds with Julia **1.13.0** and `--build-only` (no
+deployment), with the existing size warnings and unchanged limits.
+`git diff --check` passes. Generated evidence is retained locally, not committed.

@@ -185,6 +185,26 @@ constant-current feedback loop.
 
 ## Diagnostic constant-current observable
 
+**September 25 continuous representative surfaces.** After the sampled-profile
+job **11977798** found three common open isovalue intervals in the
+geometry-defined molecular half of the vacuum gap, job **11978192** tests all
+three fixed representatives using the untruncated finite-basis Fourier signal.
+All **1,734** roots are unique and descending with no unresolved region; six
+17x17 maps are complete. Search and independent 3D query repetitions are exact.
+The maximum relative density residual is **1.77867e-7** (**0.00001779%**),
+compared with **2.089%** for the earlier linearly interpolated roots. The largest
+height correction is **0.668041 pm**. All **68,493** saved native-profile values
+and **1,734** new surface values lie inside their strict interval enclosures.
+
+This resolves the numerical crossing question at three representative
+isovalues, not throughout the earlier intervals or in the isolated-slab limit.
+The full periodic gap still has no common sampled-profile interval. The
+molecular-half boundary remains a geometry convention, and finite-basis,
+periodic-image, tip and experimental-current uncertainties remain. No new QE
+calculation, SCF criterion, state normalization, production mold or recognition
+claim follows. The next question is a shared label-free experimental observation
+model, not additional root precision.
+
 **September 25 independent wavefunction reconstruction.** Job **11977502**
 reads the accepted collected coefficients and evaluates their Gamma Fourier
 series directly in Julia, independently of QE's density FFT and `local_dos`.

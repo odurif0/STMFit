@@ -30,6 +30,17 @@ enclosures with earlier floating-point samples and new direct queries; it does
 not widen the mathematical enclosures or change root certification. No physical
 accuracy, isolated-slab limit or experimental current calibration is asserted.
 
+Job **11978192** completes in **7m40s (0:0)** with all **1,734** targets
+certified unique and descending and no unresolved region: six complete 17x17
+maps at the three fixed representative isovalues. Search and independent 3D
+query repetitions are exact. Maximum relative isovalue error is **1.77867e-7**
+(**0.00001779%**), and the largest height correction from the earlier linear
+direct-profile root is **0.668041 pm**. All saved native values and new surface
+queries lie inside the strict density enclosures, without the comparison
+allowance. Read-only saved-table checks pass **307,949/307,949**. These results
+certify the three representatives, not every isovalue in the earlier intervals.
+No setting, physical uncertainty estimate or production provider is changed.
+
 ## Geometry-defined vacuum crossings
 
 `config/qe_vacuum_crossings.toml` defines a diagnostic surface family, not a

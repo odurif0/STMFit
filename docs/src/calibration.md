@@ -14,10 +14,28 @@ physical density. The implementation uses
 An unresolved, multiple, ascending or boundary crossing cannot yield a valid
 surface pixel. Refinement cannot turn a failed map into a complete map by
 discarding pixels. The 1e-7 nm root-width limit is a numerical target, not an
-experimental height uncertainty. A successful continuous-root check would
-validate the finite-basis series on this fixed domain, not prove that periodic
-images, the tip, spectral convergence or inherited experimental calibration
-are adequate. No one of the three isovalues is chosen using a recognition grade.
+experimental height uncertainty. A continuous-root check validates the
+finite-basis series on this fixed domain, not the adequacy of periodic images,
+the tip, spectral convergence or inherited experimental calibration. No one
+of the three isovalues is chosen using a recognition grade.
+
+**Completed result:** job **11978192** certifies all **1,734** representative
+roots as unique and descending, with no unresolved region and exact
+serial/parallel repetition. Six 17x17 maps remain complete. The independent
+3D signal's maximum relative departure from the isovalue falls from **2.089%**
+to **0.00001779%**; the largest change from the earlier linear direct-profile
+height is **0.668041 pm**. Every root enclosure is at most **1e-7 nm** wide.
+These are numerical errors in the fixed model, not physical height accuracy
+or experimental recognition. Only the three representative isovalues have
+been certified, not the whole open intervals containing them.
+
+The next scientific question is experimental transfer with a shared
+label-free observation model. Separately normalizing each chemical surface
+would remove part of their predicted contrast. Adding constant-current height
+patches also requires justification: heights are roots of a density equation,
+not additive density contributions. The existing height-template assembly
+cannot silently supply that justification. No mold or calibration is promoted
+by this numerical result.
 
 ## Surface families without a selected experimental current
 
