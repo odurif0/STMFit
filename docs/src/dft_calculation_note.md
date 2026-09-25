@@ -185,6 +185,21 @@ constant-current feedback loop.
 
 ## Diagnostic constant-current observable
 
+**September 25 height/envelope controls.** Job **11979008** keeps the fixed
+surface-transfer cohort, patches, calibration and all three isovalues. A common
+shape with just the fixed mean class-height contrast reproduces
+**99.52--99.57%** of the original chemical hypotheses on identified-registration
+views. With the same source-only affine nuisance and chemical geometry frozen
+at the common minimum, the physical shapes give **5.995--6.044 pm** RMS,
+worse than the chemistry-free local plane (**5.447 pm**). Independent saved
+checks pass **2,584,957/2,584,957**. The near-single-class hypotheses after plane
+profiling are not chemical composition or unit counts. These conditional,
+reused-cohort controls expose the current observation/support limitation;
+they do not prove that chemistry is absent or change the numerically verified
+maps, accepted DFT states, SCF criterion, current conversion or production molds.
+Foreground and a shared molecular envelope are needed before a new chemical
+comparison, without selecting pixels or settings from benchmark labels.
+
 **September 25 raw-image transfer.** Job **11978725** tests all six continuous
 maps on source-only diagnostic patches, retaining their relative physical
 heights with unit gain and one common offset per source scan. Separate target

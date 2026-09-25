@@ -2305,14 +2305,19 @@ See `docs/src/selection.md` for the full guard specification and
 ## Open Questions
 
 0bh. **Does chemical shape add predictive information beyond height and a local envelope?**
-A bounded control cycle keeps the complete saved raw-image cohort, source-only
-anchors, native pixels, target calibration and three isovalues from job 11978725.
-A height-contrast control retains the common map and only the two maps' mean
-height difference. Source-only constant/plane controls measure local envelope
-predictability; plane-profiled common geometry is frozen before testing the two
-chemical shapes. No chemical state can move the geometry. This is a diagnostic
-of the observed confound, not a molecular foreground detector or a production
-calibration/assignment replacement. No benchmark grade is used.
+**Not demonstrated by the completed fixed-patch controls.** Job **11979008**
+finishes **0:0 in 4m03s**, preserving all 146 inputs, 282 scored views and 15,413
+diagnostic patches. On 138 identified-registration views, height-only contrast
+reproduces **99.52--99.57%** of the earlier chemical hypotheses. After profiling
+the same source-only plane, chemical shapes give **5.995--6.044 pm** RMS versus
+**5.447 pm** for a plane without chemistry: **21.13--23.12% greater MSE**.
+They beat the plane-only control in only **5/138** views at each isovalue.
+All three isovalues and every case remain reported. Independent readback passes
+**2,584,957/2,584,957** checks; there is no external grade or production change.
+The next consequential problem is image-derived molecular support and a shared
+background/envelope observation model, without a count/composition prior or
+selection from heldout winners. This does not prove chemical information absent
+from the images; the current diagnostic anchors are not validated unit centers.
 
 0bg. **Do the continuous surface shapes transfer to raw trace/retrace images?**
 **Numerically reproducible, but chemical transfer is not established.** Job
@@ -2324,9 +2329,9 @@ Its **44.80--45.36 pm** RMS remains far above the source-copy **6.63 pm**.
 Independent saved-output checks pass **7,281,567/7,281,567**. An overlay of the
 first eligible scan shows many substrate/border anchors and a class contrast
 associated with molecular brightness; this is not a chemical truth annotation.
-The next useful test must separate background and a class-independent molecular
-envelope from chemical contrast, including a height-only null. No count,
-calibration, registry, benchmark grade or champion is changed.
+The height/local-plane controls are now completed in **0bh**; molecular support
+and the common observation model remain unresolved. No count, calibration,
+registry, benchmark grade or champion is changed.
 
 0bf. **Do all six representative surfaces have unique descending roots in the continuous WFC signal?**
 **Resolved in the fixed finite-basis model at the three saved representatives.**
@@ -2336,9 +2341,10 @@ All six maps remain complete. The maximum independent relative density error
 is **0.00001779%**, down from **2.089%** for linear-profile roots; the largest
 height correction is **0.668041 pm**. Saved-table checks pass **307,949/307,949**.
 This does not certify every isovalue in the three earlier intervals or physical
-slab/tip convergence. The next consequential question is transfer to experimental
-images with common label-free calibration, not further numerical root precision.
-There is no production change, benchmark grade or champion promotion.
+slab/tip convergence. Experimental transfer with shared label-free calibration
+is examined in **0bg--0bh**; the observation/support model remains unresolved,
+not numerical root precision. There is no production change, benchmark grade
+or champion promotion.
 
 0be. **Is there a common, unambiguous constant-current surface in a geometry-defined vacuum domain?**
 **Resolved for the sampled profiles; continuous representatives are verified
@@ -17795,3 +17801,115 @@ bright structure and the substrate/borders. This is not the molecule's true
 composition. It motivates reporting the full-cohort hypothesis counts, not
 relabeling states or imposing a number of GlcNAc units. The helper executes
 successfully under Julia 1.13; no inference source or setting is changed.
+
+### 2026-09-25 — Surface controls complete: local plane beats the chemical dictionary
+
+**Completed result and accounting.** The sole job **11979008** completes **0:0**
+on `vipc2088`, **16:35:53--16:39:56 UTC** (**4m03s**), with **989,232 K** peak
+RSS. All 146 file-completion markers are present. Its **4,108** scientific output
+files (**2,485,404,882 bytes**) and both Slurm logs are local. The run-directory
+checksum comparison is empty; comparing the containing log directory shows only
+its expected local directory timestamp change, not a file-content difference.
+The scientific source/config/dependency checksum comparison is also empty.
+Project and Manifest remain unchanged. No retry, requeue or second job follows.
+
+The output preserves all **146** inputs: **282** successful directions from
+**141** scans, the same two `no_supported_anchor` directions of the coarse
+240816_002 scan, and the same four unsupported biases. There are zero new failed
+views. All **15,413** source patches and **3,216,589** heldout pixels per isovalue
+remain. The fixed identified-registration subset contains **138** directions,
+**81** scans, **6,467** diagnostic patches and **1,424,589** evaluation pixels.
+Unidentified registration is still flagged and retained; it is not quietly
+promoted to a calibrated displacement or excluded from the all-scored report.
+
+**Independent verification.** The saved-output reader completes with exit zero,
+**2,584,957/2,584,957** assertions in **14m17.5s**, under Julia **1.13.0**.
+It verifies complete case/hash accounting, unchanged pixel support, independently
+interpolated selected predictions, source/target SSE, linear normal equations,
+constant/common-offset stationarity, frozen common geometry for chemistry,
+both chemical alternatives and saved candidate ordering. It reproduces the
+unchanged source-common offset/loss comparison and checks that the two purely
+local controls repeat exactly across isovalues. It does not independently
+recompute every unchosen common-geometry candidate or prove a global physical
+optimum. The prior heldout-row construction remains frozen; this reader does
+not repeat the original raw-image/calibration computation. Assertion counts
+are arithmetic checks, not statistical independence or chemical accuracy.
+
+**Identified-registration comparison.** RMS values are **pm**, pooled on the
+same fixed **1,424,589** evaluation pixels. Old controls are copied unchanged
+from the verified upstream run. All three representatives remain reported;
+none is chosen by the comparison.
+
+| Model | Isovalue 1 | Isovalue 2 | Isovalue 3 |
+|:--|--:|--:|--:|
+| Original common surface, one scan offset | 67.2326 | 67.1078 | 66.8349 |
+| Original chemical dictionary, one scan offset | 45.3609 | 45.2719 | 44.8042 |
+| Height-only contrast, one scan offset | 59.3376 | 59.2963 | 58.9524 |
+| Independent source-patch constant | 8.3206 | 8.3206 | 8.3206 |
+| Independent source-patch plane | 5.4470 | 5.4470 | 5.4470 |
+| Common shape plus source-patch plane | 7.2084 | 7.2997 | 7.6044 |
+| Chemical shape at frozen common geometry, same plane | 6.0054 | 5.9950 | 6.0441 |
+| Source-copy reference | 6.6292 | 6.6292 | 6.6292 |
+
+Height-only contrast reduces MSE by **21.93--22.20%** relative to the original
+common surface, accounting for about **40.24--40.58%** of the original chemical
+dictionary's MSE reduction. Thus a fixed mean-height shift does **not** explain
+the entire predictive gain. Yet it reproduces **99.52--99.57%** of the original
+chemical *state choices* in the identified subset (**99.36--99.42%** across all
+15,413 patches). Agreement of two hypotheses is not either one's accuracy, but
+it supports the observed dominance of height in the original state decision.
+
+After the matched local plane is fitted, chemical shapes improve MSE by
+**30.59--36.83%** relative to the plane-plus-common shape, winning in all **138**
+identified views. However, they remain **21.13--23.12% worse in MSE** than the
+plain local plane, beating it in only **5/138** views and **3/81, 3/81, 2/81**
+scan-level comparisons for the three isovalues. These exceptions remain in
+`case_comparison.tsv`; they are not used to redefine foreground, tune a setting
+or select a new success subset. Source copy is also worse than the local plane,
+so it is a useful reference, not a demonstrated noise floor.
+
+The all-scored comparison is retained separately: local-plane RMS **22.9134 pm**,
+chemical-plus-plane **23.1437 / 23.1386 / 23.1496 pm**, common-plus-plane
+**23.5246 / 23.5524 / 23.6509 pm**, local constant **23.5709 pm** and source copy
+**23.4185 pm**. The original chemical dictionary gives
+**44.1153 / 44.0582 / 43.7144 pm**, versus height-only
+**55.7467 / 55.7328 / 55.5101 pm**. Chemical-plus-plane beats plain plane in only
+**8/282, 8/282, 9/282** views; the unresolved shifts still dominate much of this
+all-scored error and are not used as evidence of physical registration.
+
+**Hypothesis collapse is not composition.** After plane profiling, the three
+isovalues select the GlcN hypothesis for **15,333 / 15,337 / 15,370** of **15,413**
+patches (**99.48--99.72%**); the corresponding GlcNAc counts are **80 / 76 / 43**.
+No composition constraint causes this: synthetic mixed-shape recovery and label
+swap controls pass, and each patch freely chooses either physical surface.
+The fixed witness scan selects GlcN for all 20/33 forward/backward patches at
+all three isovalues, including the bright feature and substrate/borders.
+Neither these hypotheses nor the 15,413 patches are molecular unit counts.
+
+**Decision.** The current physical-shape/local-patch observation model has not
+established chemically specific predictive information beyond the simple local
+trend control. Do not promote it or tune its isovalue, gain, detection threshold
+or composition after this result. The experiment deliberately removes affine
+height information and uses imperfect diagnostic anchors, so it does not prove
+chemical information absent from the images, or rule out physical templates
+under a better observation model. It also reuses the same cohort/holdout after
+the earlier diagnostic, not independent validation.
+
+The next useful direction is image-derived molecular foreground and a shared
+background/molecular envelope before class-specific contrast, with support and
+geometric choices made without chemical states or benchmark feedback. It must
+retain failures and a chemistry-free predictive control; neither a desired N
+nor a top-k/class-count rule may repair these results. No such new method or
+additional job is included in this completed cycle. Counting, assignment,
+calibration, registry, unknown25 and champion are unchanged; the full strict
+label-free **694/43/855** objective remains unmet.
+
+Evidence is under `results/vacuum_surface_controls_20260925/`: `run/`, both
+Slurm logs, `remote_terminal.log`, `fetched_checks.log`, `case_comparison.tsv`,
+`model_summary.tsv`, `hypothesis_counts.tsv`, `plane_comparison_counts.tsv`,
+checksum logs and `first_scan_plane_shapes.png`. Generated evidence stays local
+and uncommitted.
+
+Final documentation builds with Julia **1.13.0** and `--build-only`, without
+deployment, with the existing size warnings and unchanged limits.
+`git diff --check` passes; no production or benchmark headline is replaced.

@@ -17,6 +17,20 @@ correct count, chemical labels, independent noise or a calibrated current.
 These controls follow inspection of the same cohort's earlier predictions;
 the reused heldout rows are a diagnostic comparison, not fresh validation.
 
+**Completed result:** job **11979008** preserves all 146 cases without a new
+failure. On identified-registration views, height-only contrast retains
+**99.52--99.57%** of the old chemical state choices, despite explaining only
+about **40%** of their predictive gain over the original common surface.
+Plane-plus-chemical shapes improve on plane-plus-common, but remain
+**21.13--23.12% worse in MSE** than a local plane with no chemistry
+(**5.995--6.044 pm** versus **5.447 pm** RMS). After plane profiling,
+**99.48--99.72%** of all diagnostic patches choose the same GlcN hypothesis;
+this is not a composition estimate. Neither the new comparison nor its
+**2,584,957** passing arithmetic checks justify unit assignment or physical
+current calibration. Foreground and a shared molecular envelope remain to be
+established without a desired count; removing affine height here does not prove
+chemical information absent from better-localized observations.
+
 ## Experimental transfer without inherited count calibration
 
 The bounded surface-transfer diagnostic uses only the raw source image to

@@ -16,6 +16,14 @@ and rank failures remain failed views. Replay tolerances (`1e-10` relative,
 acceptance. These controls neither assign production units nor choose an
 isovalue/foreground/chemical confidence threshold.
 
+Job **11979008** completes **0:0 in 4m03s**, with no new failed view and all
+146 inputs retained. On 138 identified-registration views, the height-only
+control reproduces **99.52--99.57%** of earlier chemical hypotheses. The matched
+plane-plus-chemical model gives **5.995--6.044 pm** RMS, worse than a source-only
+local plane (**5.447 pm**), across all three isovalues. Independent readback
+passes **2,584,957/2,584,957** checks. No parameter is retuned or promoted;
+these diagnostic patches are not validated molecular foreground or units.
+
 ## Raw-image transfer of the continuous surfaces
 
 `config/vacuum_surface_transfer.toml` is diagnostic-only. It binds both surface,
