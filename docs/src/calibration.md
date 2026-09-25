@@ -14,6 +14,17 @@ both masks, all isovalues, all failed input statuses and the unfiltered and
 rejected groups remain. No new physical/chemical calibration is inferred from
 this reused-cohort diagnostic, and no confidence cutoff is introduced.
 
+The completed replay (job **11979724**, **3,434,090** checks passing) shows that
+fixed GlcN alone explains **93.78%, 99.18%, 100%** of the earlier retained-support
+gain over a plain plane. The selector adds only **0.07417%, 0.01299%, 0%** in
+MSE relative to that fixed shape, improving **2, 2, 0** of 138 identified views.
+At the third isovalue, all four different GlcNAc choices lack heldout target
+pixels; equal target error is not validation of those choices. The full
+identified comparison slightly favors fixed GlcN at every isovalue. This
+supports a generic shape contribution, not robust chemical identification or
+an all-GlcN composition. Shared molecular-envelope/background modelling remains
+an open observation-model question; no such new fit or calibration is claimed.
+
 ## Bright support is not molecular identity
 
 The two-pass image-foreground diagnostic estimates a source-only bright mask,
@@ -39,9 +50,9 @@ foreground ground truth. On the 138 previously physically scored identified
 views, the unchanged chemical-plus-plane predictions on retained anchors give
 **5.884--5.924 pm** RMS versus **5.930 pm** for a plain local plane: a weak
 **0.22--1.55%** pooled-MSE gain, present in only about half the views. The same
-model chooses the GlcN shape for **99.34--99.74%** of these anchors. A fixed
-single-shape control is therefore still needed before interpreting the gain
-as useful chemical discrimination. No expected composition is used to reject
+model chooses the GlcN shape for **99.34--99.74%** of these anchors. The completed
+fixed-shape control above explains almost all of the gain without useful
+broad chemical selection. No expected composition is used to reject
 or repair these frequencies. All cases, masks, rejected anchors and isovalues
 remain reported; the unfiltered result still favors the plain local plane.
 Neither counting calibration nor the frozen application/champion changes.

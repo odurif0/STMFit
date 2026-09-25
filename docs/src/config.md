@@ -17,6 +17,15 @@ chemical-confidence thresholds. `test/diagnose_fixed_shape_replay.jl --help`
 describes execution; the independent reader is
 `test/verify_fixed_shape_replay.jl REPO SAVED_RUN NEW_REPORT_DIR`.
 
+Job **11979724** completes in **36s**, with all supported views preserved and
+**3,434,090** independent checks passing. On joint-mask retained identified
+support, the selector improves fixed-GlcN MSE by only **0.07417%, 0.01299%, 0%**;
+fixed GlcN alone accounts for **93.78%, 99.18%, 100%** of its gain over a plain
+plane. The third-isovalue alternative choices have no heldout target pixels.
+Neither a mask/isovalue nor a composition is chosen from these results, and no
+production parameter is changed. The original interleaved stdout line is
+retained; a separately tested progress lock fixes only future logging.
+
 ## Source-only bright support
 
 `config/image_foreground.toml` is a two-pass diagnostic, not production ROI or

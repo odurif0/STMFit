@@ -2305,12 +2305,20 @@ See `docs/src/selection.md` for the full guard specification and
 ## Open Questions
 
 0bj. **Does selecting between the two physical shapes beat either fixed shape?**
-The next bounded replay compares each saved chemical candidate with the saved
-source-selected candidate at exactly the same plane-common geometry and source
-nuisance coefficients. Both foreground masks, all isovalues, rejected anchors
-and full/unresolved cohorts stay visible. No candidate is refitted, geometry
-revisited or target-based selector introduced. A better generic physical shape
-must not be reported as chemically specific discrimination.
+**Only a very small conditional gain; no robust chemical discrimination.**
+Job **11979724** replays every saved candidate, with **3,434,090** independent
+checks passing and no new fit. On the joint-mask retained identified support,
+choosing between shapes improves fixed-GlcN MSE by only **0.07417%, 0.01299%,
+0%**, in **2, 2, 0** of 138 views. The four alternative choices at the third
+isovalue have zero heldout target pixels, so equality is not chemical validation.
+Fixed GlcN alone recovers **93.78%, 99.18%, 100%** of the gain over a local
+plane. Both masks/isovalues and all rejected/unresolved cases remain; the full
+identified comparison slightly favors the fixed shape at every isovalue.
+Do not infer all-GlcN composition or promote this diagnostic. The next useful
+model question is shared background/molecular-envelope structure, without
+free per-patch planes absorbing potential height contrast or background extrema
+masquerading as units. Keep a fixed-shape and a chemistry-free control before
+interpreting any future chemical contrast; no such new model is run here.
 
 0bi. **Can image-only support make the physical-shape comparison informative?**
 Job **11979519** completes all **146 scans / 292 views**, with **1,621,783** saved
@@ -2324,10 +2332,9 @@ gain appears in only **68--72/138** views and **99.34--99.74%** of the retained
 hypotheses still choose GlcN. This is a weak conditional shape gain, not chemical
 identification or a unit count. The original hypotheses instead align strongly
 with foreground/background, consistent with the earlier height confound.
-The next discriminating control is a fixed single physical shape versus the
-two-shape choice, on unchanged source-only support and geometry, before any
-claim about chemistry. Both masks/isovalues, rejected anchors and the complete
-cohort remain; no threshold, production default or champion is changed.
+The completed fixed-shape control in **0bj** explains almost all of this gain
+without a chemical choice. Both masks/isovalues, rejected anchors and the
+complete cohort remain; no threshold, production default or champion changes.
 
 0bh. **Does chemical shape add predictive information beyond height and a local envelope?**
 **Not demonstrated by the completed fixed-patch controls.** Job **11979008**
@@ -18239,3 +18246,80 @@ coefficient, prediction, input or setting is changed by this logging-only fix.
 The four-thread synthetic suite passes **2,837/2,837** checks after this fix,
 including exact recovery of all 200 concurrent progress lines. The original
 Viper scientific run remains **f059857** and is not resubmitted.
+
+**Complete independent result.** All **1,287** run files and both Slurm logs are
+fetched (**40,008,640 bytes**). The independent reader passes
+**3,434,090/3,434,090** checks in **6m38.8s**: candidate/source normal equations,
+independent four-weight map interpolation, coefficients and geometry, prior
+source/target SSE replay, hashes, selected-candidate identity, mask membership
+and unchanged populations. A separate direct TSV sum reproduces retained-group
+errors. The post-run logging-only correction is **1cc83a8**; it does not alter
+the completed scientific run or any generated result.
+
+The physical score still covers **141 scans / 282 views / 15,413** diagnostic
+patches, retaining all 146 input statuses. The joint-mask retained identified
+subset is still **81 files / 138 views / 1,516** patches and **392,950** target
+pixels. No patch center becomes unavailable, no patch is cropped and no
+coefficient or geometry is refitted. RMS errors in pm on this exact support:
+
+| Saved prediction | Isovalue 1 | Isovalue 2 | Isovalue 3 |
+|:--|--:|--:|--:|
+| Plain local plane | 5.930387 | 5.930387 | 5.930387 |
+| Fixed GlcN + saved plane | 5.897514 | 5.884575 | 5.923725 |
+| Fixed GlcNAc + saved plane | 8.619608 | 8.842669 | 9.399414 |
+| Source-selected shape + saved plane | 5.895327 | 5.884193 | 5.923725 |
+
+**Generic shape versus chemical choice.** Against fixed GlcN, the selector's
+pooled-MSE gains are only **0.074170%, 0.012993%, 0%**. It improves/worsens/ties
+**2/1/135**, **2/2/134**, **0/0/138** views respectively. At file level, these are
+two improvements and no regression, two improvements and one regression, and
+81 ties. Fixed GlcN alone provides **1.10555%, 1.53901%, 0.22455%** MSE gains over
+the plain plane: **93.7781%, 99.1756%, 100%** of the selector's corresponding
+gain over that same plane. This is an arithmetic decomposition on matched
+support, not an information-theoretic or causal chemistry measurement.
+
+The initial mask has the same selector-minus-fixed-GlcN SSE differences
+(**-0.01013685 / -0.00176796 / 0 nm2**), hence similarly tiny relative gains
+(**0.074159%, 0.012991%, 0%**), with the same view win/loss/tie counts.
+No target result chooses a mask or isovalue. On the full **138 identified
+views**, including rejected anchors, the selector is instead slightly worse
+than fixed GlcN at all three isovalues: **+0.02487%, +0.02696%, +0.05787% MSE**.
+Rejected-anchor differences also favor the fixed shape. Among all 282 scored
+views, even retained-anchor selector-minus-fixed differences change sign:
+relative MSE gains **+0.005570%, -0.001502%, -0.005959%**. Unresolved registration
+is not treated as a physically validated comparison.
+
+**Rare alternatives and evaluation coverage.** The joint-mask identified group
+contains **8 / 10 / 4** source-selected GlcNAc hypotheses. Only **4 / 5 / 0** of
+those patches have any heldout target observations, totalling **1,656 / 2,085 /
+0** target pixels. Thus at the third isovalue the selector's heldout predictions
+are exactly those of fixed GlcN on this group: the four different source choices
+are untested, not confirmed equivalent or correct. The source predictions and
+choices remain saved; zero target coverage is never counted as validation.
+The fixed target row split is not changed after seeing this outcome.
+
+**Decision.** The earlier small foreground-conditioned improvement is almost
+entirely a generic one-shape contribution under this observation model. The
+current two-shape choice has not demonstrated robust chemically specific
+predictive value and is not a candidate for chemical assignment or champion
+promotion. This does not establish an all-GlcN composition, absence of chemical
+information in the images, or failure of every DFT model. Free local planes
+deliberately remove affine height contrast, and the diagnostic anchors are not
+validated monomer positions. The useful next direction is to model the common
+molecular envelope and background jointly before interpreting local contrast,
+retaining a fixed-shape and chemistry-free control. It must not impose a class
+count, expected N, shared sequence or target-selected threshold. No new envelope
+fit or additional cluster job is included in this completed cycle.
+
+All results remain adaptive diagnostics on the reused cohort/holdout, not
+independent validation. Counting/GCV, assignment, calibration, accepted DFT
+criterion, registry, unknown25 and champion are unchanged; no external grade
+is run. The strict complete **694/43/855** goal stays unmet. Evidence is local
+under `results/fixed_shape_replay_20260925/`: `run/`, Slurm logs, initial/final
+synthetic logs, `fetched_checks.log`, checksum logs and `report/` (per-patch,
+per-view, aggregate and paired-comparison tables), plus the independent retained
+totals and rare-choice coverage sums. No generated evidence is committed.
+
+Final documentation builds successfully with Julia **1.13.0** and
+`--build-only`, without deployment, retaining the existing size warnings and
+limits. `git diff --check` passes. No production/benchmark headline is replaced.
