@@ -18209,3 +18209,13 @@ plain/common controls reproduce their saved errors without changing support.
 The documentation build (`--build-only`) and shell/diff checks pass with the
 existing size warnings and unchanged limits. No parameter changes after the
 real witness; the full cohort comparison is still pending.
+
+**Single submission.** Scientific code is committed as **f059857**. Rsync
+dry-run, sync and checksum-only confirmation show identical tracked source
+on Viper; Project, Manifest and diagnostic-config hashes also match. Viper's
+metadata/maps-only dry-run and `sbatch --test-only` pass. The sole real job
+**11979724** is submitted with explicit Julia/root/output exports and observed
+pending for **QOSGrpCpuLimit** at **18:25 UTC**. Four requested CPUs map to eight
+allocated hardware threads; the batch uses four Julia threads, 16 GB and a
+one-hour bound. This is an ordinary shared-quota wait, not permission to retry,
+cancel another job or change resources. No image prediction runs on the login.
