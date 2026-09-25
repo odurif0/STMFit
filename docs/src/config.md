@@ -1,5 +1,30 @@
 # Configuration Reference
 
+## Geometry-defined vacuum crossings
+
+`config/qe_vacuum_crossings.toml` defines a diagnostic surface family, not a
+production provider. The accepted states, sharp bias window, PAW datasets and
+absolute smooth-density normalization are unchanged. The 17x17 lateral grid is
+horizontal: its first axis is the normalized xy projection of the chain tangent,
+its second is the positive in-plane perpendicular, and tip motion is substrate
++z. XML coordinates, rather than rounded cube headers, define native z knots.
+
+The two declared domains use only atomic coordinates and PAW radii: the complete
+gap between the upper bounding PAW plane and the lower plane of the next periodic
+copy, and the lower half of that gap. Only native knots strictly inside the
+planes are used. The midpoint is a geometry diagnostic, not a fitted cutoff or
+proof of an isolated-surface limit. Every column is retained in both domains.
+
+`selection.policy="all_common_unique_descending_intervals"` enumerates all open
+isovalue intervals for piecewise-linear profiles. Ascending, multiple, tangent,
+plateau and boundary roots cannot qualify. Separate intersections cover every
+column of both molecules for cube interpolation and direct WFC knot samples;
+their joint intersection defines the reported surface family. There is no
+isovalue scan resolution or independently chosen class current. Each surviving
+interval has one geometric-midpoint diagnostic surface with direct off-grid
+density error reported. Serial/parallel values must repeat exactly. This does
+not prove continuous-WFC uniqueness between knots or calibrate current in pA.
+
 ## Independent vacuum-wavefunction diagnostic
 
 `config/qe_vacuum_wavefunctions.toml` declares

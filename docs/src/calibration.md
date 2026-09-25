@@ -1,5 +1,29 @@
 # Calibration: measurements, assumptions and limits
 
+## Surface families without a selected experimental current
+
+The geometry-defined crossing diagnostic changes the sampling direction from
+the earlier tilted ring-normal planes to the substrate normal. This is an
+explicit new diagnostic coordinate convention, not a silent production change.
+In the [Tersoff-Hamann model](https://doi.org/10.1103/PhysRevB.31.805), tunnelling
+current is related to sample density at the tip. A common isovalue is therefore
+a useful model observable, but its conversion to the experimental setpoint
+still requires tip and spectral assumptions not supplied by this calculation.
+
+The vacuum search bounds come from the accepted atomic geometry and PAW radii,
+before reading densities: all space between the two periodic PAW envelopes,
+and its molecular-side half. The half-gap convention is not evidence that the
+periodic image's wavefunctions are negligible. Comparing both domains retains
+that limitation explicitly; neither can be adjusted after a failed result.
+
+All 578 columns enter each common-isovalue intersection. A missing or ambiguous
+column is not removed to obtain a surface. The complete piecewise-linear
+interval family and empty results are preserved, with direct Fourier checks
+of the knot profiles and representative surfaces. No experimental height,
+per-class normalization, current-to-density factor, threshold or benchmark
+label is used. Uniqueness between continuous Fourier samples and transfer to
+experimental chain images remain distinct questions, even if surfaces exist.
+
 ## Direct wavefunctions check the vacuum observable, not the current setpoint
 
 The bounded September 25 WFC diagnostic independently reconstructs the smooth

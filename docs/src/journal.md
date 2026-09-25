@@ -2304,6 +2304,14 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
+0be. **Is there a common, unambiguous constant-current surface in a geometry-defined vacuum domain?**
+The next bounded diagnostic compares substrate-normal columns over both full
+and molecular-half PAW gaps, keeping every column and every open isovalue
+interval. The midpoint is fixed from geometry before density inspection;
+it is not an isolated-slab convergence result. Cube profiles and direct WFC
+samples are both tested. Preparation/tests are in progress; no calculation,
+surface or experimental improvement is yet claimed. See the dated scope below.
+
 0bd. **Does the smooth vacuum signal agree with an independent WFC reconstruction?**
 **Resolved at the audited points and integral, not as a current calibration.**
 Job **11977502** completes in **3m14s (0:0)**. All **13,872** native vertices
@@ -17079,3 +17087,76 @@ Production, calibration, the mold registry, unknown25 and champion are unchanged
 Documentation builds under Julia 1.13 with the existing size/deployment warnings
 and unchanged limits. The scientific code and configuration diff against
 submitted source **a014e7e** is empty; only the measured outcome is documented.
+
+### 2026-09-25 — Geometry-defined substrate-normal surface family: bounded scope
+
+**Deliverable and done.** Determine every common open isovalue interval giving
+one descending crossing in all 289 columns of each accepted molecule, in two
+geometry-defined vacuum domains. Export all profiles, failed/empty outcomes and
+one representative surface per surviving interval, with independent WFC values.
+Completion requires synthetic tests, one Viper calculation, fetched outputs and
+documented outcomes; it does not mean the archived **694/43/855** recognition
+goal, experimental-current calibration or a champion promotion is achieved.
+Budget: at most two hours of preparation plus one four-CPU, 32 GB, one-hour
+analysis job, no requeue or automatic retry. The existing accepted states are
+read only; this is a Julia analysis, not a new QE/PP calculation. Consequently
+it uses one ordinary sbatch, not a modification of the MPI-only QE launcher.
+
+**Geometry fixed before density inspection.** Exact accepted XML coordinates
+put the lowest Cu plane at z=0 in both cells, not at the rounded cube's apparent
+periodic ceiling. Let Lz be the cell height and r each atom's active PAW radius.
+The lower vacuum bound is max(z_atom+r), the upper bound min(z_atom+Lz-r).
+All atoms must be in the canonical z cell and the gap must be nonempty. The
+two fixed domains are this whole gap and its molecular-side half, divided at
+the arithmetic midpoint of the bounding planes. Native z knots strictly inside
+these domains guarantee all interpolation vertices lie above/below the global
+PAW envelopes. No density-selected turning point or ad hoc 0.7 nm cutoff is used.
+The midpoint is an explicitly limited geometry convention, not a proof of
+negligible periodic-image contributions.
+
+The lateral grid keeps the existing half-width/step **0.32/0.04 nm**. Its tangent
+is projected to the substrate xy plane and normalized; the in-plane perpendicular
+completes the frame. Vertical motion is +z, not the tilted ring normal used in
+the preceding plane diagnostic. This matches the modeled substrate-normal
+topography convention; both absolute and ring-relative vertical heights are
+reported. The [Tersoff-Hamann model](https://doi.org/10.1103/PhysRevB.31.805)
+motivates isodensity surfaces but supplies no absolute experimental current
+conversion for these calculations.
+
+**No favorable subset or selected current.** The implementation enumerates
+crossing-count changes at every profile density knot rather than scanning a
+chosen isovalue range. Intervals qualify only with exactly one descending root;
+plateaus, tangencies, endpoints and multiple roots are retained as failures.
+Common intervals include every column of both molecules. Cube bilinear lateral
+profiles and direct Fourier samples at the same native z knots are intersected
+separately and jointly. Each joint interval supplies a geometric-midpoint
+diagnostic surface, not an optimized setpoint. Direct density at each off-grid
+surface position quantifies interpolation error without a tuned acceptance
+threshold. All direct evaluations repeat with serial blocks. Piecewise-linear
+uniqueness does not prove continuous Fourier uniqueness between knots.
+
+Settings live in `config/qe_vacuum_crossings.toml`; the CLI is
+`test/qe_vacuum_crossings.jl --help`, with the small interval/geometry library
+under `test/lib/vacuum_crossings.jl`. Production fit/selection, physical
+calibration, registry, benchmark data and unknown25 are untouched. No labels,
+expected counts, composition, clipping, masking, monotonic forcing, per-class
+normalization or post-result bound changes are allowed in this cycle.
+
+**Prepared geometry and verification.** The full PAW gaps are GlcN
+**0.9609351–2.0107370 nm**, midpoint **1.4858361 nm**, and GlcNAc
+**1.0389508–2.0432889 nm**, midpoint **1.5411199 nm** in absolute substrate z.
+The native full/half domains contain **122/61** and **115/57** knots per column.
+These values are saved before any new density evaluation in
+`qe/vacuum_crossings_20260925/geometry_before_density.tsv`.
+The interval suite exhausts all 243 five-knot profiles over three density
+levels, including every singular level. A separate analytic periodic WFC/cube
+fixture exercises both molecules, exact repeat, an empty full-gap result and
+a valid half-gap surface family. No real multicolumn field is computed locally.
+The preparation and test logs are under `results/qe_vacuum_crossings_20260925/`.
+
+The final synthetic suite passes **2,918/2,918** under Julia **1.13.0**, including
+a rejection test for off-native vertical knots. The unchanged legacy
+constant-current suite also passes. Shell syntax, prepared/tracked batch
+identity and documentation build pass; existing documentation size/deployment
+warnings remain, with no limit changes. Viper has no queued job from this work,
+both original WFC paths are readable and its Julia is **1.13.0**.

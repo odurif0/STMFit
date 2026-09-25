@@ -1,0 +1,27 @@
+# Geometry-defined diagnostic; no experimental current or inference provider.
+[model]
+qe_version = "7.4.1"
+qe_commit = "500de340b820e1cb8c05f2d8bb8fced102f377c1"
+sample_bias_ry = -0.0220495933
+spectral_window = "sharp_zero_temperature"
+scf_acceptance_ry = 5e-5
+observable = "gamma_wavefunction_sum_outside_paw"
+
+[selection]
+policy = "all_common_unique_descending_intervals"
+domains = ["full_paw_gap", "molecular_half_paw_gap"]
+require_reference_sha256 = true
+require_exact_repeat = true
+require_outside_paw = true
+geometry_rtol = 1e-12
+surface_representative = "geometric_midpoint_each_open_interval"
+
+[preprocessing]
+cube_order = "qe_last_axis_fast"
+coordinates = "accepted_xml_cell_substrate_normal"
+vertical_knots = "native_grid_strictly_inside_paw_planes"
+clip_negative_values = false
+normalize_components = false
+half_nm = 0.32
+step_nm = 0.04
+fourier_block_points = 32
