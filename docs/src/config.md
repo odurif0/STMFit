@@ -26,6 +26,11 @@ execution/memory block size; clipping and component normalization are forbidden.
 Off-grid interpolation error and the two height-to-height decay ratios are
 descriptive outcomes, not post-hoc acceptance thresholds or height selectors.
 
+Job **11977502** passes all frozen reconstruction checks. GlcNAc nevertheless
+has **1 and 30** rising columns out of 289 over the two successive height intervals.
+These measured outcomes change no config, tolerance, interpolation rule or
+production provider; a positive field is not a guarantee of a unique isosurface.
+
 ## Diagnostic PAW component decomposition
 
 `config/qe_paw_decomposition.toml` keeps the accepted states, sharp bias window,

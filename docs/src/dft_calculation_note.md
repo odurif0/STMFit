@@ -185,6 +185,36 @@ constant-current feedback loop.
 
 ## Diagnostic constant-current observable
 
+**September 25 independent wavefunction reconstruction.** Job **11977502**
+reads the accepted collected coefficients and evaluates their Gamma Fourier
+series directly in Julia, independently of QE's density FFT and `local_dos`.
+Every one of the **13,872** native vertices required by the six declared
+planes agrees with the saved smooth density within its frozen printing bounds.
+Serial/parallel repetitions are identical. Minimum PAW clearances for the
+native vertices are **0.161923 / 0.103670 nm**, and all **1,734** direct plane
+queries are strictly outside all spheres and positive. This is pointwise
+verification in the audited domain, not a new whole-volume reconstruction.
+
+The reciprocal-space smooth norms are **18.1758333630 / 20.0011288529**;
+exact-cell cube integrals differ by only **2.45e-8 / 5.83e-8**. Earlier cube
+integrals used the rounded six-decimal axes. Both conventions are retained;
+no component is rescaled to 24/26. Relative-L2 interpolation errors at
+0.40/0.50/0.60 nm are GlcN **0.260/0.311/0.521%**, GlcNAc
+**0.402/0.495/0.526%**. These are plane-level norms, not per-pixel maxima.
+At 0.60 nm the largest pointwise relative interpolation errors are
+**9.06% / 4.70%**; the direct density, not interpolation, supplies the following
+decay diagnostic.
+
+The mean density decreases strongly for both molecules. At individual lateral
+points GlcN decreases over both intervals, but GlcNAc rises at **1/289** points
+over 0.40–0.50 nm and **30/289** over 0.50–0.60 nm, up to **11.51-fold** in the
+latter interval. A correct positive density therefore does not by itself
+establish a unique molecular-side constant-current surface. The cause of the
+rising tails and a physically supported branch remain open; no column is
+masked, made monotonic or removed by a new height cutoff. All **293,483,676
+bytes** of this run are fetched and checksum-identical. Production molds,
+SCF acceptance, current calibration and recognition remain unchanged.
+
 **September 25 PAW component attribution.** Job **11976981** reproduces the
 Gamma-corrected full ILDOS and all legacy controls byte for byte. Separate
 smooth and augmentation exports from unchanged projector/band sums each

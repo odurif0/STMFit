@@ -2305,20 +2305,24 @@ See `docs/src/selection.md` for the full guard specification and
 ## Open Questions
 
 0bd. **Does the smooth vacuum signal agree with an independent WFC reconstruction?**
-The preceding component cycle is progress: it attributes the negative vacuum
-samples to augmentation on unchanged accepted states. Under the standing
-autonomous label-free search, the next bounded test permits two hours of
-preparation from **September 25 13:00 UTC**, followed by one four-CPU / 32 GB /
-one-hour Viper job, no retry. Reconstruct the selected-state density directly
-from collected Gamma coefficients, compare every native vertex needed by the
-six declared planes with the saved smooth cubes, check the Parseval integral
-and exact serial/parallel repeat, then report interpolation error and both
-height-to-height decay ratios. All plane points and interpolation vertices
-must be outside PAW spheres. No QE calculation, cutoff/window/height change,
-clipping, renormalization, isovalue calibration, new mold, fit, grade, unknown25
-rerun or promotion is included. Done means fetched independently reconstructed
-values and a defensible physical conclusion, even if the reconstruction fails
-or the decay is not useful. This is not completion of the **694/43/855** goal.
+**Resolved at the audited points and integral, not as a current calibration.**
+Job **11977502** completes in **3m14s (0:0)**. All **13,872** native vertices
+needed by the six planes match the independent direct Fourier reconstruction
+within frozen printing bounds; Parseval norms agree and serial/parallel values
+are exact repeats. All query points and vertices are outside PAW spheres.
+Plane interpolation errors are **0.260–0.526%** in relative L2. All outputs are
+fetched and checksum-identical, with **57,850** saved-product checks.
+
+**Remaining question:** how to obtain a defensible molecular-side
+constant-current observable without hiding nonmonotonic columns? GlcN decreases
+at all 289 lateral points over both sampled height intervals. GlcNAc rises at
+**1/289** points from 0.40 to 0.50 nm and **30/289** from 0.50 to 0.60 nm;
+the largest latter increase is **11.51x**. Positive density and an overall
+decreasing mean do not prove unique crossings or identify the cause of those
+tails. Their origin and a physically supported vacuum branch remain to be
+checked; no arbitrary cutoff, masking, monotonic forcing or label-selected
+isovalue is adopted. No further job belongs to the completed bounded cycle.
+The strict label-free **694/43/855** recognition goal remains unmet.
 
 0bc. **What causes the remaining negative density outside the PAW spheres?**
 **Component attribution resolved for the two audited states:** job **11976981**
@@ -2334,9 +2338,10 @@ the preceding geometry diagnostic. See the dated result below.
 **Remaining physical question:** can a strictly outside-sphere observable
 constructed from the smooth wavefunctions support reliable STM contrast and
 constant-current surfaces? The PAW identity outside augmentation regions
-motivates this next test, but the component experiment alone does not validate
-its numerical reconstruction, vacuum decay, current calibration or chemical
-transferability. Finite-G leakage is consistent with the result, not established
+motivates this test. **0bd** now validates the independent reconstruction at the
+audited native vertices and integral, but exposes nonmonotonic GlcNAc columns;
+it does not calibrate a current or establish chemical transferability.
+Finite-G leakage is consistent with the result, not established
 by a cutoff-convergence test. Do not clip the total, renormalize a component,
 discard augmentation inside its support, select a height using labels, or
 replace a production mold. The bounded attribution experiment is complete;
@@ -17002,3 +17007,75 @@ the native CLI load, shell syntax, matching batch copy and Slurm test-only pass.
 Test-only **11977498** is not a submitted calculation. The sole real job is
 **11977502**, submitted with an explicit Julia export, four Julia threads,
 32 GB, one hour and no requeue. No additional job is allowed in this cycle.
+
+### 2026-09-25 — Direct WFC verification passes; GlcNAc vacuum tails are nonmonotonic
+
+**Completed physical comparison.** Source **a014e7e**, Viper job **11977502**,
+completed **13:22:27–13:25:41 UTC**, elapsed **3m14s**, `COMPLETED (0:0)`.
+The job reads the two unchanged accepted WFC files and saved smooth cubes;
+it performs no QE calculation. Four Julia threads use independent point blocks
+and one BLAS thread each, followed by a serial repeat of the same blocks.
+Both cases pass every frozen reconstruction, integral, support and repetition
+check. No second job or retry is submitted.
+
+**Reconstruction at the required native vertices.** All **6,936 vertices per
+molecule** agree with the independent Fourier series, with zero violations of
+the predeclared printing bounds. Maximum error/bound ratios are
+**0.9910092 / 0.9963864**. This covers every vertex used for the six planes, not
+every voxel in the original volumes. The direct densities repeat exactly in
+serial and parallel. All plane points and vertices are outside every periodic
+PAW sphere; minimum vertex clearance is **0.161923 / 0.103670 nm**.
+
+Parseval smooth norms are **18.1758333630 / 20.0011288529**. Cube integrals using
+the exact XML cell are **18.1758333385 / 20.0011289112**, absolute differences
+**2.45e-8 / 5.83e-8**, within summed printing bounds
+**0.000471171 / 0.000508159**. With rounded header axes the integrals are
+**18.1759555109 / 20.0011930747**, as in the component experiment. This explains
+the coordinate-printing convention difference; it is not a renormalization.
+Selected bands are **882–893 / 889–901**, each with the unchanged weight 2.
+
+**Off-grid values and interpolation.** All **1,734** direct plane samples are
+positive. At 0.40/0.50/0.60 nm the relative-L2 discrepancy between direct
+evaluation and exact-grid trilinear interpolation is GlcN
+**0.260238/0.311353/0.521176%**, GlcNAc **0.401684/0.495337/0.525860%**.
+These plane-level norms are not maximum pointwise errors. The separate
+rounded-header interpolation effect is **0.00671–0.00962%** for GlcN and
+**0.00136–0.00264%** for GlcNAc, in relative L2. All raw direct/interpolated
+values remain available; none is adjusted or excluded.
+Pointwise maxima of `abs(direct-interpolated)/direct` at the three heights
+are GlcN **0.786/1.871/9.059%**, GlcNAc **1.913/2.856/4.700%**. Thus the
+small plane-level L2 error must not be read as a uniform pixelwise guarantee.
+These distributions are descriptive, not a new acceptance threshold.
+
+**Decay is not uniformly monotonic.** Each row below compares the same 289
+lateral coordinates, using direct density rather than interpolated cubes.
+
+| molecule | height interval (nm) | rising columns / 289 | median upper/lower density | largest upper/lower density |
+|---|---:|---:|---:|---:|
+| GlcN | 0.40–0.50 | 0 | 0.132408 | 0.230703 |
+| GlcN | 0.50–0.60 | 0 | 0.102718 | 0.205984 |
+| GlcNAc | 0.40–0.50 | 1 | 0.108843 | 1.905641 |
+| GlcNAc | 0.50–0.60 | 30 | 0.146237 | 11.514244 |
+
+No ratio is exactly one. GlcNAc's decreasing plane sum therefore does not
+establish monotonicity of each column. Independent positive-wavefunction
+reconstruction removes the augmentation-sign ambiguity but does not identify
+the cause of these rising tails or supply an unambiguous constant-current
+branch. No arbitrary vacuum cutoff, masking, enforced decay, new setpoint,
+height choice or recognition template follows. The next physical question is
+a supported molecular-side branch with explicit crossing diagnostics, not
+selection of whichever height gives a better chemical grade.
+
+**Preservation and decision.** All **293,483,676 bytes** of run inputs/outputs
+are fetched to `qe/vacuum_wavefunctions_20260925/`; terminal recursive
+checksum comparison finds zero differences. Original WFC hashes pass again.
+Local checks of every saved native bound/repetition and all plane/decay
+relations pass **57,850/57,850**; these are saved-product integrity checks, not
+a third physical reconstruction. The analytic fixture suite passes **912/912**
+and geometry regression **17/17**. Logs are under
+`results/qe_vacuum_wavefunctions_20260925/`. This is scientific progress on
+the forward observable, not the archived **694/43/855** recognition target.
+Production, calibration, the mold registry, unknown25 and champion are unchanged.
+Documentation builds under Julia 1.13 with the existing size/deployment warnings
+and unchanged limits. The scientific code and configuration diff against
+submitted source **a014e7e** is empty; only the measured outcome is documented.

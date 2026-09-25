@@ -20,6 +20,15 @@ QE samples and plausible vacuum decay would not establish cutoff convergence,
 a tip model, an absolute current conversion or a benchmark improvement. No
 constant-current isovalue or experimental height is calibrated in this cycle.
 
+**Completed result:** job **11977502** verifies all 13,872 required native
+vertices, the Parseval integral and exact serial/parallel repetition. All 1,734
+direct plane samples are positive. GlcN decreases at every lateral point over
+both sampled intervals, but GlcNAc increases at **1/289** points over 0.40–0.50 nm
+and **30/289** over 0.50–0.60 nm, up to **11.51-fold**. These columns are retained
+unchanged. This verifies the finite-basis reconstruction in the audited domain,
+not a monotonic vacuum tail, unique isovalue crossing, absolute current or
+strict label-free experimental calibration. No mold or inference change follows.
+
 ## PAW component attribution precedes any new observable calibration
 
 The September 25 component test compares the unchanged corrected total with
