@@ -2304,6 +2304,15 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
+0bi. **Can an image-only support isolate the molecule before chemical comparison?**
+A bounded two-pass diagnostic tests an exact observed-value Otsu threshold plus
+a source horizontal-difference floor, then one jointly fitted background x-slope
+and row-offset model outside a guarded first mask. Every connected component,
+unsupported row and input remains; bright support is not a validated molecule
+or unit count. Old anchors and chemical errors are annotated only after masks
+are fixed, never used to choose them. Cross-view agreement is descriptive, not
+foreground truth or independent validation.
+
 0bh. **Does chemical shape add predictive information beyond height and a local envelope?**
 **Not demonstrated by the completed fixed-patch controls.** Job **11979008**
 finishes **0:0 in 4m03s**, preserving all 146 inputs, 282 scored views and 15,413
@@ -17913,3 +17922,99 @@ and uncommitted.
 Final documentation builds with Julia **1.13.0** and `--build-only`, without
 deployment, with the existing size warnings and unchanged limits.
 `git diff --check` passes; no production or benchmark headline is replaced.
+
+### 2026-09-25 — Source-only bright support: bounded two-pass comparison
+
+**Previous cycle: progress.** Commit **e1e1b9b** records the complete physical
+surface controls: height-only states nearly reproduce the chemical states,
+and a chemistry-free local plane predicts better. The worktree is clean;
+Viper has no active user job and job 11979008 is terminal **0:0**. Unknown25
+remains the completed frozen application, not a new campaign target.
+
+**Deliverable and done.** Test image-derived foreground before any new chemical
+model, preserving the 146 raw scans and both actual views, including the four
+bias-mismatched scans (this detector uses no DFT observable). Done means tested
+source-only masks, measured support/coverage and cross-view agreement, an
+unchanged-patch predictive comparison on kept/rejected anchors, fetched verified
+evidence and a decision. Preparation starts **17:06 UTC**, at most two hours;
+computation is one **four-CPU, 16 GB, one-hour** Viper job with four static file
+shards and no retry/requeue. One fixed first-file local inspection is allowed;
+no local multi-image fitting, new count/assignment, QE, grade, parameter sweep,
+unknown25 run, production replacement or champion promotion is included.
+The full strict label-free **694/43/855** goal remains unchanged.
+
+**Why this test.** September 18 demonstrated that background exclusion is
+conditional on a correct mask and that sequential plane/row estimation can
+bias x slope with unequal row coverage. The current physical-patch diagnostic
+selects many substrate/border extrema. Native production already uses a binned
+Otsu/fraction/noise ROI with largest-component retention; this experiment does
+not silently bless its numerical calibration or replace that ROI. The
+[Gwyddion levelling documentation](https://gwyddion.net/documentation/user-guide-en/leveling-and-background.html)
+describes masked/automatic background correction and warns that levelling can
+remove genuine structure. This motivates a measured support test, not a claim
+that any bright component is a molecule.
+
+**Frozen image rule.** The initial image comes from shared STMSXMIO observed-only
+plane/row correction and one-pixel smoothing, preserving missing samples.
+The threshold maximizes between-group intensity variance over every distinct
+finite-value split (the [Otsu criterion](https://doi.org/10.1109/TSMC.1979.4310076)),
+without histogram bins. It is at least the smoothed median plus three raw
+horizontal-first-difference MAD scales. This is an engineering contrast floor,
+not a calibrated false-positive probability. A **1e-12 nm** numerical floor
+prevents pure rounding residue becoming foreground. Constant/null images may
+yield an empty mask. All eight-connected components are retained in row/column
+order; no largest-component, area, desired-lobe-count or composition filter.
+
+The initial mask is guarded by an axis-aligned **0.16 nm** padding rounded
+outward in each image direction, reusing the previous diagnostic patch radius,
+not a newly calibrated molecular width. One joint OLS fit uses only finite
+pixels outside this guard: a common x slope plus one free level per supported
+row. Within-row centering profiles the row levels exactly before estimating
+x slope; there is no separately identified y-plane slope. Coordinates are
+normalized and raw heights median-centered, with that reference and centered
+coefficients saved to avoid the earlier physical-export precision loss.
+The same frozen threshold rule is then applied once to the corrected image.
+There is no mask iteration, hidden convergence selection, robust-loss variant
+or chemistry/target-guided correction.
+
+The existing engineering support minima (200 background pixels, 5% of the full
+image and 20 per row) and numerical rank tolerance **1e-12** remain explicit.
+Unsupported rows and smoothing windows remain unavailable, never imputed.
+Both own and common-method coverage are reported. Full-row molecular signal
+is confounded with arbitrary row offsets; curved backgrounds, weak detached
+features, masking tails and positive artifacts remain explicit failure modes.
+Such cases must be retained rather than repaired using an expected N.
+
+Masks are finalized using one source view only. Old diagnostic anchor centers
+are annotated afterwards; their patch pixels, physical fits and labels are not
+inputs to mask selection. Raw trace/retrace registration reuses the unchanged
+calibration-row procedure, solely to describe mask overlap; mask agreement
+uses both independently derived masks and is not heldout chemical evidence.
+Any later conditional saved-prediction report must retain the rejected anchors,
+unavailable membership and full cohort. The cohort/holdout have already been
+inspected, so these are adaptive diagnostics, not new independent validation.
+
+**Preflight, before the cohort job.** The first test run exposes a fixture bug:
+the supposedly unchanged source was converted from metres to nanometres and
+back, altering a few Float64 bits. Preserve its original channel object when
+changing only the other view; exact source-result equality then passes. No
+scientific parameter or equality tolerance is relaxed. The initial failure
+log is retained. The expanded synthetic suite passes **3,764/3,764** checks,
+including independent integral-image guard and exported normal-equation,
+threshold, missingness and component checks on six synthetic cases. Shared
+STMSXMIO passes **21/21** tests under Julia **1.13.0**. Null plane/row cases
+remain empty; the full-row signal is lost and curved background produces false
+foreground, as explicitly retained negative cases.
+
+All **146** raw hashes match the previous cohort in the metadata-only dry-run.
+The fixed first file, **240307_015.sxm**, completes both views locally; its
+saved arrays/prediction grouping pass **7,919/7,919** initial readback checks.
+Its accepted forward registration gives foreground IoU **0.86739 -> 0.93080**,
+with equal **201,960** jointly observed comparison pixels. Reverse registration
+remains ambiguous, uses the reported zero-lag fallback and is not evidence of
+physical agreement. This single predeclared witness does not establish a
+cohort improvement. The figure retains all old anchors and exposes their many
+background/border locations; anchor membership does not count molecular units.
+The first plot's contour was not visible, so the display-only overlay now
+draws the actual boundary pixels explicitly, without changing masks or heights.
+No parameter is changed after this inspection.

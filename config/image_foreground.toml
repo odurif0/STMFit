@@ -1,0 +1,32 @@
+# Source-only bright-support diagnostic, not validated molecular counts/chemistry.
+[model]
+transfer_run = "results/vacuum_surface_transfer_20260925/run"
+controls_run = "results/vacuum_surface_controls_20260925/run"
+transfer_settings_sha256 = "58fe1a262213ea8cc1e09a983d207a0114a6d3061a5a5af8d61387ff1ff95ea6"
+files_sha256 = "22086ca2c4ddcdc3967138503532f42e7b6d29feb0c3d1b2c9c55d18551522d6"
+segmentation = "exact_otsu_and_source_hf_floor"
+background = "one_masked_joint_x_slope_and_row_offsets"
+arms = ["initial", "joint_background"]
+guard_padding_nm = 0.16
+guard_shape = "axis_aligned_box_ceil_pixels"
+
+[selection]
+policy = "retain_all_cases_and_components_no_count_or_chemical_prior"
+connectivity = 8
+component_order = "first_row_column"
+noise_multiplier = 3.0
+numeric_height_floor_nm = 1e-12
+min_background_pixels = 200
+min_background_fraction = 0.05
+min_row_background_pixels = 20
+anchor_membership = "center_pixel_only_no_patch_refit"
+
+[preprocessing]
+channel = "Z"
+stride = 1
+initial_flatten = "plane+rows"
+smooth_radius_px = 1
+rank_rtol = 1e-12
+missing_policy = "observed_only_unavailable_rows_remain_missing"
+centering = "source_finite_median"
+binary_arrays = "little_endian_column_major_float64_or_uint8"

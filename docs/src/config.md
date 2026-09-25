@@ -1,5 +1,21 @@
 # Configuration Reference
 
+## Source-only bright support
+
+`config/image_foreground.toml` is a two-pass diagnostic, not production ROI or
+count calibration. `exact_otsu_and_source_hf_floor` uses all distinct observed
+intensity splits, without bins, and a median-plus-three-HF-MAD contrast floor.
+The **1e-12 nm** floor is numerical, not a measured noise level. All eight-
+connected components remain, including those touching an edge or missing data.
+The **0.16 nm** box guard is rounded outward in each physical axis. One masked
+joint x-slope/row-level OLS fit replaces sequential background estimation; there
+is no separately identifiable y slope and no iterative mask tuning. Required
+background support is 200 pixels, 5% of the original rectangle and 20 per row,
+with `rank_rtol=1e-12`. Unsupported rows/windows stay missing. Old anchors are
+annotated at their center only after mask construction, without a patch refit.
+Neither target pixels, chemical states, expected N nor benchmark labels choose
+the masks. The two prior run paths serve only provenance and post-fit reports.
+
 ## Height and local-envelope controls
 
 `config/vacuum_surface_controls.toml` consumes the fixed surface-transfer

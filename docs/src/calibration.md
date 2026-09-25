@@ -1,5 +1,22 @@
 # Calibration: measurements, assumptions and limits
 
+## Bright support is not molecular identity
+
+The two-pass image-foreground diagnostic estimates a source-only bright mask,
+guards it and fits one background x slope jointly with supported-row offsets.
+Within-row centering avoids the sequential plane/row x-slope ambiguity under
+unequal coverage, conditional on the estimated exclusion mask. It does not
+prove that the exclusion contains the whole molecular signal. Centered heights
+and coefficients are saved, without treating a tiny numerical floor as noise.
+The exact Otsu split plus raw horizontal-difference floor is an explicit
+engineering detector, not physical count or chemistry calibration. All
+components, weak/empty outcomes and unsupported pixels remain reported;
+there is no inferred chemical composition or largest-component prior.
+Full-row signal cannot be separated from unrestricted row offsets by this
+model, and bright substrate/contamination may survive its mask. Cross-view
+overlap is descriptive; common observed coverage and the unfiltered predictions
+must remain visible before interpreting any conditional fit improvement.
+
 ## Distinguishing chemical shape from local height trends
 
 The surface-control diagnostic holds the raw-derived observation/calibration
