@@ -24,6 +24,18 @@ function xml_fixture(;values=[-.09,-.04,-.03,-.02,-.01,-.005,.001,.02,.04])
 end
 
 include(joinpath(@__DIR__,"verify_qe_spectral_window.jl"))
+@testset "Missing Hermitian partner diagnostic, no density correction" begin
+    n=17
+    signal=[2+.4cos(2pi*j/n)+.2sin(4pi*j/n) for j in 0:n-1]
+    coefficients=[sum(signal[j+1]*cis(-2pi*k*j/n) for j in 0:n-1)/n for k in 0:n-1]
+    full=[real(sum(coefficients[k+1]*cis(2pi*k*j/n) for k in 0:n-1)) for j in 0:n-1]
+    half=[real(sum(coefficients[k+1]*cis(2pi*k*j/n) for k in 0:8)) for j in 0:n-1]
+    @test all(isapprox.(full,signal;atol=1e-14,rtol=0))
+    @test all(isapprox.(half,(signal .+ 2)/2;atol=1e-14,rtol=0))
+    @test sum(half)≈sum(signal) atol=1e-13
+    @test maximum(abs,half-signal)>.2
+end
+
 @testset "Independent native-order verification reader" begin
     V=VerifyQESpectralWindow
     mktempdir() do d
@@ -161,6 +173,13 @@ end
         f=joinpath(d,"frame.tsv")
         write(f,"key\tvalue\norigin_nm\t0.8,0.8,0.2\nt_axis\t1,0,0\nu_axis\t0,1,0\n")
         @test C.read_frame(f).origin_nm==frame.origin_nm
+        @test all(r.outside==0 for r in S.plane_domain(cand,f,config))
+        @test S.require_plane_domains([cand],[f],config)===nothing
+        outsidefile=joinpath(d,"outside.tsv")
+        write(outsidefile,"key\tvalue\norigin_nm\t0,0,0\nt_axis\t1,0,0\nu_axis\t0,1,0\n")
+        @test all(r.outside>0 for r in S.plane_domain(cand,outsidefile,config))
+        @test_throws ErrorException S.require_plane_domains([cand],[outsidefile],config)
+        @test_throws ErrorException S.require_plane_domains([cand],String[],config)
         m=joinpath(d,"meta.toml")
         meta=Dict("config_sha256"=>S.sha(CONFIG),"ildos_integral_expected"=>S.cube_stats(c).integral)
         open(io->TOML.print(io,meta),m,"w")

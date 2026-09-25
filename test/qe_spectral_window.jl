@@ -143,17 +143,46 @@ function cube_stats(c)
         maximum=maximum(c.values),integral=sum(c.values)*voxel_bohr3,
         negative_abs_integral=-sum(x for x in c.values if x<0;init=0.0)*voxel_bohr3)
 end
-function plane(c,frame,height,s)
+function plane_points(frame,height,s)
     p=s["preprocessing"]; grid=collect(-p["half_nm"]:p["step_nm"]:p["half_nm"])
     normal=C._normal(frame)
-    points=reduce(vcat,[permutedims(frame.origin_nm+t*frame.t_axis+u*frame.u_axis+height*normal)
+    reduce(vcat,[permutedims(frame.origin_nm+t*frame.t_axis+u*frame.u_axis+height*normal)
         for u in grid for t in grid])
-    inverse=inv(c.axes_nm)
-    for row in eachrow(points)
-        q=inverse*(row-c.origin_nm)
-        all(0 <= q[k] <= c.dims[k]-1 for k in 1:3) || error("Diagnostic plane outside cube")
+end
+function outside_count(origin,axes,dims,points)
+    inverse=inv(axes)
+    count(eachrow(points)) do row
+        q=inverse*(row-origin)
+        !all(0 <= q[k] <= dims[k]-1 for k in 1:3)
     end
+end
+function plane(c,frame,height,s)
+    points=plane_points(frame,height,s)
+    outside_count(c.origin_nm,c.axes_nm,c.dims,points)==0 || error("Diagnostic plane outside cube")
     C.sample_volume(c,points)
+end
+
+"Check reference geometry using only its six header lines, before any QE run."
+function plane_domain(cubefile,framefile,s)
+    header=open(cubefile) do io
+        [split(readline(io)) for _ in 1:6]
+    end
+    origin=number.(header[3][2:4])*C.BOHR_NM
+    axes=hcat([number.(header[k][2:4]) for k in 4:6]...)*C.BOHR_NM
+    dims=[parse(Int,header[k][1]) for k in 4:6]
+    all(>(0),dims) || error("Invalid QE reference dimensions")
+    frame=C.read_frame(framefile)
+    [(;height_nm=h,outside=outside_count(origin,axes,dims,plane_points(frame,h,s)))
+        for h in s["preprocessing"]["diagnostic_heights_nm"]]
+end
+function require_plane_domains(cubes,frames,s)
+    length(cubes)==length(frames) || error("Missing reference frame")
+    failures=String[]
+    for (cube,frame) in zip(cubes,frames), row in plane_domain(cube,frame,s)
+        row.outside==0 || push!(failures,"$(basename(cube)): h=$(row.height_nm), $(row.outside) points outside")
+    end
+    isempty(failures) || error("Plane-domain preflight failed before preparation: "*join(failures,"; "))
+    nothing
 end
 function compare(control,candidate,reference,framefile,metadatafile,config,outdir)
     s=settings(config); meta=TOML.parsefile(metadatafile)
@@ -188,7 +217,7 @@ function compare(control,candidate,reference,framefile,metadatafile,config,outdi
 end
 
 function prepare_run(root,config,outdir)
-    settings(config)
+    s=settings(config)
     glcn=joinpath(root,"qe","glcn_restart5"); glcnac=joinpath(root,"qe","glcnac")
     scf=joinpath(glcnac,"pw_scf_accept_plain.in")
     input=read(scf,String)
@@ -199,6 +228,7 @@ function prepare_run(root,config,outdir)
     expected=["80cd1d1fde94cf084cc7ea464d2bf065b36b2c015ea0bfaef8cebfee8ff88863",
         "40649ccd9eb6768444b8ff61bf4a639b3940cf926fe3eb42254eb024faf9b5bf"]
     sha.(references)==expected || error("Wrong archived reference cubes")
+    require_plane_domains(references,[joinpath(glcn,"frame.tsv"),joinpath(glcnac,"frame.tsv")],s)
     newdir(outdir); mkdir(joinpath(outdir,"pseudo"))
     write(joinpath(outdir,"pw_scf.in"),input)
     cp(joinpath(root,"hpc","qe_spectral_window.sbatch"),joinpath(outdir,"run_scf_pp.sbatch"))

@@ -185,6 +185,32 @@ constant-current feedback loop.
 
 ## Diagnostic constant-current observable
 
+**September 25 spectral follow-up (incomplete).** The missing accepted GlcNAc
+collected state was recovered on copies with the same plain SCF input and
+**5e-5 Ry** criterion. Both archived STM cubes reproduced byte for byte; the
+recovered 2.46 GB GlcNAc checkpoint is now local/hash-verified. Job **11975572**
+then computed GlcN plot_num=10 ILDOS in the sharp experimental −0.300 V window,
+with **12** selected states, total weight **24**. Its cube integrates to
+**24.0001607365**, without negative samples, but these checks do not establish
+spatial correctness.
+
+Its nearly constant vacuum floor is **2.6387e-4**, almost exactly half its
+cell-average density **5.27747e-4**. Official
+[`local_dos.f90`](https://github.com/QEF/q-e/blob/qe-7.4.1/PP/src/local_dos.f90)
+fills only `nl` before its final inverse transform, unlike the normal Gamma
+[`density helper`](https://github.com/QEF/q-e/blob/qe-7.4.1/FFTXlib/src/fft_helper_subroutines.f90),
+which also fills conjugate `nlm`. Missing these partners would give
+`(rho + mean(rho))/2`, conserving the integral but corrupting spatial contrast.
+This is a source-supported hypothesis, **not** a repaired-binary validation.
+No offset correction of rounded cubes or new production observable is adopted.
+
+The job stopped on the enlarged diagnostic grid: preparation accidentally used
+half-width/step **0.64/0.08 nm**, twice the existing **0.32/0.04 nm** grid. A
+header-only preflight now detects its out-of-volume samples before preparation.
+GlcNAc ILDOS was not run; there was no retry, clipping, domain shrinkage or
+recognition grade. This error does not invalidate the narrower historical plane
+statistics below. See the dated journal entry for complete partial evidence.
+
 **September 24 physical qualification.** The accepted GlcNAc cube contains
 **131,984 negative native values / 10,800,000** (minimum **−0.0037643**); GlcN
 contains none. On the existing 17×17 ring-frame plane at 0.50 nm, **35/289**

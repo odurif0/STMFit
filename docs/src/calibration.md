@@ -25,6 +25,18 @@ ILDOS. No numerical tolerance or SCF criterion is relaxed after a failure.
 There is no new isovalue calibration, template, recognition result or production
 change. See [configuration](config.md) and the dated journal entry.
 
+**Observed outcome:** both legacy cubes reproduce exactly and the accepted
+GlcNAc collected checkpoint is recovered. The candidate comparison is incomplete:
+preparation mistakenly doubled the existing grid's half-width and spacing,
+causing an out-of-domain refusal after GlcN ILDOS. A new header-only preflight
+catches this before computation. The smaller historical assignment domain has
+not thereby been shown invalid. No GlcNAc ILDOS was run and no retry followed.
+GlcN ILDOS integrates to **24.0001607365** versus expected **24**, but its vacuum
+floor matches half its mean density. Missing conjugate-G completion in QE's
+Gamma post-processing is a source-supported hypothesis, not yet validated
+with a repaired binary. A conserved integral does not establish spatial
+correctness; no rounded-cube offset subtraction or template promotion follows.
+
 ## Numerical background conditioning is not recalibration
 
 The September 25 opt-in `background_conditioning.toml` comparison changes only

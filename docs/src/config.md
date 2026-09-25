@@ -12,11 +12,18 @@ No spectral broadening is optimized.
 `[selection]` forbids mold/benchmark selection, requires byte-identical archived
 control cubes and sets `ildos_integral_rtol=1e-4` solely for the finite-precision
 cube integration check. `[preprocessing]` requires QE's last-axis-fast ordering,
-retains negative values, and samples all declared heights `[0.40,0.50,0.60]` nm
-on the old 17×17 frame (`half_nm=0.64`, `step_nm=0.08`). These heights remain
+retains negative values, and declares heights `[0.40,0.50,0.60]` nm on a
+17×17 grid (`half_nm=0.64`, `step_nm=0.08`). **This prepared grid was mistaken:**
+the existing assignment grid has half-width **0.32 nm**, step **0.04 nm**.
+The first spectral run accidentally doubled both, and its larger footprint
+leaves the cube. The saved spectral config records that failed experiment;
+it is not a replacement for the assignment grid. Header-only preparation now
+rejects these unsupported planes before creating a run directory. These heights remain
 diagnostics, not calibrated experimental tip heights or candidates ranked by
 benchmark labels. There is no production or registry change; see the journal
-and [calibration](calibration.md).
+and [calibration](calibration.md). The first run is incomplete, without retry;
+raw GlcN ILDOS also has a suspicious nearly constant vacuum floor, so it is
+not a usable new mold despite passing its integrated-state-weight check.
 
 ## Diagnostic exact background conditioning
 

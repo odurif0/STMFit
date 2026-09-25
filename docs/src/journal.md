@@ -2320,6 +2320,26 @@ conclusion. It is not an isosurface calibration, new mold, count fit, chemical
 benchmark or production promotion. Current preparation and provenance are
 recorded in the dated entry below.
 
+**CLOSED INCOMPLETE; NO PROMOTION:** job **11975572** stops **1:0 in 7m59s**
+after both archived controls reproduce byte for byte and GlcN ILDOS completes.
+The mistakenly enlarged diagnostic footprints extend outside the cube: GlcN **0/0/4** and
+GlcNAc **5/17/26** points at 0.40/0.50/0.60 nm. The preparation failed to check
+this known input geometry; a tested preflight now rejects it before any output
+directory or job is prepared. No domain, grid, frame, height, tolerance or
+missing-point policy is changed. GlcNAc ILDOS was **not run**; no retry follows.
+The preparation used half-width/step **0.64/0.08 nm** instead of the existing
+assignment values **0.32/0.04 nm**. The original claim that it reused the
+historical spatial grid was incorrect; the smaller historical footprint is not
+invalidated by this failed doubled-grid experiment.
+The restored accepted GlcNAc checkpoint (2.46 GB) is fetched/hash-verified,
+both original source checkpoints remain unchanged. GlcN ILDOS integral is
+**24.0001607365** versus expected **24**, but its nearly uniform vacuum floor
+matches half its cell-average density. Official `local_dos.f90` omits the
+conjugate-G fill present in QE's normal Gamma density reconstruction. This is
+a source-level explanation to test, **not a patched-binary validation** or a
+new usable mold. Positive values and conserved integral alone are insufficient.
+The archived score target remains open; no recognition result is produced.
+
 0az. **Does exact background conditioning improve numerical stationarity?**
 User-authorized September 25, preparation capped at two hours from **08:50 UTC**,
 then one four-CPU Viper job with a one-hour wall limit, no retry. Continue the
@@ -16291,9 +16311,11 @@ Use the same experimental `sample_bias=-0.0220495933 Ry` (approximately
 Hartree to absolute eV for the ILDOS input; the XML SCF error also needs the
 factor two to compare with the unchanged Ry criterion. The zero-temperature
 sharp window is an explicit diagnostic approximation, not an independently
-converged metal k-point/temperature model. Sample the existing 17×17 local
-frame at all three declared heights 0.40/0.50/0.60 nm without choosing a winner,
+converged metal k-point/temperature model. Sample the declared 17×17 local
+grid at all three heights 0.40/0.50/0.60 nm without choosing a winner,
 clipping density, importing a template or assuming calibrated tunneling current.
+The preparation originally called this the existing grid; the postmortem below
+corrects that mistaken description and records the doubled half-width/step.
 
 **Live checkpoint inventory.** SSH to Viper and Raven works; no Viper job was
 present at the first check. The collected accepted GlcN checkpoint exists.
@@ -16348,3 +16370,98 @@ reconstructs trilinear samples, checks SI-derived energy conversion and selected
 states, and verifies signed integrals against the saved tables. Seven affine
 synthetic-reader/interpolation checks pass in addition to the previous 92
 spectral tests (**99/99**); it does not change the already running source.
+
+### 2026-09-25 — Spectral diagnostic stopped on domain; Gamma floor suspected
+
+**Outcome.** Job **11975572**, source **f8a33ea**, terminates **FAILED, 1:0,
+7m59s**. Its four actual compute steps all finish **0:0**: GlcNAc restoration
+SCF **6m07s**, restored GlcNAc legacy PP **18s**, GlcN legacy PP **18s** and
+GlcN ILDOS PP **30s**. The SCF meets the unchanged **5e-5 Ry** criterion in
+one iteration (**4.027e-5 Ry**). Both legacy cubes match their historical SHA256
+exactly, so the missing collected GlcNAc state is restored successfully.
+
+The Julia comparison then refuses an out-of-volume plane, as designed. The
+17×17 frames leave the cube on **0/0/4** GlcN points and **5/17/26** GlcNAc
+points at the declared 0.40/0.50/0.60 nm heights. This was a preparation defect:
+the reference headers and frames already contained enough information to
+reject the planned comparison before submission. Add a header-only domain
+preflight to `prepare_run`, before it creates a directory or copies inputs;
+synthetic supported/unsupported-frame checks and a real expected-refusal check
+cover it. Do not shrink or move the frame, wrap/extrapolate points, silently
+drop them, or relax the all-supported comparison in response to this outcome.
+The frozen job is not patched or retried; **GlcNAc ILDOS was not run**.
+
+**Root cause of the domain error:** the actual existing assignment config
+`unit_assignment_patch_support.toml` uses `mold_half_nm=0.32` and
+`mold_step_nm=0.04`. The spectral preparation instead entered **0.64/0.08 nm**,
+mistaking a doubled field of view for the historical 17×17 grid. The frames and
+number of pixels match, but the footprint does not. This is an input-preparation
+error, not evidence that the smaller historical lateral planes are out of
+bounds. The failed run and its original config remain recorded unchanged;
+its wider-plane statistics must not replace the September 24 narrower-plane
+statistics. No after-the-fact grid correction is used to call this job successful.
+
+All generated logs, cubes, PP data, spectra and inputs are fetched and a
+checksum-based transfer dry-run finds no differences. The restored collected
+GlcNAc `.save` (**2,464,288,527 bytes**, nine files) is also local, with all nine
+SHA256 checks passing. Its XML is
+`3b25c35dad13754f505b0b923ec8845c3304e6a84b11f40cf0f90c2710ccc124` and its
+wavefunction is
+`5fbb2f8450f9b019d3d31aa69d7dc1f0220ff9b5cc990cd12f14ba0439ad004c`.
+Every original source checkpoint file still passes its pre-submission hash.
+No state is deleted. The job's end-of-script checksum files are absent because
+it stopped early; these separate read-only checks are not presented as a
+successful job completion.
+
+**Partial physical evidence.** The independent native-order reader checks
+the three available cubes, retaining all signs and all out-of-domain counts.
+GlcN control has **0/10,800,000** negative values, integral **26.9599711329**;
+GlcN ILDOS also has none, integral **24.0001607365**, relative error
+**6.69735e-6** against the expected weight **24**. This passes the original
+`1e-4` numerical tolerance. Its SHA256 is
+`f830002f514be0a76c32757bc67d1710fae6d35ab12ecd284b7883cffa897a06`.
+Restored GlcNAc control retains **131,984** negative values, minimum
+**−0.0037643**, integral **30.3737810083**. No complete two-molecule/three-height
+comparison is claimed. Available-subset statistics are explicitly incomplete;
+only the GlcN 0.40/0.50 nm planes are fully in bounds.
+
+**Unexpected ILDOS vacuum floor.** At 0.50 nm GlcN ILDOS spans only
+**2.638700e-4 to 2.64014344e-4**, whereas the legacy maximum is **4.25205220e-7**.
+Its cell average is **5.2774745152e-4** and half that average is
+**2.6387372576e-4**, matching the almost constant vacuum floor. Inspect official
+QE 7.4.1 [`local_dos.f90`](https://github.com/QEF/q-e/blob/qe-7.4.1/PP/src/local_dos.f90),
+[`fft_rho.f90`](https://github.com/QEF/q-e/blob/qe-7.4.1/Modules/fft_rho.f90),
+[`fft_helper_subroutines.f90`](https://github.com/QEF/q-e/blob/qe-7.4.1/FFTXlib/src/fft_helper_subroutines.f90)
+and `read_file_new.f90`. The ILDOS final density transform fills `nl` but not
+the conjugate `nlm` entries; the ordinary Gamma density helper fills both.
+For an otherwise real field, retaining one member of each nonzero conjugate
+pair gives `(rho + mean(rho))/2`: the integral is unchanged while a constant
+floor appears and spatial contrast is halved. A small synthetic Fourier test
+demonstrates this without modifying real cubes. The same final-transform code
+is present in the inspected QE **7.5** tag, so an upgrade alone is not an
+established remedy.
+
+This is a **strong source-level hypothesis**, not verification of a repaired
+QE executable on these wavefunctions. No algebraic subtraction, clipped or
+absolute-value cube, corrected mold, current calibration or external bug report
+is produced. The cube's five-significant-digit output also loses small vacuum
+contrast under such a large offset; editing its rounded values would not be a
+sound substitute for recomputation from the collected states. No recognition
+grade, production change, unknown25 rerun or champion promotion follows.
+
+Evidence is in `results/qe_spectral_window_20260925/partial_audit.log`, the
+read-only `audit_partial.jl`, hashes, preflight/test/Slurm/transfer logs, and
+`qe/spectral_window_20260925/` (including the restored checkpoint). The bounded
+cycle is closed **incomplete**, without a second job. The long-term goal remains
+open; the next physical issue is a controlled Gamma reconstruction check with
+an explicitly correct spatial domain, not score tuning on this partial result.
+
+**Final checks.** Julia 1.13 passes **108/108** spectral/preflight/Fourier
+assertions, in addition to the **252** cube and **31** surface-audit assertions
+already run in this cycle. The real `prepare_run` now refuses the doubled grid
+without creating its destination. The Fourier fixture initially used a vector
+norm against a per-sample tolerance; its check now applies the same `1e-14`
+absolute tolerance elementwise, without changing any physical criterion.
+Documentation builds successfully with existing size warnings; no size limit
+is raised and nothing is deployed. All scientific changes and conclusions are
+committed; generated evidence and checkpoints remain ignored as required.
