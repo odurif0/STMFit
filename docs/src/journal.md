@@ -17783,3 +17783,15 @@ height-only and plane-profiled hypotheses. These are post-fit state comparisons,
 not ground-truth accuracy, and cannot feed the submitted fit. The expanded
 synthetic suite passes **1,882/1,882** assertions (four added reader/report
 checks); the scientific source and job configuration remain **9300406**.
+
+The one-file overlay helper now optionally reads either saved control arm while
+retaining the upstream coordinates, anchors and image display. It performs no
+fit or chemical validation. The same first eligible **240307_015.sxm** is
+rendered for `plane_chemical` in both directions and all three isovalues, without
+selecting a case from gains. Visual inspection of
+`results/vacuum_surface_controls_20260925/first_scan_plane_shapes.png` finds all
+20 forward and 33 backward patches assigned the GlcN hypothesis, on both the
+bright structure and the substrate/borders. This is not the molecule's true
+composition. It motivates reporting the full-cohort hypothesis counts, not
+relabeling states or imposing a number of GlcNAc units. The helper executes
+successfully under Julia 1.13; no inference source or setting is changed.

@@ -3,8 +3,11 @@
 using STMSXMIO, Plots, Statistics, TOML
 include(joinpath(@__DIR__,"verify_qe_spectral_window.jl"))
 const V=VerifyQESpectralWindow
-length(ARGS)==3 || error("plot_vacuum_surface_transfer.jl SAVED_RUN ONE_RAW_SXM NEW_PNG")
-run,raw,out=ARGS
+length(ARGS) in (3,5) || error("plot_vacuum_surface_transfer.jl SAVED_RUN ONE_RAW_SXM NEW_PNG [CONTROL_RUN height_contrast|plane_chemical]")
+run,raw,out=ARGS[1:3]
+prediction_run=length(ARGS)==5 ? ARGS[4] : run
+arm=length(ARGS)==5 ? ARGS[5] : "chemical"
+arm in ("chemical","height_contrast","plane_chemical") || error("Unsupported hypothesis arm")
 ispath(out) && error("Output exists")
 c=TOML.parsefile(joinpath(run,"settings.toml")); img=read_sxm(raw)
 dir=joinpath(run,splitext(basename(raw))[1]); panels=[]
@@ -12,10 +15,11 @@ for view in ("fwd","bwd")
     ch=only(filter(q->q.name=="Z" && q.direction==view,img.channels))
     obs=STMSXMIO.preprocess_observed_channel(img,ch;stride=1,flatten="plane",smooth_radius_px=0,
         plane_rank_rtol=c["preprocessing"]["plane_rank_rtol"])
-    anchors=V.tsv(joinpath(dir,view,"anchors.tsv")); patches=V.tsv(joinpath(dir,view,"patches.tsv"))
+    anchors=V.tsv(joinpath(dir,view,"anchors.tsv"))
+    patches=V.tsv(joinpath(prediction_run,splitext(basename(raw))[1],view,"patches.tsv"))
     display_limits=Tuple(quantile(obs.z[isfinite.(obs.z)],[.01,.99]))
     for iso in 1:3
-        selected=filter(r->r["arm"]=="chemical" && parse(Int,r["interval"])==iso,patches)
+        selected=filter(r->r["arm"]==arm && parse(Int,r["interval"])==iso,patches)
         p=heatmap(obs.xs,obs.ys,obs.z;color=:grays,clims=display_limits,colorbar=false,
             aspect_ratio=:equal,title="$view / iso $iso / $(length(selected)) patches",
             xlabel="x (nm)",ylabel="y (nm)",legend=:topright)
@@ -31,5 +35,5 @@ for view in ("fwd","bwd")
     end
 end
 figure=plot(panels...;layout=(2,3),size=(1400,950),
-    plot_title="$(basename(raw)): diagnostic extrema, not unit assignments; grayscale 1-99% for display only")
+    plot_title="$(basename(raw)): $arm, not unit assignments; grayscale 1-99% for display only")
 savefig(figure,out)
