@@ -8,6 +8,14 @@ const R=L.R
 const t=L.t
 const n=L.n
 const i=L.i
+const PROGRESS_LOCK=ReentrantLock()
+
+function progress(io,file,seconds)
+    lock(PROGRESS_LOCK) do
+        println(io,"FIXED_SHAPE_FILE_COMPLETE ",file," elapsed_s=",seconds)
+        flush(io)
+    end
+end
 
 function settings(path)
     c=TOML.parsefile(path)
@@ -175,7 +183,7 @@ function main(args=ARGS)
     BLAS.set_num_threads(1)
     Threads.@threads :static for k in eachindex(names)
         file=names[k]; start=time_ns(); process_file(file,paths,maps,base,c,joinpath(out,splitext(file)[1]))
-        println("FIXED_SHAPE_FILE_COMPLETE ",file," elapsed_s=",(time_ns()-start)/1e9); flush(stdout)
+        progress(stdout,file,(time_ns()-start)/1e9)
     end
     println("FIXED_SHAPE_COMPLETE; saved coefficients only, no fit, labels or promotion")
 end

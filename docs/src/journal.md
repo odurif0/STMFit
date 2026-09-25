@@ -18219,3 +18219,23 @@ pending for **QOSGrpCpuLimit** at **18:25 UTC**. Four requested CPUs map to eigh
 allocated hardware threads; the batch uses four Julia threads, 16 GB and a
 one-hour bound. This is an ordinary shared-quota wait, not permission to retry,
 cancel another job or change resources. No image prediction runs on the login.
+
+**Terminal state and logging defect.** Accounting now confirms the same job
+completed **0:0 in 36s**, **18:25:37--18:26:13 UTC**, with batch MaxRSS
+**564,179 K** and an empty stderr. The queue is empty. All **146** file-status
+tables are present: **282** supported views are `ok`, while the four bias
+exclusions and two directions of the unsupported-resolution scan are unchanged.
+All first-file outputs are byte-identical to the local witness. Post-fetch
+checksum rsync reports no file-content difference, only the parent directory's
+timestamp; independent numerical readback is in progress.
+
+The job emits 146 completion markers, but only 145 lines begin with that
+marker: two initial thread messages interleave on the same line. This is an
+stdout defect, not a missing scientific result. Preserve the original log;
+protect future progress-message writes with a process-local lock and test 200
+concurrent records. Do not rerun the cohort to replace its log. No arithmetic,
+coefficient, prediction, input or setting is changed by this logging-only fix.
+
+The four-thread synthetic suite passes **2,837/2,837** checks after this fix,
+including exact recovery of all 200 concurrent progress lines. The original
+Viper scientific run remains **f059857** and is not resubmitted.

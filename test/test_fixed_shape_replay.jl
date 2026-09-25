@@ -8,6 +8,16 @@ const REPLAY_PATH=joinpath(@__DIR__,"../config/fixed_shape_replay.toml")
 const REPLAY=P.settings(REPLAY_PATH)
 strings(row)=Dict(string(k)=>string(getproperty(row,k)) for k in keys(row))
 
+@testset "Concurrent progress records do not interleave" begin
+    io=IOBuffer()
+    @sync for k in 1:200
+        Threads.@spawn P.progress(io,"synthetic_$(k).sxm",Float64(k))
+    end
+    lines=split(chomp(String(take!(io))),'\n')
+    @test length(lines)==200
+    @test Set(lines)==Set("FIXED_SHAPE_FILE_COMPLETE synthetic_$(k).sxm elapsed_s=$(Float64(k))" for k in 1:200)
+end
+
 function old_fixture(f,j;target=f.pp[j].values.+.002)
     result=U.fit_patches(f.pp,f.maps,f.small,CONTROL); p=f.pp[j]
     function oldrow(arm)
