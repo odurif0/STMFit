@@ -38,6 +38,15 @@ outputs and a declared whole-footprint/common-exterior geometry rule, keeping
 all original outcomes. The observed distance dependence does not authorize
 picking a favorable clearance threshold or a desired chemical-contrast sign.
 
+The saved-output follow-up defines the whole footprint as the convex hull of
+all non-Cu atomic centers plus a disk of the largest active molecular PAW
+radius. Strict periodic exterior common to both states is fixed before
+conditional heights are aggregated; the removed complement and every
+domain/isovalue remain. This deliberately covers intramolecular spaces, but
+PAW radius is not an electronic decay scale. Exterior membership or lower
+spatial spread alone cannot establish a clean-Cu plateau, transferability,
+chemical calibration or physical uncertainty.
+
 ## A shared envelope must not silently remove chemical contrast
 
 The September 25 shared-image diagnostic fits one source-only spline surface

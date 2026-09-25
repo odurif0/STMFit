@@ -1,0 +1,26 @@
+# Saved-output diagnostic only; no chosen reference or new density calculation.
+[model]
+run = "qe/substrate_reference_20260925"
+report = "results/substrate_reference_20260925/report"
+settings_sha256 = "4e41de9a678190413bbc71c65ce10e0f23d5ad2ee2da85a3dbe09e3cbce24add"
+grid_sha256 = "d77105e8ec09bc12acd0aebfda615db42684b245e2c946d5d799efe0bfa70b3e"
+glcn_roots_sha256 = "0d8e14db49a9f47b3ad256057405d2b012e4f4c1660aa41ad4259e64936bcd7d"
+glcnac_roots_sha256 = "510bb8a92a0eaba6201ac15bad165436bce0bb0f921529b987f33ba5e636a876"
+paired_sha256 = "baf91594fe668125ed9f16495cb91279b63c14aa9e433d481a499040a6636029"
+summary_sha256 = "c66e90749bc2d0d4177485f6b58a873b02e0c2d246c6b2f9900f23cc450ed5f0"
+
+[selection]
+policy = "report_all_original_domains_isovalues_and_complement"
+footprint = "convex_hull_molecular_centers_plus_max_active_molecular_paw_radius"
+support = "strict_common_exterior_both_periodic_footprints"
+groups = ["all_prior", "common_exterior", "removed_by_envelope"]
+domains = ["full_cu_gap", "cu_half_gap", "saved_molecular_half"]
+adopt_reference = false
+
+[preprocessing]
+coordinates = "unchanged_accepted_nm_float64"
+predicates = "exact_rational_of_float64"
+require_offset_bbox_inside_primary_cell = true
+periodic_images = [-1, 0, 1]
+additional_clearance_nm = 0.0
+read_density = false

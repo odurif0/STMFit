@@ -2304,6 +2304,15 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
+0bm. **Does a common exterior of the complete molecular footprints support a
+less ambiguous height reference?** In progress: a two-hour, saved-output-only
+diagnostic starting 2026-09-25 at approximately 21:27 UTC. Use the convex hull
+of all non-Cu atomic centers, dilated by the largest active molecular PAW
+radius, with periodic copies. Freeze membership before conditional height
+statistics; retain all original points and the removed complement. This is
+geometric exclusion, not an electronic clean-Cu criterion. No new job, density
+calculation, clearance threshold or scalar-reference adoption is included.
+
 0bl. **Is there a consistent off-molecule DFT height reference at the saved
 isovalues?** **Numerically verified roots, but no supported scalar reference.**
 Job **11980577** completes all **8,532** outcomes on 474/768 paired geometric
@@ -18867,3 +18876,54 @@ with `--build-only`, without deployment; existing size warnings/limits remain.
 Project/Manifest and all production benchmark headlines stay unchanged.
 `git diff --check` passes. Source, plotting helper and scientific decisions
 are committed; no generated evidence or raw state is committed.
+
+### 2026-09-25 — Whole-molecule exterior, geometry before conditional heights
+
+**Deliverable and time box.** Starting approximately **21:27 UTC**, allow at
+most **two hours** to determine how the existing off-projection results change
+on a common whole-molecule exterior. Done means tested geometry, saved
+membership for all 768 original sites before conditional height aggregation,
+all three domains/isovalues and the removed complement accounted for, visual
+geometry inspection, and a documented scientific decision. No HPC job, new
+density calculation, fitting, recognition grade or production change belongs
+to this cycle. The full 694/43/855 recognition goal remains unachieved.
+
+**Rule declared before conditional heights.** For each accepted state, take
+the convex hull of **all molecular atomic centers** (the complete trimer,
+excluding Cu), then its Minkowski sum with a disk of the maximum active
+**molecular** PAW radius. The radius is **0.0924787423604803 nm**, from C; the
+larger Cu radius does not dilate the molecule. Repeat this footprint
+periodically. Retain a site only if strictly outside both footprints.
+There is no additional clearance, favorable-site selection, isovalue choice,
+or domain selection. Membership uses exact rational predicates on the already
+accepted Float64 nm coordinates; reported distances are rounded diagnostics.
+This does not make the input atomic coordinates physically exact.
+
+The expanded bounding boxes must fit strictly inside the primary lateral
+cell; both current geometries satisfy this. Molecules crossing a boundary are
+rejected rather than automatically unwrapped. The old uniform grid and all
+old outcomes remain. Whole-footprint exclusion must be a subset of the
+previous outside-PAW set, and its removed complement must be reported.
+The polygon-offset definition follows the [CGAL reference](https://doc.cgal.org/latest/Minkowski_sum_2/group__PkgMinkowskiSum2Ref.html);
+it is a geometric operation, **not** a validated electronic decay length,
+clean-Cu detector, or physical permission to adopt a scalar reference.
+
+**Preparation check.** The standalone synthetic geometry suite passes
+**1,465/1,465** assertions. The first CLI invocation stops at a Julia macro
+parsing error in its entrypoint, before creating geometry or reading heights;
+parenthesizing `@__FILE__` fixes the entrypoint. No scientific rule changes.
+
+**Geometry frozen before height aggregation, approximately 21:45 UTC.** All
+768 sites are saved: **325 common exterior**, **149 removed** from the old
+474 candidates, and 294 already outside the old support. The independent
+reader passes **8,460/8,460** geometry assertions, in addition to the repeated
+**1,465/1,465** synthetic checks. It uses gift wrapping rather than Andrew
+chains, an expanded-norm distance formula and a larger 5x5 periodic image
+enumeration, with separately parsed accepted XML/active PAW data. Boundary
+cases, subnormal non-collinearity, duplicates, permutations, periodic shifts,
+Cu-radius exclusion and unsupported boundary-crossing molecules are tested.
+The plotted envelope/common-support geometry is visually inspected before
+conditional heights. Plot contours are rounded for display only; membership
+is exact relative to the accepted input floats. Membership SHA256 is
+`f58a8a905c84a521021ee7a267c6052fd680292d61faf99629490d46d239339c`.
+No height aggregation or reference selection has yet occurred in this cycle.

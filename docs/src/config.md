@@ -1,5 +1,19 @@
 # Configuration Reference
 
+## Whole-molecule exterior of saved reference sites
+
+`config/molecular_exterior.toml` pins the existing grid, roots and reports.
+It excludes the periodic convex hull of all molecular centers, dilated by
+the largest active molecular PAW radius (**not Cu**). Strict common exterior
+membership is computed with exact rational predicates on accepted Float64 nm
+coordinates; displayed clearances do not select points. Expanded bounding
+boxes must fit inside the primary cell; automatic molecular unwrapping is
+not implemented. No extra distance threshold is allowed. All original sites,
+the exterior and the removed complement retain all three domains/isovalues.
+`test/diagnose_molecular_exterior.jl --help` separates geometry preparation
+from saved-height aggregation. There is no new density calculation, physical
+background calibration, reference adoption or production selection parameter.
+
 ## Off-projection substrate-reference diagnostic
 
 `config/qe_substrate_reference.toml` retains accepted Gamma states, the sharp
