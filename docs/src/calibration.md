@@ -24,6 +24,18 @@ per-class normalization, current-to-density factor, threshold or benchmark
 label is used. Uniqueness between continuous Fourier samples and transfer to
 experimental chain images remain distinct questions, even if surfaces exist.
 
+**Completed result:** job **11977798** finds three joint open intervals in the
+molecular half-gap and none in the full gap. The intervals include every pixel
+and overlap the independently reconstructed and interpolated-profile results.
+Six representative maps are exported, with exact repeat and no missing pixel.
+Their largest direct-density departure from the requested isovalue is **2.089%**;
+the maximum cube/direct-profile height difference is **1.427 pm**. Every half-gap
+profile nevertheless contains an increasing segment, and four GlcNAc columns
+have disjoint admissible intervals. This result does not impose monotonicity.
+The geometric half-gap, finite z sampling, finite-basis periodic slab and unknown
+tip/current conversion remain limitations. No one of the three intervals is
+chosen as a chemical model or experimental setpoint.
+
 ## Direct wavefunctions check the vacuum observable, not the current setpoint
 
 The bounded September 25 WFC diagnostic independently reconstructs the smooth

@@ -2305,12 +2305,22 @@ See `docs/src/selection.md` for the full guard specification and
 ## Open Questions
 
 0be. **Is there a common, unambiguous constant-current surface in a geometry-defined vacuum domain?**
-The next bounded diagnostic compares substrate-normal columns over both full
-and molecular-half PAW gaps, keeping every column and every open isovalue
-interval. The midpoint is fixed from geometry before density inspection;
-it is not an isolated-slab convergence result. Cube profiles and direct WFC
-samples are both tested. Preparation/tests are in progress; no calculation,
-surface or experimental improvement is yet claimed. See the dated scope below.
+**Resolved for the sampled profiles, not the continuous or isolated-surface
+limit.** Job **11977798** completes in **7m00s (0:0)**. The full periodic PAW gap
+admits no common interval; its geometry-defined molecular half admits **three**
+joint open intervals across all 578 columns, using both cube and direct-WFC
+profiles. Six complete maps are exported. All 68,493 native-z query values and
+1,734 off-grid surface values repeat exactly; saved independent checks pass
+**361,279/361,279**. Maximum off-grid isovalue error is **2.089%**.
+
+**Remaining question:** do the common intervals survive continuous-WFC crossing
+analysis, and what periodic-image/experimental-current uncertainty remains?
+Every half-gap profile contains at least one rising segment; four GlcNAc columns
+have multiple admissible intervals. No column, interval or error is hidden.
+The midpoint remains a geometry convention, not isolated-slab convergence.
+No interval is selected using recognition labels, no production mold changes,
+and no additional job belongs to this completed cycle. The strict label-free
+**694/43/855** objective remains unmet. See the dated result below.
 
 0bd. **Does the smooth vacuum signal agree with an independent WFC reconstruction?**
 **Resolved at the audited points and integral, not as a current calibration.**
@@ -17169,3 +17179,82 @@ Remote CLI load, batch identity/syntax and Slurm test-only pass. Test-only
 **11977796** is not a submitted job. The sole real job is **11977798**, with
 explicit Julia export, four Julia threads, 32 GB, one hour and no requeue.
 No additional calculation is included in this bounded cycle.
+
+### 2026-09-25 — Three complete surface families survive the geometry-defined half-gap test
+
+**Completed calculation.** Source **e2b2dae**, sole Viper job **11977798**,
+completed **13:57:53–14:04:53 UTC**, elapsed **7m00s**, `COMPLETED (0:0)`.
+The four-thread Julia calculation reads the unchanged accepted states, evaluates
+direct Fourier profiles and repeats them with serial blocks. It performs no
+QE calculation, experimental fit, label access or grade. No retry is submitted.
+All **299,075,173 bytes** of inputs/outputs are fetched to
+`qe/vacuum_crossings_20260925/`; recursive checksum comparison has zero
+differences and both original WFC checksums pass again.
+
+**All columns retained.** There are **35,258 GlcN** and **33,235 GlcNAc**
+direct knot samples, all positive, with exact parallel/serial repetitions.
+Full-gap cube/direct relative-L2 differences are **0.031725% / 0.036796%**.
+These whole-profile norms are not uniform pointwise error bounds. The full
+periodic gap has no admissible interval in any of the 578 individual direct
+profiles. In the molecular half-gap every column has at least one admissible
+interval, despite every column also containing at least one rising segment.
+Four GlcNAc columns have more than one admissible interval; no column is masked
+and no monotonic decay is imposed.
+
+The complete common interval sets are found separately from cube profiles and
+direct WFC knot samples. Their joint intersection has exactly these **three
+open intervals**, in the unchanged density units (not pA):
+
+| interval | lower boundary | upper boundary | geometric-midpoint representative |
+|---|---:|---:|---:|
+| 1 | 9.49677472494e-9 | 9.82738280986e-9 | 9.66066460866e-9 |
+| 2 | 1.01253895347e-8 | 1.40885030392e-8 | 1.19436837380e-8 |
+| 3 | 1.45811642014e-8 | 2.60189599730e-8 | 1.94778522357e-8 |
+
+All joint boundaries originate in GlcNAc columns **12, 15 or 29**. These
+restricting columns remain in the surfaces. No interval is preferred or
+calibrated using the experimental chemical sequence, expected N or composition.
+
+**Six representative maps, 289/289 pixels each.** Heights solve the direct
+piecewise-linear knot profiles at the declared interval midpoints. Independent
+Fourier evaluation at those off-grid positions measures the actual density
+departure from the isovalue; all 1,734 values repeat exactly. There is no
+post-result tolerance or root-adjustment step.
+
+| interval | GlcN mean absolute z (nm) | GlcNAc mean absolute z (nm) | max absolute density error GlcN / GlcNAc |
+|---|---:|---:|---:|
+| 1 | 1.24336323 | 1.26415437 | 1.212% / 1.774% |
+| 2 | 1.23373666 | 1.25437571 | 1.246% / 2.089% |
+| 3 | 1.21107241 | 1.23212495 | 0.902% / 1.903% |
+
+Median absolute relative-density errors range **0.201–0.309%**. The largest
+height difference between cube-profile and direct-profile surfaces is
+**0.00142724 nm (1.427 pm)**. Absolute substrate-coordinate and ring-relative
+vertical heights are both retained; no independent per-class centering or
+normalization is applied to these maps.
+
+**Independent verification and limits.** The new read-only
+`test/verify_qe_vacuum_crossings.jl` counts all crossings with a global event
+sweep over the union of density knots, without calling the per-column interval
+implementation. It verifies the complete cube/direct interval sets, excludes
+singular levels, independently intersects the sets, and checks every exported
+root, coordinate, isovalue and error relation. **361,279/361,279** saved-product
+checks pass. This does not independently recalculate the physical WFC values.
+The preparation suite is **2,918/2,918**, with **107/107** unchanged legacy
+constant-current regressions. Evidence logs are under
+`results/qe_vacuum_crossings_20260925/`.
+
+This establishes sampled-profile surface families, not continuous-WFC root
+uniqueness, vacuum/slab convergence, an experimental current conversion or
+improved recognition. The half-gap remains a predeclared geometric diagnostic.
+A useful next route is to exploit the vertical columns' one-dimensional finite
+Fourier representation to inspect continuous crossings, retaining all three
+intervals rather than selecting the best benchmark score. Experimental transfer
+must subsequently fit shared nuisance parameters without labels. Production,
+calibration, registry, unknown25 and champion are unchanged; the strict label-free
+**694/43/855** objective remains open. No further job is part of this cycle.
+
+Documentation builds under Julia 1.13 with the existing size/deployment warnings
+and unchanged limits. Against submitted source **e2b2dae**, the experiment's
+code, settings, batch and synthetic tests are unchanged; only a read-only
+saved-result checker and the measured outcome are added afterwards.

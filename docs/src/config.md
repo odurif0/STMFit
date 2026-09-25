@@ -25,6 +25,14 @@ interval has one geometric-midpoint diagnostic surface with direct off-grid
 density error reported. Serial/parallel values must repeat exactly. This does
 not prove continuous-WFC uniqueness between knots or calibrate current in pA.
 
+Job **11977798** completes in **7m00s (0:0)**. The full periodic gap admits no
+common interval; its molecular-side half admits **three**, with all 578 columns
+retained in both cube and direct-WFC profiles. All **68,493** knot values and
+**1,734** surface values repeat exactly in serial/parallel. Independent saved
+checks pass **361,279/361,279**. The largest off-grid surface density discrepancy
+is **2.089%**; it is reported, not converted into a tuned acceptance threshold.
+No production provider, current calibration or benchmark claim changes.
+
 ## Independent vacuum-wavefunction diagnostic
 
 `config/qe_vacuum_wavefunctions.toml` declares
