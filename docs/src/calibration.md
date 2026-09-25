@@ -17,6 +17,21 @@ model, and bright substrate/contamination may survive its mask. Cross-view
 overlap is descriptive; common observed coverage and the unfiltered predictions
 must remain visible before interpreting any conditional fit improvement.
 
+The completed source-only comparison (job **11979519**, all 146 scans) improves
+pooled mask agreement **0.94707 -> 0.95909** on 141 identified-registration
+views at equal common coverage. It loses only 45 additional smoothed pixels,
+without losing any old patch center. This is a stability measurement, not
+foreground ground truth. On the 138 previously physically scored identified
+views, the unchanged chemical-plus-plane predictions on retained anchors give
+**5.884--5.924 pm** RMS versus **5.930 pm** for a plain local plane: a weak
+**0.22--1.55%** pooled-MSE gain, present in only about half the views. The same
+model chooses the GlcN shape for **99.34--99.74%** of these anchors. A fixed
+single-shape control is therefore still needed before interpreting the gain
+as useful chemical discrimination. No expected composition is used to reject
+or repair these frequencies. All cases, masks, rejected anchors and isovalues
+remain reported; the unfiltered result still favors the plain local plane.
+Neither counting calibration nor the frozen application/champion changes.
+
 ## Distinguishing chemical shape from local height trends
 
 The surface-control diagnostic holds the raw-derived observation/calibration

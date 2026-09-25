@@ -2304,14 +2304,22 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
-0bi. **Can an image-only support isolate the molecule before chemical comparison?**
-A bounded two-pass diagnostic tests an exact observed-value Otsu threshold plus
-a source horizontal-difference floor, then one jointly fitted background x-slope
-and row-offset model outside a guarded first mask. Every connected component,
-unsupported row and input remains; bright support is not a validated molecule
-or unit count. Old anchors and chemical errors are annotated only after masks
-are fixed, never used to choose them. Cross-view agreement is descriptive, not
-foreground truth or independent validation.
+0bi. **Can image-only support make the physical-shape comparison informative?**
+Job **11979519** completes all **146 scans / 292 views**, with **1,621,783** saved
+output checks passing. On 141 identified-registration views, source-only joint
+background correction raises pooled mask IoU **0.94707 -> 0.95909** at identical
+common coverage; 120 views improve and 21 worsen. Only 45 additional smoothed
+pixels become unavailable, and no old diagnostic patch center loses coverage.
+On the 138 previously scored identified views, retained-anchor chemical-plus-
+plane errors are **0.22--1.55% lower in MSE** than a plain local plane, but the
+gain appears in only **68--72/138** views and **99.34--99.74%** of the retained
+hypotheses still choose GlcN. This is a weak conditional shape gain, not chemical
+identification or a unit count. The original hypotheses instead align strongly
+with foreground/background, consistent with the earlier height confound.
+The next discriminating control is a fixed single physical shape versus the
+two-shape choice, on unchanged source-only support and geometry, before any
+claim about chemistry. Both masks/isovalues, rejected anchors and the complete
+cohort remain; no threshold, production default or champion is changed.
 
 0bh. **Does chemical shape add predictive information beyond height and a local envelope?**
 **Not demonstrated by the completed fixed-patch controls.** Job **11979008**
@@ -18030,3 +18038,111 @@ The Julia/root/data/output variables are explicitly exported on the sbatch
 command line. Four requested CPUs map to eight allocated hardware threads;
 the Julia batch uses four static file shards, 16 GB and the one-hour bound.
 No compute is run on the login node, no retry or new scientific arm is added.
+
+**Completed run and reproduction.** Job **11979519** finishes **0:0 in 3m01s**,
+from **17:41:17 to 17:44:18 UTC**; batch MaxRSS is **1,292,675 K**. Its log has
+146 file-completion records and the terminal marker; stderr is empty and the
+user queue is empty. All **4,658** run files plus both Slurm logs are fetched
+(**2,096,359,614 bytes**). Checksum-only rsync reports no file-content difference,
+only the local parent directory's timestamp. All files for the fixed witness
+scan, including both masks, floats and tables, are **byte-identical** to its
+local run. The full reader passes **1,621,783/1,621,783** checks in **10m28.6s**,
+covering raw/array hashes, centered background equations, thresholds, components,
+missingness, old anchors, unchanged registration and prediction populations.
+No image or model is refitted during that readback. A second simple TSV sum
+independently reproduces the global support and identified-view overlap totals.
+
+**Support, not truth.** All **292** backgrounds have status `ok`; every view
+has nonempty bright support. Initial availability is **73,632,686** pixels,
+versus **73,632,641** after the masked joint correction, out of **73,670,096**
+finite raw observations. The extra loss is exactly 15 smoothed pixels each in
+`240817_018/fwd`, `240817_024/fwd` and `241114_027/bwd`: each has one row with
+only 16 background observations, below the unchanged 20-point minimum.
+No previously fitted patch center becomes unavailable. Foreground grows from
+**9,522,687 to 9,810,262** pixels (12.93% to 13.32% of available pixels).
+All components are retained: **419 -> 383**, with **41 -> 31** touching image
+edges and **4 -> 4** touching missing observations. These are neither molecule
+counts nor validated unit counts; merging, false bright substrate and weak
+tails remain possible.
+
+For the **141 identified views / 83 files**, both arms compare the same
+**33,976,177** pixels. Pooled intersection/union is
+**4,820,793/5,090,227 = 0.947068** initially and
+**4,985,708/5,198,382 = 0.959088** after joint correction. Median view IoU is
+**0.952760 -> 0.959535**; **120/141** improve and **21/141** worsen, with median
+paired change **+0.008588**. Across all 292 views, including unresolved shifts,
+pooled common-support IoU is **0.761257 -> 0.769633**, with **236** improvements
+and **56** regressions. There is no claim that zero-lag fallback is physical
+registration, or that agreement of two bright masks proves molecular identity.
+
+**Unchanged predictions on retained and rejected anchors.** The prior physical
+comparison still covers **141 files / 282 views / 15,413 patches**. The same
+four unsupported-bias scans and one unsupported-patch-resolution scan remain
+outside physical scoring; all five remain in the image-only support report.
+The joint mask retains **2,911** old scored anchors and rejects **12,502**;
+the initial mask retains **2,925**. No fit, patch pixels, class or isovalue is
+chosen again. The identified subset remains **81 files / 138 views / 6,467
+patches**. Its joint-mask retained group contains **1,516** patches and
+**392,950** target pixels; the rejected group has **4,951** patches and
+**1,031,639** pixels. There are no unavailable patch centers. These are centers
+inside/outside the mask, not cropped/refitted foreground-only patches.
+
+On that retained identified support, RMS errors in pm are:
+
+| Saved model | Isovalue 1 | Isovalue 2 | Isovalue 3 |
+|:--|--:|--:|--:|
+| Local plane | 5.930387 | 5.930387 | 5.930387 |
+| Plane + common physical shape | 6.859992 | 6.943394 | 7.235283 |
+| Plane + chosen chemical shape | 5.895327 | 5.884193 | 5.923725 |
+| Source copy | 7.082310 | 7.082310 | 7.082310 |
+
+The chosen chemical shape beats the plain plane by **1.1789%, 1.5518%, 0.2246%**
+in pooled MSE, in **71/138, 72/138, 68/138** views and **41/81, 44/81, 42/81**
+files. The initial mask gives a similarly small **1.1584%, 1.5345%, 0.2019%**
+gain on its own retained support; the chemical outcome does not select a mask.
+On rejected identified anchors, the plain plane remains better:
+**5.251189 pm**, versus chemical-plus-plane **6.046857 / 6.036629 / 6.089274 pm**.
+The full unfiltered comparison is unchanged and still favors the plain plane.
+Across all 282 views, including unresolved registration, even the retained
+group favors the plane (**28.757845 pm**) over chemical-plus-plane
+(**28.815547 / 28.811112 / 28.821657 pm**). All groups and all three isovalues
+remain in the saved reports; no external grade is run on the smaller support.
+
+**The weak gain does not establish chemical specificity.** A post-fit reader
+checks the old prediction-file hashes and matches every hypothesis count to
+the independently verified patch totals. Among the 1,516 retained identified
+anchors, plane-plus-chemical chooses GlcN for **1,508 / 1,506 / 1,512** anchors
+(**99.47% / 99.34% / 99.74%**), with only **8 / 10 / 4** GlcNAc hypotheses.
+These frequencies are descriptive, not composition priors or composition
+estimates. Before local plane profiling, the original chemical model chooses
+GlcNAc for **1,434 / 1,434 / 1,428** retained anchors (about 94%), but GlcN for
+**4,926/4,951** rejected anchors at each isovalue. This strong association with
+foreground/background is consistent with the earlier height-confounding
+diagnosis; it does not identify the true chemistry of either region.
+
+**Decision and next scientific question.** The two-pass correction improves
+bright-support stability on most identified views with negligible extra loss
+of availability. It stays a diagnostic candidate, not a validated molecular
+segmentation or production replacement. Conditional saved-prediction analysis
+recovers a weak shape gain that the background-heavy unfiltered score obscured,
+but does not validate the choice between chemical species. A useful next
+bounded control is to compare the two-shape selector with each fixed physical
+shape on the same support/geometry, using source-only nuisance coefficients
+and retaining both masks, every case and isovalue. That would distinguish a
+generic shape contribution from a useful chemical choice; it must not impose
+composition, expected N or post-result thresholds. No such new physical
+prediction, fit or additional job is performed in this cycle.
+
+This is an adaptive diagnostic on a previously inspected cohort/holdout, not
+independent validation. Counting, assignment, calibration, registry, unknown25
+and champion remain unchanged. The complete strict label-free **694/43/855**
+goal remains unmet. Code and readers are committed; generated evidence stays
+local under `results/image_foreground_20260925/`: `run/`, Slurm logs, checksum
+and verification logs, `report/`, `summary/`, `foreground_hypotheses.tsv` and
+the fixed-witness `first_file_support.png`. No result/data directory is committed.
+
+The final documentation build passes under Julia **1.13.0** with `--build-only`,
+without deployment, with the existing size warnings and unchanged limits.
+`git diff --check` passes. The hypothesis reader succeeds on both the fixed
+witness and the full verified run, checking old hashes and exact population
+totals; it does not rerun or alter predictions. No benchmark headline is replaced.

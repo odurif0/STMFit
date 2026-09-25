@@ -15,6 +15,27 @@ with `rank_rtol=1e-12`. Unsupported rows/windows stay missing. Old anchors are
 annotated at their center only after mask construction, without a patch refit.
 Neither target pixels, chemical states, expected N nor benchmark labels choose
 the masks. The two prior run paths serve only provenance and post-fit reports.
+`test/diagnose_image_foreground.jl --help` describes the raw-input driver;
+`test/verify_image_foreground.jl REPO SAVED_RUN RAW_DIR NEW_REPORT_DIR`
+checks its saved arrays and groups the unchanged prior predictions.
+`test/summarize_image_foreground.jl VERIFIED_REPORT NEW_SUMMARY_DIR` reports
+all/identified-view overlap, coverage and comparisons with the plain local
+plane. These reporting programs do not choose a mask or isovalue, alter patch
+pixels, or rerun the chemical fits. The full unfiltered comparison and rejected
+and unavailable groups remain alongside retained-anchor results.
+`test/report_foreground_hypotheses.jl REPO SAVED_RUN VERIFIED_REPORT NEW_TSV`
+counts old physical hypotheses only after support construction; it checks
+prediction hashes and the verified population totals. It never sets composition.
+
+Job **11979519** completes all **292** views, with **1,621,783** saved-output
+checks passing. On 141 identified-registration views, pooled mask IoU rises
+**0.94707 -> 0.95909** at equal common coverage (120 improve, 21 worsen).
+Only 45 additional smoothed pixels become unavailable; no old patch center
+does. On retained anchors in the 138 previously scored identified views, the
+chosen chemical shape improves plane-only MSE by **0.22--1.55%**, but still
+selects GlcN in **99.34--99.74%** of cases. Both masks and all isovalues remain
+reported. This does not calibrate molecular count or chemical identity, and no
+parameter or production default is promoted.
 
 ## Height and local-envelope controls
 
