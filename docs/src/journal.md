@@ -16331,3 +16331,12 @@ Metadata-only inspection of accepted GlcN gives **46** legacy selected bands,
 including **8** negative-weight bands (negative weight sum **−0.793084**), versus
 **12** states in the sharp experimental-bias window (total weight **24**).
 This is a spectral observation, not an improvement in chemical recognition.
+
+**Submission.** Source **f8a33ea** and all prepared inputs are checksum-identical
+in the isolated project `/u/oldu/code/STMFit_spectral_20260925/STMFit`.
+Julia **1.13.0** loads the diagnostic under the QE module stack. Slurm's test-only
+check succeeds (its hypothetical ID **11975557** is not a submitted job).
+The existing QE launcher then submits exactly one real job, **11975572**,
+with explicit `JULIA_BIN` in its command-line export, eight MPI ranks, 96 GB,
+one-hour limit and no requeue. Slurm allocates 16 hardware CPU threads for the
+eight single-threaded MPI ranks on Viper. No result is claimed at submission.
