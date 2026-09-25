@@ -18425,3 +18425,40 @@ Settings SHA256 is
 It starts on **vipc2306**, with the actual Julia version and all five
 config/source/environment hashes matching the local copies in its stdout.
 Track that same job, fetch all evidence and verify before drawing a conclusion.
+
+**Compute completion and preservation.** Job **11980183** completes
+**19:21:23–19:26:39 UTC**, `COMPLETED (0:0)`, elapsed **5m16s**, with eight
+allocated hardware CPUs and batch MaxRSS **3,953,749 KiB**. Stderr is empty;
+all **146** completion messages and **292** view statuses are present and `ok`.
+All **1,168** candidate fits are valid, and source GCV chooses the finest
+declared grid in **292/292** views. This boundary choice is not evidence for
+an optimal physical resolution. All **8,733** requested physical perturbation
+probes have complete source support; incompatible-bias/no-anchor cases remain
+in the image comparison without invented physical probes.
+
+All **4,519** run files and both Slurm logs are fetched, totaling
+**3,842,624,166 bytes**. A checksum comparison has zero content differences
+(only the local parent directory timestamp differs). Every output of the
+fixed first scan is byte-identical between local and Viper execution. The
+saved source/envelope/residual figure `first_envelope.png` was inspected: the
+smooth shape is reproduced, with scan-oriented texture and some localized
+structure remaining. This is visual description, not a chemical/unit label.
+
+**Independent-reader efficiency.** Before the full comparison, target pixel
+assertions are batched without changing the compared values, missingness or
+tolerances. The first cohort reader then exposes repeated text-to-number and
+dictionary operations inside its pixel loop. A separate one-file check tests
+hoisting those conversions and reading only raw target observations, without
+recomputing an unused target background. Source background still receives its
+independent dense normal-equation check, all input hashes remain checked, and
+the old reader/log are retained. No inference code, parameter, numerical
+tolerance, source prediction, target score or HPC result is changed.
+
+The efficient reader passes **884/884** grouped assertions on the fixed first
+scan, including the same full pixel arrays and all three spline grids. Its
+seven report tables are **byte-identical** to `first_supported_report/`.
+The original local cohort reader is deliberately interrupted after its first
+completed files, with `fetched_checks.log` preserved; it is not a failed HPC
+experiment. Full verification restarts from the saved outputs in the separate
+`report_fast/`, without another fit, new settings or overwrite. Test counts
+decrease because array checks are grouped, not because pixels are dropped.

@@ -10,6 +10,30 @@ const n=D.n
 const i=D.i
 close(a,b)=isequal(a,b) || isapprox(a,b;rtol=1e-8,atol=1e-12)
 
+"Read saved observations without fitting or recomputing the target background."
+function load_saved(dir; source=true)
+    meta=TOML.parsefile(joinpath(dir,"metadata.toml")); ny,nx=Int(meta["rows"]),Int(meta["columns"])
+    hashes=t(joinpath(dir,"arrays.tsv"))
+    for h in hashes
+        source || h["file"]=="raw_centered.f64" || continue
+        @test R.sha(joinpath(dir,h["file"]))==h["sha256"]
+    end
+    raw=D.D.get_array(dir,"raw_centered.f64",Float64,ny,nx)
+    source || return (;meta,raw)
+    guard=D.D.get_array(dir,"guard.u8",UInt8,ny,nx).==1
+    mask=D.D.get_array(dir,"joint_core.u8",UInt8,ny,nx).==1
+    rows=t(joinpath(dir,"background_rows.tsv")); @test i.(rows,"row")==collect(1:ny)
+    xs=Float64.(meta["xs_nm"]); xn=(xs.-Float64(meta["xcenter_nm"]))./Float64(meta["xscale_nm"])
+    level=n.(rows,"row_level_centered_nm"); slope=Float64(meta["slope_normalized_nm"])
+    valid=isfinite.(raw)
+    for row in rows; row["usable"]=="true" || (valid[i(row,"row"),:].=false); end
+    b=D.F.background_operator(valid,guard,xn)
+    bg=[level[q[1]]+slope*xn[q[2]] for q in b.inds]
+    @test all(isfinite,bg)
+    # The dense independent background normal-equation check occurs below.
+    (;meta,raw,guard,mask,rows,xn,valid,b,bg,z=raw[valid]-bg)
+end
+
 function recursive_basis(x,t,j,d)
     d==0 && return t[j]<=x<t[j+1] ? 1. : 0.
     a=t[j+d]-t[j]; b=t[j+d+1]-t[j+1]
@@ -37,7 +61,7 @@ function map_value(map,state,dx,dy,base)
 end
 
 function verify_direction(dir,paths,maps,base,c)
-    a=D.load_source(paths["foreground"]); other=D.load_source(paths["target"])
+    a=load_saved(paths["foreground"]); other=load_saved(paths["target"];source=false)
     cal=TOML.parsefile(joinpath(dir,"calibration.toml")); oldcal=TOML.parsefile(joinpath(paths["foreground"],"pair_status.toml"))
     @test cal==oldcal
     for h in t(joinpath(dir,"input_hashes.tsv")); @test R.sha(joinpath(paths[h["role"]],h["file"]))==h["sha256"]; end
@@ -50,17 +74,24 @@ function verify_direction(dir,paths,maps,base,c)
     end
     @test all(isequal.(arrays["source_corrected.f64"][good],a.z))
     @test all(isnan,arrays["source_corrected.f64"][.!good])
-    target=arrays["target_corrected.f64"]; masks=R.F.row_masks(ny,base); plane=cal["difference_plane"]; lag=cal["applied_dx_px"]
+    target=arrays["target_corrected.f64"]; expected_target=fill(NaN,ny,nx)
+    masks=R.F.row_masks(ny,base); plane=Float64.(cal["difference_plane"]); lag=Int(cal["applied_dx_px"])
+    levels=n.(a.rows,"row_level_centered_nm"); slope=Float64(meta["slope_normalized_nm"])
+    xs=Float64.(meta["xs_nm"]); ys=Float64.(meta["ys_nm"])
+    other_reference=Float64(other.meta["source_reference_nm"]); reference=Float64(meta["source_reference_nm"])
+    @test other.meta["xs_nm"]==meta["xs_nm"] && other.meta["ys_nm"]==meta["ys_nm"]
     @test !any(masks.cal .& masks.test)
     for y in 1:ny,x in 1:nx
         xx=x+lag
         if good[y,x] && masks.test[y] && 1<=xx<=nx && isfinite(other.raw[y,xx])
-            bg=n(a.rows[y],"row_level_centered_nm")+meta["slope_normalized_nm"]*a.xn[x]
-            want=other.raw[y,xx]+other.meta["source_reference_nm"]-meta["source_reference_nm"]-
-                plane[1]-plane[2]*meta["xs_nm"][x]-plane[3]*meta["ys_nm"][y]-bg
-            @test close(target[y,x],want)
-        else; @test isnan(target[y,x]); end
+            bg=levels[y]+slope*a.xn[x]
+            expected_target[y,x]=other.raw[y,xx]+other_reference-reference-
+                plane[1]-plane[2]*xs[x]-plane[3]*ys[y]-bg
+        end
     end
+    # Same value and missingness checks, batched to avoid millions of test
+    # macro dispatches in the cohort reader. No output or tolerance changes.
+    @test all(close(target[k],expected_target[k]) for k in eachindex(target))
     models=t(joinpath(dir,"models.tsv")); coeff=t(joinpath(dir,"coefficients.tsv")); selection=TOML.parsefile(joinpath(dir,"selection.toml"))
     @test length(models)==4 && count(r->r["chosen"]=="true",models)==1
     @test selection["chosen"]==only(r for r in models if r["chosen"]=="true")["arm"]
