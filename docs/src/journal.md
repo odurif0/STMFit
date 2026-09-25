@@ -18404,3 +18404,24 @@ does not remove observed pixels, change their model space or infer missing
 values. Remaining rank failures still fail explicitly. A missing-edge-band
 fixture compares predictions to dense least squares. A new first-file output
 will test this representation correction, with no overwrite of the initial run.
+
+**Verified preparation and submission.** Source **26dddb1** passes all **2,536**
+final synthetic assertions, including source-coefficient equality after target
+evaluation pixels change. The initial one-file reader passes **525,040** checks;
+the corrected `first_file_supported/` run fits all three grids and passes
+**525,150** independent checks. Both initial and corrected outputs remain.
+No target score or probe retention changes the fixed resolutions or selection.
+The sparse whole-image basis is shared across all usable pixels, not refitted
+independently on old patches.
+
+Code synchronization to the existing surface-transfer Viper workspace has zero
+checksum differences. Metadata/maps-only dry-run accounts for **146 files**
+and both directions, without a login-node fit. Julia **1.13.0**, Project and
+Manifest hashes are unchanged. Shell syntax and Slurm test-only **11980144**
+pass; this is not a submitted job. The one real job is **11980183**, submitted
+at **19:20 UTC**, with explicit Julia/root/output exports and no requeue.
+Settings SHA256 is
+`537071ec23652f69c27cf5f359251f373c1fa3047476541cd8e9d5235d11b166`.
+It starts on **vipc2306**, with the actual Julia version and all five
+config/source/environment hashes matching the local copies in its stdout.
+Track that same job, fetch all evidence and verify before drawing a conclusion.
