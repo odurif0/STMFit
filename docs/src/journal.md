@@ -2304,6 +2304,16 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
+0bg. **Do the continuous surface shapes transfer to raw trace/retrace images?**
+A bounded raw-image diagnostic compares all three fixed isovalues, with one
+common height offset per source scan and a shared unit gain. Source-only bright
+local extrema provide disjoint diagnostic patches, not an N-selected estimate.
+The target view supplies calibration rows for integer translation and a
+difference plane; separate buffered rows measure prediction. Chemical surfaces
+are compared with their common-height control, a constant and the source image.
+All failures and unsupported biases remain in the cohort report. This does not
+promote a current conversion or replace production counting/calibration.
+
 0bf. **Do all six representative surfaces have unique descending roots in the continuous WFC signal?**
 **Resolved in the fixed finite-basis model at the three saved representatives.**
 Job **11978192** completes in **7m40s (0:0)**: all **1,734** roots are unique and
@@ -17443,3 +17453,107 @@ part of this completed cycle.
 Final documentation builds with Julia **1.13.0** and `--build-only` (no
 deployment), with the existing size warnings and unchanged limits.
 `git diff --check` passes. Generated evidence is retained locally, not committed.
+
+### 2026-09-25 — Raw-image transfer of continuous surfaces: bounded comparison
+
+**Previous cycle: progress.** Commit **8a63d8a** records six complete continuous
+maps, with 1,734 unique descending roots and exact query/search repetitions.
+The worktree is clean and the preceding Viper job is terminal; no live job is
+found. Numerical validity is established only at the fixed representatives,
+not physical transfer or the strict label-free **694/43/855** objective.
+
+**Deliverable and done.** Measure whether these fixed-height shapes predict
+the other scan direction better than a common (chemistry-free) surface, with
+no benchmark-derived count, geometry, normalization or label input. Use every
+top-level SXM in the existing 146-file raw directory, without a benchmark
+manifest; record bias mismatch, missing data and every failed/unidentified
+case. Both directions and all three isovalues remain reported. Done means a
+tested diagnostic, one bounded Viper result, fetched outputs and a measured
+decision. Preparation starts **15:03 UTC**, at most two hours; computation is
+one **four-CPU, 16 GB, two-hour** job with four file shards, no retry. No QE,
+unknown25 rerun, registry replacement, external grade or champion change.
+
+**Observation hypothesis, not additive chain heights.** The
+[Tersoff-Hamann paper](https://doi.org/10.1103/PhysRevB.31.805) relates model-tip
+current to density at its position; numerical isosurfaces do not justify adding
+height tiles across a chain. This diagnostic instead fits separate, disjoint
+local patches directly in nm. Heights reference each structure's lowest Cu
+atom. Both species retain their relative heights and corrugations; gain is
+exactly one, and only one offset is fitted jointly across all patches in a
+source scan. There is no per-class or per-patch z-score, scale or height offset.
+The arithmetic mean of the two surfaces is a chemistry-free null, not a
+physical mixed-species STM calculation. Trimer context, finite-cell and tip
+limitations remain explicit.
+
+**Geometry and search.** Source-only plane/row-flattened, one-pixel-smoothed
+observations locate eight-neighbor maxima above the 0.70 image quantile and
+three high-frequency MAD scales above their local minimum. These are exploratory
+image thresholds, not calibrated significance or inherited count rules.
+Descending-height nonmaximum suppression separates anchors by twice the
+**0.16 nm** diagnostic radius; it imposes no expected number of lobes or chemical
+composition. Fitting uses the unsmoothed, plane-corrected source observations,
+not the anchor-filtered image. All candidate surfaces use the same native
+observed pixels. Rotations cover **0:15:345 degrees** and translations each use
+**[-0.08,0,0.08] nm**. The fixed disk and every transform stay inside the saved
+0.32 nm half-width maps; no extrapolation, reflection or free blur is introduced.
+
+All candidate residual means/centered sums of squares are retained. Equal
+quadratic curvature in the shared offset permits a piecewise lower-envelope
+search over that offset and every patch's discrete state, avoiding an arbitrary
+EM initialization. This optimizes only the declared finite grid, not a global
+physical model or the overall research goal. The three isovalues are not
+selected by a grade or a heldout winner.
+
+**Predictive boundary.** Target calibration uses alternating **32-row blocks**,
+with a one-row buffer at block edges; complementary buffered blocks supply
+evaluation. Integer horizontal registration uses the existing signed row-centered
+correlation, common support and unchanged acquisition-registration checks, on
+calibration rows only. Unidentified shifts retain the existing zero-shift
+fallback and an explicit flag; no subpixel/vertical/drift claim is made.
+The target/source difference plane is also fitted only to calibration rows.
+Source anchors, states and common offset never see target pixel values.
+Missing pixels are not imputed, and target evaluation rows do not enter any
+target correction. This is conditional cross-view predictive evidence, not
+independent noise, an unseen cohort or chemical truth. No threshold is retuned
+after the real result; source-copy and constant controls expose signal/noise
+and background limitations.
+
+The first synthetic run passes all **405** lower-envelope checks and **450**
+interpolation/recovery checks, with one test failure at an exactly zero linear
+interpolant: **-2.12e-16** was compared with zero using relative tolerance only.
+The test now includes **1e-14 nm** absolute floating-point tolerance; no model,
+search range, experimental acceptance criterion or data is changed. The failed
+log remains `results/vacuum_surface_transfer_20260925/tests_initial.log`.
+
+The next synthetic workflow finds a genuine anchor-detection limitation: a
+flat-topped peak is lost by the initial strict-singleton maximum rule. Before
+any real-image fitting, maxima are changed to eight-connected equal-height
+components, represented by the pixel nearest their centroid with a deterministic
+coordinate tie-break. No amplitude, spacing or acceptance threshold changes.
+An explicit four-pixel plateau fixture and target-evaluation mutation tests
+cover this correction; the failed `tests_roundoff_fixed.log` remains available.
+The metadata-only dry-run finds **146** top-level raw SXMs, **142** at the
+declared model bias; four bias-incompatible scans will be reported, not fitted.
+
+Julia **1.13.0** now passes **942/942** focused checks, including exhaustive
+small-dictionary minima, synthetic mixed-species recovery, plateau detection,
+missing-target retention and byte-identical training/calibration outputs after
+target evaluation pixels are changed. The reused acquisition-registration suite
+passes **9,221/9,221**. Map hashes, physical coordinates and metadata-only cohort
+preflight pass. Lateral interpolation is explicitly bilinear in the saved
+17x17 height grids, not a claim of continuous root certification at transformed
+experimental coordinates. No real pixel fit has run at this point.
+
+Cross-checking the original acquisition config reveals its search bound is
+**2.0 nm**, not the initially entered 1.0 nm; the earlier image-only diagnostic
+already found an unlabelled **-1.370 nm** displacement. The preflight config is
+corrected to the original 2.0 nm bound (still capped at one quarter of image
+width), before any real-image fitting. Correlation/ambiguity thresholds are
+unchanged. This avoids excluding a previously observed acquisition displacement
+merely through a transcription error; it is not result-driven range expansion.
+
+Final frozen-config tests again pass **942/942**, SXM I/O passes **21/21**, shell
+syntax and `git diff --check` pass. Documentation builds locally under Julia
+1.13 with `--build-only`, existing size warnings and no changed limits. The
+Project and Pkg-generated Manifest are unchanged. Config SHA256:
+`58fe1a262213ea8cc1e09a983d207a0114a6d3061a5a5af8d61387ff1ff95ea6`.

@@ -1,5 +1,39 @@
 # Configuration Reference
 
+## Raw-image transfer of the continuous surfaces
+
+`config/vacuum_surface_transfer.toml` is diagnostic-only. It binds both surface,
+XML and frame hashes from the continuous-root run and retains all three common
+isovalues. Heights reference the lowest Cu atom; `[model].height_gain=1` and
+`photometry="one_common_offset_per_source_scan"` forbid class-specific scales
+and patch-specific offsets. `arms=["common","chemical"]` compares the mean
+surface with the two chemical candidates, never a composition-constrained mix.
+Rotations use 15-degree steps and translations `[-0.08,0,0.08] nm` in each
+image coordinate. No reflected class, blur or map extrapolation is supplied.
+`interpolation="bilinear_certified_grid_heights"` defines a lateral map
+approximation; the earlier root certification applies to the original nodes,
+not to arbitrary transformed experimental coordinates.
+
+Source-only bright extrema use the explicit 0.70 quantile, three high-frequency
+MAD scales, one-pixel smoothing and 0.16 nm disjoint disks. These engineering
+choices are not independently calibrated detection probabilities or production
+count settings. Equal-height eight-connected maxima use their nearest-centroid
+pixel (`anchor_plateau`), rather than discarding flat tops. Fitting uses native
+observed, unsmoothed plane-corrected heights.
+The common offset and all patch states are optimized over the finite dictionary
+using its piecewise quadratic lower envelope. All candidate costs are retained.
+
+Alternating 32-row target blocks, with one-row edge buffers, separate calibration
+from evaluation. Calibration alone determines integer horizontal registration
+and a target/source difference plane. Existing correlation/support/ambiguity
+checks are unchanged; unidentified registration retains zero shift and its
+failure flag. The original 2.0 nm translation bound remains capped at one
+quarter of the image width. The target evaluation rows influence no fitted parameter.
+Nonmatching bias (outside the explicit 1e-6 V tolerance around -0.300 V), absent
+directions, insufficient support and errors remain reported. Source-copy and
+constant controls use the identical evaluation pixels. No N, sequence, benchmark
+manifest, historical geometry or production-calibration file enters the runner.
+
 ## Continuous vacuum crossings at the saved representatives
 
 `config/qe_vacuum_continuous.toml` keeps the accepted states, sharp bias window,

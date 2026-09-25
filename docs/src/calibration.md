@@ -1,5 +1,31 @@
 # Calibration: measurements, assumptions and limits
 
+## Experimental transfer without inherited count calibration
+
+The bounded surface-transfer diagnostic uses only the raw source image to
+locate bright extrema and fit each of the three fixed surface families. These
+disjoint local patches do not estimate `N_selected`, splice height maps into an
+additive chain model, or use the old benchmark-informed width/support settings.
+The source plane is removed using observed pixels; row flattening and smoothing
+locate anchors only. Fits retain unsmoothed physical nm values. Both DFT species
+share unit gain and one source-scan height offset, preserving their predicted
+relative height and corrugation; neither class is individually standardized.
+Lateral evaluation is bilinear in the saved 17x17 height grids, not a fresh
+continuous-WFC root calculation at every experimental coordinate.
+
+Only alternating buffered target-row blocks enter translation and height-plane
+calibration. Complementary blocks evaluate the frozen source prediction. Target
+evaluation pixels cannot affect source anchors, discrete chemical/geometry
+states, the shared offset or target corrections. Both directions, all isovalues,
+the chemistry-free mean surface, a constant and source-copy predictions remain
+reported. An unresolved registration is flagged, not silently declared physical.
+
+This tests a local height-shape hypothesis with a finite exploratory geometry
+grid. It does not establish tip/current conversion, context transfer from the
+DFT trimer, physically accurate calibration, independent noise or chemical
+recognition. Cross-view improvement must not be read as a benchmark grade, and
+image-derived anchors must not be relabeled as validated molecular counts.
+
 ## Continuous roots do not choose an experimental setpoint
 
 The follow-up at the three saved midpoint isovalues replaces vertical linear
