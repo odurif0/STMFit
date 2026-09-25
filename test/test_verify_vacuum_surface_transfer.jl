@@ -4,6 +4,10 @@ include(joinpath(@__DIR__,"verify_vacuum_surface_transfer.jl"))
 const V=VerifyVacuumSurfaceTransfer
 
 @testset "Independent saved-prediction checker" begin
+    rows=[Dict("patch"=>string(j),"row"=>string(k)) for (k,j) in enumerate([2,1,3,2,1,1])]
+    grouped=V.by_patch(rows)
+    @test Set(keys(grouped))==Set([1,2,3])
+    @test all(grouped[j]==filter(r->parse(Int,r["patch"])==j,rows) for j in 1:3)
     grid=collect(-.32:.04:.32)
     a=[1+.03exp(-(t/.12)^2-(u/.12)^2) for u in grid,t in grid]
     b=[1.025+.02exp(-(t/.08)^2-((u+.05)/.1)^2) for u in grid,t in grid]

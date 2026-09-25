@@ -17579,3 +17579,12 @@ offset, target-row separation and complete case retention. It does not refit
 real images, reconstruct every unchosen candidate cost, or claim an independent
 proof of every global dictionary minimum. The submitted scientific sources
 and settings remain unchanged.
+
+The real saved-output reader exposes a performance problem: filtering the
+complete observation/cost table anew for each patch costs quadratic work in
+patch count. The job itself has already completed and its **2.9 GB** output is
+checksum-identical locally. The read-only checker is changed to a single-pass
+patch index preserving row order, with an equivalence test and per-file progress
+messages. This changes no fit, statistic, tolerance or scientific output. The
+initial read-only pass is stopped explicitly to use the indexed reader; it is
+not a scientific-job retry or an inference failure, and its log is retained.

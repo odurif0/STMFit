@@ -10,6 +10,14 @@ i(r,k)=R.integer(r,k)
 t(path)=R.V.tsv(path)
 close(a,b)=isapprox(a,b;rtol=1e-10,atol=1e-18)
 
+function by_patch(rows)
+    groups=Dict{Int,Vector{eltype(rows)}}()
+    for row in rows
+        push!(get!(groups,i(row,"patch"),eltype(rows)[]),row)
+    end
+    groups
+end
+
 "Independent four-weight interpolation of the saved physical height grid."
 function at(map,row,state,c)
     co,si=cosd(n(state,"angle")),sind(n(state,"angle"))
@@ -24,7 +32,7 @@ end
 function verify_direction(dir,maps,c)
     models=t(joinpath(dir,"models.tsv")); rows=t(joinpath(dir,"patches.tsv")); obs=t(joinpath(dir,"observations.tsv"))
     cal=TOML.parsefile(joinpath(dir,"calibration.toml"))
-    grouped=Dict(j=>filter(r->i(r,"patch")==j,obs) for j in unique(i.(obs,"patch")))
+    grouped=by_patch(obs)
     @test Set((i(r,"interval"),r["arm"]) for r in models)==Set((j,a) for j in 1:3 for a in ("common","chemical"))
     @test length(models)==6
     pixels=[(i(r,"row"),i(r,"column")) for r in obs]
@@ -43,6 +51,8 @@ function verify_direction(dir,maps,c)
         pp=filter(r->i(r,"interval")==interval && r["arm"]==arm,rows)
         @test Set(i.(pp,"patch"))==Set(keys(grouped)) && length(pp)==length(grouped)
         costs=t(joinpath(dir,"costs_$(interval)_$(arm).tsv"))
+        costs_by_patch=by_patch(costs)
+        @test Set(keys(costs_by_patch))==Set(keys(grouped))
         training=0.; testing=0.; flatloss=0.; copyloss=0.; testpixels=0; residualsum=0.
         for patch in pp
             j=i(patch,"patch"); observations=grouped[j]
@@ -55,7 +65,7 @@ function verify_direction(dir,maps,c)
             @test close(train,n(patch,"training_sse_nm2")) && close(test,n(patch,"test_sse_nm2"))
             @test close(flat,n(patch,"flat_sse_nm2")) && close(copy,n(patch,"source_copy_sse_nm2"))
             @test length(source)==i(patch,"training_pixels") && count(good)==i(patch,"test_pixels")
-            cc=filter(r->i(r,"patch")==j,costs); chosen=filter(r->r["chosen"]=="true",cc)
+            cc=costs_by_patch[j]; chosen=filter(r->r["chosen"]=="true",cc)
             @test length(cc)==(arm=="common" ? 216 : 432) && length(chosen)==1
             selected=only(chosen)
             @test all(selected[k]==patch[k] for k in ("type","angle","tx","ty"))
@@ -115,6 +125,7 @@ function verify(root,run,rawdir)
                         flat=n(common,"flat_sse_nm2"),source_copy=n(common,"source_copy_sse_nm2")))
                 end
             end
+            println("TRANSFER_CHECKED ",file); flush(stdout)
         end
     end
     println((;raw_files=length(files),unsupported_bias=unsupported,statuses,source_patches=patches))
