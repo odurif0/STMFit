@@ -2304,6 +2304,14 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
+0bf. **Do all six representative surfaces have unique descending roots in the continuous WFC signal?**
+A bounded interval-enclosed Fourier diagnostic is being prepared at the three
+saved common midpoint isovalues, with the same lateral grid and molecular-half
+native endpoints. It will retain every unresolved or additional root and export
+refined surfaces only at certified pixels. This is not a new current search,
+experimental calibration, production change or benchmark grade. See the scope
+below; no continuous physical result is claimed before the calculation.
+
 0be. **Is there a common, unambiguous constant-current surface in a geometry-defined vacuum domain?**
 **Resolved for the sampled profiles, not the continuous or isolated-surface
 limit.** Job **11977798** completes in **7m00s (0:0)**. The full periodic PAW gap
@@ -17258,3 +17266,85 @@ Documentation builds under Julia 1.13 with the existing size/deployment warnings
 and unchanged limits. Against submitted source **e2b2dae**, the experiment's
 code, settings, batch and synthetic tests are unchanged; only a read-only
 saved-result checker and the measured outcome are added afterwards.
+
+### 2026-09-25 — Continuous Fourier root test: bounded scope and numerical method
+
+**Previous cycle classification: progress.** Job 11977798 produced six complete
+sampled-profile maps and three common intervals, with an independent complete
+crossing-count check. Its maximum off-grid density error was 2.089%; between-knot
+crossings remained unchecked. The current worktree begins clean at **5e85d22**,
+and Viper confirms the prior job terminal, with no queued work from this cycle.
+
+**Deliverable and done.** Test unique descending crossings in the continuous
+finite-basis WFC density at all three already-declared representative isovalues
+for every lateral column. Export root enclosures, complete domain subdivisions,
+all unresolved/multiple outcomes, grouped coefficient bounds and refined maps,
+with independent 3D Fourier queries. The done condition is tested code, one
+bounded Viper result, fetched/checked outputs and a documented scientific
+decision. It is not completion of the strict label-free **694/43/855** goal.
+Budget: two hours preparation and one four-CPU, 32 GB, one-hour Julia analysis
+job; no QE calculation, second job, automatic retry or post-result tuning.
+
+**Continuous signal, no fitted decay law.** At fixed lateral coordinates, group
+all stored Gamma coefficients by vertical reciprocal index into real cosine
+and sine coefficients. The omitted conjugate partner is reconstructed, G=0 is
+counted once, and no harmonic is discarded. Lateral phase arithmetic, summation,
+frequencies, positive state weights and normalization are enclosed using pinned
+`IntervalArithmetic.jl` **1.0.12**. The physical normalization is unchanged; input
+Float64 coefficients and geometry are treated as their stored numerical values,
+not as estimates of DFT/model uncertainty.
+
+Taylor range enclosures of order **12** bound each wavefunction and derivative
+over a vertical interval. The next full-series derivative magnitude bounds the
+remainder. Weighted squares and their derivatives enclose density and slope.
+An interval is excluded only if its density range cannot contain the isovalue,
+or a fixed-sign derivative and same-side endpoint values exclude a root. A
+strict endpoint sign change plus a fixed-sign derivative establishes one root;
+interval Newton then narrows it. Remaining regions are subdivided and retained.
+The fixed numerical limits are root width **1e-7 nm**, depth **24**, **20,000**
+enclosure evaluations per search and **32** Newton iterations. Any inconclusive region
+keeps the column unresolved, never masked or forced monotonic.
+
+The domain endpoints and all three midpoint isovalues are copied from the
+previous result; no interval is selected by benchmark performance. The input
+profile/map hashes are pinned. Complete continuous searches repeat serially
+after parallel execution; independent 3D queries at refined surfaces also
+repeat. Grouping is performed once with outward-rounded coefficient bounds,
+which are saved. Comparisons with ordinary floating-point queries retain the
+existing **1e-13** absolute roundoff allowance; it never enters root isolation
+or widens a mathematical enclosure. The earlier PAW geometry, experimental
+bias, spectral window and **5e-5 Ry** state acceptance remain unchanged.
+
+**Environment and preparation.** `Pkg.add(...; preserve=Pkg.PRESERVE_ALL)` adds
+the pinned interval package and its required numerical libraries. Pkg updates
+the ignored Manifest's stale Julia 1.12 standard/bundled libraries to the
+required Julia **1.13** environment; it is not hand-edited. Existing scientific
+package versions are preserved. A small synthetic grouping timing (1,800
+vectors, 13 bands) estimates roughly 17.5 minutes for serial grouping of 578
+full-size columns; production grouping is parallel, and that timing is not a
+prediction of physical convergence. There is no local real multicolumn WFC
+calculation. Evidence belongs in `qe/vacuum_continuous_20260925/` and
+`results/qe_vacuum_continuous_20260925/`.
+
+This is a vertical DFT-observable diagnostic, not the GaussianFit1D counting
+path. Production fitting/selection, calibration, registry, unknown25 and champion
+are untouched. Physical slab/cutoff/k-point/tip uncertainties remain separate
+from any successful numerical root certificate. No label, expected count,
+composition, new support mask, current conversion or recognition result enters
+this experiment.
+
+The first complete synthetic workflow run has **2,607 passing checks** and one
+CLI return-contract failure: the analysis returned its final Boolean check
+instead of `nothing`. All 867 toy roots, their analytic enclosures, exact
+repetitions and numerical comparisons passed. The fix adds an explicit return;
+no scientific formula, numerical limit or acceptance threshold changes. The
+failed log is preserved as `workflow_tests.log` before a fresh test execution.
+
+The final analytic interval suite passes **245/245**, including independent
+256-bit value and derivative checks. The complete synthetic file workflow
+passes **2,612/2,612** after the return-contract fix, with 867 roots enclosed,
+no unresolved region, exact search/query repeats and maximum relative density
+error **6.17e-9**. Core **32/32** and SXM I/O **21/21** regressions also pass.
+Fit-engine regression and documentation build are still running at this point;
+no physical job has been submitted. Source/batch configuration SHA256 is
+`451d1e627bd5cd4bd55c5b86400c68d65c0cc66e8a4f4046b0a2c70bb33086c1`.

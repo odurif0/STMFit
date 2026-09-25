@@ -1,5 +1,24 @@
 # Calibration: measurements, assumptions and limits
 
+## Continuous roots do not choose an experimental setpoint
+
+The follow-up at the three saved midpoint isovalues replaces vertical linear
+interpolation by the finite Fourier series of the same accepted states. It
+keeps the earlier molecular-half domain and every lateral pixel. Interval
+enclosures include rounding in lateral phase evaluation, coefficient regrouping,
+vertical harmonics and density/derivative evaluation. All harmonics contribute;
+Taylor polynomials bound ranges with an explicit remainder, not a modified
+physical density. The implementation uses
+[IntervalArithmetic.jl](https://juliaintervals.github.io/IntervalArithmetic.jl/stable/manual/usage/).
+
+An unresolved, multiple, ascending or boundary crossing cannot yield a valid
+surface pixel. Refinement cannot turn a failed map into a complete map by
+discarding pixels. The 1e-7 nm root-width limit is a numerical target, not an
+experimental height uncertainty. A successful continuous-root check would
+validate the finite-basis series on this fixed domain, not prove that periodic
+images, the tip, spectral convergence or inherited experimental calibration
+are adequate. No one of the three isovalues is chosen using a recognition grade.
+
 ## Surface families without a selected experimental current
 
 The geometry-defined crossing diagnostic changes the sampling direction from
