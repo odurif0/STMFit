@@ -16340,3 +16340,11 @@ The existing QE launcher then submits exactly one real job, **11975572**,
 with explicit `JULIA_BIN` in its command-line export, eight MPI ranks, 96 GB,
 one-hour limit and no requeue. Slurm allocates 16 hardware CPU threads for the
 eight single-threaded MPI ranks on Viper. No result is claimed at submission.
+
+**Independent verification preparation.** A separate read-only saved-output
+checker, `test/verify_qe_spectral_window.jl`, uses no diagnostic cube/frame/XML
+helpers. It keeps the native last-axis-fast array, solves coordinates in bohr,
+reconstructs trilinear samples, checks SI-derived energy conversion and selected
+states, and verifies signed integrals against the saved tables. Seven affine
+synthetic-reader/interpolation checks pass in addition to the previous 92
+spectral tests (**99/99**); it does not change the already running source.

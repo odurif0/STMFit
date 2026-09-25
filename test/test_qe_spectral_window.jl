@@ -23,6 +23,28 @@ function xml_fixture(;values=[-.09,-.04,-.03,-.02,-.01,-.005,.001,.02,.04])
     """
 end
 
+include(joinpath(@__DIR__,"verify_qe_spectral_window.jl"))
+@testset "Independent native-order verification reader" begin
+    V=VerifyQESpectralWindow
+    mktempdir() do d
+        file=joinpath(d,"affine.cube")
+        open(file,"w") do io
+            println(io,"affine field\nlast axis fast\n0 1 2 3\n3 2 0 0\n4 0 3 0\n5 0 0 4")
+            for i in 0:2, j in 0:3, k in 0:4
+                println(io,100i+10j+k)
+            end
+        end
+        c=V.cube(file)
+        @test c.dims==[3,4,5]
+        @test c.origin==[1.,2.,3.]
+        @test c.grid[5,4,3]==234
+        @test V.sample(c,[1.,2.,3.]+c.axes*[.4,1.2,2.3])≈54.3
+        @test_throws AssertionError V.sample(c,[0.,0.,0.])
+        @test V.element("<a><b>x</b></a>","b")=="x"
+        @test_throws AssertionError V.element("<b>x</b><b>y</b>","b")
+    end
+end
+
 @testset "Frozen spectral policy and explicit rejection" begin
     s=S.settings(CONFIG)
     @test s["model"]["scf_acceptance_ry"]==5e-5
