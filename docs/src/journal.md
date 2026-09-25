@@ -17160,3 +17160,12 @@ constant-current suite also passes. Shell syntax, prepared/tracked batch
 identity and documentation build pass; existing documentation size/deployment
 warnings remain, with no limit changes. Viper has no queued job from this work,
 both original WFC paths are readable and its Julia is **1.13.0**.
+
+**Submission.** Source **e2b2dae**, unchanged Manifest and all **291,380,017 bytes**
+of prepared inputs have zero checksum differences after synchronization to
+`/u/oldu/code/STMFit_vacuum_crossings_20260925/STMFit`. Config SHA256 is
+`369726ff7f7208ae54ef2477ef33d7ca893cc75ac233a7af0eb6e938c41bc443`.
+Remote CLI load, batch identity/syntax and Slurm test-only pass. Test-only
+**11977796** is not a submitted job. The sole real job is **11977798**, with
+explicit Julia export, four Julia threads, 32 GB, one hour and no requeue.
+No additional calculation is included in this bounded cycle.
