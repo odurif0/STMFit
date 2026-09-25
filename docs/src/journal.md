@@ -2304,7 +2304,30 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
+0bc. **What causes the remaining negative density outside the PAW spheres?**
+Gamma continuation **11976185** confirms the missing-conjugate mechanism, but
+the corrected sharp-window density still has **1/289 GlcN and 111/289 GlcNAc**
+negative samples at the unchanged 0.50 nm plane. All six declared planes are
+outside every periodic atomic PAW augmentation sphere; the minimum clearance
+is **0.112 nm**. Next, separate the smooth wavefunction contribution and the
+augmentation contribution on the same collected states, requiring their sum
+to reproduce the corrected cube before attributing the residual. Finite-G
+augmentation/interpolation leakage is a hypothesis, not yet a demonstrated
+cause. No clipping, absolute values, height choice, new SCF, cutoff sweep,
+threshold tuning or benchmark-driven selection follows this result. The
+bounded Gamma continuation is complete; any component diagnostic is a separate
+bounded next step toward a usable label-free physical observable.
+
 0bb. **Does Gamma conjugate completion remove the ILDOS floor?**
+**Resolved for the two audited states:** continuation **11976185** completed
+successfully in **9m03s**. The predicted `stock=(patched+mean(patched))/2`
+relation holds over **21,600,000 voxels** within the predeclared print-precision
+bounds; selected-state weights are conserved and patched repeats are exact.
+All rebuilt legacy controls are byte-identical to their archives. Independent
+verification passes **20,968/20,968**, and all fetched outputs match Viper.
+This validates the isolated software correction, not physical nonnegativity or
+experimental recognition; the remaining signed-plane problem is **0bc**.
+
 Continue under the user's autonomous label-free research authorization. The
 previous cycle made progress (exact controls, recovered checkpoint and a
 specific source-level hypothesis), but the score objective is not achieved.
@@ -2321,13 +2344,13 @@ three-height diagnostics, independent verification, tests and a physical
 conclusion. No algebraically corrected rounded cube substitutes for a rerun
 from the collected wavefunctions; no height is chosen from chemical labels.
 
-**Current outcome:** job **11975972** is terminal `FAILED`, exit **2:0** after
+**Initial attempt:** job **11975972** is terminal `FAILED`, exit **2:0** after
 **1m39s**. Both site controls are exact, but missing MKL linker paths caused
 stock compilation to request the unfetched LAPACK dependency; the offline
 transport guard stopped it. No stock/patched executable or paired ILDOS result
 exists. Checkpoints and fetched controls are intact. The build preparation is
 corrected and link-tested separately, without relaunching this cycle. The
-Gamma hypothesis remains untested; the next useful step is the same frozen
+Gamma hypothesis was untested at that stage; the next step was the same frozen
 numerical comparison in a separately bounded technical continuation, not a
 new physical model or tolerance search.
 
@@ -16660,3 +16683,84 @@ patch dry-application and launcher dry-run pass. Test-only **11976184** was
 not submitted. The sole real job is **11976185**, initially pending for node
 availability, with explicit module/Julia exports and the unchanged one-hour
 allocation. No duplicate or further job is submitted.
+
+### 2026-09-25 — Gamma defect confirmed; signed vacuum density remains
+
+**Completed comparison.** Viper job **11976185**, source **fd10f36**, completed
+**11:46:41–11:55:44 UTC**, `COMPLETED (0:0)`, elapsed **9m03s**. The early MKL
+runtime test and both pristine/patched builds succeeded. All twelve PP steps
+completed. Both site, rebuilt-stock and patched plot_num=5 controls reproduce
+their respective archived cubes byte for byte. The stock GlcN ILDOS also
+reproduces the prior job's cube exactly. No SCF or geometry calculation ran.
+
+The two new executables are retained locally: stock SHA256
+`0e4aaf62977c0e2c6caad38e07d101b5c91cefefb6c91b00853224d63db7406c`,
+patched
+`0e2adbd040058d947fdd2af94fa908eb2280a3500a4c1dc4c0668cd864e3e8d2`.
+The saved source diff contains exactly the frozen conjugate-fill instruction
+and its two comment lines; the patched source SHA256 is
+`8c803e855ebf9bbf5b15a8b4218815f0bfca73d701925d6cc556d593def96263`.
+The site installation is unchanged.
+
+**Mechanism demonstrated.** `stock=(patched+mean(patched))/2` holds at every
+voxel of both **10,800,000-value** cubes. There are **zero** violations of the
+frozen E13.5 quantization envelopes; maximum error/bound ratios are
+**0.905217 / 0.968050**. Corrected integrals are
+**24.0001613025 / 26.0000836367**, compared with state weights **24 / 26**.
+The removed additive terms are **0.000263873732 / 0.000281596979** in native
+density units, fixed by the respective cell means, not fitted to vacuum pixels.
+Each corrected ILDOS repeats byte for byte. Their SHA256s are GlcN
+`f9cb76e0fadb23a156af57f329f3e8d3985376021dbad270c8b535c997220911`
+and GlcNAc
+`fd17389087a27fdf8d5ec2a6644ce0b2ace501b0b7d4c4de74389d573876ca35`.
+This is a direct wavefunction-level confirmation of the Gamma reconstruction
+defect in these two QE 7.4.1 cases, not an algebraic correction of rounded data.
+
+**Remaining physical failure.** Removing the spurious positive offset exposes
+signed values. GlcN has **670,895** negative native voxels (minimum
+**-6.3468e-7**); GlcNAc has **1,209,128** (minimum **-7.2795e-4**).
+Core-region pseudodensity alone is not the decisive diagnostic: negatives
+also persist in the predeclared above-molecule planes. No values are clipped.
+
+| ring-relative height (nm) | GlcN negative / 289 | GlcN negative/positive plane sum | GlcNAc negative / 289 | GlcNAc negative/positive plane sum |
+|---|---:|---:|---:|---:|
+| 0.40 | 0 | 0% | 45 | 0.500368% |
+| 0.50 | 1 | 0.009392% | 111 | 14.782668% |
+| 0.60 | 45 | 5.877977% | 137 | 85.450289% |
+
+At 0.50 nm the minima are **-1.30674365e-9 / -1.27854952e-7**.
+The tiny negative fraction of the whole-volume integral does not validate
+vacuum contrast: the molecular signal becomes small with height. These
+corrected cubes therefore do not yet qualify as nonnegative vacuum STM molds.
+No height is picked from this table and no chemical benchmark is graded.
+
+**Geometry-only follow-up.** The new `test/qe_paw_plane_clearance.jl` reads
+only cube geometry, accepted XML species, the active UPFs and the existing
+frame/grid. It uses the PAW outer integration index
+`max(maximum(beta cutoff indices), augmentation cutoff index)`, as in QE
+7.4.1 `upflib/read_upf_new.f90`, not the UPF `cutoff_r=-1` sentinel.
+Lengths are Bohr in both formats. Orthorhombic periodic minimum-image
+distances include the repeated slab; unsupported skew cells fail explicitly.
+All **1,734** sampled points lie strictly outside all declared spheres.
+Minimum clearances at 0.40/0.50/0.60 nm are GlcN
+**0.167714/0.266784/0.354720 nm** and GlcNAc
+**0.111954/0.211814/0.311748 nm**. Thus these negatives are not explained by
+sampling inside a declared augmentation sphere. This does **not** prove which
+numerical contribution generates them or justify discarding augmentation.
+The next informative physical test is a component decomposition on unchanged
+states, with exact reconstruction of the corrected total, before changing any
+observable used for inference.
+
+**Verification, preservation and decision.** The independent compute-node
+reader passes **20,968/20,968** checks, including all three heights and the
+whole-volume conjugate relation. All **4,293,528,670 bytes** of outputs outside
+duplicate `work/` checkpoints are fetched; a terminal checksum comparison
+has zero differences. Source and copied checkpoint hashes remain unchanged.
+Local source/binary hashes, **266/266** fetched-cube/plane checks and **17/17**
+geometry fixture checks pass, including periodic-image enumeration and the
+UPF index rule. Documentation builds with the existing size/deployment warnings
+and unchanged limits. No new density calculation is run locally or on a login node.
+The failed run remains intact. This cycle makes scientific progress by
+isolating one real defect and a separate unresolved physical failure; it does
+not meet the archived **694/43/855** recognition objective. Production,
+calibration, mold registry, unknown25 and champion status remain unchanged.

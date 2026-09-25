@@ -185,7 +185,33 @@ constant-current feedback loop.
 
 ## Diagnostic constant-current observable
 
-**September 25 spectral follow-up (incomplete).** The missing accepted GlcNAc
+**September 25 Gamma reconstruction result.** Job **11976185** completed the
+paired stock/patched QE 7.4.1 test on the same accepted collected states.
+Filling the missing conjugate reciprocal-space entries removes the additive
+floor: `stock = (patched + mean(patched))/2` holds for all **21.6 million**
+voxels within the previously fixed cube-printing error bounds. All legacy STM
+controls are byte-identical to their archives, corrected ILDOS repeats are
+exact, and corrected integrals are **24.0001613 / 26.0000836** for selected
+weights **24 / 26**. Independent verification passes **20,968** checks; all
+outputs and both binaries are fetched and hash-verified. This establishes the
+isolated reconstruction defect, not a new production STM observable.
+
+The corrected sharp-window density still has negative samples on the unchanged
+0.40/0.50/0.60 nm ring-relative planes: GlcN **0/1/45** and GlcNAc
+**45/111/137** out of 289 at each height. At 0.50 nm the GlcNAc negative plane
+sum is **14.78%** of its positive sum. Geometry-only checks using the active
+UPF outer augmentation indices and periodic cell show all sampled points are
+outside the declared PAW spheres, with minimum clearance **0.112 nm**.
+The outer radius follows the pinned
+[QE UPF reader](https://github.com/QEF/q-e/blob/qe-7.4.1/upflib/read_upf_new.f90);
+the [UPF format](https://pseudopotentials.quantum-espresso.org/home/unified-pseudopotential-format)
+defines radial lengths in Bohr.
+The next diagnostic should separate smooth and augmentation contributions on
+the unchanged states and verify their sum against the corrected total.
+Finite-reciprocal-grid leakage is not yet established as the cause. No clipping,
+height choice, SCF criterion change, mold import or recognition grade follows.
+
+**Earlier September 25 spectral follow-up (incomplete).** The missing accepted GlcNAc
 collected state was recovered on copies with the same plain SCF input and
 **5e-5 Ry** criterion. Both archived STM cubes reproduced byte for byte; the
 recovered 2.46 GB GlcNAc checkpoint is now local/hash-verified. Job **11975572**
@@ -201,15 +227,17 @@ fills only `nl` before its final inverse transform, unlike the normal Gamma
 [`density helper`](https://github.com/QEF/q-e/blob/qe-7.4.1/FFTXlib/src/fft_helper_subroutines.f90),
 which also fills conjugate `nlm`. Missing these partners would give
 `(rho + mean(rho))/2`, conserving the integral but corrupting spatial contrast.
-This is a source-supported hypothesis, **not** a repaired-binary validation.
-No offset correction of rounded cubes or new production observable is adopted.
+That hypothesis is now validated by the paired rebuilt-binary result above.
+No algebraic offset correction of rounded cubes or new production observable
+is adopted.
 
 The separate paired build/PP job **11975972** reproduced both site controls
 exactly but failed during stock compilation because the MKL build paths were
 missing. Neither a rebuilt stock nor a patched binary was produced, so it
-does not test the conjugate-fill hypothesis. Checkpoints were unchanged and
-outputs are fetched. The build prerequisite is now link-tested; no retry,
-new ILDOS result or observable replacement follows from that preparation fix.
+does not itself test the conjugate-fill hypothesis. Checkpoints were unchanged
+and outputs were fetched. Its diagnosed MKL build correction enabled the
+separately bounded continuation **11976185**, without altering the failed run
+or the frozen scientific settings.
 
 The earlier spectral job **11975572** stopped on the enlarged diagnostic grid: preparation accidentally used
 half-width/step **0.64/0.08 nm**, twice the existing **0.32/0.04 nm** grid. A

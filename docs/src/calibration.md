@@ -14,9 +14,13 @@ precision plus the explicit roundoff allowance.
 The actual historical 17×17 lateral grid is **0.32/0.04 nm** half-width/step,
 validated against the source config and both volume domains. All three declared
 heights remain diagnostics; no height, current, isovalue or chemical threshold
-is calibrated here. Passing this software check would still not establish a
-nonnegative vacuum observable, a physically converged STM model, label-free
-historical calibration or improved experimental recognition.
+is calibrated here. Job **11976185** passes the frozen software checks, but
+does not establish a nonnegative vacuum observable, a physically converged STM
+model, label-free historical calibration or improved experimental recognition.
+At 0.50 nm the corrected GlcN/GlcNAc planes still contain **1/111** negative
+samples out of 289 each, outside all declared PAW augmentation spheres. No
+height or clipping rule is selected from this result; component-level density
+diagnosis must precede any new physical calibration.
 
 ## Explicit spectral-window diagnostic
 

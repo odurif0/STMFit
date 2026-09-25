@@ -17,6 +17,14 @@ checks the source grid config and all cube bounds. This separate config does
 not alter the recorded failed doubled-grid experiment below, production,
 calibration, the mold registry or any recognition grade.
 
+Job **11976185** passes the frozen reconstruction checks but exposes residual
+signed density in the above-molecule planes. The geometry-only diagnostic
+`test/qe_paw_plane_clearance.jl RUN_DIR NEW_OUTPUT_DIR` reads the same settings,
+cube headers, accepted XML species and active UPF radial indices to report
+periodic clearance from augmentation spheres. It reads no cube density payload,
+adds no physical parameter, does not mask or correct pixels, and selects no
+height or model. The Gamma config and all production settings remain unchanged.
+
 ## Diagnostic QE spectral window
 
 `config/qe_spectral_window.toml` is opt-in and never selects a chemical model.
