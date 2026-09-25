@@ -2305,12 +2305,20 @@ See `docs/src/selection.md` for the full guard specification and
 ## Open Questions
 
 0bk. **Can a shared full-image envelope predict repeat views without absorbing
-the local physical contrast?** A bounded source-only B-spline/GCV diagnostic
-is prepared September 25. Unlike per-patch planes it shares a continuous image
-surface; it keeps all finite usable pixels and the frozen masked background.
-The source-only GCV includes the complete conditional linear trace, while
-cross-view holdout and DFT perturbation retention are reports only. This is not
-yet a result, a validated molecular envelope or a chemical/counting model.
+the local physical contrast?** **Prediction improves, but substantial probe
+energy is absorbed.** Job **11980183** completes 146 scans / 292 views, with
+**132,131** independent saved-output assertions passing. On 141
+identified-registration views, shared-envelope RMS is **6.6009 pm** versus
+**7.5986 pm** for source copy on matched source-bright support (**24.537%** MSE
+gain; **120/21** improved/worsened views). Whole-image MSE improves **30.377%**.
+GCV selects the finest declared grid in **292/292** views, so the scale search
+is boundary-limited. Only **52.08/52.25/52.49%** of injected DFT contrast energy
+remains at the three fixed isovalues on identified physical-probe support.
+This supports a chemistry-free prediction baseline, not subtract-and-classify
+preprocessing, monomer locations, chemical accuracy or champion promotion.
+The next physical question is consistency between the experimental background
+and the DFT height reference; a valid off-molecule reference at the same
+isovalue has not been established. No new reference or additional job is adopted.
 
 0bj. **Does selecting between the two physical shapes beat either fixed shape?**
 **Only a very small conditional gain; no robust chemical discrimination.**
@@ -2326,7 +2334,8 @@ Do not infer all-GlcN composition or promote this diagnostic. The next useful
 model question is shared background/molecular-envelope structure, without
 free per-patch planes absorbing potential height contrast or background extrema
 masquerading as units. Keep a fixed-shape and a chemistry-free control before
-interpreting any future chemical contrast; no such new model is run here.
+interpreting any future chemical contrast. The later shared-envelope result is
+recorded in 0bk; a joint chemical comparison remains unrun.
 
 0bi. **Can image-only support make the physical-shape comparison informative?**
 Job **11979519** completes all **146 scans / 292 views**, with **1,621,783** saved
@@ -18462,3 +18471,113 @@ completed files, with `fetched_checks.log` preserved; it is not a failed HPC
 experiment. Full verification restarts from the saved outputs in the separate
 `report_fast/`, without another fit, new settings or overwrite. Test counts
 decrease because array checks are grouped, not because pixels are dropped.
+
+**Next physical question, not an additional run.** The source image is measured
+relative to an observed, masked background; `load_maps` references the DFT tip
+heights to the lowest Cu **atom**. Matching atomic coordinate origins is not
+the same as matching an STM background level. This is an inference from the
+two implemented conventions. The underlying distinction is consistent with
+the density-at-tip current model of
+[Tersoff and Hamann (1985)](https://journals.aps.org/prb/abstract/10.1103/PhysRevB.31.805).
+A useful separately bounded check would ask whether valid off-molecule,
+Cu-dominated reference crossings exist in these same periodic cells at the
+same three isovalues and unchanged accepted states. Their availability, branch
+uniqueness, PAW clearance and spatial variability are not established here.
+Such a check could inform a constrained shared envelope; it would not by itself
+resolve unit positions, chemical-shape mismatch, tip effects or current
+calibration. No substrate reference, new QE run, SCF criterion or provider is
+adopted in this cycle.
+
+### 2026-09-25 — Shared envelope improves prediction; contrast absorption remains
+
+**Completed verification.** Independent reader **113d2e5** completes all
+**146 scans / 292 views**, passing **132,131/132,131** grouped assertions in
+**31m56s** (test-set elapsed time, excluding initial loading/compilation).
+Each grouped target assertion still checks every native pixel and missing
+position. The reader reconstructs the cubic basis recursively, checks saved
+coefficients and normal equations, evaluates the complete `B+P-PB` trace with
+an independent dense background solve, replays heldout corrections and errors,
+and reconstructs each physical probe with independent four-weight interpolation.
+The earlier slow reader was deliberately stopped after **22** completed files;
+its log, the initial/corrected witness runs and all failed preparation evidence
+remain intact. No HPC or scientific fit was repeated for this optimization.
+
+**Prediction at matched native support.** All four candidates are valid in all
+292 views. GCV chooses the **0.32 nm minimum-interval** family in every view;
+actual interval lengths follow the frozen whole-image floor rule, not exactly
+0.32 nm. This is the best of the declared source-GCV candidates, not a global
+optimum or an identified molecular scale. Source-only bright masks annotate
+scores after fitting; they are not molecular or chemical truth.
+
+The primary identified-registration subset is **83 files / 141 views**. Both
+methods use exactly the same heldout target pixels in each group:
+
+| identified support | target pixels | source-copy RMS (pm) | selected envelope RMS (pm) | MSE reduction | better / worse views |
+|---|---:|---:|---:|---:|---:|
+| whole usable image | 15,867,576 | 6.33508 | 5.28600 | 30.3773% | 134 / 7 |
+| source bright foreground | 2,387,525 | 7.59864 | 6.60089 | 24.5370% | 120 / 21 |
+| remaining background | 13,480,051 | 6.08399 | 5.01732 | 31.9908% | 136 / 5 |
+
+Source-copy is a prediction control, not a noise floor. The foreground SSE
+changes **137.853998855 -> 104.028718975 nm2**; an independent TSV aggregation
+reproduces the totals and paired improvement counts. Background-only RMS on
+this foreground is **155.604 pm**, and the two coarser spline families give
+**30.6644 / 12.0845 pm**. These target scores do not choose the resolution;
+the source-only choice was frozen first. The old per-patch-plane and physical-
+shape RMS figures have different pixel populations and are not directly ranked
+against this whole-image fit.
+
+**Unresolved registration is retained, not hidden.** Across all **146 files /
+292 views**, there are **33,351,640** scored pixels and **4,579,218** foreground
+pixels. Full-image source-copy/envelope RMS is **25.9515 / 25.6287 pm**, a
+**2.47184%** MSE reduction. On foreground it is **37.3651 / 37.1146 pm**, only
+**1.33612%** MSE reduction; **240/52** views improve/worsen. These pooled values
+include the unchanged zero-shift fallback and are not physical validation of
+those unresolved views. No scan or flag is discarded or recalibrated.
+
+**Local physical sensitivity.** All **8,733** probes complete, representing
+**2,911** old retained patches at each of three isovalues. The physically
+supported identified subset has **1,516** probes per isovalue. Remaining
+energy fractions are **52.0827%, 52.2544%, 52.4870%**, respectively; their
+medians are **52.7700%, 52.8689%, 52.8727%**. Across all views, pooled fractions
+are **52.3738%, 52.5123%, 52.6553%**. The smallest identified fraction is
+**9.32384%** at the second isovalue. No fraction is clipped or selected as a
+new acceptance threshold. These are **energy** ratios, not amplitude recovery
+or percentages of correctly identified chemistry. Energy here means summed
+squared height perturbations in **nm2**, not electronic DFT energy. The geometry,
+mask and
+selected resolution stay fixed during each injection; artificial patch edges,
+unvalidated unit centers and lack of model re-selection limit interpretation.
+
+**Decision.** Retain this method as a reproducible, label-free, chemistry-free
+**prediction baseline** for future observation models. It demonstrates a real
+cross-view fit improvement on the predeclared identified subset, while showing
+why a freely fitted envelope cannot simply be subtracted before chemical
+assignment: roughly **48%** of the injected contrast energy is removed, and
+some probes lose over **90%**. This is not evidence that real chemistry is
+absent, that those energy fractions transfer to actual monomers, or that the
+DFT shapes are quantitatively correct. A consistent physical background/height
+reference and joint nuisance/contrast comparison remain to be tested, with
+fixed-shape and height-only controls; no new physical calculation is added here.
+
+The experiment never reads expected N, sequence, composition, benchmark labels
+or grades. Its all-pixel fit uses only the source image and the saved source
+background; chemical maps/anchors enter only the post-selection probes. Heldout
+target values enter scores only. Inference and selection are label-free, but
+this reused-cohort, adaptively motivated comparison is **not fresh validation**.
+No counting, unit assignment, confidence calibration, production config,
+accepted DFT state/criterion, registry, unknown25 output or champion is changed.
+No external recognition grade is run. The complete **694/43/855** objective is
+therefore still unmet.
+
+Evidence is retained under `results/shared_image_envelope_20260925/`: `run/`,
+Slurm/accounting logs, checksum logs, both first-file runs, the byte-identical
+witness comparison, synthetic logs, `first_envelope.png`, both cohort-reader
+logs and **`report_fast/`** (all seven final tables). Generated evidence stays
+untracked; source, config and scientific decisions are committed.
+
+Final documentation builds under Julia **1.13.0** with `--build-only`, without
+deployment, retaining existing size warnings and unchanged limits. The
+calibration/config/DFT notes and this journal's Open Questions reflect the
+verified outcome. Production benchmark headlines are unchanged because no
+production behavior or recognition result is changed. `git diff --check` passes.

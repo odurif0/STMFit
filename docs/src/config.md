@@ -35,6 +35,18 @@ so its sharp boundary and incomplete physical support limit interpretation.
 This is sensitivity to an injected signal, not chemical recovery or unit count.
 Run `test/diagnose_shared_image_envelope.jl --help` for the entrypoint.
 
+Job **11980183** completes all **146 scans / 292 views**; the independent
+reader passes **132,131** grouped assertions without dropping pixels. GCV
+selects the finest grid in every view. On 141 identified-registration views,
+matched bright-support RMS improves **7.5986 -> 6.6009 pm** versus source copy
+(**24.537%** MSE reduction; **120/21** improved/worsened views). However, only
+**52.08--52.49%** of the localized DFT contrast energy survives the fitted
+background/envelope on identified probe support. Keep this as a chemistry-free
+prediction baseline, not a unit-assignment provider or a new physical scale
+calibration. All unresolved views and all three isovalues remain in the report;
+no result selects new settings or changes the production champion. The final
+reader is `test/verify_shared_image_envelope.jl REPO SAVED_RUN NEW_REPORT_DIR`.
+
 ## Fixed physical shapes versus the saved selector
 
 `config/fixed_shape_replay.toml` pins the prior transfer, control and foreground

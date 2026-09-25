@@ -23,6 +23,19 @@ chemical information. Conversely, retaining a perturbation does not show that
 real-image chemistry is identifiable. No new current, height, count, composition
 or confidence calibration is introduced.
 
+The completed job **11980183** passes **132,131** independent grouped checks.
+On 141 identified-registration views, the class-free envelope lowers matched
+bright-support prediction MSE by **24.537%** against source copy, improving
+120 views and worsening 21. Yet it removes approximately **48%** of the
+injected contrast energy; some probes lose over **90%**. Every source-GCV
+choice is at the finest declared grid. Better image prediction therefore
+does not identify a chemical-preserving resolution or validate subtracting
+the envelope before assignment. A jointly constrained observation model is
+still needed. In particular, the DFT lowest-Cu-atom reference and the fitted
+experimental STM background are different conventions; whether a supported
+off-molecule reference at the same isovalue resolves part of this mismatch
+is an open physical question, not an adopted calibration or a promised fix.
+
 ## Chemical choice versus one fixed physical shape
 
 A gain from a two-shape dictionary over a plain local plane does not by itself
@@ -46,7 +59,8 @@ pixels; equal target error is not validation of those choices. The full
 identified comparison slightly favors fixed GlcN at every isovalue. This
 supports a generic shape contribution, not robust chemical identification or
 an all-GlcN composition. Shared molecular-envelope/background modelling remains
-an open observation-model question; no such new fit or calibration is claimed.
+an open observation-model question. The shared-image experiment above tests
+prediction and contrast absorption, not chemical calibration.
 
 ## Bright support is not molecular identity
 

@@ -185,6 +185,21 @@ constant-current feedback loop.
 
 ## Diagnostic constant-current observable
 
+**September 25 shared-image envelope.** Job **11980183** fits a chemistry-free
+source-only B-spline envelope after the frozen masked image background, with
+resolution selected by the complete conditional GCV trace. It processes all
+146 scans / 292 views; **132,131** independent grouped checks pass. On 141
+identified-registration views, foreground cross-view MSE improves **24.537%**
+against source copy. This is an image-prediction result, not a DFT or chemical
+recognition validation. On identified physical-probe support, only
+**52.08--52.49%** of the injected GlcNAc-minus-GlcN energy survives at the three
+fixed isovalues. Probe geometry/support is inherited, and the mask/resolution
+is not reselected under perturbation. The finest envelope grid is chosen in
+every view, without demonstrating an optimal physical scale. A consistent
+image/DFT background reference and joint envelope/contrast model remain open;
+no off-molecule reference, current calibration, accepted state, SCF criterion
+or production mold is changed.
+
 **September 25 height/envelope controls.** Job **11979008** keeps the fixed
 surface-transfer cohort, patches, calibration and all three isovalues. A common
 shape with just the fixed mean class-height contrast reproduces
