@@ -1,5 +1,22 @@
 # Calibration: measurements, assumptions and limits
 
+## Distinguishing chemical shape from local height trends
+
+The surface-control diagnostic holds the raw-derived observation/calibration
+boundary fixed. Its height-only contrast uses the same common map with two
+constant shifts, fixed by the physical maps' mean difference, and a shared
+source-scan offset. It does not calibrate shifts from experimental composition.
+Separate local constant and plane controls measure how much the source alone
+predicts without any chemical template. Both plane-template arms use the same
+source-only nuisance basis; the common arm fixes geometry before the two
+chemical shapes are compared. Removing each candidate's affine component is
+an explicit diagnostic loss of height/slope information, not a new physical
+normalization for production. Evaluation pixels never determine a source
+parameter. Better cross-view prediction would still not prove foreground,
+correct count, chemical labels, independent noise or a calibrated current.
+These controls follow inspection of the same cohort's earlier predictions;
+the reused heldout rows are a diagnostic comparison, not fresh validation.
+
 ## Experimental transfer without inherited count calibration
 
 The bounded surface-transfer diagnostic uses only the raw source image to

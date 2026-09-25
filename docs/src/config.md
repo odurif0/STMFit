@@ -1,5 +1,21 @@
 # Configuration Reference
 
+## Height and local-envelope controls
+
+`config/vacuum_surface_controls.toml` consumes the fixed surface-transfer
+observations, pinning their settings and file-list hashes. It retains all
+directions/isovalues and cannot redefine anchors, support or target calibration.
+The five arms are `height_contrast`, `local_constant`, `local_plane`,
+`plane_common` and `plane_chemical`. The height arm replaces spatial contrast
+with its equal-weight mean over all fixed map nodes, retaining the common shape,
+unit gain and one scan offset. Plane arms use exactly `[1, dx_nm, dy_nm]` on
+source pixels only. Chemical geometry is frozen at the plane-common source
+minimum; chemistry cannot re-register. `plane_rank_rtol=1e-12` is numerical,
+and rank failures remain failed views. Replay tolerances (`1e-10` relative,
+`1e-14 nm` offset and `1e-18 nm2` SSE absolute) check arithmetic, not scientific
+acceptance. These controls neither assign production units nor choose an
+isovalue/foreground/chemical confidence threshold.
+
 ## Raw-image transfer of the continuous surfaces
 
 `config/vacuum_surface_transfer.toml` is diagnostic-only. It binds both surface,

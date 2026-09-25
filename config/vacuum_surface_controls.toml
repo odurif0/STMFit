@@ -1,0 +1,23 @@
+# Diagnostic ablations of the fixed raw-image transfer, not an assignment method.
+[model]
+input_run = "results/vacuum_surface_transfer_20260925/run"
+input_settings_sha256 = "58fe1a262213ea8cc1e09a983d207a0114a6d3061a5a5af8d61387ff1ff95ea6"
+input_files_sha256 = "22086ca2c4ddcdc3967138503532f42e7b6d29feb0c3d1b2c9c55d18551522d6"
+arms = ["height_contrast", "local_constant", "local_plane", "plane_common", "plane_chemical"]
+contrast_mean = "equal_weight_all_fixed_map_nodes"
+height_gain = 1.0
+plane_basis = "1_dx_nm_dy_nm"
+chemical_geometry = "frozen_source_plane_common_argmin"
+
+[selection]
+policy = "all_cases_directions_isovalues_no_grade"
+ties = "first_exact_minimum_no_chemical_confidence"
+rank_failure = "retain_failed_view_no_support_change"
+
+[preprocessing]
+observations = "saved_native_pixels_no_refiltering"
+target_use = "score_only_never_fit"
+plane_rank_rtol = 1e-12
+replay_rtol = 1e-10
+replay_atol_nm = 1e-14
+replay_atol_nm2 = 1e-18

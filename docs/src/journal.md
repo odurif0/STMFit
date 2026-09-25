@@ -2304,6 +2304,16 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
+0bh. **Does chemical shape add predictive information beyond height and a local envelope?**
+A bounded control cycle keeps the complete saved raw-image cohort, source-only
+anchors, native pixels, target calibration and three isovalues from job 11978725.
+A height-contrast control retains the common map and only the two maps' mean
+height difference. Source-only constant/plane controls measure local envelope
+predictability; plane-profiled common geometry is frozen before testing the two
+chemical shapes. No chemical state can move the geometry. This is a diagnostic
+of the observed confound, not a molecular foreground detector or a production
+calibration/assignment replacement. No benchmark grade is used.
+
 0bg. **Do the continuous surface shapes transfer to raw trace/retrace images?**
 **Numerically reproducible, but chemical transfer is not established.** Job
 **11978725** retains all **146** raw scans: four bias mismatches, one without
@@ -17683,3 +17693,74 @@ The strict label-free **694/43/855** objective remains unmet by this diagnostic.
 Final documentation builds under Julia **1.13.0** with `--build-only`, no
 deployment, existing size warnings and unchanged limits. `git diff --check`
 passes. Generated predictions, logs and figures remain local and uncommitted.
+
+### 2026-09-25 — Height and local-envelope controls: bounded source-only comparison
+
+**Previous cycle: progress.** Commit **13e3fd0** completes the 146-file surface
+transfer accounting and independent saved-output verification. The two-shape
+dictionary's apparent gain has a background/brightness confound, while source
+copy is much more accurate. The worktree is clean, Viper has no live user job,
+and accounting confirms job **11978725** terminal **0:0**. The unknown25
+application remains completed as documented September 17; it is not rerun.
+
+**Scientific deliverable and done.** Determine whether the predictive gain
+requires chemical shape after controlling simple height and local trends.
+Retain the complete 146-file input list, failed/unsupported cases, both views,
+native patches and three isovalues. Done means tested source-only controls,
+one bounded Viper comparison, fetched evidence, verified arithmetic and a
+scientific decision, not merely a new script or protocol. Preparation starts
+**16:15 UTC**, at most two hours; computation is one **four-CPU, 16 GB, one-hour**
+job in four static file shards, no retry/requeue. No new QE, geometry/anchor
+extraction, target correction, counting, registry, unknown25 run, external
+grade or champion change. The user's autonomous research scope remains the
+strict label-free **694/43/855** objective, not this diagnostic alone.
+
+**Fixed ablations.** For each isovalue write `C=(H0+H1)/2` and `D=(H1-H0)/2`.
+The height-contrast arm uses `C +/- mean(D)`, with the mean over all fixed map
+nodes, not experimental pixels. It preserves the same 432 discrete chemical/
+geometry alternatives and one common source-scan offset as the original
+dictionary, but discards spatial chemical contrast. Constant shifts change
+candidate residual means, not centered SSE; the existing lower-envelope method
+solves the common offset. The unchanged common-surface source fit is replayed
+and compared with its saved offset/loss in every view and isovalue.
+
+Two chemistry-free controls fit a constant or an affine plane separately to
+each source patch. A `plane_common` arm adds the fixed common map and profiles
+the same local plane for each allowed geometry. Its source-loss-minimizing
+rotation/translation is then frozen. `plane_chemical` tests only the two species
+at that geometry, profiling the same plane and choosing the source minimum,
+with no composition prior. Target values enter scoring only. There is no new
+blur, scale, reflection, pixel mask or heldout-driven parameter selection.
+SVD removes the span of `[1, dx_nm, dy_nm]` at the unchanged numerical rank
+tolerance. This deliberately absorbs absolute height and slope to test the
+remaining shape; it is not physical class normalization or a calibrated tip
+model. A pure-height class difference must disappear under this matched nuisance.
+It does not resolve molecular foreground or prove a local plane is adequate.
+
+The older July common/contrast diagnostic already warned that geometry could
+mask chemical-model mismatch, and the June residual/envelope features did not
+establish identity. This test differs in using the new continuous physical
+surfaces and unchanged, raw-derived pixels with actual cross-view holdout.
+The two new input bindings pin the completed transfer settings and file list;
+per-view hashes retain the observed pixels and saved baseline/calibration.
+No old benchmark-informed count or support config enters these controls.
+The scientific question follows the previous cohort result, so this reused
+cross-view holdout is an adaptive diagnostic, not a fresh validation set.
+
+The initial synthetic test invocation passes the **942** unchanged upstream
+checks, then stops on a Julia parse error in the new test fixture's tightly
+spaced decimal/broadcast expression. Explicit multiplication and spaces fix the
+fixture; no physical setting, real fit or scientific acceptance rule changes.
+The initial log remains `results/vacuum_surface_controls_20260925/tests_initial.log`.
+
+The corrected Julia **1.13.0** suite passes **1,878/1,878** assertions: **942**
+unchanged upstream checks, **41** height/plane projection and mixed-shape
+recovery checks, **4** pure-height negative-control checks, and **891** complete
+saved-output/independent-prediction/target-mutation checks. The chemical geometry
+is verified equal to the common-source geometry. A class swap reverses states
+without changing predictions; adding a source plane preserves the residual
+shape decision. The metadata-only dry-run finds **146** inputs and **282**
+usable views, with every upstream unsupported case retained. Shell syntax and
+`git diff --check` pass. Project and the Julia-1.13 Pkg-generated Manifest are
+unchanged; no dependency update is required. Control config SHA256:
+`b8e202a6d8964016b4bf4dc8caccca9671780baf179f9c1d32e774ec3fea9ba7`.
