@@ -204,7 +204,14 @@ which also fills conjugate `nlm`. Missing these partners would give
 This is a source-supported hypothesis, **not** a repaired-binary validation.
 No offset correction of rounded cubes or new production observable is adopted.
 
-The job stopped on the enlarged diagnostic grid: preparation accidentally used
+The separate paired build/PP job **11975972** reproduced both site controls
+exactly but failed during stock compilation because the MKL build paths were
+missing. Neither a rebuilt stock nor a patched binary was produced, so it
+does not test the conjugate-fill hypothesis. Checkpoints were unchanged and
+outputs are fetched. The build prerequisite is now link-tested; no retry,
+new ILDOS result or observable replacement follows from that preparation fix.
+
+The earlier spectral job **11975572** stopped on the enlarged diagnostic grid: preparation accidentally used
 half-width/step **0.64/0.08 nm**, twice the existing **0.32/0.04 nm** grid. A
 header-only preflight now detects its out-of-volume samples before preparation.
 GlcNAc ILDOS was not run; there was no retry, clipping, domain shrinkage or

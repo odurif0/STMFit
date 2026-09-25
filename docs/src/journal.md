@@ -2321,6 +2321,16 @@ three-height diagnostics, independent verification, tests and a physical
 conclusion. No algebraically corrected rounded cube substitutes for a rerun
 from the collected wavefunctions; no height is chosen from chemical labels.
 
+**Current outcome:** job **11975972** is terminal `FAILED`, exit **2:0** after
+**1m39s**. Both site controls are exact, but missing MKL linker paths caused
+stock compilation to request the unfetched LAPACK dependency; the offline
+transport guard stopped it. No stock/patched executable or paired ILDOS result
+exists. Checkpoints and fetched controls are intact. The build preparation is
+corrected and link-tested separately, without relaunching this cycle. The
+Gamma hypothesis remains untested; the next useful step is the same frozen
+numerical comparison in a separately bounded technical continuation, not a
+new physical model or tolerance search.
+
 0ba. **Can an explicit positive-weight energy window repair the STM observable?**
 Under the user's September 25 long-term autonomous research authorization,
 the reference to reach is archived **694/43/855**, not merely historical
@@ -16553,3 +16563,51 @@ and patch dry-application pass on Viper. Slurm's test-only ID **11975969** was
 not submitted. The existing QE launcher submits one real job, **11975972**,
 with explicit Julia/module exports, eight ranks (16 allocated hardware threads),
 96 GB, one hour and no requeue. No calculation is run on the login node.
+
+### 2026-09-25 — Gamma comparison incomplete: MKL build dependency diagnosed
+
+**Outcome.** The single permitted job **11975972** ran **11:23:54–11:25:33 UTC**
+and is `FAILED (2:0)`, elapsed **1m39s**. Its site PP steps completed in
+**20 s / 25 s**. Both plot_num=5 cubes match the archived GlcN/GlcNAc SHA256s
+exactly, including after fetching; all copied checkpoint files and both
+original wavefunctions retain their pre-run hashes. The complete outputs
+excluding duplicate `work/` checkpoints are fetched (947,674,640 bytes), with
+zero checksum differences. The real `install/config.log` and `make.inc` are
+also retained locally. There are no new stock/patched PP binaries, no paired
+ILDOS cubes, and no applied source patch. This is an incomplete software test,
+not evidence for or against the Gamma hypothesis and not a recognition result.
+
+**Exact failure.** The compiler test for `dspev` reports `cannot find
+-lmkl_intel_lp64`, `-lmkl_sequential`, and `-lmkl_core`. The installed site QE
+binary has its own MKL runtime paths, but loading `intel/2024.0`, `impi/2021.11`
+and `qe/7.4.1` does not load the MKL build module. QE accepted the supplied
+BLAS flag without checking it, then selected `external/lapack/liblapack.a` as
+its fallback. That submodule was not prepared. `make` attempted to fetch it;
+the explicit `protocol.allow=never` guard rejected the transport and stopped
+the build. No compute-node network fetch succeeded. Slurm/test-only checks
+and source synchronization had not tested these compiler library paths.
+
+**Targeted build correction, no resubmission.** The tracked job template now
+loads `mkl/2024.0`, supplies the explicit MKL link directory and runtime path,
+and checks a tiny BLAS/LAPACK program before copying states or running site
+controls. It saves the inner configure log before `make`, verifies its actual
+exit marker (the outer QE wrapper returns zero even on inner failure), and
+rejects an internal LAPACK fallback. It does not fetch a different numerical
+library or change any scientific input, precision bound, grid, wavefunction,
+DFT acceptance criterion or expected state weight. A compiler/link-only check
+on Viper resolves both BLAS/LAPACK symbols and all runtime libraries; the probe
+is not executed on the login node, and no QE calculation is run there.
+This fixes the observed link prerequisite but does not yet demonstrate that
+the full QE build or patched calculation succeeds.
+
+**Verification and preserved evidence.** Julia **1.13** passes **10,538/10,538**
+Gamma assertions, including the actual shell fallback guard on positive,
+missing and internal-LAPACK fixtures, plus **108/108** spectral regression
+assertions. Shell syntax and whitespace checks pass. Documentation builds with
+the existing size/deployment warnings, without changing their limits.
+Original preparation, Slurm failure and the failed job's copied script remain
+unchanged. No retry or new job is submitted in this cycle. Logs are under
+`results/qe_gamma_reconstruction_20260925/`; raw outputs remain under
+`qe/gamma_reconstruction_20260925/`. No mold, calibration, count, assignment,
+benchmark headline, production default, unknown25 output or champion changes.
+The archived **694/43/855** objective remains open.

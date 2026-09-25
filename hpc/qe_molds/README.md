@@ -166,6 +166,15 @@ generic launcher's narrow input list must be synchronized explicitly before
 using `--no-sync-code --no-sync-qe`. A new isolated build must not replace the
 site executable or modify the only copy of a collected electronic state.
 
+The isolated Gamma PP build additionally requires `mkl/2024.0` and explicit
+MKL link/runtime paths: the site QE module can run its own binary without
+exposing these paths to a new compiler invocation. Job **11975972** failed on
+this distinction before producing either new PP binary. The corrected template
+checks BLAS/LAPACK linkage first, retains `install/config.log` before building,
+and refuses a missing-LAPACK fallback. Dependencies must still be fetched
+before submission; compute-node Git transports stay disabled. These compiler
+checks are not validation of the physical Gamma patch.
+
 The original full pilot (`8×8×4` slab, Cu `spn` PAW, `2×2×1` k-points,
 `ecutwfc=80`, `ecutrho=640`) exceeded the Raven QOS memory limit: QE estimated
 `~159 GB` dynamic RAM per MPI process. The active Raven pilot therefore uses an

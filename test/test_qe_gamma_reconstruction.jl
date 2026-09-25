@@ -146,6 +146,22 @@ end
     @test occursin("cp -a",job) && !occursin("rm -",job)
     @test occursin("stock_control stock_ildos",job)
     @test occursin("patched_control patched_ildos repeat_ildos",job)
+    @test occursin("module load mkl/2024.0",job)
+    @test occursin("-Wl,-rpath,\$STMFIT_MKL_LIBDIR",job)
+    @test occursin("qe_mkl_link_probe.f90",job)
+    @test first(findfirst("mpiifort ",job)) < first(findfirst("cp -a",job))
+    @test first(findfirst("cp install/config.log",job)) < first(findfirst("make -j 8 pwlibs",job))
+    @test occursin("^configure: exit 0\$",job)
+    # Execute the actual post-configure guard on successful and failed fixtures.
+    guard=match(r"(?ms)^if ! grep -Eq '\^LAPACK.*?^fi$",job).match
+    mktempdir() do d
+        script=joinpath(d,"guard.sh"); write(script,"set -eu\n"*guard*"\n")
+        for (content,expected) in (("LAPACK = \nLAPACK_LIBS = -mkl=sequential\n",true),
+                ("# LAPACK = \nLAPACK = liblapack\n",false),("",false))
+            write(joinpath(d,"make.inc"),content)
+            @test success(pipeline(Cmd(`bash $script`;dir=d),stdout=devnull,stderr=devnull))==expected
+        end
+    end
     run(`bash -n $(joinpath(ROOT,"hpc/qe_gamma_reconstruction.sbatch")) $(joinpath(ROOT,"hpc/launch_qe_molds_remote.sh")) $(joinpath(ROOT,"hpc/submit_qe_molds.sh"))`)
     @test true
 end
