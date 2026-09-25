@@ -34,6 +34,16 @@ directions, insufficient support and errors remain reported. Source-copy and
 constant controls use the identical evaluation pixels. No N, sequence, benchmark
 manifest, historical geometry or production-calibration file enters the runner.
 
+Job **11978725** completes in **10m07s (0:0)** with the frozen settings:
+141 scored scans, one excluded by native patch support and four bias mismatches,
+all retained. On 138 identified-registration views the chemical dictionary
+reduces heldout MSE by **54.48--55.06%** relative to the common surface, across
+all three isovalues. Its **44.80--45.36 pm** RMS is still much worse than the
+**6.63 pm** source-copy control. Saved-output checks pass
+**7,281,567/7,281,567**; this is numerical verification, not chemical validation.
+The first eligible scan's overlay shows a background/molecular-brightness
+confound. No threshold, isovalue, production setting or champion is changed.
+
 ## Continuous vacuum crossings at the saved representatives
 
 `config/qe_vacuum_continuous.toml` keeps the accepted states, sharp bias window,

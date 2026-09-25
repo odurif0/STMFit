@@ -2305,14 +2305,18 @@ See `docs/src/selection.md` for the full guard specification and
 ## Open Questions
 
 0bg. **Do the continuous surface shapes transfer to raw trace/retrace images?**
-A bounded raw-image diagnostic compares all three fixed isovalues, with one
-common height offset per source scan and a shared unit gain. Source-only bright
-local extrema provide disjoint diagnostic patches, not an N-selected estimate.
-The target view supplies calibration rows for integer translation and a
-difference plane; separate buffered rows measure prediction. Chemical surfaces
-are compared with their common-height control, a constant and the source image.
-All failures and unsupported biases remain in the cohort report. This does not
-promote a current conversion or replace production counting/calibration.
+**Numerically reproducible, but chemical transfer is not established.** Job
+**11978725** retains all **146** raw scans: four bias mismatches, one without
+supported patches and 141 with scored predictions. On the **138** views with
+identified registration, the two-surface dictionary reduces heldout MSE by
+**54.48--55.06%** relative to the common surface across the three fixed isovalues.
+Its **44.80--45.36 pm** RMS remains far above the source-copy **6.63 pm**.
+Independent saved-output checks pass **7,281,567/7,281,567**. An overlay of the
+first eligible scan shows many substrate/border anchors and a class contrast
+associated with molecular brightness; this is not a chemical truth annotation.
+The next useful test must separate background and a class-independent molecular
+envelope from chemical contrast, including a height-only null. No count,
+calibration, registry, benchmark grade or champion is changed.
 
 0bf. **Do all six representative surfaces have unique descending roots in the continuous WFC signal?**
 **Resolved in the fixed finite-basis model at the three saved representatives.**
@@ -17588,3 +17592,94 @@ patch index preserving row order, with an equivalence test and per-file progress
 messages. This changes no fit, statistic, tolerance or scientific output. The
 initial read-only pass is stopped explicitly to use the indexed reader; it is
 not a scientific-job retry or an inference failure, and its log is retained.
+
+### 2026-09-25 — Surface transfer is reproducible; background/chemistry confound remains
+
+**Completed bounded result.** The sole job **11978725** completes **0:0** on
+`vipc2306`, **15:34:48--15:44:55 UTC** (**10m07s**), with **1,129,963 K** peak
+RSS. All **146** file-completion markers are present. All **3,963** output files
+(**2,889,370,877 bytes**) are fetched; checksum comparison with Viper is empty.
+The submitted scientific source **bae6586**, physical/raw inputs and configuration
+remain unchanged. No retry, second fit, new QE calculation or external grade is
+included in this cycle.
+
+**Complete case accounting.** Four raw scans are retained as `unsupported_bias`:
+`240311_Cu100062.sxm`, `240311_Cu100063.sxm`, `240312_Cu100090.sxm` and
+`240314_Cu100_026.sxm`. The other **142** match the fixed -0.300 V model.
+Of these, **141** have scored patches in both directions: **282** views,
+**15,413** source patches and **3,216,589** heldout pixels per isovalue.
+`240816_002.sxm` retains both `no_supported_anchor` statuses: 404/352 detected
+anchors, none usable. A header-only check explains the support exclusion:
+256x256 samples span 19.99999 nm, so a full 0.16 nm disk contains at most
+**13** native pixels, below the frozen **25**-pixel requirement. No radius or
+support threshold is relaxed after observing this case. No `failed` status is
+present. Diagnostic anchors are not validated units or `N_selected`.
+
+Integer registration is identified for **138** views from **81** scans, with
+**1,424,589** heldout pixels per isovalue. The remaining views keep their
+zero-shift fallback and unresolved-registration flag; they are not silently
+included in the physically identified subset. These checks do not establish
+independent noise, subpixel drift correction or independent-cohort validation.
+
+**Verified predictive comparison.** RMS values below are in **pm**, pooled over
+the same heldout pixels within each row. The last column is the relative
+**MSE**, not RMS, reduction: `1 - SSE_chemical / SSE_common`. All three frozen
+isovalues are retained, with no winning-isovalue selection.
+
+| Evaluated views | Isovalue index | Common surface RMS | Chemical dictionary RMS | Constant RMS | Source-copy RMS | Relative MSE reduction |
+|:--|--:|--:|--:|--:|--:|--:|
+| All scored (282) | 1 | 62.4824 | 44.1153 | 66.9104 | 23.4185 | 50.1502% |
+| All scored (282) | 2 | 62.3887 | 44.0582 | 66.9104 | 23.4185 | 50.1298% |
+| All scored (282) | 3 | 62.2278 | 43.7144 | 66.9104 | 23.4185 | 50.6508% |
+| Identified registration (138) | 1 | 67.2326 | 45.3609 | 72.9311 | 6.6292 | 54.4799% |
+| Identified registration (138) | 2 | 67.1078 | 45.2719 | 72.9311 | 6.6292 | 54.4895% |
+| Identified registration (138) | 3 | 66.8349 | 44.8042 | 72.9311 | 6.6292 | 55.0603% |
+
+The chemical dictionary beats the common surface in **281/282** scored views
+and all **138/138** identified views for each isovalue; the one loss is retained.
+Pooling both directions by scan gives **141/141** lower SSE. These comparisons
+measure conditional image prediction, not correct chemical assignments.
+The two-candidate dictionary also has more local flexibility than the single
+common surface; a gain alone cannot identify its physical cause.
+
+**Independent readback.** The indexed saved-output checker completes under
+Julia **1.13.0**, exit zero, with **7,281,567/7,281,567** assertions in **6m37s**.
+It checks the complete raw/hash/status accounting, heldout-row separation,
+selected physical predictions through separately implemented bilinear arithmetic,
+source/target/control residual sums, candidate ordering at the stored common
+offset and common-offset stationarity. It does not refit the images or
+independently recompute every unchosen candidate cost or global minimum.
+Its synthetic suite passes **185/185**, alongside the unchanged **942/942**
+workflow suite. Arithmetic assertion counts are not statistical evidence or
+independent experimental repetitions. The initial slower reader's interrupted
+log is preserved; indexing changes only readback cost.
+
+**Visible limitation and decision.** A saved overlay of the first lexicographic
+eligible scan, **240307_015.sxm**, is inspected in both directions and all three
+isovalues. This scan was fixed before inspecting predictive gains. It contains
+20 forward and 33 backward diagnostic patches. Many anchors fall on low-relief
+substrate or the scan borders, especially in the backward view. GlcNAc-hypothesis
+patches mostly occupy the bright molecular feature, while GlcN-hypothesis patches
+mostly occupy low background, nearly unchanged across isovalues. This is a
+visual inference from one specified scan, not ground-truth chemistry or proof
+that every scan behaves identically.
+
+The result exposes a background/molecular-height confound: the two-class choice
+can explain a height distinction without resolving unit chemistry. Moreover,
+the physical dictionary remains about **6.8 times** worse in RMS than source
+copy on identified-registration views. More numerical digits in the DFT roots
+cannot by themselves resolve this observation/localization mismatch. The next
+consequential test is a class-independent molecular envelope and explicit
+background, with a height-only contrast null before interpreting chemical shape.
+No such new model is tuned or submitted in this completed cycle; no expected
+count, composition prior or benchmark label may define its foreground.
+
+Evidence is retained in `results/vacuum_surface_transfer_20260925/`, including
+`run/`, `fetched_checks_indexed.log`, `case_comparison.tsv`, `summary_only.log`,
+`unsupported_resolution_header.log` and `first_scan_anchors.png`. Counting,
+assignment, calibration, registry, unknown25 and champion are unchanged.
+The strict label-free **694/43/855** objective remains unmet by this diagnostic.
+
+Final documentation builds under Julia **1.13.0** with `--build-only`, no
+deployment, existing size warnings and unchanged limits. `git diff --check`
+passes. Generated predictions, logs and figures remain local and uncommitted.

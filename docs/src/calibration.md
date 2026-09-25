@@ -26,6 +26,19 @@ DFT trimer, physically accurate calibration, independent noise or chemical
 recognition. Cross-view improvement must not be read as a benchmark grade, and
 image-derived anchors must not be relabeled as validated molecular counts.
 
+**Completed result:** job **11978725** scores 141 scans, retaining one
+unsupported-resolution case and four bias mismatches. On the 138 views with
+identified registration, all three chemical dictionaries improve on the common
+surface (**44.80--45.36 pm** versus **66.83--67.23 pm** RMS), but source copy
+remains far more accurate (**6.63 pm**). A fixed first-scan overlay places many
+anchors on background/borders and associates the chemical hypothesis with
+molecular brightness. This is evidence of a possible background/height confound,
+not chemical truth. The next comparison needs an explicit background and a
+class-independent molecular envelope, including a height-only contrast null.
+Neither the predictive gain nor the **7,281,567** passing saved-output arithmetic
+checks validate chemical assignment, justify a count, or calibrate a setpoint.
+No production calibration is changed.
+
 ## Continuous roots do not choose an experimental setpoint
 
 The follow-up at the three saved midpoint isovalues replaces vertical linear

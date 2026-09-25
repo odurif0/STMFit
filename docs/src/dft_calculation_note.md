@@ -185,6 +185,21 @@ constant-current feedback loop.
 
 ## Diagnostic constant-current observable
 
+**September 25 raw-image transfer.** Job **11978725** tests all six continuous
+maps on source-only diagnostic patches, retaining their relative physical
+heights with unit gain and one common offset per source scan. Separate target
+row blocks calibrate registration and measure prediction. All 146 raw scans
+remain accounted for: 141 scored, one without sufficient native patch support
+and four incompatible biases. On 138 identified-registration views, the chemical
+dictionary lowers MSE by **54.48--55.06%** relative to the common surface across
+the three fixed isovalues. Its **44.80--45.36 pm** RMS is nevertheless far worse
+than source copy (**6.63 pm**). The first eligible scan's overlay associates
+class hypotheses with molecular brightness versus background and includes many
+nonmolecular anchors. This visual observation is not a chemical annotation;
+the gain cannot establish chemical transfer. An explicit background, shared
+molecular envelope and height-only null are the next relevant controls. No map,
+current conversion, calibration, production provider or champion is promoted.
+
 **September 25 continuous representative surfaces.** After the sampled-profile
 job **11977798** found three common open isovalue intervals in the
 geometry-defined molecular half of the vacuum gap, job **11978192** tests all
