@@ -1,5 +1,17 @@
 # Calibration: measurements, assumptions and limits
 
+## PAW component attribution precedes any new observable calibration
+
+The September 25 component test compares the unchanged corrected total with
+separately calculated smooth and augmentation contributions. It is diagnostic
+only: neither component is a new mold, and there is no per-component
+renormalization, clipping, spectral/height/cutoff sweep or label access.
+The full-density reference and source-state hashes are fixed before the job.
+Their additive reconstruction must hold throughout both cubes, independently
+checked in native cube order, before attributing the signed plane samples.
+Even a positive smooth component would not alone validate a calibrated STM
+observable or justify removing augmentation inside its atomic support.
+
 ## Gamma reconstruction is a software/observable check, not recalibration
 
 The separate September 25 paired PP-only comparison tests the predicted

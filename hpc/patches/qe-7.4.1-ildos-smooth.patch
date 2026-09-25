@@ -1,0 +1,13 @@
+diff --git a/PP/src/local_dos.f90 b/PP/src/local_dos.f90
+--- a/PP/src/local_dos.f90
++++ b/PP/src/local_dos.f90
+@@ -386,7 +386,8 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
+   !            bec_sum is not, and the result is summed over pools
+   !
+   CALL mp_sum( rho%of_g(:,:), inter_pool_comm )
+-  CALL addusdens(rho%of_g(:,:))
++  ! Diagnostic ILDOS component: retain only the smooth wavefunction density.
++  IF (iflag /= 3) CALL addusdens(rho%of_g(:,:))
+   !
+   !    Now select the desired component, bring it to real space
+   !

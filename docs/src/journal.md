@@ -2318,6 +2318,21 @@ threshold tuning or benchmark-driven selection follows this result. The
 bounded Gamma continuation is complete; any component diagnostic is a separate
 bounded next step toward a usable label-free physical observable.
 
+**Bounded component experiment, September 25 12:13 UTC.** The preceding turn
+made progress: the Gamma defect is reproduced and signed samples are confirmed
+outside all declared PAW spheres. Under the standing autonomous search, allow
+two hours preparation followed by one eight-MPI / 96 GB / one-hour Viper job,
+no retry. Build the verified Gamma correction plus two isolated ILDOS-only
+variants: omit `addusdens` for the smooth component, or zero its incoming
+reciprocal density to export augmentation from unchanged projector sums.
+Require exact legacy controls, exact corrected-total reproduction and exact
+component repeats; verify `total=smooth+augmentation` over both complete cubes
+within the predeclared E13.5 error envelope. Preserve all signs and all three
+heights. No component is renormalized, and neither component is adopted as a
+mold here. No SCF, relaxation, cutoff/window/height change, new grade or label
+access. Done means fetched independently verified components and a defensible
+attribution, including a negative or inconclusive result if warranted.
+
 0bb. **Does Gamma conjugate completion remove the ILDOS floor?**
 **Resolved for the two audited states:** continuation **11976185** completed
 successfully in **9m03s**. The predicted `stock=(patched+mean(patched))/2`
@@ -16764,3 +16779,49 @@ The failed run remains intact. This cycle makes scientific progress by
 isolating one real defect and a separate unresolved physical failure; it does
 not meet the archived **694/43/855** recognition objective. Production,
 calibration, mold registry, unknown25 and champion status remain unchanged.
+
+### 2026-09-25 — Fixed-state PAW component attribution: preparation
+
+**Deliverable and scope.** Attribute the remaining signed density to its smooth
+or augmentation component, or record that this decomposition is insufficient.
+The previous cycle is scientific progress: the Gamma defect was reproduced
+and the remaining negative plane samples are outside all declared PAW spheres.
+Preparation is bounded to two hours from **12:13 UTC**, then one eight-MPI,
+96 GB, one-hour Viper job including compilation, with no retry. The broad
+archived **694/43/855** label-free recognition objective remains unmet. This
+physical diagnostic includes no new SCF, relaxation, cutoff, window, grid,
+height, calibration, fit, benchmark, production change or unknown25 rerun.
+
+**Source-level contrast.** Pinned QE 7.4.1 and the already verified Gamma patch
+produce the total. Two small ILDOS-only source variants act immediately before
+`addusdens`: the smooth variant omits that call for `iflag=3`; the augmentation
+variant zeroes the incoming smooth reciprocal density, then calls the same
+augmentation routine on unchanged band/projector sums. The inspected
+`addusdens_g` forms its `aux` independently and adds it to `rho`; no rounded
+cube is subtracted to generate a component. Both accepted XMLs specify
+`real_space_q=false` and `real_space_beta=false`. The dispatcher maps
+plot_num=10 to `local_dos(3,...)`; legacy plot_num=5 controls are unchanged.
+Each saved executable is paired with its exact source/diff/hash. The initial
+pristine source and the previous completed/failed runs are left intact.
+
+**Predeclared checks.** The site and three rebuilt legacy controls must match
+the archived cubes exactly. Each new full ILDOS must match the corrected total
+from job **11976185** exactly. Both component cubes must repeat byte for byte.
+The full density must integrate to **24/26**, the selected-state weights;
+no separate state-weight normalization is imposed on either component.
+For every voxel, `total=smooth+augmentation` must hold within
+`(quantum(total)+quantum(smooth)+quantum(augmentation))/2 + 1e-13`, using the
+unchanged five-significant-digit QE output. All signed whole-cube statistics,
+all three 17x17 planes and their negative-sample attribution are retained.
+Sign patterns are the outcome to explain, not an acceptance condition fitted
+after the result. This does not adopt the smooth-only component as a model.
+
+**Preparation verification.** **14,038/14,038** Julia 1.13 assertions pass,
+including a signed synthetic full/component comparison with the independent
+native-order reader, policy/rounding checks and application/reversal of both
+patches on the pinned source. **10,538/10,538** Gamma regression assertions
+also pass. Accepted XML/corrected-total/legacy hashes and all six plane domains
+are checked before creating the new run directory. The launcher remains the
+existing QE PP-only workflow; eighteen PP steps are sequential within one
+allocation. Config, calibration documentation and the journal are updated
+before submission. No inference input or external grade is read.

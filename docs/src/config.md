@@ -1,5 +1,23 @@
 # Configuration Reference
 
+## Diagnostic PAW component decomposition
+
+`config/qe_paw_decomposition.toml` keeps the accepted states, sharp bias window,
+Gamma correction, grid, heights and numerical precision policy of the preceding
+experiment. `[model].decomposition` fixes a single attribution question:
+`smooth_plus_reciprocal_augmentation`. Isolated QE variants either bypass
+`addusdens` for ILDOS only or zero its incoming smooth reciprocal density;
+the projector sums and augmentation construction are unchanged.
+
+`[selection]` requires byte-identical legacy controls and corrected-total
+reference, plus exact repetitions of both components. Whole-volume
+`total=smooth+augmentation` is checked with half the sum of the three printed
+value quanta plus the unchanged `numeric_roundoff_atol=1e-13`. Only the full
+density must integrate to the selected state weight: components are not
+independently normalized. `[preprocessing].normalize_components=false` and
+`clip_negative_values=false` are enforced. Signs at all three predeclared
+heights are reported, not used to choose a component, height or chemical model.
+
 ## Diagnostic Gamma reconstruction
 
 `config/qe_gamma_reconstruction.toml` freezes a PP-only comparison of official
