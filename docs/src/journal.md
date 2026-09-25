@@ -17348,3 +17348,16 @@ error **6.17e-9**. Core **32/32** and SXM I/O **21/21** regressions also pass.
 Fit-engine regression and documentation build are still running at this point;
 no physical job has been submitted. Source/batch configuration SHA256 is
 `451d1e627bd5cd4bd55c5b86400c68d65c0cc66e8a4f4046b0a2c70bb33086c1`.
+
+**Environment verification and submission.** GaussianFit2D regression finishes
+with **18,104/18,104** passing checks; documentation builds with existing size
+and deployment warnings, no limit change. Existing scientific package versions
+are unchanged; the exact Manifest differences are saved. Source **145c748**,
+the Pkg-generated Manifest and **14,327,226 bytes** of prepared inputs have
+zero checksum differences in
+`/u/oldu/code/STMFit_vacuum_continuous_20260925/STMFit`. Login-node instantiate
+and interval-library precompile complete; the Manifest remains byte-identical
+afterwards. Remote CLI load, shell/batch identity and Slurm test-only pass.
+Test-only **11978186** is not a submitted calculation. The sole real job is
+**11978192**, explicitly exporting Julia 1.13, with four Julia threads, 32 GB,
+one hour and no requeue. No additional job is included in this bounded cycle.
