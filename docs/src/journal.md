@@ -2304,6 +2304,18 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
+0az. **Does exact background conditioning improve numerical stationarity?**
+User-authorized September 25, preparation capped at two hours from **08:50 UTC**,
+then one four-CPU Viper job with a one-hour wall limit, no retry. Continue the
+saved exhaustive-control elliptical fit at four predetermined ranks of relative
+repeat-GCV drift (1, 49, 98, 146; filename breaks ties). Compare native LM,
+unit-box SLSQP and centered/QR-normalized-background SLSQP from identical saved
+parameters, twice with reversed method order. Keep N, family, pixels, support,
+physical domain and RSS unchanged. Six linear inequalities preserve the original
+background box after its non-diagonal transformation. The deliverable is a
+complete stationarity/stability/cost comparison, verified and fetched locally;
+not a count search, calibration, recognition grade or champion promotion.
+
 0ay. **Can fully observed training scans improve excluded-scan recognition?**
 Under renewed user authorization, test one observation-defined training cohort:
 both raw views entirely finite, target scan still excluded from Fisher and both
@@ -16045,3 +16057,91 @@ shell recount shadows zsh's special `path` parameter and fails command lookup;
 removing that binding fixes only the local bookkeeping, without changing any
 fit, grade or parameter. The documentation build passes without deployment or
 raised limits; existing size/search warnings remain. `git diff --check` passes.
+
+### 2026-09-25 — Exact background conditioning: bounded numerical comparison
+
+**Authorized deliverable.** Compare stationarity, stability and cost at fixed
+saved predicted N, with no promise of better counts or recognition. Preparation
+starts **08:50 UTC**, capped at two hours; then one four-CPU/16 GB Viper job,
+one-hour hard limit, no retry. The unknown25 application is complete and remains
+untouched. No benchmark labels, expected N, class composition, new physical
+bounds, GCV changes, 1D fit, `n_eff` reinterpretation, raw preprocessing, grade,
+classifier, DFT calculation or production change enters this experiment.
+
+**Motivation and scope.** All 10,244 local-sigma candidate fits reach their LM
+iteration caps; prior long-LM/SLSQP diagnostics exposed poorly conditioned
+background directions. More iterations and geometric variable projection are
+already tested, not new remedies. This comparison instead changes the
+background's numerical coordinates while retaining its exact physical domain.
+`test/lib/background_conditioning.jl` and its driver are diagnostic-only;
+the production fit engine is not modified.
+
+Use the complete saved inference cohort of job **11966219**, not an externally
+graded subset. Rank the `global_sigma_max` selections by
+`abs(GCV1-GCV2)/max(GCV1,GCV2)`, ascending, with filename ties. The predetermined
+ranks **1/49/98/146** select `240307_015.sxm` (saved N7), `240817_005.sxm` (N6),
+`240817_082.sxm` (N6), `240817_050.sxm` (N6). All families are elliptical. Three
+have zero saved GCV drift, the fourth 0.00672953; this is a numerical diagnostic
+sample, not representative benchmark validation or known-count selection.
+
+All three methods start from **the same repeat-1 saved endpoint** for each
+case; this is continuation, not a fresh raw-to-fit reproduction. The two runs
+reverse method order and never reuse a newly optimized endpoint. The arms are
+native finite-difference LM, native-parameter unit-box SLSQP and SLSQP with a
+centered/QR-normalized background basis. Native LM receives 10,000 iterations;
+both SLSQP arms receive at most 10,000 callbacks, using the previously declared
+`ftol_rel=1e-14`, `xtol_rel=1e-12`. Every call has a **180-second** internal wall
+limit, below the one-hour job envelope. These ceilings are not equal arithmetic
+work; report actual times, callbacks, gradient/model evaluations and stop codes.
+
+The plane's centered design is `[1 x-mean(x) y-mean(y)]`; QR supplies a full-rank
+basis. Scale its columns to RMS height equal to the saved target's population
+standard deviation, a numerical scale only. A full affine map converts back to
+the original `[b0,bx,by]`. Its enclosing coordinate box alone is insufficient:
+six exact normalized linear inequalities retain **all and only** the original
+background box. Other parameters retain diagonal scaling and their original
+boxes. The map is anchored at the exact saved start. SLSQP can evaluate an
+infeasible background trial; record it, never use it as a physical endpoint or
+best-valid fallback. Only endpoint roundoff at `1e-12` of native box width may
+be clipped; larger violations fail explicitly.
+
+Both SLSQP arms use identical native derivatives, exact plane columns and
+bound-respecting molecular finite differences. The unchanged two-step
+stationarity audit uses original native box coordinates and RSS/initial RSS,
+not the new coordinates, at tolerance **1e-6**. Independent Gaussian decoding,
+forward predictions, RSS/full GCV, saved bounds, native validity, parameter
+checkpoints and gradients are checked before reporting. No label-based choice
+of coordinates, solver, threshold, case or restart is permitted. Rank-deficient
+planes and constant-target scales remain unavailable without fallback.
+
+Primary outcome: whether centered-plane SLSQP improves original-coordinate
+stationarity over unit-box SLSQP, without increasing RSS beyond replay tolerance
+or losing native validity, in both repetitions. Report mixed/negative cases
+as well as gains; a solver stop, good conditioning or lower RSS alone does not
+certify chemical fidelity, global optimality or independent physical calibration.
+The controls' differing algorithms/derivative implementations are explicit;
+only the two SLSQP arms isolate the affine-coordinate change. NLopt's own
+[comparison and SLSQP documentation](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/)
+also distinguishes tolerance stops from comparable optimizer work.
+
+Initial synthetic checks catch an ambiguous Julia dotted-arithmetic expression
+in the independent verifier and a local pixel-count variable shadowing `count`.
+Both are corrected before any real fit or submission; the first complete test
+log is retained in `results/background_conditioning_20260925/tests_initial.log`.
+The Juliaup wrapper is read-only under the sandbox; verification uses the
+installed Julia **1.13.0** executable directly, without a version or Manifest
+change. Metadata-only real input selection passes; no real fit has run yet.
+
+**Preflight complete.** The new suite passes **1,331 assertions**: 321 strict
+scope/affine-domain/derivative checks, 18 active-bound optimum/stationarity
+checks, and 992 synthetic saved-workflow/independent-verifier checks. All
+**18,104** GaussianFit2D assertions pass. The first ranked real scan alone gets
+**38 read-only forward/derivative/domain checks**, with no local optimization.
+Its unit-box full-Jacobian condition number is **1.05922e7**, versus
+**177,077.95** in centered coordinates; plane condition **66.7905 versus 1**.
+Its unchanged native projected gradient is **0.587725**, not stationary. The
+coordinate-condition improvement is by construction, not a fit or recognition
+gain. All checks total **19,473** assertions. Both source Project/Manifest hashes
+remain unchanged. The documentation builds without deployment or relaxed limits;
+an initial sandbox-only Pkg usage-log write fails before the build, then the
+authorized cache-writing build passes. Generated logs stay local and ignored.

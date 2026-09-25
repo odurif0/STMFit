@@ -1,5 +1,24 @@
 # Calibration: measurements, assumptions and limits
 
+## Numerical background conditioning is not recalibration
+
+The September 25 opt-in `background_conditioning.toml` comparison changes only
+coordinates used by the numerical optimizer. A centered, QR-normalized basis
+represents the same tilted background, and exact transformed inequalities retain
+its original feasible set. Molecular amplitudes, positions, widths, overlap,
+saved count/family, pixels, support, noise and full parameter count do not change
+as model definitions. Their fitted endpoint values may change. The target's
+population standard deviation supplies a numerical coordinate scale, not a
+physical amplitude bound or independently measured noise.
+
+Four cases are chosen by predetermined ranks of saved numerical repeatability,
+not external counting or chemical errors. Same-start repetitions and a separate
+forward/gradient check measure numerical stability and stationarity. A smaller
+RSS or a better-conditioned Jacobian does not establish better counting or
+recognition. Existing inherited calibration provenance remains benchmark-informed;
+this diagnostic cannot certify strict label-free calibration or an optimum.
+No full-cohort benchmark or production change is included in this experiment.
+
 ## Width-conditioned counting is not recalibration
 
 The September 24 counting diagnostic keeps all historical numerical physical

@@ -1,5 +1,42 @@
 # Configuration Reference
 
+## Diagnostic exact background conditioning
+
+`config/background_conditioning.toml` is used only by
+`test/diagnose_background_conditioning.jl`. It continues four saved elliptical
+fits from `global_sigma_max` repeat 1, at ranks 1/49/98/146 of ascending relative
+repeat-GCV difference, with filename ties. N and family are predictions, fixed
+throughout this diagnostic. Both repetitions use the same saved endpoint; order
+is LM/unit-box SLSQP/centered-plane SLSQP, then reversed. No raw preprocessing,
+count search, chemical assignment or benchmark grade is run.
+
+The centered plane uses QR of `[1 x-mean(x) y-mean(y)]`, with RMS column height
+equal to the population standard deviation of the saved target pixels. This
+is numerical scaling, not physical calibration or an estimated noise level.
+The affine map is anchored at the exact original parameter vector. Its enclosing
+coordinate box is supplemented by six normalized linear inequalities for the
+original three background bounds; replacing these by independent new bounds
+would change the scientific problem. Other parameters retain diagonal unit-box
+scaling. No amplitude profiling, regularization or additional plane is added.
+
+LM has 10,000 iterations, `x_tol=1e-8`, `g_tol=1e-12`; each SLSQP has at most
+10,000 objective callbacks, `ftol_rel=1e-14`, `xtol_rel=1e-12`. Every call has a
+180-second internal wall limit; iteration/callback ceilings are not equal work.
+SLSQP minimizes native RSS divided by initial RSS (floor `1e-12`). Both SLSQP
+arms use identical native-coordinate derivatives with exact plane columns;
+finite-difference molecular derivatives use step `6.055454452393343e-6`.
+The existing two-step independent audit retains projected unit-box gradient
+tolerance `1e-6`, gradient agreement `1e-7 + 1e-4*max_norm`, half-step 0.5 and
+rank tolerance `1e-10`. Solver stop codes are reported separately.
+
+Constraint and affine roundoff tolerances are `1e-12` of the native box width.
+SLSQP's infeasible intermediate plane trials are recorded, not accepted as
+physical endpoints or used as best-valid replacements. A returned point outside
+the numerical roundoff allowance is an explicit failure. Degenerate background
+coordinates or a constant target fail without fallback. All settings and inputs,
+traces, checkpoints, physical endpoints and diagnostics are retained. The single
+four-shard Viper job is limited to one hour. Production settings stay unchanged.
+
 ## Diagnostic width-conditioned counting
 
 `config/local_sigma_counting.toml` belongs only to
