@@ -1,5 +1,40 @@
 # Configuration Reference
 
+## Shared whole-image envelope diagnostic
+
+`config/shared_image_envelope.toml` declares a chemistry-free tensor cubic
+B-spline on every finite native source pixel, after the saved masked joint
+background. Open clamped knots span the whole image; each axis has
+`max(1, floor(span / minimum_interval))` intervals. The fixed minimum intervals
+are **1.28, 0.64, 0.32 nm**, respectively eight, four and two times the earlier
+diagnostic patch radius. These are exploratory scale limits, not calibrated
+monomer sizes or chemical length scales. Background-only and all three grids
+are retained. The minimum source GCV selects in that order, with no target
+score, chemical template, anchor, expected count or composition input.
+
+Conditional on the frozen source mask and finite support, the complete linear
+operator is `H = B + P - P*B`, where `B` is the masked row-level/x-slope
+background and `P` the spline least-squares projector. GCV uses
+`(RSS/n)/(1-tr(H)/n)^2`, not spline coefficient count alone. The oblique
+background and spline traces are evaluated from small normal matrices without
+an image-sized dense influence matrix. Numerical pivot/normal tolerances are
+`1e-12`/`1e-9`. Identically zero columns on observed support are omitted and
+their original indices retained; this changes no observable function space.
+Other singular candidates remain failed, without added regularization.
+Spatial dependence and source-selected masks mean this is a conditional
+diagnostic, not calibrated statistical risk or a change to production GCV.
+
+Frozen calibration-row registration and difference planes supply heldout
+target scores. Only the **source** background is subtracted from the target;
+no row baseline is estimated using target evaluation pixels. Whole image,
+source foreground and remaining background are reported on matched support,
+with source copy as a separate control. Afterwards, saved DFT class differences
+at old source-common patch geometries probe `(I-P)*(I-B)` without refitting
+the mask or choosing a new resolution. Each probe is zero outside its patch,
+so its sharp boundary and incomplete physical support limit interpretation.
+This is sensitivity to an injected signal, not chemical recovery or unit count.
+Run `test/diagnose_shared_image_envelope.jl --help` for the entrypoint.
+
 ## Fixed physical shapes versus the saved selector
 
 `config/fixed_shape_replay.toml` pins the prior transfer, control and foreground

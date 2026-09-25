@@ -2304,6 +2304,14 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
+0bk. **Can a shared full-image envelope predict repeat views without absorbing
+the local physical contrast?** A bounded source-only B-spline/GCV diagnostic
+is prepared September 25. Unlike per-patch planes it shares a continuous image
+surface; it keeps all finite usable pixels and the frozen masked background.
+The source-only GCV includes the complete conditional linear trace, while
+cross-view holdout and DFT perturbation retention are reports only. This is not
+yet a result, a validated molecular envelope or a chemical/counting model.
+
 0bj. **Does selecting between the two physical shapes beat either fixed shape?**
 **Only a very small conditional gain; no robust chemical discrimination.**
 Job **11979724** replays every saved candidate, with **3,434,090** independent
@@ -18323,3 +18331,76 @@ totals and rare-choice coverage sums. No generated evidence is committed.
 Final documentation builds successfully with Julia **1.13.0** and
 `--build-only`, without deployment, retaining the existing size warnings and
 limits. `git diff --check` passes. No production/benchmark headline is replaced.
+
+### 2026-09-25 — Shared image envelope: bounded source-only experiment
+
+**Previous cycle: progress.** The fixed-shape replay is complete at **9d8b029**:
+almost all the retained-support predictive gain was reproduced by one fixed
+shape. It is not evidence for composition or a champion. Viper accounting
+confirms **11979724 COMPLETED 0:0**, with no live user job at **18:54 UTC**.
+The worktree was clean. Historical foreground/background, physical-height and
+per-patch-plane failures were reviewed before choosing this experiment.
+
+**Scientific deliverable and done.** Determine whether a class-independent,
+shared full-image surface improves cross-view prediction and quantify how much
+of a localized physical class contrast it would remove. Done means synthetic
+operator checks, a focused one-file check, one bounded Viper comparison,
+fetched/independently verified outputs and a scientific decision. Preparation
+starts **18:56 UTC**, at most two hours, followed by one **four-CPU, 16 GB,
+one-hour** job in four static file shards, without retry or requeue. Keep all
+146 files and both views, including unsupported physical-probe cases. This
+does not include counting, assignment, QE, production/registry replacement,
+external grading, unknown25 reruns or champion promotion. The archived strict
+label-free **694/43/855** complete-workflow objective remains unmet.
+
+**Observation model.** Reuse the saved source masked joint x slope and row
+levels, without changing segmentation or fitting target background. Fit an
+open-clamped tensor cubic B-spline on **all finite usable source pixels**, not
+just bright anchors or selected components. Fixed minimum knot intervals are
+**1.28, 0.64, 0.32 nm**, eight/four/two times the earlier diagnostic patch
+radius. Each axis uses `max(1,floor(span/width))` uniform intervals. These
+exploratory resolution limits are not calibrated molecular lengths. Background
+only is a fourth candidate. Choose the lowest source GCV, keeping this fixed
+coarse-to-fine order for exact ties; save every candidate and failure.
+
+**Trace and boundary.** With mask/support frozen, `H=B+P-PB` maps source raw
+heights to background plus envelope, where `B` is the oblique masked background
+operator and `P` the least-squares spline projector. Compute its full trace as
+`rank(B)+rank(P)-tr(PB)` from small matrices. Use `(RSS/n)/(1-tr(H)/n)^2`,
+without adjusting the existing effective-sample-size placeholder. Source-derived
+masks and correlated residuals make this a conditional heuristic, not unbiased
+risk estimation. GCV is source-only. Frozen calibration rows supply registration
+and the difference plane; complementary target rows supply scores. Subtract the
+**source** row background from the target. Report full/foreground/background
+matched pixel populations, background-only and source-copy controls. Do not
+select resolution from these target results.
+
+**Contrast sensitivity, not assignment.** Only after selection, inject each
+saved GlcNAc-minus-GlcN surface difference at its old common-source geometry on
+joint-mask retained diagnostic patches, zero outside that patch. Keep all three
+isos and apply `(I-P)*(I-B)` with mask/resolution fixed. Record input, background,
+envelope and remaining energies without clipping ratios. These probes have
+artificial patch edges, unvalidated monomer support and no mask/model
+re-selection under perturbation. Retention cannot certify chemistry; absorption
+would expose a nuisance-model limitation. No physical gain, offset, map, count,
+class prior or target threshold is learned from the probes.
+
+The initial synthetic smoke command finds a Julia array-construction error in
+background row counts (`Vector` on a two-dimensional adjoint). Replacing it by
+explicit `vec(Array(...))` fixes only shape construction before any real-image
+run. The synthetic suite checks the complete trace against an explicitly formed
+dense influence matrix, independent recursive basis values, missing observations,
+contrast responses, target scoring and source-only selection. Numerical
+rank/normal tolerances and all science choices are in the new config; config
+and calibration docs describe their limitations and the primary GCV reference.
+
+**Focused support correction before the batch.** All **2,532** synthetic
+assertions pass. The first fixed scan exposes entire spline columns supported
+only in missing edge rows: the coarse grid fits, but the two fine grids fail
+as unsupported. That initial run is retained as `first_file/`; it is not used
+to change knot widths, GCV or thresholds. The finite-observation design now
+omits **exactly zero** columns, recording their original basis indices. This
+does not remove observed pixels, change their model space or infer missing
+values. Remaining rank failures still fail explicitly. A missing-edge-band
+fixture compares predictions to dense least squares. A new first-file output
+will test this representation correction, with no overwrite of the initial run.

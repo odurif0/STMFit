@@ -1,0 +1,30 @@
+# Class-free image model. Diagnostic only; no count or chemical assignment.
+[model]
+foreground_run = "results/image_foreground_20260925/run"
+transfer_run = "results/vacuum_surface_transfer_20260925/run"
+controls_run = "results/vacuum_surface_controls_20260925/run"
+foreground_settings_sha256 = "4150df53ab1401e5c72f48dd82de52e5c5610c2a16d7df02f46d1cd0220b0b57"
+transfer_settings_sha256 = "58fe1a262213ea8cc1e09a983d207a0114a6d3061a5a5af8d61387ff1ff95ea6"
+controls_settings_sha256 = "b8e202a6d8964016b4bf4dc8caccca9671780baf179f9c1d32e774ec3fea9ba7"
+files_sha256 = "22086ca2c4ddcdc3967138503532f42e7b6d29feb0c3d1b2c9c55d18551522d6"
+basis = "whole_image_open_uniform_tensor_cubic_bspline"
+minimum_knot_intervals_nm = [1.28, 0.64, 0.32]
+interval_count = "max_one_floor_image_span_over_minimum_interval"
+background = "reuse_source_masked_x_slope_and_row_levels"
+probe = "saved_common_geometry_glcnac_minus_glcn_zero_outside_patch"
+
+[selection]
+policy = "minimum_source_conditional_gcv_background_then_coarse_to_fine"
+degrees_of_freedom = "trace_B_plus_P_minus_PB_conditional_on_frozen_mask"
+foreground_use = "report_only_all_finite_source_pixels_fit"
+groups = ["all", "foreground", "background"]
+probe_use = "post_fit_only_no_selection_from_retention"
+
+[preprocessing]
+observations = "saved_unsmoothed_source_native_pixels"
+target = "saved_calibration_then_source_background_subtraction_score_only"
+missing = "keep_missing_no_prediction_score_or_probe_imputation"
+unsupported_basis = "drop_exact_zero_columns_no_change_to_observed_function_space"
+rank_pivot_rtol = 1e-12
+normal_equation_rtol = 1e-9
+binary_arrays = "little_endian_column_major_float64"

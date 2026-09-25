@@ -1,5 +1,28 @@
 # Calibration: measurements, assumptions and limits
 
+## A shared envelope must not silently remove chemical contrast
+
+The September 25 shared-image diagnostic fits one source-only spline surface
+to the complete usable image after the frozen masked background. Its GCV
+resolution is selected before target scoring or DFT perturbation probes.
+The trace includes both linear stages and their overlap, conditional on the
+fixed mask; source-derived masks and correlated residuals still prevent an
+unconditional risk claim. No effective-sample-size placeholder is reinterpreted.
+The trace formula follows the general linear-smoother GCV expression in
+[Golub, Heath and Wahba (1979)](https://pages.stat.wisc.edu/~wahba/stat860/pdf1/golub.heath.wahba.pdf);
+it does not establish the chosen knot scales as physically correct.
+
+Probes add the saved physical GlcNAc-minus-GlcN difference on one old native
+patch and zero elsewhere. Both background and envelope responses are computed
+with the selected resolution and mask frozen. Their residual energy can reveal
+signal absorption, but is not chemical classification accuracy. The masked
+background is oblique, so ratios are not clipped to [0,1]. Probe boundaries,
+unvalidated anchors and the absence of re-selection under perturbation limit
+any physical interpretation. A good predictive envelope can still destroy
+chemical information. Conversely, retaining a perturbation does not show that
+real-image chemistry is identifiable. No new current, height, count, composition
+or confidence calibration is introduced.
+
 ## Chemical choice versus one fixed physical shape
 
 A gain from a two-shape dictionary over a plain local plane does not by itself
