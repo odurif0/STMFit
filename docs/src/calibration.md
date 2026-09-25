@@ -7,10 +7,14 @@ separately calculated smooth and augmentation contributions. It is diagnostic
 only: neither component is a new mold, and there is no per-component
 renormalization, clipping, spectral/height/cutoff sweep or label access.
 The full-density reference and source-state hashes are fixed before the job.
-Their additive reconstruction must hold throughout both cubes, independently
-checked in native cube order, before attributing the signed plane samples.
-Even a positive smooth component would not alone validate a calibrated STM
-observable or justify removing augmentation inside its atomic support.
+Job **11976981** verifies additive reconstruction throughout both cubes,
+exact reference/repeat reproduction and **27,992** independent assertions.
+The smooth cubes have no negative samples; every negative total-plane sample
+has negative augmentation and positive smooth density. This positive smooth
+component does not alone validate a calibrated STM observable or justify
+removing augmentation inside its atomic support. A vacuum-only candidate
+still needs independently checked reconstruction, geometric support, decay
+and constant-current diagnostics before any experimental comparison.
 
 ## Gamma reconstruction is a software/observable check, not recalibration
 
@@ -31,8 +35,8 @@ does not establish a nonnegative vacuum observable, a physically converged STM
 model, label-free historical calibration or improved experimental recognition.
 At 0.50 nm the corrected GlcN/GlcNAc planes still contain **1/111** negative
 samples out of 289 each, outside all declared PAW augmentation spheres. No
-height or clipping rule is selected from this result; component-level density
-diagnosis must precede any new physical calibration.
+height or clipping rule is selected from this result; the component attribution
+above supplies a diagnosis, not a new physical calibration.
 
 ## Explicit spectral-window diagnostic
 
@@ -67,9 +71,10 @@ catches this before computation. The smaller historical assignment domain has
 not thereby been shown invalid. No GlcNAc ILDOS was run and no retry followed.
 GlcN ILDOS integrates to **24.0001607365** versus expected **24**, but its vacuum
 floor matches half its mean density. Missing conjugate-G completion in QE's
-Gamma post-processing is a source-supported hypothesis, not yet validated
-with a repaired binary. A conserved integral does not establish spatial
-correctness; no rounded-cube offset subtraction or template promotion follows.
+Gamma post-processing was a source-supported hypothesis at that stage; the
+later paired-binary result above validates it. A conserved integral does not
+establish spatial correctness; no rounded-cube offset subtraction or template
+promotion follows.
 
 ## Numerical background conditioning is not recalibration
 

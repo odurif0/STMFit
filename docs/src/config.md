@@ -18,6 +18,11 @@ independently normalized. `[preprocessing].normalize_components=false` and
 `clip_negative_values=false` are enforced. Signs at all three predeclared
 heights are reported, not used to choose a component, height or chemical model.
 
+Job **11976981** passes these frozen checks and **27,992** independent
+assertions. The smooth cubes are positive; all negative total-plane samples
+are attributable to negative augmentation. This diagnostic outcome does not
+activate a smooth-only provider or change any physical/selection parameter.
+
 ## Diagnostic Gamma reconstruction
 
 `config/qe_gamma_reconstruction.toml` freezes a PP-only comparison of official

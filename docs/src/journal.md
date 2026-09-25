@@ -2305,33 +2305,27 @@ See `docs/src/selection.md` for the full guard specification and
 ## Open Questions
 
 0bc. **What causes the remaining negative density outside the PAW spheres?**
-Gamma continuation **11976185** confirms the missing-conjugate mechanism, but
-the corrected sharp-window density still has **1/289 GlcN and 111/289 GlcNAc**
-negative samples at the unchanged 0.50 nm plane. All six declared planes are
-outside every periodic atomic PAW augmentation sphere; the minimum clearance
-is **0.112 nm**. Next, separate the smooth wavefunction contribution and the
-augmentation contribution on the same collected states, requiring their sum
-to reproduce the corrected cube before attributing the residual. Finite-G
-augmentation/interpolation leakage is a hypothesis, not yet a demonstrated
-cause. No clipping, absolute values, height choice, new SCF, cutoff sweep,
-threshold tuning or benchmark-driven selection follows this result. The
-bounded Gamma continuation is complete; any component diagnostic is a separate
-bounded next step toward a usable label-free physical observable.
+**Component attribution resolved for the two audited states:** job **11976981**
+completed **12:37:06–12:48:03 UTC**, `0:0`, with **27,992/27,992** independent
+checks. Total cubes reproduce the corrected references exactly, all legacy
+controls match, both components repeat exactly, and `total=smooth+augmentation`
+holds at every voxel within the frozen printing bounds. The smooth component
+has no negative value in either complete cube. Every negative sample on all
+six declared vacuum planes has negative augmentation and positive smooth
+density. These planes are outside every periodic PAW sphere, as checked in
+the preceding geometry diagnostic. See the dated result below.
 
-**Bounded component experiment, September 25 12:13 UTC.** The preceding turn
-made progress: the Gamma defect is reproduced and signed samples are confirmed
-outside all declared PAW spheres. Under the standing autonomous search, allow
-two hours preparation followed by one eight-MPI / 96 GB / one-hour Viper job,
-no retry. Build the verified Gamma correction plus two isolated ILDOS-only
-variants: omit `addusdens` for the smooth component, or zero its incoming
-reciprocal density to export augmentation from unchanged projector sums.
-Require exact legacy controls, exact corrected-total reproduction and exact
-component repeats; verify `total=smooth+augmentation` over both complete cubes
-within the predeclared E13.5 error envelope. Preserve all signs and all three
-heights. No component is renormalized, and neither component is adopted as a
-mold here. No SCF, relaxation, cutoff/window/height change, new grade or label
-access. Done means fetched independently verified components and a defensible
-attribution, including a negative or inconclusive result if warranted.
+**Remaining physical question:** can a strictly outside-sphere observable
+constructed from the smooth wavefunctions support reliable STM contrast and
+constant-current surfaces? The PAW identity outside augmentation regions
+motivates this next test, but the component experiment alone does not validate
+its numerical reconstruction, vacuum decay, current calibration or chemical
+transferability. Finite-G leakage is consistent with the result, not established
+by a cutoff-convergence test. Do not clip the total, renormalize a component,
+discard augmentation inside its support, select a height using labels, or
+replace a production mold. The bounded attribution experiment is complete;
+no further HPC job is included in this cycle. The archived **694/43/855**
+recognition objective remains open.
 
 0bb. **Does Gamma conjugate completion remove the ILDOS floor?**
 **Resolved for the two audited states:** continuation **11976185** completed
@@ -16839,3 +16833,85 @@ smooth/augmentation patch SHA256s are
 `c3eac3aab33883fb6110cc43a4aea0567740e7cb5325c0bf44ef57998dd5e39e`
 and `58db60430dd7267e4773ac832bb2163d4fd1a059d00c423e851b5b02d2419b34`.
 Follow this job to its terminal result; do not submit another in this cycle.
+
+### 2026-09-25 — Signed vacuum density attributed to PAW augmentation
+
+**Completed experiment.** Source **cb00345**, Viper job **11976981**, completed
+**12:37:06–12:48:03 UTC**, `COMPLETED (0:0)`, elapsed **10m57s**. All three
+isolated executables built and all eighteen PP steps completed. Both site
+controls and all six rebuilt legacy controls match their archived cubes
+byte for byte. The full ILDOS cubes reproduce job **11976185** exactly;
+each independently generated smooth and augmentation component repeats
+byte for byte. No SCF, relaxation, cutoff, window or height was changed.
+
+**Additivity and signs.** Across both **10,800,000-voxel** cubes, there are
+zero violations of the predeclared `total=smooth+augmentation` precision
+envelopes. Maximum error/bound ratios are **0.9995581 / 0.9993400**. The
+independent native-order reader passes **27,992/27,992** assertions, including
+whole-volume reconstruction and separate sampling of all saved planes.
+Full integrals remain **24.0001613025 / 26.0000836367**. The unnormalized
+smooth integrals are **18.1759555109 / 20.0011930747** and augmentation
+integrals **5.8242056914 / 5.9988902856**; neither component is required to
+integrate to the full selected-state weight.
+
+Both smooth cubes are strictly positive at their printed native samples:
+minima **1.0817e-11 / 2.9072e-11**, zero negatives. Augmentation is signed,
+with **5,714,429 / 5,710,637** negative native values. On the unchanged
+outside-sphere planes:
+
+| molecule | height (nm) | total negative / 289 | smooth negative / 289 | augmentation negative / 289 |
+|---|---:|---:|---:|---:|
+| GlcN | 0.40 | 0 | 0 | 147 |
+| GlcN | 0.50 | 1 | 0 | 160 |
+| GlcN | 0.60 | 45 | 0 | 136 |
+| GlcNAc | 0.40 | 45 | 0 | 150 |
+| GlcNAc | 0.50 | 111 | 0 | 160 |
+| GlcNAc | 0.60 | 137 | 0 | 153 |
+
+Every negative total-plane sample has positive smooth density and negative
+augmentation. The smooth contribution is computed directly, not obtained by
+subtracting two rounded cubes; exact full-reference reproduction and additive
+reconstruction make this an attribution on the same accepted states. It is
+not a new benchmark result or proof of a particular finite-G error mechanism.
+The plane ratio `sum(abs(augmentation))/sum(smooth)` rises with height:
+GlcN **0.00847 / 0.05557 / 0.52405**, GlcNAc
+**0.04914 / 0.53342 / 5.28550** at 0.40/0.50/0.60 nm. These are descriptive
+ratios on all retained samples, not a threshold or a height-selection rule.
+
+**Physical interpretation and next useful question.** The responsible
+contribution is now identified. In the PAW formalism, the transformation
+reduces to the identity outside the augmentation regions
+([Blöchl 1994, section II A](https://ims.ut.ee/images/3/32/Phys-Rev-B_1994_50_17953_Blochl_DFT-PAW.pdf)).
+This motivates testing a vacuum-only wavefunction observable, with explicit
+geometric support and an independent reconstruction, then testing its decay
+and constant-current surfaces. It does not justify treating smooth density
+as all-electron density inside atomic spheres, rescaling its whole-volume
+integral to 24/26, or adopting it as a calibrated mold solely because it is
+positive. Cutoff/spectral convergence, experimental transferability and a
+strictly label-free calibration remain unestablished. No component, height,
+isovalue, threshold or model is selected on recognition labels here.
+
+**Preserved component identities.** Smooth GlcN/GlcNAc SHA256s are
+`6fbaafb370c65fee6fa3281513683e490b04c6e36de518b94d74c4d94a9df84c` and
+`df0c38626142f2a68d1d713b51be93e5e3260b62fb5899aa6730b09ee6344c47`;
+augmentation SHA256s are
+`2e7acd4e5356db402a2b19d7958c29ec0d2a4859d02c0d2ae71aa5b150b9c394` and
+`e0478aff2d43f80f52dd948bd112a5556718de3c1cd8d0dc9b73f2234e673551`.
+The run directory retains all three binaries, exact source variants and diffs,
+build logs, native cubes, signed planes and independent verification output.
+Original and copied checkpoints pass terminal hash checks. The production
+registry, calibration, fitting, unknown25 application and champion remain
+unchanged; no second job is submitted in this cycle.
+
+**Final preservation and verification.** All **6,578,008,764 bytes** outside
+duplicate `work/` checkpoints are fetched to
+`qe/paw_decomposition_20260925/`; a terminal recursive checksum comparison
+against Viper reports zero differences. All six saved executable/source hashes
+pass locally. Applying the committed patches to a temporary copy of the pinned
+pristine source reproduces each fetched source variant exactly (**6/6** local
+assertions). The previously frozen fixture and Gamma suites remain
+**14,038/14,038** and **10,538/10,538**; no scientific code or setting changes
+after their execution. Documentation builds with the existing size/deployment
+warnings and unchanged limits. Fetch/build/check logs are retained under
+`results/qe_paw_decomposition_20260925/`. The attribution deliverable is
+achieved, but the strict label-free **694/43/855** recognition objective is not.

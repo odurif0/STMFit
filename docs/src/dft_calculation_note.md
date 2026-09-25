@@ -185,6 +185,29 @@ constant-current feedback loop.
 
 ## Diagnostic constant-current observable
 
+**September 25 PAW component attribution.** Job **11976981** reproduces the
+Gamma-corrected full ILDOS and all legacy controls byte for byte. Separate
+smooth and augmentation exports from unchanged projector/band sums each
+repeat exactly. Their sum reproduces every voxel of both full cubes within
+the predeclared printing precision; independent verification passes
+**27,992/27,992** checks. Neither component is separately normalized.
+
+The smooth cubes have no negative native samples. Every negative total sample
+on the six predeclared outside-sphere planes has positive smooth density and
+negative augmentation. This establishes component attribution, not numerical
+convergence of a vacuum observable or a recognition improvement. No clipping,
+new mold, height selection, calibration or production change follows.
+
+The PAW transformation equals the identity outside its augmentation regions
+([Blöchl 1994, section II A](https://ims.ut.ee/images/3/32/Phys-Rev-B_1994_50_17953_Blochl_DFT-PAW.pdf)).
+This motivates a next, separately bounded test of a vacuum-only wavefunction
+observable with an independently checked reconstruction and geometric support.
+It does not authorize dropping augmentation inside atomic spheres or forcing
+the smooth whole-cell integral to equal the full state weight. Finite-G
+leakage remains a plausible mechanism, not a completed cutoff-convergence test;
+vacuum decay, constant-current extraction and experimental transferability
+still need to be established for the candidate.
+
 **September 25 Gamma reconstruction result.** Job **11976185** completed the
 paired stock/patched QE 7.4.1 test on the same accepted collected states.
 Filling the missing conjugate reciprocal-space entries removes the additive
@@ -206,10 +229,11 @@ The outer radius follows the pinned
 [QE UPF reader](https://github.com/QEF/q-e/blob/qe-7.4.1/upflib/read_upf_new.f90);
 the [UPF format](https://pseudopotentials.quantum-espresso.org/home/unified-pseudopotential-format)
 defines radial lengths in Bohr.
-The next diagnostic should separate smooth and augmentation contributions on
-the unchanged states and verify their sum against the corrected total.
-Finite-reciprocal-grid leakage is not yet established as the cause. No clipping,
-height choice, SCF criterion change, mold import or recognition grade follows.
+The subsequent component diagnostic above separates smooth and augmentation
+contributions on these unchanged states and verifies their sum against the
+corrected total. Finite-reciprocal-grid leakage is not yet established as the
+mechanism. No clipping, height choice, SCF criterion change, mold import or
+recognition grade follows.
 
 **Earlier September 25 spectral follow-up (incomplete).** The missing accepted GlcNAc
 collected state was recovered on copies with the same plain SCF input and
