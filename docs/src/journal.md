@@ -2331,6 +2331,17 @@ Gamma hypothesis remains untested; the next useful step is the same frozen
 numerical comparison in a separately bounded technical continuation, not a
 new physical model or tolerance search.
 
+**Technical continuation, September 25 11:40 UTC:** the next goal turn confirms
+11975972 is terminal and no other user job is queued/running. The previous turn
+made progress by identifying and link-testing the missing build prerequisite;
+it did not answer the physical question. Continue this same frozen comparison
+from pristine source in a separate directory: at most two hours preparation,
+then one eight-MPI / 96 GB / one-hour job, with no further submission in this
+continuation. The failed run is retained unchanged. Only the diagnosed MKL build
+setup differs; no new model, wavefunction, observable, tolerance or benchmark
+decision is introduced. Fetch and independently check the full comparison
+before drawing a physical conclusion.
+
 0ba. **Can an explicit positive-weight energy window repair the STM observable?**
 Under the user's September 25 long-term autonomous research authorization,
 the reference to reach is archived **694/43/855**, not merely historical
@@ -16611,3 +16622,29 @@ unchanged. No retry or new job is submitted in this cycle. Logs are under
 `qe/gamma_reconstruction_20260925/`. No mold, calibration, count, assignment,
 benchmark headline, production default, unknown25 output or champion changes.
 The archived **694/43/855** objective remains open.
+
+### 2026-09-25 — Gamma comparison: bounded continuation after MKL diagnosis
+
+**Scientific deliverable and done.** Complete the already frozen paired QE
+reconstruction test from the accepted collected states: archived site controls,
+rebuilt-stock controls, patched repeats, selected-state integrals, whole-volume
+conjugate relation and all three declared physical planes, independently
+verified after fetching. This is a technical continuation of the incomplete
+Gamma experiment, not a new hypothesis or a reclassification of job 11975972.
+The preceding goal turn is progress because the missing link dependency is now
+identified and link-tested; it is not scientific validation of the patch.
+
+**Boundaries.** Under the standing autonomous research authorization, preparation
+is limited to two hours from **11:40 UTC**, followed by one Viper job with
+eight MPI ranks, 96 GB and a one-hour limit including compilation. There is no
+additional submission within this continuation. Read-only scheduler checks
+confirm the previous job is terminal and no user job is currently live. Start
+from the same pristine QE tag and pinned dependencies in a new isolated
+project, leaving the failed build/run unchanged. Use source **bc4eaa8**'s MKL
+module, explicit library/rpath and early compiler checks. Settings SHA256
+`3504ef7663488ffe21f8b4c69f68baea416891202388de28b2f6b7598d11b9a3`
+and patch SHA256
+`b1d894885762d265a0fd0a967937628de3257dfd54e3b5aae9b055642ccb1fc3`
+remain fixed. No SCF, relaxation, spectrum/grid/height change, benchmark labels,
+calibration, fitting, mold replacement, unknown25 rerun or champion promotion
+is included.
