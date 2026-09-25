@@ -66,7 +66,8 @@ Options:
 
 Requires hpc/remote.env. Run locally from the STMFit checkout after preparing
 QE input directories. Full runs provide run_qe_mold.sbatch; preliminary SCF+PP
-runs may provide run_scf_pp.sbatch.
+runs may provide run_scf_pp.sbatch; saved-state PP diagnostics use
+run_pp_only.sbatch with a provenance-only pw_scf.in.
 EOF
 }
 
@@ -173,6 +174,7 @@ if (( SYNC_QE )); then
             --include='pp_ldos.in' \
             --include='run_qe_mold.sbatch' \
             --include='run_scf_pp.sbatch' \
+            --include='run_pp_only.sbatch' \
             --include='pseudo/' \
             --include='pseudo/*.UPF' \
             --exclude='*' \

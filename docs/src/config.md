@@ -1,5 +1,22 @@
 # Configuration Reference
 
+## Diagnostic Gamma reconstruction
+
+`config/qe_gamma_reconstruction.toml` freezes a PP-only comparison of official
+QE 7.4.1 and a one-instruction Gamma conjugate-completion patch. `[model]` pins
+the QE commit, existing bias, sharp spectral window and unchanged SCF acceptance.
+`[selection]` requires exact archived site controls and exact patched repetitions,
+the original `ildos_integral_rtol=1e-4`, and numerical comparison using
+`cube_significant_digits=5` (QE E13.5 output) plus `numeric_roundoff_atol=1e-13`.
+The relation check propagates quantization of the stock voxel, patched voxel
+and patched mean; it does not fit a tolerance or a background offset.
+
+`[preprocessing]` uses the actual historical half-width/step **0.32/0.04 nm**,
+heights **0.40/0.50/0.60 nm**, QE last-axis-fast order and no clipping. Preparation
+checks the source grid config and all cube bounds. This separate config does
+not alter the recorded failed doubled-grid experiment below, production,
+calibration, the mold registry or any recognition grade.
+
 ## Diagnostic QE spectral window
 
 `config/qe_spectral_window.toml` is opt-in and never selects a chemical model.

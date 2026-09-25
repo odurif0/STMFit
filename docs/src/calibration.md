@@ -1,5 +1,23 @@
 # Calibration: measurements, assumptions and limits
 
+## Gamma reconstruction is a software/observable check, not recalibration
+
+The separate September 25 paired PP-only comparison tests the predicted
+`stock = (patched + mean(patched))/2` relation from missing Gamma Fourier
+partners. It rebuilds the same QE source with and without one conjugate-fill
+instruction and uses unchanged accepted wavefunctions. Controls cover the site
+binary, rebuilt legacy STM, exact patched repeats and selected-state integrals.
+The whole-volume mean in the relation is fixed by the candidate cube, not fitted
+to vacuum pixels or STM labels. Numerical bounds come from QE's printed
+precision plus the explicit roundoff allowance.
+
+The actual historical 17×17 lateral grid is **0.32/0.04 nm** half-width/step,
+validated against the source config and both volume domains. All three declared
+heights remain diagnostics; no height, current, isovalue or chemical threshold
+is calibrated here. Passing this software check would still not establish a
+nonnegative vacuum observable, a physically converged STM model, label-free
+historical calibration or improved experimental recognition.
+
 ## Explicit spectral-window diagnostic
 
 The September 25 QE diagnostic compares the archived plot_num=5 STM proxy with

@@ -158,6 +158,14 @@ it is explicitly included in the `sbatch --export=ALL,...` list. Leaving
 `JULIA_BIN=julia` preserves the module-based legacy behavior. A launcher dry-run
 is still required before submission.
 
+Saved-state PP-only diagnostics may supply `run_pp_only.sbatch`. The existing
+launcher/preflight recognizes that mode explicitly: `pw_scf.in` is retained only
+as physical-input provenance and is not executed; SCF/relaxation commands in
+the script are rejected. Diagnostic source/checkpoint/config files outside the
+generic launcher's narrow input list must be synchronized explicitly before
+using `--no-sync-code --no-sync-qe`. A new isolated build must not replace the
+site executable or modify the only copy of a collected electronic state.
+
 The original full pilot (`8×8×4` slab, Cu `spn` PAW, `2×2×1` k-points,
 `ecutwfc=80`, `ecutrho=640`) exceeded the Raven QOS memory limit: QE estimated
 `~159 GB` dynamic RAM per MPI process. The active Raven pilot therefore uses an

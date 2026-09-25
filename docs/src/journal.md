@@ -2304,6 +2304,23 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
+0bb. **Does Gamma conjugate completion remove the ILDOS floor?**
+Continue under the user's autonomous label-free research authorization. The
+previous cycle made progress (exact controls, recovered checkpoint and a
+specific source-level hypothesis), but the score objective is not achieved.
+Bound this distinct PP-only comparison to two hours preparation from
+**10:57 UTC**, one Viper job, eight MPI ranks / 96 GB / one hour including
+compilation, no retry. No SCF, relaxation, inference, benchmark or production
+change. Build official QE **7.4.1** at pinned commit **500de340**, then add only
+the missing Gamma conjugate fill in `local_dos.f90`. Use the exact historical
+**0.32/0.04 nm** lateral grid, checked against its source config and both cube
+domains before preparation. Done means fetched site/stock/patched controls,
+exact patched repetitions, conserved selected-state integrals, quantitative
+whole-cube test of the predicted half-density-plus-offset relation, complete
+three-height diagnostics, independent verification, tests and a physical
+conclusion. No algebraically corrected rounded cube substitutes for a rerun
+from the collected wavefunctions; no height is chosen from chemical labels.
+
 0ba. **Can an explicit positive-weight energy window repair the STM observable?**
 Under the user's September 25 long-term autonomous research authorization,
 the reference to reach is archived **694/43/855**, not merely historical
@@ -16465,3 +16482,65 @@ absolute tolerance elementwise, without changing any physical criterion.
 Documentation builds successfully with existing size warnings; no size limit
 is raised and nothing is deployed. All scientific changes and conclusions are
 committed; generated evidence and checkpoints remain ignored as required.
+
+### 2026-09-25 — Isolated Gamma density reconstruction: paired PP preparation
+
+**Scientific deliverable.** Determine whether the nearly constant vacuum floor
+comes from missing conjugate reciprocal-space partners in QE's Gamma ILDOS
+reconstruction. The user's standing autonomous search authorization covers this
+bounded physical comparison; the archived **694/43/855** target remains open.
+Preparation is limited to two hours from **10:57 UTC**, followed by one
+eight-MPI / 96 GB / one-hour Viper job including a targeted PP build. No retry,
+SCF, relaxation, new chemical sequence, fitted broadening/current/height,
+recognition grade, unknown25 rerun or production/default change is included.
+The previous failed job remains incomplete; this is a new paired source-code
+test, not a relabelled restart of that experiment.
+
+**Source and mechanism.** Official QE tag **7.4.1**, commit
+`500de340b820e1cb8c05f2d8bb8fced102f377c1`, is fetched to an ignored source
+directory. The original `local_dos.f90` SHA256 is
+`003d5f92756420115d9393dd849e3e9270c50317abb3564cd2d432ab901da4c9`.
+The patch inserts `IF (gamma_only) psic(dfftp%nlm(:)) = CONJG(psic(dfftp%nl(:)))`
+before the first final density inverse transform, matching the ordinary
+Gamma density helper. No spectral weights, electronic states, PAW augmentation,
+grids or filtering are changed by that patch. The site installation is read-only;
+only a new isolated source/build directory is modified. FoX, libmbd and devxlib
+are fetched at the commits pinned by this tag, before submission; Git transports
+are disabled on the compute node. Julia checks use **1.13**.
+
+**Paired controls and fixed settings.** Both existing accepted collected states
+are copied. Site plot_num=5 controls must reproduce the archived cubes exactly.
+Rebuilt stock plot_num=5 must agree within the explicit E13.5 rounding envelope;
+stock and patched plot_num=5 must match byte for byte. Each patched plot_num=10
+cube must repeat byte for byte. Both stock and patched ILDOS must integrate to
+the selected state weight within the unchanged `1e-4` integration tolerance.
+The whole-cube prediction is `stock = (patched + mean(patched))/2`.
+Its per-value error bound is derived from the five-significant-digit output
+quanta of stock, patched voxel and patched mean, plus **1e-13** absolute
+floating-point allowance; these numerical checks are frozen before any result.
+They are not chemical confidence thresholds and will not be tuned after output.
+All signed values and all predeclared heights are retained.
+
+`config/qe_gamma_reconstruction.toml` deliberately uses the actual historical
+half-width/step **0.32/0.04 nm**. Preparation compares both numbers with
+`unit_assignment_patch_support.toml` and checks every point of all six planes
+against both original cube headers before creating output. This is not fitted
+tip-height calibration and does not recertify historical inference calibration
+as label-free. The existing QE launcher gains a small explicit PP-only script
+mode; its source SCF input is provenance-only, and preflight rejects any SCF or
+relaxation command in that mode. No extra launch framework or approval mechanism
+is added.
+
+**Preparation evidence.** Both XMLs pass the unchanged accepted/collected
+checks, selecting **12 GlcN / 13 GlcNAc** states (weights **24 / 26**) without
+STM labels. All six actual historical-grid planes are in bounds before any
+run directory is created. The copied wavefunctions are pinned to their saved
+SHA256s, not merely their filenames or XMLs. The synthetic complete comparison
+includes an independent native-order reader and both whole-volume control and
+conjugate-relation checks; **10,529/10,529** assertions pass, plus **108/108**
+spectral regression assertions. The first fixture run caught a return-value
+contract mismatch (`true` versus `nothing`), fixed before submission without
+changing numerical criteria. Native PP-only preflight, shell syntax, source
+patch dry-application and launcher dry-run pass. Documentation builds with the
+existing warnings and without increasing limits. The source code and launch
+inputs are committed before the single submission.

@@ -41,7 +41,8 @@ Options:
 Run from the STMFit repository root on the HPC system. The script does not sync
 files; it assumes QE run directories are already present on the cluster. Full
 runs submit run_qe_mold.sbatch; SCF+PP-only preliminary dirs may instead provide
-run_scf_pp.sbatch.
+run_scf_pp.sbatch. Saved-state diagnostics use run_pp_only.sbatch; their
+pw_scf.in is provenance for physical preflight and is not executed.
 EOF
 }
 
@@ -51,8 +52,10 @@ run_script_for_dir() {
         printf '%s\n' "run_qe_mold.sbatch"
     elif [[ -f "$dir/run_scf_pp.sbatch" ]]; then
         printf '%s\n' "run_scf_pp.sbatch"
+    elif [[ -f "$dir/run_pp_only.sbatch" ]]; then
+        printf '%s\n' "run_pp_only.sbatch"
     else
-        echo "ERROR: missing run_qe_mold.sbatch or run_scf_pp.sbatch in $dir" >&2
+        echo "ERROR: missing QE run script in $dir" >&2
         exit 1
     fi
 }

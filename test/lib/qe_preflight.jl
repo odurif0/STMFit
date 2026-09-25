@@ -103,12 +103,15 @@ end
 function _run_script(dir::String)
     full = joinpath(dir, "run_qe_mold.sbatch")
     prelim = joinpath(dir, "run_scf_pp.sbatch")
+    pp_only = joinpath(dir, "run_pp_only.sbatch")
     if isfile(full)
         return full, "relax_scf_pp"
     elseif isfile(prelim)
         return prelim, "scf_pp_only"
+    elseif isfile(pp_only)
+        return pp_only, "pp_only"
     end
-    error("Missing run script: expected $full or $prelim")
+    error("Missing run script: expected $full, $prelim or $pp_only")
 end
 
 function check_dir!(rows, dir::String; min_mem_mb::Int=0)
@@ -160,11 +163,15 @@ function check_dir!(rows, dir::String; min_mem_mb::Int=0)
         occursin("extract_qe_relaxed_xyz.jl", sbatch) || error("$dir: sbatch missing extract_qe_relaxed_xyz.jl handoff")
         occursin("update_qe_positions_from_xyz.jl", sbatch) || error("$dir: sbatch missing update_qe_positions_from_xyz.jl handoff")
         occursin("pw.x -in pw_relax.in", sbatch) || error("$dir: sbatch missing relax pw.x command")
-    else
+    elseif mode == "scf_pp_only"
         occursin("pw.x -in pw_scf.in", sbatch) || error("$dir: preliminary sbatch missing SCF pw.x command")
         !occursin("pw.x -in pw_relax.in", sbatch) || error("$dir: preliminary sbatch must not run pw_relax.in")
         !occursin("extract_qe_relaxed_xyz.jl", sbatch) || error("$dir: preliminary sbatch must not extract relaxed geometry")
         !occursin("update_qe_positions_from_xyz.jl", sbatch) || error("$dir: preliminary sbatch must not update from relaxed geometry")
+    else
+        !occursin(r"\bpw\.x\b", sbatch) || error("$dir: PP-only script must not execute SCF or relaxation")
+        !occursin("extract_qe_relaxed_xyz.jl", sbatch) || error("$dir: PP-only script must not extract geometry")
+        !occursin("update_qe_positions_from_xyz.jl", sbatch) || error("$dir: PP-only script must not change geometry")
     end
     occursin("pp.x -in pp_ldos.in", sbatch) || error("$dir: sbatch missing pp.x command")
 
