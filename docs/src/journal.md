@@ -18699,3 +18699,13 @@ Two additional complete-partition/node-count assertions are added for the
 full reader. The prepared payload is approximately **7.6 MiB**, including
 both witnesses. The same Julia **1.13.0**, Project and Manifest are present on
 Viper, the target run directory does not exist, and the account queue is empty.
+
+**Single submission.** Source **f85d69f** and the **7,840,633-byte** prepared
+payload have zero checksum differences after synchronization to
+`/u/oldu/code/STMFit_surface_transfer_20260925/STMFit`. The final witness reader,
+including partition completeness and binary-tree node counts, passes
+**12,382/12,382** checks. Remote CLI loading, script identity/syntax and Slurm
+test-only pass; test-only **11980576** is not a submitted job. The sole real
+job is **11980577**, submitted at approximately **20:52 UTC**, explicitly
+exporting Julia 1.13 with the declared resources and no requeue. No further
+calculation is authorized within this cycle's single-job bound.
