@@ -18709,3 +18709,19 @@ test-only pass; test-only **11980576** is not a submitted job. The sole real
 job is **11980577**, submitted at approximately **20:52 UTC**, explicitly
 exporting Julia 1.13 with the declared resources and no requeue. No further
 calculation is authorized within this cycle's single-job bound.
+
+**Related physical route, not added to the running experiment.** A primary-
+source check while the job runs identifies vacuum-tail continuation as a
+possible later alternative to further root refinement. [Kageshima and Tsukada
+(1992)](https://journals.aps.org/prb/abstract/10.1103/PhysRevB.46.6928) address
+the description of STM wavefunction tails; [Park and Yoon (2022), Method and
+Supplement section 3](https://www.nature.com/articles/s41598-022-10870-0)
+propagate lateral Fourier components with decaying vacuum solutions after
+checking a matching plane's signal and potential. Their material, sampling,
+plane position and potential-variation threshold are not ours and are not
+imported as calibration. This motivates checking whether our accepted states
+have any suitable PAW-free matching region with a sufficiently characterized
+potential, not asserting that our remaining structure is numerical noise.
+No propagation, new potential export, cutoff change or density replacement is
+performed in this cycle. The numerical series and current-map results remain
+what was actually calculated.
