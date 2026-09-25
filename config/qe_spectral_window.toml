@@ -1,0 +1,21 @@
+# Diagnostic only: the bias is the existing experimental -0.300 V setting.
+# This does not calibrate a tip height, current setpoint or chemical classifier.
+[model]
+qe_version = "7.4.1"
+sample_bias_ry = -0.0220495933
+spectral_window = "sharp_zero_temperature"
+scf_acceptance_ry = 5e-5
+control_plot_num = 5
+candidate_plot_num = 10
+
+[selection]
+policy = "no_mold_or_benchmark_selection"
+require_archived_control_sha256 = true
+ildos_integral_rtol = 1e-4
+
+[preprocessing]
+cube_order = "qe_last_axis_fast"
+clip_negative_values = false
+half_nm = 0.64
+step_nm = 0.08
+diagnostic_heights_nm = [0.40, 0.50, 0.60]

@@ -19,6 +19,7 @@ source "$ENV_FILE"
 
 : "${STMFIT_SSH_HOST:?STMFIT_SSH_HOST not set in $ENV_FILE}"
 : "${JULIA_MODULE_VERSION:=}"
+: "${JULIA_BIN:=julia}"
 : "${WATCH_POLL:=60}"
 : "${RSYNC_EXTRA:=}"
 : "${SSH_CONNECT_TIMEOUT:=180}"
@@ -95,7 +96,14 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-module_load_cmd="module purge && module load julia${JULIA_MODULE_VERSION:+/$JULIA_MODULE_VERSION}"
+if [[ "$JULIA_BIN" == /* ]]; then
+    module_load_cmd="test -x '$JULIA_BIN'"
+elif [[ "$JULIA_BIN" == julia ]]; then
+    module_load_cmd="module purge && module load julia${JULIA_MODULE_VERSION:+/$JULIA_MODULE_VERSION}"
+else
+    echo 'ERROR: JULIA_BIN must be julia or an absolute path.' >&2
+    exit 1
+fi
 
 run_local() {
     if (( DRY_RUN )); then
@@ -188,7 +196,7 @@ preflight_args+=(--out hpc/qe_molds/qe_input_preflight.tsv --max-total-tasks "$M
 (( WATCH )) && submit_args+=(--watch --watch-poll "$WATCH_POLL")
 (( SEQUENTIAL )) && submit_args+=(--sequential)
 
-remote_preflight="cd '$STMFIT_REMOTE_PROJECT' && $module_load_cmd && julia --project=. test/preflight_qe_mold_inputs.jl"
+remote_preflight="cd '$STMFIT_REMOTE_PROJECT' && $module_load_cmd && '$JULIA_BIN' --project=. test/preflight_qe_mold_inputs.jl"
 for arg in "${preflight_args[@]}"; do
     remote_preflight+=" '$arg'"
 done
@@ -196,7 +204,7 @@ done
 echo "Running remote preflight"
 run_remote "$remote_preflight"
 
-remote_submit="cd '$STMFIT_REMOTE_PROJECT' && JULIA_MODULE_VERSION='$JULIA_MODULE_VERSION' QE_COMPILER_MODULE='$QE_COMPILER_MODULE' QE_MPI_MODULE='$QE_MPI_MODULE' QE_MODULE='$QE_MODULE' QE_QOS='$QE_QOS' QE_MIN_MEM_MB='$QE_MIN_MEM_MB' QE_DEPENDENCY='$QE_DEPENDENCY' bash hpc/submit_qe_molds.sh"
+remote_submit="cd '$STMFIT_REMOTE_PROJECT' && JULIA_BIN='$JULIA_BIN' JULIA_MODULE_VERSION='$JULIA_MODULE_VERSION' QE_COMPILER_MODULE='$QE_COMPILER_MODULE' QE_MPI_MODULE='$QE_MPI_MODULE' QE_MODULE='$QE_MODULE' QE_QOS='$QE_QOS' QE_MIN_MEM_MB='$QE_MIN_MEM_MB' QE_DEPENDENCY='$QE_DEPENDENCY' bash hpc/submit_qe_molds.sh"
 for arg in "${submit_args[@]}"; do
     remote_submit+=" '$arg'"
 done

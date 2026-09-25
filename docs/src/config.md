@@ -1,5 +1,23 @@
 # Configuration Reference
 
+## Diagnostic QE spectral window
+
+`config/qe_spectral_window.toml` is opt-in and never selects a chemical model.
+Its `[model]` fixes QE 7.4.1, the existing `sample_bias_ry=-0.0220495933`,
+`scf_acceptance_ry=5e-5`, plot_num=5 control and plot_num=10 candidate. The
+`sharp_zero_temperature` window is between each accepted XML Fermi energy and
+that energy plus the bias. XML energies are Hartree; PP bounds are absolute eV.
+No spectral broadening is optimized.
+
+`[selection]` forbids mold/benchmark selection, requires byte-identical archived
+control cubes and sets `ildos_integral_rtol=1e-4` solely for the finite-precision
+cube integration check. `[preprocessing]` requires QE's last-axis-fast ordering,
+retains negative values, and samples all declared heights `[0.40,0.50,0.60]` nm
+on the old 17×17 frame (`half_nm=0.64`, `step_nm=0.08`). These heights remain
+diagnostics, not calibrated experimental tip heights or candidates ranked by
+benchmark labels. There is no production or registry change; see the journal
+and [calibration](calibration.md).
+
 ## Diagnostic exact background conditioning
 
 `config/background_conditioning.toml` is used only by

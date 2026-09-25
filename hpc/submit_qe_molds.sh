@@ -12,6 +12,7 @@ DRY_RUN=0
 WATCH=0
 WATCH_POLL=60
 JULIA_MODULE_VERSION=${JULIA_MODULE_VERSION:-}
+JULIA_BIN=${JULIA_BIN:-julia}
 QE_COMPILER_MODULE=${QE_COMPILER_MODULE:-intel/2024.0}
 QE_MPI_MODULE=${QE_MPI_MODULE:-impi/2021.11}
 QE_MODULE=${QE_MODULE:-qe/7.4.1}
@@ -99,14 +100,14 @@ preflight_args+=(--out "$REPORT" --max-total-tasks "$MAX_TOTAL_TASKS")
 (( SEQUENTIAL )) && preflight_args+=(--sequential)
 
 echo "Preflight: ${DIRS[*]}"
-if ! command -v julia >/dev/null 2>&1; then
+if ! command -v "$JULIA_BIN" >/dev/null 2>&1; then
     if type module >/dev/null 2>&1; then
         module purge
         module load "julia${JULIA_MODULE_VERSION:+/$JULIA_MODULE_VERSION}"
     fi
 fi
-command -v julia >/dev/null 2>&1 || { echo "ERROR: julia not found. Load a Julia module or set JULIA_MODULE_VERSION." >&2; exit 1; }
-julia --project=. test/preflight_qe_mold_inputs.jl "${preflight_args[@]}"
+command -v "$JULIA_BIN" >/dev/null 2>&1 || { echo "ERROR: Julia not found. Set JULIA_BIN or JULIA_MODULE_VERSION." >&2; exit 1; }
+"$JULIA_BIN" --project=. test/preflight_qe_mold_inputs.jl "${preflight_args[@]}"
 
 if (( DRY_RUN )); then
     echo "Dry run: no jobs submitted. Commands would be:"
@@ -134,7 +135,7 @@ prev_job_id=""
 for dir in "${DIRS[@]}"; do
     echo "Submitting $dir"
     script=$(run_script_for_dir "$dir")
-    sbatch_args=(--export=ALL,JULIA_MODULE_VERSION="$JULIA_MODULE_VERSION",QE_COMPILER_MODULE="$QE_COMPILER_MODULE",QE_MPI_MODULE="$QE_MPI_MODULE",QE_MODULE="$QE_MODULE")
+    sbatch_args=(--export=ALL,JULIA_BIN="$JULIA_BIN",JULIA_MODULE_VERSION="$JULIA_MODULE_VERSION",QE_COMPILER_MODULE="$QE_COMPILER_MODULE",QE_MPI_MODULE="$QE_MPI_MODULE",QE_MODULE="$QE_MODULE")
     [[ -n "$QE_QOS" ]] && sbatch_args=(--qos="$QE_QOS" "${sbatch_args[@]}")
     if (( SEQUENTIAL )) && [[ -n "$prev_job_id" ]]; then
         sbatch_args=(--dependency="afterok:$prev_job_id" "${sbatch_args[@]}")

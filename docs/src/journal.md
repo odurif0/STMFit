@@ -2304,6 +2304,22 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
+0ba. **Can an explicit positive-weight energy window repair the STM observable?**
+Under the user's September 25 long-term autonomous research authorization,
+the reference to reach is archived **694/43/855**, not merely historical
+677/36/854. This first cycle is bounded to two hours preparation from
+**10:02 UTC**, then one eight-MPI Viper job, 96 GB, at most one hour, no retry.
+Restore the missing accepted GlcNAc collected checkpoint from the surviving
+pre-acceptance snapshot with the identical plain SCF input and **5e-5 Ry**
+criterion, without relaxation. Require byte-identical archived plot_num=5
+controls before comparing QE 7.4.1 plot_num=10 on the same wavefunctions.
+The latter uses the sharp zero-temperature experimental bias window, not the
+cold-smearing derivative tails. Done means complete fetched cubes/spectra,
+independent integration and sign/plane checks, tests, and a committed physical
+conclusion. It is not an isosurface calibration, new mold, count fit, chemical
+benchmark or production promotion. Current preparation and provenance are
+recorded in the dated entry below.
+
 0az. **Does exact background conditioning improve numerical stationarity?**
 User-authorized September 25, preparation capped at two hours from **08:50 UTC**,
 then one four-CPU Viper job with a one-hour wall limit, no retry. Continue the
@@ -16238,3 +16254,80 @@ goal remains open, while this bounded diagnostic is complete.
 Full numerical evidence and limits:
 `results/background_conditioning_20260925/report.md`, `analysis.log`,
 `paired_details.log`, all 24 native endpoints and the fetched verification log.
+
+### 2026-09-25 — Explicit energy-window STM observable: bounded preparation
+
+The user authorizes long-term autonomous research toward a reproducible,
+strict-label-free successor to archived **694/870 correct, 43/145 exact chains,
+855/870 covered**. The archived result is an evaluation target, not a claim that
+this performance has already been obtained with label-free calibration. Keep
+the completed unknown25 application and all production defaults frozen.
+
+**Deliverable and bound.** First determine whether the signed historical STM
+quantity can be replaced by a physically stated energy-window observable on
+the same accepted electronic structures. Preparation is at most two hours from
+**10:02 UTC**, then one Viper job, eight MPI ranks / 96 GB / one hour, no retry.
+Completion requires fetched controls and candidate cubes, spectra and energy
+conventions, independent saved-output checks, tests, and a scientific decision.
+No benchmark, isovalue fit, new chemical label, registry replacement, relaxed
+structure, SCF acceptance change, threshold sweep or unknown25 rerun is included.
+The ordinary tests plus human review remain the verification mechanism; no new
+process/activation framework is introduced.
+
+**Source-grounded distinction.** Directly read official QE **7.4.1**
+[`stm.f90`](https://github.com/QEF/q-e/blob/qe-7.4.1/PP/src/stm.f90),
+[`local_dos.f90`](https://github.com/QEF/q-e/blob/qe-7.4.1/PP/src/local_dos.f90)
+and `punch_plot.f90`. Legacy plot_num=5 adds derivative-weighted states outside
+the bias interval, with a three-smearing-width band cutoff. Cold smearing can
+give negative weights below the lower edge. Plot_num=10 instead gives k-point
+weights only to eigenvalues inside the closed energy interval. Its PAW/US
+augmentation and smooth-to-dense Fourier path also differ: it is **not** an
+isolated tail-weight ablation, and positive spectral weights do not guarantee
+pointwise nonnegative values after finite-grid reconstruction. This distinction
+must remain in the physical interpretation of the resulting cubes.
+
+Use the same experimental `sample_bias=-0.0220495933 Ry` (approximately
+−0.300 V), no fitted broadening. Convert XML eigenvalues/Fermi energy from
+Hartree to absolute eV for the ILDOS input; the XML SCF error also needs the
+factor two to compare with the unchanged Ry criterion. The zero-temperature
+sharp window is an explicit diagnostic approximation, not an independently
+converged metal k-point/temperature model. Sample the existing 17×17 local
+frame at all three declared heights 0.40/0.50/0.60 nm without choosing a winner,
+clipping density, importing a template or assuming calibrated tunneling current.
+
+**Live checkpoint inventory.** SSH to Viper and Raven works; no Viper job was
+present at the first check. The collected accepted GlcN checkpoint exists.
+The accepted GlcNAc plain/TF directories were not found in the checked historical
+project or scratch locations, including physical scratch roots. The surviving
+GlcNAc snapshot is explicitly unconverged/uncollected and contains eight old
+distributed wavefunction and mixing files. Its XML SHA256 is
+`1e287fc20d12efcf3dfeda0e7f9c27e79024de10f75e3d6a0eeca471aa8ece29`, identical
+locally and on Viper; GlcN XML is
+`0cbcb7f6b1f533c24b4e05f08f5bb5b279eb9255d4c0ac04e445c04d69b057c8` in both.
+Do not relabel the old unconverged checkpoint as accepted. Restore it only in
+a full copy, with the exact previously successful plain input except its output
+directory. Before any new ILDOS calculation, require the rebuilt legacy GlcNAc
+cube to match the archived accepted cube byte for byte. A failed restoration or
+control comparison ends this job without a relaxed tolerance or second attempt.
+
+**Implementation.** Opt-in `config/qe_spectral_window.toml` and
+`test/qe_spectral_window.jl` expose all spectral and diagnostic settings. The
+script reads only the audited scalar single-Gamma XML case, emits both PP inputs
+and per-band weights, checks complete grids and archived control hashes, and
+compares integrated ILDOS with the sum of selected state weights. All signs are
+retained. The job copies both source checkpoints, keeps the restored collected
+state, and runs the two molecule cases sequentially. The existing QE launcher
+gains an explicit `JULIA_BIN` path propagated in the command-line Slurm export,
+so preflight and compute helpers use Julia **1.13**, not the site's older module.
+No source checkpoint is edited or deleted. Tests and preflight precede submission.
+
+**Preparation checks.** Julia 1.13 passes **375/375** focused assertions
+(92 spectral-window, 252 cube-reader/mold, 31 surface-audit), the native QE input
+preflight, shell syntax checks and the documentation build. The regenerated SCF
+input differs from the old accepted plain input only in `outdir`. The launcher
+dry-run uses a new isolated remote project and the explicit Julia 1.13 binary.
+Checksums of every original checkpoint file are saved locally before submission.
+Metadata-only inspection of accepted GlcN gives **46** legacy selected bands,
+including **8** negative-weight bands (negative weight sum **−0.793084**), versus
+**12** states in the sharp experimental-bias window (total weight **24**).
+This is a spectral observation, not an improvement in chemical recognition.

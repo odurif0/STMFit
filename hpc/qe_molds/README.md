@@ -151,6 +151,13 @@ local PSLibrary/KJPAW pseudos in `qe/<run>/pseudo/*.UPF`; the remote launcher
 syncs these files explicitly, and `test/preflight_qe_mold_inputs.jl` verifies
 that every `ATOMIC_SPECIES` pseudo file exists before submission.
 
+For Julia 1.13 scientific diagnostics on a site with older Julia modules, set
+`JULIA_BIN` to an absolute remote binary path when invoking the existing QE
+launcher. The login preflight and submission preflight both use that executable;
+it is explicitly included in the `sbatch --export=ALL,...` list. Leaving
+`JULIA_BIN=julia` preserves the module-based legacy behavior. A launcher dry-run
+is still required before submission.
+
 The original full pilot (`8×8×4` slab, Cu `spn` PAW, `2×2×1` k-points,
 `ecutwfc=80`, `ecutrho=640`) exceeded the Raven QOS memory limit: QE estimated
 `~159 GB` dynamic RAM per MPI process. The active Raven pilot therefore uses an

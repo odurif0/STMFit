@@ -1,5 +1,30 @@
 # Calibration: measurements, assumptions and limits
 
+## Explicit spectral-window diagnostic
+
+The September 25 QE diagnostic compares the archived plot_num=5 STM proxy with
+plot_num=10 ILDOS from the same electronic states. The candidate uses a sharp
+zero-temperature window at the existing −0.300 V experimental bias, with no
+fitted broadening. It does not claim that the Gamma-only slab or zero-temperature
+approximation is spectrally converged, or that an ILDOS value is a current in pA.
+The code checks the factor-two Hartree/Ry conversion and uses the full-precision
+XML Fermi energy, not its rounded printed value.
+
+Unlike legacy STM's cold-smearing derivative tails, the selected ILDOS state
+weights are nonnegative. However, QE's two paths also differ in PAW/US
+augmentation and Fourier interpolation. Positive weights alone do not certify
+nonnegative grid samples; the diagnostic preserves and counts every negative
+value, checks the integrated density against the selected state weights, and
+exports all three existing local height planes without selecting a height.
+The integral tolerance is numerical, not a chemical-confidence threshold.
+
+Missing accepted GlcNAc collected wavefunctions are restored only in an isolated
+copy of the surviving pre-acceptance snapshot, with the unchanged **5e-5 Ry**
+criterion. Byte-identical archived STM controls are required before comparing
+ILDOS. No numerical tolerance or SCF criterion is relaxed after a failure.
+There is no new isovalue calibration, template, recognition result or production
+change. See [configuration](config.md) and the dated journal entry.
+
 ## Numerical background conditioning is not recalibration
 
 The September 25 opt-in `background_conditioning.toml` comparison changes only
