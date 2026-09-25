@@ -2304,6 +2304,14 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
+0bn. **Is a vacuum-tail construction compatible with the accepted local
+effective potentials?** In progress, bounded to two hours from approximately
+22:07 UTC September 25 (September 26 local time), at most one PP-only job.
+Export total and electrostatic potentials on unchanged accepted states, retain
+all native planes, quantify lateral and vertical variation and selected-band
+barriers. No SCF, matching plane/flatness cutoff, propagation, mold replacement,
+reference adoption or recognition claim belongs to this cycle.
+
 0bm. **Does a common exterior of the complete molecular footprints support a
 less ambiguous height reference?** **No improvement from whole-footprint
 exclusion alone.** The geometry-fixed common exterior retains 325 of 474 old
@@ -19056,3 +19064,72 @@ size warnings and no altered limits. `git diff --check` passes. The scientific
 result and rejection are committed as **34faa1c** after preparation **4eda39a**;
 all generated geometry, tables, plots, repeats and logs remain untracked.
 No scientific calculation or cluster job remains running from this cycle.
+
+### 2026-09-26 — Accepted-state vacuum potential, bounded PP-only diagnostic
+
+**Previous goal turn: progress.** Whole-footprint exclusion was tested and
+rejected as a sufficient scalar-reference repair. That evidence changes the
+next scientific action; it is not a recognition improvement. The full
+694/43/855 raw-to-assignment objective remains unmet and active.
+
+**Deliverable and done.** From approximately **22:07 UTC September 25**
+(September 26 local time), budget **two hours**, with **at most one one-hour
+PP-only Viper job**. Done means both accepted states' full native local total
+and electrostatic potentials exported and fetched, repeated total export
+checked, native/cube ordering and numerical precision verified, all full-plane
+PAW-free heights and all selected electronic bands reported, and a quantitative
+decision on what this permits next. Preparation alone is not this deliverable.
+No SCF, density clipping, fitted vacuum level, new matching plane, borrowed
+flatness threshold, propagation, chemical calibration, grade or champion
+change is included. Current production/unknown25 outputs remain untouched.
+
+**Physics and frozen policy.** The local effective potential is
+`V_bare+V_H+V_xc` (`plot_num=1`), not the electrostatic control
+`V_bare+V_H` (`plot_num=11`). Read potential energies in Ry and accepted XML
+eigenvalues in Hartree, with the existing QE conversion constants. Retain all
+native z planes and all lateral pixels, tagging the complete PAW-free gap
+between bounding planes of all periodically repeated spheres and its lower
+geometric half. A lateral exterior mask cannot qualify a full-plane Fourier
+boundary. No plane is selected from a favorable contrast, morphology or label.
+
+The full native `filplot` retains ten significant digits and x-fast order,
+including x/y padding; the separately written five-significant-digit cube has
+z-fast order. Compare every physical voxel within the fixed printing bounds.
+Report total, electrostatic and XC mean/range/spatial SD, along with every
+selected band's barrier and local zero-lateral-momentum decay descriptors.
+In Ry/Bohr units, `kappa^2 = V_Ry-E_Ry` for that zero-momentum mode; positive
+sampled barriers are only a necessary local condition, not a propagation
+validation or proof between native nodes. Add no physical tolerance or
+flatness pass/fail threshold to these descriptions.
+
+The rationale follows [Park and Yoon, Method and Supplement section 3](https://www.nature.com/articles/s41598-022-10870-0)
+and the [QE PP definition](https://www.quantum-espresso.org/Doc/INPUT_PP.html),
+cross-checked against the locally saved QE source. Their 2.7-Angstrom matching
+height and 0.1-eV criterion are **not imported**; their different surface and
+cell do not qualify ours. The supplementary printed decay equation has an
+inverted dimensional prefactor: derive units from the Schrodinger equation
+rather than copying that expression. Potential information alone also cannot
+establish that the boundary wavefunctions are accurate.
+
+**Access at preparation.** Two BatchMode Viper checks time out during the
+banner exchange. Read-only checks find neither control socket; the configured
+`gate` relay explicitly rejects automatic authentication. No new job is
+submitted. The user is asked asynchronously to restore the normal SSH session
+without sending credentials. Local preparation/tests continue within scope.
+
+**Access restored; preparation checked.** After the user's confirmation, the
+same BatchMode check succeeds, `squeue` is empty, and the previous job 11980577
+is authoritatively `COMPLETED (0:0)`. The existing Julia 1.13 executable and
+both accepted densities are present. Their local accepted density hashes are
+pinned, and the batch checks both density and collected-WFC identities on
+full copies before PP. The originals are checked again afterwards.
+
+The first synthetic suite reports **33 passes / 1 failure**: its supposed
+truncated last value remained a valid number, so no token was actually missing.
+The fixture is corrected to remove a complete value; the reader's acceptance
+rules do not change. The corrected suite passes **34/34** assertions, including
+nonsquare/padded native order, deliberate value/geometry corruption, physical
+Ry/Hartree and Bohr/nm factors, constant and varying barriers, nonpositive
+barriers and gauge-shift invariance. Both logs are retained. Geometry-only
+preparation records **237 full-plane PAW-free native heights** across both
+states, before reading any potential values. No job is submitted yet.

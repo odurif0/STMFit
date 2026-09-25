@@ -203,8 +203,10 @@ mean molecular contrast near **21 pm**. Hypothetical reference choice can
 reverse its sign. This is not a supported scalar Cu reference, current
 calibration or chemical assignment. Atomic PAW projection clearance does not
 exclude internal molecular spaces or electronic tails. A whole-footprint/
-common-exterior geometry analysis of the saved results remains open; no
-distance cutoff is selected from the plotted contrasts. The accepted states,
+common-exterior follow-up retains 325 candidates but does not reduce the
+reference ambiguity: Cu-half paired spatial SD remains 65.42--73.94 pm, with
+both referenced contrast signs. No distance cutoff is selected from the
+plotted contrasts. The accepted states,
 **5e-5 Ry** criterion and production sources are unchanged.
 
 **September 25 shared-image envelope.** Job **11980183** fits a chemistry-free

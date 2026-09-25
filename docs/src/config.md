@@ -1,5 +1,30 @@
 # Configuration Reference
 
+## Accepted-state vacuum potential diagnostic
+
+`config/qe_vacuum_potential.toml` declares a PP-only export of the unchanged
+accepted states: total local potential (`plot_num=1`), electrostatic control
+(`plot_num=11`) and an exact repeat of the total. Accepted charge-density hashes
+are pinned alongside the existing wavefunction/XML identities. The sharp
+occupied -0.300-V band window and 5e-5-Ry SCF acceptance are unchanged.
+
+Every native z plane and full lateral plane is retained; geometry tags the
+strict all-atom PAW-free gap and its lower half. No height, footprint mask or
+flatness tolerance selects a matching plane. Primary ten-significant-digit
+`filplot` values use x-fast order with padding; five-significant-digit cube
+exports independently check z-fast indexing and every physical voxel within
+the declared printing/roundoff bounds. Header geometry tolerances derive from
+the declared decimal precision plus `geometry_rtol`, not physical uncertainty.
+Potential energies are Ry, whereas accepted XML eigenvalues are Hartree.
+
+The outputs describe total/electrostatic/XC potential variation and every
+selected band's sampled barrier. The local zero-lateral-momentum descriptor
+is `sqrt(V_Ry-E_Ry)/Bohr_nm` when positive; it is not a propagated wavefunction,
+calibrated STM current or proof of a continuum barrier. No flatness cutoff,
+vacuum level, matching plane, reference, mold or benchmark result is adopted.
+Use `test/qe_vacuum_potential.jl --help` for metadata-only preparation and
+compute-node analysis. The scientific batch must not run on a login node.
+
 ## Whole-molecule exterior of saved reference sites
 
 `config/molecular_exterior.toml` pins the existing grid, roots and reports.

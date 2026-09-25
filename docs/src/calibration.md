@@ -1,5 +1,25 @@
 # Calibration: measurements, assumptions and limits
 
+## Potential qualification precedes vacuum-tail propagation
+
+A geometrically empty region is not necessarily a region of constant local
+effective potential. The next PP-only diagnostic exports the accepted-state
+total potential and its electrostatic control, retaining every native lateral
+pixel and height. It tags the geometry-only all-atom PAW-free gap without
+selecting a matching height or flatness threshold. This supplies necessary
+physical information for a possible tail model, not a new height/current
+calibration or proof that the present reference spread is numerical noise.
+
+In Ry/Bohr units the zero-lateral-momentum constant-potential equation gives
+`kappa^2=V_Ry-E_Ry`; XML energies must first be converted from Hartree.
+Lateral potential variation couples Fourier modes, vertical variation can
+invalidate a constant barrier, and a suitable potential alone does not prove
+the boundary wavefunctions are accurate. Report these limitations and the
+sampled variation before attempting a continuation. The material-specific
+height and flatness criterion in [Park and Yoon's supplementary method](https://www.nature.com/articles/s41598-022-10870-0)
+are not calibration values for these chitosan cells. No production change is
+made by preparing this diagnostic.
+
 ## Atomic z origin is not an observed STM background
 
 Subtracting the lowest (or highest) Cu atomic coordinate from a calculated
