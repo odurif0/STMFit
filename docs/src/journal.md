@@ -2304,6 +2304,15 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
+0bl. **Is there a consistent off-molecule DFT height reference at the saved
+isovalues?** A bounded geometry-only-prepared diagnostic is underway. It will
+account for every site of a common 32x24 cell-center grid, retaining sites
+outside the union of both periodic molecular PAW projections and testing all
+three saved isovalues in all three declared domains. Off-projection does not
+mean clean Cu: lateral molecular tails, periodic adsorbates, finite basis/cell
+and unknown experimental current remain. No reference or production change
+is adopted; numerical root failures must remain visible.
+
 0bk. **Can a shared full-image envelope predict repeat views without absorbing
 the local physical contrast?** **Prediction improves, but substantial probe
 energy is absorbed.** Job **11980183** completes 146 scans / 292 views, with
@@ -18581,3 +18590,112 @@ deployment, retaining existing size warnings and unchanged limits. The
 calibration/config/DFT notes and this journal's Open Questions reflect the
 verified outcome. Production benchmark headlines are unchanged because no
 production behavior or recognition result is changed. `git diff --check` passes.
+
+### 2026-09-25 — Off-projection height-reference diagnostic, bounded preparation
+
+**Scientific deliverable and done.** Determine whether the already accepted
+wavefunctions support unique descending tip-height roots away from molecular
+PAW projections at the three unchanged molecular representative isovalues,
+and quantify the spatial/cell dependence of any conditional height reference.
+Completion requires complete geometric accounting, frozen-domain root results
+including absent/multiple/unresolved cases, repeated direct Fourier checks,
+independent saved-output verification and a documented decision. This is not
+recognition improvement or a new current/chemical calibration.
+
+**Scope/time box.** Under the user's standing autonomous research authority,
+allow **three hours** for this cycle (starting approximately **20:28 UTC**),
+including one Viper job of at most **one hour, four requested CPUs, 32 GB**,
+no requeue or retry. No new SCF, PP, geometry relaxation, image fitting,
+benchmark grading, sequence/composition prior, provider or champion change.
+Only a fixed first geometry-eligible column is evaluated locally as a witness;
+the paired full-grid diagnostic runs on Viper. Existing application outputs
+remain frozen. The previous cycle is progress in predictive fit, not attainment
+of the complete **694/43/855** goal.
+
+**Physical question.** The present molecular maps subtract the lowest Cu atom's
+z coordinate, while experimental corrected heights subtract an observed
+source-masked background. These are not the same reference. Within the
+[Tersoff--Hamann model](https://journals.aps.org/prb/abstract/10.1103/PhysRevB.31.805),
+tip-position LDOS motivates comparison at a common density proxy; the proposed
+off-projection reference is our diagnostic inference, not a calibrated nA
+conversion or a consequence guaranteed by that paper. The PAW-outside-spheres
+qualification and common **5e-5 Ry** acceptance remain unchanged.
+
+**Frozen before new density queries.** `config/qe_substrate_reference.toml`
+declares a **32x24** uniform fractional-cell-center grid, four subdivisions of
+the pilot 8x6 lateral Cu repeat, approximately **0.0639 nm** spacing. It is an
+exploratory spatial sample, not a converged mesh or a monomer scale. A site is
+retained only if it lies strictly outside every projected molecular PAW disk
+in **both** accepted geometries, with periodic lateral distances. All 768
+sites and both projection margins are saved; there is no extra halo, percentile,
+best-point or density-derived support rule. Off-projection sites can still
+contain molecular electronic tails and are not established as bare Cu.
+
+For each retained site, compute all three old isovalues over (1) the full gap
+between bounding Cu PAW planes, (2) the lower half of that gap, and (3) the
+unchanged saved molecular-half domain. Cu endpoints are native z knots strictly
+inside their geometric planes; the half boundary is their geometric midpoint,
+not a chosen density minimum. The whole vertical segments must clear every
+periodic sphere, not merely their endpoints. All domains remain separate;
+none is adopted by finding favorable roots. A full periodic gap can include
+ascending roots toward the next slab, and those roots are reported rather than
+discarded. A half-gap branch, even if numerically unique, remains a geometric
+convention and not an isolated-slab proof.
+
+Use the existing outward-rounded, untruncated Gamma-series interval search and
+unchanged numerical limits. Serial root repetitions and independent full-3D
+wavefunction evaluations check domain endpoints/midpoints and every isolated
+root, including ascending and multiple-root cases. All coefficients, partition
+leaves, numerical failures and direct queries remain. Any reference statistics
+are conditional on reported valid support; no map is re-zeroed in inference.
+Even a successful constant reference would not repair non-affine shape mismatch
+or establish unit centers, N, tip effects, chemical identity or a new champion.
+
+**Preparation checks.** The 768-site grid retains **474** common off-projection
+columns. All **2,844** declared full segments have positive clearance; the
+minimum is **0.000869736321863 nm**. Cu full-gap endpoints are GlcN
+**0.507075518294--2.002518572247 nm** and GlcNAc
+**0.497308365867--2.041581712508 nm**; their lower-half upper endpoints are
+**1.254797045270 / 1.265082685101 nm**. Molecular-half endpoints are unchanged.
+The full job will therefore retain **8,532** site/domain/isovalue outcomes.
+
+The first synthetic run passed **9,712** geometric assertions but failed four
+expectations in the analytic Fourier fixture: its third-isovalue root lies
+exactly at a Cu-half subdivision boundary. The unchanged interval algorithm
+requires strict endpoint signs and correctly preserves two unresolved leaves
+rather than certifying this case. The fixture now explicitly checks that
+ambiguity and containment of the analytic root; the method, tolerances and
+real isovalues were not changed. The corrected run passes **9,753/9,753**
+checks, including retained ascending/full-gap multiple roots and repeat/output
+guards. Both logs remain in `results/substrate_reference_20260925/`.
+Settings SHA-256 is
+`4e41de9a678190413bbc71c65ce10e0f23d5ad2ee2da85a3dbe09e3cbce24add`;
+Project/Manifest are unchanged. No real cohort density computation has yet
+been submitted.
+
+The independent geometry reader initially enumerated the entire pseudopotential
+directory, which also contains an **inactive** alternate Cu dataset. That
+overwrote its Cu radius and disagreed with the inference reader's correctly
+XML-selected radius. The independent reader now follows only the XML's active
+file list, rejects duplicate active elements, and has a synthetic regression
+with an unused alternate Cu file. Inference geometry and prepared support did
+not change; the faulty reader output is retained. No density-based adjustment
+or new pseudopotential was made.
+
+**Verified before submission.** The final synthetic run passes **9,755**
+assertions; the unchanged interval engine passes its **245** analytic
+regressions. Both real first-site witnesses complete with exact serial repeats
+and every direct full-3D query strictly inside its grouped-series enclosure
+(zero comparison distance). GlcN has six valid restricted-domain roots;
+GlcNAc has three, all in the Cu-half domain. Each full gap has one descending
+and one ascending root, so none is mislabeled unique. The GlcNAc old molecular
+domain has no crossing at this site: its Cu-side roots are below that domain's
+lower boundary. No setting is changed in response.
+
+The independent witness reader passes **12,362** assertions, including all
+768 geometric sites and all 2,844 segment clearances, all 18 root outcomes,
+39 direct queries and re-evaluation of their saved coefficient enclosures.
+Two additional complete-partition/node-count assertions are added for the
+full reader. The prepared payload is approximately **7.6 MiB**, including
+both witnesses. The same Julia **1.13.0**, Project and Manifest are present on
+Viper, the target run directory does not exist, and the account queue is empty.

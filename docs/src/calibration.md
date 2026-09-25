@@ -1,5 +1,26 @@
 # Calibration: measurements, assumptions and limits
 
+## Atomic z origin is not an observed STM background
+
+Subtracting the lowest (or highest) Cu atomic coordinate from a calculated
+constant-density tip height does not supply the apparent substrate height at
+that density. The experimental masked background and this atomic origin are
+different conventions. The bounded off-projection diagnostic therefore queries
+the same accepted wavefunctions and three saved isovalues at a fixed lateral
+grid, outside the union of both molecular PAW projections, with independently
+audited PAW-free vertical segments. It retains full-gap, Cu-half and old
+molecular-half outcomes without choosing a favorable branch/domain.
+
+The motivation follows the tip-position LDOS dependence of the
+[Tersoff--Hamann model](https://journals.aps.org/prb/abstract/10.1103/PhysRevB.31.805);
+the proposed background comparison is an inference to test, not a measured
+current conversion. Molecular tails and neighboring periodic adsorbates may
+still dominate off-projection points. A scalar background is only defensible
+if its spatial and state dependence are understood; no spread cutoff, class
+offset or chemical confidence is inferred here. Even a supported reference
+cannot cure the shape mismatch left after free local affine profiling. No
+production map, current, count, assignment or champion is changed.
+
 ## A shared envelope must not silently remove chemical contrast
 
 The September 25 shared-image diagnostic fits one source-only spline surface

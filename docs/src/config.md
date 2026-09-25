@@ -1,5 +1,27 @@
 # Configuration Reference
 
+## Off-projection substrate-reference diagnostic
+
+`config/qe_substrate_reference.toml` retains accepted Gamma states, the sharp
+−0.300 V spectral proxy and all three saved representative isovalues. A fixed
+32x24 fractional-cell-center grid covers the common lateral cell. Eligibility
+uses the union of both molecular PAW projections with periodic distances,
+strict positive clearance and no additional distance threshold. This is not
+proof of a clean-Cu electronic background. Every grid site remains in the
+geometry table, including excluded sites.
+
+Three domains are reported without selecting among them: the full Cu-PAW gap,
+its lower geometric half, and the old molecular-half native endpoints. Full
+segment clearance is checked before density access. Numerical interval settings
+remain order 12, root width 1e-7 nm, depth 24, 20,000 nodes and 32 Newton steps;
+the existing 1e-13 density comparison allowance is not a physical tolerance.
+Direct 3D Fourier queries test endpoints/midpoints and all isolated roots;
+serial repeats are required. No density normalization, clipping, current fit,
+reference adoption, image selection or chemical decision is allowed. The CLI
+is `test/qe_substrate_reference.jl --help`; `prepare` is geometry/metadata-only,
+and `witness` uses only the first geometry-eligible column. The full diagnostic
+is a single one-hour Viper job. Production configs are unchanged.
+
 ## Shared whole-image envelope diagnostic
 
 `config/shared_image_envelope.toml` declares a chemistry-free tensor cubic

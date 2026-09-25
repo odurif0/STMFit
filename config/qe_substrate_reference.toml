@@ -1,0 +1,33 @@
+# Diagnostic only: no reference is adopted from this comparison.
+[model]
+qe_version = "7.4.1"
+qe_commit = "500de340b820e1cb8c05f2d8bb8fced102f377c1"
+sample_bias_ry = -0.0220495933
+spectral_window = "sharp_zero_temperature"
+scf_acceptance_ry = 5e-5
+observable = "gamma_wavefunction_sum_outside_paw"
+reference_run = "qe/vacuum_continuous_20260925"
+
+[selection]
+policy = "report_all_saved_isovalues_and_domains_no_reference_adoption"
+support = "outside_union_of_both_periodic_molecular_paw_projections"
+domains = ["full_cu_gap", "cu_half_gap", "saved_molecular_half"]
+require_reference_sha256 = true
+require_exact_repeat = true
+interval_arithmetic_version = "1.0.12"
+taylor_order = 12
+root_width_nm = 1e-7
+max_depth = 24
+max_nodes = 20000
+newton_steps = 32
+numeric_roundoff_atol = 1e-13
+geometry_rtol = 1e-12
+
+[preprocessing]
+coordinates = "accepted_xml_cell_substrate_normal"
+lateral_grid = [32, 24]
+lateral_sampling = "fractional_cell_centers"
+vertical_knots = "native_grid_strictly_inside_cu_paw_planes"
+clip_negative_values = false
+normalize_components = false
+fourier_block_points = 32

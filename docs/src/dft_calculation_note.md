@@ -185,6 +185,17 @@ constant-current feedback loop.
 
 ## Diagnostic constant-current observable
 
+**September 25 off-projection reference diagnostic (preparation).** The
+follow-up asks whether the accepted states supply a consistent substrate
+tip-height reference at the same three isovalues. Geometry alone retains
+**474/768** common cell-grid sites outside both molecular PAW projections.
+Every declared vertical segment is outside all periodically repeated PAW
+spheres (minimum clearance **0.0008697363 nm**). This is geometric support,
+not evidence of clean Cu, negligible molecular tails, converged cell size or
+calibrated current. Full Cu-gap, Cu-half-gap and unchanged molecular-half
+results will all be reported; neither a domain nor a reference is adopted.
+The accepted states, **5e-5 Ry** criterion and production sources are unchanged.
+
 **September 25 shared-image envelope.** Job **11980183** fits a chemistry-free
 source-only B-spline envelope after the frozen masked image background, with
 resolution selected by the complete conditional GCV trace. It processes all
