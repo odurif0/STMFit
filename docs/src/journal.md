@@ -16648,3 +16648,15 @@ and patch SHA256
 remain fixed. No SCF, relaxation, spectrum/grid/height change, benchmark labels,
 calibration, fitting, mold replacement, unknown25 rerun or champion promotion
 is included.
+
+**Continuation submission.** The new project is
+`/u/oldu/code/STMFit_gamma_mkl_20260925/STMFit`, source **fd10f36**, with results
+under `qe/gamma_reconstruction_mkl_20260925/`. The complete code, Manifest,
+pristine QE/dependencies and inputs have zero checksum differences after
+transfer. All twelve physical PP inputs, both reference cubes, accepted XMLs,
+frames, spectra and settings are byte-identical to the failed Gamma run.
+Native input preflight, Julia **1.13.0**, offline submodule initialization,
+patch dry-application and launcher dry-run pass. Test-only **11976184** was
+not submitted. The sole real job is **11976185**, initially pending for node
+availability, with explicit module/Julia exports and the unchanged one-hour
+allocation. No duplicate or further job is submitted.
