@@ -19517,3 +19517,18 @@ At **12:46 UTC** the job is still `PENDING`, and local/remote verifier hashes
 both equal `5bceccbbf3969d4b7111d07b6fae44e774513301eeaa8139647c86c3ec3fe087`.
 No submitted Slurm script, physical extraction, config or resource request is
 changed, and no second job is submitted.
+
+**Execution and table-only synthesis.** Job **11988093** starts at **12:55:07
+UTC** on **vipc2245**. Its first GlcN control report passes every same-build
+identity; GlcNAc and independent verification are still pending at this point.
+A small-table reporter is prepared without reading physical component
+statistics or changing any running input. It retains all native planes,
+PAW-free gap and lower-half domains, with all/active/inactive GGA subsets.
+Means, spatial SD, extrema, branch fractions and empty/zero-denominator counts
+remain descriptive. A centered-residual triangle bound includes the saved
+maximum additivity error; it is not variance attribution or a potential
+replacement. The utility passes **16/16** synthetic checks under Julia
+**1.13.0**. Its initial decimal `0.21` exact-equality fixture exposes binary
+rounding and is replaced with exactly representable binary fractions; no
+physical datum or tolerance is changed. Neither this reporter nor its tests
+are synchronized into the running job.

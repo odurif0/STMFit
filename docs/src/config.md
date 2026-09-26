@@ -25,6 +25,19 @@ Shared component arithmetic retains the earlier precision bounds, source
 branches and full-plane statistics, with the **same-build electrostatic**
 control; it never mixes components from different builds in an additivity test.
 
+After independent saved-output verification, the small-table reporter
+`test/summarize_qe_xc_components.jl SAVED_PAIRED_RUN NEW_DIRECTORY` retains
+all native planes, the PAW-free gap and its lower half, each with all/active/
+inactive GGA subsets. It reports ranges of component statistics, source-branch
+fractions and explicitly counts empty or zero-XC-SD planes. The centered
+residual after subtracting the divergence term obeys the descriptive bound
+`(SD(lda) + SD(gga_local) + max_abs_additivity_error) / SD(XC)`.
+The error term comes from the saved full-volume additivity check. This is a
+triangle-inequality upper bound, not a fraction of explained variance, a
+physical accuracy threshold or a rule for adopting/subtracting a potential.
+No scientific volume is loaded by this summary; its synthetic tests are in
+`test/test_qe_xc_component_summary.jl`.
+
 ## Accepted-density XC component diagnostic
 
 `config/qe_xc_components.toml` pins an isolated QE 7.4.1 PP extraction of the
