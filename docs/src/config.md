@@ -43,8 +43,11 @@ checks but fails **313** independent relative-L2 assertions; independent
 component-cube checks are not reached. The native Cartesian-view reduction
 defect is reproduced synthetically and corrected by materializing the norm
 reference for dense pairwise summation, retaining the **16-eps** check.
-Full-volume revalidation is still pending. The archived run remains failed;
-its generated component summaries and figure are explicitly provisional.
+The archived run remains failed; its generated component summaries and figure
+remain explicitly provisional. Separate recheck **11989810** completes in
+**21m13s**, passing **22,642** independent control/norm and **70,062**
+component-cube checks with all **26** byte identities unchanged. Its new reports
+qualify attribution at the frozen density, not physical cutoff convergence.
 
 For an analysis-only recheck, `test/qe_xc_build_control.jl prepare-recheck
 SAVED_RUN NEW_RUN` creates relative links to the unchanged exports and a fresh
@@ -83,7 +86,8 @@ PAW-free planes from the completed analysis tables, without selecting a
 matching height. It has been exercised on synthetic tables and on the
 provisional tables from failed job **11988093**; the latter figure is retained
 under `results/xc_build_control_20260926_provisional/`, not as a qualified
-physical result.
+physical result. Qualified summaries and the all-height figure from the
+separate saved-export recheck are in `results/xc_build_recheck_20260926/`.
 
 Attempt **11982255** stops at the cross-build density byte-identity guard
 after the first GlcN extraction. The source helper compiles, but repeats,
@@ -91,7 +95,8 @@ GlcNAc and real component validation are not reached. First differences are
 at printed last digits; they do not bound the whole-volume discrepancy.
 The guard remains unchanged and the partial fields are not validated physical
 components. The same-build follow-up **11988093** passes those identities but
-still awaits complete independent validation after its norm-reduction failure.
+fails the norm check; qualification comes from the independently completed,
+separately archived recheck **11989810**, not from relabeling that failed job.
 
 ## Accepted-state vacuum potential diagnostic
 

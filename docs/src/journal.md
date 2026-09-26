@@ -2304,33 +2304,32 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
-0bp. **Can build effects be separated from the XC extraction?** The paired
-analysis-only recheck **11989810** is now running on the preserved exports;
-its independent result is pending. The prior paired
-executables in **11988093** pass all **26** same-build identities for both
-states, but the job ends **FAILED 1:0** after **25m44s**. Independent checking
-passes **22,289** assertions and fails **313**, all on the descriptive
-relative-L2 reduction; the independent component-cube suite is not reached.
-A label-free synthetic native-layout fixture reproduces precision loss when
-summing a Cartesian array view. Materializing the norm reference fixes that
-fixture without changing the **16-eps** check; **18 + 32 + 16** focused tests
-pass. Full-volume revalidation is still required, so component statistics and
-the figure remain provisional. No second job is submitted in this cycle.
-The next computation should only reanalyze the saved exports and complete
-independent checking, not repeat QE or change physics. Both archived failed
-jobs remain failed; no new potential, calibration or champion is adopted.
+0bp. **Can build effects be separated from the XC extraction?** **Yes, for the
+two frozen states.** Analysis-only recheck **11989810** completes **0:0** in
+**21m13s**, passing **22,642** independent control/norm checks and **70,062**
+independent component-cube checks. All **26** same-build identities hold;
+the Cartesian-view norm correction passes without relaxing **16 eps**.
+The complete old source archive is unchanged and the new reports are fetched
+and checksum-verified. Native cross-build maximum total differences are
+**8.3e-9 / 8.7e-9 Ry**, descriptive bounds rather than a fitted accuracy gate.
+The earlier failed jobs remain failed; qualification belongs to the separately
+recomputed reports. No new potential, calibration or champion is adopted.
 
 0bo. **Which accepted-density/XC operation carries the vacuum variation?**
-**Not yet independently qualified.** Job **11982255** compiles and exports the first GlcN
-components, then fails the predeclared cross-build density byte-identity
-control. Its first differing value differs by **1e-11 electrons/Bohr^3**;
-that first witness is not a whole-volume bound. Native and cube total-potential
-controls also differ. No repeats, GlcNAc extraction or independent component
-verification run. All partial outputs are fetched, all checkpoint hashes are
-unchanged, and the guard is not relaxed. The paired follow-up **11988093**
-passes the within-build controls but stops at independent norm verification
-(0bp). Its generated component statistics do not yet qualify a physical
-attribution. Density/cutoff sensitivity is not tested by either PP-only run.
+**Attribution is qualified at the accepted density, not its convergence.**
+In the geometry-defined lower halves, local-density XC has larger spatial SD
+than either GGA term on **61/61 GlcN and 57/57 GlcNAc** planes, with minima
+**0.14727/0.14941 eV**. Across the full PAW-free gaps it is the largest
+component on **93/122 and 88/115** planes; divergence is largest on the
+remaining **29/122 and 27/115**. These rankings are not variance fractions.
+Native density counts reach **50.07/49.78%** negative valence and
+**53.31/53.77%** negative core-corrected XC input within a plane. Small global
+negative-charge integrals therefore do not establish local tail accuracy.
+No single GGA-only explanation, density clipping or potential subtraction is
+qualified. Density-representation/cutoff sensitivity is the next test; it has
+not been measured. The user approves a separate 360-to-720-Ry sensitivity test,
+limited to two sequential eight-CPU jobs of at most four hours each, without
+changing the geometries, PBE, wavefunction cutoff or 5e-5-Ry acceptance.
 
 0bn. **Is a vacuum-tail construction compatible with the accepted local
 effective potentials?** **No constant-potential matching region is qualified
@@ -19652,3 +19651,79 @@ Julia 1.13 export, one task/one CPU requested, 8 GB, one hour and no requeue.
 Slurm allocates **two logical CPUs** to that request; Julia and BLAS remain
 single-threaded. This fits the observed shared quota. No second submission
 or modification of running inputs is made.
+
+**Completed revalidation.** Job **11989810** runs **16:58:47--17:20:00 UTC**,
+**21m13s**, and completes **0:0**. All **26** stock/extraction/repeat identities,
+**86.4 million** control native/cube comparisons, **151.2 million** component
+native/cube comparisons and both **10.8-million-voxel** additivity/source-mask
+checks pass. The independent saved-output suites pass **22,642 + 70,062 =
+92,704** assertions, including the complete 3-D norms and the component-cube
+suite not reached previously. The job also passes **18 + 35 + 14** synthetic
+checks. No numerical tolerance is relaxed. The final source-archive hash check
+passes before `XC_SAVED_EXPORT_RECHECK_COMPLETE` is printed.
+
+**Fetched and compared.** All new reports/logs and portable input links are
+fetched into `qe/xc_build_recheck_20260926/`: **2,143,028 bytes**, 23 regular
+files, 49 links and seven directories. A checksum dry-run reports zero
+differences. A local SHA-256 check independently matches all **176** files in
+the old source-archive manifest, including its unmodified failed reports and
+executables. No copied checkpoint or raw scientific volume is duplicated or
+recomputed locally. The old jobs **11982255/11988093** remain failed.
+
+Fourteen small-table preservation assertions pass under Julia **1.13.0**.
+Component statistics, counts and native/cube comparison tables are byte-identical
+to the provisional tables. Only `relative_l2` changes in the control reports:
+**675/680** plane values and **three/three** volume values for GlcN/GlcNAc;
+every other reported value remains identical. New summaries and the visually
+inspected all-plane figure are in `results/xc_build_recheck_20260926/`.
+The older `_provisional/` directory is retained, not silently relabeled.
+
+**Cross-build result.** Across every native voxel, maximum stock/site density
+differences are **1e-11 / 1e-10 electrons/Bohr^3**, total-potential differences
+**8.3e-9 / 8.7e-9 Ry** (about **1.13e-7 / 1.18e-7 eV**), and electrostatic
+differences **1e-9 Ry** for each state. The corrected relative-L2 reports now
+pass their independent checks. These observed differences cannot account for
+the order-0.2-eV-or-larger lateral potential SD measured previously; this is
+a comparison of measured scales, not adoption of a cross-build tolerance.
+
+**Physical attribution, with limits.** All domains and source subsets are
+retained. In the full PAW-free gaps, local-density XC has the largest individual
+component spatial SD on **93/122 GlcN** and **88/115 GlcNAc** planes; negative
+FFT divergence is largest on the other **29/122** and **27/115**. In the
+geometry-defined lower halves, local-density XC is larger than both GGA terms
+on every plane (**61/61 and 57/57**). Its SD spans **0.14727--1.28176 /
+0.14941--1.71826 eV**, while total XC SD spans **0.19515--1.23040 /
+0.19821--1.57914 eV** there. A component ranking is not an explained-variance
+fraction: covariances/cancellations matter. In particular, the report's
+triangle-inequality upper bounds are not measured residual errors or lower
+bounds, and no potential component is subtracted.
+
+Native counting finds lower-half negative-valence fractions **16.89--50.07% /
+9.59--49.78%** and negative core-corrected XC-input fractions
+**17.96--53.31% / 11.33--53.77%**. These count fractions do not measure missing
+charge or an artifact's potential amplitude. Integrated negative valence is
+only **0.00724418/0.00656360 electrons** over the whole cell; a small integral
+does not imply reliable local vacuum tails. Source-inactive GGA subsets have
+zero local GGA but nonzero divergence on every nonempty PAW-free plane
+(**108/108 and 98/98**), consistent with the nonlocal FFT operation. No density
+sign is clipped or reinterpreted as a tunneling observable.
+
+**Next scientific question.** The [QE input documentation](https://www.quantum-espresso.org/Doc/INPUT_PW.html)
+requires charge-cutoff testing for PAW datasets and highlights GGA/vacuum
+sensitivity. Its relevant guidance also appears in the pinned QE 7.4.1
+`PW/Doc/INPUT_PW.def`; the current online manual is 7.5. The
+[PW troubleshooting guide](https://www.quantum-espresso.org/Doc/pw_user_guide/node21.html)
+describes loss of positivity under finite Fourier truncation. This motivates
+a density/cutoff sensitivity test; it does **not** prove that all measured
+variation is numerical or establish a converged cutoff from the present data.
+The guide's generic global-charge warning is not imported as a local-tail
+acceptance criterion. No new SCF or parameter selection occurs in this cycle.
+
+The user explicitly approves a separate **360-to-720-Ry charge-cutoff
+sensitivity comparison** on the two accepted geometries, keeping PBE,
+wavefunction cutoff and **5e-5-Ry** acceptance fixed, bounded to two sequential
+eight-CPU jobs of at most four hours each. It is a two-point sensitivity
+measurement, not proof of cutoff convergence; mold/champion replacement is
+excluded. No cutoff job has been submitted at this approval checkpoint. The
+present attribution diagnostic is complete; the full **694/43/855** target
+remains unmet and the goal remains active.

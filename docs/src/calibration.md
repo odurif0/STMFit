@@ -68,10 +68,21 @@ That follow-up, **11988093**, passes the within-build identities and internal
 native/cube/additivity checks, but fails **313** independent descriptive
 relative-L2 checks. A Cartesian-view summation defect is reproduced without
 physical data and corrected locally, without relaxing the **16-eps** check.
-The independent component-cube suite was not reached; no physical attribution
-is qualified yet. Existing derived tables/figures remain provisional pending
-a separately bounded reanalysis of the saved exports. No additional QE run,
-matching plane, calibration or potential replacement is made in this cycle.
+The independent component-cube suite was not reached; that run and its derived
+tables/figures remain provisional. Separate saved-export recheck **11989810**
+passes all **92,704** independent control/norm/component checks with unchanged
+source hashes and precision bounds. No new QE computation is used.
+
+Attribution is now qualified at the fixed accepted density. Local-density XC
+has the largest individual component SD on all **61/61 and 57/57** lower-gap
+planes (minima **0.14727/0.14941 eV**). Across the full gaps it is largest on
+**93/122 and 88/115** planes, with divergence largest on the remainder. These
+are SD rankings, not variance fractions; cancellations prevent interpreting
+their ratios as explained variance. Native valence-density negative fractions
+reach **50.07/49.78%** within a plane despite small whole-cell negative-charge
+integrals. Neither a GGA-only cause nor accurate local tails follow from those
+integrals. This does not establish cutoff convergence or justify a matching
+plane, density clipping, calibration or potential replacement.
 
 ## Atomic z origin is not an observed STM background
 

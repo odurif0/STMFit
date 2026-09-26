@@ -185,7 +185,24 @@ constant-current feedback loop.
 
 ## Diagnostic constant-current observable
 
-**September 26 paired-build XC follow-up (still not qualified).** Job
+**September 26 saved-export XC revalidation.** Separate analysis-only job
+**11989810** completes in **21m13s** with **22,642** independent control/norm
+and **70,062** component-cube checks, retaining all **26** byte identities and
+the original **16-eps** norm bound. Source archive hashes remain unchanged;
+new reports are fetched and checksum-verified. No QE or SCF is rerun. Native
+cross-build maximum total-potential differences are **8.3e-9/8.7e-9 Ry**,
+reported descriptively rather than accepted against a fitted tolerance.
+
+The decomposition at the accepted density is qualified. Local-density XC has
+the largest individual spatial SD on **93/122 GlcN and 88/115 GlcNAc**
+PAW-free planes and every **61/57** lower-half plane; divergence is largest
+on the remaining full-gap planes. SD rankings are not explained-variance
+fractions. Native negative valence fractions reach **50.07/49.78%** within a
+plane, so small global negative-charge integrals do not establish local-tail
+accuracy. This is not density/cutoff convergence, a GGA-only explanation,
+a justified potential substitution or a new mold/recognition result.
+
+**September 26 paired-build XC follow-up (historically failed).** Job
 **11988093** runs for **25m44s**, passing all **26** same-build byte identities
 and internal native/cube/additivity checks for both accepted states. It then
 ends **FAILED 1:0**: independent checking passes **22,289** assertions and
@@ -193,8 +210,8 @@ fails **313**, all on the descriptive relative-L2 norm reduction. Independent
 component-cube checking is not reached. The Cartesian-view summation issue
 is reproduced synthetically and corrected locally without changing the
 **16-eps** criterion, any exported field or any physical parameter. The full
-saved exports still require independent revalidation; preliminary component
-tables and plots are not a qualified attribution. All outputs and both
+saved exports subsequently pass the separate revalidation above; its original
+component tables and plots remain provisional. All outputs and both
 executables are fetched; post-failure checks confirm the pinned original
 density/wavefunction and copied checkpoint hashes are unchanged. No second
 job, SCF, threshold change, mold replacement or champion promotion follows.
