@@ -25,6 +25,16 @@ vacuum level, matching plane, reference, mold or benchmark result is adopted.
 Use `test/qe_vacuum_potential.jl --help` for metadata-only preparation and
 compute-node analysis. The scientific batch must not run on a login node.
 
+The completed export **11981276** checks all **43.2 million** native/cube
+values; the independent saved-output suite passes **63,784** assertions.
+The smallest full-plane lateral total-potential spans over the declared gap
+are **1.2921/1.2939 eV** for GlcN/GlcNAc. No plane is adopted. The lightweight
+`test/summarize_qe_vacuum_potential.jl SAVED_RUN NEW_TSV` reports ranges on
+the two previously declared geometry domains, with positive-only barrier
+descriptors explicitly conditional. The plot command is
+`test/plot_qe_vacuum_potential.jl SAVED_RUN NEW_PNG`; it shows every PAW-free
+plane, full lateral extrema and spatial SD without a fitted trend or cutoff.
+
 ## Whole-molecule exterior of saved reference sites
 
 `config/molecular_exterior.toml` pins the existing grid, roots and reports.

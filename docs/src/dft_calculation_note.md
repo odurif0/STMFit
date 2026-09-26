@@ -185,6 +185,25 @@ constant-current feedback loop.
 
 ## Diagnostic constant-current observable
 
+**September 26 local effective potential.** PP-only job **11981276** completes
+in **4m07s** on complete copies of the accepted states. Total local potential
+(`plot_num=1`) and electrostatic control (`plot_num=11`) are exported; the
+total repeats byte for byte in native and cube formats. All **43.2 million**
+native/cube comparisons lie within declared printing bounds, **63,784**
+independent saved-output checks pass, and original/copy state hashes remain
+unchanged. All new exports and reports are fetched and checksum-identical.
+
+Across the **122/115** complete PAW-free native planes, GlcN/GlcNAc lateral
+total-potential spans range from **1.2921--13.9877 / 1.2939--12.3596 eV**.
+Minimum spatial SD is **0.2038/0.2021 eV**. Even where every sampled barrier
+is positive, lateral span/mean barrier is at least **0.3283/0.3072**.
+XC SD exceeds electrostatic SD on **235/237** planes. This identifies a
+component to investigate, not a demonstrated density-tail artifact or
+cutoff-convergence result. No flatness criterion, matching plane, wavefunction
+continuation or potential replacement is adopted. In particular the
+electrostatic control is not a substitute Hamiltonian. Both the common
+**5e-5 Ry** electronic acceptance and production molds remain unchanged.
+
 **September 25 off-projection reference diagnostic.** Job **11980577**
 completes in **19m02s**, with **582,693** independent saved-output checks.
 Geometry alone retains **474/768** common cell-grid sites outside both

@@ -2305,12 +2305,19 @@ See `docs/src/selection.md` for the full guard specification and
 ## Open Questions
 
 0bn. **Is a vacuum-tail construction compatible with the accepted local
-effective potentials?** In progress, bounded to two hours from approximately
-22:07 UTC September 25 (September 26 local time), at most one PP-only job.
-Export total and electrostatic potentials on unchanged accepted states, retain
-all native planes, quantify lateral and vertical variation and selected-band
-barriers. No SCF, matching plane/flatness cutoff, propagation, mold replacement,
-reference adoption or recognition claim belongs to this cycle.
+effective potentials?** **No constant-potential matching region is qualified
+by the completed diagnostic.** PP-only job **11981276** completes in 4m07s;
+all 43.2 million native/cube comparisons and 63,784 independent saved-output
+checks pass. Across all 122/115 full-plane PAW-free heights, even the smallest
+lateral total-potential spans are **1.2921/1.2939 eV**, with minimum spatial
+SD **0.2038/0.2021 eV**. Positive sampled barriers do not imply a flat
+potential: their span/mean-barrier ratios are at least **0.3283/0.3072**.
+XC spatial SD exceeds the electrostatic SD on **235/237** planes; this locates
+the larger component variation, not its physical or numerical cause.
+No flatness cutoff, matching plane, propagation, mold/reference replacement
+or recognition claim follows. Density/XC handling and cutoff sensitivity are
+the next questions, before any vacuum-tail construction; neither has been
+tested by this PP-only export. The 5e-5-Ry electronic gate remains unchanged.
 
 0bm. **Does a common exterior of the complete molecular footprints support a
 less ambiguous height reference?** **No improvement from whole-footprint
@@ -19133,3 +19140,107 @@ Ry/Hartree and Bohr/nm factors, constant and varying barriers, nonpositive
 barriers and gauge-shift invariance. Both logs are retained. Geometry-only
 preparation records **237 full-plane PAW-free native heights** across both
 states, before reading any potential values. No job is submitted yet.
+
+**Single submission.** Source **0607704** and its six new compute files are
+committed before transfer. Source and prepared-payload rsync dry-runs precede
+actual transfer; remote hashes match locally, existing Project/Manifest and
+reader dependency hashes match, and Julia reports **1.13.0**. Shell checks and
+Slurm test-only **11981275** pass; that number is not a submitted job. The sole
+real job **11981276** is submitted at approximately **22:29 UTC September 25**,
+with explicit `--export=ALL,JULIA_BIN=/u/oldu/software/julia-1.13.0/bin/julia`,
+eight MPI ranks, 96 GB, one hour and no requeue. Six PP calls (total,
+electrostatic, total repeat for each state) are followed by native/cube checks
+and an independent cube-derived plane/barrier reader. No further job or retry
+is included in this cycle. Test-only does not validate the compute environment;
+the real logs and terminal accounting must do that.
+
+**Completed and fetched.** Job **11981276** is `COMPLETED (0:0)`, from
+**22:31:46 to 22:35:53 UTC September 25**, **4m07s** on `vipc2222`, with six
+successful PP steps and no retry/requeue. The allocation exposes 16 hardware
+CPUs for the eight MPI tasks. Slurm reports 13m20.781s total CPU, 821,590 KiB
+batch MaxRSS, and PP per-task MaxRSS at most 475,615 KiB. Each molecule's total
+native/cube exports repeat byte for byte. Hash checks confirm every copied
+checkpoint file and the original density/WFC files unchanged.
+
+All **43,200,000** native/cube value comparisons pass; the largest whole-cell
+absolute export difference is **0.00049998 Ry**, within the format's decimal
+rounding envelope, with maximum error/bound ratio **0.9999900**. This is an
+export-precision check, not a physical potential error estimate. The compute
+node passes **34/34** synthetic tests and **63,784/63,784** independent
+cube-derived plane/barrier checks. All **500** native planes and **6,250**
+selected-band/plane records remain in the saved analysis, including negative
+barriers and non-vacuum planes.
+
+The dry-run precedes a nondeleting rsync fetch. The complete new-export/report
+tree is **1,976,353,960 bytes** including its preparation inputs; only `work/`
+(full copies of already archived accepted checkpoints) is excluded. A second
+checksum-mode dry-run returns no differences. Results are under
+`qe/vacuum_potential_20260926/`; descriptive summaries and figures are under
+`results/vacuum_potential_20260926/`. No completed job is resubmitted.
+
+**Quantitative physical result.** The two domains were defined from accepted
+geometry before potential access. The following spans/SDs cover the entire
+lateral native plane at every included height; no favorable plane or mask is
+selected. All energies below are eV; positive counts mean positive barriers
+at every sampled lateral point, not continuous-space certification.
+
+| State / geometry domain | Planes | Plane-mean total minus Fermi | Lateral total span | Lateral total SD | Positive band/planes |
+| --- | ---: | --- | --- | --- | ---: |
+| GlcN / complete PAW-free gap | 122 | -1.4499 to 3.8034 | 1.2921 to 13.9877 | 0.2038 to 1.4777 | 1139/1464 |
+| GlcN / lower geometric half | 61 | 2.4386 to 3.7312 | 1.2921 to 13.9877 | 0.2038 to 1.4777 | 599/732 |
+| GlcNAc / complete PAW-free gap | 115 | -1.8633 to 4.0250 | 1.2939 to 12.3596 | 0.2021 to 1.8870 | 1134/1495 |
+| GlcNAc / lower geometric half | 57 | 2.3505 to 4.0250 | 1.3132 to 12.3596 | 0.2048 to 1.8870 | 594/741 |
+
+Across complete gaps, the band-dependent pointwise sampled barriers span
+**-8.7056 to 6.7803 eV** (GlcN) and **-6.4363 to 7.2511 eV** (GlcNAc).
+Restricting the *descriptive ratio* to all-sampled-positive pairs, the minimum
+lateral span/mean barrier is still **0.3283/0.3072**. This conditional summary
+does not discard any failed/nonpositive outcome in the underlying tables,
+choose a propagation domain, or provide a numerical error bound on STM height.
+
+The XC contribution's spatial SD exceeds the electrostatic control's on
+**121/122 GlcN and 114/115 GlcNAc planes**. Its smallest plane SD is
+**0.19515/0.19821 eV**, compared with **0.02252/0.00884 eV** for electrostatic
+SD (separate extrema, not necessarily at the same plane). The original PP
+logs report `negative rho` **7.244e-3 / 6.564e-3** and negative core charge
+warnings. Those global messages neither localize the negative samples nor
+prove that they cause the vacuum XC variation. No density/cutoff experiment
+is run in this cycle.
+
+**Decision and next physical question.** This result does **not** qualify a
+constant-potential full-plane matching region for the proposed tail model.
+No material-specific flatness threshold from another system is imported and
+no new threshold is tuned here. A positive average barrier or a smooth
+plane-averaged electrostatic curve is insufficient: the total potential
+contains resolved lateral variation, and it is the total potential that
+belongs in the local Hamiltonian. Dropping XC, choosing the minimum-spread
+plane, fitting a vacuum energy to contrast, or imposing monotonic tails would
+not be a validated repair.
+
+The next useful question is the origin and numerical stability of this XC
+variation: inspect the accepted density's low-density handling and separate
+any numerical-cutoff sensitivity from genuine spatial variation. Potential
+export/repeat precision is not that convergence test. This remains a distinct
+bounded physical investigation before matching/propagating wavefunctions,
+and does not change the common **5e-5 Ry** electronic acceptance. Production
+providers, preprocessing, current calibration, `N_selected`, unit decisions,
+unknown-chain outputs and the champion are all unchanged. No labels or
+benchmark grade enter this diagnostic; no recognition improvement is claimed.
+
+**Local presentation checks and time box.** The lightweight four-domain
+summary passes **87/87** table-arithmetic/count/overwrite checks and reproduces
+its TSV byte for byte. The first figure's outside legends touch the x labels;
+moving them into unused plot space fixes the presentation without changing
+data or axes. Both figures remain archived, and the final image is inspected.
+At the next explicit clock check (**00:16:57 UTC September 26**), the two-hour
+wall-clock box has elapsed; all HPC work ended at 22:35:53 and exports were
+already fetched. From that check onward, only existing small-table validation,
+documentation and commit closure are performed, not another scientific
+variant or job. The full objective remains active and unmet.
+
+The saved-table test is reproducible with
+`test/test_qe_vacuum_potential_summary.jl SAVED_RUN SAVED_SUMMARY_TSV`;
+its standalone rerun also passes **87/87** checks. Documentation builds under
+Julia **1.13.0** with `--build-only` and a writable temporary depot over the
+existing read-only depot. It completes without deployment, with the existing
+page/search size warnings and no raised limits. `git diff --check` passes.

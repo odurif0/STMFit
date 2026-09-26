@@ -3,7 +3,7 @@
 ## Potential qualification precedes vacuum-tail propagation
 
 A geometrically empty region is not necessarily a region of constant local
-effective potential. The next PP-only diagnostic exports the accepted-state
+effective potential. The completed PP-only diagnostic exports the accepted-state
 total potential and its electrostatic control, retaining every native lateral
 pixel and height. It tags the geometry-only all-atom PAW-free gap without
 selecting a matching height or flatness threshold. This supplies necessary
@@ -18,7 +18,24 @@ the boundary wavefunctions are accurate. Report these limitations and the
 sampled variation before attempting a continuation. The material-specific
 height and flatness criterion in [Park and Yoon's supplementary method](https://www.nature.com/articles/s41598-022-10870-0)
 are not calibration values for these chitosan cells. No production change is
-made by preparing this diagnostic.
+made by this diagnostic.
+
+Job **11981276** exports and checks both accepted states without changing
+their density or wavefunctions. Across **122/115** PAW-free planes, the full
+lateral total-potential range is never below **1.2921/1.2939 eV** and spatial
+SD is never below **0.2038/0.2021 eV**. Among band/plane pairs positive at
+every sampled lateral point, the range/mean-barrier ratio is at least
+**0.3283/0.3072**. These are descriptive extrema, not a new physical
+acceptance threshold or a bound between grid nodes. No constant-potential
+matching region is qualified or selected by this result.
+
+XC spatial SD is larger than the electrostatic SD on **235/237** planes.
+The PP logs also report negative-density warnings, but these global messages
+do not establish where those values occur or explain the local XC variation.
+Do not silently substitute the smoother electrostatic potential for the
+effective potential, clip density, or impose a borrowed vacuum level. The
+density/XC treatment and numerical-cutoff dependence need separate examination;
+the accepted electronic convergence criterion is not changed by this finding.
 
 ## Atomic z origin is not an observed STM background
 
