@@ -2305,6 +2305,8 @@ See `docs/src/selection.md` for the full guard specification and
 ## Open Questions
 
 0bp. **Can build effects be separated from the XC extraction?** The paired
+analysis-only recheck **11989810** is now running on the preserved exports;
+its independent result is pending. The prior paired
 executables in **11988093** pass all **26** same-build identities for both
 states, but the job ends **FAILED 1:0** after **25m44s**. Independent checking
 passes **22,289** assertions and fails **313**, all on the descriptive
@@ -19640,3 +19642,13 @@ pass. Checksum dry-runs show all common readers, Project/Manifest, configs,
 helper and patch are unchanged remotely; only the two analysis/test scripts
 and the new batch need synchronization. The prepared run has one regular
 batch file and links, with no scientific volume copied or analyzed locally.
+
+**Single submission.** Implementation and preparation are committed as
+**662b093**. Post-transfer checksum dry-runs are empty; remote shell/Julia
+help checks pass and every input link resolves. Slurm test-only **11989808**
+is not a submitted job. The sole real job **11989810** is submitted at
+**16:58:27 UTC** and starts at **16:58:47 UTC** on **vipc2245**, with explicit
+Julia 1.13 export, one task/one CPU requested, 8 GB, one hour and no requeue.
+Slurm allocates **two logical CPUs** to that request; Julia and BLAS remain
+single-threaded. This fits the observed shared quota. No second submission
+or modification of running inputs is made.
