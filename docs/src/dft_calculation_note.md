@@ -185,6 +185,20 @@ constant-current feedback loop.
 
 ## Diagnostic constant-current observable
 
+**September 26 paired-build XC follow-up (still not qualified).** Job
+**11988093** runs for **25m44s**, passing all **26** same-build byte identities
+and internal native/cube/additivity checks for both accepted states. It then
+ends **FAILED 1:0**: independent checking passes **22,289** assertions and
+fails **313**, all on the descriptive relative-L2 norm reduction. Independent
+component-cube checking is not reached. The Cartesian-view summation issue
+is reproduced synthetically and corrected locally without changing the
+**16-eps** criterion, any exported field or any physical parameter. The full
+saved exports still require independent revalidation; preliminary component
+tables and plots are not a qualified attribution. All outputs and both
+executables are fetched; post-failure checks confirm the pinned original
+density/wavefunction and copied checkpoint hashes are unchanged. No second
+job, SCF, threshold change, mold replacement or champion promotion follows.
+
 **September 26 XC component attempt (not qualified).** Job **11982255**
 compiles the isolated PP helper and produces the first GlcN native components,
 then stops at the required byte comparison with the site density control.

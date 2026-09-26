@@ -45,6 +45,20 @@ end
     @test isapprox(compensated_squares(reference),Float64(BigFloat(.3)^2*length(reference));rtol=eps())
     fullplane=B.differences(perturbed,reference,p)
     @test isapprox(fullplane.relative_l2,sqrt(compensated_squares(perturbed.-reference)/compensated_squares(reference));rtol=16eps())
+    # Match readplot's range-indexed Cartesian view, not just a dense matrix
+    # or a colon-indexed contiguous view. The unmaterialized reduction fails
+    # this label-free fixture by about 2.78e-13 relatively, with zero padding too.
+    for padding in (0,1,2)
+        storage=fill(.3,240+padding,180,1)
+        shifted=storage.+reshape([1e-9*cos(i/7) for i in eachindex(storage)],size(storage))
+        native=view(storage,1:240,1:180,:); candidate=view(shifted,1:240,1:180,:)
+        a=view(candidate,:,:,1); b=view(native,:,:,1)
+        @test IndexStyle(typeof(b))==IndexCartesian()
+        observed=B.differences(a,b,p).relative_l2
+        expected=sqrt(compensated_squares(a.-b)/compensated_squares(b))
+        @test isapprox(observed,expected;rtol=16eps())
+        @test observed==B.differences(copy(a),copy(b),p).relative_l2
+    end
     mktempdir() do dir
         cp(CONFIG,joinpath(dir,"settings.toml"))
         for m in B.R.MOLECULES

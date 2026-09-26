@@ -64,6 +64,15 @@ compared with that build's total minus electrostatic control. Even a successful
 attribution would be a numerical diagnostic, not density/cutoff convergence,
 a repaired vacuum Hamiltonian or a recognition improvement.
 
+That follow-up, **11988093**, passes the within-build identities and internal
+native/cube/additivity checks, but fails **313** independent descriptive
+relative-L2 checks. A Cartesian-view summation defect is reproduced without
+physical data and corrected locally, without relaxing the **16-eps** check.
+The independent component-cube suite was not reached; no physical attribution
+is qualified yet. Existing derived tables/figures remain provisional pending
+a separately bounded reanalysis of the saved exports. No additional QE run,
+matching plane, calibration or potential replacement is made in this cycle.
+
 ## Atomic z origin is not an observed STM background
 
 Subtracting the lowest (or highest) Cu atomic coordinate from a calculated

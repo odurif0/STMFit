@@ -2304,25 +2304,31 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
-0bp. **Can build effects be separated from the XC extraction?** Job **11988093**
-is submitted after SSH restoration; its scientific controls are still pending.
-A stock/extraction executable pair will share the same configure and compiled
-libraries. Exact within-build density/total controls and repeats remain
-mandatory. All-native-voxel differences against the site build are descriptive;
-no cross-build tolerance is fitted. Component analysis is conditional on both
-accepted states passing these controls, using same-build electrostatics.
-The failed 11982255 remains failed, and no physical potential is adopted.
+0bp. **Can build effects be separated from the XC extraction?** The paired
+executables in **11988093** pass all **26** same-build identities for both
+states, but the job ends **FAILED 1:0** after **25m44s**. Independent checking
+passes **22,289** assertions and fails **313**, all on the descriptive
+relative-L2 reduction; the independent component-cube suite is not reached.
+A label-free synthetic native-layout fixture reproduces precision loss when
+summing a Cartesian array view. Materializing the norm reference fixes that
+fixture without changing the **16-eps** check; **18 + 32 + 16** focused tests
+pass. Full-volume revalidation is still required, so component statistics and
+the figure remain provisional. No second job is submitted in this cycle.
+The next computation should only reanalyze the saved exports and complete
+independent checking, not repeat QE or change physics. Both archived failed
+jobs remain failed; no new potential, calibration or champion is adopted.
 
 0bo. **Which accepted-density/XC operation carries the vacuum variation?**
-**Not yet attributed.** Job **11982255** compiles and exports the first GlcN
+**Not yet independently qualified.** Job **11982255** compiles and exports the first GlcN
 components, then fails the predeclared cross-build density byte-identity
 control. Its first differing value differs by **1e-11 electrons/Bohr^3**;
 that first witness is not a whole-volume bound. Native and cube total-potential
 controls also differ. No repeats, GlcNAc extraction or independent component
 verification run. All partial outputs are fetched, all checkpoint hashes are
-unchanged, and the guard is not relaxed. The next discriminating test is
-paired stock/instrumented executables from the same build, separating
-cross-build variation from extraction effects. No new job is run in this cycle.
+unchanged, and the guard is not relaxed. The paired follow-up **11988093**
+passes the within-build controls but stops at independent norm verification
+(0bp). Its generated component statistics do not yet qualify a physical
+attribution. Density/cutoff sensitivity is not tested by either PP-only run.
 
 0bn. **Is a vacuum-tail construction compatible with the accepted local
 effective potentials?** **No constant-potential matching region is qualified
@@ -19532,3 +19538,62 @@ replacement. The utility passes **16/16** synthetic checks under Julia
 rounding and is replaced with exactly representable binary fractions; no
 physical datum or tolerance is changed. Neither this reporter nor its tests
 are synchronized into the running job.
+
+**Terminal result: independent verification fails.** The sole job runs
+**12:55:07--13:20:51 UTC**, **25m44s**, on **vipc2245**, ending **FAILED 1:0**.
+Both builds retain all required compiled-object/library and configure hashes.
+Both states pass all **26** byte identities, **86.4 million** control
+native/cube comparisons and **151.2 million** component native/cube comparisons
+in the production analyzers. Full-volume additivity passes on each state's
+**10.8 million** voxels (maximum error **9.9599999914e-9 / 1.0053798911e-8 Ry**;
+maximum error/declared-bound **0.99513 / 0.99043**). Source branches are definite
+and consistent on every voxel, with zero printing-ambiguous cases. These are
+passed internal checks, not completion of the independent validation.
+
+The saved-output verifier passes **22,289** assertions and fails **313**, all
+at its relative-L2 check. Among these failures the relative discrepancy is
+**3.5578e-15--1.1257e-14**, against the unchanged **16 eps = 3.5527e-15** bound;
+the largest absolute difference between these dimensionless norm ratios is
+**8.7888e-25**. This is not a potential error in Ry or an accuracy criterion for
+the physics. The **18 + 23** synthetic tests in the job pass. Because the
+first saved-output testset throws, independent component-cube statistics and
+branch tests are **not reached**. The job is not reclassified as successful.
+
+**Provisional outputs retained.** The two completed analysis tables were
+fetched and checksum-verified while independent checking ran. The table-only
+reporter and plotter were exercised on them, and the figure was visually
+inspected. After the independent failure those derived files are retained
+under `results/xc_build_control_20260926_provisional/`; they are not qualified
+physical conclusions or eligible production inputs. Their creation changes
+neither a saved field nor any acceptance criterion. No component is removed,
+no favorable height is selected, and no density/cutoff claim follows.
+
+**Cause reproduced without physical data.** The first synthetic reference
+fixture tested a dense matrix, not the native reader's Cartesian range-indexed
+view. A constant-0.3 **240 x 180** native-layout view plus a 1e-9 cosine
+perturbation reproduces the failure locally: reported relative L2
+**2.3570388772130734e-9**, compensated reference **2.357038877213729e-9**,
+relative discrepancy **2.78e-13**. The failure occurs with **zero, one or two**
+padding columns. A colon-indexed contiguous view and a dense matrix do not
+reproduce it. The generic Cartesian-view norm reduction accumulates less
+accurately than the dense pairwise reduction; the prior reference-only fix
+therefore did not cover the production input layout.
+
+The targeted correction materializes only the norm reference before
+`sum(abs2, ...)`; the difference array is already dense. The independent
+compensated reference and **16-eps** check are unchanged. Nine new assertions
+exercise the actual view layout, padding, compensated reference and exact
+dense/view agreement. Focused suites pass **18 component, 32 paired-control
+and 16 table-summary** checks under Julia **1.13.0**. No accepted state, field,
+helper, source threshold, configuration or archived result is modified. No
+full-volume analysis is rerun locally and no second Viper job is submitted.
+
+**Integrity and next step.** Post-failure read-only SHA-256 checks confirm that
+the pinned original density/wavefunction files and every copied checkpoint
+file are unchanged. All outputs, logs and
+both executables are fetched under `qe/xc_build_control_20260926/`, excluding
+only copied `work/` checkpoints: **11,203,940,207 bytes**. The final checksum
+dry-run reports **zero** changed, created or deleted files. A separate bounded
+analysis-only recheck of these saved exports is needed to complete independent
+component validation. Rebuilding/re-extracting QE is not justified by the
+reproduced norm defect. The record remains unmet and the champion unchanged.

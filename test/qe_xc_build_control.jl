@@ -69,7 +69,10 @@ function differences(a,b,p)
         within+=d[q]<=bound
         ratio=max(ratio,bound>0 ? d[q]/bound : iszero(d[q]) ? 0. : Inf)
     end
-    normref=sum(abs2,b); normdiff=sum(abs2,delta)
+    # Native grids are Cartesian SubArrays, even without physical padding.
+    # Their generic reduction can accumulate serially; materialization gives
+    # the same pairwise sum as a dense plane. Delta is already a dense array.
+    normref=sum(abs2,collect(b)); normdiff=sum(abs2,delta)
     (;samples=length(a),different=count(!iszero,delta),maximum_absolute=maximum(d),
         mean_signed=mean(delta),mean_absolute=mean(d),rms=sqrt(normdiff/length(a)),
         relative_l2=normref>0 ? sqrt(normdiff/normref) : iszero(normdiff) ? 0. : Inf,

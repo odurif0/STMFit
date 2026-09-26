@@ -38,6 +38,14 @@ physical accuracy threshold or a rule for adopting/subtracting a potential.
 No scientific volume is loaded by this summary; its synthetic tests are in
 `test/test_qe_xc_component_summary.jl`.
 
+Job **11988093** passes within-build identities and internal export/additivity
+checks but fails **313** independent relative-L2 assertions; independent
+component-cube checks are not reached. The native Cartesian-view reduction
+defect is reproduced synthetically and corrected by materializing the norm
+reference for dense pairwise summation, retaining the **16-eps** check.
+Full-volume revalidation is still pending. The archived run remains failed;
+its generated component summaries and figure are explicitly provisional.
+
 ## Accepted-density XC component diagnostic
 
 `config/qe_xc_components.toml` pins an isolated QE 7.4.1 PP extraction of the
@@ -63,14 +71,18 @@ the compute node. `test/test_qe_xc_components.jl` runs synthetic checks, with
 optional `ROOT SAVED_RUN` arguments for independent cube-derived validation.
 `test/plot_qe_xc_components.jl SAVED_RUN NEW_PNG` shows all geometry-tagged
 PAW-free planes from the completed analysis tables, without selecting a
-matching height. It has only been exercised on synthetic tables so far.
+matching height. It has been exercised on synthetic tables and on the
+provisional tables from failed job **11988093**; the latter figure is retained
+under `results/xc_build_control_20260926_provisional/`, not as a qualified
+physical result.
 
 Attempt **11982255** stops at the cross-build density byte-identity guard
 after the first GlcN extraction. The source helper compiles, but repeats,
 GlcNAc and real component validation are not reached. First differences are
 at printed last digits; they do not bound the whole-volume discrepancy.
 The guard remains unchanged and the partial fields are not validated physical
-components. A same-build stock/instrumented comparison is the next control.
+components. The same-build follow-up **11988093** passes those identities but
+still awaits complete independent validation after its norm-reduction failure.
 
 ## Accepted-state vacuum potential diagnostic
 
