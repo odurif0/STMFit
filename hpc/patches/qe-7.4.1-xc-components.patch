@@ -1,0 +1,21 @@
+diff --git a/PP/src/Makefile b/PP/src/Makefile
+--- a/PP/src/Makefile
++++ b/PP/src/Makefile
+@@ -36,6 +36,7 @@ partialdos.o \
+ paw_postproc.o \
+ projections_mod.o \
+ projwfc_box.o \
++stmfit_xc_components.o \
+ punch_plot.o \
+ punch_rism.o \
+ read_proj.o \
+diff --git a/PP/src/punch_plot.f90 b/PP/src/punch_plot.f90
+--- a/PP/src/punch_plot.f90
++++ b/PP/src/punch_plot.f90
+@@ -341,5 +341,6 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
+ #endif
+ 
+   DEALLOCATE (raux)
++  IF (TRIM(filplot) == 'xc_total.dat') CALL stmfit_xc_components()
+   RETURN
+ END SUBROUTINE punch_plot

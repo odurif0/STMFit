@@ -1,5 +1,29 @@
 # Configuration Reference
 
+## Accepted-density XC component diagnostic
+
+`config/qe_xc_components.toml` pins an isolated QE 7.4.1 PP extraction of the
+unchanged nonmagnetic internal-PBE states from the potential diagnostic.
+Seven fields retain native coordinates/order: valence density, core-corrected
+XC input density, its squared gradient, the original GGA activity mask, local
+density XC, local GGA and negative FFT divergence. Density units are
+electrons/Bohr^3, squared-gradient units electrons^2/Bohr^8, potentials Ry,
+and the activity mask is dimensionless. The generic native/cube headers do
+not encode this complete field-unit distinction; use the named reports.
+
+The density thresholds **1e-10** (LDA), **1e-6** (GGA) and **1e-10** for the
+**squared** gradient are checked against the internal source values, not
+changed or used as new physical cutoffs. All native planes and both source
+GGA branches remain, including empty subsets and negative density values.
+No threshold, density clipping/normalization, inference mask or potential
+replacement is authorized. Native additivity uses the summed printing bounds
+plus `64*eps(Float64)*max(1,sum(abs,components))`, a numerical arithmetic
+allowance, not a physical tolerance. Total controls must equal the old exports,
+valence density must equal a stock PP control and all new fields must repeat.
+The entrypoint is `test/qe_xc_components.jl --help`; full analysis runs only on
+the compute node. `test/test_qe_xc_components.jl` runs synthetic checks, with
+optional `ROOT SAVED_RUN` arguments for independent cube-derived validation.
+
 ## Accepted-state vacuum potential diagnostic
 
 `config/qe_vacuum_potential.toml` declares a PP-only export of the unchanged

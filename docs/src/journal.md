@@ -2304,6 +2304,12 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
+0bo. **Which accepted-density/XC operation carries the vacuum variation?**
+In progress: separate the local-density, local GGA and FFT-divergence terms,
+along with the valence density, actual core-corrected XC input, its squared
+gradient and the unchanged internal GGA activity mask. This is component
+attribution on frozen states, not cutoff convergence or a new tail model.
+
 0bn. **Is a vacuum-tail construction compatible with the accepted local
 effective potentials?** **No constant-potential matching region is qualified
 by the completed diagnostic.** PP-only job **11981276** completes in 4m07s;
@@ -19244,3 +19250,60 @@ its standalone rerun also passes **87/87** checks. Documentation builds under
 Julia **1.13.0** with `--build-only` and a writable temporary depot over the
 existing read-only depot. It completes without deployment, with the existing
 page/search size warnings and no raised limits. `git diff --check` passes.
+
+### 2026-09-26 — Frozen-state density/XC component attribution
+
+**Deliverable and done.** The user renews autonomous long-term research. From
+approximately **00:22 UTC**, this cycle is bounded to **two hours**, at most
+**one one-hour Viper diagnostic job**, no retry/requeue. Done means read-only
+extraction of the accepted PBE density/XC components for both states, exact
+total-potential controls and repeats, native/cube/additivity checks, full
+plane and source-branch statistics fetched, and a physical decision. It is
+not a new SCF, functional, threshold, cutoff, mask, propagation, mold,
+calibration, count, assignment or benchmark experiment. The completed unknown25
+application and archived scientific Must-NOT-have list remain untouched.
+The previous cycle supplied physical evidence but no recognition improvement.
+
+**Source-grounded hypothesis.** QE 7.4.1 `v_of_rho.f90` evaluates local XC on
+valence plus nonlinear core density, then `gradcorr.f90` adds local GGA and
+subtracts the FFT divergence of its gradient-dependent vector. The internal
+nonmagnetic wrappers use the absolute density for functional evaluation;
+the internal GGA driver zeroes its local outputs at density at most **1e-6**
+or **squared** gradient at most **1e-10** (atomic units). The LDA density
+threshold is **1e-10**. These are existing source branches, not newly chosen
+physical tolerances, and will be reported/checked rather than altered.
+FFT differentiation is not a pointwise operation: a zero local GGA contribution
+does not imply zero divergence contribution there. This mechanism must be
+measured, not assumed to explain the previous potential.
+
+The [QE PW troubleshooting guide](https://www.quantum-espresso.org/Doc/pw_user_guide/node21.html)
+describes negative-density and real-space XC grid issues;
+[the phonon guide](https://www.quantum-espresso.org/Doc/ph_user_guide/node18.html)
+specifically notes the difficulty of GGA vacuum tails and finite-cutoff
+oscillations. These motivate attribution; they do not prove our observed
+variation is an artifact or justify importing a global negative-charge
+threshold as a local STM accuracy criterion. No density/XC cutoff is tuned.
+
+**Extraction design.** An isolated QE source copy at the same pinned commit
+adds a PP-only helper, enabled solely by `filplot='xc_total.dat'`. It calls
+the unchanged internal LDA/GGA and gradient/divergence routines on read-only
+accepted inputs, exporting valence density, XC input density, squared gradient,
+source activity mask, local-density XC, local GGA and negative FFT divergence.
+The ordinary total output must match job 11981276 byte for byte. Components
+must repeat exactly and sum to the independently exported total minus
+electrostatic potential within native printing and floating-roundoff bounds.
+Every native plane remains, with the previously fixed geometry flags. The
+source GGA active/inactive subsets are descriptive and never fit masks.
+
+**Preparation checks.** The first patch dry-run catches a malformed unified
+hunk line count before any source is changed; its header is corrected and
+the pristine-source `git apply --check` succeeds. The **18/18** Julia 1.13
+synthetic assertions pass for component additivity, deliberate corruptions,
+source branches (including negative inputs, threshold ambiguity and the
+squared-gradient test), empty subsets and input guards. Shell syntax passes.
+Metadata-only preparation keeps geometry hash
+`cb095896144ba53700be34d2955efa2979e2be5128247bdfbe4e8d5ac49f5f09` and binds
+configuration hash
+`8b5ccb1b6b968afb08ef0e6b0a07ca22279cd0919905dcbae201fc8e8759e8df`.
+A separate stock `plot_num=0` density control is required byte-identical to
+the extracted valence field. No job has yet been submitted.
