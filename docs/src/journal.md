@@ -2313,7 +2313,9 @@ outputs are verified. At **0.40/0.50/0.60 nm**, the 360-to-720-Ry relative-L2
 changes are **1.736/6.252/12.145%** for GlcN and **1.308/0.712/3.689%** for
 GlcNAc. Selected band indices are unchanged at the fixed bias. GlcNAc retains
 **1/289** rising columns from 0.40 to 0.50 nm and **30/289** from 0.50 to
-0.60 nm; the latter maximum ratio increases **11.514 → 12.491**. This
+0.60 nm, with identical pixel sets at both cutoffs; the latter maximum
+ratio increases **11.514 → 12.491**. All twelve case/height density maxima
+lie on the fixed diagnostic window's boundary. This
 establishes orbital-density sensitivity, not convergence, numerical origin
 of every rising column, a unique current-height branch or recognition gain.
 No new SCF/PP, normalization, selected height, benchmark or mold adoption
@@ -20172,3 +20174,43 @@ with the same bias and three planes. The requested bound is **two sequential
 8-CPU / 96-GB / 4-hour jobs**, without automatic retry, label use, SCF-gate
 change or mold/champion adoption. That scope is awaiting the user's answer;
 no next-campaign code or job is launched here.
+
+### 2026-09-27 — Saved-plane spatial follow-up: identical rising columns
+
+**Deliverable and done.** Resolve whether the unchanged counts of rising
+columns in job **11992917** hide changes in their locations. This is a
+read-only examination of the already verified small plane/decay tables,
+without a new electronic/Fourier calculation, fitted parameter, ROI change,
+normalization, label or job. Done means checking the full sets against their
+raw endpoint densities and reporting both agreements and differences.
+
+The Julia **1.13.0** check recomputes all **2,312** saved adjacent-height
+pairs from the four cases' raw `planes.tsv` tables. Endpoint values, ratio
+and rising flag agree exactly with `decay.tsv`; each interval contains the
+complete ordered pixel sequence **1–289**. The prepared input manifest also
+passes. GlcN has empty rising sets for both intervals at both cutoffs.
+GlcNAc's sets are **identical**, with no lost or gained member:
+
+- **0.40 → 0.50 nm:** pixel **17** only; it is also the maximum-ratio pixel
+  at both cutoffs (**1.905641 → 1.834829**).
+- **0.50 → 0.60 nm:** pixels **10–17, 29–34, 47–51, 65–68, 83–85,
+  101–102, 119, 136**; maximum-ratio pixel **68** is unchanged
+  (**11.514244 → 12.490877**).
+
+Indices are one-based in the inherited ordering, with `t` varying fastest
+on the full **17×17** grid. A second check matches all saved physical point
+coordinates against the frozen frame. The density maximum is on a boundary
+in **all twelve** molecule/cutoff/height cases, at the same pixel between
+cutoffs: GlcN **136** at 0.40/0.50 nm (`t=0.32, u=-0.04 nm`), **153** at
+0.60 nm (`t=0.32, u=0 nm`), and GlcNAc **239** at every height
+(`t=-0.32, u=0.24 nm`). These are sampled extrema inside the declared window,
+not demonstrated maxima over a complete molecular image.
+
+**Interpretation.** The nonmonotone locations persist, not merely their
+counts. This observation still does not identify their physical or numerical
+origin. Boundary maxima limit whole-shape claims from this small window;
+they do not by themselves identify a neighboring-unit contribution, prove
+an erroneous ROI, or authorize an expanded window or favorable crop. Every
+point remains in the result. The requested next wavefunction-cutoff scope
+is still awaiting approval; no new campaign is started and no recognition
+or champion claim changes.

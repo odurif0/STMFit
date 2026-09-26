@@ -213,8 +213,11 @@ weight two at both cutoffs. Smooth norms change only
 **18.1758333630 → 18.1755994586 / 20.0011288529 → 20.0005954459**,
 which does not bound local tail changes. GlcN has no rising sampled columns
 at either cutoff. GlcNAc retains **1/289** from 0.40 to 0.50 nm and
-**30/289** from 0.50 to 0.60 nm; the latter maximum upper/lower ratio
-increases **11.514244 → 12.490877**. These results establish sensitivity,
+**30/289** from 0.50 to 0.60 nm, with identical pixel sets at both cutoffs;
+the latter maximum upper/lower ratio increases **11.514244 → 12.490877**
+at the same pixel. All twelve case/height density maxima lie on the fixed
+17×17 window's boundary, so they are not qualified whole-image maxima.
+No point is excluded or window enlarged. These results establish sensitivity,
 not cutoff convergence, numerical origin of every rise or a unique
 current-height branch. The 720-Ry vertex queries have no new independent
 cube validation. No mold, current calibration or recognition result is
