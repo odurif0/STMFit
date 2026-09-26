@@ -1,5 +1,37 @@
 # Configuration Reference
 
+## Saved-orbital response to density cutoff
+
+`config/qe_cutoff_wavefunctions.toml` compares the **existing** accepted
+360/720-Ry states, without an SCF or PP calculation. It reuses the validated
+Gamma Fourier reader and evaluator from `qe_vacuum_wavefunctions.jl`. The
+sharp bias window remains **-0.0220495933 Ry**, relative to each state's own
+Fermi energy. Band membership follows that window; band counts or smooth
+norms are not forced to match between cutoffs.
+
+All **17×17** points at **0.40/0.50/0.60 nm** remain in the inherited frame,
+with `half_nm=0.32`, `step_nm=0.04` and `fourier_block_points=32`. Cell and
+atomic-position checks retain the earlier **1e-12** relative and **1e-12 nm**
+tolerances. Every point and native-vertex query must remain outside the PAW
+spheres. Neither clipping nor normalization is allowed. Undefined ratios at
+zero denominators remain `NaN`, with the raw samples retained.
+
+The 360-Ry replay must reproduce the previously verified native-vertex and
+plane values exactly, with unchanged query ordering. Every state repeats
+exactly in parallel and serial. The 720-Ry vertex evaluations are **not** a
+new independent cube check: no new cube is exported. Smooth Parseval norms,
+spectra, all queries, plane statistics, decay ratios and paired differences
+are reported without imposing an expected norm, monotonicity or acceptance
+threshold on the physical changes.
+
+`test/qe_cutoff_wavefunctions.jl prepare ROOT CONFIG NEW_RUN` performs only
+metadata/support preparation locally. The single
+`hpc/qe_cutoff_wavefunctions.sbatch` job runs on **4 CPUs / 32 GB / 1 h**, with
+no retry/requeue. It reads the original WFC files without writing them and
+checks their hashes before and after analysis. Real Fourier evaluation and
+independent saved-table checks run on Viper; synthetic fixtures run locally.
+No mold, fitted count, unit assignment, calibration or champion is changed.
+
 ## Charge-density cutoff sensitivity
 
 `config/qe_density_cutoff.toml` declares the approved **360/720-Ry** two-point

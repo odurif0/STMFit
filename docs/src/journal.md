@@ -2304,6 +2304,15 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
+0br. **Does charge-cutoff sensitivity reach the bias-window orbital density?**
+**A bounded saved-state comparison is authorized; no result yet.** Compare
+360/720 Ry on both geometries at the unchanged 0.40/0.50/0.60-nm planes and
+bias, using direct Fourier evaluation. One four-CPU / 32-GB / one-hour Viper
+job is allowed, with no new SCF, PP, retry, normalization, selected height,
+benchmark grade or mold adoption. First reproduce the verified 360-Ry
+diagnostic, then retain every paired sample and decay ratio. Potential
+sensitivity alone (0bq) does not answer this observable-level question.
+
 0bq. **Does raising the density cutoff reduce the vacuum variation?**
 **Two-point sensitivity is confirmed for both geometries, not convergence.**
 Sequential jobs **11990241/11991069** complete **0:0** in **1h51m/2h19m52s**,
@@ -19993,3 +20002,67 @@ bounded analysis, not a result of this potential comparison.
 
 The documentation build passes under Julia 1.13 with existing size warnings;
 `git diff --check` passes. This outcome update changes documentation only.
+
+### 2026-09-27 — Approved saved-orbital cutoff-response comparison
+
+**Deliverable and done.** Measure whether the verified **360 → 720 Ry**
+change affects the existing bias-window orbital-density diagnostic on the
+same physical planes. Done means the single job's terminal outcome, preserved
+source WFC hashes, verified 360-Ry replay, all four states' parallel/serial
+checks, complete paired tables, locally fetched outputs and an interpreted
+comparison or explicit incomplete outcome. Preparation is not the result.
+After the proposed bound, the user says **“autorisation”** and renews the
+autonomous search for a **new champion**. This iteration retains the proposed
+**one job, four CPUs, 32 GB and one hour**, with no new SCF, PP calculation,
+retry or requeue. The full recognition objective is not replaced by this
+diagnostic. The completed unknown25 application, frozen champion and the
+scientific Must-NOT-have constraints remain untouched.
+
+`config/qe_cutoff_wavefunctions.toml` and
+`test/qe_cutoff_wavefunctions.jl` reuse the already verified scalar-Gamma
+reader, Fourier evaluator and spectral convention. Both cutoffs use their
+own Fermi energy with the same **-0.0220495933-Ry** sharp bias window. Band
+membership may change; there is no expected band count, composition prior or
+renormalization of the smooth Parseval norm. No benchmark labels, expected
+chain length or chemical-sequence truth enter this analysis.
+
+The frozen frame and every **17×17** point at **0.40/0.50/0.60 nm** are
+retained. The **0.32-nm** half-width, **0.04-nm** step and **32-point** Fourier
+blocks are inherited, not selected from outcomes. Geometry checks reuse the
+earlier **1e-12** relative-cell and **1e-12-nm** atomic tolerances. All physical
+points and native-vertex queries must remain strictly outside every periodic
+PAW sphere. Native vertices precede the planes in the same validated query
+ordering, so the 360-Ry native and plane values must reproduce the earlier
+saved direct evaluation exactly. At 720 Ry no independently exported cube
+exists for this new state; the vertex queries are not advertised as a new
+cube-validation result.
+
+Each case repeats the Fourier calculation in parallel and serial, with one
+BLAS thread per block. Saved output includes every query, its repeat, all
+physical plane coordinates/densities, the full spectrum, selected band weights,
+smooth norm, plane statistics and all adjacent-height ratios/log-decays.
+Zero denominators produce explicit undefined ratios while raw samples remain;
+there is no clipping, monotonicity enforcement, uncertain-point exclusion,
+height choice or constant-current branch selection. The final comparison
+matches identical physical point keys before reporting differences, amplitude
+ratios and relative-L2 changes. It does not normalize either state.
+
+Local preparation reads metadata and checks support only; real orbital
+evaluation stays on Viper. The batch reads the four original WFC files without
+modifying them, verifies their hashes and the thin prepared inputs, evaluates
+all four cases sequentially inside one allocation, then checks the saved
+tables independently. Local tests use tiny analytic Gamma states, including
+a flat baseline and deliberately rising candidate columns. Input-tampering
+tests run before an output directory exists, so they exercise the hash guard
+rather than merely the no-overwrite guard. No new job has been submitted at
+this preparation checkpoint.
+
+**Preparation verification.** Julia 1.13 passes **81,455** assertions for the
+new scope/analytic four-state/saved-table fixtures, plus the unchanged
+**912** Fourier/cube and **17** PAW-geometry regression checks. The four real
+metadata/support preparations and their input manifests pass. Shared
+scientific helper sources are unchanged from **67094b8**. The synchronization
+dry-run contains only the four new code/config files and the thin prepared
+run (**33 regular files, 11,045,057 bytes**), with no deletion or orbital
+transfer. Shell syntax, `git diff --check` and the Julia 1.13 documentation
+build pass (existing size warnings only). No job has been submitted yet.

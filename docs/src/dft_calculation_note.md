@@ -185,6 +185,19 @@ constant-current feedback loop.
 
 ## Diagnostic constant-current observable
 
+**September 27 approved saved-orbital follow-up (preparation).** Following
+the completed cutoff comparison, the user authorizes the proposed **one
+4-CPU / 32-GB / 1-h** analysis job and renews the autonomous new-champion
+objective. The test compares both existing cutoffs on the two geometries at
+the unchanged **0.40/0.50/0.60-nm** planes and bias window. It uses direct
+Gamma Fourier reconstruction outside PAW spheres, not density-grid
+interpolation, a new SCF or a new PP export. The frozen 360-Ry diagnostic
+must replay exactly; parallel/serial repeats and all saved-table relations
+are checked. The selected energy-window bands may differ, but no smooth norm
+is rescaled to equal a state count. All points and rising/zero samples are
+retained. No physical response is measured at this preparation checkpoint,
+and no mold, current calibration or recognition result is adopted.
+
 **September 26–27 cutoff sensitivity (completed).** The user approved
 two sequential Viper jobs, each limited to **8 CPUs / 4 h**, to compare
 `ecutrho=720 Ry` against the saved accepted **360-Ry** states. Geometries,

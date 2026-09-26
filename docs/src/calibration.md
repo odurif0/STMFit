@@ -18,6 +18,16 @@ acceptance and the original per-state electronic targets remain unchanged.
 Exactly two sequential eight-CPU jobs are used, each within four hours; no
 additional SCF, calibration or production change follows.
 
+The separately authorized saved-orbital follow-up asks whether this cutoff
+sensitivity also changes the bias-window smooth density outside PAW spheres.
+It evaluates the same **0.40/0.50/0.60-nm** planes directly, with no new SCF,
+changed bias, matched band-count prior, normalization or selected height.
+All rising columns and zero samples remain visible. Reproduction of the
+360-Ry diagnostic and parallel/serial controls validate implementation; they
+do not establish cutoff convergence, calibrated experimental current, a
+unique constant-current branch or a recognition gain. The existing frozen
+molds remain unchanged while this comparison is measured.
+
 A geometrically empty region is not necessarily a region of constant local
 effective potential. The completed PP-only diagnostic exports the accepted-state
 total potential and its electrostatic control, retaining every native lateral
