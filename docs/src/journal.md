@@ -2310,8 +2310,12 @@ See `docs/src/selection.md` for the full guard specification and
 129.6 million native/cube comparisons and 14,057 independent saved-output
 checks. The original geometries, electronic settings and checkpoint hashes
 are preserved. Only after this terminal outcome is GlcNAc job **11991069**
-submitted, under the same eight-rank/four-hour bound. Two cutoff points will
-measure sensitivity, not prove convergence or qualify a new potential or mold.
+submitted, under the same eight-rank/four-hour bound; it starts at
+**19:51:58 UTC**. The fetched GlcN comparison shows substantial cutoff
+sensitivity: full-gap minimum total-potential spatial SD falls from
+**0.20376 to 0.09305 eV**, while negative samples still reach **51.14%** of
+a plane. These native-grid descriptors do not prove convergence or qualify
+a new potential or mold; GlcNAc is still running.
 
 0bp. **Can build effects be separated from the XC extraction?** **Yes, for the
 two frozen states.** Analysis-only recheck **11989810** completes **0:0** in
@@ -19865,3 +19869,45 @@ and no GlcNAc work directory. The unchanged second input is submitted as
 These are the **two** authorized jobs; no retry or additional calculation is
 submitted. GlcNAc retains its original **5e-5-Ry** SCF target, and neither the
 paired scientific comparison nor the recognition objective is complete.
+
+**Fetched GlcN comparison.** All **44 regular files**, **6,475,532,429 bytes**,
+are recovered locally. A full checksum rsync dry-run finds no changes;
+the local input/pseudopotential and converged-checkpoint manifests also pass.
+Only the small saved tables are summarized or plotted locally, with Julia
+1.13; no real scientific volume is reprocessed locally.
+
+| GlcN descriptor | 360 Ry | 720 Ry |
+|---|---:|---:|
+| Native planes in the full PAW-free gap | 122 | 175 |
+| Native planes in its lower geometric half | 61 | 87 |
+| Whole-cell negative-charge magnitude (electrons) | 0.00724418337 | 0.00150228046 |
+| Full-gap minimum total-potential spatial SD (eV) | 0.20376211 | 0.09305433 |
+| Lower-half minimum total-potential spatial SD (eV) | 0.20376211 | 0.09374628 |
+| Full-gap minimum XC spatial SD (eV) | 0.19514761 | 0.08359429 |
+| Full-gap minimum total-potential lateral span (eV) | 1.29213647 | 0.70685044 |
+| Largest negative-density fraction in a native plane (%) | 50.06944 | 51.14444 |
+
+Both whole-cell density integrals agree with the XML's **1,784 electrons**
+within **9e-10 electron**. This global charge check does not establish local
+tail accuracy. Every native plane remains in the saved tables: no height is
+selected, and the two grids are not interpolated onto one another. In
+particular, extrema are sampled at different native heights. The lower
+negative-charge magnitude and smaller minimum potential SD are sensitivity
+observations, not a cutoff-convergence proof, a flat matching-plane
+qualification or a recognition improvement. XC here means total minus
+electrostatic potential; no new LDA/GGA-component attribution is measured.
+
+`test/plot_qe_density_cutoff.jl` renders all PAW-free native planes for one
+completed case from its small saved tables, with total/electrostatic/XC
+spatial SD and negative-density fraction. It refuses incomplete plane
+indices and existing outputs. The Julia 1.13 GlcN figure
+`results/density_cutoff_20260926/glcn_native_planes.png` is generated and
+visually inspected; both complete curves and the geometric midpoint are
+visible. Lines connect native samples for display only, without resampling
+the scientific fields. No result is adopted.
+
+**Second job start.** GlcNAc **11991069** starts at **19:51:58 UTC** on
+**vipc2428**. Its log confirms an atomic starting potential, wavefunctions
+from file, dense/smooth grids **360×250×360 / 180×135×192**, and estimated
+total dynamical RAM **86.34 GB** within the 96-GB allocation. This is still a
+running calculation, not a converged second result.
