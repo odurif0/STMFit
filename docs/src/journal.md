@@ -2304,6 +2304,15 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
+0bq. **Does raising the density cutoff reduce the vacuum variation?**
+**The first case is complete; the paired comparison is pending.** GlcN job
+**11990241** completes **0:0** in **1h51m**, with SCF error **5.19734e-8 Ry**,
+129.6 million native/cube comparisons and 14,057 independent saved-output
+checks. The original geometries, electronic settings and checkpoint hashes
+are preserved. Only after this terminal outcome is GlcNAc job **11991069**
+submitted, under the same eight-rank/four-hour bound. Two cutoff points will
+measure sensitivity, not prove convergence or qualify a new potential or mold.
+
 0bp. **Can build effects be separated from the XC extraction?** **Yes, for the
 two frozen states.** Analysis-only recheck **11989810** completes **0:0** in
 **21m13s**, passing **22,642** independent control/norm checks and **70,062**
@@ -2326,8 +2335,8 @@ Native density counts reach **50.07/49.78%** negative valence and
 **53.31/53.77%** negative core-corrected XC input within a plane. Small global
 negative-charge integrals therefore do not establish local tail accuracy.
 No single GGA-only explanation, density clipping or potential subtraction is
-qualified. Density-representation/cutoff sensitivity is the next test; it has
-not been measured. The user approves a separate 360-to-720-Ry sensitivity test,
+qualified. The separate density-representation/cutoff sensitivity test is now
+under way (0bq). The user approves this 360-to-720-Ry sensitivity test,
 limited to two sequential eight-CPU jobs of at most four hours each, without
 changing the geometries, PBE, wavefunction cutoff or 5e-5-Ry acceptance.
 
@@ -19837,3 +19846,22 @@ residual. This source definition is consistent with the quantity independently
 integrated from the signed density exports. Intermediate SCF log values do
 not replace the converged, checked export comparison; no cutoff conclusion
 is drawn from them.
+
+**First terminal outcome and second submission.** GlcN **11990241** completes
+**0:0** at **19:47:01 UTC**, after **1h51m** on vipc2046. SCF converges in
+**37 iterations** with error **5.197337508716894e-8 Ry**, below its unchanged
+**1e-7-Ry** target. The geometry/electronic-setting check passes; all four PP
+steps finish **0:0**, the total-potential repeat is exact, and all **129.6
+million** native/cube comparisons pass. The independent verifier passes
+**14,057** saved-output assertions plus **21** synthetic checks. Final input,
+original-checkpoint and pre/post-PP checkpoint hashes also pass, and the batch
+prints its sensitivity-complete marker. The final SCF log and XML are fetched
+locally with identical SHA-256 hashes; full-volume retrieval follows.
+
+Only after that terminal outcome, a fresh queue/input check finds no live job
+and no GlcNAc work directory. The unchanged second input is submitted as
+**11991069** at **19:49:05 UTC**, with explicit environment export, eight ranks,
+96 GB, four hours and no requeue. It initially waits for node availability.
+These are the **two** authorized jobs; no retry or additional calculation is
+submitted. GlcNAc retains its original **5e-5-Ry** SCF target, and neither the
+paired scientific comparison nor the recognition objective is complete.
