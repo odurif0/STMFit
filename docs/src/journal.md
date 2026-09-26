@@ -19785,3 +19785,12 @@ generated directories pass their input/pseudopotential checksums; shell syntax
 and `git diff --check` pass. The documentation build passes with existing size
 warnings. The sync dry-run contains only the four new source/config files and
 the two prepared input directories, with no deletion.
+
+**First submission.** Checksum-verified input sync completes. Slurm test-only
+identifiers **11990239/11990240** are not submitted jobs. The only real job
+so far is **11990241** (GlcN), submitted on September 26 at approximately
+**17:48 UTC**, with explicit `--export=ALL,JULIA_BIN=...`, eight MPI ranks,
+one thread each, 96 GB, four hours and no requeue. Viper accounts two hardware
+threads per allocated physical core (16 Slurm logical CPUs for eight ranks),
+as in the preceding eight-rank jobs. No GlcNAc job is submitted in parallel;
+it waits for this job's terminal outcome. Source/config commit: **67094b8**.
