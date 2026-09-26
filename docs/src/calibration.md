@@ -2,6 +2,17 @@
 
 ## Potential qualification precedes vacuum-tail propagation
 
+The separately authorized **360-to-720-Ry** density-cutoff test holds PBE,
+`ecutwfc=50 Ry`, the two accepted geometries and other physical settings fixed.
+It measures signed density and total/electrostatic/XC plane statistics, not a
+new STM observable. Native grids differ; every plane is retained, with the
+same geometric gap boundaries and no interpolation or favorable-height choice.
+Even reduced negative density or potential variation would be sensitivity
+evidence, not a converged tail, current calibration or permission to replace
+the molds. The common **5e-5-Ry** SCF acceptance and the original per-state
+electronic targets remain unchanged. At most two sequential eight-CPU,
+four-hour jobs are authorized; an unfinished SCF remains an incomplete case.
+
 A geometrically empty region is not necessarily a region of constant local
 effective potential. The completed PP-only diagnostic exports the accepted-state
 total potential and its electrostatic control, retaining every native lateral

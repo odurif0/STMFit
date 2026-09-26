@@ -185,6 +185,19 @@ constant-current feedback loop.
 
 ## Diagnostic constant-current observable
 
+**September 26 approved cutoff sensitivity (preparation).** The user approves
+two sequential Viper jobs, each limited to **8 CPUs / 4 h**, to compare
+`ecutrho=720 Ry` against the saved accepted **360-Ry** states. Geometries,
+PBE/D3, `ecutwfc=50 Ry`, PAW files, smearing, Gamma sampling and the common
+**5e-5-Ry** acceptance remain unchanged. Original per-state SCF targets and
+mixing settings are inherited. Only copies of collected orbitals initialize
+the new SCFs; the potential starts from atomic densities on the new grid.
+No old density or mixing checkpoint is transferred. The same stock PP binary
+provides both cutoffs' field definitions. All native planes are reported with
+unchanged geometric tags, without cross-grid interpolation or height selection.
+This is sensitivity at two cutoffs, not convergence, a new calibrated STM
+observable or a mold/champion replacement. Results are not yet available.
+
 **September 26 saved-export XC revalidation.** Separate analysis-only job
 **11989810** completes in **21m13s** with **22,642** independent control/norm
 and **70,062** component-cube checks, retaining all **26** byte identities and

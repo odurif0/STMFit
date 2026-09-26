@@ -19727,3 +19727,61 @@ measurement, not proof of cutoff convergence; mold/champion replacement is
 excluded. No cutoff job has been submitted at this approval checkpoint. The
 present attribution diagnostic is complete; the full **694/43/855** target
 remains unmet and the goal remains active.
+
+### 2026-09-26 — Approved two-point charge-cutoff sensitivity
+
+**Deliverable and done.** Measure how **360 → 720 Ry** charge-density cutoff
+affects signed density and local-potential variation for both accepted
+geometries. Done means each bounded job's terminal outcome, successful-state
+native/cube checks and independent plane summaries, unchanged original-state
+hashes, locally fetched results and a documented comparison or explicit
+incomplete outcome. Preparation alone is not the deliverable. The user answers
+**“Oui, lancer ce test borné”** to the exact two sequential jobs, eight CPUs
+and four hours each; there is no automatic retry, requeue or extra job.
+No mold, champion, SCF acceptance change, benchmark grade or unknown25 rerun
+is authorized. The archived scientific Must-NOT-have list remains in force.
+
+`config/qe_density_cutoff.toml` changes only the intended physical cutoff:
+the accepted XML supplies every atomic coordinate/cell vector in Bohr, species,
+band count, mixing settings and electronic target. PBE/D3, PAW files,
+Gamma-only sampling, **50-Ry** wavefunction cutoff and **0.02-Ry** MV smearing
+are fixed. Original targets are **1e-7/5e-5 Ry** for GlcN/GlcNAc, within the
+unchanged common **5e-5-Ry** acceptance; GlcN is not weakened to the common
+ceiling. Numerical initialization is a fresh SCF with copied collected
+orbitals and an atomic starting potential, not `restart_mode='restart'`.
+No old density is transferred to the larger grid, and no original checkpoint
+is opened for writing. `max_seconds=9900` reserves the remainder of the
+four-hour allocation for postprocessing and independent verification.
+
+Source inspection uses pinned QE 7.4.1 `PW/Doc/INPUT_PW.def`, `potinit.f90`,
+`wfcinit.f90` and `pw_restart_new.f90`: interrupted-run restart is distinct from
+a fresh calculation initialized from files; potential and orbitals have
+separate initializers. The original collected orbital hash is checked after
+copying. A new accepted XML and explicit warm-start log are required before
+any PP export. Incomplete SCF is retained as an incomplete case, not accepted
+by a weaker criterion.
+
+The already validated stock PP executable exports density, total potential
+and electrostatic potential, plus an exact repeat of total potential. All
+native/cube voxels are checked using existing printing bounds; independently
+parsed cubes check every plane's mean, extrema, population SD, negative-density
+count bounds and whole-cell charge integrals. Both cutoffs retain every native
+plane and the same strict geometry-only PAW-free/lower-half domains. Different
+FFT grids are not interpolated onto one another. Grid-dependent extrema and
+SCF residuals must remain visible when interpreting differences; two points
+cannot establish cutoff convergence, reliable vacuum propagation or chemical
+recognition. No potential component is subtracted or adopted.
+
+Local metadata tests catch a preparation bug before submission: copying a
+relative XML symlink into a fresh directory preserved a broken link. Accepted
+XML copies now dereference their source explicitly; the old archive is not
+modified. The regression tests exercise both accepted metadata sets and every
+generated coordinate, plus out-of-scope settings and unconverged-state
+rejection. No cutoff job has been submitted at this preparation checkpoint.
+
+**Local verification.** Julia 1.13 passes **21** synthetic scope/statistics
+checks and **890** accepted-metadata/input assertions (**911** total). Both
+generated directories pass their input/pseudopotential checksums; shell syntax
+and `git diff --check` pass. The documentation build passes with existing size
+warnings. The sync dry-run contains only the four new source/config files and
+the two prepared input directories, with no deletion.

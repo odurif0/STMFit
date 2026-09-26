@@ -1,5 +1,30 @@
 # Configuration Reference
 
+## Charge-density cutoff sensitivity
+
+`config/qe_density_cutoff.toml` declares the approved **360/720-Ry** two-point
+comparison. `ecutwfc=50 Ry`, PBE/D3, accepted geometries, PAW datasets, Gamma
+sampling and smearing stay fixed. SCF targets and mixing settings are inherited
+from the accepted XML (GlcN **1e-7**, GlcNAc **5e-5 Ry**); the common acceptance
+remains **5e-5 Ry**. `startingpot="atomic"` avoids transferring density between
+different FFT grids; `startingwfc="file"` reuses only copied collected orbitals
+at the unchanged wavefunction cutoff. This is a fresh SCF, not an interrupted
+run's restart. Original states are never written.
+
+`test/qe_density_cutoff.jl prepare ROOT CONFIG NEW_RUN` prepares two independent
+directories. `hpc/qe_density_cutoff.sbatch` runs one state on eight MPI ranks,
+with **4 h** walltime and no retry/requeue. `scf_max_seconds=9900` reserves time
+for export and verification. No unconverged state passes to PP. The same saved
+stock PP binary as the baseline exports density, total and electrostatic
+potential; total export repeats exactly. Native/cube printing checks and
+independent cube-plane summaries run on Viper, including baseline rechecks.
+
+All native planes remain, with unchanged geometry-only PAW-free and lower-half
+tags. There is no cross-grid interpolation or matching-height selection.
+Different sampling grids limit direct comparisons of extrema; two cutoffs do
+not establish convergence. No threshold, density clipping, mold, calibration,
+benchmark selection or champion replacement is part of this experiment.
+
 ## Paired-build XC control
 
 `config/qe_xc_build_control.toml` declares a separate PP-only experiment after
