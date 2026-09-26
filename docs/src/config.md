@@ -1,5 +1,30 @@
 # Configuration Reference
 
+## Paired-build XC control
+
+`config/qe_xc_build_control.toml` declares a separate PP-only experiment after
+the failed cross-build identity check. One configure/library build produces a
+stock executable, then the unchanged extraction patch produces a second one.
+All existing compiled objects/libraries except the modified `punch_plot.o`
+and containing `libpp.a` must retain their hashes. The original
+`config/qe_xc_components.toml` and its archived-site identity rule are unchanged.
+
+`require_same_build_total_exact` requires stock/instrumented total native/cube
+identity; density and all extracted-field repeats remain byte-exact controls.
+Both states' controls and all-native-voxel differences against the site build
+are reported before attempting component analysis. `cross_build_policy` is
+descriptive, with no physical or numerical acceptance threshold fitted to the
+observed discrepancy. Failed identity prevents component analysis, not the
+retention of the full difference report. No density, XC branch, functional,
+cutoff, normalization, matching height or physical potential is changed.
+
+Use `test/qe_xc_build_control.jl --help` for preparation, control reporting and
+analysis; the latter two run on Viper. `test/test_qe_xc_build_control.jl` runs
+synthetic checks, or `ROOT SAVED_RUN` for independent saved-output checks.
+Shared component arithmetic retains the earlier precision bounds, source
+branches and full-plane statistics, with the **same-build electrostatic**
+control; it never mixes components from different builds in an additivity test.
+
 ## Accepted-density XC component diagnostic
 
 `config/qe_xc_components.toml` pins an isolated QE 7.4.1 PP extraction of the

@@ -30,15 +30,17 @@ const P=C.settings(joinpath(@__DIR__,"../config/qe_xc_components.toml"))["prepro
     @test_throws ErrorException C.cube_input("other")
 end
 
-function verify_saved(root,run)
-    s=C.settings(joinpath(run,"settings.toml")); p=s["preprocessing"]
+function verify_saved(root,run; load_settings=C.settings,
+        reference=(root,run,s,m)->joinpath(root,s["model"]["source_run"],m),
+        control_key="exact_total_reference_and_repeats")
+    s=load_settings(joinpath(run,"settings.toml")); p=s["preprocessing"]
     geometry=C.V.tsv(joinpath(run,"geometry.tsv"))
     number(r,k)=parse(Float64,r[k]); boolean(r,k)=parse(Bool,r[k])
     @testset "Independent component cube summaries and branches" begin
         for molecule in C.R.MOLECULES
-            dir=joinpath(run,molecule); old=joinpath(root,s["model"]["source_run"],molecule)
+            dir=joinpath(run,molecule); old=reference(root,run,s,molecule)
             saved=TOML.parsefile(joinpath(dir,"analysis/summary.toml"))
-            @test saved["exact_total_reference_and_repeats"] && !saved["density_modified"] && !saved["potential_adopted"]
+            @test saved[control_key] && !saved["density_modified"] && !saved["potential_adopted"]
             @test saved["config_sha256"]==C.S.sha(joinpath(run,"settings.toml"))
             for (file,sha) in saved["component_sha256"]; @test C.S.sha(joinpath(dir,file))==sha; end
             for field in C.FIELDS
@@ -89,4 +91,6 @@ function verify_saved(root,run)
         end
     end
 end
-isempty(ARGS) || (length(ARGS)==2 ? verify_saved(ARGS...) : error("test_qe_xc_components.jl [ROOT SAVED_RUN]"))
+if abspath(PROGRAM_FILE)==abspath(@__FILE__)
+    isempty(ARGS) || (length(ARGS)==2 ? verify_saved(ARGS...) : error("test_qe_xc_components.jl [ROOT SAVED_RUN]"))
+end

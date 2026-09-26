@@ -54,6 +54,16 @@ do not establish a whole-volume error bound or validate the physical
 decomposition. The next control must separate the build effect from the
 instrumentation effect; the guard is not relaxed and no component is adopted.
 
+The separately bounded paired-build follow-up holds configure options and
+compiled libraries fixed, changing only the PP extraction hook/helper.
+Stock density/total controls and component repeats must agree byte for byte
+inside that build. Cross-build discrepancies are reported at every native
+voxel and plane without choosing an acceptance tolerance from their size.
+Only after both states pass their same-build checks can component sums be
+compared with that build's total minus electrostatic control. Even a successful
+attribution would be a numerical diagnostic, not density/cutoff convergence,
+a repaired vacuum Hamiltonian or a recognition improvement.
+
 ## Atomic z origin is not an observed STM background
 
 Subtracting the lowest (or highest) Cu atomic coordinate from a calculated

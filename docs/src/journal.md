@@ -2304,6 +2304,15 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
+0bp. **Can build effects be separated from the XC extraction?** Prepared and
+locally tested; no new job is submitted while Viper authentication is unavailable.
+A stock/extraction executable pair will share the same configure and compiled
+libraries. Exact within-build density/total controls and repeats remain
+mandatory. All-native-voxel differences against the site build are descriptive;
+no cross-build tolerance is fitted. Component analysis is conditional on both
+accepted states passing these controls, using same-build electrostatics.
+The failed 11982255 remains failed, and no physical potential is adopted.
+
 0bo. **Which accepted-density/XC operation carries the vacuum variation?**
 **Not yet attributed.** Job **11982255** compiles and exports the first GlcN
 components, then fails the predeclared cross-build density byte-identity
@@ -19389,3 +19398,77 @@ figure is visually inspected; it is not an output or validation of job
 builds with Julia **1.13.0**, `--build-only` and a temporary writable depot,
 without deployment; only the existing page/search-size warnings remain.
 The record remains unmet and the champion is unchanged.
+
+### 2026-09-26 — Paired-build control of frozen-state XC extraction
+
+**Deliverable and done.** The full strict-label-free **694/43/855** objective
+remains unmet. The reproducibility failure of **11982255** motivates a
+paired-build experiment. From **10:56 UTC**, this cycle is bounded to **two hours**, at most
+**one one-hour Viper job**, no retry/requeue. Done means a stock/instrumented
+pair from one configure/library build, same-build density and total identity
+controls for both accepted states, full-volume cross-build difference reports,
+and, only if both states pass, repeated XC components with independent
+native/cube/additivity verification and all-plane/source-branch statistics.
+Outputs must be fetched and the physical conclusion recorded. Preparation
+alone does not meet this deliverable or the full recognition objective.
+
+The completed unknown25 application is not rerun. No labels, expected N,
+composition prior, truth-selected profile, uncertain-row deletion, user-output
+overwrite or count-selection change is included. No SCF, functional, density,
+cutoff, source threshold, matching height, current calibration, mold, external
+grade or production promotion changes. The prior failed run is not repaired
+or retrospectively reclassified.
+
+**Discriminating experiment.** Configure/build pristine QE at the pinned
+7.4.1 commit once, save stock PP, then apply exactly the previous helper/hook
+and rebuild PP. The configure file and every pre-existing object/library/module
+except `punch_plot.o` and `libpp.a` must remain byte-identical. On complete
+copies of each accepted checkpoint, stock PP exports valence density, total
+potential and electrostatics; the site PP exports a fresh density control.
+Instrumented total and all seven fields are exported twice. Full native
+differences compare stock/extracted density and total, plus stock/site density,
+total and electrostatics. Every plane remains with its inherited geometry
+flags; maxima, signed/absolute means, RMS, relative L2 and decimal-printing
+envelope counts are descriptive, not a tuned physical accuracy criterion.
+
+The separate config/entrypoint keeps the earlier archived-site byte guard
+unchanged. Shared component arithmetic is factored out without changing its
+printing bounds, source masks or statistics. The new entrypoint requires all
+same-build identities before using same-build electrostatics for additivity.
+Failed identities still retain both states' difference reports. Both PP
+executables, build logs, inputs and outputs will be archived; no new orchestration
+or persistent cluster process is introduced.
+
+**Preparation checks and access.** The initial Viper connection times out
+during the banner exchange; the relay remains authenticated, and a second
+read-only check succeeds with an empty `squeue`. At that point no authentication
+request or job retry is needed. The first synthetic test invocation catches ambiguous
+Julia `1.+2eps()` syntax in a test fixture; it is corrected to `1.0 + 2eps()`
+before submission. No scientific parameter changes with that correction.
+
+The corrected synthetic invocation initially passes **18 component + 18 paired
+control assertions**. Metadata-only preparation succeeds without opening a
+density or potential, retaining geometry hash
+`cb095896144ba53700be34d2955efa2979e2be5128247bdfbe4e8d5ac49f5f09` and helper
+hash `1a727c2af00db859c90a04c61e5c2a69803530a8f9cd7ccb029c0736305da495`.
+The separate config hash is
+`0026eefc29d2ee5800c69a6afc9a7ca51efed0440b6220479e521de80aba72ea`.
+The unchanged pristine-source patch dry-run, shell syntax and whitespace check
+pass. A later preflight returns an explicit Viper authentication denial; no
+transfer or submission has occurred. The user is asked to restore their usual
+session while local verification continues. An additional fixture checks that
+changing both members of a previously identical pair is also rejected, rather
+than trusting the saved control flag alone.
+
+The final local suites pass **18 component + 19 paired-control + 34 native
+reader/geometry/unit assertions** under Julia **1.13.0**. Both command-line
+help routes succeed, the prepared batch is byte-identical to its tracked
+source, and the control exports are hash-bound again before component
+analysis. SSH multiplexing is configured but the Viper control socket is
+absent, with the explicit authentication denial confirmed earlier. No new job
+or physical result exists at this preparation stage; the champion is unchanged.
+
+Documentation also builds successfully without deployment. Existing page/search
+size warnings remain; HTTP precompilation additionally reports an ignored
+local socket-bind denial from the sandbox, not a build failure. No permission
+or SSH configuration is changed to work around it.

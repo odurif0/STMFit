@@ -127,6 +127,14 @@ function analyze(root,run,m)
     end
     S.sha(joinpath(old,"electrostatic.dat"))==meta["reference_hashes"]["electrostatic.dat"] || error("Changed electrostatic reference")
     S.sha(joinpath(dir,"rho_valence.dat"))==S.sha(joinpath(dir,"density_control.dat")) || error("Density control differs")
+    analyze_fields(run,m,s,meta,g,joinpath(old,"electrostatic.dat"),"exact_total_reference_and_repeats")
+end
+
+# Shared arithmetic only. Each caller must first verify its own frozen controls;
+# the original entrypoint above still requires the archived site bytes exactly.
+function analyze_fields(run,m,s,meta,g,electrofile,control_key)
+    p=s["preprocessing"]; dir=joinpath(run,m)
+    ps=R.settings(joinpath(run,"potential_settings.toml"))["preprocessing"]
     values=Dict{String,Any}(); comparisons=NamedTuple[]; hashes=Dict{String,String}()
     for field in FIELDS
         file=joinpath(dir,field*".dat")
@@ -137,7 +145,7 @@ function analyze(root,run,m)
         values[field]=native.grid
         for ext in ("dat","cube"); hashes[field*"."*ext]=S.sha(joinpath(dir,field*"."*ext)); end
     end
-    total=N.readplot(joinpath(dir,"xc_total.dat")); electro=N.readplot(joinpath(old,"electrostatic.dat"))
+    total=N.readplot(joinpath(dir,"xc_total.dat")); electro=N.readplot(electrofile)
     sums=additivity(total.grid,electro.grid,values["lda"],values["gga_local"],values["gga_divergence"],p)
     masks=source_masks(values["rho_xc_input"],values["grad2_xc_input"],values["gga_active"],values["gga_local"],p)
     values["xc_total"]=total.grid.-electro.grid
@@ -170,7 +178,7 @@ function analyze(root,run,m)
         "additivity"=>Dict(string(k)=>v for (k,v) in pairs(sums)),
         "source_masks"=>Dict(string(k)=>v for (k,v) in pairs(masks)),
         "negative_valence_integral_electrons"=>sum(x->max(-x,0.),values["rho_valence"])*vol,
-        "exact_total_reference_and_repeats"=>true,"density_modified"=>false,"potential_adopted"=>false)
+        control_key=>true,"density_modified"=>false,"potential_adopted"=>false)
     open(io->TOML.print(io,summary),joinpath(out,"summary.toml"),"w")
     println(m,": ",summary["native_cube_voxels"]," export comparisons; ",sums,"; source masks ",masks)
 end
