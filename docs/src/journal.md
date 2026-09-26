@@ -19597,3 +19597,46 @@ dry-run reports **zero** changed, created or deleted files. A separate bounded
 analysis-only recheck of these saved exports is needed to complete independent
 component validation. Rebuilding/re-extracting QE is not justified by the
 reproduced norm defect. The record remains unmet and the champion unchanged.
+
+### 2026-09-26 — Analysis-only revalidation of the frozen XC exports
+
+**Deliverable and done.** The automatic goal is active again. The previous
+cycle is progress: it preserves a failed full-volume verification and fixes a
+synthetically reproduced norm-reduction defect, not the recognition target.
+From **16:49 UTC**, this follow-up is bounded to **two hours**, at most **one
+one-hour, one-CPU / 8 GB Viper job**, no retry/requeue. Done means recomputed
+same-build and cross-build reports from the existing exports, full independent
+component-cube verification, fetched outputs and a justified physical
+conclusion. The complete **694/43/855** goal remains unmet.
+
+Viper responds, the queue is empty, and **11988093** remains **FAILED 1:0**.
+Its observed batch maximum RSS is about **1.43 GB**, supporting the smaller
+analysis-only allocation. The remote working copy is rsync-managed, not a Git
+repository; a read-only `git status` probe fails for that reason, not because
+the scientific files or access are missing. No compute runs on the login node.
+
+`prepare-recheck` links only the saved exports/metadata into the new sibling
+`qe/xc_build_recheck_20260926/`; controls and analyses are newly created there.
+Relative links keep the already-fetched archive usable locally. The batch
+hashes the entire old source archive except its copied `work/` checkpoints,
+recomputes both states' reports and analyses using the dense norm-reference
+correction, retains all independent numerical bounds, and rechecks the
+source hashes. No old report is overwritten or retrospectively passed.
+
+No QE build/export/SCF, density change, functional/cutoff/threshold adjustment,
+matching plane, calibration, mold, propagation, count, assignment or external
+grade is part of this cycle. Labels and composition priors remain excluded.
+The completed unknown25 application is not rerun, and the existing
+Must-NOT-have constraints remain in force. Preparation is not the deliverable.
+
+**Preflight.** Julia **1.13.0** passes **18 component + 35 paired-control + 14
+recheck-preparation + 16 table-summary** synthetic checks. Regression coverage
+now includes the full 3-D Cartesian-view norm as well as plane views. Independent
+saved-output checks also recompute complete-volume RMS/relative L2 and the
+maximum print-bound ratio, without changing their bounds or selecting pixels.
+Metadata-only preparation succeeds; all **49** relative input links resolve,
+the copied batch is byte-identical to its source, and shell/whitespace checks
+pass. Checksum dry-runs show all common readers, Project/Manifest, configs,
+helper and patch are unchanged remotely; only the two analysis/test scripts
+and the new batch need synchronization. The prepared run has one regular
+batch file and links, with no scientific volume copied or analyzed locally.

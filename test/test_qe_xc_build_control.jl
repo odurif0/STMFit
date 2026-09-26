@@ -58,6 +58,7 @@ end
         expected=sqrt(compensated_squares(a.-b)/compensated_squares(b))
         @test isapprox(observed,expected;rtol=16eps())
         @test observed==B.differences(copy(a),copy(b),p).relative_l2
+        @test observed==B.differences(candidate,native,p).relative_l2
     end
     mktempdir() do dir
         cp(CONFIG,joinpath(dir,"settings.toml"))
@@ -81,6 +82,39 @@ end
         @test_throws ErrorException B.require_controls(dir)
         write(joinpath(dir,"glcn/stock/density.dat"),"different fixture\n")
         @test_throws ErrorException B.require_controls(dir) # jointly changed pair is still rejected
+    end
+end
+
+@testset "Analysis-only recheck preserves archived exports and reports" begin
+    mktempdir() do dir
+        old=joinpath(dir,"old"); out=joinpath(dir,"recheck"); mkpath(old)
+        cp(CONFIG,joinpath(old,"settings.toml"))
+        for f in ("potential_settings.toml","geometry.tsv","accepted_states.sha256","pseudo/fixture.upf")
+            path=joinpath(old,f); mkpath(dirname(path)); write(path,"saved fixture\n")
+        end
+        for m in B.R.MOLECULES
+            files=["metadata.toml","data-file-schema.xml","xc_thresholds.toml","controls/old.tsv","analysis/old.tsv"]
+            append!(files,B.CONTROL_FILES)
+            append!(files,collect(Iterators.flatten(B.identity_pairs())))
+            append!(files,[f*"."*ext for f in (C.FIELDS...,"xc_total") for ext in ("dat","cube")])
+            for f in unique(files)
+                path=joinpath(old,m,f); mkpath(dirname(path)); write(path,"saved fixture\n")
+            end
+        end
+        B.prepare_recheck(old,out)
+        @test islink(joinpath(out,"settings.toml")) && B.S.sha(joinpath(out,"settings.toml"))==B.S.sha(CONFIG)
+        @test islink(joinpath(out,"pseudo")) && read(joinpath(out,"pseudo/fixture.upf"),String)=="saved fixture\n"
+        @test read(joinpath(out,"run_recheck.sbatch"))==read(joinpath(@__DIR__,"../hpc/qe_xc_recheck.sbatch"))
+        for m in B.R.MOLECULES
+            @test !ispath(joinpath(out,m,"controls")) && !ispath(joinpath(out,m,"analysis"))
+            @test read(joinpath(old,m,"controls/old.tsv"),String)==read(joinpath(old,m,"analysis/old.tsv"),String)=="saved fixture\n"
+            @test all(isfile(joinpath(out,m,f)) for f in B.CONTROL_FILES)
+            @test all(realpath(joinpath(out,m,a))==joinpath(old,m,a) && realpath(joinpath(out,m,b))==joinpath(old,m,b) for (a,b) in B.identity_pairs())
+        end
+        @test_throws ErrorException B.prepare_recheck(old,out)
+        incomplete=joinpath(dir,"incomplete"); mkdir(incomplete); cp(CONFIG,joinpath(incomplete,"settings.toml"))
+        @test_throws ErrorException B.prepare_recheck(incomplete,joinpath(dir,"unused"))
+        @test !ispath(joinpath(dir,"unused"))
     end
 end
 
@@ -135,6 +169,15 @@ function verify_controls(root,run)
                 @test integer(t,"different")==sum(integer(r,"different") for r in rr)
                 @test num(t,"maximum_absolute")==maximum(num(r,"maximum_absolute") for r in rr)
                 @test integer(t,"within_combined_print_bound")==sum(integer(r,"within_combined_print_bound") for r in rr)
+                @test num(t,"max_error_to_combined_print_bound")==maximum(num(r,"max_error_to_combined_print_bound") for r in rr)
+                # Also check the corrected reduction on the complete 3-D grid,
+                # not just its planes. No new tolerance or selected voxel set.
+                refnorm=compensated_squares(b.grid)
+                diffnorm=compensated_squares((x-y for (x,y) in zip(a.grid,b.grid)))
+                expected=refnorm>0 ? sqrt(diffnorm/refnorm) : iszero(diffnorm) ? 0. : Inf
+                @test integer(t,"samples")==length(a.grid)
+                @test isapprox(num(t,"rms"),sqrt(diffnorm/length(a.grid));rtol=16eps())
+                @test isapprox(num(t,"relative_l2"),expected;rtol=16eps())
             end
             @test saved["comparison_voxels"]==sum(integer(t,"samples") for t in totals)
         end

@@ -57,6 +57,29 @@ function prepare(root,config,out)
     println("Prepared paired stock/extraction controls; no density or potential read")
 end
 
+# Reuse immutable exports, never the failed run's reports. Relative links also
+# resolve after fetching the sibling run beside its already archived source.
+function prepare_recheck(source,out)
+    source=abspath(source); out=abspath(out)
+    settings(joinpath(source,"settings.toml"))
+    links=["settings.toml","potential_settings.toml","geometry.tsv","accepted_states.sha256","pseudo"]
+    for m in R.MOLECULES
+        append!(links,[joinpath(m,f) for f in ("metadata.toml","data-file-schema.xml","xc_thresholds.toml","stock","site","repeat")])
+        append!(links,[joinpath(m,f*"."*ext) for f in (C.FIELDS...,"xc_total") for ext in ("dat","cube")])
+    end
+    all(f->ispath(joinpath(source,f)),links) || error("Incomplete saved export tree")
+    for m in R.MOLECULES, f in unique(vcat(CONTROL_FILES,collect(Iterators.flatten(identity_pairs()))))
+        isfile(joinpath(source,m,f)) || error("Missing saved control/repeat: $m/$f")
+    end
+    S.newdir(out)
+    for file in links
+        target=joinpath(out,file); mkpath(dirname(target))
+        symlink(relpath(joinpath(source,file),dirname(target)),target)
+    end
+    cp(joinpath(@__DIR__,"../hpc/qe_xc_recheck.sbatch"),joinpath(out,"run_recheck.sbatch"))
+    println("Prepared analysis-only recheck; linked saved exports, no old report reused or volume read")
+end
+
 "Descriptive differences only: no cross-build acceptance tolerance."
 function differences(a,b,p)
     size(a)==size(b) && !isempty(a) || error("Different or empty fields")
@@ -177,8 +200,9 @@ end
 
 function main(args)
     VERSION.major==1 && VERSION.minor==13 || error("Julia 1.13 required")
-    args==["--help"] && return println("qe_xc_build_control.jl prepare ROOT CONFIG NEW_RUN | report ROOT RUN MOLECULE | check RUN | analyze ROOT RUN MOLECULE")
+    args==["--help"] && return println("qe_xc_build_control.jl prepare ROOT CONFIG NEW_RUN | prepare-recheck SAVED_RUN NEW_RUN | report ROOT RUN MOLECULE | check RUN | analyze ROOT RUN MOLECULE")
     length(args)==4 && args[1]=="prepare" && return prepare(args[2:end]...)
+    length(args)==3 && args[1]=="prepare-recheck" && return prepare_recheck(args[2:end]...)
     length(args)==4 && args[1]=="report" && return report(args[2:end]...)
     length(args)==2 && args[1]=="check" && return require_controls(args[2])
     length(args)==4 && args[1]=="analyze" && return analyze(args[2:end]...)

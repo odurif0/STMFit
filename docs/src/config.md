@@ -46,6 +46,15 @@ reference for dense pairwise summation, retaining the **16-eps** check.
 Full-volume revalidation is still pending. The archived run remains failed;
 its generated component summaries and figure are explicitly provisional.
 
+For an analysis-only recheck, `test/qe_xc_build_control.jl prepare-recheck
+SAVED_RUN NEW_RUN` creates relative links to the unchanged exports and a fresh
+report directory. It does not reuse or overwrite old control/analysis tables.
+`hpc/qe_xc_recheck.sbatch` recomputes both reports and component analyses,
+then runs the independent checks with the same bounds, also checking complete
+3-D norm totals rather than only plane norms. It calls no QE executable; source
+archive hashes are checked before/after. The physical config and **16-eps**
+norm check remain unchanged. Heavy reanalysis still runs on Viper, not locally.
+
 ## Accepted-density XC component diagnostic
 
 `config/qe_xc_components.toml` pins an isolated QE 7.4.1 PP extraction of the
