@@ -2305,10 +2305,15 @@ See `docs/src/selection.md` for the full guard specification and
 ## Open Questions
 
 0bo. **Which accepted-density/XC operation carries the vacuum variation?**
-In progress: separate the local-density, local GGA and FFT-divergence terms,
-along with the valence density, actual core-corrected XC input, its squared
-gradient and the unchanged internal GGA activity mask. This is component
-attribution on frozen states, not cutoff convergence or a new tail model.
+**Not yet attributed.** Job **11982255** compiles and exports the first GlcN
+components, then fails the predeclared cross-build density byte-identity
+control. Its first differing value differs by **1e-11 electrons/Bohr^3**;
+that first witness is not a whole-volume bound. Native and cube total-potential
+controls also differ. No repeats, GlcNAc extraction or independent component
+verification run. All partial outputs are fetched, all checkpoint hashes are
+unchanged, and the guard is not relaxed. The next discriminating test is
+paired stock/instrumented executables from the same build, separating
+cross-build variation from extraction effects. No new job is run in this cycle.
 
 0bn. **Is a vacuum-tail construction compatible with the accepted local
 effective potentials?** **No constant-potential matching region is qualified
@@ -19307,3 +19312,80 @@ configuration hash
 `8b5ccb1b6b968afb08ef0e6b0a07ca22279cd0919905dcbae201fc8e8759e8df`.
 A separate stock `plot_num=0` density control is required byte-identical to
 the extracted valence field. No job has yet been submitted.
+
+**Single submission.** Preparation is committed as **4bbb93e**. Code, inputs
+and a pristine isolated QE source copy are transferred after rsync dry-runs;
+remote code/Project/Manifest hashes match, the complete input checksum dry-run
+is empty, and Julia is **1.13.0**. The source commit/submodules and patch
+dry-run pass. Slurm test-only **11982254** is not a real job. The sole real job
+**11982255** is submitted at **00:39:55 UTC**, with explicit
+`--export=ALL,JULIA_BIN=/u/oldu/software/julia-1.13.0/bin/julia`, eight MPI
+ranks, 96 GB, one hour and no requeue. It initially waits for `QOSGrpCpuLimit`,
+then starts on `vipc2063`. No additional submission is included in this cycle.
+
+**Stopped at the identity control; scientific deliverable incomplete.**
+Job **11982255** runs **00:40:22--00:43:32 UTC**, **3m10s**, and exits **1:0**.
+Both actual PP steps report `JOB DONE`; compilation/linking succeed. The
+failure is the intended `cmp rho_valence.dat density_control.dat`, at byte
+**1,762,435**, line **20,568**. The helper exports all seven first GlcN native
+fields and the normal total native/cube output, but the shell then stops:
+no repeat, component cube conversion, GlcNAc PP, full analysis or independent
+saved-output suite occurs. Thus the **18 synthetic passes** are not a claim
+that the real component decomposition passed. Slurm records 14m07.943s total
+CPU; the largest PP per-task MaxRSS is 1,921,871 KiB for the site density
+control, versus 443,319 KiB for the instrumented PP.
+
+Read-only post-failure checks confirm every copied checkpoint file and both
+original density/WFC pairs unchanged. The site binary hash is the same as
+in job 11981276:
+`ff92dc9b87d75089e3d2a8e631087d43fce6661665af33d59e5ea0da38e20195`.
+The new isolated binary is
+`83673c2be72f4d2ba11cbdbe2687f86bc1b56a3886dda50b339e503a593ec7e3`.
+The new binary's log reports MPI-only; the site's reports MPI plus OpenMP
+with one thread per MPI rank. They are different builds, despite the same
+QE release, eight-rank decomposition, unchanged checkpoints and grid.
+
+**Focused failure witnesses, not physical qualification.** The first density
+line differs at its third token:
+`4.582113190e-2` (helper) versus `4.582113191e-2` (site), a difference of
+**-1e-11 electrons/Bohr^3** at printed native precision. Additional byte
+comparisons of already produced potentials also fail: native at byte
+**85,538**, line **1,069**; cube at byte **8,721,223**, line **111,336**.
+The first native differing potential tokens are `-3.740610417e-1` versus
+`-3.740610418e-1` Ry. At the first differing cube voxel, one-based native
+index **(15,126,162)**, direct fixed-width native reads give
+`3.615950000e-1` versus `3.615950002e-1` Ry. Their **-2e-10 Ry** difference
+straddles the coarse cube rounding boundary (`0.36159` versus `0.36160`).
+These are first-failure witnesses, **not** maxima, full-volume printing-bound
+checks or evidence that every cross-build difference is negligible.
+
+The ordinary native potential is written before the helper is called. The
+observed cross-build mismatch therefore needs its own paired build control;
+it is not proof that extraction changed the accepted density on disk, nor
+proof that an XC component causes the vacuum variation. Source-reported
+thresholds equal the frozen values, but this alone does not validate the
+decomposition. Do not loosen the byte guard after observing these outputs.
+
+**Archive and decision.** All generated outputs, source patch/helper, compiled
+binary and build/PP logs are fetched after a dry-run, excluding only copied
+`work/` checkpoints. The complete fetched tree is **1,997,185,843 bytes**;
+a subsequent checksum dry-run reports no differences. Evidence remains at
+`qe/xc_components_20260926/`. No physical component statistics are computed
+from the unqualified partial run. No retry, another job, threshold adjustment,
+SCF, mold replacement, benchmark grade or champion promotion follows.
+The next useful bounded experiment is an otherwise identical stock build
+paired with its instrumented version, with source-identical controls inside
+that build and cross-build differences separately reported. That is a next
+experiment, not a retrospective pass for 11982255.
+
+**Local closure checks.** The synthetic component suite is rerun under Julia
+**1.13.0** and passes **18/18**; shell syntax and `git diff --check` also pass.
+The plotting helper `test/plot_qe_xc_components.jl` is exercised only on small
+synthetic tables for both species. Its three panels per species show plane
+means, lateral standard deviations and source-branch/negative-density
+fractions over every geometry-tagged PAW-free plane. The generated synthetic
+figure is visually inspected; it is not an output or validation of job
+11982255. No figure is produced from the partial physical run. Documentation
+builds with Julia **1.13.0**, `--build-only` and a temporary writable depot,
+without deployment; only the existing page/search-size warnings remain.
+The record remains unmet and the champion is unchanged.

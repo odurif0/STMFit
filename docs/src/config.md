@@ -23,6 +23,16 @@ valence density must equal a stock PP control and all new fields must repeat.
 The entrypoint is `test/qe_xc_components.jl --help`; full analysis runs only on
 the compute node. `test/test_qe_xc_components.jl` runs synthetic checks, with
 optional `ROOT SAVED_RUN` arguments for independent cube-derived validation.
+`test/plot_qe_xc_components.jl SAVED_RUN NEW_PNG` shows all geometry-tagged
+PAW-free planes from the completed analysis tables, without selecting a
+matching height. It has only been exercised on synthetic tables so far.
+
+Attempt **11982255** stops at the cross-build density byte-identity guard
+after the first GlcN extraction. The source helper compiles, but repeats,
+GlcNAc and real component validation are not reached. First differences are
+at printed last digits; they do not bound the whole-volume discrepancy.
+The guard remains unchanged and the partial fields are not validated physical
+components. A same-build stock/instrumented comparison is the next control.
 
 ## Accepted-state vacuum potential diagnostic
 

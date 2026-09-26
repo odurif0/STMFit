@@ -37,7 +37,7 @@ effective potential, clip density, or impose a borrowed vacuum level. The
 density/XC treatment and numerical-cutoff dependence need separate examination;
 the accepted electronic convergence criterion is not changed by this finding.
 
-The next attribution diagnostic keeps the accepted density and PBE functional
+The attribution diagnostic keeps the accepted density and PBE functional
 fixed and separates local-density XC, local GGA and negative FFT divergence.
 It also exports the actual valence-plus-core input and original GGA activity
 mask. The internal driver tests absolute density and **squared** gradient;
@@ -47,6 +47,12 @@ term from elsewhere. Attribution and reproducible sums cannot establish a
 cutoff-converged tail, an artifact's size or a new physical barrier. In
 particular no component may be dropped merely because that makes the potential
 flatter. No new calibration or recognition result belongs to this diagnostic.
+
+Its first attempt **11982255** fails the required cross-build density identity
+control before repeats or GlcNAc processing. Small first-difference witnesses
+do not establish a whole-volume error bound or validate the physical
+decomposition. The next control must separate the build effect from the
+instrumentation effect; the guard is not relaxed and no component is adopted.
 
 ## Atomic z origin is not an observed STM background
 

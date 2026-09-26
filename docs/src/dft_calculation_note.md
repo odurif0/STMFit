@@ -185,6 +185,18 @@ constant-current feedback loop.
 
 ## Diagnostic constant-current observable
 
+**September 26 XC component attempt (not qualified).** Job **11982255**
+compiles the isolated PP helper and produces the first GlcN native components,
+then stops at the required byte comparison with the site density control.
+The first density difference is **1e-11 electrons/Bohr^3**; native/cube
+total controls also differ between builds. These first witnesses are not
+whole-volume accuracy bounds. No repeat, GlcNAc export or component analysis
+is reached. All partial outputs and the executable are fetched/checksum-
+verified; all original and copied checkpoint hashes remain unchanged. The
+guard is not loosened and no retry occurs in this cycle. A paired stock and
+instrumented executable from the same build is needed before attributing
+the potential variation. The accepted states, SCF gate and molds are unchanged.
+
 **September 26 local effective potential.** PP-only job **11981276** completes
 in **4m07s** on complete copies of the accepted states. Total local potential
 (`plot_num=1`) and electrostatic control (`plot_num=11`) are exported; the
