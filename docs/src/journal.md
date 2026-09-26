@@ -19826,3 +19826,14 @@ that this alternative is numerically less accurate and requires testing;
 the same guidance is present in the pinned `PW/Doc/INPUT_PW.def`. No `tqr`
 campaign, setting change or additional job is launched. The approved two-point
 cutoff experiment continues unchanged.
+
+**Log-definition check while waiting.** In pinned QE 7.4.1
+`PW/src/v_of_rho.f90:v_xc`, the non-spin-polarized branch subtracts the core
+density before summing the negative part of the valence density, then scales
+the sum by `omega/(nr1*nr2*nr3)`. Its printed `negative rho` is therefore the
+positive magnitude of a whole-cell negative-charge integral in electrons,
+not a fraction of negative voxels, a local vacuum-error estimate or the SCF
+residual. This source definition is consistent with the quantity independently
+integrated from the signed density exports. Intermediate SCF log values do
+not replace the converged, checked export comparison; no cutoff conclusion
+is drawn from them.
