@@ -5,6 +5,19 @@ include(joinpath(@__DIR__,"qe_xc_build_control.jl"))
 const B=QEXCBuildControl
 const CONFIG=joinpath(@__DIR__,"../config/qe_xc_build_control.toml")
 
+# Independent reference reduction. A naive serial generator sum can lose
+# hundreds of ulps on a 43,200-point plane even though the production pairwise
+# reduction is accurate. Keep the 16-eps comparison, not a data-fitted tolerance.
+function compensated_squares(xs)
+    total=0.; correction=0.
+    for x in xs
+        term=x*x; next=total+term
+        correction+=abs(total)>=abs(term) ? (total-next)+term : (term-next)+total
+        total=next
+    end
+    total+correction
+end
+
 @testset "Same-build controls and descriptive cross-build differences" begin
     s=B.settings(CONFIG); p=s["preprocessing"]
     @test_throws ErrorException C.settings(CONFIG)
@@ -25,6 +38,13 @@ const CONFIG=joinpath(@__DIR__,"../config/qe_xc_build_control.toml")
     @test_throws ErrorException B.differences(Float64[],Float64[],p)
     tiny=B.differences([1.0 + 2eps()],[1.],p)
     @test tiny.different==1 && tiny.within_combined_print_bound==1 # not byte identity
+    @test compensated_squares([1.,2.,3.])==14
+    @test compensated_squares(zeros(43_200))==0
+    reference=fill(.3,240,180)
+    perturbed=reference.+reshape([1e-9*cos(i/7) for i in 1:length(reference)],size(reference))
+    @test isapprox(compensated_squares(reference),Float64(BigFloat(.3)^2*length(reference));rtol=eps())
+    fullplane=B.differences(perturbed,reference,p)
+    @test isapprox(fullplane.relative_l2,sqrt(compensated_squares(perturbed.-reference)/compensated_squares(reference));rtol=16eps())
     mktempdir() do dir
         cp(CONFIG,joinpath(dir,"settings.toml"))
         for m in B.R.MOLECULES
@@ -86,8 +106,8 @@ function verify_controls(root,run)
                     @test num(r,"maximum_absolute")==maximum(abs,delta)
                     @test isapprox(num(r,"mean_signed"),sum(delta)/n;rtol=16eps(),atol=eps()*sum(abs,delta)/n)
                     @test isapprox(num(r,"mean_absolute"),sum(abs,delta)/n;rtol=16eps())
-                    @test isapprox(num(r,"rms"),sqrt(sum(x*x for x in delta)/n);rtol=16eps())
-                    normref=sum(x*x for x in ref); normdiff=sum(x*x for x in delta)
+                    @test isapprox(num(r,"rms"),sqrt(compensated_squares(delta)/n);rtol=16eps())
+                    normref=compensated_squares(ref); normdiff=compensated_squares(delta)
                     expected=normref>0 ? sqrt(normdiff/normref) : iszero(normdiff) ? 0. : Inf
                     @test isapprox(num(r,"relative_l2"),expected;rtol=16eps())
                     count=0; ratio=0.

@@ -2304,8 +2304,8 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
-0bp. **Can build effects be separated from the XC extraction?** Prepared and
-locally tested; no new job is submitted while Viper authentication is unavailable.
+0bp. **Can build effects be separated from the XC extraction?** Job **11988093**
+is submitted after SSH restoration; its scientific controls are still pending.
 A stock/extraction executable pair will share the same configure and compiled
 libraries. Exact within-build density/total controls and repeats remain
 mandatory. All-native-voxel differences against the site build are descriptive;
@@ -19485,3 +19485,27 @@ and local/remote Project, Manifest and common-reader hashes match. Nondeleting
 rsync dry-runs precede transfer of the committed **704dc8e** implementation,
 prepared inputs and a new isolated pristine QE source tree. No physical
 parameter, component helper, geometry flag or failed-run status changes.
+
+**Single submission.** Resumption is documented in **061157b**; implementation
+remains **704dc8e**. Final source/input checksum dry-runs return no differences;
+all nine transferred compute/config files match their local SHA-256 values.
+Remote patch/shell checks and the Julia 1.13 CLI pass. Slurm test-only
+**11988092** is not a submitted job. The sole real job **11988093** is
+submitted at **12:39:45 UTC**, with explicit
+`--export=ALL,JULIA_BIN=/u/oldu/software/julia-1.13.0/bin/julia`, eight MPI ranks,
+96 GB, one hour and no requeue. It initially waits for unavailable nodes.
+No second submission or rerun of 11982255 is made.
+
+**Verifier defect found before execution.** While Slurm still reports
+`PENDING`, a label-free synthetic **240 x 180** plane tests the independent
+relative-L2 reference at the real plane size: constant 0.3 plus a 1e-9 cosine
+perturbation. The report gives **2.3570388772137285e-9**, while the verifier's
+naive serial generator reduction gives **2.3570388772131383e-9**, a relative
+difference **2.50e-13** exceeding its existing **16 eps = 3.55e-15** check.
+This is summation error in a synthetic test reference, not measured physical
+variation or a failed component extraction. The verifier replaces only its
+square-sum reference with independent compensated summation; the **16-eps
+tolerance is unchanged**. A full-plane regression plus an independent
+BigFloat constant-plane check are added. Production difference arithmetic,
+config, helper, additivity bounds and exact identities are untouched. No
+physical output has been observed or used to choose this correction.
