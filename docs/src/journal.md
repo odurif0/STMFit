@@ -19811,3 +19811,18 @@ native/cube comparisons per case and **886** additional assertions, bringing
 the local suite to **1,797**. No real scientific volume is read locally and no
 production/analysis behavior or bound is changed. The running job keeps its
 already synchronized source snapshot; this additional fixture is local only.
+
+**Read-only interpretation check while waiting.** The pinned QE 7.4.1 source
+does not support treating `tqr` as an automatic removal of finite-G leakage.
+`PW/src/realus.f90:addusdens_r` builds localized real-grid augmentation,
+then calls `rho_r2g` and adds only `1:dfftp%ngm` coefficients. After density
+symmetrization, `PW/src/sum_band.f90` calls `rho_g2r` again. Thus real-space
+evaluation of augmentation does not itself avoid the finite reciprocal
+representation or guarantee compact support/positive vacuum tails after the
+round trip. This is an inference about the algorithm, not a measured result
+for these cells and not proof that the option cannot help. The
+[QE input manual](https://www.quantum-espresso.org/Doc/INPUT_PW.html) also warns
+that this alternative is numerically less accurate and requires testing;
+the same guidance is present in the pinned `PW/Doc/INPUT_PW.def`. No `tqr`
+campaign, setting change or additional job is launched. The approved two-point
+cutoff experiment continues unchanged.
