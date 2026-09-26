@@ -19509,3 +19509,11 @@ tolerance is unchanged**. A full-plane regression plus an independent
 BigFloat constant-plane check are added. Production difference arithmetic,
 config, helper, additivity bounds and exact identities are untouched. No
 physical output has been observed or used to choose this correction.
+
+The corrected verifier passes **18 + 23** synthetic assertions and is committed
+as **6a9e57c**. A second pre-transfer check confirms `PENDING` and absence of
+the run's `work/` directory; only the test file is synchronized after its dry-run.
+At **12:46 UTC** the job is still `PENDING`, and local/remote verifier hashes
+both equal `5bceccbbf3969d4b7111d07b6fae44e774513301eeaa8139647c86c3ec3fe087`.
+No submitted Slurm script, physical extraction, config or resource request is
+changed, and no second job is submitted.
