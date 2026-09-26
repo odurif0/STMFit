@@ -19794,3 +19794,10 @@ one thread each, 96 GB, four hours and no requeue. Viper accounts two hardware
 threads per allocated physical core (16 Slurm logical CPUs for eight ranks),
 as in the preceding eight-rank jobs. No GlcNAc job is submitted in parallel;
 it waits for this job's terminal outcome. Source/config commit: **67094b8**.
+
+After a shared-quota wait, **11990241** starts at **17:56:01 UTC** on
+**vipc2046**. The live PW log confirms the atomic starting potential and
+`Starting wfcs from file`. Its dense FFT grid is **360×250×360** (32.4 million
+voxels), versus the baseline **240×180×250** (10.8 million); the smooth grid
+remains **180×135×192**. Estimated total dynamical memory is **82.36 GB** within
+the 96-GB allocation. These are setup observations, not a converged result.
