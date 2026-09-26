@@ -19801,3 +19801,13 @@ After a shared-quota wait, **11990241** starts at **17:56:01 UTC** on
 voxels), versus the baseline **240×180×250** (10.8 million); the smooth grid
 remains **180×135×192**. Estimated total dynamical memory is **82.36 GB** within
 the 96-GB allocation. These are setup observations, not a converged result.
+
+**Analysis fixture check while SCF runs.** A local end-to-end fixture exercises
+the unchanged native/cube analysis and independent saved-output verifier on
+**2×3×8** and **3×4×10** synthetic grids for both metadata sets. Deliberate
+negative x/y padding must be excluded, signed physical samples retained, and
+all planes reported at their own native heights. The test passes **504**
+native/cube comparisons per case and **886** additional assertions, bringing
+the local suite to **1,797**. No real scientific volume is read locally and no
+production/analysis behavior or bound is changed. The running job keeps its
+already synchronized source snapshot; this additional fixture is local only.

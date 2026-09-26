@@ -1,5 +1,5 @@
 #!/usr/bin/env julia
-using Test, TOML, Statistics, LinearAlgebra
+using Test, TOML, Statistics, LinearAlgebra, Printf
 include(joinpath(@__DIR__,"qe_density_cutoff.jl"))
 const C=QEDensityCutoff
 const R=C.R; const S=C.S; const N=C.N
@@ -141,8 +141,83 @@ function verify_saved(root,run,m)
     end
 end
 
+"Tiny nonsquare, differently sampled volumes; no physical field is read."
+function saved_fixture_tests(root)
+    s=C.settings(CONFIG); accepted=joinpath(root,s["model"]["baseline_run"])
+    mktempdir() do temp
+        baseline=joinpath(temp,"baseline"); run=joinpath(temp,"candidate")
+        mkpath(baseline); mkpath(run); mkpath(joinpath(temp,"config"))
+        cp(joinpath(root,"config/qe_vacuum_potential.toml"),joinpath(temp,"config/qe_vacuum_potential.toml"))
+        cp(realpath(joinpath(accepted,"pseudo")),joinpath(baseline,"pseudo"))
+        cp(realpath(joinpath(accepted,"pseudo")),joinpath(run,"pseudo"))
+        s["model"]["baseline_run"]="baseline"
+        open(io->TOML.print(io,s),joinpath(run,"settings.toml"),"w")
+        for molecule in R.MOLECULES
+            for (tree,dims,cutoff) in ((baseline,(2,3,8),360.),(run,(3,4,10),720.))
+                case=joinpath(tree,molecule); mkpath(case)
+                raw=read(joinpath(accepted,molecule,"data-file-schema.xml"),String)
+                xml=replace(raw,r"<fft_grid\b[^>]*>"=>"<fft_grid nr1=\"$(dims[1])\" nr2=\"$(dims[2])\" nr3=\"$(dims[3])\">")
+                cutoff==720. && (xml=replace(xml,"<ecutrho>1.800000000000000E+002</ecutrho>"=>"<ecutrho>3.600000000000000E+002</ecutrho>"))
+                write(joinpath(case,"data-file-schema.xml"),xml)
+                geo=R.D.xml_geometry(joinpath(case,"data-file-schema.xml"))
+                fields=Dict("density"=>[isodd(i+j) ? -.01(k+1) : .02(1+i+2j+k) for i in 1:dims[1],j in 1:dims[2],k in 1:dims[3]],
+                    "total"=>[7+.3i+.5j+.2k^2 for i in 1:dims[1],j in 1:dims[2],k in 1:dims[3]])
+                fields["electrostatic"]=fields["total"].-[.1cos(i+j*k) for i in 1:dims[1],j in 1:dims[2],k in 1:dims[3]]
+                exports=tree==baseline ? joinpath(case,"stock") : case
+                mkpath(exports)
+                species=unique(a.z for a in geo.geometry.atoms)
+                symbols=Dict(z=>name for (name,z) in R.D.P.Z)
+                for (stem,values) in fields
+                    num=stem=="density" ? 0 : stem=="total" ? 1 : 11
+                    open(joinpath(exports,stem*".dat"),"w") do io
+                        println(io,"synthetic cutoff fixture, not a physical result")
+                        # Deliberate x/y padding, excluded from all summaries.
+                        println(io,join((dims[1]+1,dims[2]+1,dims[3],dims...,length(geo.geometry.atoms),length(species))," "))
+                        alat=geo.cell[1,1]; @printf(io,"0 %.8f 0 0 0 0 0\n",alat)
+                        for j in 1:3; println(io,join(geo.cell[:,j]./alat," ")); end
+                        println(io,"100 ",cutoff/50," 50 ",num)
+                        for (j,z) in enumerate(species); println(io,j," ",symbols[z]," 1.00"); end
+                        for (j,a) in enumerate(geo.geometry.atoms)
+                            tau=a.position_nm./R.D.G.C.BOHR_NM./alat
+                            @printf(io,"%d %.9f %.9f %.9f %d\n",j,tau...,findfirst(==(a.z),species))
+                        end
+                        for k in 1:dims[3], j in 1:dims[2]+1, i in 1:dims[1]+1
+                            @printf(io,"%.9E\n",i<=dims[1] && j<=dims[2] ? values[i,j,k] : -999.)
+                        end
+                    end
+                    open(joinpath(exports,stem*".cube"),"w") do io
+                        println(io,"synthetic cutoff fixture\nnot a physical result")
+                        println(io,length(geo.geometry.atoms)," 0 0 0")
+                        for j in 1:3
+                            @printf(io,"%d %.6f %.6f %.6f\n",dims[j],(geo.cell[:,j]./dims[j])...)
+                        end
+                        for a in geo.geometry.atoms
+                            @printf(io,"%d 1.0 %.6f %.6f %.6f\n",a.z,(a.position_nm./R.D.G.C.BOHR_NM)...)
+                        end
+                        for i in 1:dims[1],j in 1:dims[2],k in 1:dims[3]
+                            @printf(io,"%.4E\n",values[i,j,k])
+                        end
+                    end
+                end
+            end
+            dir=joinpath(run,molecule)
+            for ext in ("dat","cube"); cp(joinpath(dir,"total.$ext"),joinpath(dir,"repeat_total.$ext")); end
+            hashes=Dict("stock/$stem.$ext"=>S.sha(joinpath(baseline,molecule,"stock","$stem.$ext")) for stem in C.STEMS for ext in ("dat","cube"))
+            open(io->TOML.print(io,Dict("control_exports_sha256"=>hashes)),joinpath(dir,"baseline_controls.toml"),"w")
+            C.analyze(temp,run,molecule)
+            verify_saved(temp,run,molecule)
+            report=R.V.tsv(joinpath(dir,"analysis/export_comparison.tsv"))
+            @test length(report)==6
+            @test all(r["unit"]==(r["field"]=="density" ? "electron_Bohr-3" : "Ry") for r in report)
+        end
+    end
+end
+
 if isempty(ARGS)
     metadata_tests(ROOT) # XML-only local checks; no saved volume is loaded.
+    @testset "Complete cutoff report on tiny synthetic volumes" begin
+        saved_fixture_tests(ROOT)
+    end
 elseif length(ARGS)==3
     verify_saved(ARGS...)
 else
