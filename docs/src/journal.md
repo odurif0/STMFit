@@ -19472,3 +19472,16 @@ Documentation also builds successfully without deployment. Existing page/search
 size warnings remain; HTTP precompilation additionally reports an ignored
 local socket-bind denial from the sandbox, not a build failure. No permission
 or SSH configuration is changed to work around it.
+
+**Authorized resumption at 12:35 UTC.** The user asks to continue; Viper now
+responds, `squeue` is empty, and both new remote directories are absent.
+The earlier window was interrupted by unavailable authentication, with zero
+jobs submitted. The same prepared experiment resumes in a **two-hour window
+from 12:35 UTC**, retaining its single one-hour-job limit and no retry/requeue;
+this is not an additional scientific arm or a renewed allocation after failure.
+The **18 + 19** focused synthetic checks are rerun and pass; Julia remains
+**1.13.0**. Shell/patch checks pass, the source is clean at the pinned commit,
+and local/remote Project, Manifest and common-reader hashes match. Nondeleting
+rsync dry-runs precede transfer of the committed **704dc8e** implementation,
+prepared inputs and a new isolated pristine QE source tree. No physical
+parameter, component helper, geometry flag or failed-run status changes.
