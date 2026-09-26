@@ -185,7 +185,7 @@ constant-current feedback loop.
 
 ## Diagnostic constant-current observable
 
-**September 26 approved cutoff sensitivity (preparation).** The user approves
+**September 26–27 cutoff sensitivity (completed).** The user approved
 two sequential Viper jobs, each limited to **8 CPUs / 4 h**, to compare
 `ecutrho=720 Ry` against the saved accepted **360-Ry** states. Geometries,
 PBE/D3, `ecutwfc=50 Ry`, PAW files, smearing, Gamma sampling and the common
@@ -195,8 +195,26 @@ the new SCFs; the potential starts from atomic densities on the new grid.
 No old density or mixing checkpoint is transferred. The same stock PP binary
 provides both cutoffs' field definitions. All native planes are reported with
 unchanged geometric tags, without cross-grid interpolation or height selection.
-This is sensitivity at two cutoffs, not convergence, a new calibrated STM
-observable or a mold/champion replacement. Results are not yet available.
+Both sequential jobs **11990241/11991069** complete **0:0**, within their
+bounds, with SCF errors **5.19734e-8/4.01239e-5 Ry**. All **259.2 million**
+native/cube comparisons and **28,114** independent saved-output assertions
+pass; repeats are exact, original states unchanged and complete local copies
+checksum-identical.
+
+The minimum total-potential spatial SD across the PAW-free gap changes from
+**0.20376 to 0.09305 eV** for GlcN and **0.20214 to 0.09356 eV** for GlcNAc.
+Whole-cell negative-charge magnitudes change from **0.00724418/0.00656360**
+to **0.00150228/0.00117284 electrons**, but native negative fractions still
+reach **51.14/51.30%** of a plane. The change is not uniformly smaller:
+GlcNAc's sampled maximum total-potential SD increases from **1.88698 to
+2.06179 eV**. The native grids sample different heights; their extrema and
+accurate whole-cell charge integrals are not local-tail accuracy bounds.
+Full native-plane tables and both figures are retained, with no favorable
+height selected. XC here is total minus electrostatic, not a new component
+decomposition at 720 Ry. The fresh SCFs change the self-consistent states as
+well as the grid, so this is not an isolated postprocessing change at fixed
+density. This is sensitivity at two cutoffs, not convergence, a new calibrated
+STM observable or a mold/champion replacement.
 
 **September 26 saved-export XC revalidation.** Separate analysis-only job
 **11989810** completes in **21m13s** with **22,642** independent control/norm

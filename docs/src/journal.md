@@ -2305,17 +2305,17 @@ See `docs/src/selection.md` for the full guard specification and
 ## Open Questions
 
 0bq. **Does raising the density cutoff reduce the vacuum variation?**
-**The first case is complete; the paired comparison is pending.** GlcN job
-**11990241** completes **0:0** in **1h51m**, with SCF error **5.19734e-8 Ry**,
-129.6 million native/cube comparisons and 14,057 independent saved-output
-checks. The original geometries, electronic settings and checkpoint hashes
-are preserved. Only after this terminal outcome is GlcNAc job **11991069**
-submitted, under the same eight-rank/four-hour bound; it starts at
-**19:51:58 UTC**. The fetched GlcN comparison shows substantial cutoff
-sensitivity: full-gap minimum total-potential spatial SD falls from
-**0.20376 to 0.09305 eV**, while negative samples still reach **51.14%** of
-a plane. These native-grid descriptors do not prove convergence or qualify
-a new potential or mold; GlcNAc is still running.
+**Two-point sensitivity is confirmed for both geometries, not convergence.**
+Sequential jobs **11990241/11991069** complete **0:0** in **1h51m/2h19m52s**,
+with SCF errors **5.19734e-8/4.01239e-5 Ry**. All **259.2 million** native/cube
+comparisons and **28,114** independent saved-output checks pass. The complete
+results are fetched and checksum-identical; original states remain unchanged.
+Full-gap minimum total-potential spatial SD changes from **0.20376 to
+0.09305 eV** for GlcN and **0.20214 to 0.09356 eV** for GlcNAc. The reduction
+is not uniform: GlcNAc's sampled maximum SD increases, and negative samples
+still reach **51.14/51.30%** of a PAW-free plane. The grids sample different
+heights; their extrema are descriptive, not a physical accuracy bound.
+No matching plane, potential, mold or recognition improvement is qualified.
 
 0bp. **Can build effects be separated from the XC extraction?** **Yes, for the
 two frozen states.** Analysis-only recheck **11989810** completes **0:0** in
@@ -2339,10 +2339,10 @@ Native density counts reach **50.07/49.78%** negative valence and
 **53.31/53.77%** negative core-corrected XC input within a plane. Small global
 negative-charge integrals therefore do not establish local tail accuracy.
 No single GGA-only explanation, density clipping or potential subtraction is
-qualified. The separate density-representation/cutoff sensitivity test is now
-under way (0bq). The user approves this 360-to-720-Ry sensitivity test,
-limited to two sequential eight-CPU jobs of at most four hours each, without
-changing the geometries, PBE, wavefunction cutoff or 5e-5-Ry acceptance.
+qualified. The separate 360-to-720-Ry test is now complete (0bq) and confirms
+substantial sensitivity, not cutoff convergence. It uses exactly the two
+approved sequential eight-CPU jobs, each within four hours, without changing
+the geometries, PBE, wavefunction cutoff or 5e-5-Ry acceptance.
 
 0bn. **Is a vacuum-tail construction compatible with the accepted local
 effective potentials?** **No constant-potential matching region is qualified
@@ -2355,9 +2355,10 @@ potential: their span/mean-barrier ratios are at least **0.3283/0.3072**.
 XC spatial SD exceeds the electrostatic SD on **235/237** planes; this locates
 the larger component variation, not its physical or numerical cause.
 No flatness cutoff, matching plane, propagation, mold/reference replacement
-or recognition claim follows. Density/XC handling and cutoff sensitivity are
-the next questions, before any vacuum-tail construction; neither has been
-tested by this PP-only export. The 5e-5-Ry electronic gate remains unchanged.
+or recognition claim follows. The subsequent XC attribution and two-point
+cutoff diagnostics (0bo/0bq) do not by themselves qualify a matching region
+or vacuum-tail construction; neither was tested by this PP-only export.
+The 5e-5-Ry electronic gate remains unchanged.
 
 0bm. **Does a common exterior of the complete molecular footprints support a
 less ambiguous height reference?** **No improvement from whole-footprint
@@ -19885,7 +19886,7 @@ Only the small saved tables are summarized or plotted locally, with Julia
 | Lower-half minimum total-potential spatial SD (eV) | 0.20376211 | 0.09374628 |
 | Full-gap minimum XC spatial SD (eV) | 0.19514761 | 0.08359429 |
 | Full-gap minimum total-potential lateral span (eV) | 1.29213647 | 0.70685044 |
-| Largest negative-density fraction in a native plane (%) | 50.06944 | 51.14444 |
+| Largest negative-density fraction in a PAW-free native plane (%) | 50.06944 | 51.14444 |
 
 Both whole-cell density integrals agree with the XML's **1,784 electrons**
 within **9e-10 electron**. This global charge check does not establish local
@@ -19909,5 +19910,86 @@ the scientific fields. No result is adopted.
 **Second job start.** GlcNAc **11991069** starts at **19:51:58 UTC** on
 **vipc2428**. Its log confirms an atomic starting potential, wavefunctions
 from file, dense/smooth grids **360×250×360 / 180×135×192**, and estimated
-total dynamical RAM **86.34 GB** within the 96-GB allocation. This is still a
-running calculation, not a converged second result.
+total dynamical RAM **86.34 GB** within the 96-GB allocation. At this start
+checkpoint no converged second result is available; the terminal outcome
+follows below.
+
+### 2026-09-27 — Paired density-cutoff sensitivity verified; no mold adoption
+
+**Second terminal outcome.** GlcNAc **11991069** completes **0:0** at
+**22:11:50 UTC on September 26** (**00:11:50 CEST on September 27**), after
+**2h19m52s**. SCF converges in **45 iterations**, with error
+**4.012390870740486e-5 Ry**, below the unchanged **5e-5-Ry** target. PW and
+all four PP steps complete **0:0**. Geometry, species, physical/electronic
+settings, original-state hashes and pre/post-PP checkpoint hashes pass.
+The total-potential native/cube repeat is byte-exact. All **129.6 million**
+native/cube comparisons, **14,057** independent saved-output assertions and
+**21** synthetic checks pass, followed by the sensitivity-complete marker.
+Together with GlcN, these are exactly the **two** authorized sequential jobs;
+there is no calculation retry, requeue, additional SCF or production change.
+
+**Recovery and verification.** All **44 regular files**, **6,537,036,803
+bytes**, are fetched locally, including the collected orbitals and density
+checkpoint. The first checksum-only rsync ends with signal exit **20** despite
+printing no differences; that interrupted check is not accepted. A fresh
+read-only checksum comparison terminates **0**, with no differences or
+transfers. Local input/pseudopotential and converged-checkpoint manifests also
+pass. Final XML SHA-256 is
+`e4f08f9ba92fcc2045042987c4eb3c108cdbaf2c2bb6cd8269d7f2ea0d226944`;
+SCF log SHA-256 is
+`d9ad1bd4ec7adad5a9acf7f72f9bf36eb642c404d6ce8575c9da0e2ab964c180`.
+Both jobs use the frozen submitted scientific source **67094b8**. Only their
+small saved tables and XML metadata are summarized locally with Julia 1.13.
+
+**Measured comparison.** Both dense grids change from **240×180×250** to
+**360×250×360**; the smooth grid and **50-Ry** wavefunction cutoff are unchanged.
+The original per-state targets are **1e-7/5e-5 Ry**, not a newly relaxed common
+criterion. Baseline/candidate SCF errors are **6.00572e-8/5.19734e-8 Ry** for
+GlcN and **4.02653e-5/4.01239e-5 Ry** for GlcNAc. These residuals do not bound
+the local vacuum-tail error.
+
+| Native-grid descriptor | GlcN 360 Ry | GlcN 720 Ry | GlcNAc 360 Ry | GlcNAc 720 Ry |
+|---|---:|---:|---:|---:|
+| Full PAW-free gap planes | 122 | 175 | 115 | 166 |
+| Lower geometric half planes | 61 | 87 | 57 | 83 |
+| Whole-cell negative-charge magnitude (electrons) | 0.00724418337 | 0.00150228046 | 0.00656360200 | 0.00117283833 |
+| Full-gap total-potential spatial SD, min–max (eV) | 0.203762–1.477703 | 0.093054–1.473509 | 0.202145–1.886982 | 0.093561–2.061787 |
+| Lower-half minimum total-potential spatial SD (eV) | 0.203762 | 0.093746 | 0.204806 | 0.094684 |
+| Full-gap total-potential lateral span, min–max (eV) | 1.292136–13.987656 | 0.706850–12.024576 | 1.293910–12.359561 | 0.729000–13.849073 |
+| Full-gap minimum XC spatial SD (eV) | 0.195148 | 0.083594 | 0.198214 | 0.084399 |
+| Largest negative-density fraction in a PAW-free plane (%) | 50.06944 | 51.14444 | 49.78241 | 51.29556 |
+
+Whole-cell charge integrals agree with the respective XML's **1,784/1,800
+electrons** within **9e-10 electron**. The negative-charge magnitude falls,
+but signed samples persist; neither a small negative integral nor accurate
+total charge establishes local-tail accuracy. Every native plane is retained,
+with the same strict geometry-only gap/lower-half tags. Extrema occur at
+different native heights and no cross-grid interpolation is performed.
+In particular, GlcNAc's sampled maximum SD and lateral span increase: this is
+not a uniform improvement or proof of increased physical variation at a
+matched height.
+
+Both all-plane figures are generated and visually checked:
+`results/density_cutoff_20260926/glcn_native_planes.png` and
+`results/density_cutoff_20260926/glcnac_native_planes.png`. They show the full
+sampled ranges, both cutoffs, the geometric midpoint and the persistent
+negative-density fractions. Lines only connect native samples for display.
+Electrostatic profiles are visually similar, while total/XC profiles change
+substantially; XC here is total minus electrostatic, not a new LDA/GGA
+component attribution at 720 Ry.
+
+**Decision and next question.** This confirms sensitivity of the signed
+density and effective potential to charge cutoff. The fresh SCFs also change
+the self-consistent states; this does not isolate a single postprocessing/XC
+operation at fixed density. Two points do not establish cutoff convergence,
+a reliable propagation potential, STM current calibration or improved
+recognition. No clipping, normalization,
+height selection, mold/champion replacement, benchmark grade or unknown25
+rerun occurs. The **694/43/855** recognition objective remains unmet. A useful
+next question is whether the cutoff effect reaches the existing bias-window
+wavefunction-density diagnostic at its unchanged physical planes, using the
+saved orbitals rather than another SCF. That is a separate, not-yet-authorized
+bounded analysis, not a result of this potential comparison.
+
+The documentation build passes under Julia 1.13 with existing size warnings;
+`git diff --check` passes. This outcome update changes documentation only.

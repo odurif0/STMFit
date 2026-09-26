@@ -7,11 +7,16 @@ The separately authorized **360-to-720-Ry** density-cutoff test holds PBE,
 It measures signed density and total/electrostatic/XC plane statistics, not a
 new STM observable. Native grids differ; every plane is retained, with the
 same geometric gap boundaries and no interpolation or favorable-height choice.
-Even reduced negative density or potential variation would be sensitivity
-evidence, not a converged tail, current calibration or permission to replace
-the molds. The common **5e-5-Ry** SCF acceptance and the original per-state
-electronic targets remain unchanged. At most two sequential eight-CPU,
-four-hour jobs are authorized; an unfinished SCF remains an incomplete case.
+Both authorized jobs complete successfully and their full local copies are
+checksum-verified. Smaller minimum total/XC variations and negative-charge
+integrals establish sensitivity, not a converged tail, current calibration or
+permission to replace the molds. Negative samples persist and GlcNAc's
+sampled maximum total-potential variation increases; the change is not a
+uniform improvement across the native domain. See the paired results in the
+[DFT calculation note](dft_calculation_note.md). The common **5e-5-Ry** SCF
+acceptance and the original per-state electronic targets remain unchanged.
+Exactly two sequential eight-CPU jobs are used, each within four hours; no
+additional SCF, calibration or production change follows.
 
 A geometrically empty region is not necessarily a region of constant local
 effective potential. The completed PP-only diagnostic exports the accepted-state

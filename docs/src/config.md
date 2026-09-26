@@ -25,6 +25,12 @@ Different sampling grids limit direct comparisons of extrema; two cutoffs do
 not establish convergence. No threshold, density clipping, mold, calibration,
 benchmark selection or champion replacement is part of this experiment.
 
+The completed paired result is documented in the
+[DFT calculation note](dft_calculation_note.md). Plot the small saved tables
+with `test/plot_qe_density_cutoff.jl SAVED_RUN MOLECULE NEW_PNG`, where
+`MOLECULE` is `glcn` or `glcnac`. The script retains every PAW-free native
+plane, checks complete grid indices and refuses to overwrite an existing PNG.
+
 ## Paired-build XC control
 
 `config/qe_xc_build_control.toml` declares a separate PP-only experiment after
