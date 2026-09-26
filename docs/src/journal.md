@@ -2305,7 +2305,7 @@ See `docs/src/selection.md` for the full guard specification and
 ## Open Questions
 
 0br. **Does charge-cutoff sensitivity reach the bias-window orbital density?**
-**A bounded saved-state comparison is authorized; no result yet.** Compare
+**The authorized job 11992917 is queued; no result yet.** Compare
 360/720 Ry on both geometries at the unchanged 0.40/0.50/0.60-nm planes and
 bias, using direct Fourier evaluation. One four-CPU / 32-GB / one-hour Viper
 job is allowed, with no new SCF, PP, retry, normalization, selected height,
@@ -20066,3 +20066,15 @@ dry-run contains only the four new code/config files and the thin prepared
 run (**33 regular files, 11,045,057 bytes**), with no deletion or orbital
 transfer. Shell syntax, `git diff --check` and the Julia 1.13 documentation
 build pass (existing size warnings only). No job has been submitted yet.
+
+**Submission.** Source **2269789**, all four new source/config files and the
+thin prepared run are synchronized with zero checksum differences. Remote
+Julia **1.13.0**, the CLI load, input manifests and shell syntax pass. Slurm
+test-only **11992584** is not a submitted job. After checking that no matching
+job or case output exists, the sole real job **11992917** is submitted at
+**23:00:38 UTC on September 26 / 01:00:38 CEST on September 27**. The command
+explicitly sets one node/task, four CPUs, 32 GB, one hour, no requeue and
+`--export=ALL,JULIA_BIN=...`; Slurm confirms those bounds and zero restarts.
+It initially waits for a node unavailable/down/drained or reserved for a
+higher-priority partition. This is a live queue wait, not a failed result;
+no other job or retry is submitted.
