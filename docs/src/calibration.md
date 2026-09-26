@@ -18,15 +18,23 @@ acceptance and the original per-state electronic targets remain unchanged.
 Exactly two sequential eight-CPU jobs are used, each within four hours; no
 additional SCF, calibration or production change follows.
 
-The separately authorized saved-orbital follow-up asks whether this cutoff
-sensitivity also changes the bias-window smooth density outside PAW spheres.
-It evaluates the same **0.40/0.50/0.60-nm** planes directly, with no new SCF,
-changed bias, matched band-count prior, normalization or selected height.
-All rising columns and zero samples remain visible. Reproduction of the
-360-Ry diagnostic and parallel/serial controls validate implementation; they
-do not establish cutoff convergence, calibrated experimental current, a
-unique constant-current branch or a recognition gain. The existing frozen
-molds remain unchanged while this comparison is measured.
+The completed saved-orbital follow-up confirms that this cutoff sensitivity
+also changes the bias-window smooth density outside PAW spheres. Job
+**11992917** evaluates the same **0.40/0.50/0.60-nm** planes directly, with
+no new SCF, changed bias, matched band-count prior, normalization or selected
+height.
+All columns remain visible. The two 360-Ry references reproduce exactly,
+all four parallel/serial controls pass and **129,555** independent saved-table
+checks pass. Relative-L2 changes are **1.736/6.252/12.145%** for GlcN and
+**1.308/0.712/3.689%** for GlcNAc across the three heights. GlcNAc still has
+**1/289 and 30/289** rising columns across the two adjacent-height intervals;
+the upper interval's largest ratio increases **11.514 → 12.491**. A small
+global norm change therefore does not qualify local tail accuracy, and
+raising the density cutoff does not remove this sampled branch ambiguity.
+Nor does the comparison prove that every rise is numerical. Implementation
+checks do not establish cutoff convergence, calibrated experimental current,
+a unique constant-current branch or a recognition gain. The existing frozen
+molds remain unchanged; no height or normalization is selected from this test.
 
 A geometrically empty region is not necessarily a region of constant local
 effective potential. The completed PP-only diagnostic exports the accepted-state

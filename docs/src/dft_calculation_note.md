@@ -185,18 +185,41 @@ constant-current feedback loop.
 
 ## Diagnostic constant-current observable
 
-**September 27 approved saved-orbital follow-up (preparation).** Following
+**September 27 saved-orbital follow-up (completed).** Following
 the completed cutoff comparison, the user authorizes the proposed **one
 4-CPU / 32-GB / 1-h** analysis job and renews the autonomous new-champion
 objective. The test compares both existing cutoffs on the two geometries at
 the unchanged **0.40/0.50/0.60-nm** planes and bias window. It uses direct
 Gamma Fourier reconstruction outside PAW spheres, not density-grid
-interpolation, a new SCF or a new PP export. The frozen 360-Ry diagnostic
-must replay exactly; parallel/serial repeats and all saved-table relations
-are checked. The selected energy-window bands may differ, but no smooth norm
-is rescaled to equal a state count. All points and rising/zero samples are
-retained. No physical response is measured at this preparation checkpoint,
-and no mold, current calibration or recognition result is adopted.
+interpolation, a new SCF or a new PP export. Job **11992917** completes
+**0:0** in **6m37s**. Both frozen 360-Ry diagnostics replay exactly, all
+four parallel/serial repeats are exact, and **129,555** independent
+saved-real-table assertions pass. Original WFC hashes and complete local
+copies are verified. All **1,734 paired plane points** remain; no smooth
+norm is rescaled to a state count or the other cutoff.
+
+| molecule | height (nm) | relative-L2 change (%) | median 720/360 ratio | pointwise ratio range |
+|---|---:|---:|---:|---:|
+| GlcN | 0.40 | 1.736 | 0.979752 | 0.921951–0.995365 |
+| GlcN | 0.50 | 6.252 | 0.926926 | 0.856796–0.966178 |
+| GlcN | 0.60 | 12.145 | 0.880943 | 0.749299–0.975028 |
+| GlcNAc | 0.40 | 1.308 | 0.950375 | 0.826237–1.076387 |
+| GlcNAc | 0.50 | 0.712 | 0.905077 | 0.761928–1.042273 |
+| GlcNAc | 0.60 | 3.689 | 0.832630 | 0.748147–0.977551 |
+
+Here relative L2 means `norm(rho720-rho360)/norm(rho360)`, without amplitude
+normalization. Selected band indices remain **882–893 / 889–901** with
+weight two at both cutoffs. Smooth norms change only
+**18.1758333630 → 18.1755994586 / 20.0011288529 → 20.0005954459**,
+which does not bound local tail changes. GlcN has no rising sampled columns
+at either cutoff. GlcNAc retains **1/289** from 0.40 to 0.50 nm and
+**30/289** from 0.50 to 0.60 nm; the latter maximum upper/lower ratio
+increases **11.514244 → 12.490877**. These results establish sensitivity,
+not cutoff convergence, numerical origin of every rise or a unique
+current-height branch. The 720-Ry vertex queries have no new independent
+cube validation. No mold, current calibration or recognition result is
+adopted. Wavefunction-cutoff sensitivity at fixed density cutoff remains
+untested and needs a separate bounded scope.
 
 **September 26–27 cutoff sensitivity (completed).** The user approved
 two sequential Viper jobs, each limited to **8 CPUs / 4 h**, to compare

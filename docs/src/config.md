@@ -32,6 +32,14 @@ checks their hashes before and after analysis. Real Fourier evaluation and
 independent saved-table checks run on Viper; synthetic fixtures run locally.
 No mold, fitted count, unit assignment, calibration or champion is changed.
 
+The completed job **11992917** reproduces both 360-Ry references exactly and
+passes all four parallel/serial controls plus **129,555** independent
+saved-real-table assertions. The complete local run is checksum-verified.
+The selected band indices are unchanged, but the paired maps change
+and GlcNAc's sampled rising columns persist. See all six plane comparisons
+and limitations in the [DFT calculation note](dft_calculation_note.md).
+This result does not change any configured parameter or adopt either cutoff.
+
 ## Charge-density cutoff sensitivity
 
 `config/qe_density_cutoff.toml` declares the approved **360/720-Ry** two-point

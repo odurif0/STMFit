@@ -2305,13 +2305,19 @@ See `docs/src/selection.md` for the full guard specification and
 ## Open Questions
 
 0br. **Does charge-cutoff sensitivity reach the bias-window orbital density?**
-**The authorized job 11992917 is queued; no result yet.** Compare
-360/720 Ry on both geometries at the unchanged 0.40/0.50/0.60-nm planes and
-bias, using direct Fourier evaluation. One four-CPU / 32-GB / one-hour Viper
-job is allowed, with no new SCF, PP, retry, normalization, selected height,
-benchmark grade or mold adoption. First reproduce the verified 360-Ry
-diagnostic, then retain every paired sample and decay ratio. Potential
-sensitivity alone (0bq) does not answer this observable-level question.
+**Yes, but the nonmonotone GlcNAc columns persist.** Job **11992917**
+completes **0:0** in **6m37s**, reproducing both 360-Ry references exactly
+and passing **129,555** independent saved-table assertions. All four
+parallel/serial repeats are exact; original WFC hashes and complete fetched
+outputs are verified. At **0.40/0.50/0.60 nm**, the 360-to-720-Ry relative-L2
+changes are **1.736/6.252/12.145%** for GlcN and **1.308/0.712/3.689%** for
+GlcNAc. Selected band indices are unchanged at the fixed bias. GlcNAc retains
+**1/289** rising columns from 0.40 to 0.50 nm and **30/289** from 0.50 to
+0.60 nm; the latter maximum ratio increases **11.514 → 12.491**. This
+establishes orbital-density sensitivity, not convergence, numerical origin
+of every rising column, a unique current-height branch or recognition gain.
+No new SCF/PP, normalization, selected height, benchmark or mold adoption
+occurs. Wavefunction-cutoff sensitivity remains an untested separate scope.
 
 0bq. **Does raising the density cutoff reduce the vacuum variation?**
 **Two-point sensitivity is confirmed for both geometries, not convergence.**
@@ -20078,3 +20084,91 @@ explicitly sets one node/task, four CPUs, 32 GB, one hour, no requeue and
 It initially waits for a node unavailable/down/drained or reserved for a
 higher-priority partition. This is a live queue wait, not a failed result;
 no other job or retry is submitted.
+
+### 2026-09-27 — Saved-orbital cutoff response verified; rising columns persist
+
+**Outcome.** The sole authorized analysis job **11992917**, source
+**2269789**, completes **0:0** on `vipc2245` in **6m37s**, from **23:03:19 to
+23:09:56 UTC on September 26 / 01:03:19 to 01:09:56 CEST on September 27**.
+The request remains one task with four CPUs, 32 GB and one hour, with zero
+restarts/requeue; Viper accounts eight logical CPUs for that allocation.
+Peak batch RSS is **957,370 KiB**. Both 360-Ry plane/native-vertex references
+replay exactly, all four parallel/serial comparisons are exact, all queries
+are finite/nonnegative and outside the PAW spheres, and every smooth norm is
+positive/finite. There are no zero physical-plane samples in these four cases.
+
+Viper passes **11 + 81,444** scope/synthetic assertions and **129,555**
+independent saved-real-table assertions. The four original WFC hashes and
+all prepared inputs pass the final hash check. The full run is fetched into
+`qe/cutoff_wavefunctions_20260927`: **59 regular files, 15,861,672 bytes**,
+including **30 new output files / 4,846,645 bytes**. The subsequent checksum
+dry-run exits zero with no differing files; local input hashes also pass.
+No SCF, PP export, retry or additional job is performed.
+
+All **1,734 paired physical points** (289 per molecule/height) are retained.
+The relative-L2 change is `norm(rho720-rho360)/norm(rho360)`; the pointwise
+ratio is `rho720/rho360`. These are unnormalized smooth bias-window densities,
+not fitted amplitudes, calibrated currents or error bars.
+
+| molecule | height (nm) | relative L2 change (%) | minimum ratio | median ratio | maximum ratio | sum ratio |
+|---|---:|---:|---:|---:|---:|---:|
+| GlcN | 0.40 | 1.73635 | 0.921951 | 0.979752 | 0.995365 | 0.980953 |
+| GlcN | 0.50 | 6.25210 | 0.856796 | 0.926926 | 0.966178 | 0.932099 |
+| GlcN | 0.60 | 12.14452 | 0.749299 | 0.880943 | 0.975028 | 0.874751 |
+| GlcNAc | 0.40 | 1.30773 | 0.826237 | 0.950375 | 1.076387 | 1.006897 |
+| GlcNAc | 0.50 | 0.71216 | 0.761928 | 0.905077 | 1.042273 | 0.997737 |
+| GlcNAc | 0.60 | 3.68942 | 0.748147 | 0.832630 | 0.977551 | 0.940463 |
+
+The global norm does not bound these local changes: the smooth Parseval norms
+change only **18.1758333630 → 18.1755994586** for GlcN and
+**20.0011288529 → 20.0005954459** for GlcNAc. Selected bands remain
+**882–893 / 889–901**, each with weight two, without forcing membership.
+The Fermi energies change **0.6173297805 → 0.6185823846 eV** and
+**0.3038130654 → 0.3092553068 eV**; each sharp window remains relative to its
+own Fermi energy with unchanged bias. Thus no observed map difference is
+caused by a band entering or leaving this particular window, although the
+self-consistent orbitals and potential have changed.
+
+Every adjacent-height column is also retained. Ratios below refer to upper
+over lower density at a fixed physical lateral position, not between cutoffs.
+
+| molecule | heights (nm) | rising columns, 360 → 720 | median ratio, 360 → 720 | maximum ratio, 360 → 720 |
+|---|---|---:|---:|---:|
+| GlcN | 0.40 → 0.50 | 0/289 → 0/289 | 0.132408 → 0.125428 | 0.230703 → 0.221536 |
+| GlcN | 0.50 → 0.60 | 0/289 → 0/289 | 0.102718 → 0.097158 | 0.205984 → 0.194246 |
+| GlcNAc | 0.40 → 0.50 | 1/289 → 1/289 | 0.108843 → 0.103812 | 1.905641 → 1.834829 |
+| GlcNAc | 0.50 → 0.60 | 30/289 → 30/289 | 0.146237 → 0.135865 | 11.514244 → 12.490877 |
+
+**Decision and limits.** Doubling the density cutoff changes the measured
+orbital-density tails but does not remove the sampled nonmonotonic GlcNAc
+columns. The smaller minima of potential spatial variation in the preceding
+experiment do not establish monotonicity or physical accuracy here. A small
+map-level L2 change can coexist with appreciable pointwise changes in dim
+regions; no bright-region statistic substitutes for the full tables. Two
+cutoffs and three heights neither prove convergence nor establish that every
+rising column is numerical. The 720-Ry native vertices still have no separate
+cube validation; their repeat is a computational reproducibility check.
+
+The original molds, calibration, fitting, count selection and champion remain
+unchanged. There is no new benchmark grade and the new-champion objective is
+not achieved by this diagnostic. The next numerical question is sensitivity
+to the **wavefunction** basis cutoff, which stayed at **50 Ry** throughout;
+that requires a separately bounded approved test, not a silent extension of
+this completed allocation.
+
+**Local verification and proposed next bound.** Julia **1.13.0** repeats
+all **81,455** synthetic/scope and **129,555** saved-real assertions locally;
+the documentation build and `git diff --check` pass. Documentation emits its
+existing size and local deployment-environment warnings; no documentation is
+deployed. This outcome changes documentation only, with all scientific
+sources/configs unchanged.
+
+The [QE input documentation](https://www.quantum-espresso.org/Doc/INPUT_PW.html)
+defines separate wavefunction and density/potential cutoffs and requires
+convergence testing for PAW data. Motivated by the present measured response,
+not a claim that **60 Ry** is converged, the next scope proposed to the user
+is **50 → 60 Ry ecutwfc at 720 Ry ecutrho**, on both unchanged geometries,
+with the same bias and three planes. The requested bound is **two sequential
+8-CPU / 96-GB / 4-hour jobs**, without automatic retry, label use, SCF-gate
+change or mold/champion adoption. That scope is awaiting the user's answer;
+no next-campaign code or job is launched here.
