@@ -2305,7 +2305,7 @@ See `docs/src/selection.md` for the full guard specification and
 ## Open Questions
 
 0bt. **Does orbital diagonalization precision affect the same fixed-density tails?**
-**Authorized continuation; preparing the bounded test.** Both cutoff tests
+**In progress; GlcN job 11998561 submitted, GlcNAc not yet submitted.** Both cutoff tests
 leave GlcNAc rising columns. Compare explicit NSCF diagonalization thresholds
 **1e-10 / 1e-12 Ry** on identical copies of each accepted **60/720-Ry**
 density/PAW state and basis, retaining all physical settings and queries.
@@ -20566,3 +20566,12 @@ Shell syntax, `git diff --check` and documentation build pass, with existing
 size/deployment-environment warnings only. The sync dry-run contains
 **33 regular files / 9,120,998 bytes**, all new and with no deletion. No job
 has yet been submitted at this checkpoint.
+
+**Submission.** After the checksum-identical transfer, remote input/XML
+checks, Julia 1.13 CLI, shell syntax and `sbatch --test-only` pass. Frozen
+scientific source **af00f97** is submitted for GlcN as **11998561**, at
+**2026-09-27 13:08:59 CEST**. Slurm confirms **8 MPI tasks/CPUs requested,
+96000 MB, 02:00:00**, `Requeue=0`, `Restarts=0` and explicit
+`--export=ALL,JULIA_BIN=...`. Its initial state is **PENDING** for node
+availability. GlcNAc is not submitted and must await this job's terminal
+outcome. No numerical result exists yet; do not resubmit this job.

@@ -185,7 +185,7 @@ constant-current feedback loop.
 
 ## Diagnostic constant-current observable
 
-**September 27 fixed-density precision follow-up (preparation).** After
+**September 27 fixed-density precision follow-up (GlcN submitted).** After
 the completed basis-cutoff comparison, the user resumes the autonomous
 research goal with explicit authorization to experiment. This continuation
 keeps the previously proposed bound: **two sequential 8-CPU / 96-GB /
@@ -202,6 +202,8 @@ completion, the exact requested threshold, no unconverged-eigenvalue
 warning and unchanged density/PAW files. The original query reference
 must replay exactly; subsequent evaluations retain the same ordered
 reciprocal basis and exact parallel/serial controls. No result exists yet.
+GlcN job **11998561** is submitted under the stated limits; GlcNAc is not
+submitted until that job ends. The scientific source is frozen at **af00f97**.
 
 **September 27 wavefunction-cutoff follow-up (completed).** The
 user confirms **“oui tu es autonome!”** after the explicit bounded proposal.
