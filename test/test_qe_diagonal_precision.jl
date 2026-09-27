@@ -7,12 +7,14 @@ const CONFIG=joinpath(ROOT,"config/qe_diagonal_precision.toml")
 num(r,k)=parse(Float64,r[k])
 BLAS.set_num_threads(1)
 
-function verify_saved(run,m)
+function verify_saved(run,m; stages=P.STAGES, comparison=true)
+    @test stages in (P.STAGES,("reference",),("reference","lo"))
+    @test !comparison || stages==P.STAGES
     s,meta=P.verify_inputs(run,m); hs=s["preprocessing"]["diagnostic_heights_nm"]
     per=(round(Int,2s["preprocessing"]["half_nm"]/s["preprocessing"]["step_nm"])+1)^2
     old=P.reference_state(joinpath(run,m,"reference/data-file-schema.xml"),s)
     planes=Dict(); reports=Dict()
-    for stage in P.STAGES
+    for stage in stages
         dir=joinpath(run,m,stage); out=joinpath(dir,"analysis")
         r=TOML.parsefile(joinpath(out,"summary.toml")); reports[stage]=r
         @test all(values(r["checks"])) && !r["new_scf"] && !r["mold_adopted"] && !r["new_cube_validation"]
@@ -79,9 +81,10 @@ function verify_saved(run,m)
             @test isequal(num(q,"log_decay_per_nm"),expected) || isapprox(num(q,"log_decay_per_nm"),expected;rtol=16eps(),atol=0)
         end
     end
-    for stage in P.TRIALS, key in ("plane_waves","miller_sha256","source_density_sha256","source_paw_sha256")
+    for stage in intersect(P.TRIALS,stages), key in ("plane_waves","miller_sha256","source_density_sha256","source_paw_sha256")
         @test reports[stage][key]==reports["reference"][key]
     end
+    comparison || return nothing
     pairs=D.V.tsv(joinpath(run,m,"comparison/paired_planes.tsv")); stats=D.V.tsv(joinpath(run,m,"comparison/summary.tsv"))
     @test length(pairs)==3per*length(hs) && length(stats)==3length(hs)
     for (from,to) in (("reference","lo"),("reference","hi"),("lo","hi"))
@@ -106,6 +109,38 @@ function verify_saved(run,m)
             @test isequal(num(q,"sum_ratio"),expected) || isapprox(num(q,"sum_ratio"),expected;rtol=16eps(),atol=0)
         end
     end
+end
+
+function verify_rejected(run,m)
+    s,meta=P.verify_inputs(run,m)
+    stages=Tuple(stage for stage in P.STAGES if isdir(joinpath(run,m,stage,"analysis")))
+    @test stages in (("reference",),("reference","lo"))
+    @test !ispath(joinpath(run,m,"comparison"))
+    verify_saved(run,m;stages,comparison=false)
+    trial=length(stages)==1 ? "lo" : "hi"
+    dir=joinpath(run,m,trial); work=P.workdir(run,m,trial)
+    @test !ispath(joinpath(dir,"analysis")) && !ispath(joinpath(dir,"data-file-schema.xml"))
+    @test !ispath(joinpath(dir,"converged_before_analysis.sha256"))
+    old=P.reference_state(joinpath(run,m,"reference/data-file-schema.xml"),s)
+    a=P.nscf_state(joinpath(work,"data-file-schema.xml"),s,old,trial)
+    @test !a.sp.accepted
+    for f in ("charge-density.dat","paw.txt",keys(meta["pseudo_sha256"])...)
+        @test S.sha(joinpath(work,f))==meta["source_sha256"][f]
+    end
+    log=read(joinpath(dir,"pw_nscf.out"),String)
+    @test count("JOB DONE.",log)==1
+    @test occursin(r"c_bands:\s+[1-9][0-9]* eigenvalues not converged",log)
+    # Reproduce the actual rejection, not an unrelated missing-file exception.
+    err=try
+        P.check_nscf(run,m,trial)
+        nothing
+    catch e
+        e
+    end
+    @test err isa ErrorException && err.msg=="Unfinished or unexpected NSCF"
+    @test !ispath(joinpath(dir,"data-file-schema.xml"))
+    @test !ispath(joinpath(run,m,"comparison"))
+    println(m,": verified retained stages ",stages," and rejected ",trial,"; no paired result")
 end
 
 function record(io,items...)
@@ -214,6 +249,7 @@ end
                 "pseudo_sha256"=>Dict("C.UPF"=>S.sha(joinpath(run,"pseudo/C.UPF"))),"input_sha256"=>Dict(f=>S.sha(joinpath(dir,f)) for f in files))
             open(io->TOML.print(io,meta),joinpath(dir,"metadata.toml"),"w")
             @test P.analyze(run,m,"reference",joinpath(source,"wfc1.dat"))===nothing
+            verify_saved(run,m;stages=("reference",),comparison=false)
             for trial in P.TRIALS
                 work=P.workdir(run,m,trial); mkpath(dirname(work)); cp(source,work)
                 @test P.check_start(run,m,trial)===nothing
@@ -236,6 +272,7 @@ end
                 @test_throws ErrorException P.reference_state(candidate,s)
                 for bad in (replace(log,"JOB DONE."=>""),log*"c_bands: 1 eigenvalues not converged\n",replace(log,"Starting wfcs from file"=>"Starting wfcs are random"))
                     write(logfile,bad); @test_throws ErrorException P.check_nscf(run,m,trial)
+                    occursin("eigenvalues not converged",bad) && verify_rejected(run,m)
                 end
                 write(logfile,log); write(joinpath(work,"paw.txt"),"changed")
                 @test_throws ErrorException P.check_nscf(run,m,trial)
@@ -245,6 +282,7 @@ end
                 write(joinpath(dir,trial,"converged_before_analysis.sha256"),S.sha(joinpath(work,"wfc1.dat"))*"  work/$(m)_central.save/wfc1.dat\n")
                 @test P.analyze(run,m,trial,joinpath(work,"wfc1.dat"))===nothing
                 @test_throws ErrorException P.analyze(run,m,trial,joinpath(work,"wfc1.dat"))
+                trial=="lo" && verify_saved(run,m;stages=("reference","lo"),comparison=false)
                 w=W.read_wfc(joinpath(work,"wfc1.dat"),[2]); rows=D.V.tsv(joinpath(dir,trial,"analysis/planes.tsv"))
                 for (i,r) in enumerate(rows)
                     v=geo.cell\(pts[i,:]/D.G.C.BOHR_NM)
@@ -261,8 +299,14 @@ end
 end
 
 if !isempty(ARGS)
-    length(ARGS)==2 || error("Expected SAVED_RUN MOLECULE")
-    @testset "Independent saved fixed-density precision tables" begin
-        verify_saved(ARGS...)
+    if length(ARGS)==3 && ARGS[1]=="--incomplete"
+        @testset "Incomplete real result: retained tables and strict rejection" begin
+            verify_rejected(ARGS[2:end]...)
+        end
+    else
+        length(ARGS)==2 || error("Expected [--incomplete] SAVED_RUN MOLECULE")
+        @testset "Independent saved fixed-density precision tables" begin
+            verify_saved(ARGS...)
+        end
     end
 end

@@ -20614,3 +20614,37 @@ second/final job of the approved campaign. It keeps **8 MPI ranks / 96000 MB /
 two hours**, explicit Julia export, no requeue and frozen scientific source
 **af00f97**. This tests the other preselected geometry; it neither replaces
 the rejected GlcN result nor changes the comparison or acceptance rules.
+
+**GlcN local verification and partial result.** All **51 regular files /
+6,548,710,003 bytes**, including the rejected high-precision checkpoint,
+are fetched to `qe/diagonal_precision_20260927/glcn`, without deletion.
+The final checksum-only rsync exits zero with no differences/transfers;
+local input and low-precision checkpoint manifests pass. The reference
+and valid low-precision planes contain all **867** original physical points.
+Their **secondary SCF → NSCF** comparison is:
+
+| height (nm) | relative-L2 change (%) | minimum ratio | median ratio | maximum ratio | sum ratio |
+|---|---:|---:|---:|---:|---:|
+| 0.40 | 0.029302 | 0.999556 | 1.000171 | 1.000470 | 1.000231 |
+| 0.50 | 0.031405 | 0.999537 | 1.000203 | 1.000524 | 1.000258 |
+| 0.60 | 0.032846 | 0.998086 | 1.000266 | 1.000713 | 1.000288 |
+
+Both adjacent-height intervals retain **zero** rising columns in both
+states. Density maxima remain boundary pixels **136/136/153**. The NSCF
+Fermi energy is **0.6187318822375958 eV**, versus **0.6187248900351836 eV**
+in its SCF reference, with unchanged selected bands. These small differences
+do not replace the missing **lo → hi** comparison or prove orbital-tail
+accuracy; Hamiltonian reconstruction and the different initial solver
+treatment also enter this secondary comparison.
+
+The local independent test script gains an explicit **`--incomplete`**
+mode. It checks all retained planes/queries/adjacent-height tables and
+their provenance, the failed state's unchanged density/PAW data, the exact
+unconverged-eigenvalue rejection, and the absence of a high-precision
+analysis or paired result. It never evaluates rejected orbitals or fills
+in missing results. Synthetic tests cover rejection after either stage;
+the complete-result checks remain the default. Julia **1.13.0** passes
+**1,779** scope, **379,478** synthetic and **56,732** incomplete-real-result
+assertions. Only the local test harness is extended; neither the running
+GlcNAc code/input nor any acceptance rule changes. The preceding documentation
+build also passes, with the existing size/deployment warnings only.
