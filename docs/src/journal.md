@@ -2305,7 +2305,7 @@ See `docs/src/selection.md` for the full guard specification and
 ## Open Questions
 
 0bs. **Does the orbital-basis cutoff affect the persistent vacuum-plane response?**
-**Approved; preparation only, no result yet.** The user confirms the bounded
+**In progress; GlcN submitted as 11993413, no result yet.** The user confirms the bounded
 **50 → 60 Ry ecutwfc** test at fixed **720 Ry ecutrho**, on both unchanged
 geometries: two sequential **8-CPU / 96-GB / 4-hour** jobs without retry,
 label use or mold/champion adoption. Baseline query replay must be exact;
@@ -20284,3 +20284,12 @@ helpers are unchanged; shell syntax, `git diff --check` and the documentation
 build pass (existing size and local deployment-environment warnings).
 The sync dry-run has **29 regular files / 9,072,057 bytes**, all new, with no
 deletion or old orbital transfer. No Viper job has yet been submitted.
+
+**Submission.** The complete sync is checksum-identical; remote Julia 1.13
+CLI, input manifests, original XML comparisons, shell syntax and
+`sbatch --test-only` pass. Frozen scientific source **`22446e4`** is submitted
+for GlcN as job **`11993413`** on **2026-09-27 02:12:10 CEST**. Slurm confirms
+one node, eight MPI tasks/CPUs requested, **96000 MB**, **04:00:00**, explicit
+`--export=ALL,JULIA_BIN=...`, `Requeue=0` and `Restarts=0`. Its initial state is
+**PENDING** for node availability; no SCF or new scientific result exists yet.
+GlcNAc is not submitted and must wait for this job's terminal outcome.
