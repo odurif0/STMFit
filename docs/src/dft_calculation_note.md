@@ -185,7 +185,7 @@ constant-current feedback loop.
 
 ## Diagnostic constant-current observable
 
-**September 27 wavefunction-cutoff follow-up (GlcN verified; GlcNAc running).** The
+**September 27 wavefunction-cutoff follow-up (completed).** The
 user confirms **“oui tu es autonome!”** after the explicit bounded proposal.
 The test changes **ecutwfc 50 → 60 Ry** at **ecutrho=720 Ry** for both
 accepted geometries, retaining PBE/D3, Gamma sampling, PAW files, smearing,
@@ -203,26 +203,36 @@ rising columns and boundary maxima. No new PP/cube, interpolated plane,
 normalization or selected height is introduced. This is a sensitivity test,
 not a convergence proof or a recognition result.
 
-GlcN **11993413** completes **0:0 in 2h15m22s**, with 39 SCF iterations and
-error **3.93491e-8 Ry**. The baseline replay and both parallel/serial repeats
-are exact. All **59,312** independent saved-real-table checks pass on Viper
-and locally; the complete fetched case and source hashes are verified. The
-basis grows **135,743 → 178,543** stored Gamma plane waves; the native density
-grid stays **360×250×360**, with bands **882–893** still selected.
+GlcN **11993413** and GlcNAc **11994503** complete **0:0 in 2h15m22s /
+2h04m22s**, with **39/37** SCF iterations and errors **3.93491e-8 /
+3.66651e-5 Ry**. Both baselines replay exactly and all four parallel/serial
+repeats agree. Each case passes **59,312** independent saved-real-table
+checks on Viper and locally; the original-state and fetched checkpoint
+hashes are verified. Bases grow **135,743 → 178,543 / 137,860 → 181,205**
+stored Gamma plane waves. Both native grids stay **360×250×360**, with
+bands **882–893 / 889–901** still selected at each state's own Fermi energy.
 
-| GlcN height (nm) | relative-L2 change (%) | median 60/50 ratio | pointwise ratio range |
-|---|---:|---:|---:|
-| 0.40 | 0.486 | 0.999501 | 0.965808–1.061489 |
-| 0.50 | 1.142 | 1.000684 | 0.810160–1.084200 |
-| 0.60 | 3.527 | 0.993069 | 0.595760–1.235137 |
+| molecule | height (nm) | relative-L2 change (%) | median 60/50 ratio | pointwise ratio range |
+|---|---:|---:|---:|---:|
+| GlcN | 0.40 | 0.486 | 0.999501 | 0.965808–1.061489 |
+| GlcN | 0.50 | 1.142 | 1.000684 | 0.810160–1.084200 |
+| GlcN | 0.60 | 3.527 | 0.993069 | 0.595760–1.235137 |
+| GlcNAc | 0.40 | 0.921 | 1.025186 | 0.894711–1.270401 |
+| GlcNAc | 0.50 | 1.716 | 1.004025 | 0.757400–1.405492 |
+| GlcNAc | 0.60 | 3.606 | 0.982489 | 0.612710–1.426814 |
 
-No physical point is zero. Both adjacent-height intervals retain **0/289**
-rising columns at both cutoffs, and all three density maxima stay on the
-window boundary at pixels **136/136/153**. Aggregate similarity does not
-bound local changes or establish continuous monotonicity. GlcNAc
-**11994503** is the second, sequential job with unchanged limits and source;
-its result is pending. No paired conclusion, new mold or recognition claim
-is made at this checkpoint.
+No physical point is zero or excluded. GlcN retains **0/289** rising
+columns across both adjacent-height intervals. GlcNAc retains **1/289**
+across 0.40–0.50 nm, and **30 → 28/289** across 0.50–0.60 nm; only pixels
+**10 and 136** cease rising, with no new members. Its maximum upper/lower
+ratio falls **1.834829 → 1.610121 / 12.490877 → 10.632791** across the two
+intervals. All twelve density maxima remain on the diagnostic window
+boundary: GlcN pixels **136/136/153**, GlcNAc **239/239/239** at both
+cutoffs. Aggregate similarity does not bound local changes, identify every
+rise's origin or establish continuous monotonicity or cutoff convergence.
+Neither a unique current-height branch nor better recognition is qualified.
+The two-job campaign is complete; molds, calibration and champion remain
+unchanged.
 
 **September 27 saved-orbital follow-up (completed).** Following
 the completed cutoff comparison, the user authorizes the proposed **one

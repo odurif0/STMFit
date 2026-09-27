@@ -17,11 +17,17 @@ are retained, not removed by cropping, normalization or height choice. The
 new test measures sensitivity of the smooth bias-window densities; it does
 not by itself establish convergence, a monotone physical tail, a calibrated
 current-height relation or improved recognition. Frozen molds and champion
-remain unchanged. GlcN **11993413** now completes successfully, with exact
-baseline replay, **59,312** independently checked saved-output assertions
-and checksum-identical local files. GlcNAc **11994503** is running under the
-same bounds. The GlcN response alone is not a paired chemical comparison or
-new calibration; see the partial results in the
+remain unchanged. Both jobs **11993413/11994503** complete successfully,
+with exact baseline replay, all four parallel/serial repeats exact, and
+**59,312** independent saved-output assertions per molecule passing on
+Viper and locally. Original-state and fetched checkpoint hashes pass.
+Relative-L2 changes across the three heights are **0.486/1.142/3.527%**
+for GlcN and **0.921/1.716/3.606%** for GlcNAc, while individual 0.60-nm
+ratios span **0.596–1.235 / 0.613–1.427**. GlcNAc still has **1/289** rising
+columns across 0.40–0.50 nm and **30 → 28/289** across 0.50–0.60 nm.
+Every sampled density maximum remains on the diagnostic window boundary.
+This completed sensitivity test does not qualify a new calibration or
+recognition improvement; see the full paired results in the
 [DFT calculation note](dft_calculation_note.md).
 
 ## Potential qualification precedes vacuum-tail propagation

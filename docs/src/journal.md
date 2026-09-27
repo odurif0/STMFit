@@ -2304,23 +2304,37 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
-0bs. **Does the orbital-basis cutoff affect the persistent vacuum-plane response?**
-**Partial result; GlcN verified, GlcNAc 11994503 in progress.** The user confirms the bounded
-**50 → 60 Ry ecutwfc** test at fixed **720 Ry ecutrho**, on both unchanged
-geometries: two sequential **8-CPU / 96-GB / 4-hour** jobs without retry,
-label use or mold/champion adoption. Baseline query replay must be exact;
-new states must pass the unchanged SCF acceptance, expand the plane-wave
-basis and pass parallel/serial and saved-output checks. Keep every point at
-all three existing heights. This numerical diagnostic is not the broader
-new-champion objective and cannot complete it.
+0bt. **Does orbital diagonalization precision affect the same fixed-density tails?**
+**Untested; next bounded scope proposed, not launched.** Both cutoff tests
+leave GlcNAc rising columns. Compare explicit NSCF diagonalization thresholds
+**1e-10 / 1e-12 Ry** on identical copies of each accepted **60/720-Ry**
+density/PAW state and basis, retaining all physical settings and queries.
+Two sequential **8-CPU / 96-GB / two-hour** jobs would each contain those
+two NSCF solves and their comparisons, with no new SCF, retry, criterion
+change, label use or adoption. This tests eigenvalue-tolerance sensitivity,
+not a pointwise wavefunction-error bound. It requires approval of that new
+scope; the preceding two-job campaign is not extended.
 
-GlcN **11993413** completes **0:0 in 2h15m22s**. All **59,312** independent
-saved-output checks pass on Viper and locally; full local files and source
-hashes are verified. Its relative-L2 changes are **0.486/1.142/3.527%** at the
-three heights, but individual 0.60-nm values span **0.596–1.235** times the
-baseline. Both sampled height intervals retain zero rising columns; all
-three maxima remain on the window boundary. GlcNAc is the second and final
-authorized job; no paired conclusion or mold/recognition adoption yet.
+0bs. **Does the orbital-basis cutoff affect the persistent vacuum-plane response?**
+**Yes, but the GlcNAc nonmonotonicity persists.** The two sequential,
+bounded **50 → 60 Ry ecutwfc** jobs at fixed **720 Ry ecutrho** complete
+**0:0**: GlcN **11993413 in 2h15m22s**, GlcNAc **11994503 in 2h04m22s**.
+Both baselines replay exactly and all four parallel/serial repeats agree.
+Each case passes **59,312** independent saved-output assertions on Viper and
+locally. The full copies and original-state hashes are verified; there is no
+retry, SCF-gate change, label use or mold/champion adoption.
+
+At **0.40/0.50/0.60 nm**, relative-L2 changes are **0.486/1.142/3.527%**
+for GlcN and **0.921/1.716/3.606%** for GlcNAc. Individual 0.60-nm ratios
+span **0.596–1.235 / 0.613–1.427**, so these aggregate changes are not
+pointwise accuracy bounds. GlcN retains zero rising columns; GlcNAc retains
+**1/289** across 0.40–0.50 nm and **30 → 28/289** across 0.50–0.60 nm,
+losing only pixels **10 and 136**. The latter maximum upper/lower ratio
+falls **12.491 → 10.633**; all twelve density maxima stay on the diagnostic
+window boundary. Selected band sets remain unchanged. Neither cutoff
+convergence, the origin of every rise, a unique current-height branch nor
+improved recognition is established. The bounded campaign is complete;
+the new-champion objective is not.
 
 0br. **Does charge-cutoff sensitivity reach the bias-window orbital density?**
 **Yes, but the nonmonotone GlcNAc columns persist.** Job **11992917**
@@ -2337,7 +2351,7 @@ lie on the fixed diagnostic window's boundary. This
 establishes orbital-density sensitivity, not convergence, numerical origin
 of every rising column, a unique current-height branch or recognition gain.
 No new SCF/PP, normalization, selected height, benchmark or mold adoption
-occurs. The separate wavefunction-cutoff test is now in progress (0bs).
+occurs. The separate wavefunction-cutoff test is now complete (0bs).
 
 0bq. **Does raising the density cutoff reduce the vacuum variation?**
 **Two-point sensitivity is confirmed for both geometries, not convergence.**
@@ -20362,3 +20376,119 @@ final** job of this campaign; its outcome and the paired interpretation remain
 pending. No scientific source is changed while it runs.
 The updated documentation builds successfully under Julia 1.13; only the
 existing size/deployment-environment warnings remain. `git diff --check` passes.
+
+### 2026-09-27 — Paired orbital-basis response verified; rising columns persist
+
+**Deliverable and done.** Complete the already approved two-job campaign,
+not a further cutoff search or recognition run. GlcNAc **11994503**, the
+second and final job at frozen scientific source **22446e4**, completes
+**0:0 in 2h04m22s**, from **04:35:00 to 06:39:22 CEST** on **vipc2172**.
+The SCF converges in **37 iterations**, error **3.666505807093142e-5 Ry**,
+below its unchanged **5e-5-Ry** target and common acceptance. Its single
+early warning concerns three eigenvalues at iteration 12; no such warning
+occurs in the final iterations. The unedited output ends with `JOB DONE`.
+Eight MPI ranks use eight physical cores (16 hardware threads in Slurm
+accounting); the reported per-node memory estimate is **91.710415 GB**.
+Both jobs stay within their **96000-MB / four-hour** requests, without
+retry, requeue, another SCF or a changed physical/selection setting.
+
+GlcNAc's saved **50/720-Ry** queries and planes replay exactly; its 50- and
+60-Ry parallel/serial evaluations also agree exactly. Every query remains
+outside PAW spheres, finite and nonnegative. Neither molecule has a zero
+physical-plane sample. GlcNAc's basis increases **137,860 → 181,205** stored
+Gamma plane waves; the density grid stays **360×250×360**. Its fixed-bias
+window selects the same bands **889–901**, each with weight two, without
+forcing membership. Fermi energy changes **0.3092553067903014 →
+0.3041277582123929 eV** and smooth norm **20.000595445852962 →
+20.00160384469961**. The new XML/WFC SHA-256 values are
+`ba32d6e843f0989c730e655fa00ee3c105416f3d61ccf3a5835cf8aaaf70a6a3` /
+`05846f8b59d872b4d9592006c71a26ee4399d1c852b63b7c42b054fb20d4e0d2`.
+
+Both cases keep all **1,734 paired physical points**, with no normalization,
+favorable height, crop, band-count matching or label. Relative L2 is
+`norm(rho60-rho50)/norm(rho50)` and each pointwise ratio is `rho60/rho50`.
+These are smooth bias-window densities, not calibrated experimental currents.
+
+| molecule | height (nm) | relative-L2 change (%) | minimum ratio | median ratio | maximum ratio | sum ratio |
+|---|---:|---:|---:|---:|---:|---:|
+| GlcN | 0.40 | 0.486458 | 0.965808 | 0.999501 | 1.061489 | 0.999691 |
+| GlcN | 0.50 | 1.142349 | 0.810160 | 1.000684 | 1.084200 | 1.000428 |
+| GlcN | 0.60 | 3.526764 | 0.595760 | 0.993069 | 1.235137 | 0.997356 |
+| GlcNAc | 0.40 | 0.920804 | 0.894711 | 1.025186 | 1.270401 | 0.999278 |
+| GlcNAc | 0.50 | 1.715682 | 0.757400 | 1.004025 | 1.405492 | 0.992091 |
+| GlcNAc | 0.60 | 3.605954 | 0.612710 | 0.982489 | 1.426814 | 0.986439 |
+
+Every adjacent-height pair is retained. The following ratios are upper over
+lower density at one lateral position, not ratios between cutoffs.
+
+| molecule | heights (nm) | rising columns, 50 → 60 Ry | median ratio, 50 → 60 Ry | maximum ratio, 50 → 60 Ry |
+|---|---|---:|---:|---:|
+| GlcN | 0.40 → 0.50 | 0/289 → 0/289 | 0.125428 → 0.125671 | 0.221536 → 0.195172 |
+| GlcN | 0.50 → 0.60 | 0/289 → 0/289 | 0.097158 → 0.097555 | 0.194246 → 0.154555 |
+| GlcNAc | 0.40 → 0.50 | 1/289 → 1/289 | 0.103812 → 0.102925 | 1.834829 → 1.610121 |
+| GlcNAc | 0.50 → 0.60 | 30/289 → 28/289 | 0.135865 → 0.134293 | 12.490877 → 10.632791 |
+
+A read-only Julia 1.13 check recomputes all **2,312** saved adjacent-height
+pairs from their raw endpoints and checks the full ordered pixel sets.
+GlcNAc's first interval retains pixel **17** only. In its second interval,
+only pixels **10 and 136** cease rising; no pixel is gained. The 60-Ry set is
+**11–17, 29–34, 47–51, 65–68, 83–85, 101–102, 119**. The maximum-ratio
+pixel changes **68 → 34**. All twelve case/cutoff/height density maxima
+remain on the fixed 17×17 window boundary: GlcN **136/136/153** and
+GlcNAc **239/239/239** at both cutoffs. No statement about the entire
+molecular image, intermediate heights or a unique current-height branch
+follows from these sampled extrema.
+
+**Verification.** Remote and local Julia **1.13.0** each pass **890** scope,
+**87,586** synthetic and **59,312** independent saved-real-table assertions
+for GlcNAc, as already recorded for GlcN. The source XML/WFC/density and all
+prepared/converged checkpoint manifests pass on Viper. The full GlcNAc
+case is fetched to `qe/wavefunction_cutoff_20260927/glcnac`:
+**41 regular files / 3,354,156,722 bytes**, of which **32 new files /
+3,352,943,751 bytes** are transferred, with no deletion. Local input and
+converged-checkpoint manifests pass. The final checksum-only rsync dry-run
+exits zero with no differences or transfers. Both full cases, including
+their raw converged orbitals and density, are now verified locally.
+The documentation builds under Julia **1.13.0**, with only the existing
+page/search-size and local deployment-environment warnings; no deployment
+occurs. `git diff --check` passes. Scientific code and configuration are
+unchanged by this outcome update.
+
+**Decision and limits.** Enlarging the basis changes the density response
+but does not remove the sampled GlcNAc rises. Most previously rising
+columns persist. Small map-level changes and nearly stable smooth norms
+coexist with substantial local changes; they do not qualify tail accuracy.
+Two cutoffs, finite SCF tolerances and the different initialization paths
+do not isolate every numerical contribution or establish that every rise
+is an artifact. The selected band sets are unchanged for both molecules,
+so band membership does not explain the present differences. There is no
+new cube validation, potential export, mold, calibration, benchmark grade
+or champion promotion. The bounded scientific deliverable is complete;
+the broader new-champion objective remains unmet.
+
+**Next question, not a new job.** The last printed SCF diagonalization
+thresholds are **6.22e-12 / 3.48e-9 Ry** for GlcN/GlcNAc. These differ
+from the common total-energy SCF acceptance and do not bound local orbital
+tails. The [QE input reference](https://www.quantum-espresso.org/Doc/INPUT_PW.html)
+defines `diago_thr_init` as an eigenvalue-convergence threshold and
+`diago_full_acc` as equal treatment of occupied/empty states. Local
+**QE 7.4.1** source inspection (`PW/Doc/INPUT_PW.def`, `PW/src/potinit.f90`,
+`PW/src/non_scf.f90`) confirms that the PBE NSCF path reconstructs the
+potential and PAW terms from the saved density, diagonalizes, and updates
+Fermi energy/weights without a self-consistent density update. This is not
+the hybrid-functional branch.
+
+The proposed next comparison is therefore **two explicit NSCF thresholds,
+1e-10 and 1e-12 Ry**, each starting from its own identical copy of the
+accepted **60/720-Ry** state, with `diago_full_acc=true` in both. Comparing
+two solves at one reconstructed density-defined Hamiltonian avoids treating
+the SCF-to-NSCF change alone as a pure diagonalization-tolerance effect.
+Keep PBE/D3, geometry, species, basis/grid, Gamma point, band total,
+smearing, bias and all three complete query planes fixed; report any
+spectral membership change rather than forcing it away. The bound proposed
+is **two sequential 8-CPU / 96-GB / two-hour jobs**, one per molecule,
+each containing two NSCF solves and analysis. No further SCF, retry, physical
+threshold tuning or mold/benchmark adoption is included. A tighter
+eigenvalue test does not itself certify pointwise orbital accuracy or
+promise a recognition gain. This new scope awaits the user's answer;
+no implementation or submission for it is performed here.
