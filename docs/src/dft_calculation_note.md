@@ -185,6 +185,24 @@ constant-current feedback loop.
 
 ## Diagnostic constant-current observable
 
+**September 27 fixed-density precision follow-up (preparation).** After
+the completed basis-cutoff comparison, the user resumes the autonomous
+research goal with explicit authorization to experiment. This continuation
+keeps the previously proposed bound: **two sequential 8-CPU / 96-GB /
+two-hour jobs**, each comparing NSCF thresholds **1e-10 / 1e-12 Ry** on
+independent identical copies of its accepted **60/720-Ry** state. PBE/D3,
+geometry, PAW data, Gamma sampling, smearing, bias and all physical queries
+are unchanged. Both solves use `diago_full_acc=true`. There is no new SCF,
+retry, label input, normalization or mold/champion adoption.
+
+QE 7.4.1 marks NSCF `scf_conv=false` deliberately. The existing SCF
+acceptance is therefore enforced on the source only, without rewriting
+metadata or lowering that gate. Separate NSCF checks require normal
+completion, the exact requested threshold, no unconverged-eigenvalue
+warning and unchanged density/PAW files. The original query reference
+must replay exactly; subsequent evaluations retain the same ordered
+reciprocal basis and exact parallel/serial controls. No result exists yet.
+
 **September 27 wavefunction-cutoff follow-up (completed).** The
 user confirms **“oui tu es autonome!”** after the explicit bounded proposal.
 The test changes **ecutwfc 50 → 60 Ry** at **ecutrho=720 Ry** for both

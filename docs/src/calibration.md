@@ -1,5 +1,18 @@
 # Calibration: measurements, assumptions and limits
 
+## Fixed-density diagonalization is not current calibration
+
+The bounded follow-up in `config/qe_diagonal_precision.toml` compares
+**1e-10 / 1e-12 Ry** NSCF eigenvalue tolerances at the same accepted
+**60/720-Ry** density for each molecule. Both use full occupied/empty-state
+accuracy and start from independent identical copies. No SCF acceptance,
+geometry, PAW data, physical query, spectral bias or normalization changes.
+The two NSCF results, not just their differences from the earlier SCF,
+provide the fixed-density tolerance comparison. Eigenvalue convergence is
+not a pointwise orbital-error bound. An unchanged or changed vacuum tail
+alone cannot establish physical accuracy, calibrated current or chemical
+recognition. No new mold or champion is adopted by this diagnostic.
+
 ## Wavefunction-basis sensitivity is not a new calibration
 
 After the 360/720-Ry density-cutoff comparison, the user approves a separate

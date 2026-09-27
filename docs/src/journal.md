@@ -2305,15 +2305,16 @@ See `docs/src/selection.md` for the full guard specification and
 ## Open Questions
 
 0bt. **Does orbital diagonalization precision affect the same fixed-density tails?**
-**Untested; next bounded scope proposed, not launched.** Both cutoff tests
+**Authorized continuation; preparing the bounded test.** Both cutoff tests
 leave GlcNAc rising columns. Compare explicit NSCF diagonalization thresholds
 **1e-10 / 1e-12 Ry** on identical copies of each accepted **60/720-Ry**
 density/PAW state and basis, retaining all physical settings and queries.
-Two sequential **8-CPU / 96-GB / two-hour** jobs would each contain those
+Two sequential **8-CPU / 96-GB / two-hour** jobs each contain those
 two NSCF solves and their comparisons, with no new SCF, retry, criterion
 change, label use or adoption. This tests eigenvalue-tolerance sensitivity,
-not a pointwise wavefunction-error bound. It requires approval of that new
-scope; the preceding two-job campaign is not extended.
+not a pointwise wavefunction-error bound. The user resumes the goal with
+authorization to experiment; this continuation keeps the previously
+proposed scope and time box. No new numerical result is available yet.
 
 0bs. **Does the orbital-basis cutoff affect the persistent vacuum-plane response?**
 **Yes, but the GlcNAc nonmonotonicity persists.** The two sequential,
@@ -20492,3 +20493,76 @@ threshold tuning or mold/benchmark adoption is included. A tighter
 eigenvalue test does not itself certify pointwise orbital accuracy or
 promise a recognition gain. This new scope awaits the user's answer;
 no implementation or submission for it is performed here.
+
+### 2026-09-27 — Fixed-density diagonalization precision, bounded continuation
+
+**Scientific deliverable and done.** Determine whether changing the NSCF
+eigenvalue tolerance **1e-10 → 1e-12 Ry** changes the complete bias-window
+planes at an unchanged density-defined Hamiltonian, for both molecules.
+Done means terminal outcomes for the two bounded allocations, complete
+paired results or an explicit failed/incomplete comparison, verified
+source preservation and local copies, and an interpretation. It does not
+mean a new champion: a better end-to-end label-free recognition method is
+still the goal. The previous goal turn made scientific progress by finishing
+and verifying the two basis-cutoff jobs; their outputs are not rerun as SCFs.
+
+Following the explicit bounded proposal, the user resumes the goal with
+**“autorisation d'essai”** and renews autonomous research toward a better
+method. This continuation keeps that proposal's limits: **two sequential
+8-CPU / 96-GB / two-hour jobs**, one per molecule, with **two NSCF solves
+per job**, no new SCF and no retry/requeue. The unknown25 application remains
+completed and untouched. Expected N, experimental sequence/composition and
+all benchmark labels remain absent from the calculation and analysis;
+the user's N=6 description belongs only to external benchmark grading.
+
+`config/qe_diagonal_precision.toml`, `test/qe_diagonal_precision.jl` and
+`hpc/qe_diagonal_precision.sbatch` use the accepted **60/720-Ry** states
+from the completed run. Every solve starts from its own identical copy of
+the original density, PAW on-site state, collected orbitals, XML and PAW
+files. The high-precision solve does not inherit the low-precision result.
+Both retain PBE/D3, geometry, Gamma sampling, smearing, band total and bias,
+with `startingpot=startingwfc='file'` and `diago_full_acc=true`.
+`nscf_max_seconds=3000` per solve reserves time inside the allocation for
+analysis and file checks. A failed solve is not analyzed or retried.
+
+**Source-backed distinction.** QE **7.4.1** `pw_restart_new.f90` deliberately
+writes NSCF `scf_conv/convergence_achieved=false`, with one nominal step.
+That is not an SCF failure to bypass: the accepted source still passes
+the original **5e-5-Ry** common criterion and its native target. The
+unchanged spectral reader's existing `require_accepted=false` option is
+used only after checking the NSCF calculation kind; the new result is
+never called an accepted SCF. Its dedicated checks require normal NSCF
+completion, the exact solver threshold, collected wavefunctions, no
+unconverged-eigenvalue warning and unchanged copied density/PAW files.
+`pw_init_qexsd_input.f90` writes `diago_thr_init` directly in input Ry,
+unlike `conv_thr/e2`; tests reject incorrectly halving that field.
+`punch.f90` does not rewrite the PBE NSCF density. No QE source is modified.
+
+The earlier spectral/Fourier readers, physical input writer and plane
+statistics are reused unchanged. Before either solve, the saved **60-Ry**
+query/plane reference must replay exactly. Each output repeats the full
+direct Gamma reconstruction in parallel and serial. It must retain the
+same ordered Miller indices, native grid and all **0.40/0.50/0.60-nm**
+physical queries outside the PAW spheres. No point is removed, nor is a norm
+or band count matched. Every spectrum, smooth norm, plane, adjacent-height
+ratio and paired difference is saved. **lo → hi** is the primary
+fixed-density comparison; **SCF → lo/hi** are secondary comparisons,
+not pure tolerance effects because the NSCF reconstructs its Hamiltonian
+from the saved density. Tighter eigenvalues alone do not certify pointwise
+orbital accuracy, identify every rising column's origin or predict a
+recognition improvement. No production fit or selection code is changed.
+
+**Local verification.** Julia **1.13.0**, four threads, passes **1,779**
+scope/real-input assertions and **142,810** synthetic/rejection/saved-output
+assertions on the first run. Tiny Gamma states have a common reciprocal
+basis and known coefficient changes; all physical values are checked against
+an explicit conjugate-pair sum. Tests distinguish NSCF from SCF acceptance,
+reject half-Ry XML threshold mistakes, changed density/PAW data, wrong
+physical settings, unfinished/warning-bearing logs and overwritten outputs.
+All three complete comparisons are independently recomputed from saved
+tables. Real preparation reads metadata and small tables only, with both
+case input manifests passing; no real Fourier calculation runs locally.
+Shell syntax, `git diff --check` and documentation build pass, with existing
+size/deployment-environment warnings only. The sync dry-run contains
+**33 regular files / 9,120,998 bytes**, all new and with no deletion. No job
+has yet been submitted at this checkpoint.

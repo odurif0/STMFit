@@ -1,5 +1,29 @@
 # Configuration Reference
 
+## Fixed-density orbital precision
+
+`config/qe_diagonal_precision.toml` compares `diago_thresholds_ry=[1e-10,
+1e-12]` on independent copies of the accepted **60/720-Ry** states in
+`qe/wavefunction_cutoff_20260927`. `diago_full_acc=true` applies in both
+NSCF solves; `startingpot="file"` and `startingwfc="file"` retain identical
+initial density, PAW state and orbitals. `nscf_max_seconds=3000` per solve
+reserves analysis time inside each **8-CPU / 96-GB / two-hour** allocation.
+There are two sequential jobs, one per molecule, with no retry or new SCF.
+
+`test/qe_diagonal_precision.jl --help` lists preparation, start/completion
+checks, Fourier analysis and paired summaries. The original SCF acceptance
+remains **5e-5 Ry**. NSCF's deliberately false XML SCF flag is not changed
+or interpreted as a new accepted SCF; normal log completion, the requested
+solver threshold and unchanged density/PAW files are required separately.
+QE 7.4.1 writes XML `diago_thr_init` in input Ry, unlike `conv_thr` in Ha.
+
+The existing bias, all three **17×17** query planes, geometry tolerances
+and **32-point** Fourier blocks remain unchanged. Baseline replay and
+serial/parallel repeats must be exact; ordered Miller indices must match.
+The primary comparison is **1e-10 → 1e-12** at fixed density; both changes
+from the saved SCF are also reported. No point, spectral membership or norm
+is forced to match, and no result selects a mold, height or champion.
+
 ## Wavefunction-basis cutoff sensitivity
 
 `config/qe_wavefunction_cutoff.toml` declares the approved **50/60-Ry**
