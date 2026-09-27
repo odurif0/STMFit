@@ -2305,11 +2305,11 @@ See `docs/src/selection.md` for the full guard specification and
 ## Open Questions
 
 0bt. **Does orbital diagonalization precision affect the same fixed-density tails?**
-**Incomplete for GlcN; GlcNAc job 11999206 running.** Both cutoff tests
+**Campaign finished; primary comparison unavailable for both molecules.** Both cutoff tests
 leave GlcNAc rising columns. Compare explicit NSCF diagonalization thresholds
 **1e-10 / 1e-12 Ry** on identical copies of each accepted **60/720-Ry**
 density/PAW state and basis, retaining all physical settings and queries.
-Two sequential **8-CPU / 96-GB / two-hour** jobs each contain those
+Two sequential **8-CPU / 96-GB / two-hour** jobs each plan those
 two NSCF solves and their comparisons, with no new SCF, retry, criterion
 change, label use or adoption. This tests eigenvalue-tolerance sensitivity,
 not a pointwise wavefunction-error bound. The user resumes the goal with
@@ -2318,7 +2318,13 @@ proposed scope and time box. GlcN **11998561** ends **FAILED 1:0** after
 **35m19s**: its 1e-10-Ry solve passes, but the 1e-12-Ry solve reports
 **two unconverged eigenvalues** despite `JOB DONE`. The unchanged guard
 rejects that output before analysis; no primary paired result exists.
-GlcNAc is the second/final allocation, not a retry of GlcN.
+GlcNAc **11999206** ends **FAILED 1:0 in 25m49s**, with **two unconverged
+eigenvalues already at 1e-10 Ry**; its 1e-12-Ry solve never starts.
+No rejected orbital is analyzed or adopted. These terminal outcomes expose
+a solver limitation in this setup, not the origin or accuracy of the tails.
+The single valid GlcN SCF-to-NSCF comparison changes map-level L2 by about
+**0.03%**, but is secondary and not a pure tolerance test. No benchmark
+improvement or new champion follows.
 
 0bs. **Does the orbital-basis cutoff affect the persistent vacuum-plane response?**
 **Yes, but the GlcNAc nonmonotonicity persists.** The two sequential,
@@ -20648,3 +20654,71 @@ the complete-result checks remain the default. Julia **1.13.0** passes
 assertions. Only the local test harness is extended; neither the running
 GlcNAc code/input nor any acceptance rule changes. The preceding documentation
 build also passes, with the existing size/deployment warnings only.
+
+### 2026-09-27 — Precision comparison ends without a converged pair
+
+**Terminal result.** GlcNAc **11999206**, the second/final allocation at
+frozen scientific source **af00f97**, ends **FAILED 1:0 in 25m49s**, from
+**13:48:17 to 14:14:06 CEST** on **vipc2306**. Its sole `pw.x` step exits
+**0:0 in 23m42s**, but reports **two unconverged eigenvalues** at the first
+requested threshold, **1e-10 Ry**, with **120.0** average iterations and
+six internal Davidson calls. The unchanged scientific check rejects the
+output with `Unfinished or unexpected NSCF`. As designed, the batch stops:
+there is no low-precision Fourier analysis, no 1e-12-Ry solve, no paired
+comparison and no completion marker. This is not a timeout, memory failure,
+source-SCF failure or a reason to reinterpret `JOB DONE` as convergence.
+Maximum observed per-rank RSS is **5,441,615 KiB**; eight MPI ranks remain
+within the **96000-MB / two-hour** allocation. No job is retried or requeued.
+
+The GlcNAc reference's saved planes/queries replay exactly and its
+parallel/serial evaluations agree, with unchanged bands **889–901** and
+smooth norm **20.00160384469961**. Remote input/original-checkpoint manifests
+pass after termination. The attempted NSCF's density and PAW on-site state
+are byte-identical to their source. Both original accepted SCFs and the
+**5e-5-Ry** common criterion remain untouched.
+
+| case | NSCF 1e-10 Ry | NSCF 1e-12 Ry | primary tolerance comparison |
+|---|---|---|---|
+| GlcN, 11998561 | passes; full saved analysis verified | rejected: two unconverged eigenvalues | unavailable |
+| GlcNAc, 11999206 | rejected: two unconverged eigenvalues | not run after first rejection | unavailable |
+
+**Scientific conclusion.** Neither geometry yields a converged pair under
+the declared solver settings. The proposed pure tolerance comparison is
+therefore incomplete, not evidence that tolerance has no effect. Both
+rejections occur after the solver's internal iteration limit, without
+identifying the failing bands. Their irrelevance to the bias window cannot
+be assumed. Only the separate GlcN SCF-to-NSCF result is retained as a
+secondary observation; it cannot explain away GlcNAc's rising columns,
+qualify pointwise orbital accuracy or establish chemical discrimination.
+There is no new cube, potential, current calibration, mold, benchmark grade
+or champion. The two-job allocation scope is exhausted; no third job is
+submitted.
+
+**Local verification.** All **32 regular files / 3,352,684,489 bytes** for
+GlcNAc are fetched to `qe/diagonal_precision_20260927/glcnac`, including
+the rejected checkpoint. The checksum-only rsync finishes with no
+differences or transfers, and the local input manifest passes. Explicit
+checks confirm the absence of `lo/analysis`, `hi/work` and `comparison`.
+Julia **1.13.0** passes **1,779** scope, **379,478** synthetic and **28,375**
+incomplete-real-result assertions. The latter independently verify the
+entire retained reference, unchanged density/PAW files and the exact
+scientific rejection; no failed orbital is evaluated. The corresponding
+GlcN incomplete-result verification passed **56,732** assertions. Both
+complete local case copies and original source preservation are verified.
+The bounded deliverable is complete as an explicitly incomplete precision
+comparison; the broader label-free new-champion goal is not achieved.
+
+**Next proposed numerical control, not submitted.** The
+[QE input reference](https://www.quantum-espresso.org/Doc/INPUT_PW.html)
+describes conjugate-gradient (`cg`) diagonalization as slower and less
+memory-intensive than Davidson, with somewhat greater robustness; the
+audited local **7.4.1** `INPUT_PW.def` states the same distinction. That is
+motivation for a control, not evidence that CG will converge here. The
+proposed scope retains the same independent source copies, densities,
+physical settings, full-accuracy treatment, two thresholds and all queries,
+changing only the eigensolver. It remains **at most two sequential 8-CPU /
+96-GB / two-hour jobs**, with no new SCF, weaker criterion, relaunch of an
+old job or adoption. This new scope is put to the user for approval under
+the repository's campaign rule; there is no implementation or submission
+for it in this outcome update. Increasing walltime alone would not address
+the observed internal-iteration limit.

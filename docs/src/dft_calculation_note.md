@@ -185,7 +185,7 @@ constant-current feedback loop.
 
 ## Diagnostic constant-current observable
 
-**September 27 fixed-density precision follow-up (GlcN incomplete).** After
+**September 27 fixed-density precision follow-up (no converged pair).** After
 the completed basis-cutoff comparison, the user resumes the autonomous
 research goal with explicit authorization to experiment. This continuation
 keeps the previously proposed bound: **two sequential 8-CPU / 96-GB /
@@ -207,8 +207,14 @@ but the independent 1e-12-Ry solve reports **two unconverged eigenvalues**.
 The unchanged check rejects it despite `JOB DONE`, before any high-precision
 analysis or paired comparison. Source density/PAW files remain unchanged;
 there is no retry or weakened criterion. GlcNAc **11999206**, the second/final
-job, starts after that terminal outcome under the same limits. Its result
-is pending. The scientific source is frozen at **af00f97**.
+job, ends **FAILED 1:0 in 25m49s**, with **two unconverged eigenvalues already
+at 1e-10 Ry**. Its high-precision solve never starts. Both failures follow
+six internal Davidson calls / 120 iterations, not allocation exhaustion.
+Neither molecule provides the primary tolerance comparison; this is an
+incomplete numerical experiment, not a demonstrated absence of sensitivity.
+The sole valid GlcN SCF-to-NSCF map change is about **0.03%** in relative L2,
+but includes Hamiltonian reconstruction and is not a pure tolerance effect.
+The scientific source remains **af00f97**, with no third job or adoption.
 The inherited three planes follow the tilted ring-frame normal, not the
 substrate z direction; their comparison is not a new topography validation.
 

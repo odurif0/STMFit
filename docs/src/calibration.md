@@ -7,11 +7,17 @@ The bounded follow-up in `config/qe_diagonal_precision.toml` compares
 **60/720-Ry** density for each molecule. Both use full occupied/empty-state
 accuracy and start from independent identical copies. No SCF acceptance,
 geometry, PAW data, physical query, spectral bias or normalization changes.
-The two NSCF results, not just their differences from the earlier SCF,
-provide the fixed-density tolerance comparison. Eigenvalue convergence is
+Two converged NSCF results, not just their differences from the earlier SCF,
+are needed for the fixed-density tolerance comparison. Eigenvalue convergence is
 not a pointwise orbital-error bound. An unchanged or changed vacuum tail
 alone cannot establish physical accuracy, calibrated current or chemical
 recognition. No new mold or champion is adopted by this diagnostic.
+The two-job campaign ends without such a pair: GlcN is rejected at
+**1e-12 Ry**, GlcNAc already at **1e-10 Ry**, each with two unconverged
+eigenvalues. The unchanged guard excludes both failed outputs, and the
+second GlcNAc solve never starts. The small valid GlcN SCF-to-NSCF map change
+(about **0.03%** in relative L2) is a secondary observation, not calibration
+or a result for the missing tolerance comparison.
 
 ## Wavefunction-basis sensitivity is not a new calibration
 
