@@ -20551,6 +20551,10 @@ not pure tolerance effects because the NSCF reconstructs its Hamiltonian
 from the saved density. Tighter eigenvalues alone do not certify pointwise
 orbital accuracy, identify every rising column's origin or predict a
 recognition improvement. No production fit or selection code is changed.
+These inherited planes move along the **tilted ring-frame normal** in
+`plane_points`, not the substrate z direction. That distinction, already
+documented in the September 25 substrate-normal surface experiment, remains
+unchanged; this comparison is not a new constant-current topography test.
 
 **Local verification.** Julia **1.13.0**, four threads, passes **1,779**
 scope/real-input assertions and **142,810** synthetic/rejection/saved-output
