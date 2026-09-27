@@ -1,5 +1,24 @@
 # Calibration: measurements, assumptions and limits
 
+## Wavefunction-basis sensitivity is not a new calibration
+
+After the 360/720-Ry density-cutoff comparison, the user approves a separate
+**50 → 60 Ry wavefunction-cutoff** test at fixed **720 Ry** density cutoff
+on both accepted geometries. Two sequential jobs, each at most **8 CPU /
+96 GB / 4 h**, compare the same bias and three physical planes. The baseline
+must replay exactly; candidate SCFs keep the same physical settings, original
+per-state targets and common **5e-5-Ry** acceptance. They start from atomic
+potential and atomic+random orbitals in the enlarged basis, with no
+cross-cutoff restart or mixing history. This different numerical starting
+path and finite SCF tolerance limit causal attribution of a two-point change.
+
+The previously observed boundary maxima and persistent nonmonotone columns
+are retained, not removed by cropping, normalization or height choice. The
+new test measures sensitivity of the smooth bias-window densities; it does
+not by itself establish convergence, a monotone physical tail, a calibrated
+current-height relation or improved recognition. Frozen molds and champion
+remain unchanged. No result is available at the preparation checkpoint.
+
 ## Potential qualification precedes vacuum-tail propagation
 
 The separately authorized **360-to-720-Ry** density-cutoff test holds PBE,

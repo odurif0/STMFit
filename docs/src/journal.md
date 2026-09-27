@@ -2304,6 +2304,16 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
+0bs. **Does the orbital-basis cutoff affect the persistent vacuum-plane response?**
+**Approved; preparation only, no result yet.** The user confirms the bounded
+**50 → 60 Ry ecutwfc** test at fixed **720 Ry ecutrho**, on both unchanged
+geometries: two sequential **8-CPU / 96-GB / 4-hour** jobs without retry,
+label use or mold/champion adoption. Baseline query replay must be exact;
+new states must pass the unchanged SCF acceptance, expand the plane-wave
+basis and pass parallel/serial and saved-output checks. Keep every point at
+all three existing heights. This numerical diagnostic is not the broader
+new-champion objective and cannot complete it.
+
 0br. **Does charge-cutoff sensitivity reach the bias-window orbital density?**
 **Yes, but the nonmonotone GlcNAc columns persist.** Job **11992917**
 completes **0:0** in **6m37s**, reproducing both 360-Ry references exactly
@@ -20214,3 +20224,63 @@ an erroneous ROI, or authorize an expanded window or favorable crop. Every
 point remains in the result. The requested next wavefunction-cutoff scope
 is still awaiting approval; no new campaign is started and no recognition
 or champion claim changes.
+
+### 2026-09-27 — Approved 50/60-Ry orbital-basis sensitivity
+
+**Deliverable and done.** Measure the response to **50 → 60 Ry ecutwfc**
+at fixed **720 Ry ecutrho**, separately for both accepted geometries. Done
+means two terminal job outcomes within the approved resource limits, unchanged
+source states, exact baseline query/plane replay, accepted candidate SCFs,
+parallel/serial controls, complete verified paired outputs fetched locally,
+and an interpreted result or explicit incomplete outcome. A successful
+diagnostic is not a new champion; the recognition objective remains intact.
+The user replies **“oui tu es autonome!”** to the stated **two sequential
+8-CPU / 96-GB / 4-hour jobs**. Intermediate implementation and submission
+steps need no further scientific approval within this bound.
+
+`config/qe_wavefunction_cutoff.toml`, `test/qe_wavefunction_cutoff.jl` and
+`hpc/qe_wavefunction_cutoff.sbatch` retain the accepted PBE/D3 geometry,
+species/PAW files, Gamma point, smearing, electron/band totals, original
+per-state SCF targets and mixing settings. The common acceptance remains
+**5e-5 Ry**. The input writer and the Gamma reader/evaluator are reused
+unchanged. `ecutrho` stays **720 Ry**; only the orbital basis is increased.
+Every accepted candidate must contain more plane waves than its baseline.
+
+Fresh SCFs start from atomic potential and **atomic+random** orbitals.
+Local QE 7.4.1 source inspection shows `read_collected_wfc` reads but does
+not use stored Miller indices; `read_wfc` can zero-pad differing lengths.
+Rather than assume a cross-basis coefficient mapping, this experiment does
+not copy old WFC/density/mixing files into the new SCF workspace. This changes
+the numerical initialization relative to the earlier warm-start path; finite
+SCF tolerance and path dependence remain limitations on causal attribution.
+`max_seconds=12600` reserves roughly half an hour for finalization, analysis
+and checks within the four-hour allocation. No nonconverged state is analyzed,
+and there is no retry, threshold relaxation or hidden second SCF.
+
+Each job first replays its saved **50/720-Ry** reference with the same
+native-vertex prefix and physical-plane ordering. The **-0.0220495933-Ry**
+sharp bias window, **0.40/0.50/0.60-nm** planes, **17×17** complete grid and
+earlier geometric tolerances remain fixed. After SCF acceptance, the 60-Ry
+queries repeat in parallel and serial with one BLAS thread. All points must
+remain outside PAW spheres. Spectra, selected weights, smooth norms, native
+grid dimensions, basis sizes, every density and adjacent-height ratio are
+saved. No band-count matching, normalization, crop, new cube validation or
+benchmark selection is introduced. Original files are read-only and hashed;
+the newly converged checkpoint is hashed before and after analysis.
+
+Local verification uses only tiny analytic Gamma states and real metadata.
+The synthetic candidate adds a reciprocal vector and checks every physical
+sample against an explicit conjugate-pair sum. Rejection cases cover wrong
+cutoffs, changed geometry/mixing, false convergence, excessive SCF error,
+tampered inputs and existing output directories. The first development run
+passes all numerical comparisons but fails four return-value assertions:
+`analyze` returned its final boolean rather than `nothing`. An explicit
+`nothing` fixes that interface contract; scientific values and tolerances
+are unchanged. The corrected source passes **890** real-metadata/scope and
+**87,586** synthetic/saved-output assertions (**88,476 total**) under Julia
+**1.13.0**, with four threads for the parallel Fourier path. The two real
+metadata preparations and their input manifests pass. Shared scientific
+helpers are unchanged; shell syntax, `git diff --check` and the documentation
+build pass (existing size and local deployment-environment warnings).
+The sync dry-run has **29 regular files / 9,072,057 bytes**, all new, with no
+deletion or old orbital transfer. No Viper job has yet been submitted.

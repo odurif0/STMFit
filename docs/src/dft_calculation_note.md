@@ -185,6 +185,25 @@ constant-current feedback loop.
 
 ## Diagnostic constant-current observable
 
+**September 27 approved wavefunction-cutoff follow-up (preparation).** The
+user confirms **“oui tu es autonome!”** after the explicit bounded proposal.
+The next test changes **ecutwfc 50 → 60 Ry** at **ecutrho=720 Ry** for both
+accepted geometries, retaining PBE/D3, Gamma sampling, PAW files, smearing,
+bias, three heights and the **5e-5-Ry** common acceptance. Two sequential
+**8-CPU / 96-GB / 4-h** jobs are authorized, with no retry/requeue, labels or
+mold/champion adoption. Original per-state SCF targets are retained.
+
+Each saved 50-Ry reference must replay exactly before a fresh 60-Ry SCF.
+Initialization uses atomic potential and atomic+random orbitals, without
+reinterpreting old coefficients in the enlarged basis. Accepted collected
+states are evaluated directly with the unchanged Gamma Fourier method;
+serial/parallel values must agree, and the plane-wave count must increase.
+All physical samples and spectral weights remain visible, including zeros,
+rising columns and boundary maxima. No new PP/cube, interpolated plane,
+normalization or selected height is introduced. This is a sensitivity test,
+not a convergence proof or a recognition result; no new result is measured
+at this preparation checkpoint.
+
 **September 27 saved-orbital follow-up (completed).** Following
 the completed cutoff comparison, the user authorizes the proposed **one
 4-CPU / 32-GB / 1-h** analysis job and renews the autonomous new-champion

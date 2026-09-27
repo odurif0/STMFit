@@ -1,5 +1,35 @@
 # Configuration Reference
 
+## Wavefunction-basis cutoff sensitivity
+
+`config/qe_wavefunction_cutoff.toml` declares the approved **50/60-Ry**
+wavefunction-cutoff comparison at fixed **720-Ry** density cutoff. The
+baseline is the verified saved-orbital run `qe/cutoff_wavefunctions_20260927`,
+using the SCF states in `qe/density_cutoff_20260926`. PBE/D3, PAW datasets,
+geometries, Gamma sampling, smearing and the **5e-5-Ry** common acceptance
+remain unchanged. The original per-state SCF targets and mixing settings
+are inherited. Each new SCF starts with `startingpot="atomic"` and
+`startingwfc="atomic+random"`; no old orbital file is interpreted in a
+different basis. `scf_max_seconds=12600` leaves time inside the four-hour
+allocation for analysis and checks. An unfinished state is not analyzed.
+
+`test/qe_wavefunction_cutoff.jl prepare ROOT CONFIG NEW_RUN` prepares only
+metadata, inputs and small reference tables locally. Each of the two
+sequential `hpc/qe_wavefunction_cutoff.sbatch` jobs requests **8 CPU / 96 GB /
+4 h**, without retries/requeue. A four-thread Fourier replay of the saved
+50-Ry state must match its previous queries and planes exactly before the
+eight-rank SCF starts. The accepted 60-Ry state is evaluated in parallel and
+serial; its plane-wave count must exceed the baseline's. All source and
+converged-state hashes are checked before/after analysis. No PP is run.
+
+The bias, **0.40/0.50/0.60-nm** planes, **0.32-nm** half-width, **0.04-nm**
+spacing, **32-point** blocks and earlier geometry tolerances are unchanged.
+All points, zeros and rising columns remain; undefined ratios are explicit
+`NaN`. Band membership follows each state's own fixed-bias window without
+matching counts or normalizing norms. Outputs include spectra, queries,
+plane/decay statistics and all paired differences. No cutoff is selected or
+adopted by a benchmark, and no new independent cube validation is claimed.
+
 ## Saved-orbital response to density cutoff
 
 `config/qe_cutoff_wavefunctions.toml` compares the **existing** accepted
