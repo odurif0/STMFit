@@ -185,7 +185,7 @@ constant-current feedback loop.
 
 ## Diagnostic constant-current observable
 
-**September 27 fixed-density precision follow-up (GlcN submitted).** After
+**September 27 fixed-density precision follow-up (GlcN incomplete).** After
 the completed basis-cutoff comparison, the user resumes the autonomous
 research goal with explicit authorization to experiment. This continuation
 keeps the previously proposed bound: **two sequential 8-CPU / 96-GB /
@@ -201,9 +201,14 @@ metadata or lowering that gate. Separate NSCF checks require normal
 completion, the exact requested threshold, no unconverged-eigenvalue
 warning and unchanged density/PAW files. The original query reference
 must replay exactly; subsequent evaluations retain the same ordered
-reciprocal basis and exact parallel/serial controls. No result exists yet.
-GlcN job **11998561** is submitted under the stated limits; GlcNAc is not
-submitted until that job ends. The scientific source is frozen at **af00f97**.
+reciprocal basis and exact parallel/serial controls. GlcN **11998561** ends
+**FAILED 1:0 in 35m19s**: the 1e-10-Ry solve and its Fourier checks pass,
+but the independent 1e-12-Ry solve reports **two unconverged eigenvalues**.
+The unchanged check rejects it despite `JOB DONE`, before any high-precision
+analysis or paired comparison. Source density/PAW files remain unchanged;
+there is no retry or weakened criterion. GlcNAc **11999206**, the second/final
+job, starts after that terminal outcome under the same limits. Its result
+is pending. The scientific source is frozen at **af00f97**.
 The inherited three planes follow the tilted ring-frame normal, not the
 substrate z direction; their comparison is not a new topography validation.
 

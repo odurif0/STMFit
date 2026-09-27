@@ -2305,7 +2305,7 @@ See `docs/src/selection.md` for the full guard specification and
 ## Open Questions
 
 0bt. **Does orbital diagonalization precision affect the same fixed-density tails?**
-**In progress; GlcN job 11998561 submitted, GlcNAc not yet submitted.** Both cutoff tests
+**Incomplete for GlcN; GlcNAc job 11999206 running.** Both cutoff tests
 leave GlcNAc rising columns. Compare explicit NSCF diagonalization thresholds
 **1e-10 / 1e-12 Ry** on identical copies of each accepted **60/720-Ry**
 density/PAW state and basis, retaining all physical settings and queries.
@@ -2314,7 +2314,11 @@ two NSCF solves and their comparisons, with no new SCF, retry, criterion
 change, label use or adoption. This tests eigenvalue-tolerance sensitivity,
 not a pointwise wavefunction-error bound. The user resumes the goal with
 authorization to experiment; this continuation keeps the previously
-proposed scope and time box. No new numerical result is available yet.
+proposed scope and time box. GlcN **11998561** ends **FAILED 1:0** after
+**35m19s**: its 1e-10-Ry solve passes, but the 1e-12-Ry solve reports
+**two unconverged eigenvalues** despite `JOB DONE`. The unchanged guard
+rejects that output before analysis; no primary paired result exists.
+GlcNAc is the second/final allocation, not a retry of GlcN.
 
 0bs. **Does the orbital-basis cutoff affect the persistent vacuum-plane response?**
 **Yes, but the GlcNAc nonmonotonicity persists.** The two sequential,
@@ -20579,3 +20583,34 @@ scientific source **af00f97** is submitted for GlcN as **11998561**, at
 `--export=ALL,JULIA_BIN=...`. Its initial state is **PENDING** for node
 availability. GlcNAc is not submitted and must await this job's terminal
 outcome. No numerical result exists yet; do not resubmit this job.
+
+**GlcN terminal outcome and second allocation.** Job **11998561** runs
+**13:10:40–13:45:59 CEST** on **vipc2306**, ending **FAILED 1:0 in 35m19s**.
+Both `pw.x` steps exit zero; the failure is the scientific NSCF check, not
+Slurm time or memory exhaustion. The **1e-10-Ry** step completes in
+**7m25s**, reports **21.0** average iterations and no eigenvalue warning.
+Its exact reference replay and parallel/serial Fourier checks pass, with
+unchanged ordered basis, density/PAW state and bands **882–893**. The
+smooth norm changes **18.17611052159034 → 18.17610683126881**; this alone
+is not a pointwise error estimate.
+
+The independent **1e-12-Ry** step takes **23m47s**, reports **120.0** average
+iterations and **`c_bands: 2 eigenvalues not converged`** before writing
+`JOB DONE`. The unchanged check rejects it with `Unfinished or unexpected
+NSCF`; no high-precision analysis, comparison or completion marker is
+produced. QE 7.4.1 `c_bands.f90` permits at most six internal NSCF Davidson
+calls, and `regterg.f90` limits each to 20 iterations; the log records six
+calls. These are internal iterations within one solve, not six submitted
+jobs. The warning gives no band identities, so it cannot be dismissed as
+irrelevant to the bias window. Original input/checkpoint hashes and the
+completed low-precision checkpoint manifest pass remotely; the rejected
+high-precision density and PAW on-site state still match the source exactly.
+The failed output is retained, never analyzed as converged or retried.
+
+Following this terminal outcome, GlcNAc's unchanged input/XML checks,
+shell syntax and `sbatch --test-only` pass. **11999206** is submitted at
+**13:47:49 CEST**, starts **13:48:17 CEST** on **vipc2306**, and is the
+second/final job of the approved campaign. It keeps **8 MPI ranks / 96000 MB /
+two hours**, explicit Julia export, no requeue and frozen scientific source
+**af00f97**. This tests the other preselected geometry; it neither replaces
+the rejected GlcN result nor changes the comparison or acceptance rules.
