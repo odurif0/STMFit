@@ -20722,3 +20722,31 @@ old job or adoption. This new scope is put to the user for approval under
 the repository's campaign rule; there is no implementation or submission
 for it in this outcome update. Increasing walltime alone would not address
 the observed internal-iteration limit.
+
+### 2026-09-27 — Failed-band identities are absent from the saved checkpoints
+
+**Deliverable.** Determine, without another calculation or evaluating the
+rejected orbitals, whether the existing outputs identify which bands failed.
+Read-only Slurm accounting reconfirms **11998561/11999206 FAILED 1:0**;
+neither job remains in the queue. Their complete local logs, XML and file
+inventories are inspected against the archived QE **7.4.1** source.
+
+In `KS_Solvers/Davidson/regterg.f90`, the local `conv(i)` array compares
+successive eigenvalue estimates, reduces to the scalar `notcnv`, and is
+deallocated on return. The routine overwrites the preceding eigenvalues
+with the final estimates. `PW/src/c_bands.f90` prints only the count of
+unconverged roots; two roots do not cross its fatal-error threshold. This
+explains the normal QE exit without qualifying the requested convergence.
+`PW/src/pw_restart_new.f90` writes the final spectrum/occupations, not that
+convergence mask or the previous iteration's spectrum. The actual XML
+contains no per-band residual or convergence history; its nominal NSCF
+`scf_error=0` is not such a measure. Each sibling `*_central.xml` is
+byte-identical to `data-file-schema.xml`, not an earlier iteration.
+
+**Conclusion.** The failed-band identities and last-step eigenvalue changes
+cannot be read back from these logs/XML. Comparing spectra from different
+solves would not recover the missing within-solve convergence test. No
+band can be presumed irrelevant to the bias window, and no warning is
+waived. There is no new numerical map, benchmark, parameter or acceptance
+change. The proposed bounded CG comparison still needs the user's answer;
+automatic goal continuation is not treated as approval of a new campaign.
