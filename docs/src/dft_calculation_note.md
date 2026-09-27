@@ -185,9 +185,9 @@ constant-current feedback loop.
 
 ## Diagnostic constant-current observable
 
-**September 27 approved wavefunction-cutoff follow-up (preparation).** The
+**September 27 wavefunction-cutoff follow-up (GlcN verified; GlcNAc running).** The
 user confirms **“oui tu es autonome!”** after the explicit bounded proposal.
-The next test changes **ecutwfc 50 → 60 Ry** at **ecutrho=720 Ry** for both
+The test changes **ecutwfc 50 → 60 Ry** at **ecutrho=720 Ry** for both
 accepted geometries, retaining PBE/D3, Gamma sampling, PAW files, smearing,
 bias, three heights and the **5e-5-Ry** common acceptance. Two sequential
 **8-CPU / 96-GB / 4-h** jobs are authorized, with no retry/requeue, labels or
@@ -201,8 +201,28 @@ serial/parallel values must agree, and the plane-wave count must increase.
 All physical samples and spectral weights remain visible, including zeros,
 rising columns and boundary maxima. No new PP/cube, interpolated plane,
 normalization or selected height is introduced. This is a sensitivity test,
-not a convergence proof or a recognition result; no new result is measured
-at this preparation checkpoint.
+not a convergence proof or a recognition result.
+
+GlcN **11993413** completes **0:0 in 2h15m22s**, with 39 SCF iterations and
+error **3.93491e-8 Ry**. The baseline replay and both parallel/serial repeats
+are exact. All **59,312** independent saved-real-table checks pass on Viper
+and locally; the complete fetched case and source hashes are verified. The
+basis grows **135,743 → 178,543** stored Gamma plane waves; the native density
+grid stays **360×250×360**, with bands **882–893** still selected.
+
+| GlcN height (nm) | relative-L2 change (%) | median 60/50 ratio | pointwise ratio range |
+|---|---:|---:|---:|
+| 0.40 | 0.486 | 0.999501 | 0.965808–1.061489 |
+| 0.50 | 1.142 | 1.000684 | 0.810160–1.084200 |
+| 0.60 | 3.527 | 0.993069 | 0.595760–1.235137 |
+
+No physical point is zero. Both adjacent-height intervals retain **0/289**
+rising columns at both cutoffs, and all three density maxima stay on the
+window boundary at pixels **136/136/153**. Aggregate similarity does not
+bound local changes or establish continuous monotonicity. GlcNAc
+**11994503** is the second, sequential job with unchanged limits and source;
+its result is pending. No paired conclusion, new mold or recognition claim
+is made at this checkpoint.
 
 **September 27 saved-orbital follow-up (completed).** Following
 the completed cutoff comparison, the user authorizes the proposed **one
@@ -240,8 +260,8 @@ No point is excluded or window enlarged. These results establish sensitivity,
 not cutoff convergence, numerical origin of every rise or a unique
 current-height branch. The 720-Ry vertex queries have no new independent
 cube validation. No mold, current calibration or recognition result is
-adopted. Wavefunction-cutoff sensitivity at fixed density cutoff remains
-untested and needs a separate bounded scope.
+adopted. The separately approved wavefunction-cutoff follow-up is reported
+above.
 
 **September 26–27 cutoff sensitivity (completed).** The user approved
 two sequential Viper jobs, each limited to **8 CPUs / 4 h**, to compare

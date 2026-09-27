@@ -17,7 +17,12 @@ are retained, not removed by cropping, normalization or height choice. The
 new test measures sensitivity of the smooth bias-window densities; it does
 not by itself establish convergence, a monotone physical tail, a calibrated
 current-height relation or improved recognition. Frozen molds and champion
-remain unchanged. No result is available at the preparation checkpoint.
+remain unchanged. GlcN **11993413** now completes successfully, with exact
+baseline replay, **59,312** independently checked saved-output assertions
+and checksum-identical local files. GlcNAc **11994503** is running under the
+same bounds. The GlcN response alone is not a paired chemical comparison or
+new calibration; see the partial results in the
+[DFT calculation note](dft_calculation_note.md).
 
 ## Potential qualification precedes vacuum-tail propagation
 

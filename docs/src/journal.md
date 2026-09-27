@@ -2305,7 +2305,7 @@ See `docs/src/selection.md` for the full guard specification and
 ## Open Questions
 
 0bs. **Does the orbital-basis cutoff affect the persistent vacuum-plane response?**
-**In progress; GlcN submitted as 11993413, no result yet.** The user confirms the bounded
+**Partial result; GlcN verified, GlcNAc 11994503 in progress.** The user confirms the bounded
 **50 → 60 Ry ecutwfc** test at fixed **720 Ry ecutrho**, on both unchanged
 geometries: two sequential **8-CPU / 96-GB / 4-hour** jobs without retry,
 label use or mold/champion adoption. Baseline query replay must be exact;
@@ -2313,6 +2313,14 @@ new states must pass the unchanged SCF acceptance, expand the plane-wave
 basis and pass parallel/serial and saved-output checks. Keep every point at
 all three existing heights. This numerical diagnostic is not the broader
 new-champion objective and cannot complete it.
+
+GlcN **11993413** completes **0:0 in 2h15m22s**. All **59,312** independent
+saved-output checks pass on Viper and locally; full local files and source
+hashes are verified. Its relative-L2 changes are **0.486/1.142/3.527%** at the
+three heights, but individual 0.60-nm values span **0.596–1.235** times the
+baseline. Both sampled height intervals retain zero rising columns; all
+three maxima remain on the window boundary. GlcNAc is the second and final
+authorized job; no paired conclusion or mold/recognition adoption yet.
 
 0br. **Does charge-cutoff sensitivity reach the bias-window orbital density?**
 **Yes, but the nonmonotone GlcNAc columns persist.** Job **11992917**
@@ -2329,7 +2337,7 @@ lie on the fixed diagnostic window's boundary. This
 establishes orbital-density sensitivity, not convergence, numerical origin
 of every rising column, a unique current-height branch or recognition gain.
 No new SCF/PP, normalization, selected height, benchmark or mold adoption
-occurs. Wavefunction-cutoff sensitivity remains an untested separate scope.
+occurs. The separate wavefunction-cutoff test is now in progress (0bs).
 
 0bq. **Does raising the density cutoff reduce the vacuum variation?**
 **Two-point sensitivity is confirmed for both geometries, not convergence.**
@@ -20293,3 +20301,64 @@ one node, eight MPI tasks/CPUs requested, **96000 MB**, **04:00:00**, explicit
 `--export=ALL,JULIA_BIN=...`, `Requeue=0` and `Restarts=0`. Its initial state is
 **PENDING** for node availability; no SCF or new scientific result exists yet.
 GlcNAc is not submitted and must wait for this job's terminal outcome.
+
+### 2026-09-27 — GlcN basis sensitivity verified; GlcNAc calculation started
+
+**Partial scientific deliverable.** GlcN job **11993413**, frozen source
+**22446e4**, completes **0:0** on **vipc2006** in **2h15m22s**, from
+**02:14:40 to 04:30:02 CEST**. The SCF converges in **39 iterations** with
+error **3.934909900777106e-8 Ry**, below its retained **1e-7-Ry** target and
+the unchanged **5e-5-Ry** common acceptance. Early diagonalization warnings
+concern four eigenvalues at iteration 7 and one at iteration 12; they are
+absent from the final iterations and remain in the unedited log. Forces and
+stress are evaluated without another relaxation. Eight MPI ranks use eight
+cores; Slurm accounts for **16 hardware threads** on this two-thread/core
+node. Its per-node memory estimate (`MaxRSS × Ntasks`) is **90.262487 GB**;
+the request remains **96000 MB / four hours**, without retry or requeue.
+
+The **50-Ry** query and plane reference replays exactly. Both states' parallel
+and serial evaluations are identical, finite and nonnegative, and every query
+is outside the PAW spheres. All **867 physical points** remain. The basis
+increases from **135,743 to 178,543** stored Gamma plane waves; the native
+density grid stays **360×250×360**. The fixed-bias window still selects bands
+**882–893**, each with weight two. Fermi energies change from
+**0.6185823846380134 to 0.6187248900351836 eV** and smooth norms from
+**18.175599458551478 to 18.17611052159034**, without rescaling either state.
+
+| GlcN height (nm) | Relative-L2 change (%) | Minimum 60/50 ratio | Median ratio | Maximum ratio | Sum ratio |
+|---|---:|---:|---:|---:|---:|
+| 0.40 | 0.486458 | 0.965808 | 0.999501 | 1.061489 | 0.999691 |
+| 0.50 | 1.142349 | 0.810160 | 1.000684 | 1.084200 | 1.000428 |
+| 0.60 | 3.526764 | 0.595760 | 0.993069 | 1.235137 | 0.997356 |
+
+There are no zero-valued physical samples. Both adjacent-height intervals
+have **0/289 rising columns** at both cutoffs. Their maximum upper/lower
+ratios change **0.221536 → 0.195172** and **0.194246 → 0.154555**. All three
+sampled maxima stay on the fixed window boundary at pixels **136/136/153**.
+This is sampled-height behavior, not a continuous monotonicity proof or a
+whole-image maximum. The small aggregate changes do not bound each pixel:
+the minimum 0.60-nm ratio corresponds to a **40.4% local decrease**. No
+physical-accuracy improvement, cutoff convergence or chemical discrimination
+is established by this one-molecule result.
+
+Remote and local Julia **1.13.0** checks each pass **890** scope/metadata,
+**87,586** synthetic and **59,312** independent saved-real-table assertions.
+The local juliaup launcher initially stops at a read-only configuration lock,
+before any test; the explicit Julia 1.13 binary runs the unchanged checks
+successfully. The complete GlcN case is fetched to
+`qe/wavefunction_cutoff_20260927/glcn`: **41 regular files / 3,276,365,307 bytes**.
+Final checksum rsync exits zero with no differences. Local input/checkpoint
+manifests pass; original XML, WFC and density hashes pass again remotely.
+The new WFC SHA-256 is
+`cd1ffb3d3cedd1bb6edaa0d1e69ba33d5c378c02fae440eab39272658c657943`.
+No mold, cube validation, calibration, benchmark run or champion is adopted.
+
+After GlcN's terminal result and successful checks, the unchanged GlcNAc
+inputs pass their manifest/XML checks and `sbatch --test-only`. Job
+**11994503** is submitted at **04:32:15 CEST**, with the same explicit resource
+bounds and Julia export, and starts at **04:35:00 CEST** on **vipc2172**.
+It is the **second and
+final** job of this campaign; its outcome and the paired interpretation remain
+pending. No scientific source is changed while it runs.
+The updated documentation builds successfully under Julia 1.13; only the
+existing size/deployment-environment warnings remain. `git diff --check` passes.
