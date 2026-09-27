@@ -1,0 +1,33 @@
+# Approved solver control: two independent CG precisions per accepted density.
+[model]
+qe_version = "7.4.1"
+baseline_run = "qe/wavefunction_cutoff_20260927"
+ecutwfc_ry = 60.0
+ecutrho_ry = 720.0
+functional = "PBE"
+scf_acceptance_ry = 5e-5
+sample_bias_ry = -0.0220495933
+spectral_window = "sharp_zero_temperature"
+diagonalization = "cg"
+diago_cg_maxiter = 20
+diago_thresholds_ry = [1e-10, 1e-12]
+diago_full_acc = true
+startingpot = "file"
+startingwfc = "file"
+nscf_max_seconds = 3000
+
+[selection]
+policy = "two_precision_fixed_density_no_mold_or_benchmark_selection"
+require_exact_baseline_replay = true
+require_exact_parallel_repeat = true
+adopt_reference = false
+
+[preprocessing]
+half_nm = 0.32
+step_nm = 0.04
+diagnostic_heights_nm = [0.4, 0.5, 0.6]
+fourier_block_points = 32
+geometry_rtol = 1e-12
+atom_position_atol_nm = 1e-12
+clip_density = false
+normalize_density = false

@@ -10,6 +10,12 @@ initial density, PAW state and orbitals. `nscf_max_seconds=3000` per solve
 reserves analysis time inside each **8-CPU / 96-GB / two-hour** allocation.
 There are two sequential jobs, one per molecule, with no retry or new SCF.
 
+`config/qe_cg_precision.toml` reuses this workflow for the authorized CG
+control: only `diagonalization="cg"` replaces Davidson. The explicit
+`diago_cg_maxiter=20` matches both original SCF XMLs; it is not increased.
+All other settings and bounds are identical. XML and log checks must agree
+on CG; missing, mixed or unconverged solver output is rejected.
+
 `test/qe_diagonal_precision.jl --help` lists preparation, start/completion
 checks, Fourier analysis and paired summaries. The original SCF acceptance
 remains **5e-5 Ry**. NSCF's deliberately false XML SCF flag is not changed

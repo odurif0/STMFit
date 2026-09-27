@@ -4,6 +4,7 @@ const P=QEDiagonalPrecision
 const D=P.D; const S=P.S; const W=P.W
 const ROOT=normpath(joinpath(@__DIR__,".."))
 const CONFIG=joinpath(ROOT,"config/qe_diagonal_precision.toml")
+const CG_CONFIG=joinpath(ROOT,"config/qe_cg_precision.toml")
 num(r,k)=parse(Float64,r[k])
 BLAS.set_num_threads(1)
 
@@ -29,6 +30,9 @@ function verify_saved(run,m; stages=P.STAGES, comparison=true)
         @test r["wfc_sha256"]==expected
         @test r["diago_thr_init_ry"]==(stage=="reference" ? 0. : P.threshold(s,stage))
         a=stage=="reference" ? old : P.nscf_state(joinpath(dir,"data-file-schema.xml"),s,old,stage)
+        if P.iscg(s) || haskey(r,"diagonalization")
+            @test r["diagonalization"]==S.tag(S.tag(a.inp,"electron_control"),"diagonalization")
+        end
         @test r["state_kind"]==(stage=="reference" ? "scf_reference" : "nscf")
         @test a.sp.accepted==(stage=="reference")
         @test r["native_grid"]==a.geo.dims && r["native_grid"]==old.geo.dims
@@ -158,14 +162,14 @@ function toy_wfc(file,stage)
     end
     open(W.header,file)
 end
-function toy_xml(stage)
+function toy_xml(stage; cg=false)
     ref=stage=="reference"; thr=ref ? 0. : stage=="lo" ? 1e-10 : 1e-12
     """
     <qes Units="Hartree atomic units"><creator VERSION="7.4.1"/>
     <input><control_variables><calculation>$(ref ? "scf" : "nscf")</calculation><restart_mode>from_scratch</restart_mode><max_seconds>3000</max_seconds><forces>false</forces><stress>false</stress></control_variables>
     <atomic_species><species name="C"><mass>12.011</mass><pseudo_file>C.UPF</pseudo_file></species></atomic_species>
     <basis><gamma_only>true</gamma_only><ecutwfc>30</ecutwfc><ecutrho>360</ecutrho></basis>
-    <electron_control><conv_thr>5e-8</conv_thr><max_nstep>100</max_nstep><mixing_mode>plain</mixing_mode><mixing_beta>0.3</mixing_beta><mixing_ndim>8</mixing_ndim><diagonalization>davidson</diagonalization><diago_thr_init>$thr</diago_thr_init><diago_full_acc>$(ref ? "false" : "true")</diago_full_acc></electron_control>
+    <electron_control><conv_thr>5e-8</conv_thr><max_nstep>100</max_nstep><mixing_mode>plain</mixing_mode><mixing_beta>0.3</mixing_beta><mixing_ndim>8</mixing_ndim><diagonalization>$(cg && !ref ? "cg" : "davidson")</diagonalization><diago_cg_maxiter>20</diago_cg_maxiter><diago_thr_init>$thr</diago_thr_init><diago_full_acc>$(ref ? "false" : "true")</diago_full_acc></electron_control>
     <dft><functional>PBE</functional><vdw_corr>grimme-d3</vdw_corr><dftd3_version>3</dftd3_version><dftd3_threebody>true</dftd3_threebody></dft>
     <bands><tot_charge>0</tot_charge><occupations>smearing</occupations></bands>
     <spin><lsda>false</lsda><noncolin>false</noncolin><spinorbit>false</spinorbit></spin>
@@ -182,6 +186,11 @@ end
 
 @testset "Fixed density scope and inherited real inputs" begin
     s=P.settings(CONFIG); @test P.main(["--help"])===nothing
+    cg=P.settings(CG_CONFIG)
+    @test !P.iscg(s) && P.iscg(cg)
+    inherited=deepcopy(cg)
+    delete!(inherited["model"],"diagonalization"); delete!(inherited["model"],"diago_cg_maxiter")
+    @test inherited==s
     mktempdir() do dir
         for (section,key,value) in (("model","ecutwfc_ry",50.),("model","ecutrho_ry",360.),
                 ("model","diago_thresholds_ry",[1e-9,1e-12]),("model","diago_full_acc",false),
@@ -192,11 +201,26 @@ end
             path=joinpath(dir,"bad.toml"); open(io->TOML.print(io,bad),path,"w")
             @test_throws ErrorException P.settings(path)
         end
+        for (key,value) in (("diagonalization","david"),("diagonalization","ppcg"),("diago_cg_maxiter",100))
+            bad=deepcopy(cg); bad["model"][key]=value
+            path=joinpath(dir,"bad.toml"); open(io->TOML.print(io,bad),path,"w")
+            @test_throws ErrorException P.settings(path)
+        end
+        for key in ("diagonalization","diago_cg_maxiter")
+            bad=deepcopy(cg); delete!(bad["model"],key)
+            path=joinpath(dir,"bad.toml"); open(io->TOML.print(io,bad),path,"w")
+            @test_throws ErrorException P.settings(path)
+        end
+        source=joinpath(dir,"source.xml")
+        write(source,replace(toy_xml("reference"),"<diago_cg_maxiter>20<"=>"<diago_cg_maxiter>100<"))
+        @test_throws ErrorException P.reference_state(source,cg)
         for m in P.MOLECULES
             xml=joinpath(ROOT,s["model"]["baseline_run"],m,"60/data-file-schema.xml")
             a=P.reference_state(xml,s)
             for trial in P.TRIALS
                 input=P.input_text(xml,m,s,trial)
+                @test input==read(joinpath(ROOT,"qe/diagonal_precision_20260927",m,trial,"pw_nscf.in"),String)
+                @test P.input_text(xml,m,cg,trial)==replace(input," diagonalization='david'"=>" diagonalization='cg'\n diago_cg_maxiter=20")
                 @test occursin("calculation='nscf'",input) && !occursin("calculation='scf'",input)
                 @test occursin("ecutwfc=60.0",input) && occursin("ecutrho=720.0",input)
                 @test occursin("startingpot='file'",input) && occursin("startingwfc='file'",input)
@@ -221,9 +245,9 @@ end
     run(`bash -n $(joinpath(ROOT,"hpc/qe_diagonal_precision.sbatch"))`)
 end
 
-@testset "Synthetic fixed density, NSCF rejection and paired outputs" begin
+@testset "Synthetic fixed density: $(basename(config))" for config in (CONFIG,CG_CONFIG)
     mktempdir() do run
-        cp(CONFIG,joinpath(run,"settings.toml")); s=P.settings(CONFIG); mkpath(joinpath(run,"pseudo"))
+        cp(config,joinpath(run,"settings.toml")); s=P.settings(config); mkpath(joinpath(run,"pseudo"))
         write(joinpath(run,"pseudo/C.UPF"),"<PP_HEADER element=\"C\" is_paw=\"true\" mesh_size=\"3\"/><PP_R>0.01 0.02 0.1</PP_R><PP_AUGMENTATION cutoff_r_index=\"3\"></PP_AUGMENTATION><PP_BETA.1 cutoff_radius_index=\"3\"></PP_BETA.1>")
         for m in P.MOLECULES
             dir=joinpath(run,m); source=joinpath(dir,"source"); mkpath(source)
@@ -245,7 +269,7 @@ end
             S.table(joinpath(dir,"reference_queries.tsv"),[(;density=rho,fractional_x=fractions[1,i],fractional_y=fractions[2,i],fractional_z=fractions[3,i]) for i in axes(fractions,2)])
             S.table(joinpath(dir,"reference_planes.tsv"),[(;height_nm=z,pixel,density=rho) for z in hs for pixel in 1:289])
             files=("reference/data-file-schema.xml","reference/frame.tsv","lo/frame.tsv","hi/frame.tsv","lo/pw_nscf.in","hi/pw_nscf.in","reference_queries.tsv","reference_planes.tsv")
-            meta=Dict("molecule"=>m,"config_sha256"=>S.sha(CONFIG),"source_sha256"=>Dict(f=>S.sha(joinpath(source,f)) for f in readdir(source)),
+            meta=Dict("molecule"=>m,"config_sha256"=>S.sha(config),"source_sha256"=>Dict(f=>S.sha(joinpath(source,f)) for f in readdir(source)),
                 "pseudo_sha256"=>Dict("C.UPF"=>S.sha(joinpath(run,"pseudo/C.UPF"))),"input_sha256"=>Dict(f=>S.sha(joinpath(dir,f)) for f in files))
             open(io->TOML.print(io,meta),joinpath(dir,"metadata.toml"),"w")
             @test P.analyze(run,m,"reference",joinpath(source,"wfc1.dat"))===nothing
@@ -256,8 +280,9 @@ end
                 write(joinpath(work,"charge-density.dat"),"changed")
                 @test_throws ErrorException P.check_start(run,m,trial)
                 write(joinpath(work,"charge-density.dat"),"frozen density")
-                candidate=joinpath(work,"data-file-schema.xml"); xml=toy_xml(trial)
-                log="The potential is recalculated from file\nStarting wfcs from file\nBand Structure Calculation\nethr = $(P.threshold(s,trial))\nEnd of band structure calculation\nJOB DONE.\n"
+                candidate=joinpath(work,"data-file-schema.xml"); xml=toy_xml(trial;cg=P.iscg(s))
+                marker=P.iscg(s) ? "CG style diagonalization" : "Davidson diagonalization with overlap"
+                log="The potential is recalculated from file\nStarting wfcs from file\nBand Structure Calculation\n$marker\nethr = $(P.threshold(s,trial))\nEnd of band structure calculation\nJOB DONE.\n"
                 logfile=joinpath(dir,trial,"pw_nscf.out"); write(logfile,log)
                 for (before,after) in (("<calculation>nscf","<calculation>scf"),("<convergence_achieved>false","<convergence_achieved>true"),
                         ("<wf_collected>true","<wf_collected>false"),("<functional>PBE<","<functional>PBE0<"),
@@ -267,6 +292,24 @@ end
                     @test occursin(before,xml); write(candidate,replace(xml,before=>after))
                     @test_throws ErrorException P.check_nscf(run,m,trial)
                     @test !ispath(joinpath(dir,trial,"data-file-schema.xml"))
+                end
+                for solver in (P.iscg(s) ? ("davidson","ppcg") : ("cg","ppcg"))
+                    tag="<diagonalization>$(P.iscg(s) ? "cg" : "davidson")<"
+                    @test occursin(tag,xml)
+                    write(candidate,replace(xml,tag=>"<diagonalization>$solver<"))
+                    @test_throws ErrorException P.check_nscf(run,m,trial)
+                end
+                if P.iscg(s)
+                    for replacement in ("<diago_cg_maxiter>100</diago_cg_maxiter>","")
+                        write(candidate,replace(xml,"<diago_cg_maxiter>20</diago_cg_maxiter>"=>replacement))
+                        @test_throws ErrorException P.check_nscf(run,m,trial)
+                    end
+                    write(candidate,xml)
+                    for replacement in ("","PPCG style diagonalization","Davidson diagonalization with overlap",marker*"\n"*marker)
+                        write(logfile,replace(log,marker=>replacement))
+                        @test_throws ErrorException P.check_nscf(run,m,trial)
+                        @test !ispath(joinpath(dir,trial,"data-file-schema.xml"))
+                    end
                 end
                 write(candidate,xml)
                 @test_throws ErrorException P.reference_state(candidate,s)

@@ -2304,6 +2304,18 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
+0bu. **Can CG provide the missing fixed-density tolerance comparison?**
+**Prepared and tested; awaiting SSH access, no job or result yet.** In response to the explicit
+bounded proposal after 0bt, the user confirms **“oui, tu es autonome!”**.
+Change only Davidson to CG on the same original accepted **60/720-Ry**
+states, keeping the inherited `diago_cg_maxiter=20`, full accuracy and
+**1e-10 / 1e-12 Ry** thresholds. At most two sequential **8-CPU / 96-GB /
+two-hour** jobs, one per molecule; no new SCF, retry, acceptance change,
+label input or adoption. Independent starts, exact reference replay,
+unchanged density/PAW/basis, explicit solver checks and all original queries
+remain required. Success supplies a numerical comparison, not a calibrated
+STM observable or new champion; failure remains a rejected result.
+
 0bt. **Does orbital diagonalization precision affect the same fixed-density tails?**
 **Campaign finished; primary comparison unavailable for both molecules.** Both cutoff tests
 leave GlcNAc rising columns. Compare explicit NSCF diagonalization thresholds
@@ -20750,3 +20762,51 @@ band can be presumed irrelevant to the bias window, and no warning is
 waived. There is no new numerical map, benchmark, parameter or acceptance
 change. The proposed bounded CG comparison still needs the user's answer;
 automatic goal continuation is not treated as approval of a new campaign.
+
+### 2026-09-27 — Authorized bounded CG control of fixed-density precision
+
+**Deliverable and scope.** The user answers **“oui, tu es autonome!”** to
+the proposed CG control. Done means independently checked **1e-10 /
+1e-12-Ry** NSCF comparisons for the two accepted geometries, or retained
+terminal failures with their limitations. The scope is at most **two
+sequential 8-CPU / 96-GB / two-hour jobs**, no retries/requeue. No success
+is assumed, and a diagnostic is not a benchmark improvement.
+
+`config/qe_cg_precision.toml` reuses the existing precision driver and
+unchanged Slurm script. Inputs differ from the previous frozen inputs only
+by `diagonalization='david'` becoming `'cg'` and the explicit declaration
+`diago_cg_maxiter=20`, matching both original SCF XMLs. The archived
+Davidson configuration remains byte-identical. Every new NSCF starts from
+its own exact copy of the **original accepted 60/720-Ry SCF** density,
+PAW state and orbitals, never a preceding NSCF result. The full-accuracy
+flag, source SCF criterion, geometry, PBE/D3, band count, Gamma sampling,
+smearing, bias, Fourier method and inherited tilted ring-frame planes
+are unchanged. No new SCF, mold, calibration, label use or champion change.
+
+QE **7.4.1** source `pw_init_qexsd_input.f90` preserves the XML solver name
+`cg` (unlike the expansion `david` to `davidson`); `c_bands.f90` prints
+`CG style diagonalization`. The checker requires that exact standalone
+marker, rejects Davidson/PPCG markers, verifies the XML solver/iteration
+limit and retains all existing no-warning, source-hash and numerical checks.
+The run is prepared under `qe/cg_precision_20260927`; previous rejected
+results are preserved. No new framework or cluster-side orchestration is
+introduced.
+
+**Access at preparation.** The first read-only Viper check times out during
+banner exchange; a second reaches Viper but returns **permission denied**.
+No job is submitted. An interactive SSH refresh is requested without asking
+for credentials; local implementation and verification continue meanwhile.
+
+**Local verification.** Julia **1.13.0** passes **1,795** scope assertions,
+**379,512** legacy and **379,552** CG synthetic assertions. These cover
+independent Fourier truth, both partial-failure positions, wrong/missing
+solver metadata and log markers, unchanged physical controls, and exact
+legacy-input reproduction. The four CG inputs differ only by the declared
+solver lines. Independent readback of both old rejected real cases also
+passes: **56,732** GlcN and **28,375** GlcNAc assertions, retaining their
+original rejection with no failed-orbital evaluation. Both new prepared
+input manifests pass locally; only small inputs/metadata/reference tables
+are generated, not checkpoints or calculations. Shell syntax and
+`git diff --check` pass. Documentation builds with existing size/deployment
+warnings only. The Viper control socket is absent on the final access check;
+submission remains pending interactive authentication, not scientific approval.

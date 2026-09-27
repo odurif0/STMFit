@@ -185,6 +185,21 @@ constant-current feedback loop.
 
 ## Diagnostic constant-current observable
 
+**September 27 CG solver control (prepared; SSH access pending).** Following
+the failed Davidson comparison below, the user confirms **“oui, tu es
+autonome!”** in response to the bounded CG proposal. The existing precision
+driver and batch are reused with `config/qe_cg_precision.toml`, changing
+only the eigensolver to `cg` and explicitly retaining the source XML's
+`diago_cg_maxiter=20`. At most two sequential **8-CPU / 96-GB / two-hour**
+jobs compare **1e-10 / 1e-12 Ry**, each from independent identical copies
+of the original accepted **60/720-Ry** SCF state. Geometry, PBE/D3, PAW,
+band count, Gamma sampling, smearing, full accuracy, bias and all queries
+are unchanged. XML and log solver checks supplement the existing strict
+completion checks; no warning is waived. There is no new SCF, retry,
+criterion change, rejected-orbital reuse, mold replacement or benchmark
+selection. The numerical deliverable is a verified comparison or a
+documented failure, not an automatic champion promotion.
+
 **September 27 fixed-density precision follow-up (no converged pair).** After
 the completed basis-cutoff comparison, the user resumes the autonomous
 research goal with explicit authorization to experiment. This continuation

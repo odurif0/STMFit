@@ -19,6 +19,12 @@ second GlcNAc solve never starts. The small valid GlcN SCF-to-NSCF map change
 (about **0.03%** in relative L2) is a secondary observation, not calibration
 or a result for the missing tolerance comparison.
 
+The subsequent authorized `config/qe_cg_precision.toml` control changes
+only Davidson to CG, retaining the inherited 20-iteration CG limit, both
+tolerances and all physical settings. It reuses the original accepted SCF
+states, never the rejected NSCF states. The same two-job bound and rejection
+rules apply; no result or calibration improvement is available at preparation.
+
 ## Wavefunction-basis sensitivity is not a new calibration
 
 After the 360/720-Ry density-cutoff comparison, the user approves a separate

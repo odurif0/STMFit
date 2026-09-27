@@ -22,9 +22,16 @@ function settings(file)
         "preprocessing"=>Dict("half_nm"=>.32, "step_nm"=>.04, "diagnostic_heights_nm"=>[.4,.5,.6],
             "fourier_block_points"=>32, "geometry_rtol"=>1e-12, "atom_position_atol_nm"=>1e-12,
             "clip_density"=>false, "normalize_density"=>false))
+    # Preserve the old configuration exactly; the new control declares CG explicitly.
+    if haskey(s["model"],"diagonalization") || haskey(s["model"],"diago_cg_maxiter")
+        expected["model"]["diagonalization"]="cg"
+        expected["model"]["diago_cg_maxiter"]=20
+    end
     s==expected || error("Outside the bounded fixed-density precision comparison")
     s
 end
+
+iscg(s)=get(s["model"],"diagonalization",nothing)=="cg"
 
 function threshold(s,trial)
     trial in TRIALS || error("Unknown NSCF precision")
@@ -34,6 +41,9 @@ end
 function reference_state(xml,s)
     a=C.state(xml,s,s["model"]["ecutrho_ry"])
     S.tag(S.tag(a.inp,"control_variables"),"calculation")=="scf" || error("Reference is not an SCF")
+    if iscg(s)
+        parse(Int,S.tag(S.tag(a.inp,"electron_control"),"diago_cg_maxiter"))==s["model"]["diago_cg_maxiter"] || error("Changed inherited CG iteration limit")
+    end
     a
 end
 
@@ -43,10 +53,11 @@ function input_text(xml,m,s,trial)
     q["model"]["scf_max_seconds"]=s["model"]["nscf_max_seconds"]
     # Same checked species/geometry writer; only the calculation/solver controls differ.
     text=C.input_text(xml,m,q)
+    solver=iscg(s) ? " diagonalization='cg'\n diago_cg_maxiter=$(s["model"]["diago_cg_maxiter"])" : " diagonalization='david'"
     for (before,after) in ((" calculation='scf'", " calculation='nscf'"),
             (" pseudo_dir='../pseudo'", " pseudo_dir='../../pseudo'"),
             (" tprnfor=.true.", " tprnfor=.false."), (" tstress=.true.", " tstress=.false."),
-            (" diagonalization='david'", " diagonalization='david'\n diago_thr_init=$(threshold(s,trial))\n diago_full_acc=.true."))
+            (" diagonalization='david'", solver*"\n diago_thr_init=$(threshold(s,trial))\n diago_full_acc=.true."))
         count(before,text)==1 || error("Ambiguous NSCF input replacement")
         text=replace(text,before=>after)
     end
@@ -134,7 +145,12 @@ function nscf_state(xml,s,old,trial)
     # Unlike conv_thr, QE 7.4.1 writes diago_thr_init in input Ry, without /2.
     S.number(S.tag(ec,"diago_thr_init"))==threshold(s,trial) &&
         S.tag(ec,"diago_full_acc")=="true" || error("Changed diagonalization precision")
-    for key in ("conv_thr","mixing_mode","mixing_beta","mixing_ndim","max_nstep","diagonalization")
+    expected_solver=iscg(s) ? s["model"]["diagonalization"] : S.tag(S.tag(old.inp,"electron_control"),"diagonalization")
+    S.tag(ec,"diagonalization")==expected_solver || error("Changed diagonalization algorithm")
+    if iscg(s)
+        parse(Int,S.tag(ec,"diago_cg_maxiter"))==s["model"]["diago_cg_maxiter"] || error("Changed CG iteration limit")
+    end
+    for key in ("conv_thr","mixing_mode","mixing_beta","mixing_ndim","max_nstep")
         S.tag(ec,key)==S.tag(S.tag(old.inp,"electron_control"),key) || error("Changed inherited electronic setting: $key")
     end
     for key in ("basis","dft","bands","spin","k_points_IBZ")
@@ -157,6 +173,10 @@ function check_nscf(run,m,trial)
         S.sha(joinpath(work,file))==meta["source_sha256"][file] || error("NSCF changed the frozen density/PAW state")
     end
     log=read(joinpath(dir,"pw_nscf.out"),String)
+    if iscg(s)
+        count(r"(?m)^\s*CG style diagonalization\s*$",log)==1 &&
+            !occursin(r"Davidson diagonalization|PPCG style diagonalization",log) || error("Missing or unexpected CG solver marker")
+    end
     for marker in ("The potential is recalculated from file", "Starting wfcs from file",
             "Band Structure Calculation", "End of band structure calculation", "JOB DONE.")
         count(marker,log)==1 || error("Missing or repeated NSCF marker: $marker")
@@ -228,6 +248,7 @@ function analyze(run,m,stage,wfc_file)
         fractional_x=fractions[1,i],fractional_y=fractions[2,i],fractional_z=fractions[3,i],density=direct[i],repeat=repeated[i]) for i in eachindex(direct)])
     report=Dict("checks"=>checks,"molecule"=>m,"stage"=>stage,
         "state_kind"=>stage=="reference" ? "scf_reference" : "nscf",
+        "diagonalization"=>S.tag(S.tag(a.inp,"electron_control"),"diagonalization"),
         "diago_thr_init_ry"=>stage=="reference" ? 0. : threshold(s,stage),
         "config_sha256"=>meta["config_sha256"],"xml_sha256"=>S.sha(xml),"wfc_sha256"=>wfc_hash,
         "source_density_sha256"=>meta["source_sha256"]["charge-density.dat"],
