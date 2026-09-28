@@ -1,0 +1,32 @@
+# Repeated-scan molecule grouping and count consensus (label-free).
+# Fixed before any benchmark grade of this stage. See docs/src/selection.md.
+
+[model]
+# Absolute-frame registration window centred on the earlier scan's chain.
+window_half_nm = 3.0
+# Resampling step: finer than one chitosan lobe width, coarser than 512-px pixels.
+grid_step_nm = 0.04
+# Structure broader than about half a lobe spacing (tilt, substrate terraces)
+# is removed before correlation.
+highpass_sigma_nm = 0.32
+# Largest admitted drift between two consecutive scans.
+max_shift_nm = 1.6
+coarse_step_px = 4
+
+[selection]
+# Normalized cross-correlation threshold: independent structures correlate
+# near zero; an unchanged molecule close to one. The observed benchmark pair
+# distribution (label-free) has an empty gap between 0.39 and 0.55.
+ncc_min = 0.5
+min_overlap_px = 500
+max_center_distance_nm = 6.0
+# A consensus needs repeated evidence: at least three scans of the molecule.
+min_track_scans = 3
+majority = "strict"
+# Every lobe of the registered reference footprint must be at least this far
+# inside the target scan (about half a lobe spacing).
+frame_margin_nm = 0.3
+
+[preprocessing]
+channel = "Z"
+flatten = "plane+rows"
