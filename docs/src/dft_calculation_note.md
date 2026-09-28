@@ -185,7 +185,7 @@ constant-current feedback loop.
 
 ## Diagnostic constant-current observable
 
-**September 27 CG solver control (prepared; SSH access pending).** Following
+**September 27 CG solver control (GlcN submitted September 29).** Following
 the failed Davidson comparison below, the user confirms **“oui, tu es
 autonome!”** in response to the bounded CG proposal. The existing precision
 driver and batch are reused with `config/qe_cg_precision.toml`, changing
@@ -199,6 +199,9 @@ completion checks; no warning is waived. There is no new SCF, retry,
 criterion change, rejected-orbital reuse, mold replacement or benchmark
 selection. The numerical deliverable is a verified comparison or a
 documented failure, not an automatic champion promotion.
+After restored access, GlcN **12018453** is submitted once at unchanged
+scientific source **864287a**; initially **PENDING / QOSGrpCpuLimit**.
+GlcNAc awaits its termination. No numerical result is available yet.
 
 **September 27 fixed-density precision follow-up (no converged pair).** After
 the completed basis-cutoff comparison, the user resumes the autonomous

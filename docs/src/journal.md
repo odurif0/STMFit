@@ -2305,7 +2305,7 @@ See `docs/src/selection.md` for the full guard specification and
 ## Open Questions
 
 0bu. **Can CG provide the missing fixed-density tolerance comparison?**
-**Prepared and tested; awaiting SSH access, no job or result yet.** In response to the explicit
+**First job running; no numerical result yet.** In response to the explicit
 bounded proposal after 0bt, the user confirms **“oui, tu es autonome!”**.
 Change only Davidson to CG on the same original accepted **60/720-Ry**
 states, keeping the inherited `diago_cg_maxiter=20`, full accuracy and
@@ -2315,6 +2315,10 @@ label input or adoption. Independent starts, exact reference replay,
 unchanged density/PAW/basis, explicit solver checks and all original queries
 remain required. Success supplies a numerical comparison, not a calibrated
 STM observable or new champion; failure remains a rejected result.
+Access is restored on September 29. GlcN **12018453** is submitted once;
+GlcNAc is not submitted until its terminal state. Initial status is
+**PENDING / QOSGrpCpuLimit**, not a failed or started solve.
+GlcN starts at **01:39:47 CEST** on **vipc2050**, without resubmission.
 
 0bt. **Does orbital diagonalization precision affect the same fixed-density tails?**
 **Campaign finished; primary comparison unavailable for both molecules.** Both cutoff tests
@@ -20810,3 +20814,68 @@ are generated, not checkpoints or calculations. Shell syntax and
 `git diff --check` pass. Documentation builds with existing size/deployment
 warnings only. The Viper control socket is absent on the final access check;
 submission remains pending interactive authentication, not scientific approval.
+
+### 2026-09-29 — Resumed goal and first CG control submitted
+
+**Scientific deliverable.** The attached user objective explicitly retains
+raw-image counting, geometry, GlcN/GlcNAc assignment with uncertainty,
+end-to-end label-free provenance and a reproducible improvement beyond the
+archived **694/870 correct, 43/145 exact chains, 855/870 coverage**. Known
+6-mer membership and `NKNNKN` remain external grading data, not inference or
+calibration inputs. The CG control is the previously approved bounded
+diagnostic, not a replacement objective or an automatic champion promotion.
+
+**Resume evidence.** The shared checkout is now clean `main` at **6b37f1d**
+(September 18); the completed later work still exists on
+`research/mold-loo-20260924` at **864287a**. Main is left unchanged. A separate
+local Git worktree opens that existing research branch, with the existing
+ignored QE data and Manifest reused without alteration. Viper responds under
+Julia **1.13.0**, no user job is queued, both original SCF checkpoints exist,
+and the new CG run directory is absent remotely. There is no hidden running
+CG calculation to restart.
+
+Reviewed checksum rsync dry-runs precede a minimal transfer of the new
+configuration, the two precision scripts and the unchanged batch, followed
+by the prepared small CG inputs. No deletion, original-checkpoint overwrite,
+new SCF or scientific setting change occurs. Source, config, batch, Project
+and Manifest SHA-256 values match locally/remotely. Both remote input
+manifests and metadata/input-generation checks pass. A broader read-only
+source comparison initially reports the new worktree's absent ignored
+Manifest; reusing the existing lock resolves that local setup omission.
+Remaining differences are unused diagnostic files, not this driver's
+scientific dependencies; none is transferred or silently substituted.
+
+**Submission.** Slurm test-only **12018451** is accepted; it is not a
+scientific job. GlcN **12018453** is submitted once at **01:36:30 CEST**,
+requesting **8 CPUs / 96000 MB / two hours**, **Requeue=0, Restarts=0**.
+The command explicitly exports
+`ALL,JULIA_BIN=/u/oldu/software/julia-1.13.0/bin/julia`, overriding the
+site's `SBATCH_EXPORT=NONE`. `squeue`, `sacct` and `scontrol` agree on
+**PENDING / QOSGrpCpuLimit**, with no allocated node or started solve.
+Shared-quota waiting is not a reason to resubmit or change resources.
+
+The unchanged scientific source is **864287a**, outputs remain in
+`qe/cg_precision_20260927/glcn`, and the second geometry is not submitted
+before the first terminates. Next: observe this exact job, retain either
+verified paired results or an explicit failure, fetch the complete output,
+then perform the second approved case sequentially. No benchmark result,
+production parameter, mold or champion changes at this checkpoint.
+
+**Start and refreshed local checks.** GlcN starts at **01:39:47 CEST** on
+**vipc2050**. The first running observation reports no completed Fourier or
+NSCF stage yet. The local Julia 1.13.0 binary used on September 27 is no
+longer installed, and the juliaup launcher cannot create its sandboxed lock.
+The installed direct **1.13.1** executable works. It passes the unchanged
+**1,795 / 379,512 / 379,552** scope/legacy/CG synthetic assertions and
+**56,732 / 28,375** old GlcN/GlcNAc retained-result assertions. This is a
+fresh local regression, not recomputed scientific orbitals. The remote
+batch still uses the verified original **Julia 1.13.0** executable, so the
+new reference replay retains its numerical runtime. No Manifest is edited.
+
+The reference subsequently replays every saved query/plane exactly, with
+exact parallel/serial agreement, bands **882–893** and smooth norm
+**18.17611052159034**. The first independent start passes the original
+density/PAW/orbital hashes. The **1e-10-Ry** step begins and prints the
+expected **CG style diagonalization** marker; no convergence claim is made
+before its terminal checks. Slurm reports sixteen allocated hardware
+threads for the requested eight one-thread MPI tasks, as in the prior jobs.
