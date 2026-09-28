@@ -20879,3 +20879,9 @@ density/PAW/orbital hashes. The **1e-10-Ry** step begins and prints the
 expected **CG style diagonalization** marker; no convergence claim is made
 before its terminal checks. Slurm reports sixteen allocated hardware
 threads for the requested eight one-thread MPI tasks, as in the prior jobs.
+
+The documentation build completes **0** under local Julia **1.13.1**.
+HTTP's precompilation workload reports an ignored sandbox socket-bind
+`EPERM`; rendering and document checks still finish. Existing size and
+non-deployment warnings remain. No package, lock or documentation threshold
+is changed to silence them.
