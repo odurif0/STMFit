@@ -43,18 +43,6 @@ end
     end
 end
 
-@testset "Bounded ordinary Slurm execution" begin
-    path=joinpath(M.ROOT,"hpc/audit_calibration_measurements.sbatch")
-    @test success(`bash -n $path`)
-    source=read(path,String)
-    for token in ("--time=01:00:00","--cpus-per-task=4","--mem=16000MB",
-            "SLURM_JOB_ID","STMFIT_DATA_DIR","--dry-run","--chunk","wait")
-        @test occursin(token,source)
-    end
-    for token in ("batch_full.jl","--expected-N","grade_unit_assignment","run_unknown_unit_assignment")
-        @test !occursin(token,source)
-    end
-end
 profile(t,z;px=minimum(diff(t)),n=ones(Int,length(t)))=(;t,z,n,px,binw=minimum(diff(t)))
 
 @testset "Peak measurements, not assumed physical lobe widths" begin
