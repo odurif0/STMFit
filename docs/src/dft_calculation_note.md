@@ -185,7 +185,7 @@ constant-current feedback loop.
 
 ## Diagnostic constant-current observable
 
-**September 27 CG solver control (GlcN submitted September 29).** Following
+**September 27 CG solver control (GlcN timeout September 29).** Following
 the failed Davidson comparison below, the user confirms **“oui, tu es
 autonome!”** in response to the bounded CG proposal. The existing precision
 driver and batch are reused with `config/qe_cg_precision.toml`, changing
@@ -200,8 +200,16 @@ criterion change, rejected-orbital reuse, mold replacement or benchmark
 selection. The numerical deliverable is a verified comparison or a
 documented failure, not an automatic champion promotion.
 After restored access, GlcN **12018453** is submitted once at unchanged
-scientific source **864287a**; initially **PENDING / QOSGrpCpuLimit**.
-GlcNAc awaits its termination. No numerical result is available yet.
+scientific source **864287a**. It ends **TIMEOUT** under the two-hour Slurm
+limit, with reported elapsed **2h00m22s**. Its first **1e-10-Ry** solve does
+not finish; the second threshold never starts. No CG analysis or paired
+result is available, and this does not prove that CG cannot converge with
+different resources. All retained working-checkpoint files still match the
+original SCF, which cannot be reinterpreted as a new NSCF. The complete case
+is fetched and **28,392** local reference/preservation/rejection assertions
+pass. Final remote checksum-only comparison remains pending after SSH access
+is lost. GlcNAc's test-only request is accepted, but it is **not submitted**
+before interactive authentication is restored. No trial orbital is adopted.
 The `3000`-second QE stop is cooperative, checked after diagonalization;
 it does not guarantee time for both solves. The two-hour Slurm cap remains
 the hard bound, and an incomplete solve is rejected rather than analyzed.

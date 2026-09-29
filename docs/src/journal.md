@@ -2305,7 +2305,7 @@ See `docs/src/selection.md` for the full guard specification and
 ## Open Questions
 
 0bu. **Can CG provide the missing fixed-density tolerance comparison?**
-**First job running; no numerical result yet.** In response to the explicit
+**GlcN times out; GlcNAc awaits restored SSH access.** In response to the explicit
 bounded proposal after 0bt, the user confirms **“oui, tu es autonome!”**.
 Change only Davidson to CG on the same original accepted **60/720-Ry**
 states, keeping the inherited `diago_cg_maxiter=20`, full accuracy and
@@ -2315,10 +2315,16 @@ label input or adoption. Independent starts, exact reference replay,
 unchanged density/PAW/basis, explicit solver checks and all original queries
 remain required. Success supplies a numerical comparison, not a calibrated
 STM observable or new champion; failure remains a rejected result.
-Access is restored on September 29. GlcN **12018453** is submitted once;
-GlcNAc is not submitted until its terminal state. Initial status is
-**PENDING / QOSGrpCpuLimit**, not a failed or started solve.
-GlcN starts at **01:39:47 CEST** on **vipc2050**, without resubmission.
+GlcN **12018453** runs on **vipc2050** from **01:39:47 to 03:40:09 CEST**
+on September 29, ending **TIMEOUT** under the declared two-hour Slurm limit
+(reported elapsed **2h00m22s**). Its first **1e-10-Ry** solve never finishes;
+the second threshold is not started and no CG map or paired result exists.
+Only the original reference is qualified. All nine retained working-checkpoint
+files still match the original SCF, not a new NSCF. The full case is fetched;
+**28,392** local reference/preservation/rejection assertions pass. The final
+remote checksum-only comparison is interrupted by lost SSH authentication.
+GlcNAc's inputs and Slurm test-only pass, but **no second job is submitted**
+before access is restored. There is no retry, relaxed criterion or adoption.
 
 0bt. **Does orbital diagonalization precision affect the same fixed-density tails?**
 **Campaign finished; primary comparison unavailable for both molecules.** Both cutoff tests
@@ -20950,3 +20956,60 @@ Only the completed **reference** is checked; the first **1e-10-Ry CG** solve
 is still running, with CPU use reported for all eight ranks. Its trial
 checkpoint is neither fetched nor evaluated while incomplete. There is no
 CG tolerance result, second submitted geometry or champion change yet.
+
+### 2026-09-29 — GlcN CG times out before its first NSCF result
+
+**Outcome of the first authorized case.** GlcN **12018453**, scientific
+source **864287a**, ends **TIMEOUT** on **vipc2050** under its unchanged
+two-hour Slurm limit. Slurm reports **01:39:47–03:40:09 CEST**, elapsed
+**2h00m22s**. The sole QE step, **12018453.0**, runs from **01:41:47** and
+ends **FAILED 1:0 in 1h58m22s** after the time-limit cancellation; all eight
+processes report `SIGTERM`. Maximum recorded per-rank RSS is **2,714,803 KiB**.
+The batch and extern steps also terminate, and the job leaves `squeue`.
+No extension, requeue, retry or early manual cancellation occurs.
+
+The log stops inside the first **1e-10-Ry** CG diagonalization. There is no
+`End of band structure calculation`, achieved `ethr` or `JOB DONE`, and no
+qualified low-precision XML/analysis, **1e-12-Ry** work, paired comparison or
+completion marker. The retained working XML and **all nine checkpoint files**
+are byte-identical to the original accepted SCF. They are the starting copy,
+not a newly converged NSCF. The unchanged checker rejects that state with
+`Not the requested NSCF`; it does not copy it into a qualified result.
+No interrupted orbital is evaluated or adopted.
+
+**Scientific conclusion.** CG has not supplied the missing precision
+comparison for GlcN within this resource bound. This is a walltime-limited
+incomplete solve, unlike the preceding Davidson warning-based rejections;
+it neither proves that CG cannot converge nor qualifies any band or tail.
+The original reference still replays exactly, but supplies no CG improvement.
+The accepted SCFs, common **5e-5-Ry** gate, molds, calibration, benchmark
+predictions and champion remain unchanged. The broader **694/43/855**
+label-free objective is not achieved.
+
+**Preservation and local verification.** After termination, remote input and
+original-checkpoint manifests pass. A reviewed rsync dry-run precedes the
+successful complete transfer of **31 regular files / 3,274,780,890 bytes**
+to `qe/cg_precision_20260927/glcn`; nothing is deleted. Julia **1.13.1**
+passes **28,392** assertions on the retained reference, original and copied
+checkpoint identities, time-limit log, absent trial products and exact
+checker refusal. The unchanged scope/legacy/CG synthetic suites also pass
+**1,795 / 379,512 / 379,552** assertions. This uses the existing saved-reference
+checker plus explicit timeout/preservation assertions, not the incompatible
+`--incomplete` checker for normally exited, unconverged-eigenvalue cases.
+No scientific driver, configuration, package or Manifest is changed.
+
+**Second case and access boundary.** After GlcN terminates, source/config/
+Project/Manifest hashes still agree locally and on Viper. GlcNAc's input
+manifest, batch syntax and fresh-output checks pass. Slurm test-only
+**12019284** accepts the unchanged **8-CPU / 96000-MB / two-hour** request
+with explicit `ALL,JULIA_BIN=/u/oldu/software/julia-1.13.0/bin/julia` export;
+this is not a submitted calculation. Other account jobs remain untouched.
+
+The post-transfer checksum-only rsync then loses SSH, followed by a banner
+timeout. Read-only control checks find neither Viper nor gate socket, and
+`ssh -o BatchMode=yes ... gate true` returns **Permission denied**. Thus the
+full transfer and local scientific checks are complete, but the final remote
+checksum-only comparison remains pending. Interactive authentication is
+requested without credentials; **GlcNAc has not been submitted**. Resume
+that comparison and then the one remaining authorized case once access is
+restored, without resubmitting GlcN or treating the test-only ID as a job.
