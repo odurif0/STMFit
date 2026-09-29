@@ -34,6 +34,15 @@ function consensus_options(args)
     return o
 end
 
+# Per-scan support metadata replayed by the fixed-N extractor (adaptive runs).
+const SUPPORT_COLUMNS = ("selection_policy", "refined_policy", "selection_source", "refined_source")
+
+function scan_support(path)
+    header, rows = read_table(path)
+    cols = [c for c in SUPPORT_COLUMNS if c in header]
+    return cols, Dict(basename(r["filepath"]) => Dict(c => r[c] for c in cols) for r in rows)
+end
+
 function scan_counts(path)
     header, rows = read_table(path)
     all(c -> c in header, ("filepath", "N_selected")) || error("Summary requires filepath and N_selected")
@@ -90,15 +99,16 @@ function build_consensus(o)
     cols = ["file", "track", "track_size", "N_scan", "N_consensus", "agreement", "N_final", "reference_scan", "rule",
             "roi_x0_nm", "roi_y0_nm", "roi_x1_nm", "roi_y1_nm"]
     write_table(joinpath(out, "consensus.tsv"), cols, [Dict(k => fmt(r[k]) for k in cols) for r in rows])
+    support_cols, support = scan_support(o["--selected-summary"])
     write_table(joinpath(out, "consensus_summary.tsv"),
-        ["filepath", "status", "N_selected", "N_scan", "track", "track_size", "count_agreement", "count_rule",
-         "refit_support", "roi_x0_nm", "roi_y0_nm", "roi_x1_nm", "roi_y1_nm"],
-        [Dict("filepath" => r["file"], "status" => "ok", "N_selected" => string(r["N_final"]),
+        vcat(["filepath", "status", "N_selected", "N_scan", "track", "track_size", "count_agreement", "count_rule",
+         "refit_support", "roi_x0_nm", "roi_y0_nm", "roi_x1_nm", "roi_y1_nm"], support_cols),
+        [merge(support[r["file"]], Dict("filepath" => r["file"], "status" => "ok", "N_selected" => string(r["N_final"]),
               "N_scan" => string(r["N_scan"]), "track" => string(r["track"]),
               "track_size" => string(r["track_size"]), "count_agreement" => fmt(r["agreement"]),
               "count_rule" => r["rule"], "refit_support" => "scan",
               "roi_x0_nm" => fmt(r["roi_x0_nm"]), "roi_y0_nm" => fmt(r["roi_y0_nm"]),
-              "roi_x1_nm" => fmt(r["roi_x1_nm"]), "roi_y1_nm" => fmt(r["roi_y1_nm"])) for r in sort(rows; by=r -> r["file"])])
+              "roi_x1_nm" => fmt(r["roi_x1_nm"]), "roi_y1_nm" => fmt(r["roi_y1_nm"]))) for r in sort(rows; by=r -> r["file"])])
     changed = count(r -> r["N_final"] != r["N_scan"], rows)
     println("Molecule consensus: $(length(rows)) scans, $(length(unique(r["track"] for r in rows))) tracks, $changed counts changed")
     return joinpath(out, "consensus_summary.tsv")

@@ -41,7 +41,9 @@ function run_options(args)
     return o
 end
 
-function merge_count_shards(paths, files, output)
+const COUNT_POLICIES = ("support_midpoint_hybrid", "adaptive_support_rescue")
+
+function merge_count_shards(paths, files, output; policy="support_midpoint_hybrid")
     header = String[]; rows = Dict{String,String}[]; seen = Set{String}()
     for path in paths
         h, rs = read_table(path)
@@ -50,9 +52,9 @@ function merge_count_shards(paths, files, output)
         counts = selected_counts(path)
         isempty(intersect(seen, keys(counts))) || error("Duplicate scan across counting shards")
         union!(seen, keys(counts))
-        all(get(r, "selection_policy", "") == "support_midpoint_hybrid" for r in rs) || error("Wrong counting policy")
-        any(startswith(get(r, k, ""), "adaptive_support") for r in rs for k in
-            ("refined_policy", "refined_source", "selection_source")) && error("Adaptive support is not part of this method")
+        all(get(r, "selection_policy", "") == policy for r in rs) || error("Wrong counting policy")
+        policy == "support_midpoint_hybrid" && any(startswith(get(r, k, ""), "adaptive_support") for r in rs for k in
+            ("refined_policy", "refined_source", "selection_source")) && error("Adaptive support is not part of the hybrid policy")
         append!(rows, rs)
     end
     seen == Set(files) || error("Counting omitted or added scans")
@@ -132,7 +134,8 @@ function execute_run(o; runner=run_stage, thread_budget=min(Threads.nthreads(), 
     thread_budget > 0 || error("Positive thread budget required")
     cfg = TOML.parsefile(o["--count-config"])
     cfg["model"]["selection_criterion"] == "gcv" || error("GCV required")
-    cfg["model"]["selection_policy"] == "support_midpoint_hybrid" || error("Frozen hybrid counting policy required")
+    policy = cfg["model"]["selection_policy"]
+    policy in COUNT_POLICIES || error("Counting policy must be one of $(join(COUNT_POLICIES, ", "))")
     assignment = load_config(o["--config"])
     assignment["preprocessing"]["patch_residual_filter"] == "smooth_residual" || error("Symmetric residuals required")
     load_consensus_settings(TOML.parsefile(o["--consensus-config"]))
@@ -169,7 +172,7 @@ function execute_run(o; runner=run_stage, thread_budget=min(Threads.nthreads(), 
                      "--outdir", dirname(paths[i]), "--tsv", joinpath(out, "no_triage_input.tsv"),
                      "--skip-1d", "--chunk", "$i/$nchunks"]; threads=1)
             end
-            merge_count_shards(paths, files, selected)
+            merge_count_shards(paths, files, selected; policy)
         end
         counts = selected_counts(selected)
         stage = "scan_geometry"
