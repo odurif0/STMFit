@@ -20911,6 +20911,14 @@ submissions (12018706 fresh, 12018791 reused counts) stopped at this point:
 during counting (34 min) before reaching the same failure. Both are kept as
 evidence; neither is graded.
 
+**Declared molecule-balanced variant: rejected.** Re-running only GMM,
+k-means and vote on the fresh repeat1 cache (per-scan counts, track weights
+from the local consensus stage) gives **673/17/848** against the control
+679/29/848. Down-weighting the heavily re-imaged molecules removes exact
+chains without a per-lobe gain. The variant is not used; its option stays
+opt-in and byte-neutral. A CLI import bug in this opt-in path, found here, is
+fixed (`90dc7bf`); control configurations never reach it.
+
 ### Results
 
 (pending: dev job 12018915 with reused repeat1 counts, and final fresh job
