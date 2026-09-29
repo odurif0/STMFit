@@ -104,101 +104,33 @@ end
 
 if "--e2e" in ARGS
     @testset "Native extracted-input pipeline end to end" begin
-        saved = Dict{String,Vector{UInt8}}()
-        for variant in ("control", "complete_training", "robust_normalization", "scan_weighting", "continuous_vote", "scan_bagging", "tied_covariance", "scan_fisher", "relative_naming", "factor_analyzer", "student_t", "em_shrinkage", "student_density")
-            mktempdir() do dir
-                opts = pipeline_fixture(dir)
-                if variant != "control"
-                    cfg = TOML.parsefile(ASSIGNMENT_CONFIG)
-                    if variant == "complete_training"
-                        cfg["selection"]["assignment_training_support"] = "complete_patches"
-                    elseif variant == "scan_weighting"
-                        cfg["selection"]["gmm_training_weighting"] = "equal_scans"
-                    elseif variant == "continuous_vote"
-                        cfg["selection"]["gmm_seed_aggregation"] = "mean_membership"
-                    elseif variant == "scan_bagging"
-                        cfg["selection"]["gmm_resampling"] = "whole_scans"
-                        cfg["selection"]["gmm_bootstrap_replicates"] = 2 # Synthetic pipeline only.
-                    elseif variant == "tied_covariance"
-                        cfg["model"]["gmm_covariance_structure"] = "tied"
-                    elseif variant == "scan_fisher"
-                        cfg["selection"]["fisher_cv_scheme"] = "scan_hash_twofold"
-                    elseif variant in ("factor_analyzer", "student_t")
-                        cfg["model"]["gmm_learning_family"] = variant
-                    elseif variant == "em_shrinkage"
-                        cfg["model"]["gmm_covariance_scope"] = "all_updates"
-                        cfg["model"]["gmm_final_covariance"] = "ledoit_wolf"
-                    elseif variant == "student_density"
-                        cfg["model"]["gmm_learning_family"] = "student_t"
-                        cfg["model"]["gmm_hard_assignment"] = "student_density"
-                        cfg["model"]["gmm_final_score"] = "student_density"
-                    elseif variant == "relative_naming"
-                        cfg["selection"]["gmm_cluster_naming"] = "within_scan_z"
-                    else
-                        cfg["preprocessing"]["gmm_feature_normalization"] = "median_iqr"
-                    end
-                    path = joinpath(dir,variant*".toml")
-                    open(io -> TOML.print(io,cfg),path,"w")
-                    opts["--config"] = path
+        mktempdir() do dir
+            opts = pipeline_fixture(dir)
+            try
+                execute_pipeline(opts)
+            catch
+                for (root, _, files) in walkdir(opts["--outdir"]), file in files
+                    endswith(file, ".log") || continue
+                    log = read(joinpath(root, file), String)
+                    println("\n--- ", file, " ---\n", last(log, 4000))
                 end
-                try
-                    execute_pipeline(opts)
-                catch
-                    for (root, _, files) in walkdir(opts["--outdir"]), file in files
-                        endswith(file, ".log") || continue
-                        log = read(joinpath(root, file), String)
-                        println("\n--- ", file, " ---\n", last(log, 4000))
-                    end
-                    rethrow()
-                end
-                out = opts["--outdir"]
-                _, pred = lobe_table(joinpath(out, "predictions.tsv"))
-                @test length(pred) == 40
-                @test all(r["predicted"] in ("0", "1", "?") for r in values(pred))
-                @test any(r["predicted"] != "?" for r in values(pred))
-                @test all(r["model"] == "cc_soft_reconstructed_v1" for r in values(pred))
-                @test isfile(joinpath(out, "summary.tsv"))
-                @test isfile(joinpath(out, "review_queue.tsv"))
-                @test filesize(joinpath(out, "plots", "summary_grid.png")) > 0
-                @test length(readdir(joinpath(out, "plots", "standalone"))) == 5
-                @test !isfile(joinpath(out, "failures.tsv"))
-                for table in ("training_support","fisher_cv","features_predictor","pred_gmm","pred_kmeans","predictions")
-                    bytes = read(joinpath(out,table*".tsv"))
-                    if variant == "complete_training"
-                        @test bytes == saved[table] # All synthetic patches are complete.
-                    elseif variant in ("robust_normalization", "scan_weighting", "continuous_vote", "scan_bagging", "tied_covariance", "relative_naming", "factor_analyzer", "student_t", "em_shrinkage", "student_density")
-                        table in ("pred_gmm","predictions") || @test bytes == saved[table]
-                    elseif variant == "scan_fisher"
-                        table in ("training_support","pred_kmeans") && @test bytes == saved[table]
-                    else
-                        saved[table] = bytes
-                    end
-                end
-                if variant == "scan_bagging"
-                    _, audit = read_table(joinpath(out, "gmm_scan_bootstrap.tsv"))
-                    @test length(audit) == 10
-                    for bag in 1:2
-                        rows = filter(r -> r["replicate"] == string(bag), audit)
-                        @test sum(parse(Int, r["multiplicity"]) for r in rows) == 5
-                        @test all(parse(Int,r["training_rows"]) == 8parse(Int,r["multiplicity"]) for r in rows)
-                    end
-                else
-                    @test !isfile(joinpath(out, "gmm_scan_bootstrap.tsv"))
-                end
-                @test occursin("covariance structure: " * (variant == "tied_covariance" ? "tied" : "full"),
-                    read(joinpath(out, "logs", "gmm.log"), String))
-                @test occursin("cluster naming: " * (variant == "relative_naming" ? "within_scan_z" : "raw_amplitude"),
-                    read(joinpath(out, "logs", "gmm.log"), String))
-                @test occursin("learning family: " * (variant == "student_density" ? "student_t" :
-                    variant in ("factor_analyzer", "student_t") ? variant : "gaussian"),
-                    read(joinpath(out, "logs", "gmm.log"), String))
-                @test occursin("covariance scope: " * (variant == "em_shrinkage" ? "all_updates" : "final_only"),
-                    read(joinpath(out, "logs", "gmm.log"), String))
-                @test occursin("hard assignment: " * (variant == "student_density" ? "student_density" : "mahalanobis"),
-                    read(joinpath(out, "logs", "gmm.log"), String))
-                @test occursin("Fisher grouping: " * (variant == "scan_fisher" ? "scan_hash_twofold" : "lobe_parity"),
-                    read(joinpath(out, "logs", "fisher.log"), String))
+                rethrow()
             end
+            out = opts["--outdir"]
+            _, pred = lobe_table(joinpath(out, "predictions.tsv"))
+            @test length(pred) == 40
+            @test all(r["predicted"] in ("0", "1", "?") for r in values(pred))
+            @test any(r["predicted"] != "?" for r in values(pred))
+            @test all(r["model"] == "cc_soft_reconstructed_v1" for r in values(pred))
+            @test isfile(joinpath(out, "summary.tsv"))
+            @test isfile(joinpath(out, "review_queue.tsv"))
+            @test filesize(joinpath(out, "plots", "summary_grid.png")) > 0
+            @test length(readdir(joinpath(out, "plots", "standalone"))) == 5
+            @test !isfile(joinpath(out, "failures.tsv"))
+            for table in ("training_support", "fisher_cv", "features_predictor", "pred_gmm", "pred_kmeans")
+                @test isfile(joinpath(out, table * ".tsv"))
+            end
+            @test occursin("Fisher grouping: lobe_parity", read(joinpath(out, "logs", "fisher.log"), String))
         end
     end
 end

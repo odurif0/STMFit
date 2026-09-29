@@ -4,9 +4,9 @@
 # Usage:
 #   julia -t 4 --project=. test/run_molecule_consensus_chitosan.jl \
 #       --data-dir RAW_DIR --count-config config/chitosan.toml \
-#       --config config/unit_assignment_patch_support.toml \
+#       --config config/unit_assignment_corroborated_training.toml \
 #       --consensus-config config/molecule_consensus.toml \
-#       --templates templates_cc.tsv --outdir NEW_DIR [--selected-summary TSV] [--dry-run]
+#       --templates templates/chitosan_cc_molds_native_v1.tsv --outdir NEW_DIR [--selected-summary TSV] [--dry-run]
 #
 # --selected-summary reuses a label-free per-scan counting summary instead of
 # counting again (development only). Every other stage is recomputed from raw
