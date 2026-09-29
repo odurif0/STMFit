@@ -185,7 +185,7 @@ constant-current feedback loop.
 
 ## Diagnostic constant-current observable
 
-**September 27 CG solver control (GlcN timeout September 29).** Following
+**September 27 CG solver control (both cases time out September 29).** Following
 the failed Davidson comparison below, the user confirms **“oui, tu es
 autonome!”** in response to the bounded CG proposal. The existing precision
 driver and batch are reused with `config/qe_cg_precision.toml`, changing
@@ -211,7 +211,16 @@ pass. After the user restores SSH access, the final remote checksum-only
 comparison passes without differences, and the original/input manifests
 pass again. GlcNAc **12023139** is submitted once at **12:07:28 CEST on
 September 29**, with the same frozen sources and resource limits; it
-initially waits for the shared CPU quota. No trial orbital is adopted.
+initially waits for the shared CPU quota. It runs on **vipc2306** from
+**12:12:38 to 14:12:41 CEST**, ending **TIMEOUT in 2h00m03s** before its
+first **1e-10-Ry** solve finishes. The second threshold never starts. All
+nine retained checkpoint files still match the original SCF; the unchanged
+checker rejects them as `Not the requested NSCF`. The full case is fetched
+and matches Viper by checksum; **28,399** local reference/preservation/
+rejection assertions pass. Both authorized cases are now finished without
+a converged CG pair. This establishes a time-limited incomplete outcome,
+not that CG cannot converge with different resources. No retry follows and
+no trial orbital is adopted.
 The `3000`-second QE stop is cooperative, checked after diagonalization;
 it does not guarantee time for both solves. The two-hour Slurm cap remains
 the hard bound, and an incomplete solve is rejected rather than analyzed.

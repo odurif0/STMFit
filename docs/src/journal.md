@@ -2305,7 +2305,7 @@ See `docs/src/selection.md` for the full guard specification and
 ## Open Questions
 
 0bu. **Can CG provide the missing fixed-density tolerance comparison?**
-**GlcN times out; GlcNAc 12023139 is submitted after restored access.** In response to the explicit
+**Campaign finished: both first CG solves time out.** In response to the explicit
 bounded proposal after 0bt, the user confirms **“oui, tu es autonome!”**.
 Change only Davidson to CG on the same original accepted **60/720-Ry**
 states, keeping the inherited `diago_cg_maxiter=20`, full accuracy and
@@ -2326,7 +2326,14 @@ remote checksum-only comparison, initially interrupted by lost SSH
 authentication, passes without differences after the user restores access.
 Original/input manifests pass again. GlcNAc **12023139** is submitted once
 at **12:07:28 CEST on September 29**, initially waiting for the shared CPU
-quota. There is no retry, relaxed criterion or adoption.
+quota. It runs on **vipc2306 from 12:12:38 to 14:12:41 CEST**, ending
+**TIMEOUT in 2h00m03s** before its first threshold finishes; the second is
+never started. Its nine retained checkpoint files also match the original
+SCF, and the unchanged checker rejects them as `Not the requested NSCF`.
+The complete case is fetched, its checksum comparison passes, and **28,399**
+local reference/preservation/rejection assertions pass. Neither geometry
+supplies a CG tolerance comparison within this bound. There is no retry,
+relaxed criterion or adoption, and no general claim that CG cannot converge.
 
 0bt. **Does orbital diagonalization precision affect the same fixed-density tails?**
 **Campaign finished; primary comparison unavailable for both molecules.** Both cutoff tests
@@ -21159,3 +21166,45 @@ experiments already address related questions; exclusion is not an untested
 remedy to rerun. This readback uses all scientific rows without truth labels,
 selects no seed or threshold, and leaves predictions, calibration, production
 and champion unchanged.
+
+### 2026-09-29 — GlcNAc CG timeout: bounded solver campaign completed
+
+**Second and final authorized case.** Job **12023139**, unchanged scientific
+source **864287a**, ends **TIMEOUT** on **vipc2306** at **14:12:41 CEST**,
+after starting at **12:12:38** (reported elapsed **2h00m03s** under the declared
+two-hour Slurm limit). Its only QE step, **12023139.0**, runs from **12:14:39**
+and ends **FAILED 1:0 in 1h58m02s**. All eight ranks report `SIGTERM` after
+the time-limit cancellation; their maximum recorded per-rank RSS is
+**5,364,229 KiB**. The batch/extern steps terminate by **14:12:44**, and this
+job leaves the queue. Other account jobs are not modified.
+
+The first **1e-10-Ry** solve stops inside `CG style diagonalization` without
+an achieved `ethr`, `End of band structure calculation` or `JOB DONE`.
+There is no qualified low-precision XML/analysis, high-precision work,
+paired comparison, independent-comparison report or completion marker.
+All **nine** files in the retained working `.save` directory are byte-identical
+to the original accepted SCF. They are the starting copy, not a converged
+or newly qualified NSCF. The existing checker rejects them with exactly
+`Not the requested NSCF`, without creating a qualified XML. No interrupted
+orbital is evaluated.
+
+**Preservation and verification.** Remote source/config/Project/Manifest
+hashes remain unchanged, and input/original manifests pass. A reviewed
+rsync dry-run precedes transfer of the full **31 regular files /
+3,352,572,240 bytes** to `qe/cg_precision_20260927/glcnac`, without deletion.
+The checksum-only comparison with Viper returns no differences; local file
+count/size and the input manifest agree. Julia **1.13.1** passes **28,399**
+saved-reference, source/copy-preservation, timeout-log, missing-product and
+strict-rejection assertions. The unchanged scope and legacy/CG synthetic
+suites also pass **1,795 / 379,512 / 379,552** assertions. This uses the
+existing saved-reference reader and rejection path, without a local
+real-orbital calculation or scientific source change.
+
+**Conclusion.** Together with GlcN **12018453**, both authorized CG cases
+are complete as time-limited incomplete solves. Neither supplies the planned
+**1e-10 / 1e-12-Ry** comparison; neither high-precision solve starts. This
+does not prove general CG nonconvergence or invalidate the original accepted
+SCFs. It supplies no new CG map, precision qualification, physical calibration
+or benchmark improvement. There is no extension, requeue, retry, new SCF,
+relaxed **5e-5-Ry** gate, mold adoption or champion change. The strict
+end-to-end label-free **694/43/855** goal remains open.
