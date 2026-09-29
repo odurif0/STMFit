@@ -20999,6 +20999,24 @@ across the marginal GlcNAc lobes (the record's zero-confidence ties). No
 label-free rule was found that places this boundary more favourably without
 benchmark tuning.
 
+**Corroborated cohort learning (declared variant, `9edcce4`).** Miscounted or
+forced-count chains carry merged/split lobes into whole-cohort learning.
+`config/unit_assignment_corroborated_training.toml` lets GMM and k-means learn
+only from scans whose own GCV count equals the strict-majority consensus
+(`count_rule = agrees`, 92 scans). All 146 scans are still normalized and
+assigned; the empirical Fisher feature is unchanged. Legacy outputs are
+byte-identical without the option. On the fresh caches (assignment stages
+only), v2 becomes **703/33/863 with 160 errors** (control 695/30/863/168);
+v1 becomes 696/30/857/161 (control 693/35/857/164). Fresh raw verification
+job **12023870** is submitted.
+
+**Molecule fusion trade-off (diagnostic, not adopted).** With the consensus
+tracks' clean lobe mapping (same-N scans, absolute projection order), a
+per-physical-lobe majority over ≥3 scans raises v2 to 712 (corroborated) /
+707 (control) correct, 153/158 errors, 865 classified, but lowers exact chains
+to 24/25. It propagates each molecule's majority pattern, including a missed
+GlcNAc, to all its scans.
+
 **Hierarchical chain mixture prototype: rejected.** A two-class mixture with
 a per-chain random intercept (exact enumeration of chain configurations, PCA-
 whitened BASE4 features, EM initialized from the champion's label-free vote)
