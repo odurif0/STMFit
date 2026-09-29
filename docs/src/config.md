@@ -55,9 +55,8 @@ Other `ChainSweepConfig` fields keep their struct defaults
 `[N_files]` (first positional argument), `--config`, `--data-dir`, `--outdir`,
 `--chunk i/n`, `--tsv` (optional triage input), `--skip-1d` (default) /
 `--no-skip-1d`, `--selection-policy`, `--gcv-ambiguity-rel-threshold`,
-`--robust-guard-nu`, `--cv-folds`, `--exclude-from FILE`,
-`--plot-manifest TOML` with `--skip-plot-quality` (plots only; never selection),
-`--refined-advisory`. The batch appends to `summary_overlap060_hard.tsv` and
+`--robust-guard-nu`, `--exclude-from FILE`, and `--plot-manifest TOML` with
+`--skip-plot-quality` (plots only; never selection). The batch appends to `summary_overlap060_hard.tsv` and
 skips files already done in `--outdir`, so it can be resumed.
 
 ## `molecule_consensus.toml`

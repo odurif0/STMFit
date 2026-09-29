@@ -31,20 +31,6 @@ function preprocess_channel(img::SXMImage, ch::SXMChannel, cfg::PatternConfig)
     return xs, ys, raw, z, z_smooth, scaled_unit, noise
 end
 
-"Opt-in observed-only background correction; keep the native noise formula."
-function preprocess_observed_fit_channel(img::SXMImage, ch::SXMChannel, cfg::PatternConfig;
-                                         plane_rank_rtol::Real)
-    lowercase(ch.direction) == lowercase(cfg.direction) || error("Actual requested acquisition direction is missing")
-    lowercase(ch.name) == lowercase(cfg.channel) || error("Actual requested channel is missing")
-    v = STMSXMIO.preprocess_observed_channel(img, ch; stride=cfg.stride,
-        flatten=lowercase(strip(cfg.flatten)), smooth_radius_px=cfg.smooth_radius_px, plane_rank_rtol)
-    v.status == "observed_only" || error("Observed preprocessing failed: $(v.status)")
-    values = v.z_smooth[isfinite.(v.z_smooth)]
-    length(values) >= 2 || error("Insufficient observed smoothed pixels for native noise estimate")
-    noise = max(1.4826 * median(abs.(values .- median(values))), std(values) * 0.1, EPS)
-    return v.xs, v.ys, v.raw, v.z, v.z_smooth, v.unit, noise
-end
-
 _artifact_mad(v) = 1.4826 * median(abs.(v .- median(v)))
 
 function _line_discontinuity_score(z::AbstractMatrix{<:Real})
@@ -560,58 +546,20 @@ function _channel_roi_data(img::SXMImage, cfg::PatternConfig, z_mask::BitMatrix,
     return xs, ys, z0, z_mask, xflat, yflat, zflat, max(noise, EPS)
 end
 
-function _current_evidence_weights(img::SXMImage, cfg::PatternConfig, z_mask::BitMatrix)
-    """Compute soft weights [0.3, 1.0] from Current channel evidence, aligned with Z mask.
-    Where Current shows strong signal → weight ≈ 1.0. Where Current is flat/baseline → weight ≈ 0.3."""
-    has_current = any(c -> lowercase(c.name) == "current", img.channels)
-    !has_current && return nothing
-    # Load Current fwd+bwd, same preprocessing as Z
-    chc_fwd = get_channel(img, "Current"; direction="fwd")
-    xs, ys, _, c_fwd, _, _, _ = preprocess_channel(img, chc_fwd, cfg)
-    has_cbwd = any(c -> lowercase(c.name) == "current" && lowercase(c.direction) == "bwd", img.channels)
-    if has_cbwd
-        chc_bwd = get_channel(img, "Current"; direction="bwd")
-        _, _, _, c_bwd, _, _, _ = preprocess_channel(img, chc_bwd, cfg)
-        c_avg = (c_fwd .+ c_bwd) ./ 2.0
-    else
-        c_avg = c_fwd
-    end
-    # Soft sigmoid: normalize Current to [0,1] per-pixel
-    cm = c_avg .- quantile(c_avg[z_mask], 0.05)
-    c_range = maximum(cm[z_mask]) - minimum(cm[z_mask])
-    if c_range <= EPS
-        return ones(length(xs) * length(ys))
-    end
-    cn = clamp.((cm .- minimum(cm[z_mask])) ./ max(c_range, EPS), 0.0, 1.0)
-    # Map to weight range [0.3, 1.0]: low current → downweight, high current → full weight
-    w_map = 0.3 .+ 0.7 .* cn
-    # Flatten for mask
-    w = Float64[]
-    for iy in eachindex(ys), ix in eachindex(xs)
-        z_mask[iy, ix] || continue
-        push!(w, w_map[iy, ix])
-    end
-    return w
-end
-
-function molecule_roi_mask_fused(img, cfg::PatternConfig, z_smooth; observed_only::Bool=false)
+function molecule_roi_mask_fused(img, cfg::PatternConfig, z_smooth)
     """ROI mask from fused (or single-view) preprocessed data."""
-    values = observed_only ? filter(isfinite, vec(z_smooth)) : vec(z_smooth)
-    isempty(values) && error("No observed pixels for fused ROI")
+    values = vec(z_smooth)
     signal = z_smooth .- minimum(values)
     maxsig = maximum(values) - minimum(values)
     if maxsig <= EPS
-        return nothing, nothing, observed_only ? isfinite.(z_smooth) : trues(size(z_smooth))
+        return nothing, nothing, trues(size(z_smooth))
     end
     noise = 1.4826 * median(abs.(values .- median(values)))
     noise = max(noise, std(values)*0.1, EPS)
-    threshold_signal = observed_only ? reshape(values .- minimum(values), :, 1) : signal
-    threshold = _adaptive_roi_threshold(threshold_signal, noise, cfg.roi_threshold_fraction, 2.5)
+    threshold = _adaptive_roi_threshold(signal, noise, cfg.roi_threshold_fraction, 2.5)
     mask = signal .>= threshold
     mask = _largest_component(mask)
     mask = _dilate_mask(mask, max(0, cfg.roi_dilate_px ÷ max(1, cfg.stride)))
-    observed_only && (mask .&= isfinite.(z_smooth))
-    size_z = size(z_smooth)
     # Compute xs, ys from img
     stride = max(1, cfg.stride)
     xv, yv = _coordinate_vectors(img; stride=stride)
@@ -628,40 +576,10 @@ function _effective_spacing_min_nm(ccfg::ChainSweepConfig)
     Adjacent axial spacings are parameterized with this lower bound. Since lateral
     offsets only increase Euclidean peak distance, this guarantees that even at
     the largest allowed sigma the pairwise overlap cannot exceed `max_overlap`.
-    The opt-in local_sigma_cap mode instead uses the minimum permitted width
-    here and enforces the same pair envelope through gap-conditioned widths.
     """
-    mode = ccfg.overlap_constraint
-    mode in ("global_sigma_max", "local_sigma_cap") || error("Unknown overlap constraint: $mode")
-    if mode == "local_sigma_cap"
-        _chain_peak_profile(ccfg) == :gaussian || error("Local sigma caps are Gaussian-only")
-        0 < ccfg.max_overlap < 1 || error("Local sigma caps require 0 < max_overlap < 1")
-        for (lo, hi) in ((ccfg.sigma_parallel_min_nm, ccfg.sigma_parallel_max_nm),
-                         (ccfg.sigma_perp_min_nm, ccfg.sigma_perp_max_nm))
-            isfinite(lo) && isfinite(hi) && 0 < lo <= hi || error("Invalid sigma bounds")
-        end
-        sigma_min = ccfg.chain_circular_sigmas ? ccfg.sigma_parallel_min_nm :
-            max(ccfg.sigma_parallel_min_nm, ccfg.sigma_perp_min_nm)
-        spacing = max(ccfg.spacing_min_nm, sqrt(-2log(ccfg.max_overlap)) * sigma_min)
-        0 < spacing <= ccfg.spacing_max_nm || error("No feasible spacing at minimum sigma")
-        return spacing
-    end
     sigma_max = ccfg.chain_circular_sigmas ? ccfg.sigma_parallel_max_nm :
         max(ccfg.sigma_parallel_max_nm, ccfg.sigma_perp_max_nm)
     return effective_spacing_min(ccfg.spacing_min_nm, ccfg.spacing_max_nm, sigma_max, ccfg.max_overlap)
-end
-
-"Per-width-type caps from adjacent AXIAL gaps, never a measured physical calibration."
-function _chain_local_sigma_caps(n::Int, deltas, ccfg::ChainSweepConfig)
-    length(deltas) == max(n-1, 0) || throw(DimensionMismatch("Wrong number of gaps"))
-    caps = fill(Inf, _chain_sigma_param_count(n, ccfg))
-    scale = sqrt(-2log(ccfg.max_overlap))
-    for i in 1:n
-        cap = min(i > 1 ? deltas[i-1]/scale : Inf, i < n ? deltas[i]/scale : Inf)
-        k = _chain_lobe_type(i, length(caps))
-        caps[k] = min(caps[k], cap)
-    end
-    return caps
 end
 
 function _chain_support_length(axisctx)
@@ -893,21 +811,7 @@ function _decode_chain(p::AbstractVector, n::Int, axisctx, ccfg::ChainSweepConfi
         j += 1
     end
     n_sigma_types = _chain_sigma_param_count(n, ccfg)
-    if ccfg.overlap_constraint == "local_sigma_cap"
-        caps = _chain_local_sigma_caps(n, deltas, ccfg)
-        parhi = max.(ccfg.sigma_parallel_min_nm, min.(ccfg.sigma_parallel_max_nm, caps))
-        spar_types = [ccfg.sigma_parallel_min_nm + (parhi[k]-ccfg.sigma_parallel_min_nm)*_rsigmoid(p[j+k-1]) for k in 1:n_sigma_types]
-        j += n_sigma_types
-        spars = [spar_types[_chain_lobe_type(k, n_sigma_types)] for k in 1:n]
-        if ccfg.chain_circular_sigmas
-            sperps = spars
-        else
-            perphi = max.(ccfg.sigma_perp_min_nm, min.(ccfg.sigma_perp_max_nm, caps))
-            sperp_types = [ccfg.sigma_perp_min_nm + (perphi[k]-ccfg.sigma_perp_min_nm)*_rsigmoid(p[j+k-1]) for k in 1:n_sigma_types]
-            j += n_sigma_types
-            sperps = [sperp_types[_chain_lobe_type(k, n_sigma_types)] for k in 1:n]
-        end
-    elseif ccfg.chain_circular_sigmas
+    if ccfg.chain_circular_sigmas
         sigma_types = [ccfg.sigma_parallel_min_nm + (ccfg.sigma_parallel_max_nm - ccfg.sigma_parallel_min_nm) * _rsigmoid(p[j+k-1]) for k in 1:n_sigma_types]
         j += n_sigma_types
         sigmas = [sigma_types[_chain_lobe_type(k, n_sigma_types)] for k in 1:n]
@@ -949,34 +853,9 @@ function _chain_split_peak_value(dt, du, spar, sperp, skew_ratio, rmax)
     return exp(-0.5 * ((dt / sigma_t)^2 + (du / sperp)^2))
 end
 
-"Proper per-lobe axes from the CURRENT decoded centers, with no extra fit parameters."
-function _chain_peak_axes(ts, us, axisctx, ccfg::ChainSweepConfig)
-    mode = ccfg.chain_peak_orientation
-    mode in ("global", "local_tangent") || error("Unknown chain peak orientation: $mode")
-    ccfg.chain_tangent_degree in (1, 2) || error("Tangent degree must be 1 or 2")
-    length(ts) == length(us) || throw(DimensionMismatch("Center coordinates differ"))
-    ax, ay = axisctx.axis
-    n = length(ts)
-    # A circular Gaussian is exactly rotation invariant. Preserve the legacy
-    # arithmetic, not merely approximate equality after a redundant rotation.
-    if mode == "global" || n <= 1 || (ccfg.chain_circular_sigmas && !_chain_uses_split_profile(ccfg))
-        return fill((ax, ay), n)
-    end
-    all(isfinite, ts) && all(isfinite, us) && all(>(0), diff(ts)) || error("Invalid local-tangent centers")
-    degree = min(ccfg.chain_tangent_degree, n - 1)
-    centered = ts .- mean(ts)
-    scale = maximum(abs, centered)
-    xi = centered ./ scale
-    beta = hcat([xi .^ j for j in 0:degree]...) \ us
-    slopes = fill(beta[2] / scale, n)
-    degree == 2 && (slopes .+= (2beta[3] / scale) .* xi)
-    all(isfinite, slopes) || error("Nonfinite centerline tangent")
-    return [((ax - s*ay)/hypot(1, s), (ay + s*ax)/hypot(1, s)) for s in slopes]
-end
+"Per-lobe Gaussian axes: the chain axis for every lobe."
+_chain_peak_axes(ts, us, axisctx, ccfg::ChainSweepConfig) = fill((axisctx.axis[1], axisctx.axis[2]), length(ts))
 
-# The polynomial tangent solve can leave _chain_peak_axes inferred as Vector.
-# Specialize this pixel loop on its concrete runtime element type, preserving
-# the operation order while avoiding per-pixel dynamic dispatch/allocations.
 function _accumulate_chain_peaks!(pred, x, y, feats, peak_axes, split_profile, skew_rmax)
     for (k, f) in enumerate(feats)
         ax, ay = peak_axes[k]
@@ -1010,26 +889,17 @@ function _chain_model_values(x, y, p, n::Int, axisctx, ccfg::ChainSweepConfig;
     return _accumulate_chain_peaks!(pred, x, y, feats, peak_axes, split_profile, skew_rmax)
 end
 
-function _nearest_values_on_grid(xs, ys, zimg, feats::Vector{MolecularFeature}; observed_only::Bool=false)
+function _nearest_values_on_grid(xs, ys, zimg, feats::Vector{MolecularFeature})
     vals = Float64[]
     for f in feats
         ix = clamp(searchsortedfirst(xs, f.x_nm), 1, length(xs))
         iy = clamp(searchsortedfirst(ys, f.y_nm), 1, length(ys))
-        value = zimg[iy, ix]
-        if observed_only && !isfinite(value)
-            # Initialization only: use an actual nearest observation, never
-            # fill the image or add a fabricated sample to the fit objective.
-            indices = findall(isfinite, zimg)
-            isempty(indices) && error("No observed pixels for chain initialization")
-            nearest = argmin(I -> (xs[I[2]]-f.x_nm)^2 + (ys[I[1]]-f.y_nm)^2, indices)
-            value = zimg[nearest]
-        end
-        push!(vals, max(value, EPS))
+        push!(vals, max(zimg[iy, ix], EPS))
     end
     return vals
 end
 
-function _axis_profile_from_grid(xs, ys, zimg, axisctx, ccfg::ChainSweepConfig; observed_only::Bool=false)
+function _axis_profile_from_grid(xs, ys, zimg, axisctx, ccfg::ChainSweepConfig)
     nb = max(20, min(200, Int(ceil(_chain_support_length(axisctx) / max(0.02, ccfg.spacing_min_nm / 8)))))
     prof = zeros(nb); counts = zeros(Int, nb)
     tlo, thi = axisctx.tmin, axisctx.tmax
@@ -1047,7 +917,7 @@ function _axis_profile_from_grid(xs, ys, zimg, axisctx, ccfg::ChainSweepConfig; 
     end
     prof ./= max.(counts, 1)
     valid = prof[counts .> 0]
-    baseline = isempty(valid) ? quantile(observed_only ? filter(isfinite, vec(zimg)) : vec(zimg), ccfg.support_baseline_quantile) : quantile(valid, ccfg.support_baseline_quantile)
+    baseline = isempty(valid) ? quantile(vec(zimg), ccfg.support_baseline_quantile) : quantile(valid, ccfg.support_baseline_quantile)
     return prof, counts, baseline, tlo, thi
 end
 
@@ -1123,15 +993,15 @@ function _edge_aware_ts(prof, counts, baseline, tlo, thi, uniform_ts::Vector{Flo
     return sort(ts)
 end
 
-function _score_seed_ts(xs, ys, zimg, ts::Vector{Float64}, axisctx, ccfg::ChainSweepConfig; observed_only::Bool=false)
+function _score_seed_ts(xs, ys, zimg, ts::Vector{Float64}, axisctx, ccfg::ChainSweepConfig)
     ox, oy = axisctx.origin; ax, ay = axisctx.axis
     feats = [MolecularFeature(1.0, ox + t*ax, oy + t*ay, 0.2, 0.2, 1.0) for t in ts]
-    vals = _nearest_values_on_grid(xs, ys, zimg, feats; observed_only)
+    vals = _nearest_values_on_grid(xs, ys, zimg, feats)
     spacing_penalty = length(ts) <= 2 ? 0.0 : std(diff(ts))
-    return sum(vals) - 0.05 * spacing_penalty * max(maximum(observed_only ? filter(isfinite, vec(zimg)) : zimg), EPS)
+    return sum(vals) - 0.05 * spacing_penalty * max(maximum(zimg), EPS)
 end
 
-function _deterministic_chain_seed_candidates(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConfig, spacing0::Float64; observed_only::Bool=false)
+function _deterministic_chain_seed_candidates(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConfig, spacing0::Float64)
     support_len = _chain_support_length(axisctx)
     total = spacing0 * max(n - 1, 0)
     t0 = axisctx.tmin + 0.5 * max(support_len - total, 0.0)
@@ -1139,7 +1009,7 @@ function _deterministic_chain_seed_candidates(xs, ys, zimg, n::Int, axisctx, ccf
     # The circular fit is the autonomous 2D initializer.  It uses only raw binned
     # 2D signal along the fitted axis; no 1D bootstrap and no smoothing.
     ccfg.chain_circular_sigmas || return [uniform_ts]
-    prof, counts, baseline, tlo, thi = _axis_profile_from_grid(xs, ys, zimg, axisctx, ccfg; observed_only)
+    prof, counts, baseline, tlo, thi = _axis_profile_from_grid(xs, ys, zimg, axisctx, ccfg)
     spacing_min_eff = _effective_spacing_min_nm(ccfg)
     candidates = Vector{Vector{Float64}}()
     push!(candidates, uniform_ts)
@@ -1158,12 +1028,12 @@ function _deterministic_chain_seed_candidates(xs, ys, zimg, n::Int, axisctx, ccf
     return unique_candidates
 end
 
-function _deterministic_chain_seed(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConfig, spacing0::Float64; observed_only::Bool=false)
-    candidates = _deterministic_chain_seed_candidates(xs, ys, zimg, n, axisctx, ccfg, spacing0; observed_only)
-    return sort(argmax(ts -> _score_seed_ts(xs, ys, zimg, ts, axisctx, ccfg; observed_only), candidates))
+function _deterministic_chain_seed(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConfig, spacing0::Float64)
+    candidates = _deterministic_chain_seed_candidates(xs, ys, zimg, n, axisctx, ccfg, spacing0)
+    return sort(argmax(ts -> _score_seed_ts(xs, ys, zimg, ts, axisctx, ccfg), candidates))
 end
 
-function _pack_chain_initial(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConfig; seed_ts::Union{Nothing,Vector{Float64}}=nothing, observed_only::Bool=false)
+function _pack_chain_initial(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConfig; seed_ts::Union{Nothing,Vector{Float64}}=nothing)
     have_1d_init = length(ccfg.init_centers_t) >= n && length(ccfg.init_amplitudes) >= n
     spacing_min_eff = _effective_spacing_min_nm(ccfg)
     support_len = _chain_support_length(axisctx)
@@ -1171,8 +1041,7 @@ function _pack_chain_initial(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConf
         error(@sprintf("N=%d cannot fit support %.4f nm with effective min spacing %.4f nm", n, support_len, spacing_min_eff))
     end
 
-    image_values = observed_only ? filter(isfinite, vec(zimg)) : vec(zimg)
-    isempty(image_values) && error("No observed pixels for chain initialization")
+    image_values = vec(zimg)
     p = Float64[quantile(image_values, 0.05)]
     # Tilted baseline: init bx=0, by=0 (no tilt)
     if ccfg.chain_tilted_baseline
@@ -1187,11 +1056,11 @@ function _pack_chain_initial(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConf
         raw_deltas0 = n > 1 ? diff(centers_t) : Float64[]
     else
         spacing0 = n > 1 ? clamp(support_len / max(n - 1, 1), spacing_min_eff, ccfg.spacing_max_nm) : spacing_min_eff
-        ts0 = seed_ts === nothing ? _deterministic_chain_seed(xs, ys, zimg, n, axisctx, ccfg, spacing0; observed_only) : seed_ts
+        ts0 = seed_ts === nothing ? _deterministic_chain_seed(xs, ys, zimg, n, axisctx, ccfg, spacing0) : seed_ts
         t0 = first(ts0)
         ox, oy = axisctx.origin; ax, ay = axisctx.axis
         feats0 = [MolecularFeature(1.0, ox + t*ax, oy + t*ay, 0.2, 0.2, 1.0) for t in ts0]
-        amps = _nearest_values_on_grid(xs, ys, zimg, feats0; observed_only)
+        amps = _nearest_values_on_grid(xs, ys, zimg, feats0)
         medamp = max(median(amps), EPS)
         raw_deltas0 = n > 1 ? diff(ts0) : Float64[]
     end
@@ -1280,24 +1149,7 @@ function _pack_chain_initial(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConf
         clamp(0.35 * spacing0, ccfg.sigma_perp_min_nm, ccfg.sigma_perp_max_nm)
     end
     n_sigma_types = _chain_sigma_param_count(n, ccfg)
-    if ccfg.overlap_constraint == "local_sigma_cap"
-        # Decode actually encoded gaps, including sigmoid clipping and grouped
-        # spacing, then encode native initial widths wherever feasible.
-        ns = n_sigma_types * (ccfg.chain_circular_sigmas ? 1 : 2)
-        probe = vcat(p, zeros(ns))
-        _, _, ts_probe, _, _, _ = _decode_chain(probe, n, axisctx, ccfg)
-        caps = _chain_local_sigma_caps(n, diff(ts_probe), ccfg)
-        for cap in caps
-            hi = max(ccfg.sigma_parallel_min_nm, min(ccfg.sigma_parallel_max_nm, cap))
-            push!(p, _rlogit((clamp(spar0, ccfg.sigma_parallel_min_nm, hi)-ccfg.sigma_parallel_min_nm)/max(hi-ccfg.sigma_parallel_min_nm, EPS)))
-        end
-        if !ccfg.chain_circular_sigmas
-            for cap in caps
-                hi = max(ccfg.sigma_perp_min_nm, min(ccfg.sigma_perp_max_nm, cap))
-                push!(p, _rlogit((clamp(sperp0, ccfg.sigma_perp_min_nm, hi)-ccfg.sigma_perp_min_nm)/max(hi-ccfg.sigma_perp_min_nm, EPS)))
-            end
-        end
-    elseif ccfg.chain_circular_sigmas
+    if ccfg.chain_circular_sigmas
         sigma_trans = _rlogit((spar0 - ccfg.sigma_parallel_min_nm) / max(ccfg.sigma_parallel_max_nm - ccfg.sigma_parallel_min_nm, EPS))
         for _ in 1:n_sigma_types
             push!(p, sigma_trans)
@@ -1319,8 +1171,7 @@ function _pack_chain_initial(xs, ys, zimg, n::Int, axisctx, ccfg::ChainSweepConf
 end
 
 function _fit_chain_n(xs, ys, zimg, x, y, z, noise, n::Int, axisctx, ccfg::ChainSweepConfig; starts::Int=ccfg.multistart,
-                     warm_start::Union{Vector{Float64},Nothing}=nothing, observed_only::Bool=false,
-                     diagnostics=nothing)
+                     warm_start::Union{Vector{Float64},Nothing}=nothing)
     n == 0 && return ChainModelResult(n=0, params=[median(z)], success=true)
     if !_chain_can_fit_support(n, axisctx, ccfg)
         return ChainModelResult(n=n, success=false, valid=false,
@@ -1356,13 +1207,9 @@ function _fit_chain_n(xs, ys, zimg, x, y, z, noise, n::Int, axisctx, ccfg::Chain
         p_start = clamp.(p_start, lower .+ 1e-9, upper .- 1e-9)
 
         p_global = p_start
-        global_status = "skipped"
-        global_error = ""
-        global_evaluations = 0
         if !ccfg.skip_global
             objective = let km=ccfg.kappa_max, kw=ccfg.kappa_weight, nf=n, ax=axisctx, c=ccfg
                 (u, _) -> begin
-                    diagnostics === nothing || (global_evaluations += 1)
                     rss_val = sum(abs2, z .- model_f(xy, u))
                     if km > 0 && nf > 1
                         _, _, ts, _, spars, sperps = _decode_chain(u, nf, ax, c;
@@ -1381,46 +1228,28 @@ function _fit_chain_n(xs, ys, zimg, x, y, z, noise, n::Int, axisctx, ccfg::Chain
             try
                 sol = solve(prob, nlop; maxiters=ccfg.global_maxiter)
                 p_global = sol.u
-                diagnostics === nothing || (global_status = string(sol.retcode))
-            catch err
+            catch
                 # NLopt failed, keep p_start for LM fallback
-                if diagnostics !== nothing
-                    global_status = "exception"
-                    global_error = sprint(showerror, err)
-                end
             end
         end
 
         p_final = p_global
         perr_local = fill(NaN, length(p_global))
-        lm_converged = false
-        lm_status = "exception"
-        lm_error = ""
-        lm_iterations = 0
         try
             fit = curve_fit(model_f, xy, z, p_global; lower=lower, upper=upper, maxIter=ccfg.max_iter,
-                            autodiff=:finite, store_trace=diagnostics !== nothing)
+                            autodiff=:finite, store_trace=false)
             p_final = fit.param
-            if diagnostics !== nothing
-                lm_converged = fit.converged
-                lm_status = lm_converged ? "converged" : "not_converged"
-                lm_iterations = isempty(fit.trace) ? 0 : last(fit.trace).iteration
-            end
             try
                 pcov = estimate_covar(fit)
                 perr_local = sqrt.(max.(diag(pcov), 0.0))
             catch
             end
-        catch err
-            diagnostics === nothing || (lm_error = sprint(showerror, err))
+        catch
         end
         pred = model_f(xy, p_final)
         rss = sum(abs2, z .- pred)
         nll = _student_nll(z .- pred, noise, ccfg.student_nu)
-        return (params=p_final, rss=rss, nll=nll, perr=perr_local,
-                diagnostic=diagnostics === nothing ? nothing :
-                    (; global_status, global_error, global_evaluations, lm_status, lm_error,
-                        lm_converged, lm_iterations, initial=copy(p_start), global_params=copy(p_global)))
+        return (params=p_final, rss=rss, nll=nll, perr=perr_local)
     end
 
     # ── Multistart loop ──
@@ -1437,14 +1266,14 @@ function _fit_chain_n(xs, ys, zimg, x, y, z, noise, n::Int, axisctx, ccfg::Chain
     for s in 1:effective_starts
         if warm_start !== nothing
             p_start = warm_start
-            amp_max_data = max(maximum(observed_only ? filter(isfinite, vec(zimg)) : zimg), EPS)
+            amp_max_data = max(maximum(zimg), EPS)
             amp_min = ccfg.min_amplitude_fraction * amp_max_data
             amp_range = max(amp_max_data - amp_min, EPS)
         elseif s == 1
-            p_start, amp_min, amp_range = _pack_chain_initial(xs, ys, zimg, n, axisctx, ccfg; observed_only)
+            p_start, amp_min, amp_range = _pack_chain_initial(xs, ys, zimg, n, axisctx, ccfg)
         else
             # Random perturbation around the standard init for diversity
-            p_start, amp_min, amp_range = _pack_chain_initial(xs, ys, zimg, n, axisctx, ccfg; observed_only)
+            p_start, amp_min, amp_range = _pack_chain_initial(xs, ys, zimg, n, axisctx, ccfg)
             # Add noise to deltas (spacing variation) and sigmas
             # Param order: b0, [bx,by if tilted], amps(n), t0, deltas(n-1), us(n), [spars(n)], [sperps(n)]
             delta_start = n + 3 + (ccfg.chain_tilted_baseline ? 2 : 0)  # 1-based index of first spacing param after t0
@@ -1460,10 +1289,6 @@ function _fit_chain_n(xs, ys, zimg, x, y, z, noise, n::Int, axisctx, ccfg::Chain
         end
 
         res = _run_one_start(p_start, amp_min, amp_range)
-        # Opt-in observer runs after the timed optimizer. Copies prevent an
-        # observer from mutating the candidate used by the unchanged selection.
-        diagnostics === nothing || diagnostics((; start=s, params=copy(res.params),
-            amp_min, amp_range, rss=res.rss, res.diagnostic...))
         if res.rss < best_rss
             best_rss = res.rss
             best_result = res
@@ -1492,17 +1317,6 @@ function _chain_overlap(feats::Vector{MolecularFeature}, spar::Float64, sperp::F
     return ov
 end
 
-"Maximum Gaussian radial-envelope value at another center, using actual pair widths."
-function _chain_pair_overlap(feats::Vector{MolecularFeature}, spars, sperps)
-    length(feats) == length(spars) == length(sperps) || throw(DimensionMismatch("Wrong widths"))
-    ov = 0.0
-    for i in 1:length(feats)-1, j in i+1:length(feats)
-        s = max(spars[i], spars[j], sperps[i], sperps[j], EPS)
-        ov = max(ov, exp(-0.5 * (_dist(feats[i], feats[j])/s)^2))
-    end
-    return ov
-end
-
 function _chain_metrics!(r::ChainModelResult, axisctx, ccfg::ChainSweepConfig)
     (!r.success || isempty(r.params)) && return
     if r.n == 0
@@ -1518,8 +1332,7 @@ function _chain_metrics!(r::ChainModelResult, axisctx, ccfg::ChainSweepConfig)
     r.max_lateral_nm = maximum(abs.(us))
     r.sigma_parallel_nm = mean(spars)
     r.sigma_perp_nm = mean(sperps)
-    r.overlap = ccfg.overlap_constraint == "local_sigma_cap" ?
-        _chain_pair_overlap(feats, spars, sperps) : _chain_overlap(feats, mean(spars), mean(sperps))
+    r.overlap = _chain_overlap(feats, mean(spars), mean(sperps))
     r.kappa_max_adj = isempty(ds) ? 1.0 : adjacent_kappa_max(ds, max.(spars, sperps))
     r.endpoint_overrun_nm = endpoint_overrun(ts, axisctx.tmin, axisctx.tmax)
     near(v, lo, hi) = (v - lo) / max(hi - lo, EPS) < 0.03 || (hi - v) / max(hi - lo, EPS) < 0.03

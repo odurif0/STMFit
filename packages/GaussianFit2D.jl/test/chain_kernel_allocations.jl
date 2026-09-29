@@ -31,10 +31,10 @@ end
     G = GaussianFit2D
     ctx = (origin=(0.,0.), axis=[.8,.6], perp=[-.6,.8], tmin=-1.7, tmax=1.7)
     x = collect(range(-1.5,1.5; length=10000)); y = .2sin.(3x)
-    for mode in ("global", "local_tangent"), profile in (:gaussian, :split),
+    for profile in (:gaussian, :split),
         circular in (true, false), tilted in (true, false), bounded in (true, false), n in (1, 6)
         cfg = G.ChainSweepConfig(peak_profile=profile, chain_circular_sigmas=circular,
-            chain_tilted_baseline=tilted, chain_peak_orientation=mode)
+            chain_tilted_baseline=tilted)
         p = zeros(G._chain_nparams(n, cfg))
         p[1] = .01
         tilted && (p[2:3] .= [.003, -.007])

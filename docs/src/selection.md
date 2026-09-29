@@ -80,15 +80,15 @@ then acts down-only on the active support. Known limit: the support is a
 straight tube, so long curved chains leave it and are undercounted
 ([journal](journal.md)).
 
-### Other selectors
+### Other policies
 
-`test/batch_full.jl --selection-policy` also accepts `gcv` (raw `N_eff`),
-`gcv_with_robust_aicc_guard`, and diagnostic selectors kept in
-`STMMolecularFit/src/selectors.jl`: `spatial_blocked_cv`,
-`support_marginalized_gcv[_guard]`, `slope_heuristic_mdl`, `stability_selection`,
-`local_lobe_evidence`, `laplace_evidence[_guard]` and `fwd_bwd_consensus`.
-None beat the default on the expanded benchmark or on synthetic known-N data.
-Their evaluations are in the archived journal (tag `archive/pre-cleanup-20260929`).
+`test/batch_full.jl --selection-policy` also accepts `gcv` (raw `N_eff`) and
+`gcv_with_robust_aicc_guard` (guard without the support-midpoint layer).
+Diagnostic selectors (spatial blocked CV, support-marginalized GCV,
+slope-heuristic MDL, stability selection, local-lobe evidence, Laplace
+evidence, fwd/bwd consensus) did not beat the default on the expanded
+benchmark or on synthetic known-N data and were removed on 2026-09-30. Their
+code and evaluations are at the tag `archive/pre-cleanup-20260929`.
 
 ### Output columns (`summary_overlap060_hard.tsv`)
 

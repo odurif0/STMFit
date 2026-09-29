@@ -255,3 +255,27 @@ predictions, per-scan predictions, final counts and input hashes are identical
 to job 12025539 (772/88/865/93, 137/145 exact N, fusion π = 0.342, θ0 = 0.035,
 θ1 = 0.622). Later commits change only documentation, tests and five
 unread config keys.
+
+### 2026-09-30 — Package pruning
+
+**Why.** The user approved removing experimental options still present in the
+packages after the consolidation.
+
+**What.** Removed from `GaussianFit2D`: the `local_sigma_cap` overlap
+constraint (width-conditioned counting, rejected 09-25), the `local_tangent`
+peak orientation (locally oriented Gaussians, rejected 09-23), the
+observed-only fit preprocessing, the optimizer diagnostics hook, and an unused
+Current-channel weighting. Removed from `STMMolecularFit/selectors.jl` and
+`test/batch_full.jl`: the diagnostic selectors (spatial blocked CV,
+support-marginalized GCV, slope-heuristic MDL, stability selection, local-lobe
+evidence, Laplace evidence, fwd/bwd consensus), `--cv-folds` and
+`--refined-advisory`. Kept policies: `gcv`, `gcv_with_robust_aicc_guard`,
+`support_midpoint_hybrid`, `adaptive_support_rescue`.
+
+**Verification.** All test suites pass. On three benchmark scans covering
+support-midpoint down/up and the guard's up-when-ambiguous branch
+(`240307_015`, `240818_019`, `240817_043`), every count decision is identical
+to the unpruned code. **Counting is not bit-reproducible run to run.** The
+NLopt global search is time-limited (`global_maxtime = 10 s` per N), so a
+rerun of the unpruned code on the same scan changes BIC values in the fifth
+significant digit (275.923 → 275.940). The pruning is within that noise.

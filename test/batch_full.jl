@@ -6,19 +6,7 @@
 #   julia --project=. test/batch_full.jl [N_files]
 #   julia --project=. test/batch_full.jl [N_files] --config config/my_system.toml
 #   julia --project=. test/batch_full.jl [N_files] --chunk i/n
-#   julia --project=. test/batch_full.jl [N_files] --refined-advisory results/robust_rescore_audit/full_aicc_nu8.tsv
-#   julia --project=. test/batch_full.jl [N_files] --selection-policy gcv_with_robust_aicc_guard
-#   julia --project=. test/batch_full.jl [N_files] --selection-policy spatial_blocked_cv --cv-folds 5
-#   julia --project=. test/batch_full.jl [N_files] --selection-policy support_marginalized_gcv
-#   julia --project=. test/batch_full.jl [N_files] --selection-policy support_marginalized_gcv_guard
-#   julia --project=. test/batch_full.jl [N_files] --selection-policy slope_heuristic_mdl
-#   julia --project=. test/batch_full.jl [N_files] --selection-policy stability_selection
-#   julia --project=. test/batch_full.jl [N_files] --selection-policy local_lobe_evidence
-#   julia --project=. test/batch_full.jl [N_files] --selection-policy laplace_evidence
-#   julia --project=. test/batch_full.jl [N_files] --selection-policy laplace_evidence_guard
-#   julia --project=. test/batch_full.jl [N_files] --selection-policy fwd_bwd_consensus
-#   julia --project=. test/batch_full.jl [N_files] --selection-policy adaptive_support_rescue
-#   julia --project=. test/batch_full.jl [N_files] --selection-policy support_midpoint_hybrid
+#   julia --project=. test/batch_full.jl [N_files] --selection-policy gcv|gcv_with_robust_aicc_guard|adaptive_support_rescue|support_midpoint_hybrid
 #   julia --project=. test/batch_full.jl [N_files] --plot-manifest benchmarks/chitosan_manual_20240814_20240818.toml
 
 using STMMolecularFit, GaussianFit2D, GaussianFit1D
@@ -26,14 +14,8 @@ using STMFitCore: effective_spacing_min, support_n_bounds
 using LinearAlgebra
 using DelimitedFiles, Plots, Printf, Statistics, TOML
 
-# ── Import experimental selectors from STMMolecularFit core (un-exported) ──
-import STMMolecularFit: _select_primary,
-    _integrated_robust_aicc_n, _spatial_blocked_cv_selection,
-    _support_marginalized_gcv_selection, _stability_selection,
-    _slope_heuristic_mdl_selection,
-    _local_lobe_evidence_selection, _laplace_evidence_selection,
-    _fwd_bwd_consensus_selection,
-    SUPPORT_MARG_REGRET_MARGIN
+# ── Selector internals from STMMolecularFit (un-exported) ──
+import STMMolecularFit: _select_primary, _integrated_robust_aicc_n
 
 list_sxm_files(dir) = sort([f for f in readdir(dir) if endswith(lowercase(f), ".sxm")])
 
@@ -55,7 +37,6 @@ function _parse_cli(args)
     chunk_idx = 1
     chunk_total = 1
     config_file = "config/chitosan.toml"
-    refined_advisory = ""
     selection_policy_cli = nothing
     robust_guard_nu_cli = nothing
     gcv_ambiguity_rel_threshold_cli = nothing
@@ -86,15 +67,6 @@ function _parse_cli(args)
             continue
         elseif startswith(arg, "--config=")
             config_file = split(arg, "=", limit=2)[2]
-            i += 1
-            continue
-        elseif arg == "--refined-advisory"
-            i < length(args) || error("--refined-advisory requires a TSV path")
-            refined_advisory = args[i + 1]
-            i += 2
-            continue
-        elseif startswith(arg, "--refined-advisory=")
-            refined_advisory = split(arg, "=", limit=2)[2]
             i += 1
             continue
         elseif arg == "--selection-policy"
@@ -186,15 +158,6 @@ function _parse_cli(args)
             skip_plot_quality = Set(String.(strip.(String.(split(split(arg, "=", limit=2)[2], ","; keepempty=false)))))
             i += 1
             continue
-        elseif arg == "--cv-folds"
-            i < length(args) || error("--cv-folds requires an integer value")
-            cv_folds = parse(Int, args[i + 1])
-            i += 2
-            continue
-        elseif startswith(arg, "--cv-folds=")
-            cv_folds = parse(Int, split(arg, "=", limit=2)[2])
-            i += 1
-            continue
         elseif startswith(arg, "--")
             error("Unknown option: $arg")
         else
@@ -215,8 +178,8 @@ function _parse_cli(args)
     cfg_selection = isfile(config_file) ? get(TOML.parsefile(config_file), "selection", Dict{String,Any}()) : Dict{String,Any}()
     selection_policy_cfg = split(lowercase(String(get(cfg_model, "selection_policy", "gcv"))), "-"; keepempty=false) |> x -> join(x, "_")
     selection_policy = selection_policy_cli === nothing ? selection_policy_cfg : selection_policy_cli
-    selection_policy in ("gcv", "gcv_with_robust_aicc_guard", "spatial_blocked_cv", "support_marginalized_gcv", "support_marginalized_gcv_guard", "slope_heuristic_mdl", "stability_selection", "local_lobe_evidence", "laplace_evidence", "laplace_evidence_guard", "fwd_bwd_consensus", "adaptive_support_rescue", "support_midpoint_hybrid") ||
-        error("Unknown --selection-policy '$selection_policy'; use gcv, gcv_with_robust_aicc_guard, spatial_blocked_cv, support_marginalized_gcv, support_marginalized_gcv_guard, slope_heuristic_mdl, stability_selection, local_lobe_evidence, laplace_evidence, laplace_evidence_guard, fwd_bwd_consensus, adaptive_support_rescue, or support_midpoint_hybrid")
+    selection_policy in ("gcv", "gcv_with_robust_aicc_guard", "adaptive_support_rescue", "support_midpoint_hybrid") ||
+        error("Unknown --selection-policy '$selection_policy'; use gcv, gcv_with_robust_aicc_guard, adaptive_support_rescue or support_midpoint_hybrid")
     # Selection thresholds: CLI flag overrides TOML [selection], which overrides the built-in default.
     robust_guard_nu = robust_guard_nu_cli === nothing ? Float64(get(cfg_selection, "robust_guard_nu", 8.0)) : robust_guard_nu_cli
     gcv_ambiguity_rel_threshold = gcv_ambiguity_rel_threshold_cli === nothing ? Float64(get(cfg_selection, "gcv_ambiguity_rel_threshold", 0.05)) : gcv_ambiguity_rel_threshold_cli
@@ -224,8 +187,7 @@ function _parse_cli(args)
     isfinite(robust_guard_nu) && robust_guard_nu > 0 || error("--robust-guard-nu must be positive")
     isfinite(gcv_ambiguity_rel_threshold) && gcv_ambiguity_rel_threshold > 0 || error("--gcv-ambiguity-rel-threshold must be positive")
     isfinite(support_midpoint_up_gcv_rel_threshold) && support_midpoint_up_gcv_rel_threshold >= 0 || error("support_midpoint_up_gcv_rel_threshold must be non-negative")
-    cv_folds >= 2 || error("--cv-folds must be >= 2")
-    return n_files, chunk_idx, chunk_total, config_file, refined_advisory, selection_policy, robust_guard_nu, gcv_ambiguity_rel_threshold, support_midpoint_up_gcv_rel_threshold, cv_folds, data_dir, exclude_from, outdir, tsv, skip_1d, plot_manifest, skip_plot_quality
+    return n_files, chunk_idx, chunk_total, config_file, selection_policy, robust_guard_nu, gcv_ambiguity_rel_threshold, support_midpoint_up_gcv_rel_threshold, data_dir, exclude_from, outdir, tsv, skip_1d, plot_manifest, skip_plot_quality
 end
 
 const FWHM_SIGMA = 2.355
@@ -317,7 +279,7 @@ function _load_skip_plot_files(path::AbstractString, skip_quality)
     return skip_files
 end
 
-const N_FILES, CHUNK_IDX, CHUNK_TOTAL, CONFIG_FILE, REFINED_ADVISORY_FILE, SELECTION_POLICY, ROBUST_GUARD_NU, GCV_AMBIGUITY_REL_THRESHOLD, SUPPORT_MIDPOINT_UP_GCV_REL_THRESHOLD, CV_FOLDS, _data_dir_parsed, _exclude_from_parsed, _outdir_parsed, _tsv_parsed, SKIP_1D, PLOT_MANIFEST_FILE, SKIP_PLOT_QUALITY = _parse_cli(ARGS)
+const N_FILES, CHUNK_IDX, CHUNK_TOTAL, CONFIG_FILE, SELECTION_POLICY, ROBUST_GUARD_NU, GCV_AMBIGUITY_REL_THRESHOLD, SUPPORT_MIDPOINT_UP_GCV_REL_THRESHOLD, _data_dir_parsed, _exclude_from_parsed, _outdir_parsed, _tsv_parsed, SKIP_1D, PLOT_MANIFEST_FILE, SKIP_PLOT_QUALITY = _parse_cli(ARGS)
 const DATA_DIR = _data_dir_parsed
 isempty(DATA_DIR) && error("No data directory: set STMFIT_DATA_DIR or pass --data-dir <path>")
 isdir(DATA_DIR) || error("Data directory not found: $DATA_DIR")
@@ -331,30 +293,6 @@ if !isempty(SKIP_PLOT_FILES)
 end
 
 _tsv_bool(s::AbstractString) = lowercase(strip(s)) in ("true", "t", "1", "yes", "y")
-
-function _load_refined_advisory(path::AbstractString)
-    isempty(strip(path)) && return Dict{String,Int}()
-    if !isfile(path)
-        @warn "refined advisory TSV not found; N_refined will equal N_eff" path
-        return Dict{String,Int}()
-    end
-    lines = readlines(path)
-    isempty(lines) && return Dict{String,Int}()
-    header = split(lines[1], '\t'; keepempty=true)
-    idx = Dict(name => i for (i, name) in enumerate(header))
-    haskey(idx, "file") || error("refined advisory TSV must contain a 'file' column")
-    haskey(idx, "N") || error("refined advisory TSV must contain an 'N' column")
-    selected_col = get(idx, "is_selected", 0)
-    advisory = Dict{String,Int}()
-    for line in lines[2:end]
-        isempty(strip(line)) && continue
-        vals = split(line, '\t'; keepempty=true)
-        selected_col == 0 || (selected_col <= length(vals) && _tsv_bool(vals[selected_col])) || continue
-        file = _basename_sxm(vals[idx["file"]])
-        advisory[file] = parse(Int, vals[idx["N"]])
-    end
-    return advisory
-end
 
 function _refined_selection(fn::AbstractString, n_eff::Int, advisory::Dict{String,Int};
         amb_eff::Bool=false, dgcv_rel_eff::Real=NaN, runner_eff=0)
@@ -1017,11 +955,7 @@ cfg_toml = TOML.parsefile(CONFIG_FILE)
 haskey(cfg_toml, "model") || error("Config $CONFIG_FILE is missing a [model] section")
 model = cfg_toml["model"]
 preproc = get(cfg_toml, "preprocessing", Dict{String,Any}())
-const REFINED_ADVISORY = _load_refined_advisory(REFINED_ADVISORY_FILE)
-if !isempty(REFINED_ADVISORY)
-    @info "Loaded refined-selection advisory" file=REFINED_ADVISORY_FILE n=length(REFINED_ADVISORY)
-end
-@info "Selection policy" policy=SELECTION_POLICY robust_guard_nu=ROBUST_GUARD_NU gcv_ambiguity_rel_threshold=GCV_AMBIGUITY_REL_THRESHOLD support_midpoint_up_gcv_rel_threshold=SUPPORT_MIDPOINT_UP_GCV_REL_THRESHOLD cv_folds=CV_FOLDS
+@info "Selection policy" policy=SELECTION_POLICY robust_guard_nu=ROBUST_GUARD_NU gcv_ambiguity_rel_threshold=GCV_AMBIGUITY_REL_THRESHOLD support_midpoint_up_gcv_rel_threshold=SUPPORT_MIDPOINT_UP_GCV_REL_THRESHOLD
 
 # Calibration keys with molecule-agnostic defaults (chitosan values). A partial
 # config TOML is tolerated; only [model] itself is mandatory.
@@ -1191,111 +1125,6 @@ Threads.@threads for idx in 1:ntot
                     amb_eff=amb_eff_sel, dgcv_rel_eff=dgcv_rel_eff_sel, runner_eff=runner_eff_sel)
                 refined_source == "robust_aicc" && (refined_source = robust_source)
             end
-        elseif SELECTION_POLICY == "spatial_blocked_cv"
-            cv_n, cv_score, cv_ok, cv_se = _spatial_blocked_cv_selection(
-                img2d, pcfg_file, ccfg, ctx_circ, results_ell; folds=CV_FOLDS)
-            if cv_n === nothing
-                n_refined, refined_policy, refined_source, robust_aicc_n = (best_n_eff, "spatial_blocked_cv_failed", "N_eff", "NA")
-            else
-                n_refined, refined_policy, refined_source, robust_aicc_n = (cv_n, "spatial_blocked_cv", "spatial_blocked_cv", cv_n)
-            end
-        elseif SELECTION_POLICY in ("support_marginalized_gcv", "support_marginalized_gcv_guard")
-            sm_n, sm_regret, sm_supports, sm_candidates, sm_runner_delta, sm_med, sm_q75 = _support_marginalized_gcv_selection(
-                img2d, pcfg_file, ccfg, results_ell, results_circ)
-            if sm_n === nothing
-                n_refined, refined_policy, refined_source, robust_aicc_n = (best_n_eff, "support_marginalized_gcv_failed", "N_eff", "NA")
-            else
-                selected_sm = sm_n
-                policy_sm = "support_marginalized_gcv"
-                if SELECTION_POLICY == "support_marginalized_gcv_guard"
-                    sm_r = get(sm_med, sm_n, NaN)
-                    eff_r = get(sm_med, best_n_eff, NaN)
-                    clear_downshift = sm_n < best_n_eff && isfinite(sm_r) && isfinite(eff_r) &&
-                                      sm_r + SUPPORT_MARG_REGRET_MARGIN < eff_r
-                    selected_sm = clear_downshift ? max(sm_n, best_n_eff - 1) : best_n_eff
-                    policy_sm = clear_downshift ? "support_marginalized_gcv_guard" : "support_marginalized_gcv_guard_keep"
-                    if !clear_downshift
-                        n_simple = best_n_eff - 1
-                        simple_med = get(sm_med, n_simple, NaN)
-                        simple_q75 = get(sm_q75, n_simple, NaN)
-                        eff_q75 = get(sm_q75, best_n_eff, NaN)
-                        ambiguous_simpler = n_simple >= 1 && sm_n == best_n_eff &&
-                            isfinite(simple_med) && isfinite(eff_r) &&
-                            simple_med - eff_r <= GCV_AMBIGUITY_REL_THRESHOLD &&
-                            isfinite(simple_q75) && isfinite(eff_q75) &&
-                            simple_q75 - eff_q75 <= GCV_AMBIGUITY_REL_THRESHOLD
-                        if ambiguous_simpler
-                            selected_sm = n_simple
-                            policy_sm = "support_marginalized_gcv_guard_parsimony"
-                        end
-                    end
-                end
-                n_refined, refined_policy, refined_source, robust_aicc_n = (selected_sm, policy_sm, "support_marginalized_gcv", sm_n)
-                @printf("  support-marg: N=%d guarded=%s median_regret=%.4g supports=%d candidates=%d runner_delta=%.4g\n",
-                        sm_n, string(selected_sm), sm_regret, sm_supports, sm_candidates, sm_runner_delta)
-            end
-        elseif SELECTION_POLICY == "slope_heuristic_mdl"
-            mdl_n, mdl_score, mdl_candidates, mdl_alpha = _slope_heuristic_mdl_selection(
-                results_ell, ccfg, results_circ, ccfg_circ, length(ctx_circ.z))
-            if mdl_n === nothing
-                n_refined, refined_policy, refined_source, robust_aicc_n = (best_n_eff, "slope_heuristic_mdl_failed", "N_eff", "NA")
-            else
-                n_refined, refined_policy, refined_source, robust_aicc_n = (mdl_n, "slope_heuristic_mdl", "slope_heuristic_mdl", mdl_n)
-                @printf("  slope-MDL: N=%d alpha=%.4g score=%.4g candidates=%d\n",
-                        mdl_n, mdl_alpha, mdl_score, mdl_candidates)
-            end
-        elseif SELECTION_POLICY == "stability_selection"
-            stab = _stability_selection(img2d, pcfg_file, ccfg, results_ell, results_circ)
-            if stab === nothing
-                n_refined, refined_policy, refined_source, robust_aicc_n = (best_n_eff, "stability_selection_failed", "N_eff", "NA")
-            else
-                stab_n, stab_pct, stab_supports, stab_competitive, stab_feasible = stab
-                n_refined, refined_policy, refined_source, robust_aicc_n = (stab_n, "stability_selection", "stability_selection", stab_n)
-                @printf("  stability: N=%d competitive=%.0f%% (%d/%d) feasible=%d\n",
-                        stab_n, stab_pct, stab_competitive, stab_supports, stab_feasible)
-            end
-        elseif SELECTION_POLICY == "local_lobe_evidence"
-            lobe = _local_lobe_evidence_selection(
-                best_n_eff, results_ell, results_circ, ctx_circ.axisctx, ccfg, ctx_circ.noise)
-            if lobe === nothing
-                n_refined, refined_policy, refined_source, robust_aicc_n = (best_n_eff, "local_lobe_evidence_failed", "N_eff", "NA")
-            else
-                lobe_n, lobe_resolved, lobe_unresolved, lobe_accepted = lobe
-                lobe_source = lobe_accepted ?
-                    (lobe_n < best_n_eff ? "local_lobe_evidence_guard" : "local_lobe_evidence_ok") :
-                    "local_lobe_evidence_inconclusive"
-                n_refined, refined_policy, refined_source, robust_aicc_n = (lobe_n, "local_lobe_evidence", lobe_source, lobe_n)
-                @printf("  lobe-evidence: Neff=%d -> N=%d resolved=%d unresolved_pairs=%d source=%s\n",
-                        best_n_eff, lobe_n, lobe_resolved, lobe_unresolved, lobe_source)
-            end
-        elseif SELECTION_POLICY in ("laplace_evidence", "laplace_evidence_guard")
-            lap_n, lap_score, lap_candidates, lap_source, lap_deff, lap_occam, lap_sloppy = _laplace_evidence_selection(
-                img2d, pcfg_file, ccfg, ccfg_circ, results_ell, results_circ)
-            if lap_n === nothing
-                n_refined, refined_policy, refined_source, robust_aicc_n = (best_n_eff, SELECTION_POLICY * "_failed", "N_eff", "NA")
-            else
-                selected_lap = lap_n
-                lap_policy = "laplace_evidence"
-                lap_select_source = lap_source
-                if SELECTION_POLICY == "laplace_evidence_guard"
-                    selected_lap = lap_n < best_n_eff ? max(lap_n, best_n_eff - 1) : best_n_eff
-                    lap_policy = lap_n < best_n_eff ? "laplace_evidence_guard" : "laplace_evidence_guard_keep"
-                    lap_select_source = lap_n < best_n_eff ? "laplace_evidence_guard" : eff_source
-                end
-                n_refined, refined_policy, refined_source, robust_aicc_n = (selected_lap, lap_policy, lap_select_source, lap_n)
-                @printf("  laplace-evidence: raw_N=%d selected=%d source=%s score=%.4g d_eff=%.2f occam=%.4g sloppy=%.4g candidates=%d\n",
-                        lap_n, selected_lap, lap_source, lap_score, lap_deff, lap_occam, lap_sloppy, lap_candidates)
-            end
-        elseif SELECTION_POLICY == "fwd_bwd_consensus"
-            fb_n, fb_score, fb_candidates = _fwd_bwd_consensus_selection(
-                img2d, pcfg_file, ccfg, results_ell, results_circ)
-            if fb_n === nothing
-                n_refined, refined_policy, refined_source, robust_aicc_n = (best_n_eff, "fwd_bwd_consensus_failed", "N_eff", "NA")
-            else
-                n_refined, refined_policy, refined_source, robust_aicc_n = (fb_n, "fwd_bwd_consensus", "fwd_bwd_consensus", fb_n)
-                @printf("  fwd-bwd-consensus: N=%d joint_gcv=%.4g candidates=%d\n",
-                        fb_n, fb_score, fb_candidates)
-            end
         elseif SELECTION_POLICY == "adaptive_support_rescue"
             support_std = _support_length(ctx_circ)
             do_rescue, feasible_std = _adaptive_support_rescue_trigger(best_n_eff, support_std, ccfg, model)
@@ -1374,7 +1203,7 @@ Threads.@threads for idx in 1:ntot
                 end
             end
         else
-            n_refined, refined_policy, refined_source, robust_aicc_n = _refined_selection(fn, best_n_eff, REFINED_ADVISORY)
+            n_refined, refined_policy, refined_source, robust_aicc_n = (best_n_eff, "none", "N_eff", "NA")
         end
         refined = (; n_refined, policy=refined_policy, source=refined_source, robust_n=robust_aicc_n)
 
