@@ -20934,3 +20934,19 @@ requirement. Independent calibration/rule justification and full raw
 reproduction remain necessary before champion promotion, regardless of the
 eventual score. This conclusion is drawn before reading any new consensus
 grade; it does not reject the consensus hypothesis or change its predictions.
+
+### 2026-09-29 — Independent local readback of the CG control's reference
+
+The six completed GlcN reference-analysis files from **12018453** are fetched
+after a reviewed rsync dry-run. A subsequent checksum-only comparison reports
+no differences. Julia **1.13.1** passes **28,359** assertions on these saved
+tables, including their source/config identities, bands, coordinates, values,
+plane summaries and decay statistics against the retained original analysis.
+The unchanged scope and synthetic suites also pass **1,795 / 379,512 /
+379,552** assertions. These are table readbacks and tiny synthetic cases, not
+a local real-orbital calculation.
+
+Only the completed **reference** is checked; the first **1e-10-Ry CG** solve
+is still running, with CPU use reported for all eight ranks. Its trial
+checkpoint is neither fetched nor evaluated while incomplete. There is no
+CG tolerance result, second submitted geometry or champion change yet.
