@@ -247,5 +247,11 @@ promoted method.
 
 **Verification.** GMM, k-means and patch outputs are byte-identical to stored
 runs (fusion, v2 and record caches). All kept test files, package suites and
-the synthetic end-to-end pipeline pass. A fresh Viper run of the cleaned code
-is in progress (job 12028164, source `7c1b424`).
+the synthetic end-to-end pipeline pass. A fresh raw Viper run of the cleaned
+code with the new sbatch defaults (job 12028164, source `7c1b424`, COMPLETED
+in 1h29, MaxRSS 4.5 GB, 687 output hashes match) passes all label-free checks
+of `grade_consensus_run.jl`. It reproduces the promoted run byte for byte: final
+predictions, per-scan predictions, final counts and input hashes are identical
+to job 12025539 (772/88/865/93, 137/145 exact N, fusion π = 0.342, θ0 = 0.035,
+θ1 = 0.622). Later commits change only documentation, tests and five
+unread config keys.
