@@ -20957,4 +20957,15 @@ nine lost chains used a record 0.5 tie). Not a promotion: the saved record is
 not beaten on correct positions or exact chains.
 
 (pending: fresh final 12018916 from `b43b536`; registered-ROI dev 12019263
-and fresh final 12019264 from `1b6b5ed`)
+and fresh final 12019264 from `1b6b5ed`, all running on Viper when the SSH
+control connection expired at about 03:10 CEST; fetching needs a new
+interactive MPCDF login.)
+
+**Application-side observation (metadata only).** The lab 10–20mer tree
+holds 1,666 raw scans. For 23 of the 25 unknown25 molecules, 1–12 same-session
+scans lie within ±30 min and 5 nm of the frame centre (126 candidates in
+total, e.g. 12 for `260129_026`, 11 for `260215_020`); these are not in the
+25-file application. Registration would decide which are the same unchanged
+molecule. Molecule consensus could then stabilise counts on the unknown
+chains, but the driver currently requires the 6mer hybrid counting policy;
+the 10–20mer adaptive-support configuration is not yet supported.
