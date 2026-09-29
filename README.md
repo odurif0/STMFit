@@ -4,7 +4,35 @@ Analysis pipeline for STM images of molecular chains (chitosan on Cu(100) and
 similar systems). Detects and fits a chain-of-Gaussians model to count the
 number of monomer units (lobes) per chain from the images.
 
-**Latest September 25: width-conditioned counting is reproducibly negative.**
+**Promoted September 29: molecule-consensus reconstruction with latent-class fusion.**
+One fresh raw-to-prediction run of the frozen method (source **3c414a4**, Viper
+**12025539**, **1h30**, 688 output hashes verified, label-free inference and
+provenance checks passing) exceeds the saved record on every benchmark measure:
+
+| full145 own-N | Exact N | Correct /870 | Exact chains /145 | Classified /870 | Errors |
+|---|---:|---:|---:|---:|---:|
+| Saved record (hybrid counts) | 129 | 694 | 43 | 855 | 161 |
+| **Promoted method** | **137** | **772** | **88** | **865** | **93** |
+
+Counting is 145/145 within one lobe. The method: (1) per-scan GCV counting
+(`config/chitosan.toml`); (2) repeated-scan molecule consensus: consecutive
+scans registered in the absolute piezo frame, strict-majority count over ≥3
+scans, registered-ROI refit (`config/molecule_consensus.toml`); (3) per-scan
+assignment learned only on consensus-corroborated scans
+(`config/unit_assignment_corroborated_training.toml`); (4) binomial
+latent-class fusion of per-scan calls per physical lobe, with detection and
+false-call rates fitted by EM without labels. The posterior is the reported
+per-lobe uncertainty. Entry point: `test/run_molecule_consensus_chitosan.jl`
+(`hpc/run_molecule_consensus.sbatch`). **Limits:** the NKNNKN benchmark
+confounds GlcNAc with edge adjacency; exact chains come in molecule-sized
+blocks (43 of 88 from one 43-scan molecule; without it, 45 vs 29 for the record).
+Only repeatedly imaged molecules are fused. The counting parameters keep their
+historical benchmark-informed provenance. On the unknown 10–20mers, per-scan
+calls are inconsistent across repeat scans (fitted false-call rate 0.45), and
+long curved chains are undercounted, so those outputs are not chemically
+validated. See [journal](docs/src/journal.md).
+
+**Earlier September 25: width-conditioned counting is reproducibly negative.**
 Both fresh-fit repetitions give **42/145 exact N**, versus **101/145** for
 the matched exhaustive GCV control. Within-one agreement falls **133→105/145**;
 summed absolute count error rises **58→165**. Seven exact counts are gained,

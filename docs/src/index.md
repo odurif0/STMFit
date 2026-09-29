@@ -1,11 +1,14 @@
 # STMFit — STM Molecular Chain Fitting
 
 Automated pipeline for detecting and fitting 2D Gaussian chain models
-to STM images of molecular chains. Two fresh raw-to-prediction repetitions on
-September 24 agree: **123/145 exact counts** (143/145 within one lobe),
-**679/870 correct units, 29/145 exact chains, 848/870 coverage**. The saved-count
-129/145 and 694/43/855 results are not reproduced end to end. Historical
-677/36/854 is not surpassed overall; no new champion is promoted.
+to STM images of molecular chains. **Promoted September 29:** a fresh
+raw-to-prediction run of the molecule-consensus reconstruction with
+latent-class fusion (source 3c414a4) gives **137/145 exact counts** (145/145
+within one), **772/870 correct units, 88/145 exact chains, 865/870 classified,
+93 errors**, above the saved 694/43/855 record on every measure. See the
+[journal](journal.md) for the method, verification and limits (NKNNKN
+edge-adjacency confound, molecule-sized exact-chain blocks). The September 24
+raw reproduction of the previous pipeline gave 123/145 and 679/29/848.
 Inference reads no labels, but historical calibration used known-count grades;
 see [Calibration](calibration.md) for the provenance limit.
 

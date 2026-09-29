@@ -48,7 +48,22 @@ champion or application default: history retains one more exact chain and six
 more covered positions. See [journal](journal.md) and
 `results/observed_fit_20260924/conclusion.md`.
 
-Latest end-to-end September 24 result: two independent full146 raw-to-prediction runs give
+**Promoted September 29.** Run the frozen molecule-consensus method from raw data:
+
+```bash
+STMFIT_PROJECT_DIR=$PWD STMFIT_INPUT_DIR=/path/with/full146_raw_and_templates \
+STMFIT_OUTDIR=/new/output JULIA_BIN=$(which julia) \
+STMFIT_ASSIGNMENT_CONFIG=config/unit_assignment_corroborated_training.toml \
+  sbatch --time=04:00:00 hpc/run_molecule_consensus.sbatch
+```
+
+Verified result (source 3c414a4, job 12025539): **137/145 exact N, 772/870
+correct, 88/145 exact chains, 865/870 classified, 93 errors**; the saved
+record is 129/694/43/855/161. Final labels are in `predictions.tsv` (with
+`scan_predicted` per scan and the fused posterior as `probability_1`),
+counting provenance in `consensus/`, fusion parameters in `fusion/`.
+
+Previous end-to-end September 24 result: two independent full146 raw-to-prediction runs give
 **679/870 correct, 29/145 exact chains, 848/870 coverage**, with **123/145 exact
 counts** (143/145 within one). Their N vectors and final prediction files are
 identical; slight timed-fit geometry differences remain. The saved-count

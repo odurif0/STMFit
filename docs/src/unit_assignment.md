@@ -1,5 +1,7 @@
 # Unit Assignment (GlcNAc/GlcN per lobe)
 
+**2026-09-29 promoted:** 772/88/865 fresh; see [runbook](chitosan_runbook.md).
+
 ## Saved promoted counts and recognition (2026-09-24)
 
 Raw repetitions and fixed-N diagnostics **do not justify champion promotion**:

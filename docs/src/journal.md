@@ -2305,24 +2305,15 @@ See `docs/src/selection.md` for the full guard specification and
 ## Open Questions
 
 0bv. **Can a label-free method exceed the saved 694/43/855 record on every metric?**
-**Open; best verified configuration exceeds it on counting, correct and
-coverage, ties errors, but not exact chains (2026-09-29).** Repeated-scan
-molecule consensus counting plus corroborated cohort learning, run fresh from
-raw (`9edcce4`, job 12023870): 137/145 exact N (145/145 within one),
-702/870 correct, 33/145 exact chains, 863/870 classified, 161 errors, 2
-abstentions. The record's exact chains depend on zero-confidence 0.5 ties
-(24 of 43) and on its specific cohort (seed-invariant 43 on its cache,
-seed-invariant 30 on the consensus cache). No label-free boundary rule was
-found that recovers them without benchmark tuning. A supervised
-leave-one-molecule-out ceiling on the same features reaches only 33–43 exact
-chains (45 with an oracle threshold), so the target is at the information
-limit of the current images.
-Open sub-questions: (i) a control molecule with a non-palindromic or
-homo-oligomer sequence, to separate acetyl detection from the edge-adjacency
-confound of NKNNKN; (ii) a curved-centerline support model for long
-10–20mers, whose straight-tube axial support truncates curved chains
-(`251206_013`: 4 lobes fresh vs 11 production vs 12 manual). Whole-ROI support
-fixes that chain but shrinks others, so it is not adopted.
+**RESOLVED for the benchmark (2026-09-29).** The fresh raw run of the promoted
+molecule-consensus method (`3c414a4`, job 12025539) gives 137/145 exact N,
+772/870 correct, 88/145 exact chains, 865/870 classified and 93 errors. Open
+successors: (i) a control molecule with a non-palindromic or homo-oligomer
+sequence, to separate acetyl detection from the NKNNKN edge-adjacency confound;
+(ii) a curved-centerline support model for long 10–20mers (`251206_013`: 4
+lobes fresh vs 12 manual); (iii) per-scan assignment on long chains whose calls
+are consistent across repeat scans (fusion fit θ0=0.45 there), before any
+unknown-chain chemical claim.
 
 0bu. **Can CG provide the missing fixed-density tolerance comparison?**
 **Prepared and tested; awaiting SSH access, no job or result yet.** In response to the explicit
@@ -21132,6 +21123,46 @@ are therefore not interpretable, and 22 target calls change. The fitted
 fit (θ0=0.034) passes it; the long-chain application does not. No gate is
 added to the frozen benchmark configuration; the application needs better
 long-chain counting and per-scan assignment first.
+
+### Fresh verification and promotion (job 12025539, source `3c414a4`)
+
+The complete frozen method ran once from raw on Viper: GCV counting
+(`chitosan.toml`), molecule consensus with registered-ROI refits and
+latent-class fusion (`molecule_consensus.toml`), and corroborated assignment
+(`unit_assignment_corroborated_training.toml`). It was COMPLETED in 1h30 (MaxRSS
+4.7 GB), and all 688 output hashes match Viper. The pre-grade verifier passes
+against `3c414a4`: cohort, per-stage counts, consensus provenance, 146 raw and
+4 input hashes, and fusion integrity (final predictions equal the fusion output,
+per-scan calls retained, unfused rows unchanged). Fusion fit: π=0.342,
+θ0=0.035, θ1=0.622 (24 iterations), 79 physical lobes, 651 rows, 99 calls
+changed. Official `report_unit_assignment_benchmark.jl --full145-own-n`:
+
+| Profile | Exact N | Correct /870 | Exact chains | Classified /870 | Errors | Abstentions |
+|---|---:|---:|---:|---:|---:|---:|
+| Historical reference | 106 | 677 | 36 | 854 | 177 | 16 |
+| Saved record | 129 | 694 | 43 | 855 | 161 | 2 |
+| Fresh control (09-24) | 123 | 679 | 29 | 848 | 169 | 2 |
+| This run, per-scan calls | 137 | 703 | 33 | 863 | 160 | 3 |
+| **This run, final (fused)** | **137** | **772** | **88** | **865** | **93** | **0** |
+
+Counting: 137/145 exact, 145/145 within one (5 short, 3 extra lobes; the
+5 missing positions are the only unclassified ones). Against the record: 62
+scans gain, 21 lose, 62 tie; 51 exact chains gained, 6 lost. Without the
+43-scan molecule, the method has 514 correct / 45 exact over 102 scans versus
+485 / 29 for the record. Molecules fully exact: 13/41 versus 9/41. The
+independent fresh run 12023870 plus the same fusion gives the identical
+772/88/865/93.
+
+**Decision: promote** `molecule consensus + corroborated assignment +
+latent-class fusion` as the new label-free development-benchmark reference.
+It exceeds the record on correct, exact chains, classified positions, counting
+and errors, with no measure regressing. Limits carried with the promotion:
+(1) the NKNNKN edge-adjacency confound is amplified, not removed, so benchmark
+accuracy is not chemical validation; (2) exact chains are molecule-sized
+blocks; (3) counting parameters keep their historical benchmark-informed
+provenance; (4) on the unknown 10–20mers the fusion fit is uninformative
+(θ0=0.45) and long curved chains are undercounted, so no chemical claim is made
+there. Headlines are updated in README, index, runbook and unit assignment.
 
 **Hierarchical chain mixture prototype: rejected.** A two-class mixture with
 a per-chain random intercept (exact enumeration of chain configurations, PCA-
