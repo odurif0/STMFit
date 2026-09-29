@@ -7,7 +7,10 @@ run by `test/run_molecule_consensus_chitosan.jl` between per-scan GCV counting
 and the unchanged assignment runner. `[model]`: registration window
 `window_half_nm=3.0` around the earlier scan's chain, resampling
 `grid_step_nm=0.04`, high-pass `highpass_sigma_nm=0.32`, drift search
-`max_shift_nm=1.6` with `coarse_step_px=4`. `[selection]`: link when
+`max_shift_nm=1.6` with `coarse_step_px=4`; `roi_margin_nm=1.2` pads the
+registered footprint box used when a consensus refit fails on the scan's own
+ROI (`refit_support="registered_roi"` in the summary; the extractor crops the
+image to that box and shifts coordinates back). `[selection]`: link when
 `ncc_min=0.5` over at least `min_overlap_px=500` grid points and centroids
 within `max_center_distance_nm=6.0`; a consensus needs `min_track_scans=3` and
 `majority="strict"`; a count changes only if every registered reference lobe is

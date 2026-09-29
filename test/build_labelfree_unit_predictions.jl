@@ -31,6 +31,7 @@ struct Options
     n_seeds::Int
     interactions::Bool
     training_groups::String
+    seed_aggregation::String
 end
 
 mutable struct LobeRecord
@@ -60,6 +61,7 @@ function _parse_cli(args)
     n_seeds = 20
     interactions = false
     training_groups = ""
+    seed_aggregation = "vote"
 
     i = 1
     while i <= length(args)
@@ -96,6 +98,8 @@ function _parse_cli(args)
             interactions = true; i += 1
         elseif arg == "--training-groups"
             training_groups = _arg_value(args, i, arg); i += 2
+        elseif arg == "--seed-aggregation"
+            seed_aggregation = _arg_value(args, i, arg); i += 2
         elseif arg in ("-h", "--help")
             println("""
             Usage: julia --project=. test/build_labelfree_unit_predictions.jl [options]
@@ -115,6 +119,9 @@ function _parse_cli(args)
               --training-groups PATH Optional file/group TSV (label-free repeated-scan
                                      molecule tracks). Each group gets equal total
                                      k-means weight; all rows are still assigned.
+              --seed-aggregation M   vote (default: average the seeds' labels) or
+                                     best_cost (keep the lowest within-cluster cost
+                                     restart per view, standard k-means practice).
 
             Output columns: file, lobe, predicted, confidence, amplitude,
             probability_1, views_used, invalid_reason.
@@ -134,8 +141,9 @@ function _parse_cli(args)
     !isempty(split_features) && !isfile(split_features) && error("Split feature TSV not found: $split_features")
     !isempty(patches) && !isfile(patches) && error("Patch TSV not found: $patches")
     !isempty(training_groups) && !isfile(training_groups) && error("Training-group TSV not found: $training_groups")
+    seed_aggregation in ("vote", "best_cost") || error("--seed-aggregation must be vote or best_cost")
     return Options(features, split_features, patches, out_tsv, view_specs,
-                   first_seed, n_seeds, interactions, training_groups)
+                   first_seed, n_seeds, interactions, training_groups, seed_aggregation)
 end
 
 function _arg_value(args, i::Int, flag::String)
@@ -391,6 +399,7 @@ function _view_probability(records::Vector{LobeRecord}, features::Vector{String}
     data = permutedims(X[idxs, :])
     w = group_weights(records, idxs, opt.training_groups)
 
+    best = (Inf, Float64[])
     for seed in opt.first_seed:(opt.first_seed + opt.n_seeds - 1)
         km = w === nothing ? kmeans(data, 2; maxiter=200, rng=MersenneTwister(seed), display=:none) :
             kmeans(data, 2; weights=w, maxiter=200, rng=MersenneTwister(seed), display=:none)
@@ -407,10 +416,19 @@ function _view_probability(records::Vector{LobeRecord}, features::Vector{String}
             (seed=seed, centers=copy(km.centers), high_cluster=high_cluster,
              indices=copy(idxs), assignments=copy(km.assignments), converged=km.converged))
         high_cluster == 0 && continue
+        if opt.seed_aggregation == "best_cost"
+            km.totalcost < best[1] && (best = (km.totalcost, [km.assignments[j] == high_cluster ? 1.0 : 0.0 for j in eachindex(idxs)]))
+            continue
+        end
         for (j, i) in enumerate(idxs)
             label = km.assignments[j] == high_cluster ? 1.0 : 0.0
             votes[i] += label
             counts[i] += 1
+        end
+    end
+    if opt.seed_aggregation == "best_cost" && isfinite(best[1])
+        for (j, i) in enumerate(idxs)
+            votes[i] = best[2][j]; counts[i] = 1
         end
     end
 

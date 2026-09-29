@@ -3,7 +3,7 @@
 ## Molecule-consensus settings are declared, not tuned (2026-09-29)
 
 The consensus stage adds no fitted physical parameter and never reads a
-benchmark count. `grid_step_nm`, `highpass_sigma_nm` and `frame_margin_nm`
+benchmark count. `grid_step_nm`, `highpass_sigma_nm`, `frame_margin_nm` and `roi_margin_nm`
 follow the chitosan lobe scale (about 0.6 nm spacing). `max_shift_nm` and
 `max_center_distance_nm` bound thermal drift between consecutive scans.
 `ncc_min=0.5` separates unrelated structure (correlation near zero) from an

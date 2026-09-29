@@ -4,7 +4,7 @@ using Test, Dates, Random, Statistics, TOML
 include(joinpath(@__DIR__, "..", "lib", "molecule_consensus.jl"))
 using .MoleculeConsensus
 
-const ST = MoleculeConsensus.ConsensusSettings(3.0, 0.04, 0.32, 1.6, 4, 500, 0.5, 6.0, 3, 0.3, "plane+rows", "Z")
+const ST = MoleculeConsensus.ConsensusSettings(3.0, 0.04, 0.32, 1.6, 4, 500, 0.5, 6.0, 3, 0.3, "plane+rows", "Z", 1.2)
 
 frame(name; t=0, off=(10.0, -5.0), ext=(6.0, 6.0), ang=0.0, px=256, session="17.08.2024") =
     ScanFrame(name, DateTime(2024, 8, 17, 12, 0, 0) + Minute(t), session, off, ext, ang, px, px)
@@ -102,7 +102,7 @@ end
 
 @testset "settings validation" begin
     cfg = Dict("model" => Dict("window_half_nm" => 3.0, "grid_step_nm" => 0.04, "highpass_sigma_nm" => 0.32,
-                               "max_shift_nm" => 1.6, "coarse_step_px" => 4),
+                               "max_shift_nm" => 1.6, "coarse_step_px" => 4, "roi_margin_nm" => 1.2),
                "selection" => Dict("ncc_min" => 0.5, "min_overlap_px" => 500, "max_center_distance_nm" => 6.0,
                                    "min_track_scans" => 3, "majority" => "strict", "frame_margin_nm" => 0.3),
                "preprocessing" => Dict("channel" => "Z", "flatten" => "plane+rows"))
@@ -131,7 +131,7 @@ end
         fake(out, name, script, args; threads=1) = begin
             push!(calls, args)
             outpath = args[findfirst(==("--out"), args) + 1]
-            open(outpath, "w") do io  # only a.sxm fits at the consensus count
+            open(outpath, "w") do io  # only a.sxm fits at the consensus count, on either support
                 println(io, "file\tlobe"); for k in 1:6; println(io, "a.sxm\t$k"); end
             end
         end
@@ -141,6 +141,25 @@ end
         @test byfile["a.sxm"]["N_selected"] == "6" && byfile["a.sxm"]["count_rule"] == "consensus_applied"
         @test byfile["b.sxm"]["N_selected"] == "3" && byfile["b.sxm"]["count_rule"] == "consensus_fit_failed"
         @test byfile["c.sxm"]["N_selected"] == "6" && byfile["c.sxm"]["count_rule"] == "agrees"
-        @test length(calls) == 1 && calls[1][findfirst(==("--files"), calls[1]) + 1] == "a.sxm,b.sxm"
+        @test byfile["b.sxm"]["refit_support"] == "scan"
+        @test length(calls) == 2 && calls[1][findfirst(==("--files"), calls[1]) + 1] == "a.sxm,b.sxm"
+        @test calls[2][findfirst(==("--files"), calls[2]) + 1] == "b.sxm"
+        _, retry = MCRun.MoleculeConsensusRun.read_table(joinpath(dir, "consensus_summary_registered_roi.tsv"))
+        @test only(r for r in retry if r["filepath"] == "b.sxm")["refit_support"] == "registered_roi"
+        # a registered-support success keeps the consensus count
+        calls2 = Vector{Vector{String}}()
+        succeed(out, name, script, args; threads=1) = begin
+            push!(calls2, args); outpath = args[findfirst(==("--out"), args) + 1]
+            files = split(args[findfirst(==("--files"), args) + 1], ",")
+            open(outpath, "w") do io
+                println(io, "file\tlobe")
+                for f in files; (name == "consensus_refit_check" && f == "b.sxm") && continue; for k in 1:6; println(io, "$f\t$k"); end; end
+            end
+        end
+        dir2 = mkpath(joinpath(dir, "second")); proposed2 = joinpath(dir2, "consensus_summary.tsv"); cp(proposed, proposed2)
+        final2 = MCRun.MoleculeConsensusRun.check_consensus_refits(dir2, dir2, "count.toml", proposed2, succeed)
+        _, rows2 = MCRun.MoleculeConsensusRun.read_table(final2)
+        b2 = only(r for r in rows2 if r["filepath"] == "b.sxm")
+        @test b2["N_selected"] == "6" && b2["count_rule"] == "consensus_registered_roi" && b2["refit_support"] == "registered_roi"
     end
 end

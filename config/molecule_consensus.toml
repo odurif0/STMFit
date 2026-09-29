@@ -12,6 +12,10 @@ highpass_sigma_nm = 0.32
 # Largest admitted drift between two consecutive scans.
 max_shift_nm = 1.6
 coarse_step_px = 4
+# Registered support for a consensus refit that fails on the scan's own ROI:
+# crop to the registered reference footprint plus this margin (about two lobe
+# spacings of background for the unchanged ROI detection and flattening).
+roi_margin_nm = 1.2
 
 [selection]
 # Normalized cross-correlation threshold: independent structures correlate

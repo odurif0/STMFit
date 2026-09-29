@@ -63,28 +63,47 @@ end
 
 """
 A consensus count is kept only if the unchanged fixed-N fitter can fit that
-scan at it; otherwise the scan keeps its own GCV count (`consensus_fit_failed`).
+scan at it: first on the scan's own support, then once on the registered
+molecule region (`registered_roi`, rule `consensus_registered_roi`).
+Otherwise the scan keeps its own GCV count (`consensus_fit_failed`).
 Only changed scans are refit here; no label or grade is involved.
 """
 function check_consensus_refits(out, raw, count_config, proposed, runner)
     header, rows = read_table(proposed)
-    changed = [basename(r["filepath"]) for r in rows if r["N_selected"] != r["N_scan"]]
-    final = joinpath(dirname(proposed), "consensus_summary_final.tsv")
-    ok = Dict{String,Int}()
-    if !isempty(changed)
-        check = joinpath(dirname(proposed), "consensus_refit_check.tsv")
-        runner(out, "consensus_refit_check", "extract_lobe_features.jl", ["--config", count_config,
-            "--data-dir", raw, "--selected-summary", proposed, "--files", join(sort(changed), ","),
-            "--out", check]; threads=1)
-        _, fitted = read_table(check)
-        for r in fitted; ok[r["file"]] = get(ok, r["file"], 0) + 1; end
+    if !("refit_support" in header)
+        push!(header, "refit_support"); for r in rows; r["refit_support"] = "scan"; end
     end
-    for r in rows
-        f = basename(r["filepath"])
-        if r["N_selected"] != r["N_scan"] && get(ok, f, 0) != parse(Int, r["N_selected"])
-            r["N_selected"] = r["N_scan"]; r["count_rule"] = "consensus_fit_failed"
+    dir = dirname(proposed)
+    target(r) = parse(Int, r["N_selected"])
+    function refit(files, summary, name)
+        fitted = Dict{String,Int}()
+        isempty(files) && return fitted
+        check = joinpath(dir, name * ".tsv")
+        runner(out, name, "extract_lobe_features.jl", ["--config", count_config, "--data-dir", raw,
+            "--selected-summary", summary, "--files", join(sort(files), ","), "--out", check]; threads=1)
+        _, fr = read_table(check)
+        for r in fr; fitted[r["file"]] = get(fitted, r["file"], 0) + 1; end
+        return fitted
+    end
+    byfile = Dict(basename(r["filepath"]) => r for r in rows)
+    changed = [f for (f, r) in byfile if r["N_selected"] != r["N_scan"]]
+    ok = refit(changed, proposed, "consensus_refit_check")
+    failed = [f for f in changed if get(ok, f, 0) != target(byfile[f])]
+    if !isempty(failed)
+        for f in failed; byfile[f]["refit_support"] = "registered_roi"; end
+        retry = joinpath(dir, "consensus_summary_registered_roi.tsv")
+        write_table(retry, header, rows)
+        ok2 = refit(failed, retry, "consensus_refit_registered_roi")
+        for f in failed
+            r = byfile[f]
+            if get(ok2, f, 0) == target(r)
+                r["count_rule"] = "consensus_registered_roi"
+            else
+                r["N_selected"] = r["N_scan"]; r["count_rule"] = "consensus_fit_failed"; r["refit_support"] = "scan"
+            end
         end
     end
+    final = joinpath(dir, "consensus_summary_final.tsv")
     write_table(final, header, rows)
     return final
 end

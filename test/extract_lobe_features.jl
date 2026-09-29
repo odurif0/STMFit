@@ -38,6 +38,7 @@ using GaussianFit2D: ChainSweepConfig, ChainModelResult
 using Printf
 using TOML
 using Dates
+using STMSXMIO: SXMImage, SXMChannel
 
 const DEFAULT_DATA_DIR = get(ENV, "STMFIT_DATA_DIR", "")
 const DEFAULT_CONFIG = "config/chitosan.toml"
@@ -166,8 +167,32 @@ function _selected_uses_rescue(row, selection_policy)
     return false # Legacy nonadaptive filepath/N_selected summaries.
 end
 
+# Optional registered support for repeated-scan consensus refits: the image is
+# cropped to an image-coordinate box (nm) around the molecule located by
+# absolute-frame registration; the unchanged fixed-N fitter then runs on it.
+function _selected_roi(row::AbstractDict, file::AbstractString)
+    mode = get(row, "refit_support", "scan")
+    mode in ("", "scan") && return nothing
+    mode == "registered_roi" || error("Unknown refit_support $(repr(mode)) for $file")
+    box = [tryparse(Float64, get(row, k, "")) for k in ("roi_x0_nm", "roi_y0_nm", "roi_x1_nm", "roi_y1_nm")]
+    all(v -> v !== nothing && isfinite(v), box) && box[1] < box[3] && box[2] < box[4] ||
+        error("Invalid registered ROI for $file")
+    return (box[1], box[2], box[3], box[4])
+end
+
+function _crop_image(img, roi)
+    sx = img.range_nm[1] / (img.width - 1); sy = img.range_nm[2] / (img.height - 1)
+    c0 = clamp(floor(Int, roi[1] / sx) + 1, 1, img.width); c1 = clamp(ceil(Int, roi[3] / sx) + 1, 1, img.width)
+    r0 = clamp(floor(Int, roi[2] / sy) + 1, 1, img.height); r1 = clamp(ceil(Int, roi[4] / sy) + 1, 1, img.height)
+    c1 - c0 >= 8 && r1 - r0 >= 8 || error("Registered ROI is too small after clipping")
+    chans = [SXMChannel(c.name, c.unit, c.direction, c.data[r0:r1, c0:c1]) for c in img.channels]
+    cropped = SXMImage(img.filepath, img.header, c1 - c0 + 1, r1 - r0 + 1,
+                       ((c1 - c0) * sx, (r1 - r0) * sy), img.offset_nm, chans)
+    return cropped, (c0 - 1) * sx, (r0 - 1) * sy
+end
+
 function _read_selected_context(path::String; selection_policy::AbstractString="")
-    selected = Dict{String,NamedTuple{(:n, :use_rescue),Tuple{Int,Bool}}}()
+    selected = Dict{String,NamedTuple{(:n, :use_rescue, :roi),Tuple{Int,Bool,Union{Nothing,NTuple{4,Float64}}}}}()
     isempty(path) && return selected
     isfile(path) || error("Selected summary not found: $path")
     lines = readlines(path)
@@ -187,7 +212,7 @@ function _read_selected_context(path::String; selection_policy::AbstractString="
         n = tryparse(Int, row["N_selected"])
         n !== nothing && n > 0 || error("Invalid N_selected for $file: $(row["N_selected"])")
         get(row, "status", "ok") == "ok" || error("Unsuccessful counting row for $file")
-        selected[file] = (n=n, use_rescue=_selected_uses_rescue(row, selection_policy))
+        selected[file] = (n=n, use_rescue=_selected_uses_rescue(row, selection_policy), roi=_selected_roi(row, file))
     end
     isempty(selected) && error("No selected counts in summary: $path")
     return selected
@@ -400,6 +425,9 @@ function main()
 
             try
                 img = read_sxm(fp)
+                roi = haskey(selected_contexts, fn) ? selected_contexts[fn].roi : nothing
+                xoff, yoff = 0.0, 0.0
+                roi === nothing || ((img, xoff, yoff) = _crop_image(img, roi))
                 pcfg, ccfg, ccfg_circ = _configs(model, preproc, dirname(out_tsv);
                     selected_context=get(selected_contexts, fn, nothing))
                 pcfg.filepath = fp
@@ -437,8 +465,8 @@ function main()
                     println(io, join([
                         fn, string(best_r.n), string(k),
                         @sprintf("%.8e", feats[k].amplitude),
-                        @sprintf("%.6f", feats[k].x_nm),
-                        @sprintf("%.6f", feats[k].y_nm),
+                        @sprintf("%.6f", feats[k].x_nm + xoff),
+                        @sprintf("%.6f", feats[k].y_nm + yoff),
                         @sprintf("%.6f", ts[k]),
                         @sprintf("%.6f", us[k]),
                         @sprintf("%.6f", spars[k]),
@@ -447,7 +475,7 @@ function main()
                         @sprintf("%.6f", feats[k].amplitude / max(amax, 1e-30)),
                         @sprintf("%.6f", feats[k].skew_ratio),
                         @sprintf("%.8f", ax), @sprintf("%.8f", ay),
-                        @sprintf("%.6f", ox), @sprintf("%.6f", oy),
+                        @sprintf("%.6f", ox + xoff), @sprintf("%.6f", oy + yoff),
                         @sprintf("%.8e", b0),
                         @sprintf("%.8e", tilt_x),
                         @sprintf("%.8e", tilt_y),

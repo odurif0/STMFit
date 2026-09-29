@@ -87,14 +87,18 @@ function build_consensus(o)
     write_table(joinpath(out, "pairs.tsv"),
         ["a", "b", "center_distance_nm", "ncc", "tx_nm", "ty_nm", "linked", "reason"],
         [Dict(string(k) => fmt(v) for (k, v) in pairs(p)) for p in links])
-    cols = ["file", "track", "track_size", "N_scan", "N_consensus", "agreement", "N_final", "reference_scan", "rule"]
+    cols = ["file", "track", "track_size", "N_scan", "N_consensus", "agreement", "N_final", "reference_scan", "rule",
+            "roi_x0_nm", "roi_y0_nm", "roi_x1_nm", "roi_y1_nm"]
     write_table(joinpath(out, "consensus.tsv"), cols, [Dict(k => fmt(r[k]) for k in cols) for r in rows])
     write_table(joinpath(out, "consensus_summary.tsv"),
-        ["filepath", "status", "N_selected", "N_scan", "track", "track_size", "count_agreement", "count_rule"],
+        ["filepath", "status", "N_selected", "N_scan", "track", "track_size", "count_agreement", "count_rule",
+         "refit_support", "roi_x0_nm", "roi_y0_nm", "roi_x1_nm", "roi_y1_nm"],
         [Dict("filepath" => r["file"], "status" => "ok", "N_selected" => string(r["N_final"]),
               "N_scan" => string(r["N_scan"]), "track" => string(r["track"]),
               "track_size" => string(r["track_size"]), "count_agreement" => fmt(r["agreement"]),
-              "count_rule" => r["rule"]) for r in sort(rows; by=r -> r["file"])])
+              "count_rule" => r["rule"], "refit_support" => "scan",
+              "roi_x0_nm" => fmt(r["roi_x0_nm"]), "roi_y0_nm" => fmt(r["roi_y0_nm"]),
+              "roi_x1_nm" => fmt(r["roi_x1_nm"]), "roi_y1_nm" => fmt(r["roi_y1_nm"])) for r in sort(rows; by=r -> r["file"])])
     changed = count(r -> r["N_final"] != r["N_scan"], rows)
     println("Molecule consensus: $(length(rows)) scans, $(length(unique(r["track"] for r in rows))) tracks, $changed counts changed")
     return joinpath(out, "consensus_summary.tsv")

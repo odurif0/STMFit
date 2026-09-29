@@ -72,6 +72,7 @@ struct ConsensusSettings
     frame_margin_nm::Float64
     flatten::String
     channel::String
+    roi_margin_nm::Float64
 end
 
 function load_consensus_settings(cfg::AbstractDict)
@@ -80,11 +81,12 @@ function load_consensus_settings(cfg::AbstractDict)
     out = ConsensusSettings(Float64(m["window_half_nm"]), Float64(m["grid_step_nm"]),
         Float64(m["highpass_sigma_nm"]), Float64(m["max_shift_nm"]), Int(m["coarse_step_px"]),
         Int(s["min_overlap_px"]), Float64(s["ncc_min"]), Float64(s["max_center_distance_nm"]),
-        Int(s["min_track_scans"]), Float64(s["frame_margin_nm"]), String(p["flatten"]), String(p["channel"]))
+        Int(s["min_track_scans"]), Float64(s["frame_margin_nm"]), String(p["flatten"]), String(p["channel"]),
+        Float64(m["roi_margin_nm"]))
     out.window_half_nm > 0 && out.grid_step_nm > 0 && out.highpass_sigma_nm > 0 &&
         out.max_shift_nm > 0 && out.coarse_step_px >= 1 && out.min_overlap_px > 0 &&
         -1 < out.ncc_min < 1 && out.max_center_distance_nm > 0 && out.min_track_scans >= 2 &&
-        out.frame_margin_nm >= 0 || error("Invalid molecule-consensus settings")
+        out.frame_margin_nm >= 0 && out.roi_margin_nm > 0 || error("Invalid molecule-consensus settings")
     return out
 end
 
@@ -248,7 +250,8 @@ function consensus_counts(order, pairs, counts, lobes_abs, frames, st::Consensus
         nstar = n >= st.min_track_scans && length(winners) == 1 && top > n / 2 ? only(winners) : 0
         row = Dict{String,Any}("file" => f, "track" => track[f], "track_size" => n,
             "N_scan" => counts[f], "N_consensus" => nstar, "agreement" => top / n,
-            "N_final" => counts[f], "reference_scan" => "", "rule" => "")
+            "N_final" => counts[f], "reference_scan" => "", "rule" => "",
+            "roi_x0_nm" => NaN, "roi_y0_nm" => NaN, "roi_x1_nm" => NaN, "roi_y1_nm" => NaN)
         if n < st.min_track_scans
             row["rule"] = "track_too_short"
         elseif nstar == 0
@@ -263,10 +266,11 @@ function consensus_counts(order, pairs, counts, lobes_abs, frames, st::Consensus
                 p = link[(order[k], order[k+1])]; t = (t[1] + sgn * p.tx_nm, t[2] + sgn * p.ty_nm)
             end
             fr = frames[f]; m = st.frame_margin_nm
-            inside = all(lobes_abs[ref]) do P
-                x, y = image_xy(fr, P[1] + t[1], P[2] + t[2])
-                m <= x <= fr.extent[1] - m && m <= y <= fr.extent[2] - m
-            end
+            pts = [image_xy(fr, P[1] + t[1], P[2] + t[2]) for P in lobes_abs[ref]]
+            inside = all(p -> m <= p[1] <= fr.extent[1] - m && m <= p[2] <= fr.extent[2] - m, pts)
+            r = st.roi_margin_nm
+            row["roi_x0_nm"] = max(0.0, minimum(first.(pts)) - r); row["roi_x1_nm"] = min(fr.extent[1], maximum(first.(pts)) + r)
+            row["roi_y0_nm"] = max(0.0, minimum(last.(pts)) - r); row["roi_y1_nm"] = min(fr.extent[2], maximum(last.(pts)) + r)
             row["reference_scan"] = ref
             if inside
                 row["N_final"] = nstar; row["rule"] = "consensus_applied"
