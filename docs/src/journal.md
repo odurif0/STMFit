@@ -2313,7 +2313,10 @@ raw (`9edcce4`, job 12023870): 137/145 exact N (145/145 within one),
 abstentions. The record's exact chains depend on zero-confidence 0.5 ties
 (24 of 43) and on its specific cohort (seed-invariant 43 on its cache,
 seed-invariant 30 on the consensus cache). No label-free boundary rule was
-found that recovers them without benchmark tuning.
+found that recovers them without benchmark tuning. A supervised
+leave-one-molecule-out ceiling on the same features reaches only 33–43 exact
+chains (45 with an oracle threshold), so the target is at the information
+limit of the current images.
 Open sub-questions: (i) a control molecule with a non-palindromic or
 homo-oligomer sequence, to separate acetyl detection from the edge-adjacency
 confound of NKNNKN; (ii) a curved-centerline support model for long
@@ -21038,6 +21041,27 @@ the record: 21 scans gain, 16 lose; exact chains +1/−11. **Not promoted**:
 exact chains remain 10 below the record (errors equal). This is the best
 verified label-free configuration of this session on correct, coverage,
 counting and errors.
+
+**Supervised ceiling (diagnostic; labels used only here, never by the method).**
+On the same fresh consensus cache (137 N=6 chains), classifiers trained with
+the true labels and evaluated leave-one-molecule-out (whole consensus tracks
+held out, so repeat scans do not leak):
+
+| Supervised model | Features | Exact chains /137 at p≥0.5 | With oracle threshold | Per-lobe accuracy |
+|---|---|---:|---:|---:|
+| Logistic, C=0.01–10 | BASE4 | 33–41 | 43–45 | 0.80 |
+| Logistic, C=0.01–10 | GMM view (BASE4, descriptor, molds, Fisher) | 36–43 | 41–43 | 0.81–0.82 |
+| Logistic | GMM view + 5–20 PCA components of fwd/bwd 17×17 residual patches | 24–37 | 30–41 | 0.77–0.80 |
+| Gradient boosting (depth 2–3) | GMM view or 17 numeric features | 30–37 | 33–39 | 0.77–0.79 |
+
+Raw patches and non-linear models do not add generalizable information. With
+true labels, current features reach at most about 43 exact chains on these
+137 chains, and 45 only with a threshold chosen from the answers. The label-free
+result (33 exact, 81.3% classified accuracy) is at the supervised per-lobe
+ceiling. Exceeding 43 exact chains label-free would mean beating supervised
+learning on the same information. This requires new information (a control
+sequence, other imaging conditions or more views), not another classifier
+variant.
 
 **Molecule fusion trade-off (diagnostic, not adopted).** With the consensus
 tracks' clean lobe mapping (same-N scans, absolute projection order), a
