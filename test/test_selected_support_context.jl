@@ -55,13 +55,13 @@ changed_fields(a, b) = Set(name for name in fieldnames(typeof(a)) if !isequal(ge
         contexts = mode_contexts(dir)
         @test Set(keys(contexts)) == Set("scan_$i.sxm" for i in eachindex(SUPPORT_MODES))
         for (i, mode) in enumerate(SUPPORT_MODES)
-            @test contexts["scan_$i.sxm"] === (n=9, use_rescue=mode.use_rescue)
+            @test contexts["scan_$i.sxm"] == (n=9, use_rescue=mode.use_rescue, roi=nothing)
         end
 
         # Legacy nonadaptive summaries still need only these two columns.
         path = write_summary(dir, ["N_selected", "filepath"],
             [["5", "/synthetic/alpha.sxm"], ["11", "beta.sxm"]])
-        expected = Dict("alpha.sxm" => (n=5, use_rescue=false), "beta.sxm" => (n=11, use_rescue=false))
+        expected = Dict("alpha.sxm" => (n=5, use_rescue=false, roi=nothing), "beta.sxm" => (n=11, use_rescue=false, roi=nothing))
         @test Extractor._read_selected_context(path) == expected
         @test Extractor._read_selected_context(path; selection_policy="gcv") == expected
 
@@ -70,17 +70,17 @@ changed_fields(a, b) = Set(name for name in fieldnames(typeof(a)) if !isequal(ge
         for mode in SUPPORT_MODES
             path = write_summary(dir, ["filepath", "N_selected", "refined_policy"],
                 [["alpha.sxm", "7", mode.policy]])
-            @test Extractor._read_selected_context(path)["alpha.sxm"] === (n=7, use_rescue=mode.use_rescue)
+            @test Extractor._read_selected_context(path)["alpha.sxm"] == (n=7, use_rescue=mode.use_rescue, roi=nothing)
         end
         for policy in ("gcv", "gcv_with_robust_aicc_guard", "support_midpoint_hybrid")
             path = write_summary(dir, ["filepath", "N_selected", "selection_policy", "refined_policy"],
                 [["alpha.sxm", "7", policy, "overfit_guard_down_only"]])
-            @test Extractor._read_selected_context(path; selection_policy=policy)["alpha.sxm"] === (n=7, use_rescue=false)
+            @test Extractor._read_selected_context(path; selection_policy=policy)["alpha.sxm"] == (n=7, use_rescue=false, roi=nothing)
         end
         for mode in filter(m -> !m.use_rescue, SUPPORT_MODES)
             path = write_summary(dir, ["filepath", "N_selected", "refined_policy", "selection_source"],
                 [["alpha.sxm", "7", mode.policy, ADAPTIVE_POLICY]])
-            @test Extractor._read_selected_context(path)["alpha.sxm"] === (n=7, use_rescue=false)
+            @test Extractor._read_selected_context(path)["alpha.sxm"] == (n=7, use_rescue=false, roi=nothing)
         end
     end
 end
@@ -358,6 +358,21 @@ end
             @test occursin(case.error, diagnostic)
             @test !ispath(output)
             @test !ispath(dirname(output))
+        end
+    end
+end
+
+@testset "registered ROI refit support parsing" begin
+    mktempdir() do dir
+        cols = ["filepath", "N_selected", "refit_support", "roi_x0_nm", "roi_y0_nm", "roi_x1_nm", "roi_y1_nm"]
+        path = write_summary(dir, cols, [["alpha.sxm", "6", "registered_roi", "0.5", "0.0", "3.4", "5.0"]])
+        @test Extractor._read_selected_context(path)["alpha.sxm"] == (n=6, use_rescue=false, roi=(0.5, 0.0, 3.4, 5.0))
+        path = write_summary(dir, cols, [["alpha.sxm", "6", "scan", "NaN", "NaN", "NaN", "NaN"]])
+        @test Extractor._read_selected_context(path)["alpha.sxm"].roi === nothing
+        for bad in (["alpha.sxm", "6", "registered_roi", "NaN", "0", "1", "1"], ["alpha.sxm", "6", "registered_roi", "2", "0", "1", "1"],
+                    ["alpha.sxm", "6", "elsewhere", "0", "0", "1", "1"])
+            path = write_summary(dir, cols, [bad])
+            @test_throws ErrorException Extractor._read_selected_context(path)
         end
     end
 end
