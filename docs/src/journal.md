@@ -2305,7 +2305,7 @@ See `docs/src/selection.md` for the full guard specification and
 ## Open Questions
 
 0bu. **Can CG provide the missing fixed-density tolerance comparison?**
-**GlcN times out; GlcNAc awaits restored SSH access.** In response to the explicit
+**GlcN times out; GlcNAc 12023139 is submitted after restored access.** In response to the explicit
 bounded proposal after 0bt, the user confirms **“oui, tu es autonome!”**.
 Change only Davidson to CG on the same original accepted **60/720-Ry**
 states, keeping the inherited `diago_cg_maxiter=20`, full accuracy and
@@ -2322,9 +2322,11 @@ the second threshold is not started and no CG map or paired result exists.
 Only the original reference is qualified. All nine retained working-checkpoint
 files still match the original SCF, not a new NSCF. The full case is fetched;
 **28,392** local reference/preservation/rejection assertions pass. The final
-remote checksum-only comparison is interrupted by lost SSH authentication.
-GlcNAc's inputs and Slurm test-only pass, but **no second job is submitted**
-before access is restored. There is no retry, relaxed criterion or adoption.
+remote checksum-only comparison, initially interrupted by lost SSH
+authentication, passes without differences after the user restores access.
+Original/input manifests pass again. GlcNAc **12023139** is submitted once
+at **12:07:28 CEST on September 29**, initially waiting for the shared CPU
+quota. There is no retry, relaxed criterion or adoption.
 
 0bt. **Does orbital diagonalization precision affect the same fixed-density tails?**
 **Campaign finished; primary comparison unavailable for both molecules.** Both cutoff tests
@@ -21052,3 +21054,26 @@ recognition. This does not prove that all ensemble features lack chemical
 information, reject the counting gain, or validate a replacement feature.
 Labels enter only the external tally/interpretation; the algebraic check
 does not read them. The strict label-free new-champion objective remains open.
+
+### 2026-09-29 — Restored access and the remaining bounded CG case
+
+The user confirms **“accès viper now granted”**. SSH works, the account queue
+is empty at preflight, and GlcN **12018453** remains terminal **TIMEOUT**.
+The previously interrupted checksum-only rsync comparison now exits cleanly
+with no differences for the full retained GlcN case. Remote original and
+input manifests also pass; GlcN is not resubmitted.
+
+The unchanged six source/config/Project/Manifest hashes match local scientific
+source **864287a**. GlcNAc's prepared inputs, copied batch, original XML and
+fresh-output checks pass. Test-only request **12023138** is accepted (not a
+calculation), then the one remaining authorized case is submitted exactly
+once as **12023139** at **12:07:28 CEST**. Slurm confirms **8 requested
+CPUs / 8 tasks / 96000 MB / two hours**, no requeue, and the explicit pinned
+Julia **1.13.0** export. Its initial state is pending under the shared CPU
+quota; there is no claim that it has already calculated a result.
+
+The deliverable remains the unchanged fixed-density **1e-10 / 1e-12-Ry**
+CG comparison for GlcNAc, or a retained and verified incomplete/failure
+outcome within this allocation. No new SCF, altered acceptance criterion,
+interrupted-orbital analysis, mold replacement, calibration or champion
+promotion is authorized by this resumption. Other worktrees/jobs are untouched.
