@@ -20810,3 +20810,108 @@ are generated, not checkpoints or calculations. Shell syntax and
 `git diff --check` pass. Documentation builds with existing size/deployment
 warnings only. The Viper control socket is absent on the final access check;
 submission remains pending interactive authentication, not scientific approval.
+
+## 2026-09-29 — Repeated-scan molecule consensus: diagnosis, method and raw runs
+
+**Deliverable and definition of done.** A reproducible label-free raw-to-0/1/?
+method that exceeds the saved development reference **694/870 correct,
+43/145 exact chains, 855/870 classified** on a fresh raw execution, with a
+frozen configuration, label-free provenance and a complete comparison
+(counting, correct, exact chains, errors, abstentions). The current reproducible
+pipeline gives **679/29/848** (two identical fresh repeats, 2026-09-24).
+Work is on branch `research/labelfree-chain-20260929` (from
+`research/mold-loo-20260924`).
+
+### Diagnosis of the reproducible fresh run (labels used only after the fact)
+
+- **Cohort structure.** The 145 benchmark files are repeated scans of about
+  36 imaged molecule sites (same session, same offset within drift). The
+  largest consecutive series (`240817_033`–`083`) has 43 scans. Files are not
+  independent observations; exact-chain counts move in molecule-sized blocks.
+- **Error anatomy.** On the 123 N=6 fresh chains, positions 1/3/4/6 are
+  100/93/90/98% correct, but the GlcNAc positions 2 and 5 only 55%. Class 1
+  is emitted 160 times for 246 true GlcNAc; emitted GlcN are 95% precise.
+- **Weak and strong GlcNAc.** In each chain one GlcNAc is clearly brighter
+  (amp_prominence AUC 0.93 against interior GlcN). The other is
+  indistinguishable from interior GlcN (raw amplitude AUC 0.44, prominence
+  0.60, all chain-geometry descriptors ≈0.5). Mapped into the absolute piezo
+  frame, the detected GlcNAc is mostly the same physical residue across scan
+  angles from +40° to −70°: a molecule property, not a scan-frame artifact.
+  Averaging features over up to 43 registered scans does not separate the
+  weak GlcNAc either. In the fresh run 103 of 246 GlcNAc lobes get p=0.
+  Exact 0.5 k-means/GMM ties are emitted as class 1 with confidence 0:
+  17 GlcNAc / 5 GlcN in the fresh run, 30 / 17 in the saved record. This
+  largely explains the 43 versus 29 exact-chain gap between saved and fresh.
+- **Position confound (limitation, not fixed).** Measured in `amp_rel`, the
+  prominence contrast between positions 2/5 and 3/4 (0.198) decomposes into
+  about 0.099 from edge dimming alone (ends 0.199 below interior GlcN, halved
+  by the neighbour mean), 0.033 from the neighbouring GlcNAc, and only 0.066
+  from the lobe's own contrast (d' about 0.4). A position-neutral ablation
+  (own-lobe, chain-normalized features in the same GMM/k-means/vote)
+  recovers edge-versus-interior, not chemistry: positions 3/4 are called
+  GlcNAc 86–93% of the time (471/0/848 on the fresh cache).
+  Details: NKNNKN places GlcNAc exactly
+  at the edge-adjacent positions. End lobes have log amplitude −0.33 below
+  interior lobes (label-free within-chain regression), and `amp_prominence`
+  compares each lobe with its neighbours (an edge uses itself as the missing
+  neighbour). A chain of identical monomers with dim ends therefore scores
+  high prominence at positions 2 and N−1. In the unknown25 application,
+  class-1 calls are 19/50 at edge distance 1 versus 6/49, 4/42 and 1/19 at
+  distances 2, 3 and 4. This benchmark cannot separate acetyl detection from
+  edge adjacency; benchmark accuracy is not evidence of chemical recognition
+  on unknown chains.
+- **Human reads of 10–20mers (external reference, not used by the method).**
+  `SequenceAnalysis.xlsx` (lab storage) contains manual reads of 15 unknown
+  chains (e.g. `1010111`, `101011111`), asymmetric along the chain. The
+  unknown25 predictions agree poorly with them. These reads are human visual
+  judgements, not ground truth.
+- **Fusion of assignment across repeat scans is rejected.** Averaging per-scan
+  vote probabilities per registered physical lobe lowers the fresh run from
+  679/29 to 665/16 (666/20 when every mis-registered track is removed with
+  labels, diagnostic only), because errors are molecule-systematic and fusion
+  locks in the majority pattern.
+
+### Method: repeated-scan molecule count consensus
+
+`test/lib/molecule_consensus.jl`, `test/build_molecule_consensus.jl`,
+`config/molecule_consensus.toml`. Scans are ordered by `REC_DATE`/`REC_TIME`.
+Consecutive scans of one session are registered in the absolute piezo frame
+(`SCAN_OFFSET`, `SCAN_RANGE`, `SCAN_ANGLE`). The sign convention was checked
+label-free: chain axes agree across rotated repeat scans. Mean flattened
+fwd/bwd topography is resampled at 0.04 nm, high-passed (σ=0.32 nm), and
+translation-registered by normalized cross-correlation (±1.6 nm). Scans are
+linked when NCC ≥ 0.5. On the benchmark cohort the label-free pair
+distribution has an empty gap between 0.39 and 0.55. A track with ≥3 scans
+and a strict-majority per-scan GCV count gives that count to every
+disagreeing scan whose registered footprint (reference scan lobes plus
+accumulated drift) lies ≥0.3 nm inside its frame. Deviating scans are refit
+at the consensus N by the unchanged fixed-N fitter; assignment is the frozen
+`cc_soft_patch_support_v1` pipeline. No expected N, sequence, class count or
+benchmark membership is read. Settings were fixed before any grade of this
+stage.
+
+On the fresh repeat1 counts (label-free inputs), the stage forms 42 tracks
+and changes 16 counts: 15 to 6 and one (`240817_018`) from 6 to 7, inside a
+7/6/7 track. 46 synthetic assertions cover frame round trips, rotated-frame
+consistency, drift recovery, rejection of unrelated images, missing pixels
+and all consensus rules.
+
+A second, pre-declared variant (`config/unit_assignment_molecule_balanced.toml`)
+gives each molecule track equal total training mass in GMM and k-means
+(pseudo-replication correction). Legacy outputs are byte-identical without it.
+
+A trial refit of the 16 changed scans exposes two that the unchanged fixed-N
+fitter cannot fit at the consensus count. `240814_020` (per-scan N=4) has a
+truncated image support; in `240818_019` (N=3) the per-scan ROI is another
+object at the frame edge, while the registered footprint lies on the
+molecule. The driver therefore trial-refits only changed scans and keeps the
+per-scan count when that fails (`consensus_fit_failed`). The first
+submissions (12018706 fresh, 12018791 reused counts) stopped at this point:
+12018791 failed at the assignment base fit, and 12018706 was cancelled
+during counting (34 min) before reaching the same failure. Both are kept as
+evidence; neither is graded.
+
+### Results
+
+(pending: dev job 12018915 with reused repeat1 counts, and final fresh job
+12018916 from `b43b536`)
