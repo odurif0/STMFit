@@ -6,16 +6,18 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=16000MB
 set -euo pipefail
-# One raw-to-prediction run: fresh GCV counting, molecule consensus, assignment.
-# Export all four paths explicitly with sbatch --export. Development runs may
-# also export STMFIT_SELECTED_SUMMARY (reuse per-scan counts) and
-# STMFIT_ASSIGNMENT_CONFIG (a declared variant config, repository-relative).
-# Application runs may export STMFIT_COUNT_CONFIG (e.g. the 10-20mer config).
+# One raw-to-prediction run of the promoted method: fresh GCV counting,
+# molecule consensus, corroborated assignment and latent-class fusion.
+# Export the four required paths with sbatch --export. Optional overrides:
+# STMFIT_RAW_SUBDIR (raw subdirectory of STMFIT_INPUT_DIR, default full146_raw),
+# STMFIT_COUNT_CONFIG (e.g. the 10-20mer config), STMFIT_ASSIGNMENT_CONFIG,
+# STMFIT_TEMPLATES (default: tracked frozen molds) and STMFIT_SELECTED_SUMMARY
+# (reuse per-scan counts; development only).
 if [[ $# -gt 1 ]] || [[ $# -eq 1 && "$1" != "--dry-run" ]]; then
     echo "Usage: $0 [--dry-run]" >&2; exit 2
 fi
 : "${STMFIT_PROJECT_DIR:?Set committed source checkout}"
-: "${STMFIT_INPUT_DIR:?Set raw/template input directory}"
+: "${STMFIT_INPUT_DIR:?Set raw input directory}"
 : "${STMFIT_OUTDIR:?Set new output directory}"
 : "${JULIA_BIN:?Set Julia 1.13 executable}"
 for path in "$STMFIT_PROJECT_DIR" "$STMFIT_INPUT_DIR" "$STMFIT_OUTDIR" "$JULIA_BIN"; do
@@ -30,7 +32,7 @@ fi
 export GKSwstype=100 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 JULIA_NUM_THREADS=4
 exec "$JULIA_BIN" --startup-file=no -t 4 --project=. test/run_molecule_consensus_chitosan.jl \
     --data-dir "$STMFIT_INPUT_DIR/${STMFIT_RAW_SUBDIR:-full146_raw}" --count-config "${STMFIT_COUNT_CONFIG:-config/chitosan.toml}" \
-    --config "${STMFIT_ASSIGNMENT_CONFIG:-config/unit_assignment_patch_support.toml}" \
+    --config "${STMFIT_ASSIGNMENT_CONFIG:-config/unit_assignment_corroborated_training.toml}" \
     --consensus-config config/molecule_consensus.toml \
-    --templates "$STMFIT_INPUT_DIR/templates_cc.tsv" --outdir "$STMFIT_OUTDIR" \
+    --templates "${STMFIT_TEMPLATES:-templates/chitosan_cc_molds_native_v1.tsv}" --outdir "$STMFIT_OUTDIR" \
     ${STMFIT_SELECTED_SUMMARY:+--selected-summary "$STMFIT_SELECTED_SUMMARY"} "$@"
