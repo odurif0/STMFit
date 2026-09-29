@@ -45,3 +45,18 @@ end
         @test_throws ErrorException read_training_groups(groups)
     end
 end
+
+@testset "CLI accepts training groups only with equal_molecules" begin
+    mktempdir() do dir
+        feats = joinpath(dir, "f.tsv"); write(feats, "file\tlobe\tamplitude\tx\na.sxm\t1\t1.0\t0.1\n")
+        groups = joinpath(dir, "g.tsv"); write(groups, "file\tgroup\na.sxm\ttrack1\n")
+        base = ["--features", feats, "--out", joinpath(dir, "o.tsv"), "--view", "v=x"]
+        opt = GMM._parse_cli(vcat(base, ["--config", CANDIDATE, "--training-groups", groups]))
+        @test opt.training_weighting == "equal_molecules" && opt.training_groups == Dict("a.sxm" => "track1")
+        @test_throws ErrorException GMM._parse_cli(vcat(base, ["--config", CANDIDATE]))
+        @test_throws ErrorException GMM._parse_cli(vcat(base, ["--config", CONTROL, "--training-groups", groups]))
+        @test isempty(GMM._parse_cli(vcat(base, ["--config", CONTROL])).training_groups)
+        kopt = KM._parse_cli(vcat(base, ["--training-groups", groups]))
+        @test kopt.training_groups == groups
+    end
+end

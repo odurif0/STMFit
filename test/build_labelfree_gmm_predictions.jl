@@ -26,7 +26,8 @@ using .AssignmentMixtures
 include(joinpath(@__DIR__, "lib", "reconstructed_unit_assignment.jl"))
 using .ReconstructedUnitAssignment: load_training_policy, load_training_mask, validate_training_mask,
     load_gmm_normalization, load_gmm_weighting, load_gmm_seed_aggregation, load_gmm_resampling,
-    load_gmm_covariance_structure, load_gmm_cluster_naming, load_gmm_learning, load_gmm_covariance_scope, write_table
+    load_gmm_covariance_structure, load_gmm_cluster_naming, load_gmm_learning, load_gmm_covariance_scope, write_table,
+    read_training_groups
 
 const DEFAULT_FEATURES = "results/unit_separability/lobe_features_selectedN_primary_local.tsv"
 const DEFAULT_SPLIT = ""
