@@ -21013,3 +21013,42 @@ checksum-only comparison remains pending. Interactive authentication is
 requested without credentials; **GlcNAc has not been submitted**. Resume
 that comparison and then the one remaining authorized case once access is
 restored, without resubmitting GlcN or treating the test-only ID as a job.
+
+### 2026-09-29 — Read-only consensus grade and endpoint-feature interpretation
+
+While SSH remains unavailable, independently inspect the completed development
+result from the separate `research/labelfree-chain-20260929` worktree, source
+**b43b536**, job **12018915**. Neither that worktree nor its jobs are modified.
+The cached run's integrity checker passes against its pinned input commit,
+including raw inputs, the reused counting summary and consensus provenance.
+Current files match the saved checksum manifest; the archived local/remote
+manifests agree. This is a local readback, not a fresh remote verification.
+
+A separate read-only external tally reproduces the full **145/870** report:
+fresh control **679 correct / 29 exact chains / 848 covered**, consensus
+**690 / 34 / 857**, saved record **694 / 43 / 855**. Exact counts are
+**123 / 135 / 129**, respectively. The consensus has **10 missing / 3 extra**
+positions and **167 emitted errors**, versus the record's **13 / 6 / 161**.
+Its coverage exceeds the record, but it retains four fewer correct positions
+and nine fewer exact chains. No promotion follows. This development run reuses
+counts; fresh raw repetition and inherited calibration provenance remain
+separate requirements. No prediction, threshold or calibration is changed.
+
+**Interpretation check, not a new learner.** The existing
+`augment_lobe_local_features.jl` defines `amp_prominence` as an amplitude
+minus its two-neighbour mean, repeating the endpoint itself for its absent
+neighbour. For a chain of length at least five with identical interior
+amplitudes `a` and dimmer endpoints `b < a`, this gives positive prominence
+`(a-b)/2` at positions **2 and N-1**, negative endpoint prominence and zero
+elsewhere. Direct algebraic checks at lengths **5, 8 and 12** pass **12/12**
+assertions with amplitudes 1.0/0.8 and no chemical classes. These are
+illustrative values, not fitted parameters or a proposed recalibration.
+
+Thus this feature alone is not chemically specific: an envelope can create
+the two edge-adjacent peaks without a chemical contrast. Those positions
+coincide with the acetylated positions of the external 6-mer control, so a
+high grade alone cannot separate this positional explanation from chemical
+recognition. This does not prove that all ensemble features lack chemical
+information, reject the counting gain, or validate a replacement feature.
+Labels enter only the external tally/interpretation; the algebraic check
+does not read them. The strict label-free new-champion objective remains open.
