@@ -21077,3 +21077,31 @@ CG comparison for GlcNAc, or a retained and verified incomplete/failure
 outcome within this allocation. No new SCF, altered acceptance criterion,
 interrupted-orbital analysis, mold replacement, calibration or champion
 promotion is authorized by this resumption. Other worktrees/jobs are untouched.
+
+### 2026-09-29 — Independent readback of the completed fresh consensus runs
+
+While CG GlcNAc waits, inspect the newly fetched results of the separate
+`research/labelfree-chain-20260929` worktree without modifying it or managing
+its jobs. The existing pre-grade verifier passes for fresh runs **b43b536**
+and **1b6b5ed**, including all **146 raw hashes**, the four pinned inputs,
+counts, geometry and consensus provenance. Their **680 / 683** current
+output hashes pass; the archived local/remote manifests agree. Fresh per-scan
+counts match the September 24 control on **146/146** scans in both runs.
+This is an independent local readback of already completed runs, not another
+fit or a new live remote verification of those outputs.
+
+A separate in-memory external tally, with unchanged prediction hashes,
+reproduces **693 correct / 35 exact chains / 857 covered** for v1 and
+**695 / 30 / 863** for v2 with registered-ROI refits, on the fixed **145/870**
+denominator. V2 also matches every official per-file physical grade. Its
+counts are exact on **137/145** and within one on **145/145**, with **5 missing /
+3 extra** positions and **168 emitted errors**. Against the saved
+**694 / 43 / 855** record this is **+1 correct, -13 exact chains, +8 covered,
++7 errors**; 16 scans gain correct positions, 18 lose and 111 tie.
+
+The counting improvement is real on this development benchmark, but the
+full method is not promoted. Fresh execution is now demonstrated for these
+consensus versions; the inherited hybrid/calibration provenance and chemical
+specificity caveats above remain. The additional consensus step's lack of
+label inputs does not establish end-to-end label-free calibration. No
+threshold, seed, prediction, physical reference or champion is changed here.
