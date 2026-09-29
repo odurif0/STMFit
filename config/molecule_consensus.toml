@@ -16,6 +16,14 @@ coarse_step_px = 4
 # crop to the registered reference footprint plus this margin (about two lobe
 # spacings of background for the unchanged ROI detection and flattening).
 roi_margin_nm = 1.2
+# Latent-class fusion EM (test/build_molecule_fusion.jl). Neutral start: class 1
+# is the component whose scans mostly call 1; the fit is start-independent on the
+# benchmark cohort.
+fusion_em_max_iter = 500
+fusion_em_tol = 1e-10
+fusion_init_pi = 0.5
+fusion_init_theta0 = 0.1
+fusion_init_theta1 = 0.9
 
 [selection]
 # Normalized cross-correlation threshold: independent structures correlate
@@ -36,6 +44,11 @@ frame_margin_nm = 0.3
 collect_max_gap_min = 30.0
 collect_max_offset_nm = 5.0
 collect_max_range_nm = 20.0
+# Fuse per-scan unit calls over a molecule track: binomial latent-class model
+# (detection rate, false-call rate, mixing weight fitted by EM, no labels).
+# Physical lobes observed in fewer scans keep their per-scan call.
+fusion = "latent_class"
+fusion_min_scans = 3
 
 [preprocessing]
 channel = "Z"

@@ -144,7 +144,7 @@ function execute_run(o; runner=run_stage, thread_budget=min(Threads.nthreads(), 
     tag = @sprintf("%03d", round(Int, 100cfg["model"]["max_overlap"]))
     reuse = haskey(o, "--selected-summary")
     println("$(length(files)) raw scans; ", reuse ? "reused per-scan counts" : "$nchunks counting shards",
-            " -> scan geometry -> molecule consensus -> assignment")
+            " -> scan geometry -> molecule consensus -> assignment -> molecule fusion (if configured)")
     haskey(o, "--dry-run") && return println("Dry-run: no pixels read, no output written; no labels or grades are inputs")
     out = abspath(o["--outdir"]); mkpath(joinpath(out, "logs")); stage = "inputs"
     try
@@ -208,8 +208,19 @@ function execute_run(o; runner=run_stage, thread_budget=min(Threads.nthreads(), 
         for name in ("features.tsv", "features_split.tsv", "predictions.tsv")
             check_counts(joinpath(dest, name), final_counts)
         end
+        final_predictions = joinpath(dest, "predictions.tsv")
+        if get(TOML.parsefile(o["--consensus-config"])["selection"], "fusion", "none") == "latent_class"
+            stage = "fusion"
+            fusion_dir = joinpath(out, "fusion")
+            runner(out, stage, "build_molecule_fusion.jl", ["--data-dir", raw, "--consensus", consensus_dir,
+                "--features", joinpath(dest, "features.tsv"), "--predictions", final_predictions,
+                "--config", abspath(o["--consensus-config"]), "--outdir", fusion_dir]; threads=1)
+            final_predictions = joinpath(fusion_dir, "predictions_fused.tsv")
+            check_counts(final_predictions, final_counts)
+        end
+        cp(final_predictions, joinpath(out, "predictions.tsv"))
         stage = "report"
-        write_chain_report(consensus, joinpath(dest, "predictions.tsv"), joinpath(out, "chain_report.tsv"))
+        write_chain_report(consensus, final_predictions, joinpath(out, "chain_report.tsv"))
     catch e
         write_table(joinpath(out, "failures.tsv"), ["stage", "reason"],
             [Dict("stage" => stage, "reason" => replace(sprint(showerror, e), '\n' => ' ', '\t' => ' '))])
