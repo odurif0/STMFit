@@ -20885,3 +20885,29 @@ HTTP's precompilation workload reports an ignored sandbox socket-bind
 `EPERM`; rendering and document checks still finish. Existing size and
 non-deployment warnings remain. No package, lock or documentation threshold
 is changed to silence them.
+
+### 2026-09-29 — CG progress reporting and cooperative time-limit clarification
+
+**Read-only finding while 12018453 runs.** The eight MPI processes continue
+to accumulate CPU time, but the first Gamma solve emits no per-band progress.
+The pinned QE **7.4.1** `KS_Solvers/CG/rcgdiagg.f90` places its per-band
+energy/iteration messages behind `__VERBOSE`; their absence is not evidence
+of a stopped process or a converged band. No verbose rebuild, signal or
+runtime instrumentation is introduced.
+
+In `PW/src/c_bands.f90`, `diag_bands` returns before `check_stop_now()` is
+called in the k-point loop. The CG routine has no such stop check inside
+its band/iteration loops; the retry condition checks convergence and the
+number of internal passes, not elapsed time. Consequently the unchanged
+`nscf_max_seconds=3000` input is a cooperative stop request, **not** a hard
+50-minute cap or guaranteed allowance for analysis/the second solve. The
+configuration documentation's earlier statement that it "reserves analysis
+time" was too strong and is corrected. The actual allocation remains
+bounded by Slurm's **two-hour** limit, with no extension or resubmission.
+
+This changes interpretation of monitoring/time bounds, not any scientific
+input, convergence criterion, source executable or output. Normal completion
+and all frozen NSCF checks are still required before analysis. There is no
+new numerical or benchmark result in this finding.
+`git diff --check` and the Julia **1.13.1** documentation build pass, with
+the existing size/deployment warnings and no scientific source change.

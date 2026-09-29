@@ -202,6 +202,9 @@ documented failure, not an automatic champion promotion.
 After restored access, GlcN **12018453** is submitted once at unchanged
 scientific source **864287a**; initially **PENDING / QOSGrpCpuLimit**.
 GlcNAc awaits its termination. No numerical result is available yet.
+The `3000`-second QE stop is cooperative, checked after diagonalization;
+it does not guarantee time for both solves. The two-hour Slurm cap remains
+the hard bound, and an incomplete solve is rejected rather than analyzed.
 
 **September 27 fixed-density precision follow-up (no converged pair).** After
 the completed basis-cutoff comparison, the user resumes the autonomous

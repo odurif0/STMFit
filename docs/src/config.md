@@ -6,8 +6,10 @@
 1e-12]` on independent copies of the accepted **60/720-Ry** states in
 `qe/wavefunction_cutoff_20260927`. `diago_full_acc=true` applies in both
 NSCF solves; `startingpot="file"` and `startingwfc="file"` retain identical
-initial density, PAW state and orbitals. `nscf_max_seconds=3000` per solve
-reserves analysis time inside each **8-CPU / 96-GB / two-hour** allocation.
+initial density, PAW state and orbitals. `nscf_max_seconds=3000` requests a
+cooperative stop per solve; it is not a preemptive 50-minute limit. QE checks
+after the Gamma diagonalization, whose internal passes can overrun it.
+Slurm enforces the **8-CPU / 96-GB / two-hour** allocation's hard time limit.
 There are two sequential jobs, one per molecule, with no retry or new SCF.
 
 `config/qe_cg_precision.toml` reuses this workflow for the authorized CG
