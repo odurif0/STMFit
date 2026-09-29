@@ -1,17 +1,22 @@
 # Frozen constant-current molds used by the promoted assignment pipeline.
+# The LDOS cubes (untracked, qe/ locally and on Viper) are the accepted relaxed
+# GlcN/GlcNAc DFT results (docs/src/dft_calculation_note.md); the frames are
+# tracked here.
 # Rebuild (byte-identical, verified 2026-09-29):
 #   julia --project=. test/build_cc_molds_native.jl \
-#     --cube0 qe/glcn_restart5/glcn_central_ldos.cube --frame0 qe/glcn_restart5/frame.tsv \
-#     --cube1 qe/glcnac/glcnac_central_ldos.cube --frame1 qe/glcnac/frame.tsv \
+#     --cube0 qe/glcn_restart5/glcn_central_ldos.cube --frame0 templates/qe_frames/glcn_central_frame.tsv \
+#     --cube1 qe/glcnac/glcnac_central_ldos.cube --frame1 templates/qe_frames/glcnac_central_frame.tsv \
 #     --config config/unit_assignment_corroborated_training.toml --out NEW.tsv
 schema = "stmfit-cc-mold-provenance-v1"
 builder = "test/build_cc_molds_native.jl"
 config = "config/unit_assignment_corroborated_training.toml"
 glcn_cube_path = "qe/glcn_restart5/glcn_central_ldos.cube"
 glcn_cube_sha256 = "80cd1d1fde94cf084cc7ea464d2bf065b36b2c015ea0bfaef8cebfee8ff88863"
+glcn_frame_path = "templates/qe_frames/glcn_central_frame.tsv"
 glcn_frame_sha256 = "b40436964c90d30bf8358a9f2f1906dd78f89d37552fd5b3fd03d3c75ee8b8ea"
 glcnac_cube_path = "qe/glcnac/glcnac_central_ldos.cube"
 glcnac_cube_sha256 = "40649ccd9eb6768444b8ff61bf4a639b3940cf926fe3eb42254eb024faf9b5bf"
+glcnac_frame_path = "templates/qe_frames/glcnac_central_frame.tsv"
 glcnac_frame_sha256 = "a2db0644d7139ffe804c1077ba64a52793b9d838ba4155eda0c28f0f8a8d4af4"
 templates_path = "templates/chitosan_cc_molds_native_v1.tsv"
 templates_sha256 = "fede623b72c0381875fb738c4c1ec128397919b33be937ba5423c80cc04478e4"

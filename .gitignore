@@ -31,8 +31,3 @@ __pycache__/
 .github/
 # Temporary working directories (.tmp-*) created by scripts/agent probes.
 .tmp*/
-# Generated QE preflight/job reports and rendered previews.
-hpc/qe_molds/qe_input_preflight*.tsv
-hpc/qe_molds/qe_jobs.tsv
-hpc/qe_molds/structure_validation.tsv
-hpc/qe_molds/previews/
