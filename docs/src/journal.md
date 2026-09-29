@@ -21121,6 +21121,18 @@ which is estimated label-free. Fresh raw verification of the complete frozen
 method (`3c414a4`, corroborated training, `molecule_consensus.toml` with
 fusion): job **12025539**.
 
+**Fusion on the unknown 10–20mer application (descriptive, label-free).**
+Applied to the verified application outputs (job 12023144), the same EM
+fits π=0.557, θ0=0.454, θ1=0.936 over 120 physical lobes (636 rows). A 45%
+false-call rate means per-scan calls on these long chains are inconsistent
+across repeat scans of the same molecule: the two components are "almost
+always 1" and "often 1", not detected versus undetected. Fused labels there
+are therefore not interpretable, and 22 target calls change. The fitted
+θ0/θ1 is a label-free quality indicator. The benchmark
+fit (θ0=0.034) passes it; the long-chain application does not. No gate is
+added to the frozen benchmark configuration; the application needs better
+long-chain counting and per-scan assignment first.
+
 **Hierarchical chain mixture prototype: rejected.** A two-class mixture with
 a per-chain random intercept (exact enumeration of chain configurations, PCA-
 whitened BASE4 features, EM initialized from the champion's label-free vote)
