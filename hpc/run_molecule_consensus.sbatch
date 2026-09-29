@@ -29,7 +29,7 @@ if [[ $# -eq 0 ]]; then
 fi
 export GKSwstype=100 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 JULIA_NUM_THREADS=4
 exec "$JULIA_BIN" --startup-file=no -t 4 --project=. test/run_molecule_consensus_chitosan.jl \
-    --data-dir "$STMFIT_INPUT_DIR/full146_raw" --count-config "${STMFIT_COUNT_CONFIG:-config/chitosan.toml}" \
+    --data-dir "$STMFIT_INPUT_DIR/${STMFIT_RAW_SUBDIR:-full146_raw}" --count-config "${STMFIT_COUNT_CONFIG:-config/chitosan.toml}" \
     --config "${STMFIT_ASSIGNMENT_CONFIG:-config/unit_assignment_patch_support.toml}" \
     --consensus-config config/molecule_consensus.toml \
     --templates "$STMFIT_INPUT_DIR/templates_cc.tsv" --outdir "$STMFIT_OUTDIR" \
