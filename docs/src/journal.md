@@ -2304,6 +2304,23 @@ See `docs/src/selection.md` for the full guard specification and
 
 ## Open Questions
 
+0bv. **Can a label-free method exceed the saved 694/43/855 record on every metric?**
+**Open; best verified configuration exceeds it on counting, correct and
+coverage, ties errors, but not exact chains (2026-09-29).** Repeated-scan
+molecule consensus counting plus corroborated cohort learning, run fresh from
+raw (`9edcce4`, job 12023870): 137/145 exact N (145/145 within one),
+702/870 correct, 33/145 exact chains, 863/870 classified, 161 errors, 2
+abstentions. The record's exact chains depend on zero-confidence 0.5 ties
+(24 of 43) and on its specific cohort (seed-invariant 43 on its cache,
+seed-invariant 30 on the consensus cache). No label-free boundary rule was
+found that recovers them without benchmark tuning.
+Open sub-questions: (i) a control molecule with a non-palindromic or
+homo-oligomer sequence, to separate acetyl detection from the edge-adjacency
+confound of NKNNKN; (ii) a curved-centerline support model for long
+10–20mers, whose straight-tube axial support truncates curved chains
+(`251206_013`: 4 lobes fresh vs 11 production vs 12 manual). Whole-ROI support
+fixes that chain but shrinks others, so it is not adopted.
+
 0bu. **Can CG provide the missing fixed-density tolerance comparison?**
 **Prepared and tested; awaiting SSH access, no job or result yet.** In response to the explicit
 bounded proposal after 0bt, the user confirms **“oui, tu es autonome!”**.
