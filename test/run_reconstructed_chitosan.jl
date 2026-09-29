@@ -14,7 +14,7 @@ const VALUE_OPTIONS = Set(["--data-dir", "--count-config", "--config", "--outdir
     "--selected-summary", "--features", "--split-features", "--patches-fwd",
     "--patches-bwd", "--descriptor-patches", "--templates",
     "--cube0", "--cube1", "--frame0", "--frame1", "--acquisition-shifts", "--patch-frames",
-    "--residual-features-fwd", "--residual-features-bwd", "--mold-tangent-settings", "--training-groups"])
+    "--residual-features-fwd", "--residual-features-bwd", "--mold-tangent-settings", "--training-groups", "--training-scans"])
 
 function parse_options(args)
     if "--help" in args || "-h" in args
@@ -41,6 +41,9 @@ function parse_options(args)
           matched patches, no other acquisition/geometry experiment.
         --training-groups PATH: file/group TSV of label-free repeated-scan molecule
           tracks; required iff GMM/k-means weighting is equal_molecules.
+        --training-scans PATH: molecule-consensus summary; required iff
+          assignment_training_scans is corroborated_counts (GMM and k-means learn
+          only from scans whose own count agrees with the consensus).
         --dry-run: check supplied input paths and print the stages without computing.
 
         Production only: no benchmark labels, expected count, control sequence,
@@ -401,6 +404,10 @@ function execute_pipeline(opts)
         uses_groups == haskey(opts, "--training-groups") || error("--training-groups is required only with equal_molecules weighting")
         gmm_groups = sel["gmm_training_weighting"] == "equal_molecules" ? ["--training-groups", abspath(opts["--training-groups"])] : String[]
         kmeans_groups = kmeans_weighting == "equal_molecules" ? ["--training-groups", abspath(opts["--training-groups"])] : String[]
+        corroborated = load_training_scans(cfg) == "corroborated_counts"
+        corroborated == haskey(opts, "--training-scans") || error("--training-scans is required only with corroborated_counts")
+        scan_args = corroborated ? ["--training-scans", abspath(opts["--training-scans"])] : String[]
+        append!(gmm_groups, scan_args); append!(kmeans_groups, scan_args)
         common = ["--features", table, "--first-seed", string(sel["first_seed"])]
         bootstrap_args = load_gmm_resampling(cfg).mode == "whole_scans" ?
             ["--bootstrap-audit", joinpath(outdir, "gmm_scan_bootstrap.tsv")] : String[]

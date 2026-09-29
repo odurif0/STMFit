@@ -27,7 +27,7 @@ include(joinpath(@__DIR__, "lib", "reconstructed_unit_assignment.jl"))
 using .ReconstructedUnitAssignment: load_training_policy, load_training_mask, validate_training_mask,
     load_gmm_normalization, load_gmm_weighting, load_gmm_seed_aggregation, load_gmm_resampling,
     load_gmm_covariance_structure, load_gmm_cluster_naming, load_gmm_learning, load_gmm_covariance_scope, write_table,
-    read_training_groups
+    read_training_groups, load_training_scans, read_corroborated_scans
 
 const DEFAULT_FEATURES = "results/unit_separability/lobe_features_selectedN_primary_local.tsv"
 const DEFAULT_SPLIT = ""
@@ -63,6 +63,7 @@ struct Options
     cluster_naming::String
     learning::NamedTuple
     training_groups::Dict{String,String}
+    training_scans::Union{Nothing,Set{String}}
 end
 
 function _load_final_score(config::AbstractDict)
@@ -103,6 +104,7 @@ function _parse_cli(args)
     training_support = ""
     bootstrap_audit = ""
     training_groups = ""
+    training_scans = ""
 
     i = 1
     while i <= length(args)
@@ -113,6 +115,8 @@ function _parse_cli(args)
             training_support = _arg_value(args, i, arg); i += 2
         elseif arg == "--training-groups"
             training_groups = _arg_value(args, i, arg); i += 2
+        elseif arg == "--training-scans"
+            training_scans = _arg_value(args, i, arg); i += 2
         elseif arg == "--config"
             config = _arg_value(args, i, arg); i += 2
         elseif startswith(arg, "--config=")
@@ -273,6 +277,9 @@ function _parse_cli(args)
     (training_weighting == "equal_molecules") == !isempty(training_groups) ||
         error("--training-groups is required only with equal_molecules")
     groups = isempty(training_groups) ? Dict{String,String}() : read_training_groups(training_groups)
+    (load_training_scans(cfg) == "corroborated_counts") == !isempty(training_scans) ||
+        error("--training-scans is required only with corroborated_counts")
+    scans = isempty(training_scans) ? nothing : read_corroborated_scans(training_scans)
     seed_aggregation = load_gmm_seed_aggregation(cfg)
     bootstrap = load_gmm_resampling(cfg)
     (bootstrap.mode == "whole_scans") == !isempty(bootstrap_audit) ||
@@ -291,7 +298,7 @@ function _parse_cli(args)
                    first_seed, n_seeds, interactions, selftrain, covariance.mode, covariance_scope, covariance.ridge, final_score,
                    training_policy, training_support, normalization.mode, normalization.scale_fallback,
                    training_weighting, seed_aggregation, bootstrap.mode, bootstrap.replicates, bootstrap.seed,
-                   bootstrap_audit, covariance_structure, cluster_naming, learning, groups)
+                   bootstrap_audit, covariance_structure, cluster_naming, learning, groups, scans)
 end
 
 function _arg_value(args, i::Int, flag::String)
@@ -941,6 +948,7 @@ function _view_probability(records::Vector{LobeRecord}, features::Vector{String}
     model_state !== nothing && opt.resampling != "none" &&
         error("Model capture requires the non-resampled native path")
     eligible = validate_training_mask(opt.training_policy, training_mask, length(records))
+    opt.training_scans === nothing || (eligible = eligible .& [r.file in opt.training_scans for r in records])
     X, valid = _standardized_matrix(records, features; interactions=opt.interactions, training_mask,
         normalization=opt.normalization, scale_fallback=opt.scale_fallback, normalization_state)
     idxs = findall(valid .& eligible)

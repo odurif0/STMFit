@@ -202,7 +202,9 @@ function execute_run(o; runner=run_stage, thread_budget=min(Threads.nthreads(), 
             ["--data-dir", raw, "--count-config", abspath(o["--count-config"]),
              "--config", abspath(o["--config"]), "--templates", abspath(o["--templates"]),
              "--selected-summary", consensus, "--outdir", dest,
-             (uses_groups ? ["--training-groups", groups] : String[])...]; threads=min(thread_budget, 4))
+             (uses_groups ? ["--training-groups", groups] : String[])...,
+             (get(sel, "assignment_training_scans", "all") == "corroborated_counts" ? ["--training-scans", consensus] : String[])...];
+            threads=min(thread_budget, 4))
         for name in ("features.tsv", "features_split.tsv", "predictions.tsv")
             check_counts(joinpath(dest, name), final_counts)
         end

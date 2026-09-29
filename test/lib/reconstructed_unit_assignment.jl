@@ -8,7 +8,7 @@ export read_table, write_table, lobe_table, require_same_keys,
        load_training_mask, validate_training_mask, load_gmm_normalization, load_gmm_weighting,
        load_gmm_seed_aggregation, load_gmm_resampling, load_gmm_covariance_structure,
        load_fisher_cv, load_gmm_cluster_naming, load_gmm_learning, load_gmm_covariance_scope,
-       read_training_groups
+       read_training_groups, load_training_scans, read_corroborated_scans
 
 const TRANSVERSE_DESCRIPTORS = ("transverse_half_plane_asymmetry",
     "transverse_first_moment", "affine_residual_half_plane_asymmetry")
@@ -168,6 +168,25 @@ function load_gmm_weighting(config::AbstractDict)
     mode != "equal_lobes" && get(get(config, "model", Dict()), "gmm_final_covariance", nothing) != "ridge" &&
         throw(ArgumentError("$mode requires ridge; weighted shrinkage is not implemented"))
     return String(mode)
+end
+
+"""
+Scans admitted to cohort learning. `all` keeps every scan; `corroborated_counts`
+keeps scans whose own GCV count equals a strict-majority repeated-scan consensus
+(`count_rule == "agrees"` in a molecule-consensus summary). All scans are still
+normalized and scored; only model fitting and cluster naming are restricted.
+"""
+function load_training_scans(config::AbstractDict)
+    mode = get(get(config, "selection", Dict()), "assignment_training_scans", "all")
+    mode in ("all", "corroborated_counts") ||
+        throw(ArgumentError("assignment_training_scans must be all or corroborated_counts"))
+    return String(mode)
+end
+
+function read_corroborated_scans(path::AbstractString)
+    header, rows = read_table(path)
+    all(c -> c in header, ("filepath", "count_rule")) || error("Training scans need filepath and count_rule columns")
+    return Set(basename(r["filepath"]) for r in rows if r["count_rule"] == "agrees")
 end
 
 "File => label-free training group (repeated-scan molecule track) from a file/group TSV."
@@ -341,6 +360,7 @@ function load_config(path::AbstractString)
     load_gmm_cluster_naming(cfg)
     load_gmm_learning(cfg)
     load_gmm_covariance_scope(cfg)
+    load_training_scans(cfg)
     model["descriptor"] in TRANSVERSE_DESCRIPTORS || error("Unsupported descriptor")
     model["descriptor_column"] == "patch_u_asym_reconstructed" || error("Unsupported descriptor column")
     model["descriptor_channel"] == "bwd_res" || error("Unsupported descriptor patch family")

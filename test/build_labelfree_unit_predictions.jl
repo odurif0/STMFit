@@ -32,6 +32,7 @@ struct Options
     interactions::Bool
     training_groups::String
     seed_aggregation::String
+    training_scans::String
 end
 
 mutable struct LobeRecord
@@ -62,6 +63,7 @@ function _parse_cli(args)
     interactions = false
     training_groups = ""
     seed_aggregation = "vote"
+    training_scans = ""
 
     i = 1
     while i <= length(args)
@@ -100,6 +102,8 @@ function _parse_cli(args)
             training_groups = _arg_value(args, i, arg); i += 2
         elseif arg == "--seed-aggregation"
             seed_aggregation = _arg_value(args, i, arg); i += 2
+        elseif arg == "--training-scans"
+            training_scans = _arg_value(args, i, arg); i += 2
         elseif arg in ("-h", "--help")
             println("""
             Usage: julia --project=. test/build_labelfree_unit_predictions.jl [options]
@@ -122,6 +126,9 @@ function _parse_cli(args)
               --seed-aggregation M   vote (default: average the seeds' labels) or
                                      best_cost (keep the lowest within-cluster cost
                                      restart per view, standard k-means practice).
+              --training-scans PATH  Optional molecule-consensus summary: centroids are
+                                     learned only on scans with count_rule=agrees,
+                                     then every row is assigned to its nearest centroid.
 
             Output columns: file, lobe, predicted, confidence, amplitude,
             probability_1, views_used, invalid_reason.
@@ -142,8 +149,9 @@ function _parse_cli(args)
     !isempty(patches) && !isfile(patches) && error("Patch TSV not found: $patches")
     !isempty(training_groups) && !isfile(training_groups) && error("Training-group TSV not found: $training_groups")
     seed_aggregation in ("vote", "best_cost") || error("--seed-aggregation must be vote or best_cost")
+    !isempty(training_scans) && !isfile(training_scans) && error("Training-scan TSV not found: $training_scans")
     return Options(features, split_features, patches, out_tsv, view_specs,
-                   first_seed, n_seeds, interactions, training_groups, seed_aggregation)
+                   first_seed, n_seeds, interactions, training_groups, seed_aggregation, training_scans)
 end
 
 function _arg_value(args, i::Int, flag::String)
@@ -363,6 +371,36 @@ function _standardized_matrix(records::Vector{LobeRecord}, features::Vector{Stri
     return z, valid
 end
 
+"""Corroborated scans (`count_rule == "agrees"`) from a molecule-consensus summary."""
+function corroborated_scans(path::AbstractString)
+    lines = filter(l -> !isempty(strip(l)), readlines(path))
+    header = split(lines[1], '\t')
+    fi = findfirst(==("filepath"), header); ri = findfirst(==("count_rule"), header)
+    (fi === nothing || ri === nothing) && error("Training scans need filepath and count_rule columns")
+    return Set(basename(String(split(l, '\t')[fi])) for l in lines[2:end] if split(l, '\t')[ri] == "agrees")
+end
+
+"""Centroids learned on corroborated scans only; every valid row is then assigned
+to its nearest centroid. Votes over seeds as in the legacy path."""
+function _view_probability_trained(records, X, idxs, features, opt)
+    keep = corroborated_scans(opt.training_scans)
+    train = [i for i in idxs if records[i].file in keep]
+    length(train) >= 2 || return fill(NaN, length(records))
+    data = permutedims(X[train, :]); allx = permutedims(X[idxs, :])
+    votes = zeros(Float64, length(records)); counts = zeros(Int, length(records))
+    for seed in opt.first_seed:(opt.first_seed + opt.n_seeds - 1)
+        km = kmeans(data, 2; maxiter=200, rng=MersenneTwister(seed), display=:none)
+        amp = [mean(records[train[j]].amplitude for j in eachindex(train) if km.assignments[j] == c) for c in 1:2]
+        high = amp[1] >= amp[2] ? 1 : 2
+        for (j, i) in enumerate(idxs)
+            d = [sum(abs2, allx[:, j] .- km.centers[:, c]) for c in 1:2]
+            votes[i] += argmin(d) == high ? 1.0 : 0.0
+            counts[i] += 1
+        end
+    end
+    return [counts[i] > 0 ? votes[i] / counts[i] : NaN for i in eachindex(records)]
+end
+
 """Mean-one weights giving each label-free training group (repeated scans of one
 molecule) equal total mass; `nothing` keeps the legacy unweighted arithmetic."""
 function group_weights(records, idxs, path::AbstractString)
@@ -396,6 +434,9 @@ function _view_probability(records::Vector{LobeRecord}, features::Vector{String}
     probs = fill(NaN, length(records))
     votes = zeros(Float64, length(records))
     counts = zeros(Int, length(records))
+    if !isempty(opt.training_scans)
+        return _view_probability_trained(records, X, idxs, features, opt)
+    end
     data = permutedims(X[idxs, :])
     w = group_weights(records, idxs, opt.training_groups)
 
