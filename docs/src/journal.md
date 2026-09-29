@@ -21061,11 +21061,12 @@ result (33 exact, 81.3% classified accuracy) is at the supervised per-lobe
 ceiling. Exceeding 43 exact chains label-free would mean beating supervised
 learning on the same information. This requires new information (a control
 sequence, other imaging conditions or more views), not another classifier
-variant. Repeat scans do not supply it: fusing the supervised held-out
-probabilities (mean probability or mean log-odds per registered physical lobe)
-raises per-lobe accuracy to 0.835 but lowers exact chains from 43 to 24,
-because missed GlcNAc are molecule-systematic and fusion spreads them to every
-scan of the molecule.
+variant. Symmetric fusion of repeat scans does not supply it: fusing the
+supervised held-out probabilities (mean probability or mean log-odds per
+registered physical lobe) raises per-lobe accuracy to 0.835 but lowers exact
+chains from 43 to 24. **Correction (same day):** asymmetric latent-class
+fusion of the repeat scans does supply it; see the next subsection. The
+ceiling above holds per scan only.
 
 **Molecule fusion trade-off (diagnostic, not adopted).** With the consensus
 tracks' clean lobe mapping (same-N scans, absolute projection order), a
@@ -21073,6 +21074,52 @@ per-physical-lobe majority over ≥3 scans raises v2 to 712 (corroborated) /
 707 (control) correct, 153/158 errors, 865 classified, but lowers exact chains
 to 24/25. It propagates each molecule's majority pattern, including a missed
 GlcNAc, to all its scans.
+
+### Latent-class fusion of repeated-scan calls (after the user's "continuer")
+
+Majority or mean fusion treats per-scan errors as symmetric. They are not:
+a GlcNAc is often **missed** in some scans of a molecule, while a GlcN is
+rarely **called** GlcNAc. A binomial latent-class model (Dawid–Skene with one
+repeated annotator) captures this. Each physical lobe of a consensus track has
+a hidden type z; each scan's call is Bernoulli(θ_z); π, θ0 and θ1 are fitted
+by EM without labels, and the class-1 component is the one with the higher
+call rate. Physical lobes are the per-scan lobes of the track's modal count,
+ranked along the chain axis of the first such scan in the absolute piezo frame
+(translation invariant). Lobes observed in fewer than `fusion_min_scans=3`
+scans keep their per-scan call. The posterior is reported as `probability_1`
+and `confidence`; the per-scan call is retained as `scan_predicted`.
+
+Label-free fit on the verified fresh corroborated calls (job 12023870): π=0.348,
+θ0=0.034, θ1=0.625, identical from four starting points. 79 physical lobes and
+651 rows are fused. External grade after the fit:
+
+| Input (verified fresh per-scan calls) | Correct /870 | Exact chains | Classified /870 | Errors |
+|---|---:|---:|---:|---:|
+| Saved record | 694 | 43 | 855 | 161 |
+| Corroborated, unfused | 702 | 33 | 863 | 161 |
+| Corroborated + latent-class fusion | **772** | **88** | **865** | **93** |
+| v2 control assignment + fusion | 767 | 89 | 865 | 98 |
+
+Robustness (all graded after fitting; no setting chosen by grade):
+fusion_min_scans 2–5 with π learned or fixed at 0.5 gives 764–772 correct,
+83–89 exact chains and 93–101 errors. Per track, the 43-scan molecule goes
+from 10 to 43 exact chains, the 14-scan one 2→14, the 7-scan one 2→7. The
+10-scan track 27 stays at 0: its second GlcNAc is never called in any scan.
+The Julia implementation (`test/lib/molecule_fusion.jl`,
+`test/build_molecule_fusion.jl`, 11 synthetic assertions) reproduces the
+Python prototype exactly. It runs as the last stage of
+`test/run_molecule_consensus_chitosan.jl`.
+
+**Caveats, stated before the fresh verification.** (1) Fusion amplifies
+whatever the per-scan calls detect, including the NKNNKN edge-adjacency
+confound; it neither creates nor removes it. (2) Exact chains become
+molecule-sized blocks: 43 of 88 come from one heavily re-imaged molecule.
+(3) Only same-count scans of a consensus track are fused; singletons and
+discordant counts keep per-scan calls. (4) This idea was found after earlier
+fusion variants had been graded; its justification is the error asymmetry,
+which is estimated label-free. Fresh raw verification of the complete frozen
+method (`3c414a4`, corroborated training, `molecule_consensus.toml` with
+fusion): job **12025539**.
 
 **Hierarchical chain mixture prototype: rejected.** A two-class mixture with
 a per-chain random intercept (exact enumeration of chain configurations, PCA-
