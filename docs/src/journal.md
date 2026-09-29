@@ -20956,10 +20956,38 @@ saved record: coverage exceeded, correct −4, exact chains −9 (seven of the
 nine lost chains used a record 0.5 tie). Not a promotion: the saved record is
 not beaten on correct positions or exact chains.
 
-(pending: fresh final 12018916 from `b43b536`; registered-ROI dev 12019263
-and fresh final 12019264 from `1b6b5ed`, all running on Viper when the SSH
-control connection expired at about 03:10 CEST; fetching needs a new
-interactive MPCDF login.)
+**Fresh raw-to-prediction runs (Viper, one job each, 4 CPUs / 16 GB, no
+retry).** The SSH control connection expired at about 03:10 CEST; the user
+restored access at 11:57. All three jobs had completed: 12018916 (`b43b536`,
+1h30), 12019263 (`1b6b5ed`, reused counts, 30 min) and 12019264 (`1b6b5ed`,
+fresh counting, 1h51). All outputs were fetched with identical SHA256 lists
+(680, 237 and 683 files). The pre-grade verifier passes on each against its
+own source commit. Fresh per-scan counts equal the 2026-09-24 fresh repeats
+on 146/146 scans. Both registered-ROI runs apply 14 plain consensus counts
+and 2 `consensus_registered_roi` counts; 104/145 consecutive pairs are linked.
+
+Full145/own-N external grade. The official
+`report_unit_assignment_benchmark.jl --full145-own-n` report for 12019264
+matches the independent Python replica exactly.
+
+| Profile | Exact N /145 | Correct /870 | Exact chains | Classified /870 | Missing / extra | Errors | Abstentions |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Saved record (hybrid counts) | 129 | 694 | 43 | 855 | 13 / 6 | 161 | 2 |
+| Fresh control, current pipeline | 123 | 679 | 29 | 848 | 20 / 5 | 169 | 2 |
+| Consensus v1, fresh (`b43b536`) | 135 | 693 | 35 | 857 | 10 / 3 | 164 | 3 |
+| Consensus v2 + registered ROI, fresh (`1b6b5ed`) | **137** | **695** | 30 | **863** | 5 / 3 | 168 | 2 |
+| Consensus v2, reused counts | 137 | 696 | 31 | 863 | 5 / 3 | 167 | 2 |
+
+Counting grade of v2: 137/145 exact, **145/145 within one lobe** (5 short, 3
+extra); per-scan GCV of the same run 123/145 (143 within one). Against the
+record, v2 gains counting (+8), correct (+1) and coverage (+8), but loses 13
+exact chains and adds 7 emitted errors (16 scans gain, 18 lose, 111 tie). Two
+runs of the same code with identical counts differ by 1 correct / 1 exact
+chain (timed fixed-N optimizer). Moving two scans from fallback to registered
+ROI changes exact chains from 35 to 30 elsewhere in the cohort (whole-cohort
+learning). **Decision: no promotion.** The record is not beaten on exact chains
+or emitted errors. The consensus counting stage is retained as a verified,
+label-free counting improvement.
 
 **Hierarchical chain mixture prototype: rejected.** A two-class mixture with
 a per-chain random intercept (exact enumeration of chain configurations, PCA-
