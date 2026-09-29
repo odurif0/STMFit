@@ -20961,6 +20961,12 @@ and fresh final 12019264 from `1b6b5ed`, all running on Viper when the SSH
 control connection expired at about 03:10 CEST; fetching needs a new
 interactive MPCDF login.)
 
+**Hierarchical chain mixture prototype: rejected.** A two-class mixture with
+a per-chain random intercept (exact enumeration of chain configurations, PCA-
+whitened BASE4 features, EM initialized from the champion's label-free vote)
+collapses to a small outlier component (π≈0.08, 57 lobes called GlcNAc;
+584/2/860 on the consensus cache). Not pursued.
+
 **Application-side observation (metadata only).** The lab 10–20mer tree
 holds 1,666 raw scans. For 23 of the 25 unknown25 molecules, 1–12 same-session
 scans lie within ±30 min and 5 nm of the frame centre (126 candidates in
