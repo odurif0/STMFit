@@ -35,9 +35,12 @@ empirical templates; 10–20mer outputs not validated.
    edge-adjacent position that NKNNKN happens to share with GlcNAc? A control
    molecule with a non-palindromic or homo-oligomer sequence is needed.
    Position-neutral features recover edge versus interior, not chemistry.
-2. **Long-chain counting.** The straight support tube loses curved 10–20mers
-   (`251206_013`: 4 lobes fresh, 12 manual). A curved-centreline support model
-   is a prerequisite for the application.
+2. **Long-chain counting.** The axial support is truncated on long chains
+   (`251206_013`: 1.5 of 7.5 nm, 4 lobes fresh, 12 manual). The support
+   baseline is the 10% quantile of the axial profile, which assumes at least
+   10% background bins; on long chains it lands on the molecule. A curved
+   centreline does not fix this (2026-09-30). A length-invariant background
+   estimate is the candidate fix.
 3. **Long-chain assignment consistency.** On the 10–20mers the fusion fit gives
    θ0 = 0.45: per-scan calls disagree across repeat scans of the same molecule.
    What makes long-chain per-scan calls stable?
@@ -212,9 +215,10 @@ The independent run 12023870 with the same fusion gives the identical result.
 **Promoted.** No measure regresses against the record.
 
 **Application** (job 12023144, 25 targets + 109 collected repeat candidates):
-17 counts change. Two long curved chains fail (4 and 2 lobes); bisection
-traces this to the straight support tube, not to consensus. Fusion θ0 = 0.45.
-Not chemically interpretable.
+17 counts change. Two long chains fail (4 and 2 lobes): their per-scan
+support is truncated, not their consensus. The straight-tube explanation
+recorded then was refuted on 2026-09-30 (support baseline, see below).
+Fusion θ0 = 0.45. Not chemically interpretable.
 
 ### 2026-09-29 — Consolidation of the repository
 
@@ -279,3 +283,50 @@ to the unpruned code. **Counting is not bit-reproducible run to run.** The
 NLopt global search is time-limited (`global_maxtime = 10 s` per N), so a
 rerun of the unpruned code on the same scan changes BIC values in the fifth
 significant digit (275.923 → 275.940). The pruning is within that noise.
+
+### 2026-09-30 — Curved centreline: prototype refutes the hypothesis
+
+**Question** (user request). Would a curved centreline, instead of the straight
+PCA tube, make long-chain counts trustworthy? Planned test: implement it and
+check non-regression on the 6-mers.
+
+**Prototype, before any package change.** Ridge points are intensity centroids
+of `u` in 0.175 nm bins of `t`. A polynomial `u = f(t)` is fitted, with the
+degree (0–4) chosen by weighted GCV. The support is recomputed in a ±0.16 nm
+tube around `f`, with the unchanged `_active_t_support` rule, and compared to
+the straight tube. Label-free, no fitting of lobes.
+
+**Result.**
+
+- The axial profiles along the straight and curved tubes are nearly identical
+  on `251206_013`, `260220_083` and `240307_015`.
+- The curved support is not systematically better on the 25 unknown targets.
+  It is longer on some (`260115_040` 6.1 → 7.4 nm), shorter on others
+  (`260220_030` 5.3 → 3.9, `260129_026` 3.9 → 3.0), and unchanged on the
+  truncated cases (`260220_083` 1.9 → 1.85). `251206_013` only reaches its
+  full 7.5 nm through the `no_component_long_enough` fallback.
+- The selected degree often hits the maximum. The ridge centroid follows the
+  lobe-to-lobe modulation, not a smooth bend.
+
+**Actual cause.** `_active_t_support` sets the baseline to the 10% quantile of
+the axial profile bins and the noise to the MAD of the bins below it. This
+assumes that at least 10% of the bins are background.
+
+- On a 6-mer, the profile ramps slowly to zero at both ends (`240307_015`:
+  baseline 0.03, threshold 0.054, peak 0.16), so the rule works.
+- On a long chain that fills about 90% of the profile, the baseline lands on
+  the molecule's flanks (`251206_013`: 0.083). The noise, taken from the steep
+  end bins, is large, and the threshold reaches 0.149 against a peak of 0.166.
+  Only the brightest segments pass.
+
+The same mechanism explains `260215_022` (2.9 of 5.6 nm) and `260221_044`
+(5.1 of 7.9 nm).
+
+**Decision.** The curved centreline is not implemented; the evidence does not
+support it. The earlier journal and docs statement that "the straight tube
+loses curved chains" is withdrawn and corrected. Candidate fix, pending user
+approval: a background level and noise estimated independently of chain length
+(e.g. from pixels outside the molecule). It would be declared and frozen before
+testing, checked for non-regression on the 6-mer benchmark, and compared
+descriptively to the manual reads of the long chains. This changes the frozen
+counting rule, so it needs a declared experiment.

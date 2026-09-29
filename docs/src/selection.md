@@ -76,9 +76,10 @@ Used by `config/chitosan_10_20mer_adaptive_support_rescue.toml` (`n_max = 24`).
 If `N_eff` sits at the support-feasibility ceiling, a second pass with
 permissive support settings is accepted only when support length and N both
 increase and circular/elliptical counts stay coherent. The robust-AICc guard
-then acts down-only on the active support. Known limit: the support is a
-straight tube, so long curved chains leave it and are undercounted
-([journal](journal.md)).
+then acts down-only on the active support. Known limit: the support baseline
+is the 10% quantile of the axial profile. On long chains that fill most of the
+profile, the baseline lands on the molecule and the support is truncated, so
+long chains are undercounted ([journal](journal.md)).
 
 ### Other policies
 

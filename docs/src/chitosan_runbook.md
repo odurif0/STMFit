@@ -118,12 +118,15 @@ reproduce ([journal](journal.md)). For cluster arrays of `batch_full.jl`, see
 
 **Status (job 12023144, 25 targets + 109 repeat candidates).** 99 consecutive
 pairs are linked and 17 counts change. For the 12 manually read targets, the
-mean |N − N_manual| is 1.33. Two long curved chains fail badly (`251206_013`:
-4 lobes, manual 12; `260220_083`: 2, earlier production 9). The straight support
-tube loses a curved chain. The fusion fit gives θ0 = 0.45, so per-scan calls are
-inconsistent across repeat scans. **These outputs are not chemically
-validated.** A curved-centreline support model and consistent per-scan
-assignment on long chains are prerequisites ([journal](journal.md)).
+mean |N − N_manual| is 1.33. Two long chains fail badly (`251206_013`:
+4 lobes, manual 12; `260220_083`: 2, earlier production 9). Their axial
+support is truncated because the support baseline (10% quantile of the axial
+profile) lands on the molecule when the chain fills most of the profile; a
+curved centreline does not change this (prototype, 2026-09-30). The fusion fit
+gives θ0 = 0.45, so per-scan calls are inconsistent across repeat scans.
+**These outputs are not chemically validated.** A length-invariant support
+baseline and consistent per-scan assignment on long chains are prerequisites
+([journal](journal.md)).
 
 ## Tests
 

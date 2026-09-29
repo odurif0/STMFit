@@ -117,7 +117,7 @@ same fusion gives identical numbers.
 2. **Correlated exact chains.** Exact chains come in molecule-sized blocks.
 3. **Coverage of fusion.** Only repeatedly imaged molecules are fused.
 4. **Application.** On unknown 10–20mers the per-scan calls are inconsistent
-   (θ0 = 0.45), and long curved chains are undercounted. No chemical claim is
+   (θ0 = 0.45), and some long chains are undercounted. No chemical claim is
    made there.
 
 ## Grading conventions

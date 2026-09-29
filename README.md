@@ -40,7 +40,7 @@ GlcNAc with edge adjacency, so benchmark accuracy is not chemical validation.
 Exact chains come in molecule-sized blocks (43 of 88 from one 43-scan molecule).
 Only repeatedly imaged molecules are fused. The counting parameters keep their
 historical benchmark-informed provenance ([calibration](docs/src/calibration.md)).
-On unknown 10–20mers, long curved chains are undercounted and per-scan calls are
+On unknown 10–20mers, some long chains are undercounted (truncated support) and per-scan calls are
 inconsistent across repeat scans (fitted false-call rate 0.45). Those outputs
 are therefore not chemically validated.
 
