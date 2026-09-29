@@ -59,7 +59,7 @@ end
         rules = vcat(["s$s.sxm" => "agrees" for s in 1:20], ["bad.sxm" => "consensus_fit_failed"])
         s = consensus_summary(dir, rules)
         X = reshape([r.features["x"] for r in recs], :, 1)
-        opt = KM.Options("", "", "", "", ["v" => ["x"]], 0, 5, false, "", "vote", s)
+        opt = KM.Options("", "", "", "", ["v" => ["x"]], 0, 5, false, s)
         p = KM._view_probability_trained(recs, X, collect(eachindex(recs)), ["x"], opt)
         @test all(isfinite, p)
         truth = [r.lobe in (2, 5) && r.file != "bad.sxm" for r in recs]

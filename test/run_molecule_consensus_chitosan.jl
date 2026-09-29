@@ -190,19 +190,13 @@ function execute_run(o; runner=run_stage, thread_budget=min(Threads.nthreads(), 
         consensus = check_consensus_refits(out, raw, abspath(o["--count-config"]), proposed, runner)
         final_counts = selected_counts(consensus)
         Set(keys(final_counts)) == Set(files) || error("Consensus omitted or added scans")
-        _, tracks = read_table(joinpath(consensus_dir, "consensus.tsv"))
-        groups = joinpath(consensus_dir, "training_groups.tsv")
-        write_table(groups, ["file", "group"], [Dict("file" => r["file"], "group" => "track" * r["track"]) for r in tracks])
         sel = assignment["selection"]
-        uses_groups = sel["gmm_training_weighting"] == "equal_molecules" ||
-                      get(sel, "kmeans_training_weighting", "equal_lobes") == "equal_molecules"
         stage = "assignment"
         dest = joinpath(out, "assignment")
         runner(out, stage, "run_reconstructed_chitosan.jl",
             ["--data-dir", raw, "--count-config", abspath(o["--count-config"]),
              "--config", abspath(o["--config"]), "--templates", abspath(o["--templates"]),
              "--selected-summary", consensus, "--outdir", dest,
-             (uses_groups ? ["--training-groups", groups] : String[])...,
              (get(sel, "assignment_training_scans", "all") == "corroborated_counts" ? ["--training-scans", consensus] : String[])...];
             threads=min(thread_budget, 4))
         for name in ("features.tsv", "features_split.tsv", "predictions.tsv")

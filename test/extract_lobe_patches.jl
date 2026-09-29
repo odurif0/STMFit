@@ -14,12 +14,6 @@ using .ScriptUtils: _parse_f, _read_tsv
 include(joinpath(@__DIR__, "lib", "patch_preprocessing.jl"))
 using .PatchPreprocessing: PreprocessingSettings, load_patch_preprocessing,
     load_patch_residual_filter, patch_residual, preprocess_patch_channel
-include(joinpath(@__DIR__, "lib", "patch_acquisition.jl"))
-using .PatchAcquisition
-include(joinpath(@__DIR__, "lib", "patch_frames.jl"))
-using .PatchFrames
-include(joinpath(@__DIR__, "lib", "residual_features.jl"))
-using .ResidualFeatures
 
 const DEFAULT_FEATURES = "results/unit_separability/lobe_features_selectedN_primary.tsv"
 const DEFAULT_OUT = "results/unit_separability/lobe_patches_selectedN_primary.tsv"
@@ -33,10 +27,6 @@ struct Options
     step_nm::Float64
     preprocessing::PreprocessingSettings
     residual_filter::String
-    acquisition_shifts::Union{Nothing,String}
-    patch_frames::Union{Nothing,String}
-    residual_fwd::Union{Nothing,String}
-    residual_bwd::Union{Nothing,String}
 end
 
 function _parse_cli(args)
@@ -45,9 +35,6 @@ function _parse_cli(args)
     data_dir = get(ENV, "STMFIT_DATA_DIR", "")
     config_path::Union{Nothing,String} = nothing
     assignment_path::Union{Nothing,String} = nothing
-    acquisition_path::Union{Nothing,String} = nothing
-    frames_path::Union{Nothing,String} = nothing
-    residual_paths = Dict{String,String}()
     half_nm = 0.32
     half_u_nm = 0.32
     step_nm = 0.08
@@ -67,18 +54,6 @@ function _parse_cli(args)
         elseif startswith(arg, "--config=")
             config_path === nothing || error("Duplicate --config option")
             config_path = split(arg, "=", limit=2)[2]; i += 1
-        elseif arg == "--acquisition-shifts"
-            acquisition_path === nothing || error("Duplicate --acquisition-shifts")
-            i < length(args) && !startswith(args[i+1], "--") || error("Missing acquisition table")
-            acquisition_path = args[i+1]; i += 2
-        elseif arg == "--patch-frames"
-            frames_path === nothing || error("Duplicate --patch-frames")
-            i < length(args) && !startswith(args[i+1], "--") || error("Missing patch-frame table")
-            frames_path = args[i+1]; i += 2
-        elseif arg in ("--residual-features-fwd", "--residual-features-bwd")
-            haskey(residual_paths,arg) && error("Duplicate residual model option")
-            i < length(args) && !startswith(args[i+1],"--") || error("Missing residual model table")
-            residual_paths[arg]=args[i+1]; i+=2
         elseif arg == "--assignment-config"
             assignment_path === nothing || error("Duplicate --assignment-config option")
             i < length(args) && !startswith(args[i+1], "--") || error("Missing value for --assignment-config")
@@ -102,10 +77,6 @@ function _parse_cli(args)
               --data-dir PATH   SXM data directory [\$STMFIT_DATA_DIR]
               --config PATH     Optional count TOML: all three [preprocessing] fields
                                 (omitted: stride=1, flatten=plane+rows, smooth_radius_px=1)
-              --acquisition-shifts PATH  Opt-in backward shift table; forward only restores raw masks
-              --patch-frames PATH  Opt-in local sampling axes; model subtraction stays global
-              --residual-features-fwd PATH --residual-features-bwd PATH
-                                Subtraction-only models for each target view; both required
               --assignment-config PATH  TOML with [preprocessing] patch_residual_filter
                                         (omitted: legacy smooth_data_only)
               --half-nm FLOAT   Patch half-size along the chain t [0.32]
@@ -122,8 +93,7 @@ function _parse_cli(args)
     isfile(features) || error("Features TSV not found: $features")
     preprocessing = load_patch_preprocessing(config_path)
     residual_filter = load_patch_residual_filter(assignment_path)
-    return Options(features, out_tsv, data_dir, half_nm, half_u_nm, step_nm, preprocessing, residual_filter, acquisition_path, frames_path,
-        get(residual_paths,"--residual-features-fwd",nothing),get(residual_paths,"--residual-features-bwd",nothing))
+    return Options(features, out_tsv, data_dir, half_nm, half_u_nm, step_nm, preprocessing, residual_filter)
 end
 
 function _eval_peak(x, y, cx, cy, ax, ay, A, spar, sperp, skew_ratio)
@@ -166,11 +136,6 @@ function main(args=ARGS)
     for row in rows
         push!(get!(by_file, basename(row["file"]), Dict{String,String}[]), row)
     end
-    shifts = read_shifts(opt.acquisition_shifts,keys(by_file))
-    frames = read_frames(opt.patch_frames, rows)
-    model_axes = read_model_axes(rows)
-    residual_models = read_residual_models(opt.residual_fwd,opt.residual_bwd,rows;
-        acquisition_shifts=opt.acquisition_shifts,patch_frames=opt.patch_frames)
     coords = collect(-opt.half_nm:opt.step_nm:opt.half_nm)
     coords_u = collect(-opt.half_u_nm:opt.step_nm:opt.half_u_nm)
     pix_names = [@sprintf("%03d", i) for i in 1:(length(coords) * length(coords_u))]
@@ -187,16 +152,11 @@ function main(args=ARGS)
             try
                 img = read_sxm(sxm_path)
                 ch = get_channel(img, "Z"; direction="fwd")
-                residual_models === nothing || require_direction(ch,"fwd")
                 pcfg = PatternConfig(filepath=sxm_path, channel="Z", direction="fwd",
                     stride=opt.preprocessing.stride, flatten=opt.preprocessing.flatten,
                     smooth_radius_px=opt.preprocessing.smooth_radius_px,
                     output_dir=dirname(opt.out_tsv), no_plot=true)
                 xs, ys, raw, z, z_smooth, scaled_unit, noise = preprocess_patch_channel(img, ch, pcfg, opt.preprocessing)
-                if shifts !== nothing
-                    require_direction(ch,"fwd")
-                    z,z_smooth = observed_shift(z,ch,opt.preprocessing,0)
-                end
                 nx, ny = length(xs), length(ys)
                 ax = _parse_f(rs[1]["axis_x"]); ay = _parse_f(rs[1]["axis_y"])
                 b0 = haskey(rs[1], "baseline") ? _parse_f(rs[1]["baseline"]) : 0.0
@@ -211,23 +171,18 @@ function main(args=ARGS)
                     spar = _parse_f(row["sigma_parallel_nm"]); sperp = _parse_f(row["sigma_perp_nm"])
                     skew = haskey(row, "skew_ratio") ? _parse_f(row["skew_ratio"]) : 1.0
                     isfinite(skew) || (skew = 1.0)
-                    maxis, mayis = patch_axis(model_axes, row, ax, ay)
                     for iy in 1:ny, ix in 1:nx
-                        model[iy, ix] += _eval_peak(xs[ix], ys[iy], cx, cy, maxis, mayis, A, spar, sperp, skew)
+                        model[iy, ix] += _eval_peak(xs[ix], ys[iy], cx, cy, ax, ay, A, spar, sperp, skew)
                     end
-                end
-                if residual_models !== nothing
-                    model=subtraction_model(residual_models.fwd[file],xs,ys,_eval_peak)
                 end
                 residual = patch_residual(z, z_smooth, model, opt.preprocessing, opt.residual_filter)
 
                 for row in rs
                     cx = _parse_f(row["x_nm"]); cy = _parse_f(row["y_nm"])
                     raw_vals = Float64[]; res_vals = Float64[]
-                    pax, pay = patch_axis(frames, row, ax, ay)
                     for u in coords_u, t in coords
-                        x = cx + t * pax + u * (-pay)
-                        y = cy + t * pay + u * pax
+                        x = cx + t * ax + u * (-ay)
+                        y = cy + t * ay + u * ax
                         push!(raw_vals, _interp(xs, ys, z_smooth, x, y))
                         push!(res_vals, _interp(xs, ys, residual, x, y))
                     end

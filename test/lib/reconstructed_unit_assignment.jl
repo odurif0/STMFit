@@ -5,10 +5,8 @@ using Printf, Statistics, TOML
 export read_table, write_table, lobe_table, require_same_keys,
        transverse_asymmetry, transverse_descriptor, augment_descriptor, mold_margin,
        write_soft_vote, load_config, load_training_policy, write_training_support,
-       load_training_mask, validate_training_mask, load_gmm_normalization, load_gmm_weighting,
-       load_gmm_seed_aggregation, load_gmm_resampling, load_gmm_covariance_structure,
-       load_fisher_cv, load_gmm_cluster_naming, load_gmm_learning, load_gmm_covariance_scope,
-       read_training_groups, load_training_scans, read_corroborated_scans
+       load_training_mask, validate_training_mask, load_fisher_cv,
+       load_training_scans, read_corroborated_scans
 
 const TRANSVERSE_DESCRIPTORS = ("transverse_half_plane_asymmetry",
     "transverse_first_moment", "affine_residual_half_plane_asymmetry")
@@ -148,27 +146,7 @@ function validate_training_mask(policy, mask, n)
     return mask
 end
 
-"Explicit per-file GMM feature scaling, independent of pixel normalization."
-function load_gmm_normalization(config::AbstractDict)
-    pre = get(config, "preprocessing", Dict())
-    mode = get(pre, "gmm_feature_normalization", nothing)
-    mode in ("mean_sample_std", "median_iqr") ||
-        throw(ArgumentError("explicit gmm_feature_normalization must be mean_sample_std or median_iqr"))
-    fallback = get(pre, "gmm_scale_fallback", nothing)
-    fallback isa Real && !(fallback isa Bool) && isfinite(fallback) && fallback > 0 ||
-        throw(ArgumentError("explicit gmm_scale_fallback must be positive and finite"))
-    return (mode=String(mode), scale_fallback=Float64(fallback))
-end
 
-"Observation weights depend only on the number of usable training rows per scan."
-function load_gmm_weighting(config::AbstractDict)
-    mode = get(get(config, "selection", Dict()), "gmm_training_weighting", nothing)
-    mode in ("equal_lobes", "equal_scans", "equal_molecules") ||
-        throw(ArgumentError("explicit gmm_training_weighting must be equal_lobes, equal_scans or equal_molecules"))
-    mode != "equal_lobes" && get(get(config, "model", Dict()), "gmm_final_covariance", nothing) != "ridge" &&
-        throw(ArgumentError("$mode requires ridge; weighted shrinkage is not implemented"))
-    return String(mode)
-end
 
 """
 Scans admitted to cohort learning. `all` keeps every scan; `corroborated_counts`
@@ -189,129 +167,11 @@ function read_corroborated_scans(path::AbstractString)
     return Set(basename(r["filepath"]) for r in rows if r["count_rule"] == "agrees")
 end
 
-"File => label-free training group (repeated-scan molecule track) from a file/group TSV."
-function read_training_groups(path::AbstractString)
-    header, rows = read_table(path)
-    all(c -> c in header, ("file", "group")) || error("Training groups need file and group columns")
-    groups = Dict{String,String}()
-    for r in rows
-        f = r["file"]; haskey(groups, f) && error("Duplicate training-group file $f")
-        isempty(r["group"]) && error("Empty training group for $f")
-        groups[f] = r["group"]
-    end
-    return groups
-end
 
-"Aggregation of existing per-seed scores; no change to fitting or group naming."
-function load_gmm_seed_aggregation(config::AbstractDict)
-    mode = get(get(config, "selection", Dict()), "gmm_seed_aggregation", nothing)
-    mode in ("hard_vote", "mean_membership") ||
-        throw(ArgumentError("explicit gmm_seed_aggregation must be hard_vote or mean_membership"))
-    return String(mode)
-end
 
-"Whole-scan bootstrap settings; no per-lobe or class-stratified sampling."
-function load_gmm_resampling(config::AbstractDict)
-    sel = get(config, "selection", Dict())
-    mode = get(sel, "gmm_resampling", nothing)
-    mode in ("none", "whole_scans") || throw(ArgumentError("explicit gmm_resampling must be none or whole_scans"))
-    bags = get(sel, "gmm_bootstrap_replicates", nothing)
-    seed = get(sel, "gmm_bootstrap_seed", nothing)
-    bags isa Integer && !(bags isa Bool) && 1 <= bags <= typemax(Int) ||
-        throw(ArgumentError("explicit gmm_bootstrap_replicates must be a positive integer"))
-    seed isa Integer && !(seed isa Bool) && 0 <= seed <= typemax(Int) - (bags - 1) ||
-        throw(ArgumentError("explicit gmm_bootstrap_seed must be nonnegative without overflow"))
-    mode == "none" && bags != 1 && throw(ArgumentError("none requires one unresampled replicate"))
-    if mode == "whole_scans"
-        load_gmm_weighting(config) == "equal_lobes" || throw(ArgumentError("bootstrap requires equal_lobes"))
-        load_gmm_seed_aggregation(config) == "hard_vote" || throw(ArgumentError("bootstrap requires hard_vote"))
-        load_training_policy(config) == "all_admissible" || throw(ArgumentError("bootstrap requires all_admissible"))
-        load_gmm_normalization(config).mode == "mean_sample_std" || throw(ArgumentError("bootstrap requires mean_sample_std"))
-        get(get(config, "model", Dict()), "gmm_final_covariance", nothing) == "ridge" ||
-            throw(ArgumentError("bootstrap requires ridge covariance"))
-    end
-    return (mode=String(mode), replicates=Int(bags), seed=Int(seed))
-end
 
-"Covariance sharing throughout GMM learning, separate from final shrinkage."
-function load_gmm_covariance_structure(config::AbstractDict)
-    model, sel, pre = (get(config, section, Dict()) for section in ("model", "selection", "preprocessing"))
-    mode = get(model, "gmm_covariance_structure", nothing)
-    mode in ("full", "tied") || throw(ArgumentError("explicit gmm_covariance_structure must be full or tied"))
-    if mode == "tied"
-        for (section, key, expected) in ((model, "gmm_final_covariance", "ridge"),
-                (model, "gmm_final_score", "mahalanobis"),
-                (sel, "gmm_training_weighting", "equal_lobes"),
-                (sel, "gmm_seed_aggregation", "hard_vote"),
-                (sel, "gmm_resampling", "none"),
-                (sel, "assignment_training_support", "all_admissible"),
-                (pre, "gmm_feature_normalization", "mean_sample_std"))
-            get(section, key, nothing) == expected ||
-                throw(ArgumentError("tied covariance currently requires $key=$expected"))
-        end
-    end
-    return String(mode)
-end
 
-"Apply shrinkage at every covariance update, separately from all other alternatives."
-function load_gmm_covariance_scope(config::AbstractDict)
-    model, sel, pre = (get(config, section, Dict()) for section in ("model", "selection", "preprocessing"))
-    scope = get(model, "gmm_covariance_scope", nothing)
-    scope in ("final_only", "all_updates") || throw(ArgumentError("explicit gmm_covariance_scope required"))
-    if scope == "all_updates"
-        for (section, key, expected) in ((model, "gmm_learning_family", "gaussian"),
-                (model, "gmm_covariance_structure", "full"), (model, "gmm_final_covariance", "ledoit_wolf"),
-                (model, "gmm_final_score", "mahalanobis"), (model, "gmm_hard_assignment", "mahalanobis"),
-                (sel, "fisher_cv_scheme", "lobe_parity"), (sel, "gmm_cluster_naming", "raw_amplitude"),
-                (sel, "gmm_training_weighting", "equal_lobes"), (sel, "gmm_seed_aggregation", "hard_vote"),
-                (sel, "gmm_resampling", "none"), (sel, "assignment_training_support", "all_admissible"),
-                (pre, "gmm_feature_normalization", "mean_sample_std"))
-            get(section, key, nothing) == expected || throw(ArgumentError("all-updates shrinkage requires $key=$expected"))
-        end
-    end
-    return String(scope)
-end
 
-"Fixed alternative learning families; no rank, df, seed or model selection by grade."
-function load_gmm_learning(config::AbstractDict)
-    model, sel, pre = (get(config, section, Dict()) for section in ("model", "selection", "preprocessing"))
-    family = get(model, "gmm_learning_family", nothing)
-    family in ("gaussian", "factor_analyzer", "student_t") || throw(ArgumentError("explicit gmm_learning_family required"))
-    hard = get(model, "gmm_hard_assignment", nothing)
-    hard in ("mahalanobis", "student_density") || throw(ArgumentError("explicit gmm_hard_assignment required"))
-    final = get(model, "gmm_final_score", nothing)
-    if hard == "student_density" || final == "student_density"
-        family == "student_t" && hard == final == "student_density" ||
-            throw(ArgumentError("Student density requires student_t learning and matching hard/final rules"))
-    end
-    for key in ("gmm_factor_rank", "gmm_learning_maxiter")
-        value = get(model, key, nothing)
-        value isa Integer && !(value isa Bool) && 1 <= value <= typemax(Int) ||
-            throw(ArgumentError("$key must be a positive integer"))
-    end
-    for key in ("gmm_student_df", "gmm_learning_tolerance", "gmm_learning_min_mass", "gmm_learning_cholesky_guard")
-        value = get(model, key, nothing)
-        value isa Real && !(value isa Bool) && isfinite(value) && value > 0 ||
-            throw(ArgumentError("$key must be positive and finite"))
-    end
-    if family != "gaussian"
-        for (section, key, expected) in ((model, "gmm_covariance_structure", "full"),
-                (model, "gmm_covariance_scope", "final_only"),
-                (model, "gmm_final_covariance", "ridge"), (model, "gmm_final_score", hard),
-                (sel, "fisher_cv_scheme", "lobe_parity"), (sel, "gmm_cluster_naming", "raw_amplitude"),
-                (sel, "gmm_training_weighting", "equal_lobes"), (sel, "gmm_seed_aggregation", "hard_vote"),
-                (sel, "gmm_resampling", "none"), (sel, "assignment_training_support", "all_admissible"),
-                (pre, "gmm_feature_normalization", "mean_sample_std"))
-            get(section, key, nothing) == expected || throw(ArgumentError("$family requires $key=$expected"))
-        end
-        model["gmm_learning_cholesky_guard"] == 1e-8 ||
-            throw(ArgumentError("alternative learning guard must match the unchanged 1e-8 final-score guard"))
-    end
-    return (family=String(family), hard_assignment=String(hard), factor_rank=Int(model["gmm_factor_rank"]),
-        student_df=Float64(model["gmm_student_df"]), maxiter=Int(model["gmm_learning_maxiter"]),
-        tolerance=Float64(model["gmm_learning_tolerance"]), min_mass=Float64(model["gmm_learning_min_mass"]),
-        cholesky_guard=Float64(model["gmm_learning_cholesky_guard"]))
-end
 
 "Explicit Fisher grouping; the split seed never selects by pixels or labels."
 function load_fisher_cv(config::AbstractDict)
@@ -325,25 +185,6 @@ function load_fisher_cv(config::AbstractDict)
     return (scheme=String(scheme), seed=Int(seed))
 end
 
-"Only name already learned GMM components; never impose their sizes."
-function load_gmm_cluster_naming(config::AbstractDict)
-    model, sel, pre = (get(config, section, Dict()) for section in ("model", "selection", "preprocessing"))
-    mode = get(sel, "gmm_cluster_naming", nothing)
-    mode in ("raw_amplitude", "within_scan_z") ||
-        throw(ArgumentError("explicit gmm_cluster_naming must be raw_amplitude or within_scan_z"))
-    if mode == "within_scan_z"
-        for (section, key, expected) in ((model, "gmm_covariance_structure", "full"),
-                (model, "gmm_final_covariance", "ridge"), (model, "gmm_final_score", "mahalanobis"),
-                (sel, "fisher_cv_scheme", "lobe_parity"), (sel, "gmm_training_weighting", "equal_lobes"),
-                (sel, "gmm_seed_aggregation", "hard_vote"), (sel, "gmm_resampling", "none"),
-                (sel, "assignment_training_support", "all_admissible"),
-                (pre, "gmm_feature_normalization", "mean_sample_std"))
-            get(section, key, nothing) == expected ||
-                throw(ArgumentError("relative naming currently requires $key=$expected"))
-        end
-    end
-    return String(mode)
-end
 
 function load_config(path::AbstractString)
     cfg = TOML.parsefile(path)
@@ -351,15 +192,7 @@ function load_config(path::AbstractString)
         haskey(cfg, section) || error("Missing config section [$section]")
     end
     model, pre = cfg["model"], cfg["preprocessing"]
-    load_gmm_normalization(cfg)
-    load_gmm_weighting(cfg)
-    load_gmm_seed_aggregation(cfg)
-    load_gmm_resampling(cfg)
-    load_gmm_covariance_structure(cfg)
     load_fisher_cv(cfg)
-    load_gmm_cluster_naming(cfg)
-    load_gmm_learning(cfg)
-    load_gmm_covariance_scope(cfg)
     load_training_scans(cfg)
     model["descriptor"] in TRANSVERSE_DESCRIPTORS || error("Unsupported descriptor")
     model["descriptor_column"] == "patch_u_asym_reconstructed" || error("Unsupported descriptor column")
