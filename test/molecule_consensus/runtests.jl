@@ -114,3 +114,33 @@ end
     repo = dirname(dirname(@__DIR__))
     @test load_consensus_settings(TOML.parsefile(joinpath(repo, "config", "molecule_consensus.toml"))).min_track_scans == 3
 end
+
+module MCRun
+include(joinpath(@__DIR__, "..", "run_molecule_consensus_chitosan.jl"))
+end
+
+@testset "consensus counts are kept only when the fixed-N refit succeeds" begin
+    mktempdir() do dir
+        proposed = joinpath(dir, "consensus_summary.tsv")
+        MCRun.MoleculeConsensusRun.write_table(proposed,
+            ["filepath", "status", "N_selected", "N_scan", "count_rule"],
+            [Dict("filepath" => "a.sxm", "status" => "ok", "N_selected" => "6", "N_scan" => "5", "count_rule" => "consensus_applied"),
+             Dict("filepath" => "b.sxm", "status" => "ok", "N_selected" => "6", "N_scan" => "3", "count_rule" => "consensus_applied"),
+             Dict("filepath" => "c.sxm", "status" => "ok", "N_selected" => "6", "N_scan" => "6", "count_rule" => "agrees")])
+        calls = Vector{Vector{String}}()
+        fake(out, name, script, args; threads=1) = begin
+            push!(calls, args)
+            outpath = args[findfirst(==("--out"), args) + 1]
+            open(outpath, "w") do io  # only a.sxm fits at the consensus count
+                println(io, "file\tlobe"); for k in 1:6; println(io, "a.sxm\t$k"); end
+            end
+        end
+        final = MCRun.MoleculeConsensusRun.check_consensus_refits(dir, dir, "count.toml", proposed, fake)
+        _, rows = MCRun.MoleculeConsensusRun.read_table(final)
+        byfile = Dict(r["filepath"] => r for r in rows)
+        @test byfile["a.sxm"]["N_selected"] == "6" && byfile["a.sxm"]["count_rule"] == "consensus_applied"
+        @test byfile["b.sxm"]["N_selected"] == "3" && byfile["b.sxm"]["count_rule"] == "consensus_fit_failed"
+        @test byfile["c.sxm"]["N_selected"] == "6" && byfile["c.sxm"]["count_rule"] == "agrees"
+        @test length(calls) == 1 && calls[1][findfirst(==("--files"), calls[1]) + 1] == "a.sxm,b.sxm"
+    end
+end
