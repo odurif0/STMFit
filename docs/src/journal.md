@@ -20831,17 +20831,24 @@ Work is on branch `research/labelfree-chain-20260929` (from
 - **Error anatomy.** On the 123 N=6 fresh chains, positions 1/3/4/6 are
   100/93/90/98% correct, but the GlcNAc positions 2 and 5 only 55%. Class 1
   is emitted 160 times for 246 true GlcNAc; emitted GlcN are 95% precise.
-- **Weak and strong GlcNAc.** In each chain one GlcNAc is clearly brighter
-  (amp_prominence AUC 0.93 against interior GlcN). The other is
-  indistinguishable from interior GlcN (raw amplitude AUC 0.44, prominence
-  0.60, all chain-geometry descriptors ≈0.5). Mapped into the absolute piezo
-  frame, the detected GlcNAc is mostly the same physical residue across scan
-  angles from +40° to −70°: a molecule property, not a scan-frame artifact.
-  Averaging features over up to 43 registered scans does not separate the
-  weak GlcNAc either. In the fresh run 103 of 246 GlcNAc lobes get p=0.
-  Exact 0.5 k-means/GMM ties are emitted as class 1 with confidence 0:
-  17 GlcNAc / 5 GlcN in the fresh run, 30 / 17 in the saved record. This
-  largely explains the 43 versus 29 exact-chain gap between saved and fresh.
+- **Two GlcNAc per chain, one usually missed.** In most fresh N=6 chains only
+  one of positions 2/5 is called GlcNAc. Labelling the more prominent one
+  "strong" gives AUC 0.93 against interior GlcN, the other 0.60. This split is
+  **not** evidence of an invisible residue class: re-pairing GlcNAc values at
+  random across chains (order-statistics null, 500 draws) gives 0.908/0.615
+  for prominence and 0.803/0.425 for raw amplitude, versus 0.929/0.595 and
+  0.814/0.414 observed. The GlcNAc signal is moderately separable, and with
+  two GlcNAc per chain the lower one often falls below the decision boundary.
+  Mapped into the absolute piezo frame, the detected GlcNAc is mostly the same
+  physical residue across scan angles (+40° to −70°), indicating molecule-level
+  systematic variation rather than scan-frame noise; averaging over up to 43
+  registered scans does not recover the missed one. In the fresh run 103 of
+  246 GlcNAc lobes get p=0. Exact 0.5 k-means/GMM ties are emitted as class 1
+  with confidence 0: 17 GlcNAc / 5 GlcN in the fresh run, 30 / 17 in the saved
+  record. **24 of the record's 43 exact chains contain at least one such
+  zero-confidence tie.** The k-means views have a flat objective: per view,
+  near-equal-cost optima (differences about 0.01%) put 140–180 lobes in the
+  high-amplitude cluster, and they differ exactly on these marginal lobes.
 - **Position confound (limitation, not fixed).** Measured in `amp_rel`, the
   prominence contrast between positions 2/5 and 3/4 (0.198) decomposes into
   about 0.099 from edge dimming alone (ends 0.199 below interior GlcN, halved
