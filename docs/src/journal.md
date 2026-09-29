@@ -21127,3 +21127,35 @@ parallel/serial and prior-reference values agree exactly. The original
 gate. Reference XML still correctly identifies Davidson, not the running CG
 trial. No incomplete working orbital is fetched or interpreted, and no new
 SCF, mold or benchmark result is claimed.
+
+### 2026-09-29 — Consensus readback: class changes on unchanged local inputs
+
+Read-only comparison of the retained consensus tables localizes part of the
+sensitivity seen above; no learner or image fit is run. The v2 reused-count
+case also passes its existing verifier (146 raw hashes and five pinned
+inputs), all **237** current output hashes and equality of its archived
+local/remote manifests. Its prediction SHA256 is
+`ad2c835e7b6d2fcf582abd95039f2fe6b3cd8d52849d04cb360250add1683a39`;
+the fresh v2 prediction hash remains
+`fdf1fd67bc3edf1f179bf4440219e0d41e3e084b924075b8d2c6d01ae7172881`.
+
+Across those two v2 runs, all **876** lobe keys agree. The serialized geometry,
+local descriptors and forward/backward 17x17 patch rows are identical on
+**796** keys, including all **three** final class changes. K-means exports
+are unchanged at those three keys, while the GMM outputs flip. For
+`240817_021/5` and `240817_081/5`, the only changed field in the saved predictor
+row is `emp_fisher`; `240817_080/5` also changes `split_log_skew`. Shared learned
+banks can also differ, so this is not an isolated causal test of one feature.
+
+Between the fresh v1 and v2 runs, **798/871** common keys retain identical
+serialized geometry/local-feature and forward/backward patch rows. **14 of
+17** final class changes occur on that unchanged subset. This demonstrates
+why a changed cohort/refit can affect assignments elsewhere, not just the
+newly fitted lobes. It does not make transductive learning label leakage by
+itself, or prove that freezing a particular bank improves recognition.
+
+The September 24 exact-input frozen-learning and negative whole-scan-exclusion
+experiments already address related questions; exclusion is not an untested
+remedy to rerun. This readback uses all scientific rows without truth labels,
+selects no seed or threshold, and leaves predictions, calibration, production
+and champion unchanged.
