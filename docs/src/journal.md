@@ -21011,5 +21011,14 @@ scans lie within ±30 min and 5 nm of the frame centre (126 candidates in
 total, e.g. 12 for `260129_026`, 11 for `260215_020`); these are not in the
 25-file application. Registration would decide which are the same unchanged
 molecule. Molecule consensus could then stabilise counts on the unknown
-chains, but the driver currently requires the 6mer hybrid counting policy;
-the 10–20mer adaptive-support configuration is not yet supported.
+chains. The driver now accepts the 10–20mer adaptive-support counting policy
+and carries each scan's accepted support into the consensus refit (`cf6679f`).
+`test/collect_repeat_scans.jl` (header-only; `collect_max_gap_min=30`,
+`collect_max_offset_nm=5`, `collect_max_range_nm=20`) selects 25 targets plus
+109 distinct repeat candidates from the lab tree. 26 duplicate basenames with
+differing contents are excluded and listed. All 134 raw files are hash-verified
+on Viper. Application job **12023144** (`c82f98e`,
+`chitosan_10_20mer_adaptive_support_rescue.toml` counting,
+`unit_assignment_patch_support.toml` assignment, 16 h cap, no retry) was
+submitted on 2026-09-29. It is label-free end to end; its human-read
+comparison is external and descriptive only.
