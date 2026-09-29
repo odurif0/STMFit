@@ -1,55 +1,63 @@
 # STMFit agent notes
 
-STMFit is a Julia repo for label-free lobe counting and diagnostic
-GlcN/GlcNAc assignment in STM images. Read `docs/src/journal.md` before changing
-scientific behavior; it records successful and failed experiments that are not
-recoverable from the current code alone.
+STMFit is a Julia repo for label-free reconstruction of chitosan chains from raw
+STM images: unit counting, positions, and GlcN/GlcNAc assignment with explicit
+uncertainty. Read `docs/src/journal.md` (current state, open questions,
+rejected approaches) before changing scientific behavior. The full pre-2026-09-29
+history is at the tag `archive/pre-cleanup-20260929`.
 
 ## Scientific invariants
 
-- Fitting, `N_selected`, unit assignment, calibration, thresholds, and
-  abstention must not use expected `N`, `NKNNKN`, class counts, or any benchmark
-  label. Labels belong only in external grading/report scripts.
-- Unit assignment has no composition prior. “Choose the top k lobes” is not a
-  valid label-free method.
+- Fitting, `N_selected`, molecule consensus, unit assignment, fusion,
+  calibration, thresholds and abstention must not use expected `N`, `NKNNKN`,
+  class counts, benchmark membership or any label. Labels belong only in
+  external grading/report scripts (`test/grade_*.jl`, `test/report_*.jl`).
+- Unit assignment has no composition prior. "Choose the top k lobes" is not a
+  valid label-free method. Cluster naming is physical (brighter = GlcNAc).
 - GCV drives base model selection. BIC/AICc are diagnostics or guards because
   spatially correlated residuals make absolute iid information criteria
   unreliable. Do not reinterpret or retune the `n_eff = n ÷ 9` placeholder.
 - The 1D fit is diagnostic-only and skipped by default. It must not feed
   `N_selected`; `--no-skip-1d` only enables a cross-check.
-- Physical and selection parameters belong in `config/*.toml`, not hidden code
-  defaults. Configs have `[model]`, `[selection]`, and `[preprocessing]`.
-- Keep benchmark and application claims separate: the 6mer sets have external
-  labels; 10–20mer data do not. “Processed” or visually plausible is not
-  benchmark validation.
-- Relaxed GlcN and GlcNAc DFT cubes now pass the documented production gate at
-  the common `5e-5 Ry` acceptance criterion; GlcNAc was validated by byte-identical
-  plain/TF LDOS cubes. Read `docs/src/dft_calculation_note.md` before changing the
-  criterion or replacing the still-preliminary joint-proxy registry sources.
+- Physical, selection and assignment parameters belong in `config/*.toml`, not
+  hidden code defaults. Configs have `[model]`, `[selection]`, `[preprocessing]`.
+  Promoted configs are frozen; a change is a new declared experiment.
+- Keep benchmark and application claims separate: the 6-mer set has external
+  labels; 10–20mer data do not. "Processed" or visually plausible is not
+  validation. NKNNKN confounds GlcNAc with edge adjacency, so benchmark
+  accuracy is not chemical validation.
+- The DFT molds (`templates/chitosan_cc_molds_native_v1.tsv`) are empirical
+  templates from the accepted cubes (5e-5 Ry criterion). They keep a legacy
+  cube addressing and read a signed LDOS quantity. Read
+  `docs/src/dft_calculation_note.md` before changing cubes, criterion or builder;
+  new molds get a new versioned file.
 
-## Real boundaries and entrypoints
+## Structure and entrypoints
 
 - The root project composes five local packages through `Project.toml [sources]`:
-  `STMFitCore`, `STMSXMIO`, `GaussianFit1D`, `GaussianFit2D`, and
-  `STMMolecularFit`. `STMMolecularFitGUI` is a separate package and its launcher
-  still contains pre-monorepo assumptions; do not treat it as production entry.
-- `STMSXMIO` owns `SXMImage`, SXM parsing, channel alignment, and shared
+  `STMFitCore`, `STMSXMIO`, `GaussianFit1D`, `GaussianFit2D`, `STMMolecularFit`.
+  `STMMolecularFitGUI` is separate and unmaintained; not a production entry.
+- `STMSXMIO` owns `SXMImage`, SXM parsing, channel alignment and shared
   preprocessing. Do not redefine those types in either fit engine.
-- `GaussianFit1D` depends on `STMFitCore`, not `STMSXMIO`.
-  `GaussianFit2D` depends on Core, SXM I/O, and the 1D package.
-  `STMMolecularFit` orchestrates all four.
+  `GaussianFit1D` depends on `STMFitCore` only; `GaussianFit2D` on Core, SXM I/O
+  and 1D; `STMMolecularFit` orchestrates all four.
 - `packages/GaussianFit2D.jl/src/core.jl` is the fit engine;
   `packages/STMMolecularFit.jl/src/selectors.jl` owns selection;
-  `test/batch_full.jl` is the production driver and imports some selector
-  internals deliberately.
-- Root `test/*.jl` files are mostly standalone research/workflow programs, not a
-  conventional single test suite. Use their `--help` or header usage before
-  assuming arguments.
+  `test/batch_full.jl` is the counting driver and imports selector internals.
+- Promoted method, raw scans to predictions:
+  `test/run_molecule_consensus_chitosan.jl` (Slurm: `hpc/run_molecule_consensus.sbatch`).
+  It runs `batch_full.jl` → `extract_lobe_features.jl` →
+  `build_molecule_consensus.jl` → `run_reconstructed_chitosan.jl` (assignment) →
+  `build_molecule_fusion.jl`. Shared code in `test/lib/`.
+- Verification and external grading: `test/grade_consensus_run.jl`.
+- `test/*.jl` scripts are standalone command-line programs. Use their
+  `--help` or header usage before assuming arguments.
 
-## Setup and focused verification
+## Setup and verification
 
-CI uses Julia 1.12 and explicitly develops local packages before instantiate.
-Use the same bootstrap on a clean depot; do not hand-edit `Manifest.toml`:
+Julia 1.13 (explicit user decision, 2026-09-16), including tests and
+subprocesses; local `julia` resolves to 1.13 via juliaup. The Manifest is
+ignored; use Pkg, never hand-edit it. Bootstrap a clean depot with:
 
 ```bash
 julia --project=. -e '
@@ -60,111 +68,78 @@ end
 Pkg.instantiate(); Pkg.precompile()'
 ```
 
-There is no root aggregator for the package tests. Run package suites under the
-bootstrapped root environment so local, unregistered dependencies resolve:
+Tests, run under the root environment:
 
 ```bash
 julia --project=. packages/STMFitCore.jl/test/runtests.jl
 julia --project=. packages/STMSXMIO.jl/test/runtests.jl
 julia --project=. packages/GaussianFit2D.jl/test/runtests.jl
-julia --project=. test/joint_proxy/runtests.jl   # joint-proxy workflow suite
+for t in test/test_*.jl test/molecule_consensus/*.jl; do julia --project=. "$t"; done
+julia --project=. test/test_reconstructed_pipeline.jl --e2e
 ```
 
-Build docs from the root environment; `docs/make.jl` activates the root project:
+Refactors of kept scripts must be verified byte-for-byte against stored
+outputs. Changes to scientific behavior need a fresh raw run and an external grade.
+
+Docs: `GKSwstype=100 julia --project=. docs/make.jl --build-only`.
+
+## Data and commands
+
+Raw `.sxm` files are untracked (`data/README.md`). Pass `--data-dir` (or
+`STMFIT_DATA_DIR` for `batch_full.jl`).
 
 ```bash
-GKSwstype=100 julia --project=. docs/make.jl
+julia --project=. test/inspect_one_file.jl <file.sxm>            # one scan
+julia -t 4 --project=. test/batch_full.jl 48 --config config/chitosan.toml --data-dir DIR
+julia --project=. test/run_molecule_consensus_chitosan.jl --help  # promoted method
+julia --project=. test/grade_consensus_run.jl --run RUN --outdir NEW  # verify + grade
+julia --project=. test/measure_calibration.jl <clean_scan.sxm>    # audit, no config written
 ```
 
-## Data and production commands
-
-Raw `.sxm` files are untracked. Point scripts to them with `STMFIT_DATA_DIR` or
-`--data-dir`; see `data/README.md` for the expected layout.
-
-```bash
-# Fast, focused inspection before a batch
-julia --project=. test/inspect_one_file.jl <file.sxm>
-
-# Production batch; the first positional argument limits file count
-STMFIT_DATA_DIR=/path/to/data julia -t 4 --project=. test/batch_full.jl 48 \
-  --config config/chitosan.toml
-
-# Bootstrap a new molecule from one clean scan, then visually check it
-julia --project=. test/measure_calibration.jl <clean_scan.sxm>
-
-# Unknown-sequence unit assignment and integrity checks
-julia --project=. test/run_unknown_unit_assignment.jl --help
-julia --project=. test/validate_unit_predictions.jl --help
-julia --project=. test/summarize_unknown_unit_qc.jl --help
-```
-
-`measure_calibration.jl` is a bootstrap, not ground truth; parameters are
-coupled and known scans can be under-detected. Spot-check visible structure.
 If high-N fits disappear, inspect the physical `max_overlap` constraint before
 changing selection logic.
 
 ## HPC and generated state
 
-- Configure `hpc/remote.env` from `hpc/remote.env.example`; it is personal and
-  ignored. Always run `./hpc/launch_remote.sh --dry-run` before `--watch`.
-- The launcher order is sync -> instantiate on the login node -> Slurm array ->
-  merge chunk TSVs -> fetch. Compute nodes have no internet; never run the STM
-  batch or QE compute on login nodes.
-- Viper currently sets `SBATCH_EXPORT=NONE`. For manual jobs requiring custom
-  variables, pass an explicit command-line `sbatch --export=...` list; assigning
-  variables before `sbatch` is insufficient. Command-line options override the
-  environment, which overrides `#SBATCH` directives. Shell dry-runs and
-  `sbatch --test-only` do not validate the compute-node environment. Job 11806180
-  failed before Julia because this export was omitted; do not repeat or retry it.
-- Raven account `oldu` has an observed 8-CPU group quota. The generic launcher
-  defaults (`4 chunks x 4 CPUs`) exceed it; configure at most 8 CPUs total.
-  `batch_full.jl` caps useful Julia threads at four per task.
-- Long 10–20mer chains may need at least 8 hours. `intelligent_sweep` early
-  stops; disable it only for intentionally exhaustive diagnostics.
-- Run heavyweight diagnostic batches, multi-file fits, and exhaustive whole-ROI
-  searches on Viper rather than locally. Prepare a dry-run first and shard them;
-  local execution is for focused single-file checks only.
-- QE molds use `hpc/launch_qe_molds_remote.sh`, not the STM array launcher, and
-  should stay sequential under the one-node Raven QOS limit.
-- Do not commit `results/`, raw `data/`, `qe/`, `docs/build/`, generated
-  sensitivity configs, mold/map TSVs, or generated QE reports; `.gitignore`
-  enumerates them. `/ptmp` is temporary, so fetch HPC results locally.
+- HPC is deliberately boring: sync committed code (plus the ignored Manifest),
+  instantiate on the login node, dry-run, submit one `sbatch`, poll `squeue`,
+  fetch outputs locally. No agent orchestration or state on the cluster that
+  outlives a job. Never compute on login nodes; compute nodes have no internet.
+- Viper sets `SBATCH_EXPORT=NONE`: pass variables with
+  `sbatch --export=NONE,VAR=...`; shell variables before `sbatch` are not seen.
+- Run cohort fits, multi-file batches and exhaustive searches on Viper, not
+  locally. Local runs are for single-file checks and tests.
+- Raven account `oldu` has an 8-CPU group quota; the `launch_remote.sh` default
+  (4 × 4 CPUs) exceeds it. `batch_full.jl` uses at most 4 threads per task.
+- Long 10–20mer counting may need 8 h or more. QE jobs stay sequential under the
+  one-node QOS limit.
+- Do not commit `results/`, raw `data/`, `qe/`, `docs/build/`, `hpc/remote.env`
+  or generated outputs. `/ptmp` is temporary: fetch HPC results.
 
 ## Documentation contract
 
 - Add a dated `docs/src/journal.md` entry for every experiment, scientific
-  decision, failed approach, bug fix, or parameter change, including why.
-- If behavior changes benchmark results, rerun the appropriate grade and update
-  every cited headline (`README.md`, runbook, selection/unit-assignment docs),
-  rather than copying an old number into this file.
-- Keep the journal’s Open Questions current. Parameter additions/renames also
-  require `docs/src/config.md` and `docs/src/calibration.md` updates.
-- Package READMEs contain legacy standalone paths and 1D/BIC-era descriptions.
-  For current methodology and commands, trust root scripts/config, root README,
-  and `docs/src/`.
+  decision, failed approach, bug fix or parameter change, with the reason.
+  Keep its Current state and Open questions current.
+- If behavior changes benchmark results, rerun the grade and update every
+  cited headline (`README.md`, `docs/src/index.md`, runbook, selection and
+  unit-assignment pages).
+- Parameter additions or renames also require `docs/src/config.md` and
+  `docs/src/calibration.md` updates.
+- Package READMEs contain legacy standalone descriptions. Trust the root
+  README, `docs/src/` and the scripts.
 
-## Process guardrails (added 2026-09-16, after the T11-T13 apparatus incident)
+## Process guardrails (2026-09-16, after the T11–T13 apparatus incident)
 
 - Every task starts from a stated scientific deliverable and its definition of
-  done. Process artifacts (protocols, authority ledgers, receipts, review
-  gates, staged snapshots) are NOT deliverables and do not count as progress.
-- Do not create authorization layers, meta-review cycles, multi-version
-  approval cascades, or new "runtime/activation" frameworks. Verification is:
-  tests + one human review. That is the whole mechanism.
-- HPC usage is deliberately boring: sync code (rsync or git relay), submit one
-  sbatch, poll squeue, fetch logs and outputs back locally. No agent
-  orchestration on the cluster, no cluster-side state that outlives a job.
-- Finish the application (unknown-chitosan 10-20mer workflow on the frozen
-  champion) before any new method campaign. New campaigns need a human-approved
-  scope, a time box, and the existing plan's Must-NOT-have list honored.
-- Commit early; never leave validated work uncommitted. The working tree is not
-  a storage device. Git identity is set repo-local (Olivier Durif
-  <o.durif@fkf.mpg.de>); GitHub push goes through the local machine (raven has
-  no credentials).
-- Julia: use Julia 1.13 for milestone 1 (explicit user decision, 2026-09-16),
-  including tests and subprocesses. Local `julia --project=.` resolves to 1.13.0
-  through juliaup's `release` channel; the `+1.13` alias is not installed.
-  The Manifest was generated with 1.12.6; use Pkg, never hand-edit it.
-- The `.omo/` directory is retired; read it only as an archive
-  (`STMFit-archive-20260916` on the local machine, residual staging on raven).
-  Never write new agent state into the repo outside git.
+  done. Process artifacts (protocols, ledgers, receipts, review gates, staged
+  snapshots) are not deliverables.
+- Do not create authorization layers, meta-review cycles, approval cascades or
+  "runtime/activation" frameworks. Verification is tests plus one human review.
+- New method campaigns need a human-approved scope and a time box. Current
+  priority: the unknown 10–20mer application (see the journal's open questions).
+- Commit early; never leave validated work uncommitted. Git identity is set
+  repo-local (Olivier Durif <o.durif@fkf.mpg.de>). GitHub push goes through the
+  local machine (the clusters have no credentials).
+- The `.omo/` directory is retired (archive `STMFit-archive-20260916`). Never
+  write agent state into the repo outside git.

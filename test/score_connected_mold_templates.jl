@@ -25,7 +25,7 @@ include(joinpath(@__DIR__, "lib", "script_utils.jl"))
 using .ScriptUtils: _parse_f, _read_tsv, _standardize
 
 const DEFAULT_PATCHES = "results/unit_separability/lobe_patches_selectedN_primary.tsv"
-const DEFAULT_TEMPLATES = "templates/chitosan_connected_molds.tsv"
+const DEFAULT_TEMPLATES = "templates/chitosan_cc_molds_native_v1.tsv"
 const DEFAULT_OUT = "results/unit_assignment/connected_mold_predictions.tsv"
 
 struct Options

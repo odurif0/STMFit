@@ -1,6 +1,6 @@
 #!/usr/bin/env julia
 # Deep single-file comparison: 1D slide vs 2D elliptical vs 2D circular chain fits.
-# Usage: julia --project=. test/scripts/inspect_one_file.jl <filepath.sxm> [output_dir]
+# Usage: julia --project=. test/inspect_one_file.jl <filepath.sxm> [output_dir]
 
 using STMMolecularFit, GaussianFit2D, GaussianFit1D
 using Plots, Printf, Statistics
@@ -25,7 +25,7 @@ function _ellipse!(p, x0, y0, a, b, angle; color=:cyan, alpha=0.3, label="")
 end
 
 function main()
-    length(ARGS) >= 1 || error("Usage: julia --project=. test/scripts/inspect_one_file.jl <filepath.sxm> [output_dir]")
+    length(ARGS) >= 1 || error("Usage: julia --project=. test/inspect_one_file.jl <filepath.sxm> [output_dir]")
     filepath = ARGS[1]
     output_dir = length(ARGS) >= 2 ? ARGS[2] : "results/circ_vs_ell"
     mkpath(output_dir)

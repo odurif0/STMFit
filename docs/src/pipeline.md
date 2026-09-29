@@ -1,129 +1,92 @@
-# Pipeline Architecture
+# Pipeline
 
-## Data Flow
+## Data flow
 
 ```
-SXM File (.sxm)
+raw .sxm scans (one directory, unique basenames)
   │
-  ├─→ STMSXMIO: read_sxm() ─→ SXMImage (shared type, read once)
+  ├─ 1. per-scan counting ........ test/batch_full.jl (4 shards, --skip-1d)
+  │      circular sweep → circ→ell refinement → GCV + robust-AICc guard
+  │      → support-midpoint adjustment → N_selected           counting_summary.tsv
   │
-  ├─→ STMMolecularFit: extract_slide()          [diagnostic only, --no-skip-1d]
-  │     └─→ 1D profile along chain axis
-  │           └─→ GaussianFit1D: fit_slide()
-  │                 └─→ Independent QC reference count (over-counts; not in N_selected)
+  ├─ 2. scan geometry ............ test/extract_lobe_features.jl at N_selected
+  │                                                           scan_geometry.tsv
+  ├─ 3. molecule consensus ....... test/build_molecule_consensus.jl
+  │      absolute-frame registration of consecutive scans → tracks
+  │      → strict-majority count → fixed-N refit check (own ROI, then
+  │        registered ROI) → final counts          consensus/consensus_summary_final.tsv
   │
-  └─→ GaussianFit2D: chain_gaussian_sweep()
-        │
-        ├─→ Circular sweep (σ∥ = σ⟂)
-        │     └─→ Deterministic 2D-only initialization + NLopt + LsqFit
-        │
-        ├─→ circ→ell LsqFit refinement (per N)
-        │     └─→ Warm-start from circular, local only
-        │
-        └─→ Model selection
-              └─→ GCV (canonical; valid under spatial correlation)
-                    + robust-AICc guard (down + up-when-ambiguous)
+  ├─ 4. per-scan assignment ...... test/run_reconstructed_chitosan.jl
+  │      base + split fits at final N → local features → 17×17 / 9×9 patches
+  │      → descriptor → DFT mold margins → empirical Fisher margin
+  │      → GMM (1 view) + k-means (4 views), learned on corroborated scans
+  │      → soft vote → 0/1/? + confidence                  assignment/predictions.tsv
+  │
+  ├─ 5. latent-class fusion ...... test/build_molecule_fusion.jl
+  │      physical lobes of each track → EM (π, θ0, θ1) → posterior
+  │                                                 fusion/predictions_fused.tsv
+  └─ predictions.tsv (= fused), chain_report.tsv, raw/input hashes, logs/
 ```
 
-## Component Roles
+One command runs all five stages:
+`test/run_molecule_consensus_chitosan.jl` (Slurm wrapper
+`hpc/run_molecule_consensus.sbatch`). External verification and grading are a
+separate step: `test/grade_consensus_run.jl`. See the [runbook](chitosan_runbook.md).
 
-### STMFitCore.jl
-Shared mathematical utilities:
-- `effective_spacing_min(spacing_min, spacing_max, sigma_max, max_overlap)`
-- `kappa_penalty(κ; kappa_max, weight)` — condition number penalty
-- `adjacent_kappa_max(deltas, sigmas)` — max adjacent condition number
-- `endpoint_overrun(ts, tmin, tmax)` — support boundary check
+## Run directory
 
-### STMSXMIO.jl
-Shared SXM (Nanonis) I/O layer, owned here to avoid duplication between the two
-fit engines (both `using STMSXMIO`):
-- `SXMImage`, `SXMChannel` types and `read_sxm` (big-endian float32 parser,
-  fwd/bwd channel expansion, backward-scan x-flip, mandatory-header guard).
-- Channel access (`get_channel` with direction fallback), coordinate/value scaling.
-- Low-level preprocessing helpers shared with both engines: `_plane_fit`,
-  `_box_smooth`, `_otsu_threshold`, `_largest_component`, `_dilate_mask`.
-- Two intentionally distinct row-flattening conventions, because the engines
-  had silently diverged: `_row_median_flatten_global` (preserves global level,
-  used by GaussianFit2D) and `_row_median_flatten_zero` (zeros each row,
-  used by STMMolecularFit).
+| Path | Content |
+|---|---|
+| `raw_hashes.tsv`, `input_hashes.tsv` | SHA-256 of every raw scan and every config/template input |
+| `counting_summary.tsv`, `counting_chunk*/` | Per-scan counting (merged summary, per-shard plots) |
+| `scan_geometry.tsv` | Fixed-N Gaussian geometry at the per-scan counts |
+| `consensus/pairs.tsv` | Consecutive-scan registrations (centre distance, NCC, drift translation, link decision) |
+| `consensus/consensus.tsv` | Per-scan track, consensus count and rule |
+| `consensus/consensus_summary_final.tsv` | Final count per scan, after refit checks (`count_rule`, `refit_support`) |
+| `assignment/` | Per-scan assignment run: features, patches, mold scores, Fisher, `pred_gmm.tsv`, `pred_kmeans.tsv`, `predictions.tsv`, maps, `review_queue.tsv` |
+| `fusion/` | `predictions_fused.tsv`, `physical_lobes.tsv`, `fusion_params.tsv` |
+| `predictions.tsv` | Final per-lobe calls: `predicted` (0/1/?), `probability_1`, `confidence`, per-scan call |
+| `chain_report.tsv` | One row per scan: counts, rule, track, assignment string, confidence summary |
+| `failures.tsv` | Present only if a stage failed (stage and reason) |
 
-### GaussianFit1D.jl
-1D multi-Gaussian fitting on the axial slide profile:
-- Sweeps N=2..max using NLopt + LsqFit
-- Ghost peak filter (rejects models with ≥2 unconstrained edge peaks)
-- `sBIC` (Student-t BIC) for model selection
-- Produces an independent reference count (`N_1D`) and support length for QC.
-- **Diagnostic only** (off by default via `--skip-1d`): never enters `N_selected`.
-  Re-enable with `--no-skip-1d` for cross-checking. The 1D fit tends to over-count
-  (lateral averaging creates spurious axial peaks).
+## Packages
 
-### GaussianFit2D.jl
-2D chain model with Gaussian lobes along a PCA-derived axis:
-- `_weighted_roi_axis()` — intensity-weighted PCA via SVD
-- `_active_t_support()` — adaptive support detection from axial profile
-- `_chain_fit_data()` — extracts tube around axis, fits support bounds
-- `_deterministic_chain_seed()` — autonomous 2D circular initialization from raw binned axial signal
-- `_decode_chain()` — converts optimizer params → MolecularFeature list
-- `_chain_model_values()` — evaluates 2D Gaussian model at grid points
-- `_fit_chain_n()` — single-N optimizer (NLopt global + LsqFit local)
-- `chain_gaussian_sweep()` — bidirectional N sweep with early stopping
+| Package | Role |
+|---|---|
+| `STMFitCore.jl` | Physical constraints and scoring helpers: effective spacing, κ penalty, support overrun |
+| `STMSXMIO.jl` | `SXMImage`/`read_sxm`, channel access, fwd/bwd alignment, shared preprocessing (plane fit, row flattening, smoothing, Otsu ROI) |
+| `GaussianFit1D.jl` | 1D slide-profile fit. Diagnostic only (off by default); never feeds `N_selected` |
+| `GaussianFit2D.jl` | 2D chain-of-Gaussians engine (`src/core.jl`): axis, support, seeding, sweep, fit |
+| `STMMolecularFit.jl` | Orchestration and selectors (`src/selectors.jl`); used by `test/batch_full.jl` |
 
-### STMMolecularFit.jl
-Orchestration and I/O:
-- SXM file reading (Nanonis format)
-- Slide profile extraction and arc-length correction
-- Batch orchestration and 1D/2D QC comparison
-- Plot generation and output file management
+`STMSXMIO` owns the SXM types; neither fit engine redefines them.
+`GaussianFit2D` depends on Core, SXM I/O and the 1D package; `STMMolecularFit`
+orchestrates all four.
 
-## Optimization Strategy
+## Counting engine
 
-### Circular Model (anchor model)
-```
-deterministic raw-2D seed → NLopt (GN_DIRECT_L) → LsqFit (LM)
-```
-The circular model is initialized independently from the 1D fit. Candidate
-centres are derived from the raw 2D axial profile (uniform, weighted quantile,
-raw local maxima, and edge-aware seeds); the selected seed initializes the
-single global/local optimization path for that N.
+For each scan, `GaussianFit2D.chain_gaussian_sweep`:
 
-### circ→ell Refinement (elliptical model)
-```
-LsqFit (LM, local, 50 iter) — warm-started from circular solution
-```
-Finds the true elliptical minimum without global exploration.
-This replaces the elliptical NLopt sweep entirely (see Research Journal §7, §11).
+1. finds the molecule ROI (Otsu threshold, largest component) and its axis
+   (intensity-weighted PCA);
+2. detects the active support along the axis from the axial profile
+   (baseline + `support_noise_k`·noise, `support_padding_nm`);
+3. fits a tube of half-width `fit_width_nm` around the axis with N Gaussian
+   lobes plus a tilted baseline, for each feasible N;
+4. **circular sweep**: deterministic seeds from the raw axial signal, NLopt
+   global search then LsqFit (σ∥ = σ⟂);
+5. **circ→ell refinement**: LsqFit only, warm-started from each circular
+   solution. A global elliptical search diverges from the isotropic start and
+   is not used;
+6. scores each N by GCV and keeps `min(circular, elliptical)` per N (the
+   circular model is nested in the elliptical one).
 
-## Key Parameters
+Selection of `N_selected` from these candidates is described in
+[Model selection](selection.md). Physical bounds (spacing, overlap, widths) and
+the κ penalty come from the `[model]` section of the counting config
+([Configuration](config.md)).
 
-| Parameter | Default | Purpose |
-|-----------|---------|---------|
-| `spacing_min_nm` | 0.35 | Minimum inter-lobe spacing |
-| `spacing_max_nm` | 0.75 | Maximum inter-lobe spacing |
-| `max_overlap` | 0.60 | Maximum lobe overlap fraction |
-| `sigma_parallel_min_nm` | 0.191 | Minimum axial sigma (FWHM 0.45) |
-| `sigma_parallel_max_nm` | 0.509 | Maximum axial sigma (FWHM 1.20) |
-| `sigma_perp_min_nm` | 0.10 | Minimum perpendicular sigma |
-| `sigma_perp_max_nm` | 0.55 | Maximum perpendicular sigma |
-| `fit_width_nm` | 0.16 | Tube half-width around the molecular axis |
-| `support_noise_k` | 2.5 | Threshold multiplier: baseline + k·noise |
-| `support_padding_nm` | 0.25 | Chitosan calibrated support edge padding |
-| `selection_criterion` | gcv | Primary criterion: gcv, bic, aicc, or cv |
-| `cv_method` | gcv | Analytical GCV by default; kfold is slower |
-| `cv_folds` | 5 | Cross-validation folds when `cv_method="kfold"` |
-| `kappa_max` | 10.0 | Chitosan calibrated condition-number penalty threshold |
+## Assignment components
 
-## Running on the MPCDF HPC cluster
-
-The batch is embarrassingly parallel and maps onto a Slurm **job array** (one
-task per `--chunk i/n` slice). A self-contained launcher + scripts live in
-`hpc/` (Raven & Viper) — see `hpc/README.md`
-for setup and `hpc/launch_remote.sh` for the push-button workflow:
-
-```bash
-cp hpc/remote.env.example hpc/remote.env   # configure once
-./hpc/launch_remote.sh --watch             # sync → submit → merge → fetch
-```
-
-After the array finishes, `hpc/merge_chunks.jl` concatenates the per-chunk
-`summary_*_chunkNNofMM.tsv` shards back into a single
-`summary_overlap060_hard.tsv`, and the launcher fetches all results locally.
+See [Unit assignment](unit_assignment.md) for each feature, the classifiers,
+the vote and the fusion model.

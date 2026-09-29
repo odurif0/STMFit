@@ -77,7 +77,7 @@ counts as one independent observation, accounting for spatial correlation.
 > correlation range exceeds the fit window, `n_eff` is not objectively
 > definable there; the `÷9` factor only affects BIC/AICc *diagnostics*, never
 > `N_selected` (which is driven by GCV). See
-> [Calibration](calibration.md#effective-sample-size-why-gcv-is-the-canonical-criterion).
+> [Calibration](calibration.md#Effective-sample-size).
 
 ## Residual Diagnostics
 

@@ -1,1068 +1,131 @@
-# Model Selection
+# Model selection
 
-The September 25 background-conditioning diagnostic makes **no N/family
-selection**: four numerically chosen saved elliptical fits are continued twice.
-Both SLSQP coordinate systems attain the same RSS, **10.42–29.25% below** their
-time-capped LM controls, but **0/24 endpoints** pass the fixed stationarity
-audit. Centering adds 21.39% optimizer time and is not retained. All fits stay
-natively valid; no benchmark grade or recognition gain is inferred. Source
-**a706593**, job **11974388**, **0:0 in 14m43s**; 1,063 independent saved-output
-checks pass. Production selection and its numerical calibration remain unchanged.
-`results/background_conditioning_20260925/report.md`.
+How STMFit chooses the number of lobes N of each chain: first per scan, then
+across repeated scans of the same molecule. No step reads an expected N, a
+benchmark label or a sequence.
 
-The September 24 audit separates **label-free inference** from parameter
-provenance: historical support/width calibration and hybrid-rule choices used
-known-count benchmark grades. Fresh reproduction cannot remove that dependence;
-strict label-free calibration and independent validation are not established.
-See [calibration](calibration.md) and [the audit](journal.md#2026-09-24-—-Fresh-hybrid-reproduction-and-historical-label-use-audit).
-
-The September 25 width-conditioned overlap comparison is **rejected**. Both
-fresh-fit repeats give **42/145 exact N**, versus the matched exhaustive GCV
-control **101/145**; within-one agreement falls **133→105/145** and summed
-absolute error rises **58→165**. Seven exact counts are gained, 66 lost. All
-146 N/family choices repeat within each arm, but none of 10,244 LM fits declares
-convergence. Physical numbers, shared pixels and support stay fixed; no hybrid
-rule, BIC early stop, 1D initializer or expected count enters selection.
-Source **5d27c28**, job **11966219**, **0:0 in 3h37m51s**; 458,907 saved-output
-checks pass before grading. This exhaustive control is not the hybrid pipeline;
-no chemical score or default/champion change follows. See
-[configuration](config.md#Diagnostic-width-conditioned-counting),
-`results/local_sigma_counting_20260924/report.md`.
-
-The completed learning diagnostic makes **no fit or N decision**. Restricting all
-shared learning to fully observed scans, still excluding the evaluated scan,
-gives control **670/870 correct, 16/145 exact** and observed inputs **670/15**.
-Native references are **678/28**, **680/35**; all-admissible exclusion gives
-**672/19**, **673/29**. Coverage remains **848/870**. Both repetitions and
-captured predictive states are byte-identical; **449,324** saved-output checks
-pass before grading. No exact chain is gained versus native; 12/20 are lost.
-Reject this as a replacement. With 20 missing control positions at these
-fixed counts, even eliminating all abstentions permits only **850/870** coverage,
-below historical **854/870**. This external count audit must not become a
-known-N input to selection. GCV, guards, `n_eff`, physical calibration, count
-rules and unknown25 are unchanged. See [journal](journal.md),
-`results/complete_observation_20260924/conclusion.md`.
-
-The earlier frozen-learning diagnostic makes **no fit or N decision**. Its
-ordered local/Fisher/normalization/classifier replacements give **678/28 →
-671/25 → 665/17 → 674/21 → 680/35**, all coverage **848/870**. The reverse
-frozen-input control gives **680/36**, not a production successor. Both saved-
-input repetitions, including captured predictive parameters, are byte-identical. Native branches
-also reproduce the previous exports exactly. This localizes sensitivity to
-cohort learning without changing GCV, physical guards or `n_eff`, and does not
-establish a global optimum or independent validation. See [journal](journal.md)
-and `results/frozen_learning_20260924/conclusion.md`.
-
-The subsequent observed-only preprocessing comparison keeps those saved N and
-all physical/selection settings fixed. Both repetitions yield **680/870 correct,
-35/145 exact chains, 848/870 coverage**, versus native **678/28** and **679/29**.
-All 584 fits pass per run; full-parameter GCV still selects the valid circular
-or elliptical family. This is not a new counting result or a converged optimum:
-all recorded LM fits hit their caps. Candidate decisions repeat, but sixteen
-confidences differ by 0.4. The gain occurs downstream of unchanged local inputs
-on the fully observed scans; no selector/default/champion change follows.
-See [journal](journal.md), `results/observed_fit_20260924/conclusion.md`.
-
-The September 24 **QE cube-order correction** gives **676/870 correct, 27/145
-exact**, versus byte-identical legacy tangent **679/33**, both coverage **852**.
-Six scan gains/nine losses, one exact gain/seven losses. Keep the explicit
-correct reader for physical work, but no recognition promotion or default
-change. This leaves N/GCV/`n_eff`, geometry and counting guards literal:
-**106/145 exact counts**, 16 missing/38 extra positions. Correct token order
-does not validate the unchanged surface calibration; its sparse surfaces were
-observed before grading. Historical **677/36/854** remains unexceeded overall.
-Source **8295965**, job **11955512**; `results/cube_order_20260924/report.md`.
-
-The September 24 **leave-target-out geometric-state** test gives **670/870
-correct, 32/145 exact**, versus exact tangent replay **679/33**, both coverage
-**852**. Only other lobes select a target's parity/mirror; its physical costs
-stay unchanged. Two scans gain/eleven lose, one exact gain/two losses. Reject
-without retuning; retain target-only scores and the neutral missing-cost fix.
-N/GCV/`n_eff`, geometry and all counting guards remain fixed: **106/145 exact
-counts**, 16 missing/38 extra lobes. Historical **677/36/854** is not surpassed
-overall. Source **61a56d6**, job **11955091**; `results/mold_loo_20260924/report.md`.
-
-The September 23 **adjacent-amplitude tangent** test gives **671/870 correct,
-29/145 exact**, versus byte-identical target-only **679/33**, both coverage
-**852**. One scan gains/nine lose, zero exact gains/four losses. All N/GCV/`n_eff`,
-geometry, patch support, Fisher and classifier settings remain fixed. Reject
-these extra nuisance columns without retuning; retain the earlier candidate and
-neutral missing-cost fix. Historical **677/36/854** is not surpassed overall.
-Source **8460c08**, job **11953935**; `results/tangent_neighbors_20260923/report.md`.
-
-The September 23 **mold-state decoder** comparison leaves all N/GCV/`n_eff`,
-physical guards and geometry unchanged. Missing-cost omission exactly preserves
-tangent predictions (**679/870 correct, 33/145 exact**, coverage **852**);
-shared parity/mirror gives **675/32/852** and is rejected. Keep the opt-in
-correctness fix without a recognition-gain claim or production-default change.
-Counting stays **106/145 exact**, 16 missing/38 extra lobes. Historical
-**677/36/854** is not surpassed overall. Source **e8c9104**, job **11953490**;
-`results/mold_states_20260923/report.md`.
-
-Adding the ellipse-angle derivative to tangent CC is **negative**: **678/870
-correct, 30/145 exact**, versus tangent replay **679/33**, both coverage **852**.
-No N, GCV, `n_eff`, physical guard or fitted geometry changes. Counts remain
-**106/145 exact**, 16 missing/38 extra lobes. Reject this ablation; keep the
-earlier tangent candidate and support reference. Historical **677/36/854**
-is not surpassed overall. Source **0b7a4cf**, job **11953258**;
-`results/tangent_orientation_20260923/report.md`.
-
-The September 23 **tangent physical-mold scores** give **679/870 correct,
-33/145 exact**, versus support **676/34**, both at **852/870 coverage**. This
-exceeds historical **677/36** per unit, not on exact chains or coverage (854).
-It changes no N, GCV, physical guard, `n_eff`, geometry, patch or Fisher result;
-only both CC descriptors and subsequent unlabeled GMM learning change. Counts
-remain **106/145 exact**, 16 missing/38 extra lobes. Retain this experimental
-per-unit candidate without replacing support or claiming an overall champion.
-Source **92cce55**, job **11952883**; `results/tangent_molds_20260923/report.md`.
-
-The September 23 **cross-view residual comparison is negative**: own-view
-subtraction **675/870 correct, 30/145 exact**, opposite-view **673/30**, versus
-exact saved support replay **676/34**, all at **852/870 coverage**. N, geometry,
-main/split features, raw patches, all selection rules and `n_eff` remain fixed.
-Both sets of bounded linear coefficients affect subtraction only. All 292
-profiles converge; 146 fused means pass unchanged native guards. Full-complexity
-GCV is diagnostic, not a new selector. Reject both versions, retain support below
-historical **677/36**. Source **9d6c541**, job **11952397**; full comparisons and
-limits: `results/cross_view_residual_20260923/report.md`.
-
-The September 23 **local-Gaussian model comparison is negative**: valid minimum
-GCV selects local ellipses on **87/146** scans, but recognition falls to
-**664/870 correct, 30/145 exact**, versus matched global **674/31** and saved
-support **676/34**. Coverage stays **852/870**, counts **106/145 exact**. All
-584 fits pass native validity while hitting their iteration caps; validity is
-not convergence. Tangents reuse fitted centers, not free angles or labels.
-GCV retains full parameter counts; `n_eff`, physical guards, global sampling
-and split cache stay unchanged. No production selector change or promotion.
-Source **c692958**, job **11951208**; `results/local_gaussian_20260923/report.md`.
-
-The September 23 **local-tangent patch-frame comparison is negative**:
-**670/870 correct, 30/145 exact**, versus global replay **676/34**, with
-unchanged **852/870 coverage**. Sampling axes derive only from saved centers;
-all N/base/split geometry and Gaussian subtraction remain unchanged. Counts
-stay **106/145 exact**, with 16 missing positions and 38 extra lobes. Neither
-GCV, `n_eff`, physical guards nor assignment settings change. No locally
-oriented molecular model was fitted in that ablation. Retain support, below
-historical **677/36**; source **87235dc**, job **11950305**,
-`results/local_orientation_20260923/report.md`.
-
-The September 23 **multi-start/subpixel pilot adds no admissible paired family**.
-Four fixed starts select by training RSS; paired GCV counts both added shift
-coordinates. Full RSS and all eight reserved-block errors improve, but selected
-shifts saturate **−1 pixel in both axes** and full view validity still fails.
-Only fused split elliptical stays valid. There is no N, threshold, `n_eff` or
-production-selection change, no post-result enlargement and no grade. Keep
-**676/34**, below **677/36**; `results/paired_shift_20260923/report.md`.
-
-The September 23 **SLSQP follow-up adds no fully valid family** despite lowering
-all eight diagnostic RSS objectives **0.75–6.73%**. All runs stop on
-FTOL_REACHED but fail the unchanged strict stationarity audit. Gaussian
-elliptical maxima reach **3.559 fused / 3.443 paired mean**; paired views
-**4.291/3.542** fail 3.5. Only fused split elliptical remains fully valid under
-either solver; valid minimum full-parameter GCV therefore changes no selection.
-Solver stopping, independent stationarity and native validity remain distinct.
-No N, `n_eff`, threshold or production selection change, and no new grade.
-Retain **676/34**, below **677/36**; `results/paired_solver_20260923/report.md`.
-
-The September 22 **original-support registered refit remains inconclusive**.
-Original ROI/axis/tube/bounds replay exactly for all 146 scans. The three earlier
-span failures disappear, but registered Gaussian fitting of `240817_006.sxm`
-at saved N=6 fails the existing maximum absolute residual/noise guard (3.5) in
-both circular and elliptical families. The registered split fit is then not
-attempted. This does not prove an incorrect N, physical impossibility or worse
-chemical recognition; failed numerical residual values and convergence are
-unavailable. **145/146 scans** complete all four fits. No count, validity
-threshold, GCV policy or `n_eff` formula changes, and no partial grade is run.
-Retain exactly replayed support **676/34**, below historical **677/36**.
-Source **98d664d**, job **11942393**; diagnostic:
-`results/registered_original_support_20260922/report.md`.
-
-The preceding September 22 **registered native refit is inconclusive** at saved N.
-Two N=10 scans fail even the zero-shift control: minimum native span 4.6303 nm
-exceeds the observed support 4.2040 nm. A third, N=6, fails after registration
-(2.5724 versus 2.5421 nm). These are conservative native parametrization
-constraints, not proof that the saved counts are false. All 146 inputs remain
-accounted for; 143 have four valid fits. No N, overlap bound or support rule is
-changed to rescue them, and no partial candidate grade is emitted. Full-parameter
-GCV selects only the family at each saved N; the `n_eff` formula is unchanged.
-The exact reference replay retains **676/34**, below historical **677/36**.
-Source **c7836f9**, job **11942091**; complete diagnostic:
-`results/registered_refit_20260922/report.md`. Its original-support follow-up
-is reported above; no complete recognition comparison is yet available.
-
-The September 22 fixed-geometry acquisition registration is **negative:
-671/870 correct, 26/145 exact**, versus both native and observation-mask
-controls **676/34**. Coverage falls **852→850/870**. N and every base/split
-geometry field remain byte-identical: **106/145 exact counts**, 16 missing
-positions and 38 extra lobes stay unchanged. GCV and `n_eff` do not change;
-no count selection or Gaussian refit occurs. Accepted translations improve image agreement,
-not recognition in this frozen-geometry pipeline. Retain saved support;
-source **9961973**, job **11941278**, report
-`results/acquisition_registration_20260922/report.md`. No post-grade tuning.
-
-The September 22 matched **geometric variable-projection** comparison is
-**negative: 632/870 correct, 20/145 exact**, against same-start joint
-optimization **676/34** and exactly replayed saved support **676/34**.
-Coverage stays **852/870**. The Gaussian geometry is refined at saved N;
-valid GCV chooses only the shared initial model family at that N. Both local
-arms use the same κ-penalized RSS, physical validity checks and optimizer
-ceilings, with full-parameter GCV diagnostic afterward. N and family remain
-fixed during refinement. All 146 profiled objectives improve over joint, but
-recognition worsens; 103 searches hit the evaluation limit. The **106/145
-exact counts**, 16 missing positions and 38 extra lobes are unchanged, not
-revalidated. Retain saved support; source **7c5fb6c**, job **11940220**, report
-`results/geometry_profile_20260922/report.md`. No post-grade tuning follows.
-
-The September 22 frozen-geometry amplitude comparison is **negative**:
-**675/870 correct, 32/145 exact**, versus exactly replayed support **676/34**,
-at unchanged **852/870 coverage**. All saved N and geometric fields remain
-identical, including **106/145 exact counts**, 16 missing positions and 38
-extra lobes. Only Gaussian amplitudes/background are solved under native
-bounds. GCV retains the full original parameter count, serves as a diagnostic
-and selects nothing; lower RSS on all 146 scans does not improve recognition.
-Retain saved support, below historical 677/36. This neither reruns nor
-revalidates count selection. Source **567cdde**, job **11938782**, full report
-`results/frozen_amplitude_profile_20260922/report.md`; no post-grade tuning.
-
-The September 22 raw-GCV reselection is **complete and negative**: exact counts
-fall **106 → 101/145**; assignment gives **661/870 correct, 32/145 exact**,
-versus **675/34 for the freshly refitted control** and **676/34 for saved
-support**. Coverage falls 852 → 849/870. Twenty-two of 146 scans change N,
-900 → 898 lobes; benchmark missing/extras rise 16/38 → 19/39. Both arms refit
-at fixed N after the unchanged direct extractor's raw-GCV sweep. This is
-neither the batch `support_midpoint_hybrid` policy nor an exhaustive sweep.
-The refitted control differs on three decisions, and same-N geometries also
-vary, so this is an end-to-end comparison, not an isolated causal N effect.
-Retain saved support, below historical 677/36. Source `853ad38`, job `11936561`;
-see the dated [journal](journal.md) and `results/gcv_reselection_20260922/report.md`.
-Physical/assignment TOMLs, GCV/guards and the separately promoted counting
-reference stay unchanged. No post-grade tuning or unknown25 rerun follows.
-
-On the September 20 symmetric-fusion research branch, fused fit samples use
-both unsmoothed views and ROI detection still uses both smoothed views. The
-completed fixed-count assignment comparison improves 666 → 671 correct / 870
-controls and 24 → 28 exact chains / 145, with unchanged coverage. The historical
-assignment reference remains better and the correction is not promoted. This
-comparison holds cached counts fixed; it does not revalidate the historical
-counting results below for the corrected fit input.
-
-The separate physical-u Fisher-mirror experiment regresses assignment to
-669/870 correct and 27/145 exact at the same cached counts/coverage, versus
-671/28 for the symmetric-fusion control. It is rejected as the working
-reference and changes no count-selection parameter or benchmark claim here.
-
-The later matched-residual assignment comparison reaches **672/870 correct and
-29/145 exact**, against the replayed 671/28 control, with identical counts and
-849/870 coverage. It becomes the opt-in working candidate, not a new champion:
-historical 677/36 still leads. This patch-only change does not rerun or revalidate
-count selection, change GCV/guards, or establish unknown-chain chemical accuracy.
-
-The next fixed-geometry descriptor comparison advances the opt-in working
-candidate to **673/870 correct and 33/145 exact**, using affine-residual
-half-plane asymmetry; the first-moment alternative gives 672/28 and is rejected.
-Coverage remains 849/870 and historical 677/36 remains better. No selected N,
-physical bound, GCV rule or guard changes. This assignment-only result does not
-revalidate the separate frozen counting benchmark below.
-
-The September 21 signed-CC and affine-Fisher experiments both regress assignment:
-**668/870 correct, 32/145 exact** and **672/870, 32/145**, respectively, versus
-the exactly replayed **673/33** control. Coverage stays 849/870. Neither is
-retained as the working reference; the affine-descriptor candidate remains
-673/33, below historical 677/36. These fixed-geometry, label-free-inference
-experiments change no selected N, count-selection rule or counting claim.
-
-The subsequent numerical comparison improves assignment to **675/870 correct,
-675/849 (79.5%), 33/145 exact** with training-mean Fisher centering. It is the
-opt-in working candidate at that stage, not a champion: historical 677/36 still leads.
-Independent final covariance shrinkage gives **665/870 and 34/145** and is not
-retained as the replacement. Coverage stays 849/870, all cached N are unchanged,
-and neither result reruns or revalidates count selection or the unknown25
-application. The benchmark is reused development data, not independent validation.
-
-The subsequent complete-disk support comparison reaches **676/870 correct,
-676/852 (79.3%), 34/145 exact**, with coverage rising from 849 to 852/870.
-`unit_assignment_patch_support.toml` is the latest opt-in working candidate;
-historical 677/36 remains ahead. The separate final Gaussian-score arm gives
-**666/870 and 32/145** and is rejected. Support retains every key, imputes no
-pixel and still abstains on incomplete disks. Geometry and N are fixed: none
-of these results revalidates counting, changes GCV/guards or demonstrates
-unknown-chain accuracy. No combined variant or post-grade tuning follows.
-
-The complete-patch-training follow-up regresses to **674/870 correct, 33/145
-exact**, with classified coverage **850/870** versus 852/870. It is rejected;
-the working candidate remains **676/34**, below historical 677/36. The loss
-includes two abstentions on a scan without complete training patches. No
-normalization fallback, selected-N change, count refit or GCV/guard adjustment
-follows this grade.
-
-The median/IQR GMM-normalization follow-up is **negative: 667/870 correct,
-667/852 (78.3%), 10/145 exact**, versus 676/34 at identical coverage and selected
-N. It loses 24 exact chains and gains none. Reject this variant and retain the
-support candidate; no GCV, counting, physical bound, DFT or unknown25 change
-follows. This reused external assignment grade does not validate new counting
-behavior or independent generalization.
-
-Equal-scan GMM weighting gives **675/870 correct, 36/145 exact**, at unchanged
-**852/870 coverage**, versus the replayed 676/34 support control. This is a
-tradeoff (one fewer correct position, two more exact chains), not a new champion;
-retain the support candidate as the primary reference. Historical 677/36 remains
-unexceeded. All N are fixed; no GCV/guard, count refit, physical calibration,
-DFT or unknown25 change follows, and this assignment result does not revalidate
-counting or independent generalization.
-
-Continuous GMM seed aggregation regresses to **671/870 correct, 26/145 exact**,
-at unchanged **852/870 coverage**, versus the replayed 676/34 support control.
-It loses nine exact chains and gains one; all 24 final flips leave old vote
-ties. Reject this variant and retain the support candidate, still below
-historical 677/36. This assignment-only change leaves all N, GCV/guards,
-physical calibration and counting claims fixed. No post-grade threshold or
-precision change, count refit, DFT change or unknown25 run follows.
-
-Whole-scan GMM bagging regresses to **665/870 correct, 10/145 exact**, at
-unchanged **852/870 coverage**, versus the replayed 676/34 support control.
-It loses 24 exact chains and gains none. Of 62 final 1→0 changes, 57 leave
-old vote ties. Reject the variant and retain the support candidate; historical
-677/36 remains unexceeded. All selected N, GCV/guards, physical calibration
-and counting claims stay fixed. No post-grade fusion or threshold adjustment,
-count refit, DFT change or unknown25 run follows. This assignment-only grade
-does not revalidate counting or independent generalization.
-
-Sharing covariance throughout GMM learning regresses to **666/870 correct,
-6/145 exact**, at unchanged **852/870 coverage**, versus the exactly replayed
-676/34 support control. It loses 28 exact chains and gains none. Reject the
-variant and retain the support candidate; historical 677/36 remains unexceeded.
-All selected N, GCV/guards, physical calibration and counting claims stay fixed.
-No post-grade fusion, naming or threshold adjustment, count refit, DFT change
-or unknown25 run follows. This assignment-only comparison does not revalidate
-counting or independent generalization.
-
-The independent whole-scan Fisher and relative GMM-naming comparison brings
-no assignment improvement: **668/870 correct, 34/145 exact** for grouped
-Fisher; **676/870, 34/145**, with unchanged decisions, for relative naming.
-Both retain **852/870 coverage**. Keep the 676/34 support candidate, below
-historical 677/36. All selected N, geometry, GCV/guards and physical calibration
-stay fixed; no count refit, DFT change or unknown25 rerun follows. This reused
-assignment benchmark does not revalidate counting or independent generalization.
-
-The fixed factor-analyzer / Student learning comparison also regresses
-assignment: **620/870 correct, 23/145 exact** and **631/870, 25/145**, at
-unchanged **852/870 coverage**, versus exactly replayed **676/34** support.
-Retain the support candidate; historical 677/36 remains unexceeded. All
-Student fits converge, while factor fits reach the fixed 200-update cap;
-this does not reject a fully converged MFA optimum. No selected N, geometry,
-GCV/guard, counting claim, DFT or unknown25 result changes. No post-grade
-iteration/rank/df or fusion tuning follows; reused grading is not independent
-validation. Details: `results/factor_student_mixtures_20260922/report.md`.
-
-All-update covariance shrinkage and coherent Student-density decisions also
-regress assignment: **637/870 correct, 24/145 exact** and **627/870, 25/145**,
-at unchanged **852/870 coverage**. The support control replays **676/34**
-exactly and remains the working candidate; historical 677/36 is not exceeded.
-All ten fits per arm meet their stopping criterion. No selected N, geometry,
-GCV/guard, physical calibration, counting claim, DFT or unknown25 result changes.
-No post-grade coefficient, df, threshold or fusion tuning follows. Full losses
-and limitations: `results/em_shrinkage_student_density_20260922/report.md`.
-This assignment-only development comparison is not independent validation.
-
-How STMFit chooses the optimal number of lobes (N) from the sweep results.
-
-## Selection Hierarchy
+## Per-scan hierarchy
 
 ```
-Level 1: configured criterion per N (default: GCV)
+Level 1  score each candidate N by GCV
          score_eff(N) = min(score_circ(N), score_ell_refined(N))
-         └─ Circular model is nested within elliptical
-         └─ Circular score is a robust fallback if elliptical refinement fails
-
-Level 2: model-specific bests
-         └─ N_ell = best valid refined elliptical model
-         └─ N_circ = best valid circular model
-         └─ N_eff = best effective min(circ, ell) model
-
-Level 3: Final result
-         └─ Chitosan default: support_midpoint_hybrid reports N_selected
-             (robust-AICc guard, then a one-step support-midpoint adjustment)
-         └─ Raw baseline override: --selection-policy gcv reports N_eff
-
-Level 4 (optional, multi-scan): repeated-scan molecule consensus
-         └─ consecutive scans linked by absolute-frame image registration
-         └─ track of >= 3 scans with a strict-majority N_selected
-         └─ disagreeing scans take that count if the molecule is inside the frame
+Level 2  N_circ, N_ell, N_eff = best valid circular / elliptical / effective model
+Level 3  N_selected = policy applied to N_eff (chitosan: support_midpoint_hybrid)
+Level 4  molecule consensus across repeated scans (test/run_molecule_consensus_chitosan.jl)
 ```
 
-## Repeated-scan molecule consensus (2026-09-29)
+### Why GCV
 
-An STM session often re-images one molecule many times (different drift,
-range or scan angle). `test/run_molecule_consensus_chitosan.jl` keeps every
-per-scan GCV decision above, then treats those scans as repeated
-measurements of one molecule. Consecutive scans of the same `REC_DATE` are
-linked when their flattened topography, resampled in the absolute piezo frame,
-correlates at NCC ≥ 0.5 after a pure drift translation. A track of at least
-three scans with a strict-majority count gives that count to disagreeing scans
-whose registered footprint is inside the frame. No expected count, sequence or
-benchmark membership is read; singletons and ties keep their per-scan count.
-Parameters are in `config/molecule_consensus.toml`
-([Configuration](config.md#Repeated-scan-molecule-count-consensus-(2026-09-29))).
+GCV (`RSS·n/(n−p)²`) is analytical, needs no refit and needs no effective sample
+size. STM residuals are strongly spatially correlated (lag-1 ρ ≈ 0.9–0.95,
+correlation range 17–100 px, wider than the ~10 px fit tube), so iid BIC/AICc
+values are not calibrated evidence. BIC/AICc are therefore diagnostics or
+guards only. Their `n_eff = max(10, n ÷ 9)` is a fixed placeholder; do not
+retune or reinterpret it. GCV is still a parameter-count approximation for a
+nonlinear constrained fit: it is the canonical practical score, not a
+calibrated count uncertainty.
 
-## Why GCV as the per-candidate score?
+### Why `min(ell, circ)`
 
-GCV is the default per-candidate sweep score because it is analytical, fast, and does not require
-refitting folds. BIC is still computed and remains useful for diagnostics and
-legacy comparisons, but it is not the default batch selection criterion.
+The circular model (σ∥ = σ⟂) is nested in the elliptical model. If local
+elliptical refinement ends worse than the circular solution at the same N, it
+failed to improve that model. Taking the minimum guards against this without a
+new parameter.
 
-- `n_eff` (effective sample size): the `length(zfit) ÷ 9` heuristic is a
-  placeholder. The STM residual field can be strongly spatially correlated
-  (the reported 17–100 px range exceeds the ~10-px fit window), so an effective
-  sample size is not reliably identified from that window alone. Absolute iid
-  BIC/AICc values should not be treated as calibrated evidence. GCV remains the
-  canonical practical criterion, but it does not guarantee unbiased predictive
-  error under arbitrary spatial correlation or nonlinear constrained fitting.
-  See `docs/src/calibration.md` for the limitations; do not retune `n_eff`.
-- BIC assumes all parameters contribute equally, but extra sigma parameters
-  can absorb noise without improving predictive accuracy.
-- On ambiguous STM images, BIC can marginally prefer over-fit models.
+### Chitosan policy: `support_midpoint_hybrid`
 
-The `selection_criterion` field can be set to `"gcv"`, `"bic"`, `"aicc"`, or
-`"cv"`. The chitosan calibration uses `"gcv"` with `cv_method="gcv"`.
+The default in `config/chitosan.toml`. Two label-free layers act on `N_eff`:
 
-## Chitosan default: support-midpoint hybrid
-
-`test/batch_full.jl` supports an integrated support-midpoint hybrid primary
-selection policy. For `config/chitosan.toml`, this is now the configured
-default:
-
-```bash
-julia -t 4 --project=. test/batch_full.jl 48 --config config/chitosan.toml
-```
-
-The raw GCV/effective baseline remains available with `--selection-policy gcv`.
-The robust-AICc guard alone remains available with
-`--selection-policy gcv_with_robust_aicc_guard`.
-
-This policy is label-free: it does not use an expected `N`, does not prefer
-`N=6`, and does not use benchmark labels during fitting or selection. It layers
-two generic signals on top of the standard GCV/effective result:
-
-1. Compute the standard circ→ell `N_eff` exactly as in the default pipeline.
-2. Fit an auxiliary exhaustive elliptical candidate set.
-3. Rescore those candidates with Student-t robust AICc (`nu=8` by default;
-   override with `--robust-guard-nu`).
-4. Let `robust_aicc_N` be the lowest robust-AICc candidate.
-5. Apply a symmetric, bounded rule:
+**Robust-AICc guard.** An auxiliary exhaustive elliptical candidate set is
+rescored with Student-t robust AICc (`robust_guard_nu = 8`); `robust_aicc_N` is
+its minimum.
 
 ```text
-# down branch (free, unchanged): veto over-segmentation
-if robust_aicc_N < N_eff:
-    N_selected = robust_aicc_N
-
-# up branch (conditional): recover under-segmented ambiguous cases
-elif robust_aicc_N == N_eff + 1
-     and ambiguous_eff
-     and delta_GCV_rel_eff <= 0.05
-     and runner_up_N_eff == N_eff + 1:
-    N_selected = robust_aicc_N
-
-# otherwise keep N_eff
+if robust_aicc_N < N_eff:                                   # veto over-segmentation
+    N_guarded = robust_aicc_N
+elif robust_aicc_N == N_eff + 1 and ambiguous_eff           # recover one missing lobe
+     and delta_GCV_rel_eff <= 0.05 and runner_up_N_eff == N_eff + 1:
+    N_guarded = robust_aicc_N
 else:
-    N_selected = N_eff
+    N_guarded = N_eff
 ```
 
-The down branch can veto extra lobes that look like over-segmentation. The up
-branch can recover a missing lobe only when GCV itself cannot discriminate
-(`ambiguous_eff`) and the adjacent `N_eff + 1` is the runner-up; it is bounded
-to `+1` so it cannot reproduce over-segmentation jumps such as `6 → 8`. Both
-branches use no expected `N`, no target count, and no benchmark labels. See the
-Research Journal (§2026-06-17) for the motivation (`240817_043.sxm`) and the
-no-regression validation.
-
-The support-midpoint layer then uses the measured 2D support length and the
-physical spacing/overlap calibration to compute the midpoint of the feasible-N
-interval. It can move the robust-guarded count toward the midpoint:
+**Support midpoint.** The measured support length and the physical
+spacing/overlap bounds give a feasible interval
+`[support_N_min, support_N_max]`; `mid = round((min + max) / 2)`.
 
 ```text
-support_midpoint = round((support_N_min + support_N_max) / 2)
-
-if N_guarded > support_midpoint + 1:
-    # Gap >= 2: trust the support geometry, go to midpoint
-    N_selected = support_midpoint
-
-elif N_guarded > support_midpoint:
-    N_selected = N_guarded - 1
-
-elif N_guarded < support_midpoint
-     and N_eff > N_guarded
-     and delta_GCV_rel_eff <= 0.30:
-    N_selected = N_guarded + 1
-
-else:
-    N_selected = N_guarded
+if N_guarded > mid + 1:                          N_selected = mid
+elif N_guarded > mid:                            N_selected = N_guarded - 1
+elif N_guarded < mid and N_eff > N_guarded
+     and delta_GCV_rel_eff <= 0.30:              N_selected = N_guarded + 1
+else:                                            N_selected = N_guarded
 ```
 
-The down branch asks whether the fitted count exceeds what the measured support
-geometry suggests. When the robust guard over-counts by at least two lobes
-relative to the support midpoint (gap >= 2), the rule trusts the geometry and
-goes directly to the midpoint rather than making only a one-step correction; a
-single-step gap uses the more conservative one-lobes downshift. The up branch is
-deliberately stricter: it requires the raw GCV/effective selector to contain
-upward evidence and a close effective-GCV gap
-(`support_midpoint_up_gcv_rel_threshold`, default `0.30`). This makes the rule a
-generic support-consistency adjustment rather than a target-count correction.
-
-### Output columns
-
-When the policy is enabled, batch summaries include:
-
-- `N_selected`: the primary result under `--selection-policy`.
-- `selection_policy`: usually `gcv`, `gcv_with_robust_aicc_guard`, or
-  `support_midpoint_hybrid`.
-- `selection_source`: the effective source (`ell`, `circ`, or `N_eff`) when kept,
-  `robust_aicc_guard` when the robust guard moved the primary count,
-  `support_midpoint_down`, `support_midpoint_down_to_mid`, or `support_midpoint_up`
-  when the support-midpoint layer made the final move.
-- `N_refined`: robust-guarded count before the support-midpoint layer, kept for
-  compatibility with earlier audit output.
-- `refined_policy`: `overfit_guard_down_only` (downshift or keep) or
-  `overfit_guard_up_when_ambiguous` (conditional upshift).
-- `refined_source`: `N_eff` when kept, or the auxiliary robust-AICc source such as
-  `ell_robust_aicc` when the integrated guard moved the count.
-- `robust_aicc_N`: the auxiliary robust-AICc-selected count.
-
-### Historical grades and current reproduction
-
-The saved robust-AICc guard result was a no-regression result on the original
-240817 primary benchmark: it improved exact agreement from `N_eff = 35/39` to
-`N_selected = 39/39` in the 2026-06-17 validation pass. The chitosan
-default was promoted for the expanded counting benchmark: the support-midpoint
-hybrid rule (including the gap≥2 down-to-midpoint extension) improved the full
-145-file external grade from `106/145` exact (`138/145` within one lobe) to
-`129/145` exact (`143/145` within one lobe). This was first reproduced by
-offline replay on frozen fit data and then confirmed by a full Viper batch run
-with 146 `ok` rows, graded against the 145-file manifest. That historical
-promotion is empirical and provisional, not the current corrected pipeline's
-fresh score or the endpoint of selector research.
-
-These numbers are development evidence, not per-image fitting priors. Labels
-are absent from the current inference path, but historical calibration and rule
-selection did use these grades; this is not independent validation.
-
-On September 24, linking this **saved** promoted vector to freshly rebuilt
-support assignment gives **694/870 correct units, 43/145 exact chains and
-855/870 coverage**, versus fresh control at saved raw-GCV counts **676/34/852** and
-historical **677/36/854**. It changes 28/146 counts, 900→871 lobes, without
-rerunning selection or changing GCV/thresholds. This new measured recognition
-reference is therefore **not a fresh reproduction of the counting benchmark**.
-See [unit assignment](unit_assignment.md#saved-promoted-counts-and-recognition-2026-09-24)
-and `results/promoted_counts_20260924/report.md`.
-
-The subsequent two complete raw-to-prediction runs agree on all 146 counts
-(863 lobes), but change ten saved counts. Both grade **123/145 exact N**,
-**143/145 within one**, 17 short-N and five extra-N scans. Recognition is
-**679/870 correct, 29/145 exact chains, 848/870 coverage**, not saved 694/43/855.
-Final predictions are byte-identical across the fresh repeats despite small
-timed-fit variation. Do not retune the 0.30 upshift threshold or undo symmetric
-fusion to recover known benchmark cases. No champion promotion follows;
-independent calibration remains the scientific prerequisite. Source **d2a0714**,
-job **11959377**; `results/hybrid_reproduction_20260924/report.md`.
-
----
-
-## Archive: experimental selectors (not default, not recommended)
-
-> The selectors below were investigated and documented during development.
-> They remain available as `--selection-policy` options for diagnostics but are
-> **not** used by the default workflow (`support_midpoint_hybrid`). None
-> outperformed the promoted chitosan default on the expanded counting benchmark
-> or the robust-AICc guard on synthetic known-N
-> validation. This section is kept as a reference of what was tried and why it
-> wasn't adopted. Skim if investigating alternative selection criteria.
-
-## Experimental adaptive support rescue
-
-`--selection-policy adaptive_support_rescue` keeps the first-pass support and
-GCV selector unless the selected count is at the support-feasibility ceiling.
-That trigger is label-free: it compares the detected support length to the
-minimum physically usable spacing implied by the calibration.  If triggered, a
-second pass uses permissive support parameters and is accepted only when it
-increases support length, selects a larger `N`, and keeps circular/elliptical
-counts coherent.  Otherwise the standard result is retained.  After any rescue
-decision, the validated robust-AICc guard is applied down-only on the active
-support. The benchmark and 10–20mer adaptive configs use this same rule; the
-10–20mer config differs only by extending `n_max` to allow long chains.
-`adaptive_robust_guard_max_drop` exists as a non-default diagnostic option to
-cap automatic downshifts, but it is not part of the common benchmark-aligned
-workflow.
-
-The reference config is `config/chitosan_adaptive_support_rescue.toml`.  It is
-experimental and not the production default.
-
-Operationally, the guard is safe-by-fallback: if the auxiliary robust-AICc sweep
-fails, batch processing keeps the standard `N_eff` result and records the guard
-failure instead of failing the file.
-
-## Experimental spatial blocked CV selector
-
-`test/batch_full.jl` also supports a more objectivable, but currently diagnostic,
-spatial blocked cross-validation selector:
-
-```bash
-julia --project=. test/batch_full.jl 48 \
-  --config config/chitosan.toml \
-  --selection-policy spatial_blocked_cv \
-  --cv-folds 3
-```
-
-The rule is pre-registerable and label-free:
-
-1. Compute the standard circ→ell candidate set.
-2. Sort fit pixels by their axial coordinate along the molecule.
-3. Split them into contiguous spatial/axial blocks.
-4. For each candidate `N`, refit on all blocks except one and score the held-out
-   block with Student-t negative log-likelihood.
-5. Select the `N` with the lowest mean held-out NLL.
-
-This is mathematically attractive because it measures predictive performance on
-spatial regions not used for fitting, rather than relying on an analytic GCV
-approximation.  It is therefore a good candidate for future frozen validation.
-
-Current status: **diagnostic only**.  Early smoke tests show that the raw blocked
-CV selector can be unstable for STM chain counting: for example it downshifted
-`240817_002.sxm` from `6` to `5`, selected `10` for `240817_017.sxm` with
-3 folds, and kept `240817_043.sxm` at `5`.  This indicates that the idea is
-more objectivable, but the current direct selector is not yet robust enough to
-replace `N_eff` or the robust-AICc guard.
-
-Use it to study predictive stability, not as the default selector.
-
-## Experimental support-marginalized GCV selector
-
-`test/batch_full.jl` supports a cheap support-sensitivity selector:
-
-```bash
-julia --project=. test/batch_full.jl 48 \
-  --config config/chitosan.toml \
-  --selection-policy support_marginalized_gcv
-```
-
-A conservative guarded variant is also available:
-
-```bash
-julia --project=. test/batch_full.jl 48 \
-  --config config/chitosan.toml \
-  --selection-policy support_marginalized_gcv_guard
-```
-
-This selector does **not** refit models.  It keeps the fitted circ→ell candidate
-set and rescores each candidate across a frozen support-padding grid:
-
-```text
-support_padding_nm ∈ {0.00, 0.10, 0.20, 0.25, 0.35, 0.50}
-```
-
-For each support, it recomputes the fit window, evaluates each candidate's GCV
-on that support, converts scores to relative regret against the best candidate
-for that support, then selects the `N` with the lowest median regret.  The 75th
-percentile regret and lower `N` are used as deterministic tie-breaks.
-
-```text
-regret_s(N) = (GCV_s(N) - min_M GCV_s(M)) / |min_M GCV_s(M)|
-N_selected = argmin_N (median_s regret_s(N), q75_s regret_s(N), N)
-```
-
-The goal is not to prefer a target count, but to ask whether a selected `N` is
-stable under plausible support boundaries.  This makes it useful for diagnosing
-support-sensitive files such as `240817_043.sxm`.
-
-Current status: **diagnostic/experimental only**.  Smoke tests show sensible
-behaviour for some controls (`240817_002.sxm → 6`, `240817_026.sxm → 6`) and
-some overfit cases (`240817_019.sxm → 6`), but it does not resolve all target
-cases (`240817_017.sxm → 7`, `240817_043.sxm → 5`, `240817_058.sxm → 5` with
-the current frozen grid/rescore-only rule).  It is therefore useful as a support
-stability diagnostic, not as a default primary selector.
-
-The guarded variant treats the support-marginalized result as bounded evidence
-for over-segmentation.  It only downshifts when the support-marginalized median
-regret is at least `0.02` better than the GCV `N_eff`, and caps the downshift to
-one lobe:
-
-```text
-if N_support < N_eff and regret(N_support) + 0.02 < regret(N_eff):
-    N_selected = max(N_support, N_eff - 1)
-else:
-    N_selected = N_eff
-```
-
-If there is no clear downshift but `N_eff-1` is within the existing GCV
-ambiguity tolerance (`5%`) of `N_eff` under the support-marginalized median and
-q75 regrets, the guard may also choose the one-step simpler model by parsimony.
-This is a frozen one-standard-error-style rule and never increases `N`.
-
-This avoids aggressive support-only jumps such as `7→5`; in smoke tests it kept
-`240817_002.sxm` and `240817_026.sxm` at `6`, changed `240817_019.sxm` to `6`,
-and changed `240817_058.sxm` from the raw support choice `5` to the guarded
-choice `6`.  The parsimony check did not change `240817_017.sxm` because the
-lower model was not stable enough under q75 regret.  It still leaves
-`240817_043.sxm` at `5`, so it is a safer diagnostic guard, not a replacement
-for the robust-AICc guard.
-
-## Experimental slope-heuristic MDL selector
-
-`test/batch_full.jl` also supports a file-adaptive MDL selector based on the
-Birgé–Massart slope heuristic:
-
-```bash
-julia --project=. test/batch_full.jl 48 \
-  --config config/chitosan.toml \
-  --selection-policy slope_heuristic_mdl
-```
-
-For each valid circ/ell candidate, it computes a contrast from the residual sum
-of squares and an effective sample size:
-
-```text
-C_m = n_eff * log(RSS_m / n_pixels)
-D_m = number of free parameters
-```
-
-It then estimates the empirical overfit slope from the high-complexity half of
-candidates using a robust Theil–Sen slope:
-
-```text
-C_m ≈ a - α D_m
-```
-
-and selects the model minimizing the doubled-slope MDL score:
-
-```text
-score_m = C_m + 2 α D_m
-```
-
-This is attractive because the complexity penalty is estimated from the file's
-own contrast–dimension curve rather than fixed from a benchmark.  It uses no
-expected `N`, no target count, and no benchmark labels.
-
-Current status: **experimental/diagnostic only**.  Smoke tests show that this
-selector is conservative on controls (`240817_002.sxm → 6`, `240817_026.sxm →
-6`) but does not recover the current target overfit cases (`017 → 7`, `019 →
-7`, `058 → 7`) and keeps the support-sensitive `043 → 5`.  It is therefore a
-principled diagnostic criterion, not currently a better primary selector.
-
-## Experimental stability-selection selector
-
-`test/batch_full.jl` supports a support-perturbation stability selector:
-
-```bash
-julia --project=. test/batch_full.jl 48 \
-  --config config/chitosan.toml \
-  --selection-policy stability_selection
-```
-
-It uses the same frozen support-padding grid as support-marginalized GCV, but
-asks a different question.  Instead of minimizing median regret, it counts how
-often each `N` is competitive across support perturbations:
-
-```text
-N is competitive on support s if GCV_s(N) ≤ 1.01 * min_M GCV_s(M)
-```
-
-The selector ranks candidates by:
-
-```text
-1. largest number of competitive supports
-2. largest number of feasible supports
-3. lower N as parsimony tie-break
-```
-
-This is useful as a stability diagnostic because it reports how often a count
-remains near-optimal under small support-boundary changes.  It uses no expected
-`N`, no target count, and no benchmark labels.
-
-Current status: **experimental/diagnostic only**.  Smoke tests show stable
-controls (`240817_002.sxm → 6`, `240817_026.sxm → 6`) and one corrected overfit
-case (`240817_019.sxm → 6`), but it leaves `240817_017.sxm → 7`, keeps
-`240817_043.sxm → 5`, and is too conservative on `240817_058.sxm → 5`.  It is
-therefore not a replacement for the robust-AICc guard.
-
-## Experimental local-lobe-evidence guard
-
-`test/batch_full.jl` also supports a local resolvability diagnostic:
-
-```bash
-julia --project=. test/batch_full.jl 48 \
-  --config config/chitosan.toml \
-  --selection-policy local_lobe_evidence
-```
-
-This policy is a down-only guard on top of `N_eff`.  It decodes the fitted chain,
-examines adjacent lobes, and merges a pair as locally unresolved when both of the
-following are true:
-
-```text
-center separation < 2.0 × mean σ∥
-and valley depth is weak: valley SNR < 3.0 or valley fraction < 0.2
-```
-
-It then counts connected resolved components.  The highest `N ≤ N_eff` is
-accepted only if at most one adjacent pair is unresolved:
-
-```text
-N_resolved ≥ N - 1
-```
-
-The rule uses no expected `N`, no target count, and no benchmark labels.  It also
-never increases `N`; local geometric resolvability can veto redundant lobes but
-cannot prove that a missing lobe should be added.
-
-Current status: **diagnostic/inconclusive**.  The criterion is physically
-interpretable for isolated peaks, but chitosan lobes are intentionally allowed to
-overlap in a continuous molecular chain.  Smoke tests kept controls such as
-`240817_026.sxm` at `6`, but the resolved-component count collapsed to one
-connected chain (`resolved=1`, `unresolved_pairs=5`), so the guard treated the
-local evidence as inconclusive and fell back to GCV.  This makes it useful as an
-audit of peak separability, not as a better primary selector.
-
-## Experimental Laplace-evidence selector
-
-`test/batch_full.jl` supports an approximate Bayesian-evidence selector:
-
-```bash
-julia --project=. test/batch_full.jl 48 \
-  --config config/chitosan.toml \
-  --selection-policy laplace_evidence
-```
-
-and a safer one-lobe overfit guard:
-
-```bash
-julia --project=. test/batch_full.jl 48 \
-  --config config/chitosan.toml \
-  --selection-policy laplace_evidence_guard
-```
-
-For each valid circ/ell candidate, it computes a Gauss–Newton/Laplace local
-evidence approximation from finite differences of the model prediction with
-respect to normalized bounded parameters.  With Student-t residual weights and
-singular values `λ` of the weighted Jacobian, the score is:
-
-```text
-fit    = 2 * (n_eff / n_pixels) * StudentT_NLL
-occam  = Σ log(1 + λ)
-d_eff  = Σ λ / (1 + λ)
-sloppy = (n_params - d_eff) * log(n_eff)
-score  = fit + occam + sloppy
-```
-
-The intent is to penalize locally sloppy or unidentified extra parameters using
-the fitted model's own curvature, without expected `N`, target counts, or labels.
-
-The direct selector chooses the minimum score.  The guarded variant treats this
-as overfit evidence only: if Laplace prefers a lower count than `N_eff`, it
-downshifts by at most one lobe; otherwise it keeps `N_eff`.
-
-Current status: **experimental/diagnostic only**.  Smoke tests show that direct
-Laplace evidence is too parsimonious for some chitosan files (`019 → 5`, `058 →
-5`).  The guarded variant is safer: it keeps `026 → 6`, changes `017 → 6`,
-`019 → 6`, and `058 → 6`, but cannot increase the support-sensitive `043` from
-`5` to `6`.  It is a principled overfit guard candidate, not yet a replacement
-for the integrated robust-AICc guard.
-
-## Experimental fwd/bwd direction-consensus selector
-
-`test/batch_full.jl` supports a forward/backward scan-consensus selector:
-
-```bash
-julia --project=. test/batch_full.jl 48 \
-  --config config/chitosan.toml \
-  --selection-policy fwd_bwd_consensus
-```
-
-This selector exploits the physical fact that true molecular signal should be
-present in both forward and backward STM scans.  For each candidate `N` fitted on
-fused data, it evaluates the model on fwd-only and bwd-only preprocessed pixels,
-does a linear recalibration per scan (`z ≈ a × model + b`) to absorb brightness
-differences, and selects the `N` with the lowest joint GCV:
-
-```text
-joint_GCV(N) = (2·n_pixels) / (2·n_pixels - p_eff)² × (RSS_fwd + RSS_bwd)
-p_eff = n_chain_params + 4   (a_fwd, b_fwd, a_bwd, b_bwd)
-```
-
-This is label-free, uses only fitted candidates (no refitting), and adds genuine
-physical information from scan-direction replication.
-
-Current status: **experimental/diagnostic only**.  Smoke tests show that the
-simple joint-GCV with per-scan recalibration does not discriminate better than
-fused GCV for the chitosan benchmark overfit cases (`017 → 7`, `019 → 7`,
-`058 → 7`), though controls are preserved (`026 → 6`).  The support-sensitive
-`043 → 5` is also unchanged.  The recalibration absorbs most scan-to-scan
-differences, making the joint GCV essentially equivalent to fused GCV.  A more
-discriminating approach (lobe-level fwd/bwd amplitude consistency, or a true
-joint refit) would be needed for this information to improve selection.
-
-## Synthetic known-N selector validation
-
-`test/synthetic_known_n_validation.jl` provides a label-free validation harness
-for comparing selectors on synthetic STM-like Gaussian chains with known true
-counts:
-
-```bash
-julia --project=. test/synthetic_known_n_validation.jl \
-  --cases 50 \
-  --seed 1234 \
-  --noise-scale 1.0 \
-  --mode circ_ell \
-  --out results/synthetic_known_n/summary_50_circ_ell.tsv
-
-julia --project=. test/aggregate_synthetic_known_n.jl \
-  results/synthetic_known_n/summary_50_circ_ell.tsv \
-  --out results/synthetic_known_n/aggregate_50_circ_ell.tsv
-
-# Fast circular-only mode remains available for cheaper stress tests:
-julia --project=. test/synthetic_known_n_validation.jl \
-  --cases 50 \
-  --seed 1234 \
-  --noise-scale 1.0 \
-  --mode circular \
-  --out results/synthetic_known_n/summary_50.tsv
-
-julia --project=. test/aggregate_synthetic_known_n.jl \
-  results/synthetic_known_n/summary_50.tsv \
-  --out results/synthetic_known_n/aggregate_50.tsv
-
-julia --project=. test/aggregate_synthetic_known_n.jl \
-  results/synthetic_known_n/summary_50.tsv \
-  results/synthetic_known_n/summary_50_seed2026.tsv \
-  results/synthetic_known_n/summary_50_seed4321.tsv \
-  results/synthetic_known_n/summary_50_seed1234_noise05.tsv \
-  results/synthetic_known_n/summary_50_seed1234_noise15.tsv \
-  --out results/synthetic_known_n/aggregate_multiseed_noise.tsv
-
-julia --project=. test/aggregate_synthetic_known_n.jl \
-  results/synthetic_known_n/summary_50_circ_ell.tsv \
-  results/synthetic_known_n/summary_50_circ_ell_seed2026.tsv \
-  results/synthetic_known_n/summary_50_circ_ell_seed4321.tsv \
-  results/synthetic_known_n/summary_50_circ_ell_seed1234_noise05.tsv \
-  results/synthetic_known_n/summary_50_circ_ell_seed1234_noise15.tsv \
-  --out results/synthetic_known_n/aggregate_circ_ell_multiseed_noise.tsv
-```
-
-The script generates in-memory `SXMImage` cases whose true `N` cycles through
-`4..8`, adds lobe-position/width/amplitude jitter, baseline tilt, independent
-fwd/bwd noise, and occasional scan artifacts, then runs the requested synthetic
-mode (`circular` or `circ_ell`).
-It applies the core selector implementations from `STMMolecularFit` and writes a
-TSV with one row per case and policy:
-
-- `case_id`, `seed`, `true_N`, `artifact`, `noise_scale`
-- `policy`, `N_eff`, `N_selected`, `abs_error`
-- `status`, `score_or_source`
-
-Use `--policies` to restrict the comparison, for example:
-
-```bash
-julia --project=. test/synthetic_known_n_validation.jl \
-  --policies gcv,gcv_with_robust_aicc_guard,laplace_evidence_guard
-```
-
-Current status: **phase-2 validation available**.  The default `--mode circular`
-is still a cheap stress test, but `--mode circ_ell` runs the closer batch analog:
-fixed-label-free circular candidate sweep followed by local elliptical refinement
-of valid circular candidates.  In both modes the candidate search window is fixed
-and does not depend on `true_N`; synthetic labels are used only for external
-grading (`abs_error` and aggregate exact-match summaries), never inside fitting
-or selection.
-
-The companion aggregation script summarizes exact rate, mean absolute error,
-over-selection, under-selection, and error counts for all cases and stratified by
-`true_N`, artifact class, seed, and noise scale.  It accepts multiple TSV inputs
-and can read both legacy 10-column synthetic summaries and newer summaries with
-the `noise_scale` column.
-
-In the first 50-case `circ_ell` run (`seed=1234`, `noise_scale=1`), the effective
-GCV baseline improved substantially relative to circular-only (`43/50` exact,
-mean absolute error `0.20`).  The robust-AICc guard remained best on exact rate
-(`46/50`, mean absolute error `0.14`, no over-selections and four
-under-selections), while stability selection was close (`44/50`, mean absolute
-error `0.18`).
-
-Across the current 250-case phase-2 `circ_ell` grid (three seeds at
-`noise_scale=1`, plus `noise_scale=0.5` and `1.5` for seed `1234`), robust-AICc
-guard remains best overall: `231/250` exact, mean absolute error `0.128`, with
-four over-selections and fifteen under-selections.  GCV is much stronger in
-phase 2 than in circular-only mode (`213/250`, mean absolute error `0.20`) but
-still trails the robust guard.
-
-## Why min(ell, circ)?
-
-The circular model (σ∥ = σ⟂ per lobe) is a **nested special case** of
-the elliptical model. Therefore:
-
-- For any N, there exists an elliptical solution with objective ≤ circular
-  objective under the same residual criterion
-  (set σ∥ = σ⟂ and you get the circular solution exactly).
-
-If the refined elliptical score is worse than circular at the same N, the
-elliptical local refinement did not improve that model. Using `min()` guards
-against this failure without introducing any new parameters.
-
-## Effective output columns
-
-- `N_ell`: best valid refined elliptical 2D model. This is the primary model
-  count when assessing the elliptical Gaussian chain.
-- `N_circ`: best valid circular 2D model.
-- `N_eff`: hybrid/effective best using `min(score_circ(N), score_ell(N))` per N.
-- `N_selected`: policy-level primary result. With `selection_policy="gcv"` it
-  equals `N_eff`; with the chitosan default `support_midpoint_hybrid` it is the
-  robust-AICc guarded count after the one-step support-midpoint adjustment.
-- `N_1D`: independent 1D slide-profile count used for QC, not to initialize the
-  standard 2D circular batch sweep.
-
-## Ambiguity diagnostics
-
-Batch summaries also report close-second-best GCV diagnostics.  They do **not**
-change the selected `N`; they only flag cases where the best model and the
-second-best distinct `N` are close in relative GCV (default: ΔGCV/GCV ≤ 5%).
-
-- `ambiguous_ell`, `runnerup_N_ell`, `delta_GCV_ell`, `delta_GCV_rel_ell`
-  describe the refined elliptical sweep.
-- `ambiguous_eff`, `runnerup_N_eff`, `delta_GCV_eff`, `delta_GCV_rel_eff`
-  describe the effective `min(ell,circ)` selection.
-
-These columns are intended for QC/visual review of support-sensitive or weakly
-identified files, not as an expected-N prior.
-
-For ambiguous files, the best-plot title also includes a warning such as
-`ambiguous ell GCV: selected N=5; second best N=6 (ΔGCV=2.5%)`, so close
-alternatives remain visible during plot review.
-
-## circ→ell LsqFit Refinement
-
-**All elliptical fitting is now done via circ→ell LsqFit refinement.**
-The NLopt global optimizer is intentionally excluded — it always diverges
-from the isotropic start in 33D parameter space (see Research Journal §7).
-
-For each N fitted by the circular sweep:
-1. Circular solution provides positions, amplitudes, and isotropic σ
-2. Params expanded to elliptical format (σ∥ = σ⟂ = σ_circ initially)
-3. LsqFit only (skip_global=true, max_iter=50) locally refines sigmas
-4. Scores are computed for the configured criterion; the refined elliptical and
-   circular results are compared per N.
-
-**Why this works**: The circular solution is near the global elliptical minimum.
-LsqFit follows the gradient to the nearest local minimum without exploring
-the wider parameter space where NLopt gets lost. The refinement consistently
-improves BIC (3-24× better than NLopt elliptical in tests).
-
-## Effective Sample Size
-
-`n_eff = max(10, length(zfit) ÷ 9)`
-
-The divisor ÷9 approximates the spatial correlation area: a 3×3 pixel
-block ≈ 1 independent observation. Typical STM images have FWHM ~0.5 nm
-≈ 25 pixels, giving a correlation area of ~500 px². The ÷9 factor is
-conservative (larger n_eff → larger BIC penalty → favors simpler models).
-
-> **This `n_eff` is a placeholder that only enters BIC/AICc diagnostics — never
-> `N_selected`.** The correlation range exceeds the fit window, so `n_eff` is
-> not objectively definable there; GCV (which needs no `n_eff`) drives
-> `N_selected`. See
-> [Calibration](calibration.md#effective-sample-size-why-gcv-is-the-canonical-criterion).
+The upward branch is deliberately stricter than the downward one. If the
+auxiliary guard fit fails, the file keeps `N_eff` and records the failure.
+
+**Provenance.** These rules and thresholds, `fit_width_nm` and
+`support_padding_nm` were chosen historically while looking at known-count
+benchmark grades. Inference reads no label, but this is not an independent
+calibration ([Calibration](calibration.md)).
+
+### Long chains: `adaptive_support_rescue`
+
+Used by `config/chitosan_10_20mer_adaptive_support_rescue.toml` (`n_max = 24`).
+If `N_eff` sits at the support-feasibility ceiling, a second pass with
+permissive support settings is accepted only when support length and N both
+increase and circular/elliptical counts stay coherent. The robust-AICc guard
+then acts down-only on the active support. Known limit: the support is a
+straight tube, so long curved chains leave it and are undercounted
+([journal](journal.md)).
+
+### Other selectors
+
+`test/batch_full.jl --selection-policy` also accepts `gcv` (raw `N_eff`),
+`gcv_with_robust_aicc_guard`, and diagnostic selectors kept in
+`STMMolecularFit/src/selectors.jl`: `spatial_blocked_cv`,
+`support_marginalized_gcv[_guard]`, `slope_heuristic_mdl`, `stability_selection`,
+`local_lobe_evidence`, `laplace_evidence[_guard]` and `fwd_bwd_consensus`.
+None beat the default on the expanded benchmark or on synthetic known-N data.
+Their evaluations are in the archived journal (tag `archive/pre-cleanup-20260929`).
+
+### Output columns (`summary_overlap060_hard.tsv`)
+
+| Column | Meaning |
+|---|---|
+| `N_selected` | Count under the configured policy (primary result) |
+| `N_eff`, `N_ell`, `N_circ` | Best effective / refined elliptical / circular model |
+| `selection_policy`, `selection_source` | Policy, and which layer made the final move (`ell`, `circ`, `robust_aicc_guard`, `support_midpoint_down`, `support_midpoint_down_to_mid`, `support_midpoint_up`) |
+| `N_refined`, `refined_policy`, `refined_source`, `robust_aicc_N` | Guard stage audit |
+| `ambiguous_eff`, `runnerup_N_eff`, `delta_GCV_rel_eff` (and `_ell`) | Close second-best diagnostics (ΔGCV/GCV ≤ 5%); QC only |
+| `support_2D_ell_nm`, `support_2D_circ_nm` | Active support length |
+| `N_1D` | 1D diagnostic count (`NA` unless `--no-skip-1d`) |
+
+## Repeated-scan molecule consensus
+
+STM sessions often re-image one molecule many times, with drift and different
+ranges. `test/build_molecule_consensus.jl` treats these scans as repeated
+measurements:
+
+1. **Ordering.** Scans are sorted by acquisition time (`REC_DATE`, `REC_TIME`).
+   Only consecutive scans of the same date can be linked.
+2. **Registration.** Each scan is resampled in the absolute piezo frame around
+   the earlier scan's chain centroid (window ±3 nm, 0.04 nm grid), high-pass
+   filtered (σ = 0.32 nm), and registered by a pure translation (≤ 1.6 nm).
+   The pair is linked when NCC ≥ 0.5 and the centroids are ≤ 6 nm apart.
+3. **Tracks.** Chains of linked consecutive scans form tracks.
+4. **Consensus.** A track of ≥ 3 scans with a strict-majority per-scan count
+   N* gives N* to a disagreeing scan, provided the reference footprint,
+   translated by the accumulated drift, lies inside that scan's frame
+   (margin 0.3 nm). Rules: `agrees`, `consensus_applied`, `track_too_short`,
+   `no_strict_majority`, `footprint_outside_frame`.
+5. **Refit check** (`run_molecule_consensus_chitosan.jl`). The unchanged
+   fixed-N fitter must fit each changed scan at N*: first on its own support,
+   then once on the registered footprint plus 1.2 nm (`consensus_registered_roi`).
+   Otherwise the scan keeps its own count (`consensus_fit_failed`).
+
+Singletons, ties and failed refits keep their per-scan count. Settings are in
+`config/molecule_consensus.toml`; their justification is in
+[Calibration](calibration.md). On the benchmark the final counts are 137/145
+exact (per-scan counting: 123/145), 145/145 within one.

@@ -1,92 +1,46 @@
-# STMFit — STM Molecular Chain Fitting
+# STMFit
 
-Automated pipeline for detecting and fitting 2D Gaussian chain models
-to STM images of molecular chains. **Promoted September 29:** a fresh
-raw-to-prediction run of the molecule-consensus reconstruction with
-latent-class fusion (source 3c414a4) gives **137/145 exact counts** (145/145
-within one), **772/870 correct units, 88/145 exact chains, 865/870 classified,
-93 errors**, above the saved 694/43/855 record on every measure. See the
-[journal](journal.md) for the method, verification and limits (NKNNKN
-edge-adjacency confound, molecule-sized exact-chain blocks). The September 24
-raw reproduction of the previous pipeline gave 123/145 and 679/29/848.
-Inference reads no labels, but historical calibration used known-count grades;
-see [Calibration](calibration.md) for the provenance limit.
+STMFit reconstructs molecular chains from raw STM images without labels. It
+counts the units of each chain, locates them, and assigns each unit GlcN (0) or
+GlcNAc (1) with an explicit posterior uncertainty. The reference system is
+chitosan on Cu(100).
 
-The pipeline has also been **applied** to unknown 10–20mer chains. Without
-external labels, processing and visual QC do not validate chemical assignment.
-Other molecules require their own physical calibration and validation; the
-measurement diagnostic does not automatically establish a physical calibration.
+## Current state (2026-09-29)
 
-## Quick Start
+The promoted method is per-scan GCV counting, then repeated-scan molecule
+consensus, corroborated per-scan assignment and latent-class fusion. A fresh
+raw run (Viper job 12025539, source `3c414a4`) was graded externally on the
+145-scan NKNNKN 6-mer benchmark:
 
-```bash
-# Single-file diagnostic
-STMFIT_DATA_DIR=/path/to/data julia --project=. test/inspect_one_file.jl 240817_004.sxm
+| Profile | Exact N /145 | Correct /870 | Exact chains /145 | Classified /870 | Errors |
+|---|---:|---:|---:|---:|---:|
+| Previous record | 129 | 694 | 43 | 855 | 161 |
+| **Promoted method** | **137** | **772** | **88** | **865** | **93** |
 
-# Full batch (default: chitosan.toml, support-midpoint hybrid)
-STMFIT_DATA_DIR=/path/to/data julia -t 4 --project=. test/batch_full.jl 48 \
-  --config config/chitosan.toml
+What this does and does not establish:
 
-# Audit apparent widths/spacings and missing measurements, without fitting
-julia --project=. test/measure_calibration.jl path/to/clean_scan.sxm
+- Inference is label-free end to end. Benchmark membership and the `NKNNKN`
+  control are read only by the grading scripts.
+- The counting parameters in `config/chitosan.toml` were historically chosen
+  with benchmark grades. They are frozen, but they are not independently
+  calibrated ([Calibration](calibration.md)).
+- NKNNKN places GlcNAc next to the chain ends, so edge adjacency and chemistry
+  are confounded. A control molecule with another sequence is needed for
+  chemical validation.
+- The unknown 10–20mer application runs, but its counts and calls are not
+  validated ([Runbook](chitosan_runbook.md)).
 
-# Raw GCV baseline (no guard) for comparison
-STMFIT_DATA_DIR=/path/to/data julia -t 4 --project=. test/batch_full.jl 48 \
-  --config config/chitosan.toml --selection-policy gcv
+## Where to go
 
-# Original 240817 primary-benchmark validation policy (39/39 exact)
-STMFIT_DATA_DIR=/path/to/data julia -t 4 --project=. test/batch_full.jl 39 \
-  --config config/chitosan.toml --selection-policy gcv_with_robust_aicc_guard
-
-# Summarize results
-julia --project=. test/summarize.jl results/best_plots/
-```
-
-Experimental selectors (blocked CV, support-marginalized GCV, slope-heuristic
-MDL, stability, Laplace, fwd/bwd consensus, local-lobe evidence) and synthetic
-validation are documented in [Model Selection](selection.md).
-
-## Calibration
-
-`test/measure_calibration.jl` reports apparent widths/spacings in both views and
-exposes the old bootstrap's fallback values. It no longer derives physical fit
-bounds or writes a production TOML automatically. See [**Calibration**](calibration.md)
-for the measurement limits and why GCV remains the canonical criterion.
-The completed raw-view audit finds legacy width/spacing fallbacks on 245/292
-and 261/292 views; the new diagnostic is not a promoted physical calibration.
-
-The default `config/chitosan.toml` is the historical hand-tuned reference.
-`config/chitosan_auto.toml` is a historical bootstrap output, including values
-matching the old fallbacks, not independent validation or label-free calibration.
-
-For the chitosan reference set, `benchmarks/chitosan_240817.toml` records
-evaluation-only quality classes. It is **not** used by fitting code and must not
-become a selection prior.
-
-## Unit Assignment (GlcNAc/GlcN)
-
-The pipeline can assign each fitted lobe a monomer type to produce a
-deacetylation map per chain. This is a **work in progress**. The 6mer 0/1/?
-benchmark uses the same 145 files as the counting benchmark; the control sequence
-`NKNNKN` is external grading information only and must not enter the label-free
-method. See
-[Unit Assignment](unit_assignment.md) and [QE STM Molds](qe_stm_molds.md).
-
-## Research Journal
-
-All experimental paths — successful and failed — are documented in the
-[Research Journal](journal.md). **Update this journal** whenever you:
-- Test a new approach (even if it fails)
-- Change the pipeline or model selection logic
-- Discover a bug or convergence issue
-- Add or remove parameters
-
-## Components
-
-| Component | Role |
-|-----------|------|
-| `STMFitCore.jl` | Shared utilities: κ penalty, spacing constraints |
-| `STMSXMIO.jl` | Shared SXM (Nanonis) I/O: `SXMImage`/`read_sxm` + preprocessing helpers |
-| `GaussianFit1D.jl` | 1D slide profile fitting (diagnostic only, off by default) |
-| `GaussianFit2D.jl` | 2D chain model: circular + elliptical Gaussian lobes |
-| `STMMolecularFit.jl` | Orchestration: SXM I/O, slide extraction, selectors, batch summaries |
+| Page | Content |
+|---|---|
+| [Pipeline](pipeline.md) | Data flow, packages, stages and outputs |
+| [Model selection](selection.md) | Count selection per scan, molecule consensus |
+| [Unit assignment](unit_assignment.md) | Features, molds, classifiers, vote, fusion, uncertainty |
+| [Calibration](calibration.md) | What each parameter is based on, and its limits |
+| [Configuration](config.md) | Every config file and key |
+| [Runbook](chitosan_runbook.md) | Running, verifying and grading; 10–20mer application |
+| [DFT molds](qe_stm_molds.md), [DFT note](dft_calculation_note.md) | GlcN/GlcNAc LDOS molds from Quantum ESPRESSO |
+| [Mathematical background](math.md) | Model, GCV, κ penalty, diagnostics |
+| [Research journal](journal.md) | Decisions, rejected approaches, open questions |
+| [API](api.md) | Package reference |

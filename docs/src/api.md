@@ -18,7 +18,7 @@ Main public entry points:
 | `GaussianFit2D.ChainModelResult` | Fit result for one N, including scores, validity, residual diagnostics and metrics. |
 
 Important internal pipeline functions documented conceptually in
-[Pipeline Architecture](pipeline.md): `_active_t_support`,
+[Pipeline](pipeline.md): `_active_t_support`,
 `_deterministic_chain_seed`, `_fit_chain_n`, and the batch-level
 `_refine_circ_to_ell` helper.
 

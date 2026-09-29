@@ -18,7 +18,7 @@ Pipeline (journal 2026-08-01/02, sections 8h-8r):
 The resulting template TSV is scored against experimental residual patches by
 test/score_connected_mold_templates.jl; the per-lobe cost_margin is the mold
 feature used by the label-free GMM/k-means pipeline (see
-test/build_cc_soft_champion.py).
+test/run_reconstructed_chitosan.jl).
 
 Usage:
   python3 test/lib/cc_mold_builder.py CUBE0 CUBE1 FRAME0 FRAME1 OUT_TEMPLATE \
