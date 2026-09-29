@@ -30,6 +30,12 @@ majority = "strict"
 # Every lobe of the registered reference footprint must be at least this far
 # inside the target scan (about half a lobe spacing).
 frame_margin_nm = 0.3
+# Repeat-scan collection for application cohorts (test/collect_repeat_scans.jl):
+# same session, acquired within this many minutes of a target, frame centre
+# within this distance, and no overview frame larger than this range.
+collect_max_gap_min = 30.0
+collect_max_offset_nm = 5.0
+collect_max_range_nm = 20.0
 
 [preprocessing]
 channel = "Z"
