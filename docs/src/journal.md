@@ -21105,3 +21105,25 @@ consensus versions; the inherited hybrid/calibration provenance and chemical
 specificity caveats above remain. The additional consensus step's lack of
 label inputs does not establish end-to-end label-free calibration. No
 threshold, seed, prediction, physical reference or champion is changed here.
+
+### 2026-09-29 — GlcNAc CG starts; original reference independently checked
+
+Job **12023139** starts on **vipc2306 at 12:12:38 CEST**, with a hard end
+time of **14:12:38**. Slurm retains **8 requested CPUs / 8 tasks** and allocates
+16 logical CPU entries; QE explicitly reports **8 MPI ranks and one thread
+per rank**, not a sixteen-rank computation. The first **1e-10-Ry** NSCF step
+starts at **12:14:39** and enters `CG style diagonalization`. Neither a
+converged trial nor the second threshold is available at this point.
+
+The six completed reference-analysis files are fetched after a reviewed
+dry-run and pass a checksum-only comparison with Viper. Julia **1.13.1**
+passes **28,359** independent saved-reference assertions, plus the unchanged
+**1,795 / 379,512 / 379,552** scope/legacy/CG synthetic assertions. These are
+table readbacks and tiny fixtures, not a local real-orbital calculation.
+The replay uses original bands **889--901**, smooth norm
+**20.00160384469961**, and all **6,936 native vertices / 867 plane points**;
+parallel/serial and prior-reference values agree exactly. The original
+**3.666505807093142e-5-Ry** SCF error remains within the common **5e-5-Ry**
+gate. Reference XML still correctly identifies Davidson, not the running CG
+trial. No incomplete working orbital is fetched or interpreted, and no new
+SCF, mold or benchmark result is claimed.
