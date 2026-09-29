@@ -20926,7 +20926,35 @@ chains without a per-lobe gain. The variant is not used; its option stays
 opt-in and byte-neutral. A CLI import bug in this opt-in path, found here, is
 fixed (`90dc7bf`); control configurations never reach it.
 
+**Registered-ROI refit (added after the first trial).** The two failed
+scans are then refit once on an image crop around the registered reference
+footprint (`roi_margin_nm=1.2`, `refit_support="registered_roi"`), with the
+unchanged fixed-N fitter; per-scan counts are kept only if this also fails.
+Locally both fit six lobes on the molecule (`240818_019` moves from the edge
+object to the registered chain). `best_cost` k-means seed aggregation
+(standard lowest-cost restart instead of a vote over restarts, including a
++19% cost local optimum in one view) is neutral on three caches (690→692,
+679→679, 694→694 correct; exact chains unchanged) and is not adopted.
+
 ### Results
 
-(pending: dev job 12018915 with reused repeat1 counts, and final fresh job
-12018916 from `b43b536`)
+**Development run, reused fresh repeat1 counts (job 12018915, `b43b536`,
+32 min).** All 234 output hashes match Viper; the pre-grade verifier passes
+(cohort, per-stage row counts, consensus provenance, 146 raw and 4 input
+hashes). Consensus: 42 tracks, 16 proposed changes, 14 applied, 2
+`consensus_fit_failed`. External full145/own-N grade:
+
+| Profile | Exact N /145 | Correct /870 | Exact chains /145 | Coverage /870 | Missing / extra | Errors | 0.5 ties emitted as 1 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Saved record (hybrid counts) | 129 | 694 | 43 | 855 | 13 / 6 | 161 | 50 |
+| Fresh reproducible control | 123 | 679 | 29 | 848 | 20 / 5 | 169 | 23 |
+| Molecule consensus (dev) | 135 | 690 | 34 | 857 | 10 / 3 | 167 | 0 |
+
+Against the fresh control: +11 correct, +5 exact chains, +9 covered, −2
+errors (13 scans gain, 10 lose; 7 exact chains gained, 2 lost). Against the
+saved record: coverage exceeded, correct −4, exact chains −9 (seven of the
+nine lost chains used a record 0.5 tie). Not a promotion: the saved record is
+not beaten on correct positions or exact chains.
+
+(pending: fresh final 12018916 from `b43b536`; registered-ROI dev 12019263
+and fresh final 12019264 from `1b6b5ed`)
