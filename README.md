@@ -59,11 +59,11 @@ Pkg.instantiate(); Pkg.precompile()'
 
 ```bash
 # Inspect one scan (fits and plots, no batch)
-julia --project=. test/inspect_one_file.jl data/chitosan_6mer/240817_004.sxm
+julia --project=. test/inspect_one_file.jl data/chitosan_6mer/20240817_LHe_Cu100/240817_004.sxm
 
 # Per-scan counting only
-julia -t 4 --project=. test/batch_full.jl 48 --config config/chitosan.toml \
-    --data-dir data/chitosan_6mer --outdir results/counting
+julia -t 4 --project=. test/batch_full.jl 146 --config config/chitosan.toml \
+    --data-dir RAW_DIR --outdir results/counting
 
 # Complete method, raw scans -> predictions.tsv (run it on Viper for a cohort)
 julia -t 4 --project=. test/run_molecule_consensus_chitosan.jl \

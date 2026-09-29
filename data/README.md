@@ -6,8 +6,8 @@ subdirectory per dataset, or point scripts elsewhere with `--data-dir` (or
 
 | Dataset | Local | Viper | Content |
 |---|---|---|---|
-| 6-mer benchmark cohort | `data/chitosan_6mer/` | `/ptmp/oldu/stmfit/full146_v1_inputs/full146_raw/` | 146 scans; 145 graded (`benchmarks/chitosan_6mer_counting_confirmed.toml`) |
-| Lab 6-mer tree | `/home/durif/Rebecca/data/data/` | — | Inventory in `benchmarks/chitosan_6mer_data_inventory.tsv` |
+| 6-mer lab tree | `data/chitosan_6mer/` (session folders, ~1,080 scans; source `/home/durif/Rebecca/data/data/`) | — | Inventory in `benchmarks/chitosan_6mer_data_inventory.tsv` |
+| 6-mer benchmark cohort | symlinks in `results/reconstructed_cc_soft_v1/full146_raw/` | `/ptmp/oldu/stmfit/full146_v1_inputs/full146_raw/` | 146 scans; 145 graded (`benchmarks/chitosan_6mer_counting_confirmed.toml`) |
 | Unknown 10–20mers | `/home/durif/Rebecca/data/10_20mer_analysis/` (25 targets) | `/ptmp/oldu/stmfit/data_10_20mer` | Repeat candidates are collected with `test/collect_repeat_scans.jl` |
 
 The manifests in `benchmarks/` hold external grading metadata only (quality
