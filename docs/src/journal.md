@@ -21040,3 +21040,28 @@ on Viper. Application job **12023144** (`c82f98e`,
 `unit_assignment_patch_support.toml` assignment, 16 h cap, no retry) was
 submitted on 2026-09-29. It is label-free end to end; its human-read
 comparison is external and descriptive only.
+
+**Application result (job 12023144, COMPLETED in 2h31, 633 output hashes
+match).** 134 scans; 99 consecutive pairs are linked. 17 counts change:
+13 plain consensus, 4 on the registered ROI; 47 scans are in tracks without
+a strict majority (long chains scatter more). Among the 25 targets, `260221_044` moves from 8 to 11 lobes
+(registered ROI; the manual read has 11 units). Two targets fail badly under
+fresh counting: `251206_013` gives 4 lobes (September production 11, manual
+read 12) and `260220_083` gives 2 (production 9); their repeat scans fail the
+same way, so consensus cannot repair them. Mean |N−N_manual| over the 12
+manually read targets is 1.33 (production 1.17). The assignment names 71% of
+lobes class 1 (the brighter cluster), with no edge-distance pattern. That
+naming was fixed on the 6mer benchmark and is not chemically validated here.
+
+**Long-chain counting fragility (diagnosed, not fixed).** Bisection on
+`251206_013` (single local scan, commits `6b37f1d`…`c7836f9`) attributes the
+change to `d12283a` (symmetric fwd/bwd fusion): 7.5 nm support / N=11 before,
+1.5 nm / N=4 after. The ROI masks are byte-identical and the axial profiles
+nearly so (baseline 0.069, peak 0.165, threshold 0.149 in both). The old 7.5 nm
+was the `no_component_long_enough` fallback (full range); the fix nudged one
+short above-threshold run past the 1 nm minimum. The root cause is the ±0.16 nm
+tube around a straight principal axis: a long curved chain leaves the tube and
+its axial profile dips. Capping the threshold at half prominence does not
+help (1.51→1.68 nm, 1.93→2.06 nm). Long 10–20mers need a curved-axis support
+model before their counts can be trusted; this is an application prerequisite,
+not a 6mer benchmark issue.
