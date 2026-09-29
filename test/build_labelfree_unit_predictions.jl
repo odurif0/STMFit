@@ -30,6 +30,7 @@ struct Options
     first_seed::Int
     n_seeds::Int
     interactions::Bool
+    training_groups::String
 end
 
 mutable struct LobeRecord
@@ -58,6 +59,7 @@ function _parse_cli(args)
     first_seed = 0
     n_seeds = 20
     interactions = false
+    training_groups = ""
 
     i = 1
     while i <= length(args)
@@ -92,6 +94,8 @@ function _parse_cli(args)
             n_seeds = parse(Int, split(arg, "="; limit=2)[2]); i += 1
         elseif arg == "--interactions"
             interactions = true; i += 1
+        elseif arg == "--training-groups"
+            training_groups = _arg_value(args, i, arg); i += 2
         elseif arg in ("-h", "--help")
             println("""
             Usage: julia --project=. test/build_labelfree_unit_predictions.jl [options]
@@ -108,6 +112,9 @@ function _parse_cli(args)
               --seeds INT            Number of k-means seeds [20]
               --interactions         Append pairwise products within each view after
                                      per-file z-scoring.
+              --training-groups PATH Optional file/group TSV (label-free repeated-scan
+                                     molecule tracks). Each group gets equal total
+                                     k-means weight; all rows are still assigned.
 
             Output columns: file, lobe, predicted, confidence, amplitude,
             probability_1, views_used, invalid_reason.
@@ -126,8 +133,9 @@ function _parse_cli(args)
     isfile(features) || error("Feature TSV not found: $features")
     !isempty(split_features) && !isfile(split_features) && error("Split feature TSV not found: $split_features")
     !isempty(patches) && !isfile(patches) && error("Patch TSV not found: $patches")
+    !isempty(training_groups) && !isfile(training_groups) && error("Training-group TSV not found: $training_groups")
     return Options(features, split_features, patches, out_tsv, view_specs,
-                   first_seed, n_seeds, interactions)
+                   first_seed, n_seeds, interactions, training_groups)
 end
 
 function _arg_value(args, i::Int, flag::String)
@@ -347,6 +355,30 @@ function _standardized_matrix(records::Vector{LobeRecord}, features::Vector{Stri
     return z, valid
 end
 
+"""Mean-one weights giving each label-free training group (repeated scans of one
+molecule) equal total mass; `nothing` keeps the legacy unweighted arithmetic."""
+function group_weights(records, idxs, path::AbstractString)
+    isempty(path) && return nothing
+    groups = Dict{String,String}()
+    lines = filter(l -> !isempty(strip(l)), readlines(path))
+    header = split(lines[1], '\t')
+    fi = findfirst(==("file"), header); gi = findfirst(==("group"), header)
+    (fi === nothing || gi === nothing) && error("Training groups need file and group columns")
+    for l in lines[2:end]
+        v = split(l, '\t'); f = String(v[fi])
+        haskey(groups, f) && error("Duplicate training-group file $f")
+        groups[f] = String(v[gi])
+    end
+    counts = Dict{String,Int}()
+    for i in idxs
+        g = get(groups, records[i].file, nothing)
+        g === nothing && error("No training group for $(records[i].file)")
+        counts[g] = get(counts, g, 0) + 1
+    end
+    mass = length(idxs) / length(counts)
+    return [mass / counts[groups[records[i].file]] for i in idxs]
+end
+
 function _view_probability(records::Vector{LobeRecord}, features::Vector{String}, opt::Options;
                            normalization_state=nothing, model_state=nothing)
     X, valid = _standardized_matrix(records, features; interactions=opt.interactions, normalization_state)
@@ -357,14 +389,19 @@ function _view_probability(records::Vector{LobeRecord}, features::Vector{String}
     votes = zeros(Float64, length(records))
     counts = zeros(Int, length(records))
     data = permutedims(X[idxs, :])
+    w = group_weights(records, idxs, opt.training_groups)
 
     for seed in opt.first_seed:(opt.first_seed + opt.n_seeds - 1)
-        km = kmeans(data, 2; maxiter=200, rng=MersenneTwister(seed), display=:none)
+        km = w === nothing ? kmeans(data, 2; maxiter=200, rng=MersenneTwister(seed), display=:none) :
+            kmeans(data, 2; weights=w, maxiter=200, rng=MersenneTwister(seed), display=:none)
         cluster_amp = Dict{Int,Vector{Float64}}(1 => Float64[], 2 => Float64[])
+        cluster_w = Dict{Int,Vector{Float64}}(1 => Float64[], 2 => Float64[])
         for (j, i) in enumerate(idxs)
             push!(cluster_amp[km.assignments[j]], records[i].amplitude)
+            push!(cluster_w[km.assignments[j]], w === nothing ? 1.0 : w[j])
         end
-        mean_amp = Dict(c => mean(vals) for (c, vals) in cluster_amp if !isempty(vals))
+        mean_amp = w === nothing ? Dict(c => mean(vals) for (c, vals) in cluster_amp if !isempty(vals)) :
+            Dict(c => sum(vals .* cluster_w[c]) / sum(cluster_w[c]) for (c, vals) in cluster_amp if !isempty(vals))
         high_cluster = length(mean_amp) == 2 ? first(sort(collect(keys(mean_amp)); by=c -> mean_amp[c], rev=true)) : 0
         model_state === nothing || push!(model_state,
             (seed=seed, centers=copy(km.centers), high_cluster=high_cluster,

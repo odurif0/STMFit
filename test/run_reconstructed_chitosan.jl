@@ -14,7 +14,7 @@ const VALUE_OPTIONS = Set(["--data-dir", "--count-config", "--config", "--outdir
     "--selected-summary", "--features", "--split-features", "--patches-fwd",
     "--patches-bwd", "--descriptor-patches", "--templates",
     "--cube0", "--cube1", "--frame0", "--frame1", "--acquisition-shifts", "--patch-frames",
-    "--residual-features-fwd", "--residual-features-bwd", "--mold-tangent-settings"])
+    "--residual-features-fwd", "--residual-features-bwd", "--mold-tangent-settings", "--training-groups"])
 
 function parse_options(args)
     if "--help" in args || "-h" in args
@@ -39,6 +39,8 @@ function parse_options(args)
         --mold-tangent-settings TOML: experimental native-sampled Gaussian tangent
           projection of both physical CC scores only; frozen geometry, fresh
           matched patches, no other acquisition/geometry experiment.
+        --training-groups PATH: file/group TSV of label-free repeated-scan molecule
+          tracks; required iff GMM/k-means weighting is equal_molecules.
         --dry-run: check supplied input paths and print the stages without computing.
 
         Production only: no benchmark labels, expected count, control sequence,
@@ -393,16 +395,22 @@ function execute_pipeline(opts)
         stage = "gmm"
         gmm = joinpath(outdir, "pred_gmm.tsv")
         sel = cfg["selection"]
+        kmeans_weighting = get(sel, "kmeans_training_weighting", "equal_lobes")
+        kmeans_weighting in ("equal_lobes", "equal_molecules") || error("Unknown k-means training weighting")
+        uses_groups = sel["gmm_training_weighting"] == "equal_molecules" || kmeans_weighting == "equal_molecules"
+        uses_groups == haskey(opts, "--training-groups") || error("--training-groups is required only with equal_molecules weighting")
+        gmm_groups = sel["gmm_training_weighting"] == "equal_molecules" ? ["--training-groups", abspath(opts["--training-groups"])] : String[]
+        kmeans_groups = kmeans_weighting == "equal_molecules" ? ["--training-groups", abspath(opts["--training-groups"])] : String[]
         common = ["--features", table, "--first-seed", string(sel["first_seed"])]
         bootstrap_args = load_gmm_resampling(cfg).mode == "whole_scans" ?
             ["--bootstrap-audit", joinpath(outdir, "gmm_scan_bootstrap.tsv")] : String[]
         sel["interactions"] && push!(common, "--interactions")
-        run_stage(outdir, stage, "build_labelfree_gmm_predictions.jl", vcat(common, training_args, bootstrap_args,
+        run_stage(outdir, stage, "build_labelfree_gmm_predictions.jl", vcat(common, training_args, bootstrap_args, gmm_groups,
             ["--config", opts["--config"], "--out", gmm, "--view", "v_cc=$BASE4,patch_u_asym_reconstructed,mold_cc_fwd,mold_cc_bwd,emp_fisher",
              "--seeds", string(sel["gmm_seeds"]), "--selftrain", string(sel["gmm_selftrain"])]))
         stage = "kmeans"
         km = joinpath(outdir, "pred_kmeans.tsv")
-        run_stage(outdir, stage, "build_labelfree_unit_predictions.jl", vcat(common,
+        run_stage(outdir, stage, "build_labelfree_unit_predictions.jl", vcat(common, kmeans_groups,
             ["--out", km, "--patches", paths["--patches-bwd"], "--view", "v_base=$BASE4",
              "--view", "v_split=$BASE4,split_log_skew", "--view", "v_comt=$BASE4,bwd_neg_com_t",
              "--view", "v_diag45=$BASE4,bwd_neg_diag45", "--seeds", string(sel["kmeans_seeds"])]))

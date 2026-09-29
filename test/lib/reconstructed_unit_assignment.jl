@@ -7,7 +7,8 @@ export read_table, write_table, lobe_table, require_same_keys,
        write_soft_vote, load_config, load_training_policy, write_training_support,
        load_training_mask, validate_training_mask, load_gmm_normalization, load_gmm_weighting,
        load_gmm_seed_aggregation, load_gmm_resampling, load_gmm_covariance_structure,
-       load_fisher_cv, load_gmm_cluster_naming, load_gmm_learning, load_gmm_covariance_scope
+       load_fisher_cv, load_gmm_cluster_naming, load_gmm_learning, load_gmm_covariance_scope,
+       read_training_groups
 
 const TRANSVERSE_DESCRIPTORS = ("transverse_half_plane_asymmetry",
     "transverse_first_moment", "affine_residual_half_plane_asymmetry")
@@ -162,11 +163,24 @@ end
 "Observation weights depend only on the number of usable training rows per scan."
 function load_gmm_weighting(config::AbstractDict)
     mode = get(get(config, "selection", Dict()), "gmm_training_weighting", nothing)
-    mode in ("equal_lobes", "equal_scans") ||
-        throw(ArgumentError("explicit gmm_training_weighting must be equal_lobes or equal_scans"))
-    mode == "equal_scans" && get(get(config, "model", Dict()), "gmm_final_covariance", nothing) != "ridge" &&
-        throw(ArgumentError("equal_scans requires ridge; weighted shrinkage is not implemented"))
+    mode in ("equal_lobes", "equal_scans", "equal_molecules") ||
+        throw(ArgumentError("explicit gmm_training_weighting must be equal_lobes, equal_scans or equal_molecules"))
+    mode != "equal_lobes" && get(get(config, "model", Dict()), "gmm_final_covariance", nothing) != "ridge" &&
+        throw(ArgumentError("$mode requires ridge; weighted shrinkage is not implemented"))
     return String(mode)
+end
+
+"File => label-free training group (repeated-scan molecule track) from a file/group TSV."
+function read_training_groups(path::AbstractString)
+    header, rows = read_table(path)
+    all(c -> c in header, ("file", "group")) || error("Training groups need file and group columns")
+    groups = Dict{String,String}()
+    for r in rows
+        f = r["file"]; haskey(groups, f) && error("Duplicate training-group file $f")
+        isempty(r["group"]) && error("Empty training group for $f")
+        groups[f] = r["group"]
+    end
+    return groups
 end
 
 "Aggregation of existing per-seed scores; no change to fitting or group naming."

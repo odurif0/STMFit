@@ -61,6 +61,7 @@ struct Options
     covariance_structure::String
     cluster_naming::String
     learning::NamedTuple
+    training_groups::Dict{String,String}
 end
 
 function _load_final_score(config::AbstractDict)
@@ -100,6 +101,7 @@ function _parse_cli(args)
     config = DEFAULT_CONFIG
     training_support = ""
     bootstrap_audit = ""
+    training_groups = ""
 
     i = 1
     while i <= length(args)
@@ -108,6 +110,8 @@ function _parse_cli(args)
             bootstrap_audit = _arg_value(args, i, arg); i += 2
         elseif arg == "--training-support"
             training_support = _arg_value(args, i, arg); i += 2
+        elseif arg == "--training-groups"
+            training_groups = _arg_value(args, i, arg); i += 2
         elseif arg == "--config"
             config = _arg_value(args, i, arg); i += 2
         elseif startswith(arg, "--config=")
@@ -265,6 +269,9 @@ function _parse_cli(args)
         error("Alternative learning requires --selftrain >= 1 for the configured hard updates")
     normalization = load_gmm_normalization(cfg)
     training_weighting = load_gmm_weighting(cfg)
+    (training_weighting == "equal_molecules") == !isempty(training_groups) ||
+        error("--training-groups is required only with equal_molecules")
+    groups = isempty(training_groups) ? Dict{String,String}() : read_training_groups(training_groups)
     seed_aggregation = load_gmm_seed_aggregation(cfg)
     bootstrap = load_gmm_resampling(cfg)
     (bootstrap.mode == "whole_scans") == !isempty(bootstrap_audit) ||
@@ -283,7 +290,7 @@ function _parse_cli(args)
                    first_seed, n_seeds, interactions, selftrain, covariance.mode, covariance_scope, covariance.ridge, final_score,
                    training_policy, training_support, normalization.mode, normalization.scale_fallback,
                    training_weighting, seed_aggregation, bootstrap.mode, bootstrap.replicates, bootstrap.seed,
-                   bootstrap_audit, covariance_structure, cluster_naming, learning)
+                   bootstrap_audit, covariance_structure, cluster_naming, learning, groups)
 end
 
 function _arg_value(args, i::Int, flag::String)
@@ -541,16 +548,18 @@ function _final_component_score(x, mu, covariance, weight, opt::Options)
 end
 
 "Mean-one weights; each represented scan has total n / number_of_scans."
-function _observation_weights(records, idxs, mode::String)
+function _observation_weights(records, idxs, mode::String, groups=Dict{String,String}())
     mode == "equal_lobes" && return nothing # Preserve legacy floating-point operations.
-    mode == "equal_scans" || throw(ArgumentError("unknown GMM training weighting"))
+    mode in ("equal_scans", "equal_molecules") || throw(ArgumentError("unknown GMM training weighting"))
     isempty(idxs) && return Float64[]
+    unit(i) = mode == "equal_scans" ? records[i].file :
+        get(() -> throw(ArgumentError("No training group for $(records[i].file)")), groups, records[i].file)
     counts = Dict{String,Int}()
     for i in idxs
-        counts[records[i].file] = get(counts, records[i].file, 0) + 1
+        counts[unit(i)] = get(counts, unit(i), 0) + 1
     end
     mass = length(idxs) / length(counts)
-    return [mass / counts[records[i].file] for i in idxs]
+    return [mass / counts[unit(i)] for i in idxs]
 end
 
 function _check_observation_weights(w, n)
@@ -945,7 +954,7 @@ function _view_probability(records::Vector{LobeRecord}, features::Vector{String}
     counts = zeros(Int, length(records))
     data = permutedims(X[idxs, :])
     scoring_data = permutedims(X[score_idxs, :])
-    observation_weights = _observation_weights(records, idxs, opt.training_weighting)
+    observation_weights = _observation_weights(records, idxs, opt.training_weighting, opt.training_groups)
     naming_weights = if observation_weights === nothing
         nothing
     else
