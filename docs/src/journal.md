@@ -21061,7 +21061,11 @@ result (33 exact, 81.3% classified accuracy) is at the supervised per-lobe
 ceiling. Exceeding 43 exact chains label-free would mean beating supervised
 learning on the same information. This requires new information (a control
 sequence, other imaging conditions or more views), not another classifier
-variant.
+variant. Repeat scans do not supply it: fusing the supervised held-out
+probabilities (mean probability or mean log-odds per registered physical lobe)
+raises per-lobe accuracy to 0.835 but lowers exact chains from 43 to 24,
+because missed GlcNAc are molecule-systematic and fusion spreads them to every
+scan of the molecule.
 
 **Molecule fusion trade-off (diagnostic, not adopted).** With the consensus
 tracks' clean lobe mapping (same-N scans, absolute projection order), a
