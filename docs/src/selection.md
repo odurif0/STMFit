@@ -383,7 +383,26 @@ Level 3: Final result
          └─ Chitosan default: support_midpoint_hybrid reports N_selected
              (robust-AICc guard, then a one-step support-midpoint adjustment)
          └─ Raw baseline override: --selection-policy gcv reports N_eff
+
+Level 4 (optional, multi-scan): repeated-scan molecule consensus
+         └─ consecutive scans linked by absolute-frame image registration
+         └─ track of >= 3 scans with a strict-majority N_selected
+         └─ disagreeing scans take that count if the molecule is inside the frame
 ```
+
+## Repeated-scan molecule consensus (2026-09-29)
+
+An STM session often re-images one molecule many times (different drift,
+range or scan angle). `test/run_molecule_consensus_chitosan.jl` keeps every
+per-scan GCV decision above, then treats those scans as repeated
+measurements of one molecule. Consecutive scans of the same `REC_DATE` are
+linked when their flattened topography, resampled in the absolute piezo frame,
+correlates at NCC ≥ 0.5 after a pure drift translation. A track of at least
+three scans with a strict-majority count gives that count to disagreeing scans
+whose registered footprint is inside the frame. No expected count, sequence or
+benchmark membership is read; singletons and ties keep their per-scan count.
+Parameters are in `config/molecule_consensus.toml`
+([Configuration](config.md#Repeated-scan-molecule-count-consensus-(2026-09-29))).
 
 ## Why GCV as the per-candidate score?
 

@@ -1,5 +1,29 @@
 # Configuration Reference
 
+## Repeated-scan molecule count consensus (2026-09-29)
+
+`config/molecule_consensus.toml` configures `test/build_molecule_consensus.jl`,
+run by `test/run_molecule_consensus_chitosan.jl` between per-scan GCV counting
+and the unchanged assignment runner. `[model]`: registration window
+`window_half_nm=3.0` around the earlier scan's chain, resampling
+`grid_step_nm=0.04`, high-pass `highpass_sigma_nm=0.32`, drift search
+`max_shift_nm=1.6` with `coarse_step_px=4`. `[selection]`: link when
+`ncc_min=0.5` over at least `min_overlap_px=500` grid points and centroids
+within `max_center_distance_nm=6.0`; a consensus needs `min_track_scans=3` and
+`majority="strict"`; a count changes only if every registered reference lobe is
+`frame_margin_nm=0.3` inside the scan. `[preprocessing]`: mean flattened
+(`"plane+rows"`) forward/backward `"Z"`; missing pixels stay missing.
+Outputs: `consensus/pairs.tsv`, `consensus/consensus.tsv` (track, per-scan and
+consensus counts, agreement, reference, rule), `consensus_summary.tsv` and
+`chain_report.tsv`. `--selected-summary` reuses per-scan counts in development
+runs only; promotion requires fresh counting.
+
+`config/unit_assignment_molecule_balanced.toml` is a declared variant with
+`gmm_training_weighting = "equal_molecules"` and
+`kmeans_training_weighting = "equal_molecules"`: each consensus track gets equal
+total training mass (`--training-groups consensus/training_groups.tsv`).
+Without these keys legacy outputs are byte-identical.
+
 ## Fixed-density orbital precision
 
 `config/qe_diagonal_precision.toml` compares `diago_thresholds_ry=[1e-10,

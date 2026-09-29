@@ -1,5 +1,24 @@
 # Calibration: measurements, assumptions and limits
 
+## Molecule-consensus settings are declared, not tuned (2026-09-29)
+
+The consensus stage adds no fitted physical parameter and never reads a
+benchmark count. `grid_step_nm`, `highpass_sigma_nm` and `frame_margin_nm`
+follow the chitosan lobe scale (about 0.6 nm spacing). `max_shift_nm` and
+`max_center_distance_nm` bound thermal drift between consecutive scans.
+`ncc_min=0.5` separates unrelated structure (correlation near zero) from an
+unchanged molecule (near one). The label-free distribution of the 111
+registered benchmark pairs has an empty gap between 0.39 and 0.55, so no
+tested link sits at the threshold. `min_track_scans=3` and the strict majority
+are the smallest evidence that can outvote one deviating scan. The rule
+reuses the frozen GCV counts. It is not a new count calibration, and the
+historical benchmark-informed provenance of `chitosan.toml` (support padding,
+fit width, hybrid rule) remains.
+
+The consensus needs repeated scans of one molecule. The unknown 10–20mer
+cohort is mostly single scans of distinct molecules, so its counts are
+unchanged unless their other raw repeat scans are added.
+
 ## Fixed-density diagonalization is not current calibration
 
 The bounded follow-up in `config/qe_diagonal_precision.toml` compares
