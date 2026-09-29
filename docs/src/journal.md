@@ -20911,3 +20911,26 @@ and all frozen NSCF checks are still required before analysis. There is no
 new numerical or benchmark result in this finding.
 `git diff --check` and the Julia **1.13.1** documentation build pass, with
 the existing size/deployment warnings and no scientific source change.
+
+### 2026-09-29 — Read-only provenance check of the separate molecule-consensus run
+
+A separate worktree, `research/labelfree-chain-20260929`, now contains
+**cc5808b / be07fcd** and its independently submitted Viper job **12018706**.
+It uses a distinct project/output directory. Neither its code nor its job is
+modified here; the running CG source hashes still match **864287a**.
+
+The inspected consensus module groups consecutive acquisitions using raw
+headers, registered observed images and per-scan fitted geometry, then uses
+a strict majority of inferred counts. No expected count, control sequence
+or composition is an input to that module. However, its raw-to-prediction
+runner explicitly requires `support_midpoint_hybrid`, and the batch supplies
+the inherited `config/chitosan.toml`. The September 24 audit already shows
+that this calibration/hybrid-rule lineage used known-count benchmark grades.
+Adding a label-free consensus does not remove that dependency.
+
+Consequently any improvement from this exact run is a development-benchmark
+result, not yet proof of the attached goal's **end-to-end label-free**
+requirement. Independent calibration/rule justification and full raw
+reproduction remain necessary before champion promotion, regardless of the
+eventual score. This conclusion is drawn before reading any new consensus
+grade; it does not reject the consensus hypothesis or change its predictions.
