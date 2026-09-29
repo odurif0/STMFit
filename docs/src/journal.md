@@ -2316,7 +2316,7 @@ are consistent across repeat scans (fusion fit θ0=0.45 there), before any
 unknown-chain chemical claim.
 
 0bu. **Can CG provide the missing fixed-density tolerance comparison?**
-**Prepared and tested; awaiting SSH access, no job or result yet.** In response to the explicit
+**Campaign finished: both first CG solves time out.** In response to the explicit
 bounded proposal after 0bt, the user confirms **“oui, tu es autonome!”**.
 Change only Davidson to CG on the same original accepted **60/720-Ry**
 states, keeping the inherited `diago_cg_maxiter=20`, full accuracy and
@@ -2326,6 +2326,25 @@ label input or adoption. Independent starts, exact reference replay,
 unchanged density/PAW/basis, explicit solver checks and all original queries
 remain required. Success supplies a numerical comparison, not a calibrated
 STM observable or new champion; failure remains a rejected result.
+GlcN **12018453** runs on **vipc2050** from **01:39:47 to 03:40:09 CEST**
+on September 29, ending **TIMEOUT** under the declared two-hour Slurm limit
+(reported elapsed **2h00m22s**). Its first **1e-10-Ry** solve never finishes;
+the second threshold is not started and no CG map or paired result exists.
+Only the original reference is qualified. All nine retained working-checkpoint
+files still match the original SCF, not a new NSCF. The full case is fetched;
+**28,392** local reference/preservation/rejection assertions pass. The final
+remote checksum-only comparison, initially interrupted by lost SSH
+authentication, passes without differences after the user restores access.
+Original/input manifests pass again. GlcNAc **12023139** is submitted once
+at **12:07:28 CEST on September 29**, initially waiting for the shared CPU
+quota. It runs on **vipc2306 from 12:12:38 to 14:12:41 CEST**, ending
+**TIMEOUT in 2h00m03s** before its first threshold finishes; the second is
+never started. Its nine retained checkpoint files also match the original
+SCF, and the unchanged checker rejects them as `Not the requested NSCF`.
+The complete case is fetched, its checksum comparison passes, and **28,399**
+local reference/preservation/rejection assertions pass. Neither geometry
+supplies a CG tolerance comparison within this bound. There is no retry,
+relaxed criterion or adoption, and no general claim that CG cannot converge.
 
 0bt. **Does orbital diagonalization precision affect the same fixed-density tails?**
 **Campaign finished; primary comparison unavailable for both molecules.** Both cutoff tests
@@ -21212,3 +21231,382 @@ its axial profile dips. Capping the threshold at half prominence does not
 help (1.51→1.68 nm, 1.93→2.06 nm). Long 10–20mers need a curved-axis support
 model before their counts can be trusted; this is an application prerequisite,
 not a 6mer benchmark issue.
+
+### 2026-09-29 — Resumed goal and first CG control submitted
+
+**Scientific deliverable.** The attached user objective explicitly retains
+raw-image counting, geometry, GlcN/GlcNAc assignment with uncertainty,
+end-to-end label-free provenance and a reproducible improvement beyond the
+archived **694/870 correct, 43/145 exact chains, 855/870 coverage**. Known
+6-mer membership and `NKNNKN` remain external grading data, not inference or
+calibration inputs. The CG control is the previously approved bounded
+diagnostic, not a replacement objective or an automatic champion promotion.
+
+**Resume evidence.** The shared checkout is now clean `main` at **6b37f1d**
+(September 18); the completed later work still exists on
+`research/mold-loo-20260924` at **864287a**. Main is left unchanged. A separate
+local Git worktree opens that existing research branch, with the existing
+ignored QE data and Manifest reused without alteration. Viper responds under
+Julia **1.13.0**, no user job is queued, both original SCF checkpoints exist,
+and the new CG run directory is absent remotely. There is no hidden running
+CG calculation to restart.
+
+Reviewed checksum rsync dry-runs precede a minimal transfer of the new
+configuration, the two precision scripts and the unchanged batch, followed
+by the prepared small CG inputs. No deletion, original-checkpoint overwrite,
+new SCF or scientific setting change occurs. Source, config, batch, Project
+and Manifest SHA-256 values match locally/remotely. Both remote input
+manifests and metadata/input-generation checks pass. A broader read-only
+source comparison initially reports the new worktree's absent ignored
+Manifest; reusing the existing lock resolves that local setup omission.
+Remaining differences are unused diagnostic files, not this driver's
+scientific dependencies; none is transferred or silently substituted.
+
+**Submission.** Slurm test-only **12018451** is accepted; it is not a
+scientific job. GlcN **12018453** is submitted once at **01:36:30 CEST**,
+requesting **8 CPUs / 96000 MB / two hours**, **Requeue=0, Restarts=0**.
+The command explicitly exports
+`ALL,JULIA_BIN=/u/oldu/software/julia-1.13.0/bin/julia`, overriding the
+site's `SBATCH_EXPORT=NONE`. `squeue`, `sacct` and `scontrol` agree on
+**PENDING / QOSGrpCpuLimit**, with no allocated node or started solve.
+Shared-quota waiting is not a reason to resubmit or change resources.
+
+The unchanged scientific source is **864287a**, outputs remain in
+`qe/cg_precision_20260927/glcn`, and the second geometry is not submitted
+before the first terminates. Next: observe this exact job, retain either
+verified paired results or an explicit failure, fetch the complete output,
+then perform the second approved case sequentially. No benchmark result,
+production parameter, mold or champion changes at this checkpoint.
+
+**Start and refreshed local checks.** GlcN starts at **01:39:47 CEST** on
+**vipc2050**. The first running observation reports no completed Fourier or
+NSCF stage yet. The local Julia 1.13.0 binary used on September 27 is no
+longer installed, and the juliaup launcher cannot create its sandboxed lock.
+The installed direct **1.13.1** executable works. It passes the unchanged
+**1,795 / 379,512 / 379,552** scope/legacy/CG synthetic assertions and
+**56,732 / 28,375** old GlcN/GlcNAc retained-result assertions. This is a
+fresh local regression, not recomputed scientific orbitals. The remote
+batch still uses the verified original **Julia 1.13.0** executable, so the
+new reference replay retains its numerical runtime. No Manifest is edited.
+
+The reference subsequently replays every saved query/plane exactly, with
+exact parallel/serial agreement, bands **882–893** and smooth norm
+**18.17611052159034**. The first independent start passes the original
+density/PAW/orbital hashes. The **1e-10-Ry** step begins and prints the
+expected **CG style diagonalization** marker; no convergence claim is made
+before its terminal checks. Slurm reports sixteen allocated hardware
+threads for the requested eight one-thread MPI tasks, as in the prior jobs.
+
+The documentation build completes **0** under local Julia **1.13.1**.
+HTTP's precompilation workload reports an ignored sandbox socket-bind
+`EPERM`; rendering and document checks still finish. Existing size and
+non-deployment warnings remain. No package, lock or documentation threshold
+is changed to silence them.
+
+### 2026-09-29 — CG progress reporting and cooperative time-limit clarification
+
+**Read-only finding while 12018453 runs.** The eight MPI processes continue
+to accumulate CPU time, but the first Gamma solve emits no per-band progress.
+The pinned QE **7.4.1** `KS_Solvers/CG/rcgdiagg.f90` places its per-band
+energy/iteration messages behind `__VERBOSE`; their absence is not evidence
+of a stopped process or a converged band. No verbose rebuild, signal or
+runtime instrumentation is introduced.
+
+In `PW/src/c_bands.f90`, `diag_bands` returns before `check_stop_now()` is
+called in the k-point loop. The CG routine has no such stop check inside
+its band/iteration loops; the retry condition checks convergence and the
+number of internal passes, not elapsed time. Consequently the unchanged
+`nscf_max_seconds=3000` input is a cooperative stop request, **not** a hard
+50-minute cap or guaranteed allowance for analysis/the second solve. The
+configuration documentation's earlier statement that it "reserves analysis
+time" was too strong and is corrected. The actual allocation remains
+bounded by Slurm's **two-hour** limit, with no extension or resubmission.
+
+This changes interpretation of monitoring/time bounds, not any scientific
+input, convergence criterion, source executable or output. Normal completion
+and all frozen NSCF checks are still required before analysis. There is no
+new numerical or benchmark result in this finding.
+`git diff --check` and the Julia **1.13.1** documentation build pass, with
+the existing size/deployment warnings and no scientific source change.
+
+### 2026-09-29 — Read-only provenance check of the separate molecule-consensus run
+
+A separate worktree, `research/labelfree-chain-20260929`, now contains
+**cc5808b / be07fcd** and its independently submitted Viper job **12018706**.
+It uses a distinct project/output directory. Neither its code nor its job is
+modified here; the running CG source hashes still match **864287a**.
+
+The inspected consensus module groups consecutive acquisitions using raw
+headers, registered observed images and per-scan fitted geometry, then uses
+a strict majority of inferred counts. No expected count, control sequence
+or composition is an input to that module. However, its raw-to-prediction
+runner explicitly requires `support_midpoint_hybrid`, and the batch supplies
+the inherited `config/chitosan.toml`. The September 24 audit already shows
+that this calibration/hybrid-rule lineage used known-count benchmark grades.
+Adding a label-free consensus does not remove that dependency.
+
+Consequently any improvement from this exact run is a development-benchmark
+result, not yet proof of the attached goal's **end-to-end label-free**
+requirement. Independent calibration/rule justification and full raw
+reproduction remain necessary before champion promotion, regardless of the
+eventual score. This conclusion is drawn before reading any new consensus
+grade; it does not reject the consensus hypothesis or change its predictions.
+
+### 2026-09-29 — Independent local readback of the CG control's reference
+
+The six completed GlcN reference-analysis files from **12018453** are fetched
+after a reviewed rsync dry-run. A subsequent checksum-only comparison reports
+no differences. Julia **1.13.1** passes **28,359** assertions on these saved
+tables, including their source/config identities, bands, coordinates, values,
+plane summaries and decay statistics against the retained original analysis.
+The unchanged scope and synthetic suites also pass **1,795 / 379,512 /
+379,552** assertions. These are table readbacks and tiny synthetic cases, not
+a local real-orbital calculation.
+
+Only the completed **reference** is checked; the first **1e-10-Ry CG** solve
+is still running, with CPU use reported for all eight ranks. Its trial
+checkpoint is neither fetched nor evaluated while incomplete. There is no
+CG tolerance result, second submitted geometry or champion change yet.
+
+### 2026-09-29 — GlcN CG times out before its first NSCF result
+
+**Outcome of the first authorized case.** GlcN **12018453**, scientific
+source **864287a**, ends **TIMEOUT** on **vipc2050** under its unchanged
+two-hour Slurm limit. Slurm reports **01:39:47–03:40:09 CEST**, elapsed
+**2h00m22s**. The sole QE step, **12018453.0**, runs from **01:41:47** and
+ends **FAILED 1:0 in 1h58m22s** after the time-limit cancellation; all eight
+processes report `SIGTERM`. Maximum recorded per-rank RSS is **2,714,803 KiB**.
+The batch and extern steps also terminate, and the job leaves `squeue`.
+No extension, requeue, retry or early manual cancellation occurs.
+
+The log stops inside the first **1e-10-Ry** CG diagonalization. There is no
+`End of band structure calculation`, achieved `ethr` or `JOB DONE`, and no
+qualified low-precision XML/analysis, **1e-12-Ry** work, paired comparison or
+completion marker. The retained working XML and **all nine checkpoint files**
+are byte-identical to the original accepted SCF. They are the starting copy,
+not a newly converged NSCF. The unchanged checker rejects that state with
+`Not the requested NSCF`; it does not copy it into a qualified result.
+No interrupted orbital is evaluated or adopted.
+
+**Scientific conclusion.** CG has not supplied the missing precision
+comparison for GlcN within this resource bound. This is a walltime-limited
+incomplete solve, unlike the preceding Davidson warning-based rejections;
+it neither proves that CG cannot converge nor qualifies any band or tail.
+The original reference still replays exactly, but supplies no CG improvement.
+The accepted SCFs, common **5e-5-Ry** gate, molds, calibration, benchmark
+predictions and champion remain unchanged. The broader **694/43/855**
+label-free objective is not achieved.
+
+**Preservation and local verification.** After termination, remote input and
+original-checkpoint manifests pass. A reviewed rsync dry-run precedes the
+successful complete transfer of **31 regular files / 3,274,780,890 bytes**
+to `qe/cg_precision_20260927/glcn`; nothing is deleted. Julia **1.13.1**
+passes **28,392** assertions on the retained reference, original and copied
+checkpoint identities, time-limit log, absent trial products and exact
+checker refusal. The unchanged scope/legacy/CG synthetic suites also pass
+**1,795 / 379,512 / 379,552** assertions. This uses the existing saved-reference
+checker plus explicit timeout/preservation assertions, not the incompatible
+`--incomplete` checker for normally exited, unconverged-eigenvalue cases.
+No scientific driver, configuration, package or Manifest is changed.
+
+**Second case and access boundary.** After GlcN terminates, source/config/
+Project/Manifest hashes still agree locally and on Viper. GlcNAc's input
+manifest, batch syntax and fresh-output checks pass. Slurm test-only
+**12019284** accepts the unchanged **8-CPU / 96000-MB / two-hour** request
+with explicit `ALL,JULIA_BIN=/u/oldu/software/julia-1.13.0/bin/julia` export;
+this is not a submitted calculation. Other account jobs remain untouched.
+
+The post-transfer checksum-only rsync then loses SSH, followed by a banner
+timeout. Read-only control checks find neither Viper nor gate socket, and
+`ssh -o BatchMode=yes ... gate true` returns **Permission denied**. Thus the
+full transfer and local scientific checks are complete, but the final remote
+checksum-only comparison remains pending. Interactive authentication is
+requested without credentials; **GlcNAc has not been submitted**. Resume
+that comparison and then the one remaining authorized case once access is
+restored, without resubmitting GlcN or treating the test-only ID as a job.
+
+### 2026-09-29 — Read-only consensus grade and endpoint-feature interpretation
+
+While SSH remains unavailable, independently inspect the completed development
+result from the separate `research/labelfree-chain-20260929` worktree, source
+**b43b536**, job **12018915**. Neither that worktree nor its jobs are modified.
+The cached run's integrity checker passes against its pinned input commit,
+including raw inputs, the reused counting summary and consensus provenance.
+Current files match the saved checksum manifest; the archived local/remote
+manifests agree. This is a local readback, not a fresh remote verification.
+
+A separate read-only external tally reproduces the full **145/870** report:
+fresh control **679 correct / 29 exact chains / 848 covered**, consensus
+**690 / 34 / 857**, saved record **694 / 43 / 855**. Exact counts are
+**123 / 135 / 129**, respectively. The consensus has **10 missing / 3 extra**
+positions and **167 emitted errors**, versus the record's **13 / 6 / 161**.
+Its coverage exceeds the record, but it retains four fewer correct positions
+and nine fewer exact chains. No promotion follows. This development run reuses
+counts; fresh raw repetition and inherited calibration provenance remain
+separate requirements. No prediction, threshold or calibration is changed.
+
+**Interpretation check, not a new learner.** The existing
+`augment_lobe_local_features.jl` defines `amp_prominence` as an amplitude
+minus its two-neighbour mean, repeating the endpoint itself for its absent
+neighbour. For a chain of length at least five with identical interior
+amplitudes `a` and dimmer endpoints `b < a`, this gives positive prominence
+`(a-b)/2` at positions **2 and N-1**, negative endpoint prominence and zero
+elsewhere. Direct algebraic checks at lengths **5, 8 and 12** pass **12/12**
+assertions with amplitudes 1.0/0.8 and no chemical classes. These are
+illustrative values, not fitted parameters or a proposed recalibration.
+
+Thus this feature alone is not chemically specific: an envelope can create
+the two edge-adjacent peaks without a chemical contrast. Those positions
+coincide with the acetylated positions of the external 6-mer control, so a
+high grade alone cannot separate this positional explanation from chemical
+recognition. This does not prove that all ensemble features lack chemical
+information, reject the counting gain, or validate a replacement feature.
+Labels enter only the external tally/interpretation; the algebraic check
+does not read them. The strict label-free new-champion objective remains open.
+
+### 2026-09-29 — Restored access and the remaining bounded CG case
+
+The user confirms **“accès viper now granted”**. SSH works, the account queue
+is empty at preflight, and GlcN **12018453** remains terminal **TIMEOUT**.
+The previously interrupted checksum-only rsync comparison now exits cleanly
+with no differences for the full retained GlcN case. Remote original and
+input manifests also pass; GlcN is not resubmitted.
+
+The unchanged six source/config/Project/Manifest hashes match local scientific
+source **864287a**. GlcNAc's prepared inputs, copied batch, original XML and
+fresh-output checks pass. Test-only request **12023138** is accepted (not a
+calculation), then the one remaining authorized case is submitted exactly
+once as **12023139** at **12:07:28 CEST**. Slurm confirms **8 requested
+CPUs / 8 tasks / 96000 MB / two hours**, no requeue, and the explicit pinned
+Julia **1.13.0** export. Its initial state is pending under the shared CPU
+quota; there is no claim that it has already calculated a result.
+
+The deliverable remains the unchanged fixed-density **1e-10 / 1e-12-Ry**
+CG comparison for GlcNAc, or a retained and verified incomplete/failure
+outcome within this allocation. No new SCF, altered acceptance criterion,
+interrupted-orbital analysis, mold replacement, calibration or champion
+promotion is authorized by this resumption. Other worktrees/jobs are untouched.
+
+### 2026-09-29 — Independent readback of the completed fresh consensus runs
+
+While CG GlcNAc waits, inspect the newly fetched results of the separate
+`research/labelfree-chain-20260929` worktree without modifying it or managing
+its jobs. The existing pre-grade verifier passes for fresh runs **b43b536**
+and **1b6b5ed**, including all **146 raw hashes**, the four pinned inputs,
+counts, geometry and consensus provenance. Their **680 / 683** current
+output hashes pass; the archived local/remote manifests agree. Fresh per-scan
+counts match the September 24 control on **146/146** scans in both runs.
+This is an independent local readback of already completed runs, not another
+fit or a new live remote verification of those outputs.
+
+A separate in-memory external tally, with unchanged prediction hashes,
+reproduces **693 correct / 35 exact chains / 857 covered** for v1 and
+**695 / 30 / 863** for v2 with registered-ROI refits, on the fixed **145/870**
+denominator. V2 also matches every official per-file physical grade. Its
+counts are exact on **137/145** and within one on **145/145**, with **5 missing /
+3 extra** positions and **168 emitted errors**. Against the saved
+**694 / 43 / 855** record this is **+1 correct, -13 exact chains, +8 covered,
++7 errors**; 16 scans gain correct positions, 18 lose and 111 tie.
+
+The counting improvement is real on this development benchmark, but the
+full method is not promoted. Fresh execution is now demonstrated for these
+consensus versions; the inherited hybrid/calibration provenance and chemical
+specificity caveats above remain. The additional consensus step's lack of
+label inputs does not establish end-to-end label-free calibration. No
+threshold, seed, prediction, physical reference or champion is changed here.
+
+### 2026-09-29 — GlcNAc CG starts; original reference independently checked
+
+Job **12023139** starts on **vipc2306 at 12:12:38 CEST**, with a hard end
+time of **14:12:38**. Slurm retains **8 requested CPUs / 8 tasks** and allocates
+16 logical CPU entries; QE explicitly reports **8 MPI ranks and one thread
+per rank**, not a sixteen-rank computation. The first **1e-10-Ry** NSCF step
+starts at **12:14:39** and enters `CG style diagonalization`. Neither a
+converged trial nor the second threshold is available at this point.
+
+The six completed reference-analysis files are fetched after a reviewed
+dry-run and pass a checksum-only comparison with Viper. Julia **1.13.1**
+passes **28,359** independent saved-reference assertions, plus the unchanged
+**1,795 / 379,512 / 379,552** scope/legacy/CG synthetic assertions. These are
+table readbacks and tiny fixtures, not a local real-orbital calculation.
+The replay uses original bands **889--901**, smooth norm
+**20.00160384469961**, and all **6,936 native vertices / 867 plane points**;
+parallel/serial and prior-reference values agree exactly. The original
+**3.666505807093142e-5-Ry** SCF error remains within the common **5e-5-Ry**
+gate. Reference XML still correctly identifies Davidson, not the running CG
+trial. No incomplete working orbital is fetched or interpreted, and no new
+SCF, mold or benchmark result is claimed.
+
+### 2026-09-29 — Consensus readback: class changes on unchanged local inputs
+
+Read-only comparison of the retained consensus tables localizes part of the
+sensitivity seen above; no learner or image fit is run. The v2 reused-count
+case also passes its existing verifier (146 raw hashes and five pinned
+inputs), all **237** current output hashes and equality of its archived
+local/remote manifests. Its prediction SHA256 is
+`ad2c835e7b6d2fcf582abd95039f2fe6b3cd8d52849d04cb360250add1683a39`;
+the fresh v2 prediction hash remains
+`fdf1fd67bc3edf1f179bf4440219e0d41e3e084b924075b8d2c6d01ae7172881`.
+
+Across those two v2 runs, all **876** lobe keys agree. The serialized geometry,
+local descriptors and forward/backward 17x17 patch rows are identical on
+**796** keys, including all **three** final class changes. K-means exports
+are unchanged at those three keys, while the GMM outputs flip. For
+`240817_021/5` and `240817_081/5`, the only changed field in the saved predictor
+row is `emp_fisher`; `240817_080/5` also changes `split_log_skew`. Shared learned
+banks can also differ, so this is not an isolated causal test of one feature.
+
+Between the fresh v1 and v2 runs, **798/871** common keys retain identical
+serialized geometry/local-feature and forward/backward patch rows. **14 of
+17** final class changes occur on that unchanged subset. This demonstrates
+why a changed cohort/refit can affect assignments elsewhere, not just the
+newly fitted lobes. It does not make transductive learning label leakage by
+itself, or prove that freezing a particular bank improves recognition.
+
+The September 24 exact-input frozen-learning and negative whole-scan-exclusion
+experiments already address related questions; exclusion is not an untested
+remedy to rerun. This readback uses all scientific rows without truth labels,
+selects no seed or threshold, and leaves predictions, calibration, production
+and champion unchanged.
+
+### 2026-09-29 — GlcNAc CG timeout: bounded solver campaign completed
+
+**Second and final authorized case.** Job **12023139**, unchanged scientific
+source **864287a**, ends **TIMEOUT** on **vipc2306** at **14:12:41 CEST**,
+after starting at **12:12:38** (reported elapsed **2h00m03s** under the declared
+two-hour Slurm limit). Its only QE step, **12023139.0**, runs from **12:14:39**
+and ends **FAILED 1:0 in 1h58m02s**. All eight ranks report `SIGTERM` after
+the time-limit cancellation; their maximum recorded per-rank RSS is
+**5,364,229 KiB**. The batch/extern steps terminate by **14:12:44**, and this
+job leaves the queue. Other account jobs are not modified.
+
+The first **1e-10-Ry** solve stops inside `CG style diagonalization` without
+an achieved `ethr`, `End of band structure calculation` or `JOB DONE`.
+There is no qualified low-precision XML/analysis, high-precision work,
+paired comparison, independent-comparison report or completion marker.
+All **nine** files in the retained working `.save` directory are byte-identical
+to the original accepted SCF. They are the starting copy, not a converged
+or newly qualified NSCF. The existing checker rejects them with exactly
+`Not the requested NSCF`, without creating a qualified XML. No interrupted
+orbital is evaluated.
+
+**Preservation and verification.** Remote source/config/Project/Manifest
+hashes remain unchanged, and input/original manifests pass. A reviewed
+rsync dry-run precedes transfer of the full **31 regular files /
+3,352,572,240 bytes** to `qe/cg_precision_20260927/glcnac`, without deletion.
+The checksum-only comparison with Viper returns no differences; local file
+count/size and the input manifest agree. Julia **1.13.1** passes **28,399**
+saved-reference, source/copy-preservation, timeout-log, missing-product and
+strict-rejection assertions. The unchanged scope and legacy/CG synthetic
+suites also pass **1,795 / 379,512 / 379,552** assertions. This uses the
+existing saved-reference reader and rejection path, without a local
+real-orbital calculation or scientific source change.
+
+**Conclusion.** Together with GlcN **12018453**, both authorized CG cases
+are complete as time-limited incomplete solves. Neither supplies the planned
+**1e-10 / 1e-12-Ry** comparison; neither high-precision solve starts. This
+does not prove general CG nonconvergence or invalidate the original accepted
+SCFs. It supplies no new CG map, precision qualification, physical calibration
+or benchmark improvement. There is no extension, requeue, retry, new SCF,
+relaxed **5e-5-Ry** gate, mold adoption or champion change. The strict
+end-to-end label-free **694/43/855** goal remains open.

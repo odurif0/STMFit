@@ -185,7 +185,7 @@ constant-current feedback loop.
 
 ## Diagnostic constant-current observable
 
-**September 27 CG solver control (prepared; SSH access pending).** Following
+**September 27 CG solver control (both cases time out September 29).** Following
 the failed Davidson comparison below, the user confirms **“oui, tu es
 autonome!”** in response to the bounded CG proposal. The existing precision
 driver and batch are reused with `config/qe_cg_precision.toml`, changing
@@ -199,6 +199,31 @@ completion checks; no warning is waived. There is no new SCF, retry,
 criterion change, rejected-orbital reuse, mold replacement or benchmark
 selection. The numerical deliverable is a verified comparison or a
 documented failure, not an automatic champion promotion.
+After restored access, GlcN **12018453** is submitted once at unchanged
+scientific source **864287a**. It ends **TIMEOUT** under the two-hour Slurm
+limit, with reported elapsed **2h00m22s**. Its first **1e-10-Ry** solve does
+not finish; the second threshold never starts. No CG analysis or paired
+result is available, and this does not prove that CG cannot converge with
+different resources. All retained working-checkpoint files still match the
+original SCF, which cannot be reinterpreted as a new NSCF. The complete case
+is fetched and **28,392** local reference/preservation/rejection assertions
+pass. After the user restores SSH access, the final remote checksum-only
+comparison passes without differences, and the original/input manifests
+pass again. GlcNAc **12023139** is submitted once at **12:07:28 CEST on
+September 29**, with the same frozen sources and resource limits; it
+initially waits for the shared CPU quota. It runs on **vipc2306** from
+**12:12:38 to 14:12:41 CEST**, ending **TIMEOUT in 2h00m03s** before its
+first **1e-10-Ry** solve finishes. The second threshold never starts. All
+nine retained checkpoint files still match the original SCF; the unchanged
+checker rejects them as `Not the requested NSCF`. The full case is fetched
+and matches Viper by checksum; **28,399** local reference/preservation/
+rejection assertions pass. Both authorized cases are now finished without
+a converged CG pair. This establishes a time-limited incomplete outcome,
+not that CG cannot converge with different resources. No retry follows and
+no trial orbital is adopted.
+The `3000`-second QE stop is cooperative, checked after diagonalization;
+it does not guarantee time for both solves. The two-hour Slurm cap remains
+the hard bound, and an incomplete solve is rejected rather than analyzed.
 
 **September 27 fixed-density precision follow-up (no converged pair).** After
 the completed basis-cutoff comparison, the user resumes the autonomous
