@@ -21008,7 +21008,19 @@ assigned; the empirical Fisher feature is unchanged. Legacy outputs are
 byte-identical without the option. On the fresh caches (assignment stages
 only), v2 becomes **703/33/863 with 160 errors** (control 695/30/863/168);
 v1 becomes 696/30/857/161 (control 693/35/857/164). Fresh raw verification
-job **12023870** is submitted.
+job **12023870** (`9edcce4`, COMPLETED in 2h05, 683 hashes match, verifier
+passes against `9edcce4`; per-scan counts identical to earlier fresh runs):
+
+| Profile | Exact N | Correct /870 | Exact chains | Classified /870 | Errors | Abstentions |
+|---|---:|---:|---:|---:|---:|---:|
+| Saved record | 129 | 694 | 43 | 855 | 161 | 2 |
+| Consensus v2 + corroborated training, fresh | **137** | **702** | 33 | **863** | 161 | 2 |
+
+The official report and the Python replica agree. Counting: 137/145 exact, 145/145 within one. Against
+the record: 21 scans gain, 16 lose; exact chains +1/−11. **Not promoted**:
+exact chains remain 10 below the record (errors equal). This is the best
+verified label-free configuration of this session on correct, coverage,
+counting and errors.
 
 **Molecule fusion trade-off (diagnostic, not adopted).** With the consensus
 tracks' clean lobe mapping (same-N scans, absolute projection order), a
