@@ -20989,6 +20989,16 @@ learning). **Decision: no promotion.** The record is not beaten on exact chains
 or emitted errors. The consensus counting stage is retained as a verified,
 label-free counting improvement.
 
+**Seed sensitivity (diagnostic, no selection).** Re-running GMM, k-means and
+vote with ten disjoint seed blocks (first_seed 0–900) on the fixed feature
+caches gives exactly 30 exact chains on every seed for v2 (correct 695–697)
+and exactly 43 for the record cache (694–696). The exact-chain gap is
+therefore not optimizer or seed noise: it follows the cohort features. Small
+count/geometry changes in a few scans move the unsupervised k-means boundary
+across the marginal GlcNAc lobes (the record's zero-confidence ties). No
+label-free rule was found that places this boundary more favourably without
+benchmark tuning.
+
 **Hierarchical chain mixture prototype: rejected.** A two-class mixture with
 a per-chain random intercept (exact enumeration of chain configurations, PCA-
 whitened BASE4 features, EM initialized from the champion's label-free vote)
