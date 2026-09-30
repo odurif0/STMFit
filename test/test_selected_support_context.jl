@@ -283,8 +283,9 @@ end
             _, rescue_ell, rescue_circ = Extractor._configs(model, preproc, dir; selected_context=contexts["scan_1.sxm"])
             for (base, rescue) in ((base_ell, rescue_ell), (base_circ, rescue_circ))
                 before = (field_values(base), field_values(rescue))
-                ordinary = GaussianFit2D._chain_fit_data(x, y, z, axis, base)
-                expanded = GaussianFit2D._chain_fit_data(x, y, z, axis, rescue)
+                # Synthetic off-molecule background is 0 (needed by half_maximum_cap).
+                ordinary = GaussianFit2D._chain_fit_data(x, y, z, axis, base; background=0.0)
+                expanded = GaussianFit2D._chain_fit_data(x, y, z, axis, rescue; background=0.0)
                 for (result, chain) in ((ordinary, base), (expanded, rescue))
                     xf, yf, zf, fitted_axis, keep, meta = result
                     @test meta.support_method == "auto_axis_profile_support" && meta.fallback == "none"
