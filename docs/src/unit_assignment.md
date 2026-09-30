@@ -93,14 +93,16 @@ model. For unfused lobes it is the soft-vote margin, which is **not a
 calibrated probability**. `?` marks a lobe without a valid component (5 of
 870 benchmark positions are unclassified, all at missing lobes).
 
-## Benchmark results (full145 own-N, fresh raw run 12025539)
+## Benchmark results (full145 own-N)
 
 | Profile | Exact N | Correct /870 | Exact chains /145 | Classified /870 | Errors |
 |---|---:|---:|---:|---:|---:|
 | Historical reference (Aug 2026, not raw-reproducible) | 106 | 677 | 36 | 854 | 177 |
 | Previous record (saved hybrid counts) | 129 | 694 | 43 | 855 | 161 |
-| Promoted, per-scan calls | 137 | 703 | 33 | 863 | 160 |
-| **Promoted, fused (final)** | **137** | **772** | **88** | **865** | **93** |
+| Promoted, per-scan calls (12025539) | 137 | 703 | 33 | 863 | 160 |
+| Promoted, fused (12025539, time-limited fits) | 137 | 772 | 88 | 865 | 93 |
+| Promoted, per-scan calls (12042058, deterministic) | 137 | 702 | 33 | 863 | 161 |
+| **Promoted, fused (12042058, deterministic)** | **137** | **771** | **88** | **865** | **94** |
 
 Against the record: 62 scans gain, 21 lose and 62 tie. Exact chains: 51 gained,
 6 lost. Without the 43-scan molecule, the method has 514 correct / 45 exact

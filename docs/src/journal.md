@@ -21,11 +21,10 @@ repeated-scan molecule consensus with registered-ROI refits
 scans (`unit_assignment_corroborated_training.toml`), then binomial
 latent-class fusion. Entry point: `test/run_molecule_consensus_chitosan.jl`.
 
-**Benchmark** (fresh raw run 12025539, `3c414a4`; full145 own-N): 137/145
-exact N (145/145 within one), 772/870 correct, 88/145 exact chains, 865/870
-classified, 93 errors, against the previous record 129/694/43/855/161. Four
-runs give 772, 772, 772 and 769 correct (88 exact chains and 137/145 each);
-the spread comes from the time-limited global search.
+**Benchmark** (fresh raw run with deterministic fits, 12042058, `486ddec`;
+full145 own-N): 137/145 exact N (145/145 within one), 771/870 correct, 88/145
+exact chains, 865/870 classified, 94 errors, against the previous record
+129/694/43/855/161. Earlier time-limited runs gave 772 (three runs) and 769.
 
 **Limits:** NKNNKN edge-adjacency confound; exact chains in molecule-sized
 blocks; counting parameters with benchmark-informed provenance; molds are
@@ -37,12 +36,13 @@ empirical templates; 10–20mer outputs not validated.
    edge-adjacent position that NKNNKN happens to share with GlcNAc? A control
    molecule with a non-palindromic or homo-oligomer sequence is needed.
    Position-neutral features recover edge versus interior, not chemistry.
-2. **Long-chain counting.** The axial support is truncated on long chains
-   (`251206_013`: 1.5 of 7.5 nm, 4 lobes fresh, 12 manual). The support
-   baseline is the 10% quantile of the axial profile, which assumes at least
-   10% background bins; on long chains it lands on the molecule. A curved
-   centreline does not fix this (2026-09-30). A length-invariant background
-   estimate is the candidate fix.
+2. **Long-chain counting vs assignment geometry.** The capped support rule
+   (`half_maximum_cap`, 2026-09-30) fixes long-chain supports. Mean
+   |N − N_manual| drops from 1.33 to 0.92, and `251206_013` goes from 4 to 11
+   lobes (12 read). It also improves 6-mer per-scan counts (123 → 126 exact,
+   143 → 145 within one). But it collapses the 6-mer assignment (771/88 →
+   702/24), so it is not selected. Counting and assignment must be decoupled,
+   or the assignment made robust to end-lobe geometry, before it can be used.
 3. **Long-chain assignment consistency.** On the 10–20mers the fusion fit gives
    θ0 = 0.45: per-scan calls disagree across repeat scans of the same molecule.
    What makes long-chain per-scan calls stable?
@@ -54,10 +54,11 @@ empirical templates; 10–20mer outputs not validated.
    completed. A qualified constant-current observable is open.
 6. **Calibrated uncertainty.** Fused posteriors are model posteriors under the
    latent-class model. Unfused confidences are uncalibrated vote margins.
-7. **Deterministic fits.** The NLopt global search is time-limited
-   (`global_maxtime`), so results depend slightly on node speed (772 or 769
-   correct across four runs). An iteration-bounded budget would make runs
-   reproducible.
+7. **Assignment fragility.** Moving end lobes by less than 0.1 nm on a third
+   of the scans flips GlcNAc calls at positions 2 and 5. Cohort-wide learning
+   then misses them everywhere. This is consistent with the edge-adjacency
+   confound (question 1): the benchmark GlcNAc signal depends on end-lobe
+   geometry.
 
 ## Lessons learned
 
@@ -410,3 +411,57 @@ Label-free support check, no fitting:
 - The 25 long chains are then run with the 10–20mer config and compared
   descriptively with the manual reads. They are not a criterion, and nothing
   is tuned on them.
+
+### 2026-09-30 — Results: determinism adopted, capped support rejected for the benchmark
+
+Four Viper jobs, all COMPLETED, all hashes match, all label-free checks pass:
+A (12042058, `486ddec`, 2h01), B (12042063, `9a9f25d`, 2h31), B′ (12042065,
+`9a9f25d`, 1h55) and long chains (12042066, `9a9f25d`, 2h00).
+
+**Determinism: confirmed and adopted.** B and B′, run on different nodes at
+different speeds, are identical byte for byte except output paths and logs:
+all counts, fits, features, patches, predictions and grades. Run A is the new
+reference for the promoted method: **137/145 exact N (145 within one),
+771/870 correct, 88/145 exact chains, 865/870 classified, 94 errors**.
+Per-scan calls give 702/33/863/161. Fusion: π = 0.342, θ0 = 0.035,
+θ1 = 0.622. This is within the earlier time-limited spread (772, 772, 772,
+769).
+
+**Capped support (`half_maximum_cap`): rejected for the benchmark** by the
+declared criterion.
+
+| Run | Exact N per scan | Within one | Final exact N | Correct | Exact chains | Classified | Errors |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| A (legacy support) | 123 | 143 | 137 | 771 | 88 | 865 | 94 |
+| B (capped support) | 126 | 145 | 137 | 702 | 24 | 865 | 163 |
+
+- Counting improves: per-scan exact N +3, within one +2. The registered-ROI
+  refits are no longer needed; 95 scans agree with their consensus instead
+  of 92.
+- The assignment collapses. Errors at GlcNAc positions 2 and 5 rise from 15
+  to 66 and from 43 to 70; positions 1, 3 and 6 slightly improve. Geometry
+  changes on 52 of 146 scans (lobe shift q90 0.075 nm), 66 of 876 per-scan
+  calls flip (22 of them on scans whose geometry did not change), and fusion
+  then propagates the missed GlcNAc: π 0.342 → 0.245, θ0 0.035 → 0.073.
+- The unsupervised cohort classifiers are highly sensitive to end-lobe
+  geometry. Consistently with the edge-adjacency confound, the benchmark
+  GlcNAc signal at positions 2 and 5 depends on how the end lobes are placed.
+
+**Long chains (descriptive, 10–20mer config, capped rule).** Against the 12
+manual reads (human judgements, not ground truth), mean |N − N_manual| is:
+
+- per scan: 1.58 → 1.17;
+- after consensus: 1.33 → 0.92.
+
+Examples: `251206_013` 4 → 11 (12 read), `260220_083` 2 → 9 (read
+rejected), `251206_034` 9 → 10 (9 read), `251206_038` 17 → 16 (18 read).
+The fusion false-call rate is 0.12 instead of 0.45, but that comparison is
+confounded: the earlier run used the non-corroborated assignment config.
+
+**Decision.** Keep `global_maxtime = 0`; revert both counting configs to
+`profile_quantile_noise`. The `half_maximum_cap` rule stays available in
+code, inactive. Using it requires decoupling count selection from the
+assignment geometry, or an assignment robust to end-lobe placement (open
+questions 2 and 7). The previous "no gain from stabilizing counts" lessons
+apply: count improvements do not transfer to the assignment through
+cohort-wide learning.

@@ -65,6 +65,19 @@ else:                                            N_selected = N_guarded
 The upward branch is deliberately stricter than the downward one. If the
 auxiliary guard fit fails, the file keeps `N_eff` and records the failure.
 
+**Axial support.** The support is the run of axial-profile bins, within the
+`fit_width_nm` tube, above `baseline + support_noise_k × noise`. The baseline
+is the 10% quantile of the profile and the noise is the MAD of the bins below
+it; the run containing the peak is kept and padded by `support_padding_nm`.
+This assumes that at least 10% of the bins are background, which fails on
+chains that fill the profile. The alternative `half_maximum_cap` caps the
+threshold at the off-ROI background plus half the peak height. It fixes
+long-chain supports but degrades the 6-mer assignment, so it is not selected
+([journal](journal.md)).
+
+**Determinism.** `global_maxtime = 0`: the NLopt global search is bounded by
+iterations only, so identical runs give identical outputs on any node.
+
 **Provenance.** These rules and thresholds, `fit_width_nm` and
 `support_padding_nm` were chosen historically while looking at known-count
 benchmark grades. Inference reads no label, but this is not an independent

@@ -29,7 +29,8 @@ must update this page and [Calibration](calibration.md).
 | `sigma_parallel_min_nm`, `sigma_parallel_max_nm` | 0.191, 0.509 | Axial σ bounds (FWHM 0.45–1.20 nm) |
 | `fit_width_nm` | 0.16 | Tube half-width around the axis |
 | `support_noise_k`, `support_padding_nm`, `support_min_length_nm`, `support_baseline_quantile` | 2.5, 0.25, 1.0, 0.10 | Axial support detection |
-| `global_maxtime`, `global_maxiter`, `max_iter`, `multistart` | 10 s, 10000, 300, 1 | NLopt and LsqFit budgets |
+| `global_maxtime`, `global_maxiter`, `max_iter`, `multistart` | 0, 10000, 300, 1 | NLopt and LsqFit budgets. `global_maxtime = 0` disables the time limit, so the global search is bounded by `global_maxiter` and fits are deterministic (2026-09-30) |
+| `support_threshold_rule`, `support_threshold_fraction` | `profile_quantile_noise`, 0.5 | Axial support threshold. `half_maximum_cap` caps the legacy threshold at off-ROI background + fraction × (peak − background); available, not selected ([Model selection](selection.md)) |
 | `selection_criterion`, `cv_method` | `gcv`, `gcv` | Per-candidate score (`bic`, `aicc`, `cv` are diagnostics) |
 | `selection_policy` | `support_midpoint_hybrid` | Batch policy ([Model selection](selection.md)); 10–20mer: `adaptive_support_rescue` |
 | `cv_folds`, `bic_cv_margin`, `cv_ratio_threshold` | 5, 100, 2.0 | Used only by k-fold CV diagnostics |

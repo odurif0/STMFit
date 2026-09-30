@@ -9,16 +9,17 @@ chitosan on Cu(100).
 
 The promoted method is per-scan GCV counting, then repeated-scan molecule
 consensus, corroborated per-scan assignment and latent-class fusion. A fresh
-raw run (Viper job 12025539, source `3c414a4`) was graded externally on the
+raw run with deterministic fits (Viper job 12042058, source `486ddec`) was
+graded externally on the
 145-scan NKNNKN 6-mer benchmark:
 
 | Profile | Exact N /145 | Correct /870 | Exact chains /145 | Classified /870 | Errors |
 |---|---:|---:|---:|---:|---:|
 | Previous record | 129 | 694 | 43 | 855 | 161 |
-| **Promoted method** | **137** | **772** | **88** | **865** | **93** |
+| **Promoted method** | **137** | **771** | **88** | **865** | **94** |
 
-Four runs gave 772, 772, 772 and 769 correct (88 exact chains and 137/145
-exact N each); the spread comes from the time-limited global search.
+Identical runs now give identical outputs. Before 2026-09-30 the global search
+was time-limited, and four runs gave 772, 772, 772 and 769 correct.
 
 What this does and does not establish:
 

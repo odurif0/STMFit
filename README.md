@@ -26,18 +26,19 @@ benchmark label, expected count, sequence or class proportion:
    false-call rate and mixing weight without labels. The posterior is the
    reported per-lobe uncertainty.
 
-Fresh raw-to-prediction run (Viper job 12025539, source `3c414a4`), external
+Fresh raw-to-prediction run (Viper job 12042058, source `486ddec`), external
 grading on the 145-scan NKNNKN 6-mer benchmark (870 positions):
 
 | full145 own-N | Exact N /145 | Correct /870 | Exact chains /145 | Classified /870 | Errors |
 |---|---:|---:|---:|---:|---:|
 | Historical reference (Aug 2026) | 106 | 677 | 36 | 854 | 177 |
 | Previous record (saved hybrid counts) | 129 | 694 | 43 | 855 | 161 |
-| **Promoted method** | **137** | **772** | **88** | **865** | **93** |
+| **Promoted method** (deterministic, job 12042058) | **137** | **771** | **88** | **865** | **94** |
 
-All 145 counts are within one lobe. Fits use a time-limited global search, so
-reruns vary slightly: four runs gave 772, 772, 772 and 769 correct, each with
-88 exact chains and 137/145 exact N. **Limits:** the NKNNKN control confounds
+All 145 counts are within one lobe. Since 2026-09-30 the fits are
+deterministic: identical runs give identical outputs. The earlier time-limited
+runs gave 772, 772, 772 and 769 correct, each with 88 exact chains and 137/145
+exact N. **Limits:** the NKNNKN control confounds
 GlcNAc with edge adjacency, so benchmark accuracy is not chemical validation.
 Exact chains come in molecule-sized blocks (43 of 88 from one 43-scan molecule).
 Only repeatedly imaged molecules are fused. The counting parameters keep their

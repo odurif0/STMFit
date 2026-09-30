@@ -77,9 +77,10 @@ It then filters predictions to the 145 benchmark scans and writes:
   (`final`) and per-scan (`per_scan`) calls, plus any `--profile`;
 - `counts_final.tsv`, `counts_per_scan.tsv`: count grades (exact and ±1).
 
-Expected for the promoted method: final 772/870 correct, 88/145 exact chains,
-865/870 classified, 93 errors; counts 137/145 exact, 145/145 within one;
-per-scan calls 703/33/863/160.
+Expected for the promoted method (deterministic fits): final 771/870 correct,
+88/145 exact chains, 865/870 classified, 94 errors; counts 137/145 exact,
+145/145 within one; per-scan calls 702/33/863/161. Identical runs must be
+identical byte for byte, except paths and logs.
 
 A promotion needs a fresh raw run from a committed source, frozen configs,
 passing verification, and a complete comparison (counts, correct, exact
