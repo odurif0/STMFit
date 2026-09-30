@@ -45,6 +45,12 @@ Base.@kwdef mutable struct ChainSweepConfig
     support_noise_k::Float64 = 2.5
     support_padding_nm::Float64 = 0.20
     support_min_length_nm::Float64 = 1.0
+    # Axial support threshold. "profile_quantile_noise" (legacy): baseline =
+    # support_baseline_quantile of the axial profile, threshold = baseline +
+    # support_noise_k * noise. "half_maximum_cap": the same threshold, capped at
+    # off-ROI background + support_threshold_fraction * (profile peak - background).
+    support_threshold_rule::String = "profile_quantile_noise"
+    support_threshold_fraction::Float64 = 0.5
     t_min_nm::Float64 = NaN
     t_max_nm::Float64 = NaN
     sigma_parallel_min_nm::Float64 = 0.12

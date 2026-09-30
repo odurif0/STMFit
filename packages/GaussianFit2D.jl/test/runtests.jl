@@ -31,3 +31,4 @@ end
 
 include("fused_roi.jl")
 include("chain_kernel_allocations.jl")
+include("support_threshold.jl")

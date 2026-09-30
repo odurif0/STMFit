@@ -52,7 +52,8 @@ function _integrated_robust_aicc_n(img, pcfg, ccfg_ell; nu=8.0)
     xs, ys, zimg, mask, x, y, z, noise = _load_chain_data(img, pcfg, ccfg_ell)
     axisctx_full = GaussianFit2D._weighted_roi_axis(x, y, z)
 
-    xfit_ell, yfit_ell, zfit_ell, axisctx_ell, _, _ = GaussianFit2D._chain_fit_data(x, y, z, axisctx_full, ccfg_guard)
+    xfit_ell, yfit_ell, zfit_ell, axisctx_ell, _, _ = GaussianFit2D._chain_fit_data(x, y, z, axisctx_full, ccfg_guard;
+        background=GaussianFit2D._off_roi_background(zimg, mask))
     n_eff_ell = max(10, length(zfit_ell) ÷ 9)
 
     best_n = 0

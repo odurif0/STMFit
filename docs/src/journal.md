@@ -364,3 +364,49 @@ give 772, 772, 772 and 769 correct, all with 88 exact chains and 137/145
 exact N.** Making the global search iteration-bounded instead of time-bounded
 would remove this dependence on node speed. It changes the fitting budget, so
 it would be a declared experiment (open question 7).
+
+### 2026-09-30 — Declared experiment: deterministic fits and length-invariant support
+
+**Deliverable** (user request: "fix the support threshold, make the fits
+deterministic"). Reproducible fits, and axial supports that are not truncated
+on long chains, without regressing the 6-mer benchmark. Declared before any
+grade; no label or manual read was used to define the rules.
+
+**Change 1, determinism.** `global_maxtime = 0` (NLopt time limit disabled) in
+both counting configs; the global search stays bounded by
+`global_maxiter = 10000`. Local evidence: with the time limit, the same scan
+gives different BIC values under CPU contention (1 vs 3 parallel fits). Without
+it, 1 and 3 threads give identical outputs, with no runtime cost on an
+uncontended scan (3:45 vs 3:48).
+
+**Change 2, support rule `half_maximum_cap`.** The legacy threshold
+(10% profile quantile + 2.5 × MAD noise) is capped at
+`background + 0.5 × (peak − background)`. `background` is the median of the
+preprocessed image outside the dilated molecule ROI, and `peak` is the maximum
+of the axial profile. Run selection and padding are unchanged.
+
+A pure half-maximum rule was considered first and rejected before any grade,
+from label-free profiles only. On `260221_048`, whose profile dips to 0.08
+where the chain bends out of the tube, it cut the chain into two segments
+(7.2 → 4.6 nm). The cap only ever lowers the threshold, so it keeps the
+legacy behaviour wherever that behaviour was not pathological.
+
+Label-free support check, no fitting:
+
+- 6-mers: 52/146 supports get longer (median +0, q95 +0.30 nm). The largest
+  gains are `240818_019` (1.8 → 3.7 nm) and `240814_020` (2.4 → 3.5 nm).
+- Long chains: 11/25 change, and the truncations disappear: `251206_013`
+  1.5 → 7.2, `260220_083` 1.9 → 5.8, `260215_022` 2.9 → 5.3 nm.
+
+**Evaluation, one grade each, no retuning afterwards.**
+
+- Run A (control): change 1 only, legacy support.
+- Runs B and B′: changes 1 + 2, two identical runs. B = B′ byte for byte is
+  the determinism test.
+- Each is the full promoted method from raw on Viper, graded with
+  `grade_consensus_run.jl`.
+- Acceptance for the benchmark: B does not regress against A on counts (exact
+  N, within one), correct, exact chains, classified or errors.
+- The 25 long chains are then run with the 10–20mer config and compared
+  descriptively with the manual reads. They are not a criterion, and nothing
+  is tuned on them.

@@ -290,8 +290,9 @@ end
 # Refine circular results to elliptical (same as visual_inspect_chitosan_cases.jl)
 function _refine_circ_to_ell(results_circ, img, pcfg, ccfg_ell, ctx_circ)
     refined = ChainModelResult[]
-    xs, ys, zimg, _, x, y, z, noise = GaussianFit2D._fused_roi_data(img, pcfg)
-    xfit, yfit, zfit, ac_fit, _, _ = GaussianFit2D._chain_fit_data(x, y, z, ctx_circ.axisctx_full, ccfg_ell)
+    xs, ys, zimg, mask, x, y, z, noise = GaussianFit2D._fused_roi_data(img, pcfg)
+    xfit, yfit, zfit, ac_fit, _, _ = GaussianFit2D._chain_fit_data(x, y, z, ctx_circ.axisctx_full, ccfg_ell;
+        background=GaussianFit2D._off_roi_background(zimg, mask))
     n_eff = max(10, length(zfit) ÷ 9)
     ccfg_refine = deepcopy(ccfg_ell)
     ccfg_refine.skip_global = true; ccfg_refine.max_iter = 50; ccfg_refine.multistart = 1
@@ -332,6 +333,8 @@ function _configs(model, preproc, output_dir; selected_context=nothing)
         support_padding_nm=model["support_padding_nm"],
         support_min_length_nm=get(model, "support_min_length_nm", 1.0),
         support_baseline_quantile=get(model, "support_baseline_quantile", 0.10),
+        support_threshold_rule=String(get(model, "support_threshold_rule", "profile_quantile_noise")),
+        support_threshold_fraction=Float64(get(model, "support_threshold_fraction", 0.5)),
         max_overlap=model["max_overlap"],
         global_maxtime=model["global_maxtime"], global_maxiter=model["global_maxiter"],
         max_iter=get(model, "max_iter", 300), multistart=get(model, "multistart", 1),

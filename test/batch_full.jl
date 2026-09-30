@@ -483,9 +483,10 @@ function _refine_circ_to_ell(results_circ, img, pcfg, ccfg_ell, ctx_circ)
     isempty(results_circ) && return refined
     
     # Get fit data once
-    xs, ys, zimg, _, x, y, z, noise = GaussianFit2D._fused_roi_data(img, pcfg)
+    xs, ys, zimg, mask, x, y, z, noise = GaussianFit2D._fused_roi_data(img, pcfg)
     ac_full = ctx_circ.axisctx_full
-    xfit, yfit, zfit, ac_fit, _, _ = GaussianFit2D._chain_fit_data(x, y, z, ac_full, ccfg_ell)
+    xfit, yfit, zfit, ac_fit, _, _ = GaussianFit2D._chain_fit_data(x, y, z, ac_full, ccfg_ell;
+        background=GaussianFit2D._off_roi_background(zimg, mask))
     n_eff = max(10, length(zfit) ÷ 9)
     
     # Config for LsqFit-only refinement
@@ -976,6 +977,8 @@ ccfg = GaussianFit2D.ChainSweepConfig(n_min=get(model, "n_min", 2), n_max=get(mo
     support_padding_nm=Float64(get(model, "support_padding_nm", 0.25)),
     support_min_length_nm=get(model, "support_min_length_nm", 1.0),
     support_baseline_quantile=get(model, "support_baseline_quantile", 0.10),
+    support_threshold_rule=String(get(model, "support_threshold_rule", "profile_quantile_noise")),
+    support_threshold_fraction=Float64(get(model, "support_threshold_fraction", 0.5)),
     max_overlap=Float64(get(model, "max_overlap", 0.60)),
     global_maxtime=Float64(get(model, "global_maxtime", 10.0)),
     global_maxiter=get(model, "global_maxiter", 10000),

@@ -666,7 +666,16 @@ function _chain_coordinates(x, y, axisctx)
     return t, u
 end
 
-function _active_t_support(t, z, ccfg::ChainSweepConfig)
+"Median of the preprocessed image outside the molecule ROI: the molecule-free background level."
+function _off_roi_background(zimg::AbstractMatrix, mask::AbstractMatrix{Bool})
+    size(zimg) == size(mask) || throw(DimensionMismatch("Image and ROI mask differ"))
+    values = [v for (v, m) in zip(zimg, mask) if !m && isfinite(v)]
+    return isempty(values) ? NaN : median(values)
+end
+
+function _active_t_support(t, z, ccfg::ChainSweepConfig; background::Real=NaN)
+    rule = ccfg.support_threshold_rule
+    rule in ("profile_quantile_noise", "half_maximum_cap") || error("Unknown support threshold rule: $rule")
     if length(t) < 5
         return minimum(t), maximum(t), (support_method="full_t_range_too_few_points",)
     end
@@ -685,8 +694,20 @@ function _active_t_support(t, z, ccfg::ChainSweepConfig)
     noise = isempty(low) ? _mad_std(prof) : _mad_std(low)
     threshold_noise = baseline + ccfg.support_noise_k * max(noise, EPS)
     thr = threshold_noise
+    threshold_cap = NaN
+    if rule == "half_maximum_cap"
+        # The quantile baseline assumes background bins in the profile; on a
+        # chain filling the profile it lands on the molecule. Never let the
+        # threshold exceed the fraction of the peak height above the off-ROI
+        # background (half maximum by default).
+        isfinite(background) || error("half_maximum_cap support needs a finite off-ROI background")
+        0 < ccfg.support_threshold_fraction < 1 || error("support_threshold_fraction must be in (0, 1)")
+        threshold_cap = background + ccfg.support_threshold_fraction * (peak - background)
+        thr = min(threshold_noise, threshold_cap)
+    end
     active = findall(i -> counts[i] > 0 && prof[i] >= thr, eachindex(prof))
-    base_meta = (support_method="auto_axis_profile_support",
+    base_meta = (support_method="auto_axis_profile_support", threshold_rule=rule,
+                 background=background, threshold_cap=threshold_cap,
                  profile_bins=nb, baseline=baseline, peak=peak,
                  noise_sigma_profile=noise, threshold=thr,
                  threshold_noise=threshold_noise,
@@ -725,11 +746,11 @@ function _active_t_support(t, z, ccfg::ChainSweepConfig)
         support_length_nm=final_hi-final_lo))
 end
 
-function _chain_fit_data(x, y, z, axisctx, ccfg::ChainSweepConfig)
+function _chain_fit_data(x, y, z, axisctx, ccfg::ChainSweepConfig; background::Real=NaN)
     t, u = _chain_coordinates(x, y, axisctx)
     tube = abs.(u) .<= ccfg.fit_width_nm
     sum(tube) >= 20 || return x, y, z, axisctx, trues(length(x)), (support_method="full_roi_tube_too_small",)
-    tlo, thi, support_meta = _active_t_support(t[tube], z[tube], ccfg)
+    tlo, thi, support_meta = _active_t_support(t[tube], z[tube], ccfg; background)
     isfinite(ccfg.t_min_nm) && (tlo = max(tlo, ccfg.t_min_nm))
     isfinite(ccfg.t_max_nm) && (thi = min(thi, ccfg.t_max_nm))
     if tlo >= thi
@@ -1424,7 +1445,8 @@ function chain_gaussian_sweep(img::SXMImage, cfg::PatternConfig, ccfg::ChainSwee
     end
     # ── Axis / support ──
     axisctx_full = override_axisctx !== nothing ? override_axisctx : _weighted_roi_axis(x, y, z)
-    xfit, yfit, zfit, axisctx, fit_keep, support_meta = _chain_fit_data(x, y, z, axisctx_full, ccfg)
+    background = _off_roi_background(zimg, mask)
+    xfit, yfit, zfit, axisctx, fit_keep, support_meta = _chain_fit_data(x, y, z, axisctx_full, ccfg; background)
     # Adaptive range over the hard axial support used by the parameterization.
     axis_length = _chain_support_length(axisctx)
     spacing_min_eff = _effective_spacing_min_nm(ccfg)
@@ -1553,7 +1575,8 @@ function chain_gaussian_sweep(img::SXMImage, cfg::PatternConfig, ccfg::ChainSwee
     best = _select_chain_model(results, ccfg)
     return results, best, (xs=xs, ys=ys, zimg=zimg, mask=mask, x=xfit, y=yfit, z=zfit, noise=noise,
                             axisctx=axisctx, axisctx_full=axisctx_full, fit_keep=fit_keep,
-                            fit_width_nm=ccfg.fit_width_nm, support_meta=support_meta)
+                            fit_width_nm=ccfg.fit_width_nm, support_meta=support_meta,
+                            support_background=background)
 end
 
 function fit_chain_consensus(img::SXMImage, cfg::PatternConfig, ccfg::ChainSweepConfig)
@@ -1671,7 +1694,8 @@ function chain_direct_fit(img::SXMImage, cfg::PatternConfig, ccfg::ChainSweepCon
         xs, ys, zimg, mask, x, y, z, noise = _robust_roi_data(img, cfg)
     end
     axisctx_full = _weighted_roi_axis(x, y, z)
-    xfit, yfit, zfit, axisctx, fit_keep, support_meta = _chain_fit_data(x, y, z, axisctx_full, ccfg)
+    background = _off_roi_background(zimg, mask)
+    xfit, yfit, zfit, axisctx, fit_keep, support_meta = _chain_fit_data(x, y, z, axisctx_full, ccfg; background)
     # Effective sample size (pixels in fit mask ÷ typical spatial correlation factor).
     # ÷9 ≈ 3×3 px block = 1 independent obs. Conservative: larger n_eff → more BIC penalty.
     n_eff = max(10, length(zfit) ÷ 9)
