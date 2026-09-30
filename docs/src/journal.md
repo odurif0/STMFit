@@ -23,7 +23,9 @@ latent-class fusion. Entry point: `test/run_molecule_consensus_chitosan.jl`.
 
 **Benchmark** (fresh raw run 12025539, `3c414a4`; full145 own-N): 137/145
 exact N (145/145 within one), 772/870 correct, 88/145 exact chains, 865/870
-classified, 93 errors, against the previous record 129/694/43/855/161.
+classified, 93 errors, against the previous record 129/694/43/855/161. Four
+runs give 772, 772, 772 and 769 correct (88 exact chains and 137/145 each);
+the spread comes from the time-limited global search.
 
 **Limits:** NKNNKN edge-adjacency confound; exact chains in molecule-sized
 blocks; counting parameters with benchmark-informed provenance; molds are
@@ -52,6 +54,10 @@ empirical templates; 10–20mer outputs not validated.
    completed. A qualified constant-current observable is open.
 6. **Calibrated uncertainty.** Fused posteriors are model posteriors under the
    latent-class model. Unfused confidences are uncalibrated vote margins.
+7. **Deterministic fits.** The NLopt global search is time-limited
+   (`global_maxtime`), so results depend slightly on node speed (772 or 769
+   correct across four runs). An iteration-bounded budget would make runs
+   reproducible.
 
 ## Lessons learned
 
@@ -330,3 +336,31 @@ approval: a background level and noise estimated independently of chain length
 testing, checked for non-regression on the 6-mer benchmark, and compared
 descriptively to the manual reads of the long chains. This changes the frozen
 counting rule, so it needs a declared experiment.
+
+### 2026-09-30 — Viper verification of the pruned code: run-to-run variability
+
+Job **12030359** (source `ccbd743`, COMPLETED in 1h44, 687 output hashes
+match) passes all label-free checks of `grade_consensus_run.jl`. Result:
+**137/145 exact N (145 within one), 769/870 correct, 88/145 exact chains,
+865/870 classified, 96 errors**. Per-scan calls give 700/33/863/163. Fusion:
+π = 0.330, θ0 = 0.035, θ1 = 0.607 (101 calls changed).
+
+Against the promoted runs (772/88/865/93, identical in 12025539, 12023870 and
+12028164):
+
+- all 146 per-scan counts and all final counts are identical;
+- the fixed-N refits differ on 20 of 146 scans, mostly by less than
+  0.003 nm or 0.2% in amplitude, but by up to 0.09 on `240817_050` and
+  `241113_089`;
+- this changes 5 per-scan calls, and learning on the whole cohort and fusion
+  propagate them to −3 correct.
+
+The removed code was unreachable on the promoted path. The difference is the
+known non-determinism of the time-limited global search
+(`global_maxtime = 10 s` per N). This node was slower (1h44 against 1h29), and a
+local rerun of the unpruned code on one scan already changed BIC values in the
+fifth digit. **The promoted benchmark numbers are one realization: four runs
+give 772, 772, 772 and 769 correct, all with 88 exact chains and 137/145
+exact N.** Making the global search iteration-bounded instead of time-bounded
+would remove this dependence on node speed. It changes the fitting budget, so
+it would be a declared experiment (open question 7).

@@ -35,7 +35,9 @@ grading on the 145-scan NKNNKN 6-mer benchmark (870 positions):
 | Previous record (saved hybrid counts) | 129 | 694 | 43 | 855 | 161 |
 | **Promoted method** | **137** | **772** | **88** | **865** | **93** |
 
-All 145 counts are within one lobe. **Limits:** the NKNNKN control confounds
+All 145 counts are within one lobe. Fits use a time-limited global search, so
+reruns vary slightly: four runs gave 772, 772, 772 and 769 correct, each with
+88 exact chains and 137/145 exact N. **Limits:** the NKNNKN control confounds
 GlcNAc with edge adjacency, so benchmark accuracy is not chemical validation.
 Exact chains come in molecule-sized blocks (43 of 88 from one 43-scan molecule).
 Only repeatedly imaged molecules are fused. The counting parameters keep their

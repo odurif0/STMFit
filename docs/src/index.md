@@ -17,6 +17,9 @@ raw run (Viper job 12025539, source `3c414a4`) was graded externally on the
 | Previous record | 129 | 694 | 43 | 855 | 161 |
 | **Promoted method** | **137** | **772** | **88** | **865** | **93** |
 
+Four runs gave 772, 772, 772 and 769 correct (88 exact chains and 137/145
+exact N each); the spread comes from the time-limited global search.
+
 What this does and does not establish:
 
 - Inference is label-free end to end. Benchmark membership and the `NKNNKN`
