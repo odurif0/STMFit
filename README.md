@@ -40,6 +40,9 @@ deterministic: identical runs give identical outputs. The earlier time-limited
 runs gave 772, 772, 772 and 769 correct, each with 88 exact chains and 137/145
 exact N. **Limits:** the NKNNKN control confounds
 GlcNAc with edge adjacency, so benchmark accuracy is not chemical validation.
+The assignment's benchmark signal is the contrast with the dimmer terminal
+lobe. Without it, the image features separate GlcNAc from GlcN only weakly
+(AUC ≤ 0.66) and the DFT molds not at all ([journal](docs/src/journal.md)).
 Exact chains come in molecule-sized blocks (43 of 88 from one 43-scan molecule).
 Only repeatedly imaged molecules are fused. The counting parameters keep their
 historical benchmark-informed provenance ([calibration](docs/src/calibration.md)).

@@ -26,7 +26,10 @@ full145 own-N): 137/145 exact N (145/145 within one), 771/870 correct, 88/145
 exact chains, 865/870 classified, 94 errors, against the previous record
 129/694/43/855/161. Earlier time-limited runs gave 772 (three runs) and 769.
 
-**Limits:** NKNNKN edge-adjacency confound; exact chains in molecule-sized
+**Limits:** NKNNKN edge-adjacency confound. The benchmark GlcNAc signal is
+the contrast with the dimmer terminal lobe; without it the image features
+separate the classes only weakly (AUC ≤ 0.66, amplitude) or not at all
+(shape, DFT molds). Also: exact chains in molecule-sized
 blocks; counting parameters with benchmark-informed provenance; molds are
 empirical templates; 10–20mer outputs not validated.
 
@@ -54,11 +57,12 @@ empirical templates; 10–20mer outputs not validated.
    completed. A qualified constant-current observable is open.
 6. **Calibrated uncertainty.** Fused posteriors are model posteriors under the
    latent-class model. Unfused confidences are uncalibrated vote margins.
-7. **Assignment fragility.** Moving end lobes by less than 0.1 nm on a third
-   of the scans flips GlcNAc calls at positions 2 and 5. Cohort-wide learning
-   then misses them everywhere. This is consistent with the edge-adjacency
-   confound (question 1): the benchmark GlcNAc signal depends on end-lobe
-   geometry.
+7. **Assignment fragility — answered 2026-09-30.** The benchmark signal is
+   the contrast with the dimmer terminal lobe. Without it, amplitude separates
+   GlcNAc from GlcN at non-terminal positions with AUC ≤ 0.66, and shape, DFT
+   molds and Fisher margin do not separate them at all. A robust and accurate
+   assignment needs new information (reference oligomers of known
+   composition, other imaging conditions), not another classifier variant.
 
 ## Lessons learned
 
@@ -506,3 +510,50 @@ classifier stages. On V0 it reproduces run A byte for byte.
   whatever they are, and nothing is tuned after grading.
 - Expected trade-off: on NKNNKN, GlcNAc coincides with "next to an end", so a
   variant that no longer rewards that position may grade lower.
+
+### 2026-09-30 — End-lobe robustness: no robust and accurate variant; the benchmark signal is edge adjacency
+
+All runs use `test/assignment_view_variants.jl` on the cached features of A and B.
+V0 reproduces runs A and B byte for byte. Results
+(`results/assignment_robustness_20260930/`):
+
+| Variant | Fused A↔B agreement | Class-1 rate A: end / next / interior | Final A (correct/exact/errors) | Final B |
+|---|---:|---|---|---|
+| V0 current | 784/876 | 0.02 / 0.81 / 0.09 | 771 / 88 / 94 | 702 / 24 / 163 |
+| V1 interior-referenced | 859/876 | 0.32 / 0.94 / 0.96 | 487 / 0 / 378 | 485 / 0 / 380 |
+| V2 shape only | 474/876 | 0.20 / 0.61 / 0.60 | 526 / 1 / 339 | 510 / 0 / 355 |
+
+- V1 is stable but degenerate. Without neighbour contrasts against terminal
+  lobes, the dominant structure is terminal versus non-terminal, and the
+  brighter cluster (almost every non-terminal lobe) is named GlcNAc.
+- V2 is close to random: patch shape alone gives no consistent clusters.
+- Neither is adopted; V0 remains the method.
+
+**Where the signal is** (external diagnostic, labels read for evaluation
+only). Among the non-terminal lobes (positions 2–5) of the N = 6 benchmark
+chains, the AUC of GlcNAc (2, 5) against GlcN (3, 4) is:
+
+- `amp_prominence` (contrast with neighbours, including the terminal one):
+  0.75;
+- amplitude referenced to non-terminal lobes only (`amp_int`, `integ_int`,
+  `amp_prom_int`, `integ_prom_int`): 0.62–0.66, and this may still include
+  position effects;
+- widths: 0.54–0.57;
+- patch shape: `split_log_skew` 0.45–0.47, descriptor 0.43, `mold_cc_fwd`
+  0.49, `mold_cc_bwd` 0.41, `emp_fisher` 0.52.
+
+The same values hold on geometry B.
+
+**Conclusion.** The benchmark accuracy comes almost entirely from the
+contrast with the dimmer terminal lobe, i.e. from edge adjacency. The current
+image features carry at most a weak position-independent GlcNAc signal
+(AUC ≤ 0.66, amplitude only). The DFT molds, the Fisher margin and the patch
+asymmetry carry none. An assignment that is robust to end-lobe placement
+cannot also be accurate with these features. Chemical validation on the
+10–20mers therefore needs new information rather than another classifier
+variant, for example:
+
+- reference oligomers of known composition (fully deacetylated or fully
+  acetylated chains, or known non-palindromic sequences);
+- other imaging conditions (bias, tip);
+- chemistry-specific observables.

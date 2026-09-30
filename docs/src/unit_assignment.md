@@ -113,9 +113,12 @@ same fusion gives identical numbers.
 ## Limits
 
 1. **Edge-adjacency confound.** In NKNNKN both GlcNAc sit next to a chain end.
-   Features correlated with "second from an end" score well without detecting
-   acetyl groups. Fusion amplifies whatever the per-scan calls detect; it
-   neither creates nor removes this confound.
+   The benchmark signal is the neighbour contrast with the dimmer terminal
+   lobe (AUC 0.75 at positions 2–5). Referenced to non-terminal lobes only,
+   amplitude reaches AUC ≤ 0.66, while patch shape, the DFT molds and the
+   Fisher margin reach 0.41–0.57 (2026-09-30). The calls also move when end
+   lobes move by less than 0.1 nm. Fusion amplifies whatever the per-scan calls
+   detect; it neither creates nor removes this confound.
 2. **Correlated exact chains.** Exact chains come in molecule-sized blocks.
 3. **Coverage of fusion.** Only repeatedly imaged molecules are fused.
 4. **Application.** On unknown 10–20mers the per-scan calls are inconsistent
