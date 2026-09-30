@@ -465,3 +465,44 @@ assignment geometry, or an assignment robust to end-lobe placement (open
 questions 2 and 7). The previous "no gain from stabilizing counts" lessons
 apply: count improvements do not transfer to the assignment through
 cohort-wide learning.
+
+### 2026-09-30 — Declared campaign: assignment robust to end-lobe placement
+
+**Deliverable** (user request). GlcN/GlcNAc calls that stay stable when
+end-lobe geometry changes and nothing else does. Time box: this session.
+
+**Diagnosis** (label-free: position in the chain is known from the fit).
+
+- In both A and B, the call rates of class 1 by position are 0.01–0.02 at
+  chain ends, 0.51–0.57 next to an end, and 0.10 in the interior.
+- A↔B agreement is lowest next to an end (252/292, against 286/292 at ends
+  and 272/292 in the interior).
+- Three of the four local features (`amp_prominence`, `amp_neighbor_ratio`,
+  `integrated_prominence`) compare a lobe with the mean of its two
+  neighbours. For the lobe next to an end, one of these is the terminal lobe,
+  whose fitted amplitude and placement depend on the support.
+
+**Variants, declared before any grade.** Same classifiers, seeds, vote,
+corroborated training and fusion as the promoted method; only the feature
+views change.
+
+- **V1 interior-referenced.** BASE4 is replaced by `amp_int` and `integ_int`
+  (log ratio to the median of the chain's non-terminal lobes) and by
+  `amp_prom_int` and `integ_prom_int` (log ratio to the mean of the
+  neighbours, where a non-terminal lobe never uses a terminal neighbour).
+  Patch features are kept.
+- **V2 shape only.** No amplitude features. GMM on descriptor, fwd/bwd molds
+  and Fisher; k-means on split skew, backward-patch moments, descriptor and
+  molds. Physical naming (brighter cluster = GlcNAc) is unchanged.
+
+**Evaluation.** Each variant runs on the cached features of A (legacy
+support) and B (capped support), with a local harness that reruns only the
+classifier stages. On V0 it reproduces run A byte for byte.
+
+- **Primary, label-free:** per-scan and fused call agreement between A and B,
+  and class-1 rate by position class.
+- **Secondary, external:** full145 own-N grade on A and B.
+- Adoption requires higher A↔B agreement than V0. The grades are reported
+  whatever they are, and nothing is tuned after grading.
+- Expected trade-off: on NKNNKN, GlcNAc coincides with "next to an end", so a
+  variant that no longer rewards that position may grade lower.
