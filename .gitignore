@@ -2,6 +2,8 @@
 results/
 **/results/
 **/Manifest.toml
+# The root Manifest is tracked for reproducible releases (packages/ ones stay ignored).
+!/Manifest.toml
 !.julia/Manifest.toml
 .DS_Store
 .theme

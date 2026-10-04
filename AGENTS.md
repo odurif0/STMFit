@@ -56,8 +56,9 @@ history is at the tag `archive/pre-cleanup-20260929`.
 ## Setup and verification
 
 Julia 1.13 (explicit user decision, 2026-09-16), including tests and
-subprocesses; local `julia` resolves to 1.13 via juliaup. The Manifest is
-ignored; use Pkg, never hand-edit it. Bootstrap a clean depot with:
+subprocesses; local `julia` resolves to 1.13 via juliaup. The root
+`Manifest.toml` is tracked and pins the environment for releases; change it
+only through Pkg, never by hand. Bootstrap a clean depot with:
 
 ```bash
 julia --project=. -e '
