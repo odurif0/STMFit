@@ -26,6 +26,9 @@ full145 own-N): 137/145 exact N (145/145 within one), 771/870 correct, 88/145
 exact chains, 865/870 classified, 94 errors, against the previous record
 129/694/43/855/161. Earlier time-limited runs gave 772 (three runs) and 769.
 
+**Positions:** lobe positions repeat to 0.07 nm along and 0.09–0.11 nm across
+the chain over repeated scans (2026-10-04).
+
 **Limits:** NKNNKN edge-adjacency confound. The benchmark GlcNAc signal is
 the contrast with the dimmer terminal lobe; without it the image features
 separate the classes only weakly (AUC ≤ 0.66, amplitude) or not at all
@@ -557,3 +560,55 @@ variant, for example:
   acetylated chains, or known non-palindromic sequences);
 - other imaging conditions (bias, tip);
 - chemistry-specific observables.
+
+### 2026-10-04 — 6-mer focus: counting errors and position uncertainty
+
+**Scope** (user decision: concentrate on the 6-mers until reference data
+exist). Chemistry cannot be validated on NKNNKN, so the 6-mer work targets
+what the benchmark can validate: counts, positions and their uncertainty.
+
+**Counting errors of the deterministic reference** (run A; labels used only
+to locate errors). There are 8 final errors.
+
+- **5 under-counts (5 instead of 6), all molecules with fewer than 3 scans**,
+  so consensus cannot act. Their visual causes:
+  - `240307_019` is S-shaped and `240818_007` is kinked: the straight axis
+    cuts across them;
+  - `240312_Cu100081`: the robust-AICc guard moves N_eff 6 to 5;
+  - `240313_Cu100058` has strong line noise;
+  - `240310_Cu100032`: the cause is unclear.
+- **3 over-counts: track 22** (`240817_017/018/019`). Two scans give 7, so
+  the majority overwrites the correct scan.
+
+Bending does not explain the per-scan errors overall: 22 per-scan errors are
+spread evenly over the ridge-offset classes (17%, 15%, 11% of the scans in
+the < 0.15, 0.15–0.25 and 0.25–0.40 nm bins). A curved centreline could
+address at most 2–3 strongly bent scans. The capped support leaves all final
+counts unchanged on the benchmark (identical in runs A and B); it only fixes
+per-scan counts that consensus already repaired.
+
+**Position uncertainty (label-free, new script
+`test/report_position_repeatability.jl`).** Physical lobes of molecules imaged
+several times (20 tracks, 121 lobes in run A) are aligned in the absolute frame
+and their scatter measured.
+
+| Alignment | All 20 tracks: along / across | Without track 26: along / across |
+|---|---|---|
+| Image registration only | 0.126 / 0.206 nm | 0.122 / 0.123 nm |
+| + per-scan translation | 0.075 / 0.204 nm | 0.067 / 0.107 nm |
+| + per-scan rotation (Procrustes) | 0.069 / 0.106 nm | 0.069 / 0.090 nm |
+
+- Track 26, the 43-scan molecule, rotates by 25–37° on the surface between
+  scans `240817_049` and `240817_050`. The rotation stays the same while the
+  scan angle varies from +40° to −90°. Elsewhere, scan-angle changes of
+  ±40–70° leave residual rotations of 1–3°, so the frame conversion is
+  correct.
+- **Lobe positions repeat to about 0.07 nm along the chain and 0.09–0.11 nm
+  across it (1σ, ends included).** The consecutive-scan image registration
+  adds about 0.1 nm.
+- The spacing of neighbouring lobes is 0.66 nm on average and repeats to
+  0.058 nm.
+- This scatter is an empirical upper bound: it includes fit noise, piezo
+  distortion between scans and real flexing.
+
+Outputs: `results/support_determinism_20260930/position_repeatability_runA/`.

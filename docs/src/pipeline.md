@@ -49,6 +49,23 @@ separate step: `test/grade_consensus_run.jl`. See the [runbook](chitosan_runbook
 | `chain_report.tsv` | One row per scan: counts, rule, track, assignment string, confidence summary |
 | `failures.tsv` | Present only if a stage failed (stage and reason) |
 
+## Position uncertainty
+
+`test/report_position_repeatability.jl --run RUN --data-dir RAW --outdir NEW`
+measures, without labels, how well lobe positions repeat across scans of the
+same molecule. It writes `lobe_scatter.tsv` (per physical lobe),
+`scan_rotation.tsv` (per-scan rotation fitted between scans) and `summary.tsv`.
+
+The scans of a molecule track are aligned in three ways: by the image
+registration only, plus a per-scan translation, and plus a per-scan
+translation and rotation (generalized Procrustes). Scatter is split along and
+across the chain.
+
+On the 6-mer benchmark (19 molecules imaged several times), lobe positions
+repeat to **0.07 nm along the chain and 0.09–0.11 nm across it** (1σ). Spacing
+between neighbouring lobes is 0.66 nm and repeats to 0.06 nm. One molecule
+(track 26) rotates by about 27° on the surface during its series.
+
 ## Packages
 
 | Package | Role |

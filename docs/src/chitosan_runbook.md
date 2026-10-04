@@ -152,3 +152,5 @@ compares the native mold builder with the Python reference
 | `test/measure_calibration.jl SCAN.sxm` | Apparent width/spacing audit (no config written) |
 | `test/validate_unit_predictions.jl`, `test/summarize_unknown_unit_qc.jl` | Prediction integrity and review queue |
 | `test/compare_reconstructed_champion.jl` | Keyed comparison of two prediction tables |
+| `test/report_position_repeatability.jl --run RUN --data-dir RAW --outdir NEW` | Label-free lobe-position repeatability across repeated scans ([Pipeline](pipeline.md)) |
+| `test/assignment_view_variants.jl RUN VARIANT NEW RAW` | Research harness: rerun the classifier stages of a run with other feature views |
