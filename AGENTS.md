@@ -141,5 +141,5 @@ changing selection logic.
 - Commit early; never leave validated work uncommitted. Git identity is set
   repo-local (Olivier Durif <o.durif@fkf.mpg.de>). GitHub push goes through the
   local machine (the clusters have no credentials).
-- The `.omo/` directory is retired (archive `STMFit-archive-20260916`). Never
-  write agent state into the repo outside git.
+- The retired `.omo/` agent state and its September archive were deleted on
+  2026-10-04. Never write agent state into the repo outside git.
