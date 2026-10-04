@@ -663,8 +663,8 @@ final result, sorted so that a scientist can see quickly what is exact, what
 has the right N, and what is problematic.
 
 - **Run (label-free).** The new final stage `test/plot_final_molecules.jl`
-  draws one image per scan: the preprocessed STM image around the chain, the
-  final fused calls coloured with P(GlcNAc), the 2σ position ellipses from
+  draws one image per scan: the image the fit used (mean of the flattened
+  forward and backward Z scans) around the chain, the final fused calls coloured with P(GlcNAc), the 2σ position ellipses from
   `positions.tsv`, and a title with N (and the per-scan N when the consensus
   changed it), the consensus outcome, the call string and the mean
   confidence. Plots go to `plots/all/` and to label-free folders
@@ -677,3 +677,8 @@ has the right N, and what is problematic.
   method's reader keeps refusing label columns.
 - **On run A:** 88 / 49 / 8 / 1 plots, consistent with the report (88 exact
   chains, 137 exact N, 145 graded). The 146 plots take about 75 s.
+- **Display.** A forward-only display made lobes look about 0.4 nm off the
+  ridge on `240816_005`, whose forward and backward scans are offset. The
+  plots therefore show the fused image that was fitted.
+- **Viper.** The 12-scan quickstart with the integrated stage (job 12084468,
+  `a80cad7`) still matches all 8 reference checksums and adds 12 plots.

@@ -5,7 +5,8 @@
 #   julia --project=. test/plot_final_molecules.jl --run RUN_DIR --data-dir RAW_DIR \
 #       --config COUNT_CONFIG --outdir NEW_DIR [--annotations TSV]
 #
-# Each plot shows the preprocessed STM image around the chain, the final lobes
+# Each plot shows the image the fit used (mean of the flattened forward and
+# backward Z scans) around the chain, the final lobes
 # (colour = final call, label = lobe index and P(GlcNAc)), their 2-sigma position
 # ellipses from positions.tsv, and a title with the final and per-scan counts,
 # the consensus rule, the call sequence and the confidence. Label-free: plots
@@ -57,7 +58,11 @@ function ellipse(x, y, ax, sa, sc; k=2.0, m=40)
 end
 
 function molecule_plot(img, pcfg, file, lobes, report, note, wrong)
-    xs, ys, _, _, z, _, _ = G.preprocess_channel(img, get_channel(img, "Z"; direction="fwd"), pcfg)
+    # The image the chain fit used: mean of the flattened forward and backward
+    # Z scans when both exist (G._fused_roi_data), the forward scan otherwise.
+    has_bwd = any(c -> lowercase(c.name) == "z" && lowercase(c.direction) == "bwd", img.channels)
+    xs, ys, z = has_bwd ? G._fused_roi_data(img, pcfg)[1:3] :
+        G.preprocess_channel(img, get_channel(img, "Z"; direction="fwd"), pcfg)[[1, 2, 4]]
     lx = [l.x for l in lobes]; ly = [l.y for l in lobes]; pad = 1.5
     ix = findall(x -> minimum(lx) - pad <= x <= maximum(lx) + pad, xs)
     iy = findall(y -> minimum(ly) - pad <= y <= maximum(ly) + pad, ys)
