@@ -28,3 +28,23 @@ include(joinpath(@__DIR__, "report_position_repeatability.jl"))
     @test isapprox(pooled_sd(ss, 6 * (length(sc) - 1)), σ; rtol=0.05)
     @test isnan(pooled_sd(1.0, 0))
 end
+
+@testset "per-lobe uncertainty source" begin
+    proc(t, r, pos, ss) = Dict{String,Any}("track" => t, "rank" => r, "N" => 3, "scans" => 3, "mode" => "procrustes",
+        "position" => pos, "ss_along" => ss, "ss_across" => 4ss, "dof" => 2.0)
+    rows = [proc(1, 1, "end", 0.02), proc(1, 2, "interior", 0.008), proc(1, 3, "end", 0.02)]
+    geo = Dict((f, l) => Dict("x_nm" => "1", "y_nm" => "2") for f in ("a", "b", "c", "lone"), l in 1:3)
+    R = (rows=rows, used=Dict(1 => ["a", "b", "c"]), geo=geo,
+         phys=Dict((f, l) => "track1_$l" for f in ("a", "b", "c"), l in 1:3),
+         tracks=Dict("a" => 1, "b" => 1, "c" => 1, "lone" => 2), counts=Dict(f => 3 for f in ("a", "b", "c", "lone")),
+         lobes_abs=Dict(f => [(0.0, 0.0), (0.66, 0.0), (1.32, 0.0)] for f in ("a", "b", "c", "lone")))
+    out = position_rows(R)
+    @test length(out) == 12
+    a2 = only(r for r in out if r["file"] == "a" && r["lobe"] == "2")
+    @test a2["sd_source"] == "track" && a2["sd_along_nm"] == @sprintf("%.4f", sqrt(0.008 / 2))
+    lone1 = only(r for r in out if r["file"] == "lone" && r["lobe"] == "1")
+    @test lone1["sd_source"] == "cohort" && lone1["track_scans"] == "1"
+    @test lone1["sd_along_nm"] == @sprintf("%.4f", sqrt(0.04 / 4))   # pooled over the two tracked end lobes
+    R0 = merge(R, (rows=Dict{String,Any}[],))
+    @test all(r["sd_source"] == "none" && r["sd_along_nm"] == "NA" for r in position_rows(R0) if r["file"] == "lone")
+end

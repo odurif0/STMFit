@@ -25,10 +25,12 @@ raw .sxm scans (one directory, unique basenames)
   ├─ 5. latent-class fusion ...... test/build_molecule_fusion.jl
   │      physical lobes of each track → EM (π, θ0, θ1) → posterior
   │                                                 fusion/predictions_fused.tsv
+  ├─ 6. position uncertainty ..... test/report_position_repeatability.jl
+  │      repeated scans aligned (registration, translation, rotation)  positions.tsv
   └─ predictions.tsv (= fused), chain_report.tsv, raw/input hashes, logs/
 ```
 
-One command runs all five stages:
+One command runs all six stages:
 `test/run_molecule_consensus_chitosan.jl` (Slurm wrapper
 `hpc/run_molecule_consensus.sbatch`). External verification and grading are a
 separate step: `test/grade_consensus_run.jl`. See the [runbook](chitosan_runbook.md).
@@ -47,6 +49,8 @@ separate step: `test/grade_consensus_run.jl`. See the [runbook](chitosan_runbook
 | `fusion/` | `predictions_fused.tsv`, `physical_lobes.tsv`, `fusion_params.tsv` |
 | `predictions.tsv` | Final per-lobe calls: `predicted` (0/1/?), `probability_1`, `confidence`, per-scan call |
 | `chain_report.tsv` | One row per scan: counts, rule, track, assignment string, confidence summary |
+| `positions.tsv` | Every lobe: image and absolute position, physical lobe, position uncertainty along/across the chain (1σ) and its source (`track` or `cohort`) |
+| `position_repeatability/` | Per-lobe scatter, per-scan rotations, summary ([Position uncertainty](#Position-uncertainty)) |
 | `failures.tsv` | Present only if a stage failed (stage and reason) |
 
 ## Position uncertainty

@@ -17,6 +17,14 @@
 #            shape, iterated; separates rotation between scans from noise.
 # The scatter of each physical lobe around its mean is split along the chain
 # axis and across it. No label, expected count or sequence is read.
+#
+# Outputs: summary.tsv, lobe_scatter.tsv (per physical lobe and alignment),
+# scan_rotation.tsv, and positions.tsv: every lobe of the run with its image
+# and absolute position and its position uncertainty (1 sigma, Procrustes
+# alignment). sd_source = "track" when the lobe's molecule has at least
+# MIN_TRACK_SCANS aligned scans (the lobe's own scatter), "cohort" otherwise
+# (pooled scatter of all tracked lobes of the same position class, end or
+# interior), "none" when the run has no repeated molecule.
 include(joinpath(@__DIR__, "lib", "reconstructed_unit_assignment.jl"))
 include(joinpath(@__DIR__, "lib", "molecule_consensus.jl"))
 include(joinpath(@__DIR__, "lib", "molecule_fusion.jl"))
@@ -35,6 +43,8 @@ function repeat_options(args)
     (ispath(o["--outdir"]) || islink(o["--outdir"])) && error("Output exists")
     return o
 end
+
+const MIN_TRACK_SCANS = 3
 
 "Pooled per-component SD over groups: sqrt(sum of squared residuals / sum of (n - 1))."
 pooled_sd(ss, dof) = dof > 0 ? sqrt(ss / dof) : NaN
@@ -96,6 +106,7 @@ function repeatability(run, rawdir)
         v = get!(trackscans, t, String[]); f in v || push!(v, f)
     end
     rows = Dict{String,Any}[]; spacing_rows = Dict{String,Any}[]; rotation_rows = Dict{String,Any}[]
+    used_by_track = Dict{Int,Vector{String}}()
     for (t, fs) in sort(collect(trackscans))
         length(fs) >= 2 || continue
         sort!(fs; by=f -> pos[f]); ref = fs[1]; n = counts[ref]
@@ -112,6 +123,7 @@ function repeatability(run, rawdir)
         end
         used = [f for f in fs if haskey(drift, f)]
         length(used) >= 2 || continue
+        used_by_track[t] = used
         # positions per scan, indexed by chain rank
         P = Dict{String,Vector{NTuple{2,Float64}}}()
         for f in used
@@ -154,14 +166,49 @@ function repeatability(run, rawdir)
                 "spacing_nm" => hypot(P[f][r+1][1] - P[f][r][1], P[f][r+1][2] - P[f][r][2])))
         end
     end
-    return rows, spacing_rows, rotation_rows
+    return (rows=rows, spacing=spacing_rows, rotations=rotation_rows, used=used_by_track,
+            geo=geo, phys=phys, tracks=tracks, counts=counts, lobes_abs=lobes_abs)
+end
+
+"Per-lobe position and uncertainty rows (see the header for sd_source)."
+function position_rows(R)
+    proc = Dict((r["track"], r["rank"]) => r for r in R.rows if r["mode"] == "procrustes")
+    pooled = Dict{String,NTuple{2,Float64}}()
+    for cls in ("end", "interior")
+        sel = [r for r in values(proc) if r["position"] == cls]
+        dof = isempty(sel) ? 0.0 : sum(r["dof"] for r in sel)
+        pooled[cls] = dof > 0 ? (pooled_sd(sum(r["ss_along"] for r in sel), dof), pooled_sd(sum(r["ss_across"] for r in sel), dof)) : (NaN, NaN)
+    end
+    out = Dict{String,String}[]
+    for key in sort(collect(keys(R.geo)))
+        f, lobe = key; g = R.geo[key]; a = R.lobes_abs[f][lobe]; n = R.counts[f]
+        pk = get(R.phys, key, ""); t = R.tracks[f]
+        used = get(R.used, t, String[])
+        rank = isempty(pk) ? 0 : parse(Int, split(pk, "_")[end])
+        pr = get(proc, (t, rank), nothing)
+        if pr !== nothing && f in used && length(used) >= MIN_TRACK_SCANS
+            sda, sdc = pooled_sd(pr["ss_along"], pr["dof"]), pooled_sd(pr["ss_across"], pr["dof"]); src = "track"
+        else
+            sda, sdc = pooled[lobe in (1, n) ? "end" : "interior"]
+            src = isnan(sda) ? "none" : "cohort"
+        end
+        push!(out, Dict("file" => f, "lobe" => string(lobe), "x_nm" => g["x_nm"], "y_nm" => g["y_nm"],
+            "abs_x_nm" => @sprintf("%.4f", a[1]), "abs_y_nm" => @sprintf("%.4f", a[2]), "physical_lobe" => pk,
+            "track_scans" => string(f in used ? length(used) : 1),
+            "sd_along_nm" => isnan(sda) ? "NA" : @sprintf("%.4f", sda),
+            "sd_across_nm" => isnan(sdc) ? "NA" : @sprintf("%.4f", sdc), "sd_source" => src))
+    end
+    return out
 end
 
 function main(args=ARGS)
     o = repeat_options(args)
     o === nothing && return println("report_position_repeatability.jl --run RUN_DIR --data-dir RAW_DIR --outdir NEW_DIR")
-    rows, spacing, rotations = repeatability(abspath(o["--run"]), o["--data-dir"])
+    R = repeatability(abspath(o["--run"]), o["--data-dir"])
+    rows, spacing, rotations = R.rows, R.spacing, R.rotations
     out = o["--outdir"]; mkpath(out)
+    write_table(joinpath(out, "positions.tsv"), ["file", "lobe", "x_nm", "y_nm", "abs_x_nm", "abs_y_nm", "physical_lobe",
+        "track_scans", "sd_along_nm", "sd_across_nm", "sd_source"], position_rows(R))
     write_table(joinpath(out, "scan_rotation.tsv"), ["track", "file", "scan_angle_deg", "rotation_deg"], rotations)
     write_table(joinpath(out, "lobe_scatter.tsv"), ["track", "rank", "N", "scans", "mode", "position", "sd_along_nm", "sd_across_nm"],
         [Dict("track" => string(r["track"]), "rank" => string(r["rank"]), "N" => string(r["N"]), "scans" => string(r["scans"]),

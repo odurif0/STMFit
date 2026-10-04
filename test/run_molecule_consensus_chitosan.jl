@@ -144,7 +144,7 @@ function execute_run(o; runner=run_stage, thread_budget=min(Threads.nthreads(), 
     tag = @sprintf("%03d", round(Int, 100cfg["model"]["max_overlap"]))
     reuse = haskey(o, "--selected-summary")
     println("$(length(files)) raw scans; ", reuse ? "reused per-scan counts" : "$nchunks counting shards",
-            " -> scan geometry -> molecule consensus -> assignment -> molecule fusion (if configured)")
+            " -> scan geometry -> molecule consensus -> assignment -> molecule fusion (if configured) -> positions")
     haskey(o, "--dry-run") && return println("Dry-run: no pixels read, no output written; no labels or grades are inputs")
     out = abspath(o["--outdir"]); mkpath(joinpath(out, "logs")); stage = "inputs"
     try
@@ -215,6 +215,11 @@ function execute_run(o; runner=run_stage, thread_budget=min(Threads.nthreads(), 
         cp(final_predictions, joinpath(out, "predictions.tsv"))
         stage = "report"
         write_chain_report(consensus, final_predictions, joinpath(out, "chain_report.tsv"))
+        # Label-free position uncertainty from repeated scans (does not change any earlier output).
+        stage = "positions"
+        runner(out, stage, "report_position_repeatability.jl", ["--run", out, "--data-dir", raw,
+            "--outdir", joinpath(out, "position_repeatability")]; threads=1)
+        cp(joinpath(out, "position_repeatability", "positions.tsv"), joinpath(out, "positions.tsv"))
     catch e
         write_table(joinpath(out, "failures.tsv"), ["stage", "reason"],
             [Dict("stage" => stage, "reason" => replace(sprint(showerror, e), '\n' => ' ', '\t' => ' '))])

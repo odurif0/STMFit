@@ -84,6 +84,11 @@ function verify_run(run; data_dir="")
         println("fusion: pi=$(p["pi"]) theta0=$(p["theta0"]) theta1=$(p["theta1"]) rows_fused=$(p["rows_fused"]) ",
                 "calls_changed=$(count(r -> isfused(r) && r["predicted"] != r["scan_predicted"], fused))")
     end
+    if isfile(joinpath(run, "positions.tsv"))
+        pos = tab("positions.tsv")
+        check(rows_per_file(pos) == nfinal, "positions rows equal final N")
+        check(all(r["sd_source"] in ("track", "cohort", "none") for r in pos), "known position-uncertainty sources")
+    end
     if !isempty(data_dir)
         raw = Dict{String,String}()
         for (d, _, names) in walkdir(data_dir), n in names
