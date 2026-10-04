@@ -78,8 +78,10 @@ julia -t 4 --project=. test/run_molecule_consensus_chitosan.jl \
     --consensus-config config/molecule_consensus.toml \
     --templates templates/chitosan_cc_molds_native_v1.tsv --outdir NEW_DIR
 
-# External verification and benchmark grade (labels are read only here)
-julia --project=. test/grade_consensus_run.jl --run NEW_DIR --outdir NEW_GRADE_DIR
+# External verification and benchmark grade (labels are read only here);
+# with --data-dir it also sorts one plot per molecule into
+# 1_all_exact / 2_N_exact_calls_wrong / 3_N_wrong
+julia --project=. test/grade_consensus_run.jl --run NEW_DIR --outdir NEW_GRADE_DIR --data-dir RAW_DIR
 ```
 
 Raw `.sxm` files are not tracked; see [`data/README.md`](data/README.md).

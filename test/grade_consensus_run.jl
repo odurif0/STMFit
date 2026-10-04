@@ -12,6 +12,9 @@
 #    report_unit_assignment_benchmark.jl --full145-own-n for the final (fused)
 #    and per-scan calls plus any --profile, and grade_chitosan_benchmark.jl for
 #    the per-scan and final counts. Labels are read only here.
+# 3. With --data-dir: one plot per molecule (test/plot_final_molecules.jl) in
+#    plots/1_all_exact, 2_N_exact_calls_wrong, 3_N_wrong and 4_not_in_benchmark,
+#    with the truth in the title and wrong lobes circled.
 include(joinpath(@__DIR__, "lib", "reconstructed_unit_assignment.jl"))
 using .ReconstructedUnitAssignment
 using SHA, TOML
@@ -131,6 +134,56 @@ function grade_run(run, outdir, profiles)
 end
 run_cmd(c) = Base.run(c)
 
+"""Per-scan benchmark category of the final result, for sorting plots.
+
+`grades`: rows of the report's units/grades/final.tsv; `truth`: file => true
+sequence; `pred`: file => final calls in lobe order; `run_files`: every scan.
+Returns file => (category, note, wrong lobes)."""
+function plot_categories(grades, truth, pred, run_files)
+    g = Dict(basename(r["file"]) => r for r in grades)
+    out = Dict{String,Tuple{String,String,Vector{Int}}}()
+    for f in run_files
+        calls = pred[f]
+        if !haskey(g, f)
+            out[f] = ("4_not_in_benchmark", "not in the benchmark: not graded", Int[]); continue
+        end
+        t = truth[f]; n = length(calls)
+        if n != length(t)
+            out[f] = ("3_N_wrong", "benchmark: N wrong (found $n, truth $(length(t)), sequence $t)", Int[]); continue
+        end
+        ref = g[f]["phys_alignment"] == "reverse" ? reverse(t) : t
+        wrong = [i for i in 1:n if string(calls[i]) != string(ref[i])]
+        out[f] = isempty(wrong) ? ("1_all_exact", "benchmark: all exact (truth $ref)", wrong) :
+            ("2_N_exact_calls_wrong", "benchmark: N exact, $(length(wrong)) wrong or uncertain call(s) at lobe(s) $(join(wrong, ",")) (truth $ref)", wrong)
+    end
+    return out
+end
+
+"Plain TSV reader for grading files (the method's reader refuses label columns by design)."
+function read_grading_tsv(path)
+    lines = filter(l -> !isempty(strip(l)) && !startswith(l, "#"), readlines(path))
+    header = split(first(lines), '\t')
+    return [Dict(String(h) => String(v) for (h, v) in zip(header, split(l, '\t'; keepempty=true))) for l in lines[2:end]]
+end
+
+function grade_plots(run, outdir, rawdir)
+    grades = read_grading_tsv(joinpath(outdir, "units", "grades", "final.tsv"))
+    trows = read_grading_tsv(joinpath(outdir, "units", "control_full145_truth.tsv"))
+    truth = Dict(basename(r["file"]) => r["sequence"] for r in trows)
+    _, prows = lobe_table(joinpath(run, "predictions.tsv"); required=["predicted"])
+    pred = Dict{String,String}()
+    for f in unique(first.(collect(keys(prows))))
+        pred[f] = join(prows[(f, i)]["predicted"] for i in 1:count(k -> first(k) == f, keys(prows)))
+    end
+    cats = plot_categories(grades, truth, pred, sort(collect(keys(pred))))
+    ann = joinpath(outdir, "plot_annotations.tsv")
+    write_table(ann, ["file", "category", "note", "wrong_lobes"],
+        [Dict("file" => f, "category" => c[1], "note" => c[2], "wrong_lobes" => join(c[3], ",")) for (f, c) in sort(collect(cats))])
+    julia = Base.julia_cmd()
+    cd(() -> run_cmd(`$julia --project=$ROOT $(joinpath(ROOT, "test", "plot_final_molecules.jl")) --run $run --data-dir $rawdir
+                      --config $(joinpath(ROOT, "config", "chitosan.toml")) --outdir $(joinpath(outdir, "plots")) --annotations $ann`), ROOT)
+end
+
 function main(args=ARGS)
     parsed = grade_options(args)
     if parsed === nothing
@@ -141,6 +194,11 @@ function main(args=ARGS)
     verify_run(o["--run"]; data_dir=get(o, "--data-dir", "")) || error("Integrity checks failed; no grade emitted")
     haskey(o, "--verify-only") && return println("ALL PASS")
     grade_run(abspath(o["--run"]), abspath(o["--outdir"]), profiles)
+    if haskey(o, "--data-dir")
+        grade_plots(abspath(o["--run"]), abspath(o["--outdir"]), abspath(o["--data-dir"]))
+    else
+        println("No --data-dir: molecule plots skipped")
+    end
 end
 
 abspath(PROGRAM_FILE) == abspath(@__FILE__) && main()

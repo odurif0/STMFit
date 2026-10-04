@@ -144,7 +144,7 @@ function execute_run(o; runner=run_stage, thread_budget=min(Threads.nthreads(), 
     tag = @sprintf("%03d", round(Int, 100cfg["model"]["max_overlap"]))
     reuse = haskey(o, "--selected-summary")
     println("$(length(files)) raw scans; ", reuse ? "reused per-scan counts" : "$nchunks counting shards",
-            " -> scan geometry -> molecule consensus -> assignment -> molecule fusion (if configured) -> positions")
+            " -> scan geometry -> molecule consensus -> assignment -> molecule fusion (if configured) -> positions -> plots")
     haskey(o, "--dry-run") && return println("Dry-run: no pixels read, no output written; no labels or grades are inputs")
     out = abspath(o["--outdir"]); mkpath(joinpath(out, "logs")); stage = "inputs"
     try
@@ -220,6 +220,10 @@ function execute_run(o; runner=run_stage, thread_budget=min(Threads.nthreads(), 
         runner(out, stage, "report_position_repeatability.jl", ["--run", out, "--data-dir", raw,
             "--outdir", joinpath(out, "position_repeatability")]; threads=1)
         cp(joinpath(out, "position_repeatability", "positions.tsv"), joinpath(out, "positions.tsv"))
+        # One label-free plot per molecule scan (final calls, positions, consensus outcome).
+        stage = "plots"
+        runner(out, stage, "plot_final_molecules.jl", ["--run", out, "--data-dir", raw,
+            "--config", abspath(o["--count-config"]), "--outdir", joinpath(out, "plots")]; threads=1)
     catch e
         write_table(joinpath(out, "failures.tsv"), ["stage", "reason"],
             [Dict("stage" => stage, "reason" => replace(sprint(showerror, e), '\n' => ' ', '\t' => ' '))])

@@ -75,7 +75,17 @@ It then filters predictions to the 145 benchmark scans and writes:
 
 - `units/report.md`, `units/summary.tsv`: full145 own-N unit grade for the final
   (`final`) and per-scan (`per_scan`) calls, plus any `--profile`;
-- `counts_final.tsv`, `counts_per_scan.tsv`: count grades (exact and ±1).
+- `counts_final.tsv`, `counts_per_scan.tsv`: count grades (exact and ±1);
+- with `--data-dir`, `plots/`: one image per molecule sorted by benchmark
+  outcome:
+  - `1_all_exact/`;
+  - `2_N_exact_calls_wrong/` (wrong lobes circled);
+  - `3_N_wrong/`;
+  - `4_not_in_benchmark/`.
+
+  Each plot carries the truth in its title; `plot_annotations.tsv` holds the
+  categories. This sorting reads labels and exists only in the grading step;
+  a run's own `plots/` is label-free.
 
 Expected for the promoted method (deterministic fits): final 771/870 correct,
 88/145 exact chains, 865/870 classified, 94 errors; counts 137/145 exact,

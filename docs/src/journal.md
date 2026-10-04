@@ -655,3 +655,25 @@ The local checkout went from 93 GB to 9.6 GB.
   here, and their code is at the tag `archive/pre-cleanup-20260929`.
 - No human review decision was lost: the review outcomes are in the tracked
   `benchmarks/` files.
+
+### 2026-10-04 — One plot per molecule in the final outputs
+
+User request: for the shareable pipeline, a plot of every molecule in the
+final result, sorted so that a scientist can see quickly what is exact, what
+has the right N, and what is problematic.
+
+- **Run (label-free).** The new final stage `test/plot_final_molecules.jl`
+  draws one image per scan: the preprocessed STM image around the chain, the
+  final fused calls coloured with P(GlcNAc), the 2σ position ellipses from
+  `positions.tsv`, and a title with N (and the per-scan N when the consensus
+  changed it), the consensus outcome, the call string and the mean
+  confidence. Plots go to `plots/all/` and to label-free folders
+  (`consensus_agrees`, `consensus_corrected`, `not_checked_by_consensus`,
+  `with_uncertain_calls`). This works on unknown data.
+- **Grading (labels).** With `--data-dir`, `grade_consensus_run.jl` sorts the
+  same plots into `1_all_exact`, `2_N_exact_calls_wrong` (wrong lobes
+  circled), `3_N_wrong` and `4_not_in_benchmark`, with the truth in the
+  title. The grading step reads label files with its own reader; the
+  method's reader keeps refusing label columns.
+- **On run A:** 88 / 49 / 8 / 1 plots, consistent with the report (88 exact
+  chains, 137 exact N, 145 graded). The 146 plots take about 75 s.
