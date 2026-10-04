@@ -633,3 +633,25 @@ match) reproduces run A byte for byte on every earlier output (only output
 paths and logs differ) and adds the six new files. `positions.tsv` (876
 lobes: 651 `track`, 225 `cohort`) is identical to the standalone report on
 run A. A 12-scan quickstart run (job 12082847, 16 min) passes all checks.
+
+### 2026-10-04 — Local storage cleanup
+
+The local checkout went from 93 GB to 9.6 GB.
+
+- **`qe/`** keeps only the two accepted states, `glcn_restart5` and `glcnac`
+  (SCF wavefunctions, LDOS cubes, logs; 6.4 GB). After the Viper cleanup these
+  are the only copy, and they should be backed up. The outputs of the
+  September DFT diagnostic campaigns, the preliminary runs and the
+  intermediate relaxation steps were deleted (~64 GB).
+- **`results/`** keeps the reference evidence:
+  - `molecule_consensus_20260929`, `support_determinism_20260930`,
+    `assignment_robustness_20260930` and `positions_20261004`;
+  - the comparison profiles in `unit_assignment`, `promoted_counts_20260924`
+    and `hybrid_reproduction_20260924`;
+  - `reconstructed_cc_soft_v1` (benchmark symlinks) and
+    `calibration_measurements_20260924`.
+- The other 178 result folders, outputs of earlier experiments, were deleted.
+  Journal paths to them no longer resolve locally. Their conclusions stay
+  here, and their code is at the tag `archive/pre-cleanup-20260929`.
+- No human review decision was lost: the review outcomes are in the tracked
+  `benchmarks/` files.

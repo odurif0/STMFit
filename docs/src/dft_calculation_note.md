@@ -121,6 +121,6 @@ versioned mold file and a new graded experiment.
 | Item | Location |
 |---|---|
 | Structures, slab metadata, QE input templates | `hpc/qe_molds/` |
-| QE outputs and cubes (large, untracked) | `qe/` locally, `/ptmp/oldu/...` and `/u/oldu/...` on the cluster |
+| Accepted SCF states, LDOS cubes and logs (large, untracked) | `qe/glcn_restart5/` and `qe/glcnac/` (6.4 GB) on the local machine only, since the October 2026 cleanup. Keep a backup (external disk or the Zenodo data record). The diagnostic campaign outputs were deleted. |
 | Frames, molds and provenance | `templates/` |
 | Retired preparation, audit and diagnostic scripts | tag `archive/pre-cleanup-20260929` |
