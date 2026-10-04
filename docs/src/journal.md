@@ -612,3 +612,24 @@ and their scatter measured.
   distortion between scans and real flexing.
 
 Outputs: `results/support_determinism_20260930/position_repeatability_runA/`.
+
+### 2026-10-04 — Position uncertainty integrated into the pipeline
+
+`run_molecule_consensus_chitosan.jl` now ends with
+`report_position_repeatability.jl`, which writes `positions.tsv` and
+`position_repeatability/`. Each lobe gets its image and absolute position,
+its physical lobe, and a 1σ uncertainty along and across the chain:
+
+- `sd_source = track`: the lobe's own scatter, when its molecule has at least
+  3 aligned scans;
+- `sd_source = cohort`: otherwise, the pooled value for its position class
+  (end or interior);
+- `sd_source = none`: the run has no repeated molecule.
+
+`grade_consensus_run.jl` checks the new table.
+
+**Verification.** Viper job 12082827 (source `08c7087`, 1h44, 693 hashes
+match) reproduces run A byte for byte on every earlier output (only output
+paths and logs differ) and adds the six new files. `positions.tsv` (876
+lobes: 651 `track`, 225 `cohort`) is identical to the standalone report on
+run A. A 12-scan quickstart run (job 12082847, 16 min) passes all checks.
