@@ -29,6 +29,10 @@ exact chains, 865/870 classified, 94 errors, against the previous record
 **Positions:** lobe positions repeat to 0.07 nm along and 0.09–0.11 nm across
 the chain over repeated scans (2026-10-04).
 
+**6-mer data (2026-10-05):** the 679 technically usable local 6-mer scans are
+gathered in `/home/durif/Rebecca/data/chitosan_6mer_usable/`; 478 of them were
+never reviewed for the benchmark. The institute share is not yet added.
+
 **Limits:** NKNNKN edge-adjacency confound. The benchmark GlcNAc signal is
 the contrast with the dimmer terminal lobe; without it the image features
 separate the classes only weakly (AUC ≤ 0.66, amplitude) or not at all
@@ -682,3 +686,43 @@ has the right N, and what is problematic.
   plots therefore show the fused image that was fitted.
 - **Viper.** The 12-scan quickstart with the integrated stage (job 12084468,
   `a80cad7`) still matches all 8 reference checksums and adds 12 plots.
+
+### 2026-10-05 — 6-mer candidate scans: catalog and central folder
+
+User request (roadmap step 1): look for other usable chitosan 6-mer images for
+the benchmark, and gather every real, usable image once in one folder. Sources:
+`/home/durif/Rebecca/data/data` (14 sessions, 935 scans) and the institute share
+`(NKN)2` (not yet mounted here).
+
+- **Catalog (label-free).** `test/catalog_sxm_candidates.jl` reads headers,
+  pixels and the fit's molecule ROI; no fit, no count, no label. Statuses:
+  `overview` (frame > 20 nm, the consensus collection limit),
+  `object_crosses_frame` (the observed ROI touches two opposite borders),
+  `excluded_by_review` (`benchmarks/chitosan_6mer_visual_exclusions.tsv`: the
+  34 human rejections of the inventory, mostly non-chitosan) and `duplicate`
+  (same bytes or same acquisition). Review flags: `partial_scan`,
+  `roi_touches_unscanned`, `roi_touches_border`, `several_objects`,
+  `fwd_bwd_mismatch`. `--copy-to` keeps a flat central folder with a
+  provenance `MANIFEST.tsv`; a later source only adds the scans it lacks.
+- **Rejected criterion.** Requiring at least 95% finite pixels excluded 31 of
+  the 145 benchmark scans, which the pipeline handles. Partial scans are a
+  flag instead. The frame-crossing status removes 54 scans (2×4 nm zooms on
+  part of a chain, substrate steps), none of the 145.
+- **Local result.** 935 scans: 679 usable, 195 overview, 54 crossing the frame,
+  7 rejected by review (the other 27 rejections were already overview or
+  crossing). No duplicate inside the tree; the 146 top-level files of
+  `data/chitosan_6mer/` are byte copies of session scans. Central folder:
+  `/home/durif/Rebecca/data/chitosan_6mer_usable/` (679 scans, 1.3 GB).
+- **Candidates (grading side).** `test/report_benchmark_candidates.jl` splits
+  the usable scans with the benchmark manifest and the earlier pre-assignment
+  review: 145 in the benchmark (all usable), 56 reviewed before and not kept,
+  478 never reviewed (194 without a flag, 284 flagged) in eight sessions
+  (20240310–14, 20240815, 20241113–14). Many are repeat scans of the same
+  molecules. Sheets: `results/benchmark_candidates_20261005/local_review/`.
+- **Caveat.** Some earlier pre-exclusions used fit outputs
+  (`pre_exclude_likely_nonchain_or_bad_guard_collapse`). Additions must be
+  decided by eye, without method outputs: the truth NKNNKN only holds for one
+  intact molecule, fully imaged.
+- **Next.** Add the share as a second root into the same central folder. Then
+  the human decision on the never-reviewed scans, and a grade of the frozen
+  method on the additions before any re-optimisation (step 1.5).

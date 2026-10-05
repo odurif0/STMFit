@@ -1,0 +1,38 @@
+# Raw 6-mer scans rejected by human visual inspection (from chitosan_6mer_data_inventory.tsv,
+# status manual_excluded). Input to catalog_sxm_candidates.jl --exclude: these scans stay out of
+# the central usable folder. Not a label: no count or sequence. Add a row to reject a scan.
+file	reason
+240307_001.sxm	Not chitosan
+240307_002.sxm	Not chitosan
+240307_003.sxm	Not chitosan
+240307_004.sxm	Not chitosan
+240307_005.sxm	Not chitosan
+240307_007.sxm	Not chitosan
+240307_008.sxm	Not chitosan
+240307_009.sxm	Not chitosan
+240307_011.sxm	Not chitosan
+240307_018.sxm	Not chitosan
+240814_001.sxm	excluded by manual visual inspection
+240814_002.sxm	excluded by manual visual inspection
+240814_003.sxm	excluded by manual visual inspection
+240814_004.sxm	excluded by manual visual inspection
+240814_005.sxm	excluded by manual visual inspection
+240814_006.sxm	excluded by manual visual inspection
+240814_007.sxm	excluded by manual visual inspection
+240814_008.sxm	excluded by manual visual inspection
+240814_009.sxm	excluded by manual visual inspection
+240814_010.sxm	excluded by manual visual inspection
+240816_001.sxm	non-chitosan by manual visual inspection
+240816_003.sxm	double chitosan / two objects; not a single-chain benchmark
+240816_007.sxm	non-chitosan by manual visual inspection
+240816_008.sxm	non-chitosan by manual visual inspection
+240816_009.sxm	non-chitosan by manual visual inspection
+240816_010.sxm	non-chitosan by manual visual inspection
+240818_001.sxm	non-chitosan by manual visual inspection
+240818_002.sxm	non-chitosan by manual visual inspection
+240818_003.sxm	non-chitosan by manual visual inspection
+240818_008.sxm	non-chitosan by manual visual inspection
+240818_010.sxm	non-chitosan by manual visual inspection
+240818_014.sxm	non-chitosan by manual visual inspection
+240818_022.sxm	non-chitosan by manual visual inspection
+240818_023.sxm	non-chitosan by manual visual inspection

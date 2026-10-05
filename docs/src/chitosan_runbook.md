@@ -162,5 +162,7 @@ compares the native mold builder with the Python reference
 | `test/measure_calibration.jl SCAN.sxm` | Apparent width/spacing audit (no config written) |
 | `test/validate_unit_predictions.jl`, `test/summarize_unknown_unit_qc.jl` | Prediction integrity and review queue |
 | `test/compare_reconstructed_champion.jl` | Keyed comparison of two prediction tables |
+| `test/catalog_sxm_candidates.jl --roots DIR[,DIR] ... --outdir NEW [--exclude TSV] [--copy-to CENTRAL]` | Technical triage of raw scans (no fit, no label), contact sheets, deduplicated central folder |
+| `test/report_benchmark_candidates.jl --catalog TSV --count-config TOML --outdir NEW` | Grading side: usable scans not yet in the benchmark, with review sheets |
 | `test/report_position_repeatability.jl --run RUN --data-dir RAW --outdir NEW` | Label-free lobe-position repeatability across repeated scans ([Pipeline](pipeline.md)) |
 | `test/assignment_view_variants.jl RUN VARIANT NEW RAW` | Research harness: rerun the classifier stages of a run with other feature views |
