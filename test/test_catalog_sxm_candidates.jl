@@ -33,7 +33,7 @@ if all(f -> isfile(joinpath(RAW, f)), SCANS)
             @test only(r for r in rows if r["file"] == SCANS[1])["session"] == "20240817_LHe_Cu100"
             @test sort(filter(f -> endswith(f, ".sxm"), readdir(central))) == [SCANS[1]]
             redirect_stdout(devnull) do
-                main(vcat(["--roots", joinpath(tmp, "rootB"), "--outdir", joinpath(tmp, "c2"), "--copy-to", central], cfg))
+                main(vcat(["--root", joinpath(tmp, "rootB"), "--outdir", joinpath(tmp, "c2"), "--copy-to", central], cfg))
             end
             _, rows = read_table(joinpath(tmp, "c2", "catalog.tsv"))
             dup = only(r for r in rows if r["file"] == "renamed_copy.sxm")

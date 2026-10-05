@@ -29,9 +29,11 @@ exact chains, 865/870 classified, 94 errors, against the previous record
 **Positions:** lobe positions repeat to 0.07 nm along and 0.09–0.11 nm across
 the chain over repeated scans (2026-10-04).
 
-**6-mer data (2026-10-05):** the 679 technically usable local 6-mer scans are
-gathered in `/home/durif/Rebecca/data/chitosan_6mer_usable/`; 478 of them were
-never reviewed for the benchmark. The institute share is not yet added.
+**6-mer data (2026-10-05):** every technically usable (NKN)2 scan, local and
+on the institute share, is gathered once in
+`/home/durif/Rebecca/data/chitosan_6mer_usable/`: `Cu100/` (820 scans) and
+`Ag111/` (160 scans, another substrate). 619 Cu(100) scans were never
+reviewed for the benchmark.
 
 **Limits:** NKNNKN edge-adjacency confound. The benchmark GlcNAc signal is
 the contrast with the dimmer terminal lobe; without it the image features
@@ -712,7 +714,8 @@ the benchmark, and gather every real, usable image once in one folder. Sources:
   7 rejected by review (the other 27 rejections were already overview or
   crossing). No duplicate inside the tree; the 146 top-level files of
   `data/chitosan_6mer/` are byte copies of session scans. Central folder:
-  `/home/durif/Rebecca/data/chitosan_6mer_usable/` (679 scans, 1.3 GB).
+  `/home/durif/Rebecca/data/chitosan_6mer_usable/` (679 scans, 1.3 GB; moved
+  to its `Cu100/` subfolder once the share was added, see below).
 - **Candidates (grading side).** `test/report_benchmark_candidates.jl` splits
   the usable scans with the benchmark manifest and the earlier pre-assignment
   review: 145 in the benchmark (all usable), 56 reviewed before and not kept,
@@ -723,6 +726,24 @@ the benchmark, and gather every real, usable image once in one folder. Sources:
   (`pre_exclude_likely_nonchain_or_bad_guard_collapse`). Additions must be
   decided by eye, without method outputs: the truth NKNNKN only holds for one
   intact molecule, fully imaged.
-- **Next.** Add the share as a second root into the same central folder. Then
-  the human decision on the never-reviewed scans, and a grade of the frozen
-  method on the additions before any re-optimisation (step 1.5).
+- **Institute share.** `hive.fkf.mpg.de/esi/DATA/STM/STM_DATA/(NKN)2`,
+  mounted by the user (gvfs), holds the same 14 sessions and 11 more. The
+  share copies of the 14 sessions are byte-identical to the local tree (the
+  679 central scans come back as duplicates, every other status repeats).
+  The new sessions:
+  - Cu(100), March–May 2025 (`Cu100LHe*`, 214 scans): 141 usable, 66
+    overview, 7 crossing the frame. Added to `chitosan_6mer_usable/Cu100/`
+    (820 scans).
+  - Ag(111), July 2025 (six `2025*_LHe_Ag111` sessions, 286 scans): 160
+    usable, 107 overview, 19 crossing. Kept apart in
+    `chitosan_6mer_usable/Ag111/`: the counting calibration is a Cu(100)
+    calibration, and the substrate changes the apparent heights and contrast.
+  - Bias: 141 of the 145 benchmark scans are at −0.3 V; the new Cu(100) scans
+    are mostly at −0.3 V (98 of 141), the Ag(111) scans spread over −0.05 to
+    −0.3 V.
+  `--root` (repeatable) was added because the gvfs path contains commas.
+  Catalogs and sheets: `results/benchmark_candidates_20261005/share_*_catalog/`.
+- **Next.** The human decision on the never-reviewed Cu(100) scans (478 from
+  2024, 141 from 2025), then a grade of the frozen method on the additions
+  before any re-optimisation (step 1.5). Ag(111) is a separate question: a
+  new substrate would need its own calibration and its own benchmark.

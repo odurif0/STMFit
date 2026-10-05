@@ -7,7 +7,7 @@ subdirectory per dataset, or point scripts elsewhere with `--data-dir` (or
 | Dataset | Local | Viper | Content |
 |---|---|---|---|
 | 6-mer lab tree | `data/chitosan_6mer/` (14 session folders, 935 scans, plus 146 top-level copies of benchmark scans; source `/home/durif/Rebecca/data/data/`) | — | Inventory in `benchmarks/chitosan_6mer_data_inventory.tsv` |
-| 6-mer usable scans | `/home/durif/Rebecca/data/chitosan_6mer_usable/` (flat, deduplicated, `MANIFEST.tsv`) | — | Built by `test/catalog_sxm_candidates.jl --copy-to` (journal 2026-10-05) |
+| 6-mer usable scans | `/home/durif/Rebecca/data/chitosan_6mer_usable/Cu100/` (820) and `.../Ag111/` (160); flat, deduplicated, each with `MANIFEST.tsv` | — | Local tree plus the institute share `hive.fkf.mpg.de/esi/DATA/STM/STM_DATA/(NKN)2`; built by `test/catalog_sxm_candidates.jl --copy-to` (journal 2026-10-05) |
 | 6-mer benchmark cohort | symlinks in `results/reconstructed_cc_soft_v1/full146_raw/` | `/ptmp/oldu/stmfit/full146_v1_inputs/full146_raw/` | 146 scans; 145 graded (`benchmarks/chitosan_6mer_counting_confirmed.toml`) |
 | Unknown 10–20mers | `/home/durif/Rebecca/data/10_20mer_analysis/` (25 targets) | `/ptmp/oldu/stmfit/data_10_20mer` | Repeat candidates are collected with `test/collect_repeat_scans.jl` |
 

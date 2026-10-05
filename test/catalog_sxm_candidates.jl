@@ -2,7 +2,7 @@
 # Catalog and technical triage of raw STM scans (benchmark candidates, new data).
 #
 # Usage:
-#   julia -t 4 --project=. test/catalog_sxm_candidates.jl --roots DIR[,DIR...] \
+#   julia -t 4 --project=. test/catalog_sxm_candidates.jl --roots DIR[,DIR...] | --root DIR [--root DIR ...] \
 #       --consensus-config config/molecule_consensus.toml --count-config config/chitosan.toml \
 #       --outdir NEW_DIR [--exclude TSV] [--copy-to CENTRAL_DIR]
 #
@@ -32,13 +32,15 @@ const G = GaussianFit2D
 
 function catalog_options(args)
     ("--help" in args || "-h" in args || isempty(args)) && return nothing
-    o = Dict{String,String}(); i = 1
+    o = Dict{String,String}(); roots = String[]; i = 1
     while i <= length(args)
         k = args[i]
-        k in ("--roots", "--consensus-config", "--count-config", "--outdir", "--copy-to", "--exclude") && i < length(args) ||
+        k in ("--roots", "--root", "--consensus-config", "--count-config", "--outdir", "--copy-to", "--exclude") && i < length(args) ||
             error("Unknown option or missing value: $k")
-        o[k] = args[i+1]; i += 2
+        k == "--roots" ? append!(roots, split(args[i+1], ",")) : k == "--root" ? push!(roots, args[i+1]) : (o[k] = args[i+1])
+        i += 2
     end
+    isempty(roots) || (o["--roots"] = join(roots, '\n'))   # --root keeps paths that contain commas
     all(haskey(o, k) for k in ("--roots", "--consensus-config", "--count-config", "--outdir")) ||
         error("Required: --roots --consensus-config --count-config --outdir")
     (ispath(o["--outdir"]) || islink(o["--outdir"])) && error("Output exists: $(o["--outdir"])")
@@ -144,11 +146,11 @@ end
 
 function main(args=ARGS)
     o = catalog_options(args)
-    o === nothing && return println("catalog_sxm_candidates.jl --roots DIR[,DIR] --consensus-config TOML --count-config TOML --outdir NEW_DIR [--exclude TSV] [--copy-to CENTRAL_DIR]")
+    o === nothing && return println("catalog_sxm_candidates.jl --roots DIR[,DIR] | --root DIR... --consensus-config TOML --count-config TOML --outdir NEW_DIR [--exclude TSV] [--copy-to CENTRAL_DIR]")
     max_range = Float64(TOML.parsefile(o["--consensus-config"])["selection"]["collect_max_range_nm"])
     pcfg = count_preprocessing(o["--count-config"])
     paths = String[]
-    for root in split(o["--roots"], ","), (d, _, names) in walkdir(root), n in names
+    for root in split(o["--roots"], '\n'), (d, _, names) in walkdir(root), n in names
         endswith(lowercase(n), ".sxm") && push!(paths, joinpath(d, n))
     end
     sort!(paths)
