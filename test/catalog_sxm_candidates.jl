@@ -113,7 +113,7 @@ function inspect_scan(path, pcfg, max_range)
     ac = G._weighted_roi_axis(x, y, zr)
     row["roi_length_nm"] = @sprintf("%.2f", ac.tmax - ac.tmin)
     row["flags"] = join(flags, ",")
-    return row, (xs=xs, ys=ys, z=z0, mask=mask)
+    return row, (xs=xs, ys=ys, z=z0, mask=mask, observed=observed)
 end
 
 function contact_sheets(rows, views, outdir; title="Usable scans")

@@ -29,11 +29,12 @@ exact chains, 865/870 classified, 94 errors, against the previous record
 **Positions:** lobe positions repeat to 0.07 nm along and 0.09–0.11 nm across
 the chain over repeated scans (2026-10-04).
 
-**6-mer data (2026-10-05):** every technically usable (NKN)2 scan, local and
-on the institute share, is gathered once in
-`/home/durif/Rebecca/data/chitosan_6mer_usable/`: `Cu100/` (820 scans) and
-`Ag111/` (160 scans, another substrate). 619 Cu(100) scans were never
-reviewed for the benchmark.
+**6-mer data (2026-10-05):** every (NKN)2 Cu(100) scan, local and on the
+institute share, is triaged once in `/home/durif/Rebecca/data/chitosan_6mer_Cu100/`:
+`gardes/` (526, the 145 benchmark scans plus 381 candidates) and `ecartes/`
+(623, with motif), from `benchmarks/chitosan_6mer_cu100_triage.tsv`. The 380
+new kept scans are a first visual pass awaiting the user's check. Ag(111)
+(160 usable scans) sits untriaged in `chitosan_6mer_Ag111/`.
 
 **Limits:** NKNNKN edge-adjacency confound. The benchmark GlcNAc signal is
 the contrast with the dimmer terminal lobe; without it the image features
@@ -747,3 +748,48 @@ the benchmark, and gather every real, usable image once in one folder. Sources:
   2024, 141 from 2025), then a grade of the frozen method on the additions
   before any re-optimisation (step 1.5). Ag(111) is a separate question: a
   new substrate would need its own calibration and its own benchmark.
+
+### 2026-10-05 — Kept/discarded triage of the Cu(100) 6-mer scans (first pass)
+
+User request: two folders, the scans kept for the benchmark and the scans
+discarded, with a first triage done by the assistant; the user then checks
+both folders and adjusts.
+
+- **Scope.** Every unique (NKN)2 Cu(100) scan of the local tree and the share
+  (1,149, deduplicated by sha256). Ag(111) is left out (another substrate, not
+  benchmark material).
+- **Rules.** Catalog statuses are applied as they are: overview → `vue_large`
+  (261), frame crossing → `molecule_coupee` (61), inventory rejections →
+  `revue_anterieure_exclu` (7). The 145 manifest scans are kept. The earlier
+  human verdicts are kept: 46 ambiguous/excluded scans stay discarded
+  (`revue_anterieure_ambigu`) and `240310_Cu100009` (accepted, outside the
+  manifest) stays kept. The nine earlier pre-exclusions based on fit outputs
+  were judged again by eye.
+- **First visual pass.** 628 scans (619 never reviewed plus those nine) were
+  judged on fixed-scale review sheets (8 × 8 nm window centred on the
+  molecule, 2 nm bar). A scan is kept when it shows one isolated chain, fully
+  imaged, with no artefact on the molecule. Motifs: `molecule_coupee` (edge or
+  unscanned zone), `plusieurs_objets`, `pas_de_molecule`, `artefact_pointe`
+  (line jumps, streaks, doubled image, tip change), `pas_6mere_long`, `pas_6mere_court`, and
+  `incertain` for borderline cases. Blur alone is not a reason; the ROI length
+  (benchmark scans: 3.6–4.5 nm, 5–95%) only served as an aid for clearly
+  long or short objects, and for blurred elongated objects that were not
+  clearly the same molecule as a kept series.
+  Result: 380 kept, 248 discarded (90 `incertain`).
+- **Totals.** 526 kept (145 benchmark + 1 earlier accepted + 380 new) and 623
+  discarded: `vue_large` 261, `molecule_coupee` 101, `incertain` 90,
+  `revue_anterieure_ambigu` 46, `pas_de_molecule` 36, `artefact_pointe` 35,
+  `plusieurs_objets` 22, `pas_6mere_long` 21, `revue_anterieure_exclu` 7,
+  `pas_6mere_court` 4.
+- **Folders.** `test/report_benchmark_triage.jl` applies the table:
+  `/home/durif/Rebecca/data/chitosan_6mer_Cu100/{gardes,ecartes}` (flat, 1.2 GB
+  each, checksums verified), `tri.tsv` (decision, motif, source, note,
+  source path) and `planches/gardes`, `planches/ecartes/<motif>` for review.
+  The flat `chitosan_6mer_usable/Cu100` copy was removed (all 820 scans are
+  in the new folders); Ag(111) moved to `chitosan_6mer_Ag111/`.
+- **Caveats.** The kept set holds many repeat scans of the same molecules
+  (for example about 40 scans of `250430_*`), so the number of independent
+  molecules is much smaller than 526. The first pass is an assistant
+  judgement on thumbnails: the `incertain` folder is where a human check
+  matters most. Benchmark membership changes only after that check; then the
+  frozen method is graded on the additions (step 1.5).
