@@ -21,13 +21,14 @@ Raw `.sxm` files are not tracked ([data/README](https://github.com/odurif0/STMFi
 The 6-mer benchmark cohort is 146 raw scans; 145 of them have a confirmed
 count of 6 (`benchmarks/chitosan_6mer_counting_confirmed.toml`), and the
 control sequence `NKNNKN` is encoded `010010`
-(`benchmarks/chitosan_240817_unit_sequences.tsv`). Locally, every 6-mer
-Cu(100) scan is kept once in the reference folder `data/chitosan_6mer_Cu100/`
-(all data live in `data/`, untracked):
-the 146 cohort scans in `gardes/benchmark/`, candidates in `gardes/candidats/`,
-discarded scans in `ecartes/<motif>/`, all listed in `LISTE.tsv`. On Viper, the
-staged cohort is `/ptmp/oldu/stmfit/full146_v1_inputs/full146_raw` (symlinks,
-unique basenames).
+(`benchmarks/chitosan_240817_unit_sequences.tsv`). All data live in the
+untracked `data/` folder ([data/README](https://github.com/odurif0/STMFit/blob/main/data/README.md)):
+one copy of every raw file in `data/raw/`, working sets as links in
+`data/sets/` (the cohort is `data/sets/6mer_Cu100_benchmark/`), and
+`data/INDEX.tsv` with every scan and its decision. The sets and the index are
+rebuilt from the tables in `benchmarks/` by `test/report_data_sets.jl`. On
+Viper, the staged cohort is `/ptmp/oldu/stmfit/full146_v1_inputs/full146_raw`
+(symlinks, unique basenames).
 
 ## Run the promoted method on Viper
 
@@ -70,7 +71,7 @@ After fetching the complete run, check integrity and grade outside the method:
 
 ```bash
 julia --project=. test/grade_consensus_run.jl --run results/run_<C> \
-    --outdir results/grade_<C> --data-dir data/chitosan_6mer_Cu100/gardes/benchmark \
+    --outdir results/grade_<C> --data-dir data/sets/6mer_Cu100_benchmark \
     [--profile name=other_predictions.tsv ...]
 ```
 
@@ -169,6 +170,7 @@ compares the native mold builder with the Python reference
 | `test/compare_reconstructed_champion.jl` | Keyed comparison of two prediction tables |
 | `test/catalog_sxm_candidates.jl --roots DIR[,DIR] ... --outdir NEW [--exclude TSV] [--copy-to CENTRAL]` | Technical triage of raw scans (no fit, no label), contact sheets, deduplicated central folder |
 | `test/report_benchmark_candidates.jl --catalog TSV --count-config TOML --outdir NEW` | Grading side: usable scans not yet in the benchmark, with review sheets |
-| `test/report_benchmark_triage.jl --catalog TSV ... --count-config TOML (--sheets NEW \| --triage TSV --dest NEW)` | Grading side: fixed-scale review sheets, then kept/discarded folders from a triage table |
+| `test/report_benchmark_triage.jl --catalog TSV ... --count-config TOML --sheets NEW` | Grading side: fixed-scale review sheets for the visual triage |
+| `test/report_data_sets.jl --data data --table TSV ...` | Grading side: rebuild `data/sets/` and `data/INDEX.tsv` from the decision tables |
 | `test/report_position_repeatability.jl --run RUN --data-dir RAW --outdir NEW` | Label-free lobe-position repeatability across repeated scans ([Pipeline](pipeline.md)) |
 | `test/assignment_view_variants.jl RUN VARIANT NEW RAW` | Research harness: rerun the classifier stages of a run with other feature views |

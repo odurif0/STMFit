@@ -29,14 +29,13 @@ exact chains, 865/870 classified, 94 errors, against the previous record
 **Positions:** lobe positions repeat to 0.07 nm along and 0.09–0.11 nm across
 the chain over repeated scans (2026-10-04).
 
-**Data (2026-10-18):** all project data live in the repository's untracked
-`data/` folder (self-contained). Every (NKN)2 Cu(100) scan, local and on the
-institute share, is kept once in the reference folder `data/chitosan_6mer_Cu100/`: `gardes/benchmark/` (the 146
-scans the runs use), `gardes/candidats/` (380, first visual pass awaiting the
-user's check) and `ecartes/<motif>/` (623), listed in `LISTE.tsv` and built
-from `benchmarks/chitosan_6mer_cu100_triage.tsv`. The benchmark runs read
-`gardes/benchmark/`. Ag(111)
-(160 usable scans) sits untriaged in `chitosan_6mer_Ag111/`.
+**Data (2026-10-18):** all data live in the untracked `data/` folder: one copy
+of every raw file in `data/raw/` (`NKN2/<session>`, `10_20mer/<session>`,
+`notes/`), working sets as links in `data/sets/` (`6mer_Cu100_benchmark` 146,
+`6mer_Cu100_candidates` 380 awaiting the user's decision, `10_20mer_targets`
+25) and `data/INDEX.tsv` (2,975 raw scans with their decision), rebuilt from
+the tables in `benchmarks/` by `test/report_data_sets.jl`. Discarded scans
+(623) have no folder, only a motif.
 
 **Limits:** NKNNKN edge-adjacency confound. The benchmark GlcNAc signal is
 the contrast with the dimmer terminal lobe; without it the image features
@@ -848,4 +847,50 @@ excluded from git.
   `raw/` or the reference folder. The absolute paths inside
   `benchmarks/chitosan_6mer_data_inventory.tsv` are historical metadata, not
   read to open files.
+
+### 2026-10-18 — Data layout: raw store, working sets, one index
+
+The first centralisation mixed molecule, substrate and processing stage at
+the same level, kept duplicates (the old `data/chitosan_6mer/`, the 25
+10–20mer targets copied out of their sessions, the 2024 scans twice), left
+the 2025 and Ag(111) scans outside `raw/`, and stored each decision twice
+(file location and table). The user agreed to a new layout, with one change:
+discarded scans keep no folder, only the reason.
+
+- **`data/raw/`** holds one copy of every raw file, by sample then session.
+  - `NKN2/` has the 25 (NKN)2 sessions: 14 Cu(100) 2024 sessions with spectra,
+    5 Cu(100) 2025 sessions (214 scans) and 6 Ag(111) sessions (160 scans).
+    The 2025 scans moved there from the triage folders under their original
+    names.
+  - `10_20mer/` has the 37 sessions.
+  - `notes/` has the manual annotations, `SequenceAnalysis.xlsx`, the slides and
+    the profiles. The `251206_034.sxm` copy found among the loose files is the
+    same bytes as the one in its session and was dropped.
+- **`data/sets/`** are relative symlinks into `raw/`:
+  `6mer_Cu100_benchmark` (146), `6mer_Cu100_candidates` (380) and
+  `10_20mer_targets` (25).
+- **`data/INDEX.tsv`** has one row per raw scan (2,975): path, sample,
+  substrate, session, acquisition date and time, frame, pixels, bias, sha256,
+  and status (set, `discarded` 623, `not_triaged` 1,800, `duplicate` 1, the
+  `260222_070 - Copy.sxm` of the 10–20mer tree), motif, who decided, note.
+- **Decisions** sit only in tracked tables.
+  - The triage table now has `set` (empty means discarded, with `motif`) and
+    `raw` columns.
+  - The new `benchmarks/chitosan_10_20mer_targets.tsv` lists the 25 targets.
+  - `test/report_data_sets.jl` checks every row against `raw/` by sha256 and
+    rebuilds the sets and the index in about 40 s.
+  - `report_benchmark_triage.jl` keeps only the review sheets.
+  - `test/test_data_sets.jl` replaces `test/test_benchmark_triage.jl`.
+- **Removed after a checksum check** (every `.sxm` identical in `raw/`):
+  - the old `data/chitosan_6mer/` (1,081 files);
+  - the triage folders `data/chitosan_6mer_Cu100/` and `data/chitosan_6mer_Ag111/`;
+  - the copied targets `raw/chitosan_10_20mer_analysis/`.
+
+  The first-pass review sheets moved to
+  `results/data_review/6mer_Cu100_first_pass_20261005/`.
+- **Run inputs.** The 1,488 symlinks under `results/` now point into `raw/`.
+  None is broken and none leaves the repository.
+- **Open.** The 2025 share sessions are incomplete in `raw/NKN2`: spectra are
+  missing, and so are the 126 Ag(111) scans that were not usable. Copy them
+  when the share is mounted.
 

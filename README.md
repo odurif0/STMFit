@@ -65,7 +65,7 @@ Pkg.instantiate(); Pkg.precompile()'
 
 ```bash
 # Inspect one scan (fits and plots, no batch)
-julia --project=. test/inspect_one_file.jl data/chitosan_6mer_Cu100/gardes/benchmark/240817_004.sxm
+julia --project=. test/inspect_one_file.jl data/sets/6mer_Cu100_benchmark/240817_004.sxm
 
 # Per-scan counting only
 julia -t 4 --project=. test/batch_full.jl 146 --config config/chitosan.toml \
