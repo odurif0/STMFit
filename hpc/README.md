@@ -31,7 +31,7 @@ Host viper raven
     ControlPath ~/.ssh/master-%C
 ```
 
-Julia 1.13 on Viper: `/viper/u1/oldu/software/julia-1.13.0/bin/julia`. Code
+Julia 1.13.2 on Viper (keep it at the latest release, as locally): `/viper/u1/oldu/software/julia-1.13.2/bin/julia`. Code
 lives under `/u/<user>/code/`, data and outputs under `/ptmp/<user>/stmfit/`.
 
 ## Promoted-method run (`run_molecule_consensus.sbatch`)

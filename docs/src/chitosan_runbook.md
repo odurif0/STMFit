@@ -43,11 +43,11 @@ git ls-files > /tmp/files.txt && echo Manifest.toml >> /tmp/files.txt
 rsync -a --files-from=/tmp/files.txt ./ viper:$D/
 
 # on the login node: instantiate only (compute nodes have no internet)
-ssh viper "cd $D && /viper/u1/oldu/software/julia-1.13.0/bin/julia --project=. \
+ssh viper "cd $D && /viper/u1/oldu/software/julia-1.13.2/bin/julia --project=. \
     -e 'using Pkg; Pkg.instantiate(); Pkg.precompile()'"
 
 # dry-run, then one submission
-ssh viper "cd $D && J=/viper/u1/oldu/software/julia-1.13.0/bin/julia \
+ssh viper "cd $D && J=/viper/u1/oldu/software/julia-1.13.2/bin/julia \
   IN=/ptmp/oldu/stmfit/full146_v1_inputs OUT=/ptmp/oldu/stmfit/run_$C && \
   STMFIT_PROJECT_DIR=\$PWD STMFIT_INPUT_DIR=\$IN STMFIT_OUTDIR=\$OUT JULIA_BIN=\$J \
     bash hpc/run_molecule_consensus.sbatch --dry-run && \

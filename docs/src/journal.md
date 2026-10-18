@@ -965,4 +965,9 @@ cleanup. No scientific behavior changes.
   - The byte-for-byte check on real data (quickstart checksums and the full146
     run against run A) is pending: Viper was unreachable (expired gateway
     session).
+- **Viper Julia.** The docs now point to
+  `/viper/u1/oldu/software/julia-1.13.2`. This install must still be done
+  when Viper is reachable again; the 1.13.0 install is no longer used.
+- **`release-prep`** (local branch) was rebased onto this layout. Its archive
+  list, READMEs, examples and containers use the new paths.
 
