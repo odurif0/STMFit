@@ -48,13 +48,12 @@ data/
 **Provenance.**
 
 - The master copy of the (NKN)2 scans is the institute share
-  `hive.fkf.mpg.de/esi/DATA/STM/STM_DATA/(NKN)2`, and `raw/NKN2` mirrors its
-  session folders.
+  `hive.fkf.mpg.de/esi/DATA/STM/STM_DATA/(NKN)2`, and `raw/NKN2` is an exact
+  mirror of it (3,822 files, checked 2026-10-18).
 - The 2024 sessions and `raw/10_20mer`, `raw/notes` are hard links to the
   originals in `/home/durif/Rebecca/data`, so they take one copy on disk.
-- The 2025 sessions hold only the `.sxm` files known locally: all 214 Cu(100)
-  scans, but only the 160 usable Ag(111) scans and none of the 2025 spectra.
-  Mount the share to complete them.
+- Substrate in `INDEX.tsv` comes from the session name (`Cu100`, `Ag111`); it
+  stays empty for `10_20mer/CuLHe03262026_depo2`, whose name gives no facet.
 - `raw/10_20mer` keeps the files of the original tree, including derived
   `.pkl`/`.npy`/`.pysxm` and one `- Copy` duplicate, listed as such.
 - The review sheets of the first triage pass are in

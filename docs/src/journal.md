@@ -33,7 +33,7 @@ the chain over repeated scans (2026-10-04).
 of every raw file in `data/raw/` (`NKN2/<session>`, `10_20mer/<session>`,
 `notes/`), working sets as links in `data/sets/` (`6mer_Cu100_benchmark` 146,
 `6mer_Cu100_candidates` 380 awaiting the user's decision, `10_20mer_targets`
-25) and `data/INDEX.tsv` (2,975 raw scans with their decision), rebuilt from
+25) and `data/INDEX.tsv` (3,101 raw scans with their decision), rebuilt from
 the tables in `benchmarks/` by `test/report_data_sets.jl`. Discarded scans
 (623) have no folder, only a motif.
 
@@ -893,4 +893,25 @@ discarded scans keep no folder, only the reason.
 - **Open.** The 2025 share sessions are incomplete in `raw/NKN2`: spectra are
   missing, and so are the 126 Ag(111) scans that were not usable. Copy them
   when the share is mounted.
+
+### 2026-10-18 — `raw/NKN2` completed from the institute share
+
+With the share mounted again (gvfs), `data/raw/NKN2` was compared file by file
+with `(NKN)2`.
+
+- **Copied.** 689 files that only the share had (0.36 GB), each verified by
+  sha256 after copy and with its modification time kept:
+  - the spectra (`.dat`) of the 2025 sessions;
+  - the 126 Ag(111) scans that the catalog had not kept;
+  - three `.ini` files.
+
+  No common file differed in size.
+- **Removed.** The only local-only files were three hidden
+  `.sxmviewer_nanonis/` viewer caches (656 exported files, not measurements).
+  They were removed from `raw/`; the originals stay in
+  `/home/durif/Rebecca/data/data`.
+- **Result.** `raw/NKN2` is now an exact mirror: 3,822 files on both sides.
+  `data/INDEX.tsv` lists 3,101 raw scans. All 286 Ag(111) 6-mer scans and the
+  1,640 10–20mer scans are `not_triaged`. The sets are unchanged (146, 380 and
+  25).
 
