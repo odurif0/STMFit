@@ -4,30 +4,26 @@ results/
 **/Manifest.toml
 # The root Manifest is tracked for reproducible releases (packages/ ones stay ignored).
 !/Manifest.toml
-!.julia/Manifest.toml
 .DS_Store
-.theme
-# Personal HPC config (MPCDF username + paths) — keep the .example tracked
-hpc/remote.env
-.claude/settings.local.json
-.ignore
-# Raw SXM data lives outside the repo (lab storage / MPCDF ptmp).
+# All data live in data/ (raw store, sets, index), untracked.
 # Keep data/README.md and data/.gitkeep tracked, ignore everything else.
 data/*
 !data/README.md
 !data/.gitkeep
 docs/build/
-# Quantum ESPRESSO run directories can contain large scratch/cube outputs.
-qe/
+# Quantum ESPRESSO run directories (accepted states, large cubes): untracked.
+dft/runs/
 # Python bytecode caches (generated).
 __pycache__/
 
-# OpenCode agent session state (never part of the project).
+# Agent and tool state (never part of the project).
 .omo/
-.slim/deepwork/
-# Agent/tool state and CI workflows kept out of the public repo.
+.slim/
 .claude/
 .cortexkit/
+.codex/
+.agents/
+.ruff_cache/
 .github/
 # Temporary working directories (.tmp-*) created by scripts/agent probes.
 .tmp*/

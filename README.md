@@ -65,23 +65,23 @@ Pkg.instantiate(); Pkg.precompile()'
 
 ```bash
 # Inspect one scan (fits and plots, no batch)
-julia --project=. test/inspect_one_file.jl data/sets/6mer_Cu100_benchmark/240817_004.sxm
+julia --project=. scripts/tools/inspect_one_file.jl data/sets/6mer_Cu100_benchmark/240817_004.sxm
 
 # Per-scan counting only
-julia -t 4 --project=. test/batch_full.jl 146 --config config/chitosan.toml \
+julia -t 4 --project=. scripts/pipeline/batch_full.jl 146 --config config/chitosan.toml \
     --data-dir RAW_DIR --outdir results/counting
 
 # Complete method, raw scans -> predictions.tsv (run it on Viper for a cohort)
-julia -t 4 --project=. test/run_molecule_consensus_chitosan.jl \
+julia -t 4 --project=. scripts/pipeline/run_molecule_consensus_chitosan.jl \
     --data-dir RAW_DIR --count-config config/chitosan.toml \
     --config config/unit_assignment_corroborated_training.toml \
     --consensus-config config/molecule_consensus.toml \
-    --templates templates/chitosan_cc_molds_native_v1.tsv --outdir NEW_DIR
+    --templates dft/molds/chitosan_cc_molds_native_v1.tsv --outdir NEW_DIR
 
 # External verification and benchmark grade (labels are read only here);
 # with --data-dir it also sorts one plot per molecule into
 # 1_all_exact / 2_N_exact_calls_wrong / 3_N_wrong
-julia --project=. test/grade_consensus_run.jl --run NEW_DIR --outdir NEW_GRADE_DIR --data-dir RAW_DIR
+julia --project=. scripts/grading/grade_consensus_run.jl --run NEW_DIR --outdir NEW_GRADE_DIR --data-dir RAW_DIR
 ```
 
 Raw `.sxm` files are not tracked; see [`data/README.md`](data/README.md).
@@ -92,22 +92,24 @@ see [`hpc/README.md`](hpc/README.md) and the [runbook](docs/src/chitosan_runbook
 
 | Path | Content |
 |---|---|
-| `packages/` | `STMFitCore` (constraints, scoring), `STMSXMIO` (SXM I/O, preprocessing), `GaussianFit1D` (diagnostic 1D fit), `GaussianFit2D` (2D chain fit engine), `STMMolecularFit` (orchestration, selectors). `STMMolecularFitGUI` is a separate, unmaintained GUI. |
-| `test/` | Command-line workflows (`run_*`, `build_*`, `extract_*`, `grade_*`) and their tests (`test_*.jl`, `molecule_consensus/`). Shared code in `test/lib/`. |
+| `src/` | `STMFit` library shared by the scripts: molecule consensus, fusion, unit assignment, patch preprocessing, molds, Fisher views. |
+| `packages/` | `STMFitCore` (constraints, scoring), `STMSXMIO` (SXM I/O, preprocessing), `GaussianFit1D` (diagnostic 1D fit), `GaussianFit2D` (2D chain fit engine), `STMMolecularFit` (orchestration, selectors). |
+| `scripts/pipeline/` | The promoted method, raw scans to predictions, positions and plots. Label-free. |
+| `scripts/grading/` | External grading and benchmark reports, the data index and sets: the only code that reads labels. |
+| `scripts/data/`, `scripts/calibration/`, `scripts/tools/` | Raw-scan catalog and repeat collection; calibration audit; single-scan inspection. |
+| `test/` | Tests only; `test/runtests.jl` runs them all. |
 | `config/` | Frozen TOML configs: counting, consensus, assignment (promoted plus the lineage configs used by tests), calibration audit, new-molecule template. |
-| `templates/` | Frozen DFT constant-current molds, their provenance and the DFT frames. |
-| `benchmarks/` | External grading manifests and control sequences. Never read by the method. |
-| `hpc/` | Slurm scripts for Raven/Viper, and the QE input record for the DFT molds. |
+| `benchmarks/` | External grading manifests, control sequences, data triage tables. Never read by the method. |
+| `dft/` | DFT inputs (`inputs/`), frozen constant-current molds with provenance and frames (`molds/`), accepted QE states (`runs/`, untracked). |
+| `hpc/` | Slurm script and notes for Raven/Viper. |
 | `docs/src/` | Documentation (Documenter): method, configuration, runbook, journal. |
+| `data/`, `results/` | All data (raw store, sets, index) and run outputs; untracked. |
 
 ## Tests
 
 ```bash
-julia --project=. packages/STMFitCore.jl/test/runtests.jl
-julia --project=. packages/STMSXMIO.jl/test/runtests.jl
-julia --project=. packages/GaussianFit2D.jl/test/runtests.jl
-for t in test/test_*.jl test/molecule_consensus/*.jl; do julia --project=. "$t"; done
-julia --project=. test/test_reconstructed_pipeline.jl --e2e   # synthetic end to end
+julia --project=. test/runtests.jl          # every test, synthetic end-to-end run included
+julia --project=. test/runtests.jl --fast   # without the end-to-end run
 ```
 
 ## Documentation

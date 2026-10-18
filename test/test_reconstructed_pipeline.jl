@@ -1,5 +1,5 @@
 using Test, Random, Statistics, Printf
-include(joinpath(@__DIR__, "run_reconstructed_chitosan.jl"))
+include(joinpath(@__DIR__, "..", "scripts", "pipeline", "run_reconstructed_chitosan.jl"))
 const ASSIGNMENT_CONFIG = joinpath(ROOT, "config", "unit_assignment_reconstructed.toml")
 const COUNT_CONFIG = joinpath(ROOT, "config", "chitosan.toml")
 

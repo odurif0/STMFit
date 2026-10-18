@@ -28,11 +28,9 @@ include("types.jl")
 # Core computation
 include("core.jl")
 
-# Plotting and CLI
+# Plotting
 include("plot.jl")
-include("cli.jl")
 
-# GUI separated into its own repository: STMMolecularFitGUI.jl
 
 # ===========================================================================
 # Exports
@@ -59,8 +57,6 @@ export run_fit, select_model_result, best_result, result_for_n,
 # Serialization & Export
 export save_results, load_results, export_results
 
-# CLI
-export parse_args, config_from_args, main_cli
 
 # Plotting
 export plot_results

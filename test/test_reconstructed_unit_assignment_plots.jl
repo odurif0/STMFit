@@ -2,7 +2,7 @@
 # Focused plot-only regression: no fits, classifier, raw data or benchmark inputs.
 ENV["GKSwstype"] = "100"
 using Test
-include(joinpath(@__DIR__, "plot_reconstructed_unit_assignment.jl"))
+include(joinpath(@__DIR__, "..", "scripts", "pipeline", "plot_reconstructed_unit_assignment.jl"))
 
 function plot_fixture(dir, n)
     files = ["synthetic_$(lpad(i, 3, '0')).sxm" for i in 1:n]

@@ -6,7 +6,7 @@ using TOML
 using GaussianFit2D
 
 module SelectedSupportExtractor
-include(joinpath(@__DIR__, "extract_lobe_features.jl"))
+include(joinpath(@__DIR__, "..", "scripts", "pipeline", "extract_lobe_features.jl"))
 end
 const Extractor = SelectedSupportExtractor
 const SUPPORT_CONFIG = joinpath(@__DIR__, "..", "config", "chitosan_10_20mer_adaptive_support_rescue.toml")
@@ -333,7 +333,7 @@ end
             TOML.print(io, invalid_config)
         end
         root = dirname(@__DIR__)
-        script = joinpath(@__DIR__, "extract_lobe_features.jl")
+        script = joinpath(@__DIR__, "..", "scripts", "pipeline", "extract_lobe_features.jl")
         cases = (
             (name="adaptive_n_only", config=SUPPORT_CONFIG, requested="alpha.sxm",
              header=["filepath", "N_selected"], row=["alpha.sxm", "9"],

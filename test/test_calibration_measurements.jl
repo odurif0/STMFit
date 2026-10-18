@@ -1,6 +1,6 @@
 using Test, TOML, LinearAlgebra, Statistics, SHA
-include(joinpath(@__DIR__,"measure_calibration.jl"))
-include(joinpath(@__DIR__,"summarize_calibration_measurements.jl"))
+include(joinpath(@__DIR__, "..", "scripts", "calibration", "measure_calibration.jl"))
+include(joinpath(@__DIR__, "..", "scripts", "calibration", "summarize_calibration_measurements.jl"))
 const M=CalibrationMeasurements
 const R=CalibrationMeasurementReport
 const C=M.settings(M.SETTINGS)

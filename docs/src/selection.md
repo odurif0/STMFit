@@ -11,7 +11,7 @@ Level 1  score each candidate N by GCV
          score_eff(N) = min(score_circ(N), score_ell_refined(N))
 Level 2  N_circ, N_ell, N_eff = best valid circular / elliptical / effective model
 Level 3  N_selected = policy applied to N_eff (chitosan: support_midpoint_hybrid)
-Level 4  molecule consensus across repeated scans (test/run_molecule_consensus_chitosan.jl)
+Level 4  molecule consensus across repeated scans (scripts/pipeline/run_molecule_consensus_chitosan.jl)
 ```
 
 ### Why GCV
@@ -96,7 +96,7 @@ long chains are undercounted ([journal](journal.md)).
 
 ### Other policies
 
-`test/batch_full.jl --selection-policy` also accepts `gcv` (raw `N_eff`) and
+`scripts/pipeline/batch_full.jl --selection-policy` also accepts `gcv` (raw `N_eff`) and
 `gcv_with_robust_aicc_guard` (guard without the support-midpoint layer).
 Diagnostic selectors (spatial blocked CV, support-marginalized GCV,
 slope-heuristic MDL, stability selection, local-lobe evidence, Laplace
@@ -119,7 +119,7 @@ code and evaluations are at the tag `archive/pre-cleanup-20260929`.
 ## Repeated-scan molecule consensus
 
 STM sessions often re-image one molecule many times, with drift and different
-ranges. `test/build_molecule_consensus.jl` treats these scans as repeated
+ranges. `scripts/pipeline/build_molecule_consensus.jl` treats these scans as repeated
 measurements:
 
 1. **Ordering.** Scans are sorted by acquisition time (`REC_DATE`, `REC_TIME`).

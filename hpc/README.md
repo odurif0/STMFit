@@ -2,15 +2,12 @@
 
 HPC use is deliberately simple: sync committed code, instantiate on the login
 node, submit one `sbatch`, poll `squeue`, fetch outputs back. No computation on
-login nodes (they only run `Pkg.instantiate()` and small merges). Compute nodes
+login nodes (they only run `Pkg.instantiate()`). Compute nodes
 have no internet. `/ptmp` is purged after about 12 weeks, so always fetch results.
 
 | Script | Purpose |
 |---|---|
 | `run_molecule_consensus.sbatch` | One raw-to-prediction run of the promoted method (4 CPUs, 16 GB, ~1.5 h for 146 scans) |
-| `launch_remote.sh` + `batch_array.sbatch` + `merge_chunks.jl` | Push-button `batch_full.jl` counting array: sync → instantiate → array → merge → fetch |
-| `remote.env.example` | Template of the personal, ignored `hpc/remote.env` |
-| `qe_molds/` | QE structures and input templates of the DFT molds (record only) |
 
 ## One-time setup
 
@@ -44,7 +41,7 @@ checkout), `STMFIT_INPUT_DIR` (contains the raw subdirectory), `STMFIT_OUTDIR`
 (must not exist), `JULIA_BIN`. Optional: `STMFIT_RAW_SUBDIR` (default
 `full146_raw`), `STMFIT_COUNT_CONFIG`, `STMFIT_ASSIGNMENT_CONFIG`,
 `STMFIT_TEMPLATES`, `STMFIT_SELECTED_SUMMARY`. Defaults are the promoted
-configs and `templates/chitosan_cc_molds_native_v1.tsv`.
+configs and `dft/molds/chitosan_cc_molds_native_v1.tsv`.
 
 **Viper sets `SBATCH_EXPORT=NONE`.** Pass every variable on the command line:
 `sbatch --export=NONE,STMFIT_PROJECT_DIR=...,...`. Variables set in the shell
@@ -52,24 +49,9 @@ before `sbatch` are not seen by the job. Always run the script with `--dry-run`
 on the login node first (metadata only). The full command sequence is in
 the runbook (`docs/src/chitosan_runbook.md`).
 
-## Counting arrays (`launch_remote.sh`)
-
-```bash
-cp hpc/remote.env.example hpc/remote.env   # set STMFIT_REMOTE_USER, host, resources
-./hpc/launch_remote.sh --dry-run           # always first
-./hpc/launch_remote.sh --watch             # sync, instantiate, submit, wait, merge, fetch
-./hpc/launch_remote.sh --fetch-only        # fetch a finished job
-```
-
-Per-run settings are environment variables: `STMFIT_CONFIG`, `STMFIT_OUTDIR`,
-`STMFIT_TSV`, `STMFIT_SKIP_1D`, `N_FILES`, `STMFIT_BATCH_ARGS`. Each array
-task runs `batch_full.jl --chunk i/N`. `merge_chunks.jl` concatenates the
-shard summaries. Re-submission resumes, because finished files are skipped.
-
 ## Limits
 
-- **Raven group quota (account `oldu`): 8 CPUs.** The launcher default of
-  4 chunks × 4 CPUs exceeds it; use at most 8 CPUs in total.
+- **Raven group quota (account `oldu`): 8 CPUs** in total.
 - `batch_full.jl` uses at most 4 Julia threads per task; the sbatch scripts set
   `OMP_NUM_THREADS = OPENBLAS_NUM_THREADS = 1`.
 - On Viper, do not set `--partition` (the submit filter chooses). On Raven,

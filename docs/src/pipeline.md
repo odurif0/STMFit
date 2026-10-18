@@ -5,36 +5,36 @@
 ```
 raw .sxm scans (one directory, unique basenames)
   │
-  ├─ 1. per-scan counting ........ test/batch_full.jl (4 shards, --skip-1d)
+  ├─ 1. per-scan counting ........ scripts/pipeline/batch_full.jl (4 shards, --skip-1d)
   │      circular sweep → circ→ell refinement → GCV + robust-AICc guard
   │      → support-midpoint adjustment → N_selected           counting_summary.tsv
   │
-  ├─ 2. scan geometry ............ test/extract_lobe_features.jl at N_selected
+  ├─ 2. scan geometry ............ scripts/pipeline/extract_lobe_features.jl at N_selected
   │                                                           scan_geometry.tsv
-  ├─ 3. molecule consensus ....... test/build_molecule_consensus.jl
+  ├─ 3. molecule consensus ....... scripts/pipeline/build_molecule_consensus.jl
   │      absolute-frame registration of consecutive scans → tracks
   │      → strict-majority count → fixed-N refit check (own ROI, then
   │        registered ROI) → final counts          consensus/consensus_summary_final.tsv
   │
-  ├─ 4. per-scan assignment ...... test/run_reconstructed_chitosan.jl
+  ├─ 4. per-scan assignment ...... scripts/pipeline/run_reconstructed_chitosan.jl
   │      base + split fits at final N → local features → 17×17 / 9×9 patches
   │      → descriptor → DFT mold margins → empirical Fisher margin
   │      → GMM (1 view) + k-means (4 views), learned on corroborated scans
   │      → soft vote → 0/1/? + confidence                  assignment/predictions.tsv
   │
-  ├─ 5. latent-class fusion ...... test/build_molecule_fusion.jl
+  ├─ 5. latent-class fusion ...... scripts/pipeline/build_molecule_fusion.jl
   │      physical lobes of each track → EM (π, θ0, θ1) → posterior
   │                                                 fusion/predictions_fused.tsv
-  ├─ 6. position uncertainty ..... test/report_position_repeatability.jl
+  ├─ 6. position uncertainty ..... scripts/pipeline/report_position_repeatability.jl
   │      repeated scans aligned (registration, translation, rotation)  positions.tsv
-  ├─ 7. molecule plots ........... test/plot_final_molecules.jl        plots/
+  ├─ 7. molecule plots ........... scripts/pipeline/plot_final_molecules.jl        plots/
   └─ predictions.tsv (= fused), chain_report.tsv, raw/input hashes, logs/
 ```
 
 One command runs all seven stages:
-`test/run_molecule_consensus_chitosan.jl` (Slurm wrapper
+`scripts/pipeline/run_molecule_consensus_chitosan.jl` (Slurm wrapper
 `hpc/run_molecule_consensus.sbatch`). External verification and grading are a
-separate step: `test/grade_consensus_run.jl`. See the [runbook](chitosan_runbook.md).
+separate step: `scripts/grading/grade_consensus_run.jl`. See the [runbook](chitosan_runbook.md).
 
 ## Run directory
 
@@ -57,7 +57,7 @@ separate step: `test/grade_consensus_run.jl`. See the [runbook](chitosan_runbook
 
 ## Position uncertainty
 
-`test/report_position_repeatability.jl --run RUN --data-dir RAW --outdir NEW`
+`scripts/pipeline/report_position_repeatability.jl --run RUN --data-dir RAW --outdir NEW`
 measures, without labels, how well lobe positions repeat across scans of the
 same molecule. It writes `lobe_scatter.tsv` (per physical lobe),
 `scan_rotation.tsv` (per-scan rotation fitted between scans) and `summary.tsv`.
@@ -80,7 +80,7 @@ between neighbouring lobes is 0.66 nm and repeats to 0.06 nm. One molecule
 | `STMSXMIO.jl` | `SXMImage`/`read_sxm`, channel access, fwd/bwd alignment, shared preprocessing (plane fit, row flattening, smoothing, Otsu ROI) |
 | `GaussianFit1D.jl` | 1D slide-profile fit. Diagnostic only (off by default); never feeds `N_selected` |
 | `GaussianFit2D.jl` | 2D chain-of-Gaussians engine (`src/core.jl`): axis, support, seeding, sweep, fit |
-| `STMMolecularFit.jl` | Orchestration and selectors (`src/selectors.jl`); used by `test/batch_full.jl` |
+| `STMMolecularFit.jl` | Orchestration and selectors (`src/selectors.jl`); used by `scripts/pipeline/batch_full.jl` |
 
 `STMSXMIO` owns the SXM types; neither fit engine redefines them.
 `GaussianFit2D` depends on Core, SXM I/O and the 1D package; `STMMolecularFit`

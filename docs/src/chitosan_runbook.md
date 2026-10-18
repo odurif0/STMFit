@@ -26,7 +26,7 @@ untracked `data/` folder ([data/README](https://github.com/odurif0/STMFit/blob/m
 one copy of every raw file in `data/raw/`, working sets as links in
 `data/sets/` (the cohort is `data/sets/6mer_Cu100_benchmark/`), and
 `data/INDEX.tsv` with every scan and its decision. The sets and the index are
-rebuilt from the tables in `benchmarks/` by `test/report_data_sets.jl`. On
+rebuilt from the tables in `benchmarks/` by `scripts/grading/report_data_sets.jl`. On
 Viper, the staged cohort is `/ptmp/oldu/stmfit/full146_v1_inputs/full146_raw`
 (symlinks, unique basenames).
 
@@ -70,7 +70,7 @@ full146 run takes about 1.5 h on 4 CPUs (MaxRSS about 5 GB).
 After fetching the complete run, check integrity and grade outside the method:
 
 ```bash
-julia --project=. test/grade_consensus_run.jl --run results/run_<C> \
+julia --project=. scripts/grading/grade_consensus_run.jl --run results/run_<C> \
     --outdir results/grade_<C> --data-dir data/sets/6mer_Cu100_benchmark \
     [--profile name=other_predictions.tsv ...]
 ```
@@ -105,9 +105,9 @@ chains, errors, abstentions) with no measure regressing.
 ## Counting only
 
 ```bash
-julia -t 4 --project=. test/batch_full.jl 146 --config config/chitosan.toml \
+julia -t 4 --project=. scripts/pipeline/batch_full.jl 146 --config config/chitosan.toml \
     --data-dir RAW_DIR --outdir results/counting_<tag> --skip-1d
-julia --project=. test/grade_chitosan_benchmark.jl \
+julia --project=. scripts/grading/grade_chitosan_benchmark.jl \
     --manifest benchmarks/chitosan_6mer_counting_confirmed.toml \
     --results results/counting_<tag>/summary_overlap060_hard.tsv \
     --column N_selected --out results/counting_<tag>/grade.tsv
@@ -115,20 +115,19 @@ julia --project=. test/grade_chitosan_benchmark.jl \
 
 Fresh per-scan counting gives 123/145 exact and 143/145 within one. The
 historical 129/145 comes from a saved summary that fresh runs do not
-reproduce ([journal](journal.md)). For cluster arrays of `batch_full.jl`, see
-`hpc/README.md` (`launch_remote.sh`).
+reproduce ([journal](journal.md)).
 
 ## Unknown 10–20mer application
 
 1. Collect repeat-scan candidates of the target molecules (headers only):
    ```bash
-   julia --project=. test/collect_repeat_scans.jl --targets targets.txt \
+   julia --project=. scripts/data/collect_repeat_scans.jl --targets targets.txt \
        --raw-root RAW_TREE --config config/molecule_consensus.toml --outdir NEW_DIR
    ```
 2. Run the method with the long-chain counting config:
    `STMFIT_COUNT_CONFIG=config/chitosan_10_20mer_adaptive_support_rescue.toml`
    (allow ≥ 8 h). Only registration decides which candidates are the same molecule.
-3. Check integrity with `test/grade_consensus_run.jl --run DIR --verify-only`.
+3. Check integrity with `scripts/grading/grade_consensus_run.jl --run DIR --verify-only`.
    There is no grade, because there are no labels.
 4. Read `chain_report.tsv`, `assignment/review_queue.tsv`, the maps in
    `assignment/plots/` and the fusion parameters.
@@ -148,29 +147,23 @@ baseline and consistent per-scan assignment on long chains are prerequisites
 ## Tests
 
 ```bash
-julia --project=. packages/STMFitCore.jl/test/runtests.jl
-julia --project=. packages/STMSXMIO.jl/test/runtests.jl
-julia --project=. packages/GaussianFit2D.jl/test/runtests.jl
-for t in test/test_*.jl test/molecule_consensus/*.jl; do julia --project=. "$t"; done
-julia --project=. test/test_reconstructed_pipeline.jl --e2e
+julia --project=. test/runtests.jl          # every test, end-to-end run included
+julia --project=. test/runtests.jl --fast   # without the end-to-end run
 ```
 
 `test_cc_mold_native.jl --real-cubes CUBE0 CUBE1 FRAME0 FRAME1 NEW_DIR` also
 compares the native mold builder with the Python reference
-(`test/lib/cc_mold_builder.py`) on the real DFT cubes.
+(`test/reference/cc_mold_builder.py`) on the real DFT cubes.
 
 ## Other tools
 
 | Script | Purpose |
 |---|---|
-| `test/inspect_one_file.jl FILE.sxm` | Circular vs elliptical 2D fits and plots for one scan |
-| `test/summarize.jl SUMMARY.tsv` | Count statistics of a batch summary |
-| `test/measure_calibration.jl SCAN.sxm` | Apparent width/spacing audit (no config written) |
-| `test/validate_unit_predictions.jl`, `test/summarize_unknown_unit_qc.jl` | Prediction integrity and review queue |
-| `test/compare_reconstructed_champion.jl` | Keyed comparison of two prediction tables |
-| `test/catalog_sxm_candidates.jl --roots DIR[,DIR] ... --outdir NEW [--exclude TSV] [--copy-to CENTRAL]` | Technical triage of raw scans (no fit, no label), contact sheets, deduplicated central folder |
-| `test/report_benchmark_candidates.jl --catalog TSV --count-config TOML --outdir NEW` | Grading side: usable scans not yet in the benchmark, with review sheets |
-| `test/report_benchmark_triage.jl --catalog TSV ... --count-config TOML --sheets NEW` | Grading side: fixed-scale review sheets for the visual triage |
-| `test/report_data_sets.jl --data data --table TSV ...` | Grading side: rebuild `data/sets/` and `data/INDEX.tsv` from the decision tables |
-| `test/report_position_repeatability.jl --run RUN --data-dir RAW --outdir NEW` | Label-free lobe-position repeatability across repeated scans ([Pipeline](pipeline.md)) |
-| `test/assignment_view_variants.jl RUN VARIANT NEW RAW` | Research harness: rerun the classifier stages of a run with other feature views |
+| `scripts/tools/inspect_one_file.jl FILE.sxm` | Circular vs elliptical 2D fits and plots for one scan |
+| `scripts/calibration/measure_calibration.jl SCAN.sxm` | Apparent width/spacing audit (no config written) |
+| `scripts/pipeline/validate_unit_predictions.jl`, `scripts/pipeline/summarize_unknown_unit_qc.jl` | Prediction integrity and review queue |
+| `scripts/data/catalog_sxm_candidates.jl --roots DIR[,DIR] ... --outdir NEW [--exclude TSV] [--copy-to CENTRAL]` | Technical triage of raw scans (no fit, no label), contact sheets, deduplicated central folder |
+| `scripts/grading/report_benchmark_candidates.jl --catalog TSV --count-config TOML --outdir NEW` | Grading side: usable scans not yet in the benchmark, with review sheets |
+| `scripts/grading/report_benchmark_triage.jl --catalog TSV ... --count-config TOML --sheets NEW` | Grading side: fixed-scale review sheets for the visual triage |
+| `scripts/grading/report_data_sets.jl --data data --table TSV ...` | Grading side: rebuild `data/sets/` and `data/INDEX.tsv` from the decision tables |
+| `scripts/pipeline/report_position_repeatability.jl --run RUN --data-dir RAW --outdir NEW` | Label-free lobe-position repeatability across repeated scans ([Pipeline](pipeline.md)) |

@@ -11,8 +11,7 @@ using Printf
 using Statistics
 using TOML
 
-include(joinpath(@__DIR__, "lib", "cc_mold_native.jl"))
-using .CCMoldNative
+using STMFit.CCMoldNative
 
 const ROOT = dirname(@__DIR__)
 const CONFIG = joinpath(ROOT, "config", "unit_assignment_reconstructed.toml")
@@ -81,7 +80,7 @@ const PYTHON_REFERENCE = raw"""
 import importlib.util, os, sys, tomllib
 import numpy as np
 root, c0, c1, f0, f1, config, outdir = sys.argv[1:]
-spec = importlib.util.spec_from_file_location("reference_cc", os.path.join(root, "test/lib/cc_mold_builder.py"))
+spec = importlib.util.spec_from_file_location("reference_cc", os.path.join(root, "test/reference/cc_mold_builder.py"))
 m = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(m)
 m.os = os  # reference imports os only from its __main__ block
@@ -264,7 +263,7 @@ function synthetic_tests()
             badframe = joinpath(dir,"badframe.tsv"); write(badframe,"")
             @test_throws ArgumentError build_molds(cube0=cube0,cube1=cube1,frame0=frame0,frame1=badframe,config=CONFIG,out=failedout)
             @test !ispath(failedout)
-            cli = joinpath(@__DIR__,"build_cc_molds_native.jl")
+            cli = joinpath(@__DIR__, "..", "scripts", "pipeline", "build_cc_molds_native.jl")
             @test occursin("All six options", read(`$(Base.julia_cmd()) --project=$ROOT $cli --help`,String))
             out = joinpath(dir,"cli.tsv")
             args = ["--cube0",cube0,"--cube1",cube1,"--frame0",frame0,"--frame1",frame1,"--config",CONFIG,"--out",out]

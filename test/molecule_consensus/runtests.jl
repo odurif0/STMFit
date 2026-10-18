@@ -1,8 +1,7 @@
 # Synthetic tests for repeated-scan grouping and molecule-level count consensus.
 #   julia --project=. test/molecule_consensus/runtests.jl
 using Test, Dates, Random, Statistics, TOML
-include(joinpath(@__DIR__, "..", "lib", "molecule_consensus.jl"))
-using .MoleculeConsensus
+using STMFit.MoleculeConsensus
 
 const ST = MoleculeConsensus.ConsensusSettings(3.0, 0.04, 0.32, 1.6, 4, 500, 0.5, 6.0, 3, 0.3, "plane+rows", "Z", 1.2)
 
@@ -116,7 +115,7 @@ end
 end
 
 module MCRun
-include(joinpath(@__DIR__, "..", "run_molecule_consensus_chitosan.jl"))
+include(joinpath(@__DIR__, "..", "..", "scripts", "pipeline", "run_molecule_consensus_chitosan.jl"))
 end
 
 @testset "consensus counts are kept only when the fixed-N refit succeeds" begin

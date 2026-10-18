@@ -16,7 +16,7 @@ separate stages; assignment works at the final molecule-consensus counts.
   mean raw amplitude is called GlcNAc (the acetyl group is larger). This
   convention is fixed; the truth is never used to choose the 0↔1 flip.
 
-## Per-scan assignment (`test/run_reconstructed_chitosan.jl`)
+## Per-scan assignment (`scripts/pipeline/run_reconstructed_chitosan.jl`)
 
 | Stage | Output | Content |
 |---|---|---|
@@ -40,12 +40,12 @@ All other settings equal `config/unit_assignment_patch_support.toml`.
 
 ### DFT constant-current molds
 
-`templates/chitosan_cc_molds_native_v1.tsv` holds GlcN and GlcNAc molds for
-each parity/mirror state. They are built by `test/build_cc_molds_native.jl` from
+`dft/molds/chitosan_cc_molds_native_v1.tsv` holds GlcN and GlcNAc molds for
+each parity/mirror state. They are built by `scripts/pipeline/build_cc_molds_native.jl` from
 the accepted Quantum ESPRESSO LDOS cubes of GlcN–GlcN–GlcN and
 GlcN–GlcNAc–GlcN trimers on Cu(100). The builder takes the isosurface whose
 mean height is first below 0.50 nm, sampled in the central-unit frame
-(`templates/qe_frames/`). The provenance file records all input hashes. The
+(`dft/molds/qe_frames/`). The provenance file records all input hashes. The
 builder keeps a legacy cube-addressing convention and reads a potentially
 signed LDOS quantity, so the molds are empirical templates rather than a
 validated STM simulation ([DFT molds](qe_stm_molds.md)).
@@ -57,7 +57,7 @@ chemical geometry, and β-(1→4) connectivity restricts it to a few global stat
 each lobe is scored against both types. The number of GlcNAc units emerges from
 the costs; there is no composition constraint.
 
-## Latent-class fusion (`test/build_molecule_fusion.jl`)
+## Latent-class fusion (`scripts/pipeline/build_molecule_fusion.jl`)
 
 For every molecule track (see [Model selection](selection.md)), the scans with
 the track's modal count are aligned: each lobe is ranked along the chain axis
@@ -127,11 +127,11 @@ same fusion gives identical numbers.
 
 ## Grading conventions
 
-`test/grade_unit_assignment.jl` grades per lobe under the physical convention.
+`scripts/grading/grade_unit_assignment.jl` grades per lobe under the physical convention.
 It tests only the sequence orientation (identity/reverse), because the chain
 axis has an arbitrary direction. The supervised "oracle" convention (best of
 four alignments including the 0↔1 flip) is an upper bound, never a method.
-`test/report_unit_assignment_benchmark.jl --full145-own-n` grades predictions
+`scripts/grading/report_unit_assignment_benchmark.jl --full145-own-n` grades predictions
 at each scan's own count. Missing control positions count as unclassified;
-extra lobes are reported but not aligned. `test/grade_consensus_run.jl` wraps
+extra lobes are reported but not aligned. `scripts/grading/grade_consensus_run.jl` wraps
 verification and both grades for a run directory.

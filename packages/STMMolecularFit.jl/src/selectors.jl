@@ -1,6 +1,6 @@
 # ──────────────────────────────────────────────────────────────────────────────
 # selectors.jl — Label-free count-selection helpers for STMFit chain models.
-# Included by STMMolecularFit.jl; used by test/batch_full.jl.
+# Included by STMMolecularFit.jl; used by scripts/pipeline/batch_full.jl.
 #
 # The robust-AICc guard rescoring an exhaustive elliptical candidate set, and
 # the dispatcher that reports the primary count for the configured policy.

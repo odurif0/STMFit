@@ -11,8 +11,7 @@ using Printf
 using TOML
 using DelimitedFiles
 
-include(joinpath(@__DIR__, "lib", "empirical_fisher_native.jl"))
-using .EmpiricalFisherNative
+using STMFit.EmpiricalFisherNative
 const EF = EmpiricalFisherNative
 const ROOT = dirname(@__DIR__)
 const CONFIG_PATH = joinpath(ROOT, "config", "unit_assignment_reconstructed.toml")
@@ -485,7 +484,7 @@ end
         table, full = fixture_table()
         input = joinpath(dir, "patches.tsv")
         write_patch_fixture(input, full; reversed=true)
-        cli = joinpath(@__DIR__, "build_empirical_fisher_native.jl")
+        cli = joinpath(@__DIR__, "..", "scripts", "pipeline", "build_empirical_fisher_native.jl")
         julia = Base.julia_cmd()
         output = joinpath(dir, "first.tsv")
         second = joinpath(dir, "second.tsv")

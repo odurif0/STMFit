@@ -30,9 +30,9 @@ if [[ $# -eq 0 ]]; then
     [[ "${SLURM_CPUS_PER_TASK:-0}" -ge 4 ]] || { echo "Four CPUs required" >&2; exit 2; }
 fi
 export GKSwstype=100 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 JULIA_NUM_THREADS=4
-exec "$JULIA_BIN" --startup-file=no -t 4 --project=. test/run_molecule_consensus_chitosan.jl \
+exec "$JULIA_BIN" --startup-file=no -t 4 --project=. scripts/pipeline/run_molecule_consensus_chitosan.jl \
     --data-dir "$STMFIT_INPUT_DIR/${STMFIT_RAW_SUBDIR:-full146_raw}" --count-config "${STMFIT_COUNT_CONFIG:-config/chitosan.toml}" \
     --config "${STMFIT_ASSIGNMENT_CONFIG:-config/unit_assignment_corroborated_training.toml}" \
     --consensus-config config/molecule_consensus.toml \
-    --templates "${STMFIT_TEMPLATES:-templates/chitosan_cc_molds_native_v1.tsv}" --outdir "$STMFIT_OUTDIR" \
+    --templates "${STMFIT_TEMPLATES:-dft/molds/chitosan_cc_molds_native_v1.tsv}" --outdir "$STMFIT_OUTDIR" \
     ${STMFIT_SELECTED_SUMMARY:+--selected-summary "$STMFIT_SELECTED_SUMMARY"} "$@"

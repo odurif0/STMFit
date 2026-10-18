@@ -11,7 +11,8 @@ history is at the tag `archive/pre-cleanup-20260929`.
 - Fitting, `N_selected`, molecule consensus, unit assignment, fusion,
   calibration, thresholds and abstention must not use expected `N`, `NKNNKN`,
   class counts, benchmark membership or any label. Labels belong only in
-  external grading/report scripts (`test/grade_*.jl`, `test/report_*.jl`).
+  external grading/report scripts, all in `scripts/grading/`. Nothing in
+  `scripts/pipeline/` or `src/` may read a label file.
 - Unit assignment has no composition prior. "Choose the top k lobes" is not a
   valid label-free method. Cluster naming is physical (brighter = GlcNAc).
 - GCV drives base model selection. BIC/AICc are diagnostics or guards because
@@ -26,7 +27,7 @@ history is at the tag `archive/pre-cleanup-20260929`.
   labels; 10–20mer data do not. "Processed" or visually plausible is not
   validation. NKNNKN confounds GlcNAc with edge adjacency, so benchmark
   accuracy is not chemical validation.
-- The DFT molds (`templates/chitosan_cc_molds_native_v1.tsv`) are empirical
+- The DFT molds (`dft/molds/chitosan_cc_molds_native_v1.tsv`) are empirical
   templates from the accepted cubes (5e-5 Ry criterion). They keep a legacy
   cube addressing and read a signed LDOS quantity. Read
   `docs/src/dft_calculation_note.md` before changing cubes, criterion or builder;
@@ -34,29 +35,50 @@ history is at the tag `archive/pre-cleanup-20260929`.
 
 ## Structure and entrypoints
 
+```
+src/STMFit.jl      pipeline library (MoleculeConsensus, MoleculeFusion,
+                   ReconstructedUnitAssignment, PatchPreprocessing, CCMoldNative,
+                   EmpiricalFisherNative, UnitAssignmentReport, ScriptUtils)
+packages/          fit engines and SXM I/O (five local packages)
+scripts/pipeline/  the promoted method: label-free
+scripts/grading/   external grading and reports: the only code that reads labels
+scripts/data/      raw-scan catalog and repeat-scan collection
+scripts/calibration/, scripts/tools/   calibration audit, single-scan inspection
+test/              tests only (test/runtests.jl runs them all)
+config/  benchmarks/  dft/  hpc/  docs/
+data/  results/  dft/runs/   untracked
+```
+
 - The root project composes five local packages through `Project.toml [sources]`:
   `STMFitCore`, `STMSXMIO`, `GaussianFit1D`, `GaussianFit2D`, `STMMolecularFit`.
-  `STMMolecularFitGUI` is separate and unmaintained; not a production entry.
 - `STMSXMIO` owns `SXMImage`, SXM parsing, channel alignment and shared
   preprocessing. Do not redefine those types in either fit engine.
   `GaussianFit1D` depends on `STMFitCore` only; `GaussianFit2D` on Core, SXM I/O
   and 1D; `STMMolecularFit` orchestrates all four.
 - `packages/GaussianFit2D.jl/src/core.jl` is the fit engine;
   `packages/STMMolecularFit.jl/src/selectors.jl` owns selection;
-  `test/batch_full.jl` is the counting driver and imports selector internals.
+  `scripts/pipeline/batch_full.jl` is the counting driver and imports selector
+  internals.
 - Promoted method, raw scans to predictions:
-  `test/run_molecule_consensus_chitosan.jl` (Slurm: `hpc/run_molecule_consensus.sbatch`).
-  It runs `batch_full.jl` → `extract_lobe_features.jl` →
-  `build_molecule_consensus.jl` → `run_reconstructed_chitosan.jl` (assignment) →
-  `build_molecule_fusion.jl`. Shared code in `test/lib/`.
-- Verification and external grading: `test/grade_consensus_run.jl`.
-- `test/*.jl` scripts are standalone command-line programs. Use their
-  `--help` or header usage before assuming arguments.
+  `scripts/pipeline/run_molecule_consensus_chitosan.jl` (Slurm:
+  `hpc/run_molecule_consensus.sbatch`). It runs `batch_full.jl` →
+  `extract_lobe_features.jl` → `build_molecule_consensus.jl` →
+  `run_reconstructed_chitosan.jl` (assignment) → `build_molecule_fusion.jl` →
+  `report_position_repeatability.jl` → `plot_final_molecules.jl`. Shared code
+  lives in `src/` (`using STMFit.<Module>`).
+- Verification and external grading: `scripts/grading/grade_consensus_run.jl`.
+- Data: `data/raw/` (one copy of every raw file), `data/sets/` and
+  `data/INDEX.tsv`, rebuilt from the tables in `benchmarks/` by
+  `scripts/grading/report_data_sets.jl` (`data/README.md`).
+- DFT: inputs in `dft/inputs/`, frozen molds in `dft/molds/`, accepted QE
+  states in `dft/runs/` (untracked).
+- Scripts are standalone command-line programs. Use their `--help` or header
+  usage before assuming arguments.
 
 ## Setup and verification
 
-Julia 1.13 (explicit user decision, 2026-09-16), including tests and
-subprocesses; local `julia` resolves to 1.13 via juliaup. The root
+The latest Julia release (1.13.2 on 2026-10-18), locally and on Viper, including
+tests and subprocesses: regenerate the Manifest when Julia updates. The root
 `Manifest.toml` is tracked and pins the environment for releases; change it
 only through Pkg, never by hand. Bootstrap a clean depot with:
 
@@ -72,11 +94,8 @@ Pkg.instantiate(); Pkg.precompile()'
 Tests, run under the root environment:
 
 ```bash
-julia --project=. packages/STMFitCore.jl/test/runtests.jl
-julia --project=. packages/STMSXMIO.jl/test/runtests.jl
-julia --project=. packages/GaussianFit2D.jl/test/runtests.jl
-for t in test/test_*.jl test/molecule_consensus/*.jl; do julia --project=. "$t"; done
-julia --project=. test/test_reconstructed_pipeline.jl --e2e
+julia --project=. test/runtests.jl          # every test, end-to-end run included
+julia --project=. test/runtests.jl --fast   # without the end-to-end run
 ```
 
 Refactors of kept scripts must be verified byte-for-byte against stored
@@ -86,15 +105,15 @@ Docs: `GKSwstype=100 julia --project=. docs/make.jl --build-only`.
 
 ## Data and commands
 
-Raw `.sxm` files are untracked (`data/README.md`). Pass `--data-dir` (or
-`STMFIT_DATA_DIR` for `batch_full.jl`).
+All data live in the untracked `data/` folder (`data/README.md`). Pass a set or
+session folder with `--data-dir` (or `STMFIT_DATA_DIR` for `batch_full.jl`).
 
 ```bash
-julia --project=. test/inspect_one_file.jl <file.sxm>            # one scan
-julia -t 4 --project=. test/batch_full.jl 48 --config config/chitosan.toml --data-dir DIR
-julia --project=. test/run_molecule_consensus_chitosan.jl --help  # promoted method
-julia --project=. test/grade_consensus_run.jl --run RUN --outdir NEW  # verify + grade
-julia --project=. test/measure_calibration.jl <clean_scan.sxm>    # audit, no config written
+julia --project=. scripts/tools/inspect_one_file.jl <file.sxm>                 # one scan
+julia -t 4 --project=. scripts/pipeline/batch_full.jl 48 --config config/chitosan.toml --data-dir DIR
+julia --project=. scripts/pipeline/run_molecule_consensus_chitosan.jl --help   # promoted method
+julia --project=. scripts/grading/grade_consensus_run.jl --run RUN --outdir NEW  # verify + grade
+julia --project=. scripts/calibration/measure_calibration.jl <clean_scan.sxm>  # audit, no config written
 ```
 
 If high-N fits disappear, inspect the physical `max_overlap` constraint before
@@ -102,7 +121,7 @@ changing selection logic.
 
 ## HPC and generated state
 
-- HPC is deliberately boring: sync committed code (plus the ignored Manifest),
+- HPC is deliberately boring: sync committed code (Manifest included),
   instantiate on the login node, dry-run, submit one `sbatch`, poll `squeue`,
   fetch outputs locally. No agent orchestration or state on the cluster that
   outlives a job. Never compute on login nodes; compute nodes have no internet.
@@ -110,12 +129,12 @@ changing selection logic.
   `sbatch --export=NONE,VAR=...`; shell variables before `sbatch` are not seen.
 - Run cohort fits, multi-file batches and exhaustive searches on Viper, not
   locally. Local runs are for single-file checks and tests.
-- Raven account `oldu` has an 8-CPU group quota; the `launch_remote.sh` default
-  (4 × 4 CPUs) exceeds it. `batch_full.jl` uses at most 4 threads per task.
+- Raven account `oldu` has an 8-CPU group quota. `batch_full.jl` uses at most
+  4 threads per task.
 - Long 10–20mer counting may need 8 h or more. QE jobs stay sequential under the
   one-node QOS limit.
-- Do not commit `results/`, raw `data/`, `qe/`, `docs/build/`, `hpc/remote.env`
-  or generated outputs. `/ptmp` is temporary: fetch HPC results.
+- Do not commit `results/`, `data/`, `dft/runs/`, `docs/build/` or generated
+  outputs. `/ptmp` is temporary: fetch HPC results.
 
 ## Documentation contract
 
@@ -127,8 +146,8 @@ changing selection logic.
   unit-assignment pages).
 - Parameter additions or renames also require `docs/src/config.md` and
   `docs/src/calibration.md` updates.
-- Package READMEs contain legacy standalone descriptions. Trust the root
-  README, `docs/src/` and the scripts.
+- Trust the root README, `docs/src/` and the scripts; the packages have no
+  README of their own.
 
 ## Process guardrails (2026-09-16, after the T11–T13 apparatus incident)
 

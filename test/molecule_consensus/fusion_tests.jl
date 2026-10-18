@@ -1,8 +1,7 @@
 # Synthetic tests for latent-class molecule fusion.
 #   julia --project=. test/molecule_consensus/fusion_tests.jl
 using Test, Random, TOML, Statistics
-include(joinpath(@__DIR__, "..", "lib", "molecule_fusion.jl"))
-using .MoleculeFusion
+using STMFit.MoleculeFusion
 
 const ST = MoleculeFusion.FusionSettings(3, 500, 1e-10, 0.5, 0.1, 0.9)
 

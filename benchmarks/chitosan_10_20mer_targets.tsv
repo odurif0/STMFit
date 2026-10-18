@@ -1,5 +1,5 @@
 # The 25 unknown 10-20mer target scans (former 10_20mer_analysis folder), identified in data/raw/ by sha256.
-# test/report_data_sets.jl links them in data/sets/10_20mer_targets/. No label: application inputs only.
+# scripts/grading/report_data_sets.jl links them in data/sets/10_20mer_targets/. No label: application inputs only.
 file	session	set	motif	source	note	sha256	raw
 251206_013.sxm	Cu100LHe06122025	10_20mer_targets		liste_cibles		0d8feee45bc4f72625c7a31270ba5cfd02eb37294941aeafd74dae7ae9fd60eb	10_20mer/Cu100LHe06122025/251206_013.sxm
 251206_034.sxm	Cu100LHe06122025	10_20mer_targets		liste_cibles		3c43f396474cc368da04761b00207621e1d381ecd8328ad5716c91695e53619a	10_20mer/Cu100LHe06122025/251206_034.sxm

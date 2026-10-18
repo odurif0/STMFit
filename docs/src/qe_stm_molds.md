@@ -10,11 +10,11 @@ their limits are in the [DFT calculation note](dft_calculation_note.md).
 
 | Item | Location |
 |---|---|
-| LDOS cubes (accepted, relaxed trimers) | `qe/glcn_restart5/glcn_central_ldos.cube`, `qe/glcnac/glcnac_central_ldos.cube` (untracked; local and Viper) |
-| Central-unit frames | `templates/qe_frames/glcn_central_frame.tsv`, `glcnac_central_frame.tsv` |
-| Molds | `templates/chitosan_cc_molds_native_v1.tsv` |
-| Provenance (all SHA-256) | `templates/chitosan_cc_molds_native_v1.provenance.toml` |
-| QE structures and input templates | `hpc/qe_molds/` |
+| LDOS cubes (accepted, relaxed trimers) | `dft/runs/glcn_restart5/glcn_central_ldos.cube`, `dft/runs/glcnac/glcnac_central_ldos.cube` (untracked; local and Viper) |
+| Central-unit frames | `dft/molds/qe_frames/glcn_central_frame.tsv`, `glcnac_central_frame.tsv` |
+| Molds | `dft/molds/chitosan_cc_molds_native_v1.tsv` |
+| Provenance (all SHA-256) | `dft/molds/chitosan_cc_molds_native_v1.provenance.toml` |
+| QE structures and input templates | `dft/inputs/` |
 
 The two systems are GlcN–GlcN–GlcN and GlcN–GlcNAc–GlcN on a three-layer
 8×6 Cu(100) slab, with the same substrate registry and central-ring frame, so
@@ -23,9 +23,9 @@ the only chemical variable is the acetylation of the central unit.
 ## Cube → molds
 
 ```bash
-julia --project=. test/build_cc_molds_native.jl \
-    --cube0 qe/glcn_restart5/glcn_central_ldos.cube --frame0 templates/qe_frames/glcn_central_frame.tsv \
-    --cube1 qe/glcnac/glcnac_central_ldos.cube --frame1 templates/qe_frames/glcnac_central_frame.tsv \
+julia --project=. scripts/pipeline/build_cc_molds_native.jl \
+    --cube0 dft/runs/glcn_restart5/glcn_central_ldos.cube --frame0 dft/molds/qe_frames/glcn_central_frame.tsv \
+    --cube1 dft/runs/glcnac/glcnac_central_ldos.cube --frame1 dft/molds/qe_frames/glcnac_central_frame.tsv \
     --config config/unit_assignment_corroborated_training.toml --out NEW.tsv
 ```
 
@@ -35,11 +35,11 @@ substituent). It scans 80 isovalues and keeps the first whose constant-current
 surface has a mean height below the 0.50 nm target. Each surface point is the
 highest occupied z sample. The result is a 17×17 height map (half-width
 0.32 nm, step 0.04 nm), normalized, for each pyranose parity and surface
-mirror. It is byte-identical to the Python reference `test/lib/cc_mold_builder.py`
+mirror. It is byte-identical to the Python reference `test/reference/cc_mold_builder.py`
 (`test/test_cc_mold_native.jl --real-cubes`). Mean heights: GlcN 0.496 nm
 (72/289 supported samples), GlcNAc 0.381 nm (235/289).
 
-`test/score_connected_mold_templates.jl` then decodes each chain against these
+`scripts/pipeline/score_connected_mold_templates.jl` then decodes each chain against these
 molds ([Unit assignment](unit_assignment.md)).
 
 **Known conventions: these are empirical templates, not a validated physical

@@ -7,14 +7,14 @@ using Statistics
 using STMSXMIO: _box_smooth
 
 module ForwardPatches
-include(joinpath(@__DIR__, "extract_lobe_patches.jl"))
+include(joinpath(@__DIR__, "..", "scripts", "pipeline", "extract_lobe_patches.jl"))
 end
 module BackwardPatches
-include(joinpath(@__DIR__, "extract_lobe_patches_bwd.jl"))
+include(joinpath(@__DIR__, "..", "scripts", "pipeline", "extract_lobe_patches_bwd.jl"))
 end
 
-include(joinpath(@__DIR__, "lib", "patch_preprocessing.jl"))
-using .PatchPreprocessing
+import STMFit
+using STMFit.PatchPreprocessing
 
 const ROOT = dirname(@__DIR__)
 const COUNT_CONFIG = joinpath(ROOT, "config", "chitosan.toml")
@@ -185,7 +185,7 @@ mktempdir() do dir
             @test_throws ErrorException mod._parse_cli(vcat(args,["--config",config,"--config",config]))
             @test_throws ArgumentError mod._parse_cli(vcat(args,["--config="]))
             @test_throws ArgumentError mod._parse_cli(vcat(args,["--config",joinpath(dir,"absent.toml")]))
-            help = read(`$(Base.julia_cmd()) --project=$ROOT $(joinpath(@__DIR__,cli)) --help`,String)
+            help = read(`$(Base.julia_cmd()) --project=$ROOT $(joinpath(@__DIR__, "..", "scripts", "pipeline", cli)) --help`,String)
             @test occursin("--config PATH",help)
             @test occursin("smooth_radius_px=1",help)
 
@@ -198,7 +198,7 @@ mktempdir() do dir
             @test read(output) == legacy_bytes
             extract_quietly(mod,vcat(args,["--config",COUNT_CONFIG,"--assignment-config",MATCHED_CONFIG]))
             @test read(output) != legacy_bytes
-            header, actual = mod.ScriptUtils._read_tsv(output)
+            header, actual = STMFit.ScriptUtils._read_tsv(output)
             legacy_lines = split(chomp(String(copy(legacy_bytes))), '\n')
             old = Dict(zip(split(legacy_lines[1],'\t'), split(legacy_lines[2],'\t')))
             @test length(actual) == 1

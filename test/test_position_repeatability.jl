@@ -1,7 +1,7 @@
 # Synthetic tests of the alignment used by test/report_position_repeatability.jl.
 #   julia --project=. test/test_position_repeatability.jl
 using Test, Random, Statistics
-include(joinpath(@__DIR__, "report_position_repeatability.jl"))
+include(joinpath(@__DIR__, "..", "scripts", "pipeline", "report_position_repeatability.jl"))
 
 @testset "rigid and Procrustes alignment" begin
     base = [(0.66 * (i - 1), 0.1 * (-1)^i) for i in 1:6]

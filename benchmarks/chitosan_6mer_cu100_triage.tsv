@@ -4,7 +4,7 @@
 # pass, each to be moved to the benchmark or discarded; empty = discarded, for the reason in motif.
 # source: auto (catalog_sxm_candidates.jl status), revue_anterieure (earlier human review),
 # benchmark_actuel (manifest), premier_tri_assistant (first visual pass, 2026-10-05). raw: path under data/raw/.
-# test/report_data_sets.jl builds data/sets/ and data/INDEX.tsv from it. Grading-side metadata: never read by the method.
+# scripts/grading/report_data_sets.jl builds data/sets/ and data/INDEX.tsv from it. Grading-side metadata: never read by the method.
 file	session	set	motif	source	note	sha256	raw
 240307_001.sxm	20240307_LHe_Cu100		vue_large	auto	cadre 100.00x100.00 nm > 20 nm	42c6fc924d968a9b86b392c6d7d4e374e7076efefde61f9b7bc785ca1ca15b6f	NKN2/20240307_LHe_Cu100/240307_001.sxm
 240307_002.sxm	20240307_LHe_Cu100		vue_large	auto	cadre 100.00x100.00 nm > 20 nm	5578b7517bb7a950ec7216263951125d77a072282b7e5f178f2d7df27185fc7f	NKN2/20240307_LHe_Cu100/240307_002.sxm

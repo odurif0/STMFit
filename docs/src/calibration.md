@@ -64,7 +64,7 @@ DFT workflow, not from grades. The history of these choices is in the
 [journal](journal.md): many single-change variants were graded and rejected,
 and none was retuned after grading.
 
-## Measurement audit (`test/measure_calibration.jl`)
+## Measurement audit (`scripts/calibration/measure_calibration.jl`)
 
 The tool reports apparent widths and spacings in both scan directions,
 missing measurements, and where the former bootstrap substituted fallback
@@ -73,7 +73,7 @@ values. It does **not** write a production config. On the full146 cohort
 and for spacings on 261/292. The observed-only measurements are more available
 but not more consistent between forward and backward views. No automatic
 physical calibration is justified by them. Settings: `config/calibration_measurements.toml`;
-cohort comparison: `test/summarize_calibration_measurements.jl`.
+cohort comparison: `scripts/calibration/summarize_calibration_measurements.jl`.
 
 ## Effective sample size
 
@@ -85,7 +85,7 @@ selection ([Model selection](selection.md#Why-GCV)).
 ## Calibrating a new molecule
 
 1. Copy `config/template.toml`. Inspect raw scans in both directions with
-   `test/measure_calibration.jl` and `test/inspect_one_file.jl`.
+   `scripts/calibration/measure_calibration.jl` and `scripts/tools/inspect_one_file.jl`.
 2. Separate unavailable values, apparent measurements and independent physical
    evidence. Do not take a median of silently substituted defaults.
 3. Set widths, spacing, overlap and `n_max` from independent evidence (FWHM,

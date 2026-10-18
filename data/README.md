@@ -29,7 +29,7 @@ data/
 - To change a decision, edit the table, then rebuild:
 
   ```bash
-  julia -t 4 --project=. test/report_data_sets.jl --data data \
+  julia -t 4 --project=. scripts/grading/report_data_sets.jl --data data \
       --table benchmarks/chitosan_6mer_cu100_triage.tsv --table benchmarks/chitosan_10_20mer_targets.tsv
   ```
 
@@ -71,7 +71,7 @@ A new molecule:
 ```bash
 mkdir data/<molecule>
 cp /path/to/scans/*.sxm data/<molecule>/
-julia --project=. test/measure_calibration.jl data/<molecule>/<clean_scan>.sxm
+julia --project=. scripts/calibration/measure_calibration.jl data/<molecule>/<clean_scan>.sxm
 ```
 
 Then follow `docs/src/calibration.md` (Calibrating a new molecule).

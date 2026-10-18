@@ -915,3 +915,54 @@ with `(NKN)2`.
   1,640 10–20mer scans are `not_triaged`. The sets are unchanged (146, 380 and
   25).
 
+### 2026-10-18 — Repository restructured; aggressive cleanup
+
+User request: an optimal layout of the repository, with a fairly aggressive
+cleanup. No scientific behavior changes.
+
+- **Layout.**
+  - `scripts/` holds the command-line programs by role:
+    - `pipeline/` (19): the promoted method and its stages, label-free;
+    - `grading/` (7): every script that reads labels;
+    - `data/` (2), `calibration/` (2), `tools/` (1).
+  - `test/` now holds only tests, with `test/runtests.jl` as the single entry.
+    It runs each file in its own process, plus the package tests and the
+    end-to-end run (`--fast` skips that run).
+  - The former `test/lib/` is the precompiled `STMFit` library in `src/`.
+    Its modules are `ScriptUtils`, `ReconstructedUnitAssignment`,
+    `UnitAssignmentReport`, `EmpiricalFisherNative`, `CCMoldNative`,
+    `PatchPreprocessing`, `MoleculeConsensus` and `MoleculeFusion`; scripts load
+    them with `using STMFit.<Module>`.
+  - DFT material is grouped in `dft/`: `inputs/` (was `hpc/qe_molds/`),
+    `molds/` (was `templates/`) and `runs/` (was `qe/`, untracked). The
+    promoted configs are untouched; their comments still name the old
+    `test/` paths.
+  - Old to new: `test/<script>.jl` → `scripts/<role>/<script>.jl`,
+    `test/lib/<x>.jl` → `src/<x>.jl`, `test/lib/cc_mold_builder.py` →
+    `test/reference/cc_mold_builder.py`.
+- **Removed.**
+  - `packages/STMMolecularFitGUI.jl` (unmaintained).
+  - The package CLIs and legacy programs: `cli.jl`, `run.jl`, `examples/`, the
+    old package READMEs and `.gitignore`s, and the `ArgParse` dependency.
+  - The chunked-counting HPC path: `launch_remote.sh`, `batch_array.sbatch`,
+    `merge_chunks.jl`, `remote.env.example`, and `summarize.jl`, used only by
+    it. The HPC path is now one `sbatch`.
+  - Two finished research harnesses: `assignment_view_variants.jl`, and
+    `compare_reconstructed_champion.jl` with its test.
+  - Root leftovers: agent-tool state (`.agents`, `.codex`, `.codegraph`,
+    `.cortexkit`, `.slim`), caches, and the July debug journal (its mold
+    conclusion is recorded above).
+  - The unused root dependencies `IntervalArithmetic` and `StatsBase`.
+- **Environment.** The stdlibs used by the library were added to the root
+  project. The Manifest was re-resolved offline with Julia 1.13.2, the user's
+  rule being to keep the latest release: package versions are unchanged, and
+  only stdlib JLLs moved.
+- **Verification.**
+  - The pre-refactor suite passed in full: 19 files plus the end-to-end run.
+  - After the refactor, `test/runtests.jl` passes all 21 runs.
+  - One test had reached `ScriptUtils` through a script module; it now uses
+    `STMFit.ScriptUtils`.
+  - The byte-for-byte check on real data (quickstart checksums and the full146
+    run against run A) is pending: Viper was unreachable (expired gateway
+    session).
+

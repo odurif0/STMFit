@@ -2,7 +2,7 @@
 #   julia --project=. test/test_data_sets.jl
 # Skips when the raw scans are absent (STMFIT_DATA_DIR or the default raw link).
 using Test, SHA
-include(joinpath(@__DIR__, "report_data_sets.jl"))
+include(joinpath(@__DIR__, "..", "scripts", "grading", "report_data_sets.jl"))
 
 const RAW = get(ENV, "STMFIT_DATA_DIR", joinpath(@__DIR__, "..", "results", "reconstructed_cc_soft_v1", "full146_raw"))
 const SCANS = ["240817_002.sxm", "240817_003.sxm", "240817_004.sxm"]

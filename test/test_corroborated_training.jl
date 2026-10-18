@@ -1,13 +1,12 @@
 # Cohort learning restricted to scans whose count is corroborated by repeated scans.
 #   julia --project=. test/test_corroborated_training.jl
 using Test, TOML, Random
-include(joinpath(@__DIR__, "lib", "reconstructed_unit_assignment.jl"))
-using .ReconstructedUnitAssignment
+using STMFit.ReconstructedUnitAssignment
 module GMM
-include(joinpath(@__DIR__, "build_labelfree_gmm_predictions.jl"))
+include(joinpath(@__DIR__, "..", "scripts", "pipeline", "build_labelfree_gmm_predictions.jl"))
 end
 module KM
-include(joinpath(@__DIR__, "build_labelfree_unit_predictions.jl"))
+include(joinpath(@__DIR__, "..", "scripts", "pipeline", "build_labelfree_unit_predictions.jl"))
 end
 const ROOT = dirname(@__DIR__)
 const CONTROL = joinpath(ROOT, "config", "unit_assignment_patch_support.toml")

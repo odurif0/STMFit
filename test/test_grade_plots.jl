@@ -1,7 +1,7 @@
 # Benchmark categories used to sort molecule plots (external grading only).
 #   julia --project=. test/test_grade_plots.jl
 using Test
-include(joinpath(@__DIR__, "grade_consensus_run.jl"))
+include(joinpath(@__DIR__, "..", "scripts", "grading", "grade_consensus_run.jl"))
 
 @testset "plot categories" begin
     grades = [Dict("file" => "a.sxm", "phys_alignment" => "identity"),

@@ -29,7 +29,7 @@ sequence, composition or benchmark label enters the DFT setup.
 The lower 96 Cu atoms are frozen; the top Cu layer and the trimer relax. Both
 systems share the lateral Cu(100) registry and the central-ring frame. The slab
 top is at z ≈ 3.615 Å, with about 12 Å of vacuum. Structures and input
-templates: `hpc/qe_molds/`.
+templates: `dft/inputs/`.
 
 ## Electronic structure
 
@@ -66,8 +66,8 @@ Accepted cubes (PP jobs 10640445/10640446):
 
 | Cube | SHA-256 |
 |---|---|
-| `qe/glcn_restart5/glcn_central_ldos.cube` | `80cd1d1fde94cf084cc7ea464d2bf065b36b2c015ea0bfaef8cebfee8ff88863` |
-| `qe/glcnac/glcnac_central_ldos.cube` | `40649ccd9eb6768444b8ff61bf4a639b3940cf926fe3eb42254eb024faf9b5bf` |
+| `dft/runs/glcn_restart5/glcn_central_ldos.cube` | `80cd1d1fde94cf084cc7ea464d2bf065b36b2c015ea0bfaef8cebfee8ff88863` |
+| `dft/runs/glcnac/glcnac_central_ldos.cube` | `40649ccd9eb6768444b8ff61bf4a639b3940cf926fe3eb42254eb024faf9b5bf` |
 
 The maps are local LDOS proxies: no explicit tip orbital, tip relaxation,
 finite-temperature transport or calibrated constant-current feedback.
@@ -107,9 +107,9 @@ mold was replaced.
 
 ## Production molds
 
-`templates/chitosan_cc_molds_native_v1.tsv` is built from the two accepted
-cubes and the tracked frames (`templates/qe_frames/`) by
-`test/build_cc_molds_native.jl` ([DFT molds](qe_stm_molds.md)). It keeps the
+`dft/molds/chitosan_cc_molds_native_v1.tsv` is built from the two accepted
+cubes and the tracked frames (`dft/molds/qe_frames/`) by
+`scripts/pipeline/build_cc_molds_native.jl` ([DFT molds](qe_stm_molds.md)). It keeps the
 historical first-index-fast cube addressing and the legacy isovalue rule, which
 replay the champion lineage. The molds are therefore empirical templates:
 their benchmark value is measured by external grading, not by the physics
@@ -120,7 +120,7 @@ versioned mold file and a new graded experiment.
 
 | Item | Location |
 |---|---|
-| Structures, slab metadata, QE input templates | `hpc/qe_molds/` |
-| Accepted SCF states, LDOS cubes and logs (large, untracked) | `qe/glcn_restart5/` and `qe/glcnac/` (6.4 GB) on the local machine only, since the October 2026 cleanup. Keep a backup (external disk or the Zenodo data record). The diagnostic campaign outputs were deleted. |
-| Frames, molds and provenance | `templates/` |
+| Structures, slab metadata, QE input templates | `dft/inputs/` |
+| Accepted SCF states, LDOS cubes and logs (large, untracked) | `dft/runs/glcn_restart5/` and `dft/runs/glcnac/` (6.4 GB) on the local machine only, since the October 2026 cleanup. Keep a backup (external disk or the Zenodo data record). The diagnostic campaign outputs were deleted. |
+| Frames, molds and provenance | `dft/molds/` |
 | Retired preparation, audit and diagnostic scripts | tag `archive/pre-cleanup-20260929` |

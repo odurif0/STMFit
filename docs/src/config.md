@@ -14,7 +14,7 @@ must update this page and [Calibration](calibration.md).
 | `unit_assignment_corroborated_training.toml` | Per-scan assignment | Promoted |
 | `unit_assignment_patch_support.toml` | Same, learning on all scans | Previous reference (control) |
 | `unit_assignment_reconstructed.toml`, `_matched_residual.toml`, `_transverse_fisher.toml` | Lineage and test fixtures | Not for production |
-| `calibration_measurements.toml` | `test/measure_calibration.jl` audit | Diagnostic |
+| `calibration_measurements.toml` | `scripts/calibration/measure_calibration.jl` audit | Diagnostic |
 | `template.toml` | Starting point for a new molecule | Template |
 
 ## Counting configs
@@ -51,7 +51,7 @@ Other `ChainSweepConfig` fields keep their struct defaults
 `early_stop_patience = 3`, `student_nu = 4.0`); see
 `packages/GaussianFit2D.jl/src/core.jl`.
 
-### `test/batch_full.jl` options
+### `scripts/pipeline/batch_full.jl` options
 
 `[N_files]` (first positional argument), `--config`, `--data-dir`, `--outdir`,
 `--chunk i/n`, `--tsv` (optional triage input), `--skip-1d` (default) /
@@ -75,7 +75,7 @@ skips files already done in `--outdir`, so it can be resumed.
 | `min_overlap_px`, `max_center_distance_nm` | 500, 6.0 | Registration overlap and centroid distance limits |
 | `min_track_scans`, `majority` | 3, `strict` | Consensus evidence |
 | `frame_margin_nm` | 0.3 | Registered footprint must lie this far inside the frame |
-| `collect_max_gap_min`, `collect_max_offset_nm`, `collect_max_range_nm` | 30, 5, 20 | `test/collect_repeat_scans.jl` candidate rules |
+| `collect_max_gap_min`, `collect_max_offset_nm`, `collect_max_range_nm` | 30, 5, 20 | `scripts/data/collect_repeat_scans.jl` candidate rules |
 | `fusion`, `fusion_min_scans` | `latent_class`, 3 | Fusion model and minimum scans per physical lobe |
 | `[preprocessing] channel`, `flatten` | `Z`, `plane+rows` | Registration image |
 
@@ -96,7 +96,7 @@ Values of the promoted `unit_assignment_corroborated_training.toml`:
 | Patches | `assignment_patch_support = "complete_disk_symmetric"`, `patch_residual_filter = "smooth_residual"`, `pixel_order = "u_outer_t_inner"` |
 
 Several keys are policy switches whose other historical values were rejected.
-`test/build_labelfree_gmm_predictions.jl` now accepts only the promoted value and
+`scripts/pipeline/build_labelfree_gmm_predictions.jl` now accepts only the promoted value and
 fails otherwise. The consensus driver requires `patch_residual_filter =
 "smooth_residual"`.
 
