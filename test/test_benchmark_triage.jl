@@ -23,19 +23,25 @@ if all(f -> isfile(joinpath(RAW, f)), SCANS)
             rows = scan_universe(cats)
             @test sort([r["file"] for r in rows]) == SCANS            # same bytes counted once, first catalog wins
             tri = joinpath(tmp, "tri.tsv")
-            write(tri, "# test\nfile\tsession\tdecision\tmotif\tsource\tnote\tsha256\n" *
-                  join(["$(r["file"])\t$(r["session"])\t$(i == 3 ? "ecarte" : "garde")\t$(i == 3 ? "incertain" : "")\ttest\t\t$(r["sha256"])\n"
+            folder(i) = i == 1 ? "gardes/benchmark" : i == 2 ? "gardes/candidats" : "ecartes/incertain"
+            write(tri, "# test\nfile\tsession\tfolder\tdecision\tmotif\tsource\tnote\tsha256\torigin\n" *
+                  join(["$(r["file"])\t$(r["session"])\t$(folder(i))\t$(i == 3 ? "ecarte" : "garde")\t$(i == 3 ? "incertain" : "")\ttest\t\t$(r["sha256"])\t$(r["session"])/$(r["file"])\n"
                         for (i, r) in enumerate(sort(rows; by=r -> r["file"]))]))
             dest = joinpath(tmp, "dest")
             redirect_stdout(devnull) do
                 triage_main(["--catalog", cats[1], "--catalog", cats[2], "--count-config", cfg[4], "--triage", tri, "--dest", dest])
             end
-            @test sort(readdir(joinpath(dest, "gardes"))) == SCANS[1:2]
-            @test readdir(joinpath(dest, "ecartes")) == SCANS[3:3]
-            @test isfile(joinpath(dest, "planches", "gardes", "page_001.png"))
+            @test readdir(joinpath(dest, "gardes", "benchmark")) == SCANS[1:1]
+            @test readdir(joinpath(dest, "gardes", "candidats")) == SCANS[2:2]
+            @test readdir(joinpath(dest, "ecartes", "incertain")) == SCANS[3:3]
+            @test isfile(joinpath(dest, "planches", "gardes", "benchmark", "page_001.png"))
             @test isfile(joinpath(dest, "planches", "ecartes", "incertain", "page_001.png"))
-            _, applied = read_table(joinpath(dest, "tri.tsv"))
-            @test all(r -> isfile(r["source_path"]), applied)
+            _, listed = read_table(joinpath(dest, "LISTE.tsv"))
+            @test sort([r["fichier"] for r in listed]) == SCANS && all(r -> isfile(joinpath(dest, r["dossier"], r["fichier"])), listed)
+            @test occursin("| `gardes/benchmark/` | 1 |", read(joinpath(dest, "LISEZMOI.md"), String))
+            bad = joinpath(tmp, "bad.tsv"); write(bad, replace(read(tri, String), "gardes/candidats" => "ecartes/candidats"))
+            @test_throws ErrorException triage_main(["--catalog", cats[1], "--catalog", cats[2], "--count-config", cfg[4],
+                                                     "--triage", bad, "--dest", joinpath(tmp, "dest3")])
             short = joinpath(tmp, "short.tsv"); write(short, join(readlines(tri)[1:end-1], "\n") * "\n")
             @test_throws ErrorException triage_main(["--catalog", cats[1], "--count-config", cfg[4],
                                                      "--triage", short, "--dest", joinpath(tmp, "dest2")])

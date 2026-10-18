@@ -29,11 +29,13 @@ exact chains, 865/870 classified, 94 errors, against the previous record
 **Positions:** lobe positions repeat to 0.07 nm along and 0.09–0.11 nm across
 the chain over repeated scans (2026-10-04).
 
-**6-mer data (2026-10-05):** every (NKN)2 Cu(100) scan, local and on the
-institute share, is triaged once in `/home/durif/Rebecca/data/chitosan_6mer_Cu100/`:
-`gardes/` (526, the 145 benchmark scans plus 381 candidates) and `ecartes/`
-(623, with motif), from `benchmarks/chitosan_6mer_cu100_triage.tsv`. The 380
-new kept scans are a first visual pass awaiting the user's check. Ag(111)
+**6-mer data (2026-10-18):** every (NKN)2 Cu(100) scan, local and on the
+institute share, is kept once in the reference folder
+`/home/durif/Rebecca/data/chitosan_6mer_Cu100/`: `gardes/benchmark/` (the 146
+scans the runs use), `gardes/candidats/` (380, first visual pass awaiting the
+user's check) and `ecartes/<motif>/` (623), listed in `LISTE.tsv` and built
+from `benchmarks/chitosan_6mer_cu100_triage.tsv`. The benchmark runs read
+`gardes/benchmark/`. Ag(111)
 (160 usable scans) sits untriaged in `chitosan_6mer_Ag111/`.
 
 **Limits:** NKNNKN edge-adjacency confound. The benchmark GlcNAc signal is
@@ -793,3 +795,30 @@ both folders and adjusts.
   judgement on thumbnails: the `incertain` folder is where a human check
   matters most. Benchmark membership changes only after that check; then the
   frozen method is graded on the additions (step 1.5).
+
+### 2026-10-18 — One reference folder for the 6-mer Cu(100) scans
+
+User request: every 6-mer file in use centralised and listed in one place,
+very clearly. It was not quite the case: the 146 cohort scans were in
+`gardes/` but mixed with the 380 unvalidated candidates; the runs read them
+through `full146_raw` symlinks into another copy (`data/chitosan_6mer/`); and
+the list was split between the 145-file manifest, the symlinks (the 146th
+scan, `240310_Cu100009`) and `tri.tsv`.
+
+- **Layout.** `/home/durif/Rebecca/data/chitosan_6mer_Cu100/` now holds
+  `gardes/benchmark/` (146: the 145 graded scans and `240310_Cu100009`, used by
+  the runs but not graded), `gardes/candidats/` (380) and `ecartes/<motif>/`
+  (623 in ten motif folders). `LISTE.tsv` has one row per scan (folder,
+  decision, motif, who decided, note, session, acquisition date and time,
+  frame, pixels, origin `<session>/<file>` in the (NKN)2 tree, sha256);
+  `LISEZMOI.md` gives the count and meaning of every folder.
+- **Single source.** The triage table gained `folder` and `origin` columns;
+  `test/report_benchmark_triage.jl` copies every scan to `DEST/<folder>/` and
+  writes the list, the readme and per-folder sheets, so the folder is always
+  rebuilt from the table. Rebuilt from its own files (no share needed): 1,149
+  scans, checksums identical, same set as before.
+- **Runs.** Both `full146_raw` symlink sets under
+  `results/reconstructed_cc_soft_v1/` now point to `gardes/benchmark/`
+  (byte-identical files, same names); `data/chitosan_6mer_Cu100` links to the
+  reference folder, and the docs use it.
+

@@ -6,10 +6,10 @@ subdirectory per dataset, or point scripts elsewhere with `--data-dir` (or
 
 | Dataset | Local | Viper | Content |
 |---|---|---|---|
-| 6-mer lab tree | `data/chitosan_6mer/` (14 session folders, 935 scans, plus 146 top-level copies of benchmark scans; source `/home/durif/Rebecca/data/data/`) | — | Inventory in `benchmarks/chitosan_6mer_data_inventory.tsv` |
-| 6-mer Cu(100) triage | `/home/durif/Rebecca/data/chitosan_6mer_Cu100/` — `gardes/` (526), `ecartes/` (623), `tri.tsv`, `planches/` | — | Every (NKN)2 Cu(100) scan of the local tree and the institute share `hive.fkf.mpg.de/esi/DATA/STM/STM_DATA/(NKN)2`, deduplicated; built by `test/report_benchmark_triage.jl` from `benchmarks/chitosan_6mer_cu100_triage.tsv` (journal 2026-10-05) |
+| **6-mer (NKN)2 on Cu(100): reference** | `/home/durif/Rebecca/data/chitosan_6mer_Cu100/` (link `data/chitosan_6mer_Cu100`) | — | Every Cu(100) scan once (1,149): `gardes/benchmark/` (146, used by the benchmark runs), `gardes/candidats/` (380, to validate), `ecartes/<motif>/` (623). `LISTE.tsv` lists every scan, `LISEZMOI.md` explains the folders. Built by `test/report_benchmark_triage.jl` from `benchmarks/chitosan_6mer_cu100_triage.tsv` |
+| 6-mer benchmark cohort (runs) | symlinks in `results/reconstructed_cc_soft_v1/full146_raw/` → `gardes/benchmark/` | `/ptmp/oldu/stmfit/full146_v1_inputs/full146_raw/` | 146 scans; 145 graded (`benchmarks/chitosan_6mer_counting_confirmed.toml`) |
+| 6-mer raw source | institute share `hive.fkf.mpg.de/esi/DATA/STM/STM_DATA/(NKN)2`; local copy of the 2024 sessions in `/home/durif/Rebecca/data/data/` (with spectra) | — | Origin of every scan (`origine` column of `LISTE.tsv`); not used directly |
 | 6-mer Ag(111) | `/home/durif/Rebecca/data/chitosan_6mer_Ag111/` (160 usable scans, `MANIFEST.tsv`) | — | Share sessions of July 2025; not triaged, not benchmark material |
-| 6-mer benchmark cohort | symlinks in `results/reconstructed_cc_soft_v1/full146_raw/` | `/ptmp/oldu/stmfit/full146_v1_inputs/full146_raw/` | 146 scans; 145 graded (`benchmarks/chitosan_6mer_counting_confirmed.toml`) |
 | Unknown 10–20mers | `/home/durif/Rebecca/data/10_20mer_analysis/` (25 targets) | `/ptmp/oldu/stmfit/data_10_20mer` | Repeat candidates are collected with `test/collect_repeat_scans.jl` |
 
 The manifests in `benchmarks/` hold external grading metadata only (quality

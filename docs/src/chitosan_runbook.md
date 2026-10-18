@@ -21,8 +21,13 @@ Raw `.sxm` files are not tracked ([data/README](https://github.com/odurif0/STMFi
 The 6-mer benchmark cohort is 146 raw scans; 145 of them have a confirmed
 count of 6 (`benchmarks/chitosan_6mer_counting_confirmed.toml`), and the
 control sequence `NKNNKN` is encoded `010010`
-(`benchmarks/chitosan_240817_unit_sequences.tsv`). On Viper, the staged cohort
-is `/ptmp/oldu/stmfit/full146_v1_inputs/full146_raw` (symlinks, unique basenames).
+(`benchmarks/chitosan_240817_unit_sequences.tsv`). Locally, every 6-mer
+Cu(100) scan is kept once in the reference folder
+`/home/durif/Rebecca/data/chitosan_6mer_Cu100/` (link `data/chitosan_6mer_Cu100`):
+the 146 cohort scans in `gardes/benchmark/`, candidates in `gardes/candidats/`,
+discarded scans in `ecartes/<motif>/`, all listed in `LISTE.tsv`. On Viper, the
+staged cohort is `/ptmp/oldu/stmfit/full146_v1_inputs/full146_raw` (symlinks,
+unique basenames).
 
 ## Run the promoted method on Viper
 
@@ -65,7 +70,7 @@ After fetching the complete run, check integrity and grade outside the method:
 
 ```bash
 julia --project=. test/grade_consensus_run.jl --run results/run_<C> \
-    --outdir results/grade_<C> --data-dir data/chitosan_6mer \
+    --outdir results/grade_<C> --data-dir data/chitosan_6mer_Cu100/gardes/benchmark \
     [--profile name=other_predictions.tsv ...]
 ```
 

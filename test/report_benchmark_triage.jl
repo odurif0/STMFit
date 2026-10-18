@@ -11,15 +11,53 @@
 # first catalog winning. --sheets draws the usable scans for review: an
 # 8 x 8 nm window centred on the molecule (same scale on every tile, 2 nm bar,
 # unscanned pixels blank), tagged [B] in the benchmark manifest, [R] reviewed
-# before, [N] never reviewed. --triage (columns file, session, sha256,
-# decision garde|ecarte, motif, source, note; one row per scan) is applied
-# by copying every scan into DEST/gardes or DEST/ecartes under its file name,
-# with DEST/tri.tsv and review sheets in DEST/planches/gardes and
-# DEST/planches/ecartes/<motif>. Benchmark membership is a human decision;
-# nothing here feeds the method.
+# before, [N] never reviewed. --triage (columns file, session, folder,
+# decision garde|ecarte, motif, source, note, sha256, origin; one row per
+# scan) is applied by copying every scan to DEST/<folder>/<file> (folder
+# gardes/... for garde, ecartes/... for ecarte), with DEST/LISTE.tsv (one row
+# per scan), DEST/LISEZMOI.md (counts and meaning of every folder) and review
+# sheets in DEST/planches/<folder>. Benchmark membership is a human
+# decision; nothing here feeds the method.
 include(joinpath(@__DIR__, "report_benchmark_candidates.jl"))
 
 const CROP_NM = 8.0
+const FOLDER_TEXT = Dict(
+    "gardes/benchmark" => "utilisés par les runs du benchmark (manifeste `benchmarks/chitosan_6mer_counting_confirmed.toml`, plus `240310_Cu100009` utilisé mais non noté)",
+    "gardes/candidats" => "gardés au premier tri visuel, à valider avant d'entrer dans le benchmark",
+    "ecartes/vue_large" => "vue d'ensemble, cadre > 20 nm",
+    "ecartes/molecule_coupee" => "molécule coupée par le bord du cadre ou par la zone non scannée",
+    "ecartes/incertain" => "cas limites du premier tri, à revoir en priorité",
+    "ecartes/revue_anterieure_ambigu" => "jugés ambigus ou exclus lors de la revue antérieure",
+    "ecartes/revue_anterieure_exclu" => "rejetés à l'œil lors de la revue antérieure (non chitosan, etc.)",
+    "ecartes/pas_de_molecule" => "pas de molécule nette (bruit, marche, bord de scan)",
+    "ecartes/artefact_pointe" => "artefact sur la molécule (saut de ligne, stries, image dédoublée, changement de pointe)",
+    "ecartes/plusieurs_objets" => "plusieurs molécules, objets accolés ou agrégat",
+    "ecartes/pas_6mere_long" => "chaîne nettement plus longue qu'un 6-mère",
+    "ecartes/pas_6mere_court" => "objet nettement plus court qu'un 6-mère")
+
+function write_readme(path, tri, triage_path)
+    folders = sort(unique(t["folder"] for t in tri); by=f -> (startswith(f, "ecartes") , f))
+    open(path, "w") do io
+        println(io, "# Scans (NKN)2 sur Cu(100) : dossier de référence\n")
+        println(io, "Chaque scan Cu(100) des sessions (NKN)2, du disque local et du serveur hive")
+        println(io, "(`esi/DATA/STM/STM_DATA/(NKN)2`), est ici une seule fois (doublons retirés par sha256).")
+        println(io, "Généré le $(Dates.today()) par `test/report_benchmark_triage.jl` (dépôt STMFit) depuis")
+        println(io, "`$(basename(triage_path))`. Ne pas modifier à la main : changer le tableau, puis reconstruire.\n")
+        println(io, "| Dossier | Scans | Contenu |\n|---|---:|---|")
+        for f in folders
+            println(io, "| `$f/` | $(count(t -> t["folder"] == f, tri)) | $(get(FOLDER_TEXT, f, "")) |")
+        end
+        ng = count(t -> t["decision"] == "garde", tri)
+        println(io, "| **total** | **$(length(tri))** | $ng gardés, $(length(tri) - ng) écartés |\n")
+        println(io, "- `LISTE.tsv` : une ligne par scan (fichier, dossier, décision, motif, qui a décidé, note,")
+        println(io, "  session, date et heure d'acquisition, cadre, pixels, origine `<session>/<fichier>` dans")
+        println(io, "  l'arbre (NKN)2, sha256).")
+        println(io, "- `planches/<dossier>/` : vignettes de relecture, cadre 8 × 8 nm centré sur la molécule,")
+        println(io, "  barre de 2 nm.")
+        println(io, "- Qui a décidé : `auto` (règle technique), `benchmark_actuel`, `revue_anterieure`,")
+        println(io, "  `premier_tri_assistant` (premier tri visuel, à vérifier).")
+    end
+end
 
 function triage_options(args)
     ("--help" in args || "-h" in args || isempty(args)) && return nothing
@@ -106,21 +144,32 @@ function triage_main(args=ARGS)
         error("The triage must list every catalog scan once ($(length(tri)) rows, $(length(rows)) scans)")
     length(unique(t["file"] for t in tri)) == length(tri) || error("Duplicate file names in the triage")
     all(t -> t["decision"] in ("garde", "ecarte"), tri) || error("decision must be garde or ecarte")
-    dest = o["--dest"]
-    for d in ("gardes", "ecartes"); mkpath(joinpath(dest, d)); end
     for t in tri
-        cp(by_sha[t["sha256"]]["path"], joinpath(dest, t["decision"] * "s", t["file"]))
+        f = t["folder"]
+        (occursin(r"^(gardes|ecartes)/[A-Za-z0-9_]+$", f) && startswith(f, t["decision"] * "s/")) ||
+            error("Folder $f does not match decision $(t["decision"]) for $(t["file"])")
     end
-    cols = ["file", "session", "decision", "motif", "source", "note", "sha256", "source_path"]
-    write_table(joinpath(dest, "tri.tsv"), cols, [merge(t, Dict("source_path" => by_sha[t["sha256"]]["path"])) for t in tri])
+    dest = o["--dest"]
+    for t in tri
+        mkpath(joinpath(dest, t["folder"]))
+        cp(by_sha[t["sha256"]]["path"], joinpath(dest, t["folder"], t["file"]))
+    end
+    sorted = sort(tri; by=t -> (t["session"], t["file"]))
+    cols = ["fichier", "dossier", "decision", "motif", "decide_par", "note", "session", "date", "heure",
+            "cadre_nm", "pixels", "origine", "sha256"]
+    write_table(joinpath(dest, "LISTE.tsv"), cols, [begin
+        r = by_sha[t["sha256"]]
+        Dict("fichier" => t["file"], "dossier" => t["folder"], "decision" => t["decision"], "motif" => t["motif"],
+             "decide_par" => t["source"], "note" => t["note"], "session" => t["session"], "date" => get(r, "rec_date", ""),
+             "heure" => get(r, "rec_time", ""), "cadre_nm" => get(r, "range_nm", ""), "pixels" => get(r, "pixels", ""),
+             "origine" => t["origin"], "sha256" => t["sha256"])
+    end for t in sorted])
+    write_readme(joinpath(dest, "LISEZMOI.md"), tri, o["--triage"])
     views = scan_views(rows, pcfg)
-    order = Dict(r["sha256"] => i for (i, r) in enumerate(rows))
     named(t) = merge(by_sha[t["sha256"]], Dict("file" => t["file"]))
-    pick(f) = sort([named(t) for t in tri if f(t) && haskey(views, t["sha256"])]; by=r -> order[r["sha256"]])
-    review_sheets(pick(t -> t["decision"] == "garde"), views, joinpath(dest, "planches", "gardes"), "Gardés")
-    for m in sort(unique(t["motif"] for t in tri if t["decision"] == "ecarte"))
-        review_sheets(pick(t -> t["decision"] == "ecarte" && t["motif"] == m), views,
-                      joinpath(dest, "planches", "ecartes", m), "Écartés: $m")
+    for f in sort(unique(t["folder"] for t in tri))
+        part = [named(t) for t in sorted if t["folder"] == f && haskey(views, t["sha256"])]
+        review_sheets(part, views, joinpath(dest, "planches", f), f)
     end
     n = Dict(d => count(t -> t["decision"] == d, tri) for d in ("garde", "ecarte"))
     println("Triage applied to $dest: $(n["garde"]) gardés, $(n["ecarte"]) écartés")
