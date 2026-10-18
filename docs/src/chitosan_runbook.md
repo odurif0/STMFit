@@ -22,8 +22,8 @@ The 6-mer benchmark cohort is 146 raw scans; 145 of them have a confirmed
 count of 6 (`benchmarks/chitosan_6mer_counting_confirmed.toml`), and the
 control sequence `NKNNKN` is encoded `010010`
 (`benchmarks/chitosan_240817_unit_sequences.tsv`). Locally, every 6-mer
-Cu(100) scan is kept once in the reference folder
-`/home/durif/Rebecca/data/chitosan_6mer_Cu100/` (link `data/chitosan_6mer_Cu100`):
+Cu(100) scan is kept once in the reference folder `data/chitosan_6mer_Cu100/`
+(all data live in `data/`, untracked):
 the 146 cohort scans in `gardes/benchmark/`, candidates in `gardes/candidats/`,
 discarded scans in `ecartes/<motif>/`, all listed in `LISTE.tsv`. On Viper, the
 staged cohort is `/ptmp/oldu/stmfit/full146_v1_inputs/full146_raw` (symlinks,

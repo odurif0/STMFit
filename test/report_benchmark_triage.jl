@@ -152,7 +152,7 @@ function triage_main(args=ARGS)
     dest = o["--dest"]
     for t in tri
         mkpath(joinpath(dest, t["folder"]))
-        cp(by_sha[t["sha256"]]["path"], joinpath(dest, t["folder"], t["file"]))
+        cp(by_sha[t["sha256"]]["path"], joinpath(dest, t["folder"], t["file"]); follow_symlinks=true)
     end
     sorted = sort(tri; by=t -> (t["session"], t["file"]))
     cols = ["fichier", "dossier", "decision", "motif", "decide_par", "note", "session", "date", "heure",

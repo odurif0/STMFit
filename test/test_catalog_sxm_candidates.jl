@@ -16,9 +16,9 @@ if all(f -> isfile(joinpath(RAW, f)), SCANS)
     @testset "central folder" begin
         mktempdir() do tmp
             a = mkpath(joinpath(tmp, "rootA", "20240817_LHe_Cu100")); b = mkpath(joinpath(tmp, "rootB", "session"))
-            cp(joinpath(RAW, SCANS[1]), joinpath(a, SCANS[1])); cp(joinpath(RAW, SCANS[2]), joinpath(a, SCANS[2]))
-            cp(joinpath(RAW, SCANS[1]), joinpath(b, "renamed_copy.sxm"))        # same bytes, other name
-            cp(joinpath(RAW, SCANS[3]), joinpath(b, SCANS[3]))
+            cp(joinpath(RAW, SCANS[1]), joinpath(a, SCANS[1]); follow_symlinks=true); cp(joinpath(RAW, SCANS[2]), joinpath(a, SCANS[2]); follow_symlinks=true)
+            cp(joinpath(RAW, SCANS[1]), joinpath(b, "renamed_copy.sxm"); follow_symlinks=true)   # same bytes, other name
+            cp(joinpath(RAW, SCANS[3]), joinpath(b, SCANS[3]); follow_symlinks=true)
             ex = joinpath(tmp, "exclude.tsv"); write(ex, "file\treason\n$(SCANS[2])\tnot chitosan\n")
             cfg = ["--consensus-config", joinpath(@__DIR__, "..", "config", "molecule_consensus.toml"),
                    "--count-config", joinpath(@__DIR__, "..", "config", "chitosan.toml")]

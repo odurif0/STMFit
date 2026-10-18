@@ -3,7 +3,7 @@
 # chitosan_6mer_counting_confirmed.toml + 240310_Cu100009); gardes/candidats = kept by the first visual pass,
 # to be validated by the user; ecartes/<motif> = discarded. source: auto (catalog_sxm_candidates.jl status),
 # revue_anterieure (earlier human review), benchmark_actuel (manifest), premier_tri_assistant (2026-10-05).
-# origin: <session>/<file> in the (NKN)2 tree (institute share; the 2024 sessions also in Rebecca/data/data).
+# origin: <session>/<file> in the (NKN)2 tree (institute share; the 2024 sessions also in data/raw/chitosan_6mer_2024_lab_tree).
 # Applied by test/report_benchmark_triage.jl. Grading-side metadata: never read by the method.
 file	session	folder	decision	motif	source	note	sha256	origin
 240307_001.sxm	20240307_LHe_Cu100	ecartes/vue_large	ecarte	vue_large	auto	cadre 100.00x100.00 nm > 20 nm	42c6fc924d968a9b86b392c6d7d4e374e7076efefde61f9b7bc785ca1ca15b6f	20240307_LHe_Cu100/240307_001.sxm

@@ -29,9 +29,9 @@ exact chains, 865/870 classified, 94 errors, against the previous record
 **Positions:** lobe positions repeat to 0.07 nm along and 0.09–0.11 nm across
 the chain over repeated scans (2026-10-04).
 
-**6-mer data (2026-10-18):** every (NKN)2 Cu(100) scan, local and on the
-institute share, is kept once in the reference folder
-`/home/durif/Rebecca/data/chitosan_6mer_Cu100/`: `gardes/benchmark/` (the 146
+**Data (2026-10-18):** all project data live in the repository's untracked
+`data/` folder (self-contained). Every (NKN)2 Cu(100) scan, local and on the
+institute share, is kept once in the reference folder `data/chitosan_6mer_Cu100/`: `gardes/benchmark/` (the 146
 scans the runs use), `gardes/candidats/` (380, first visual pass awaiting the
 user's check) and `ecartes/<motif>/` (623), listed in `LISTE.tsv` and built
 from `benchmarks/chitosan_6mer_cu100_triage.tsv`. The benchmark runs read
@@ -821,4 +821,31 @@ scan, `240310_Cu100009`) and `tri.tsv`.
   `results/reconstructed_cc_soft_v1/` now point to `gardes/benchmark/`
   (byte-identical files, same names); `data/chitosan_6mer_Cu100` links to the
   reference folder, and the docs use it.
+
+### 2026-10-18 — All data inside the repository folder
+
+User request: every dataset centralised in `Git/STMFit`, self-contained and
+excluded from git.
+
+- **Layout.** `data/` (already ignored by `.gitignore`, except its README and
+  `.gitkeep`) now holds `chitosan_6mer_Cu100/` (the reference folder, moved
+  from `/home/durif/Rebecca/data`), `chitosan_6mer_Ag111/` (moved) and `raw/`:
+  the 2024 lab tree with spectra and annotations, the 10–20mer scans, the 25
+  10–20mer targets and the loose files (`SequenceAnalysis.xlsx`, …). File
+  counts match the sources (3,416, 6,503 and 25 files).
+- **No duplication on disk.** `raw/` files are hard links to the originals in
+  `/home/durif/Rebecca/data`, which stay untouched; the 935 reference scans of
+  the 2024 sessions are hard links to their raw files (same sha256). The 214
+  scans of the 2025 share sessions exist only in the reference folder.
+- **Self-contained links.** Every symlink under `results/` is now relative and
+  resolves inside the repository: 292 cohort links and 65 links to the
+  10–20mer inputs (previously absolute paths into `/home/durif/Rebecca/data`),
+  and 1,168 links of eight Viper run-input folders that pointed to `/ptmp`
+  (dead locally), repointed by basename to the same 146 cohort scans. No link
+  is broken and none leaves the repository.
+- **Left as is.** `data/chitosan_6mer/` (1,081 files, the old copy of the lab
+  tree and of the cohort) is now redundant: every file is identical to one in
+  `raw/` or the reference folder. The absolute paths inside
+  `benchmarks/chitosan_6mer_data_inventory.tsv` are historical metadata, not
+  read to open files.
 

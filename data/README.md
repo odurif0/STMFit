@@ -1,16 +1,27 @@
 # Data directory
 
-Raw Nanonis `.sxm` scans are **not tracked** (size). Place them here, one
-subdirectory per dataset, or point scripts elsewhere with `--data-dir` (or
-`STMFIT_DATA_DIR` for `batch_full.jl`). Basenames must be unique within a run.
+All project data live here, inside the repository folder, and are **not
+tracked** by git (`.gitignore`: `data/*` except this README and `.gitkeep`).
+The folder is self-contained: no data path points outside the repository
+(run inputs under `results/` are relative links into `data/`). Pass a folder
+with `--data-dir` (or `STMFIT_DATA_DIR` for `batch_full.jl`); basenames must be
+unique within a run.
 
-| Dataset | Local | Viper | Content |
-|---|---|---|---|
-| **6-mer (NKN)2 on Cu(100): reference** | `/home/durif/Rebecca/data/chitosan_6mer_Cu100/` (link `data/chitosan_6mer_Cu100`) | — | Every Cu(100) scan once (1,149): `gardes/benchmark/` (146, used by the benchmark runs), `gardes/candidats/` (380, to validate), `ecartes/<motif>/` (623). `LISTE.tsv` lists every scan, `LISEZMOI.md` explains the folders. Built by `test/report_benchmark_triage.jl` from `benchmarks/chitosan_6mer_cu100_triage.tsv` |
-| 6-mer benchmark cohort (runs) | symlinks in `results/reconstructed_cc_soft_v1/full146_raw/` → `gardes/benchmark/` | `/ptmp/oldu/stmfit/full146_v1_inputs/full146_raw/` | 146 scans; 145 graded (`benchmarks/chitosan_6mer_counting_confirmed.toml`) |
-| 6-mer raw source | institute share `hive.fkf.mpg.de/esi/DATA/STM/STM_DATA/(NKN)2`; local copy of the 2024 sessions in `/home/durif/Rebecca/data/data/` (with spectra) | — | Origin of every scan (`origine` column of `LISTE.tsv`); not used directly |
-| 6-mer Ag(111) | `/home/durif/Rebecca/data/chitosan_6mer_Ag111/` (160 usable scans, `MANIFEST.tsv`) | — | Share sessions of July 2025; not triaged, not benchmark material |
-| Unknown 10–20mers | `/home/durif/Rebecca/data/10_20mer_analysis/` (25 targets) | `/ptmp/oldu/stmfit/data_10_20mer` | Repeat candidates are collected with `test/collect_repeat_scans.jl` |
+| Folder | Content |
+|---|---|
+| `chitosan_6mer_Cu100/` | **Reference for the 6-mer (NKN)2 on Cu(100)**: every scan once (1,149, local tree and institute share, deduplicated). `gardes/benchmark/` = the 146 scans the benchmark runs use (145 graded in `benchmarks/chitosan_6mer_counting_confirmed.toml`, plus `240310_Cu100009`); `gardes/candidats/` = 380 kept by the first visual pass, to validate; `ecartes/<motif>/` = 623 discarded. `LISTE.tsv` lists every scan, `LISEZMOI.md` explains the folders. Rebuilt by `test/report_benchmark_triage.jl` from `benchmarks/chitosan_6mer_cu100_triage.tsv` |
+| `chitosan_6mer_Ag111/` | 160 usable 6-mer scans on Ag(111) (July 2025 share sessions), `MANIFEST.tsv`; not triaged, not benchmark material |
+| `raw/chitosan_6mer_2024_lab_tree/` | Raw 2024 (NKN)2 lab tree: 14 session folders (935 scans, spectra `.dat`/`.3ds`, notes) and `chitosan_manual_annotations.md` |
+| `raw/chitosan_10_20mer/` | Raw 10–20mer scans (about 1,670 `.sxm` with their files) |
+| `raw/chitosan_10_20mer_analysis/` | The 25 unknown 10–20mer target scans |
+| `raw/misc/` | Loose files: `SequenceAnalysis.xlsx` (manual sequence reads), `_KA_SOLVE.pptx`, `251206_034` scan and notes, profiles |
+
+On Viper the staged copies are temporary: `/ptmp/oldu/stmfit/full146_v1_inputs/full146_raw/`
+(6-mer cohort) and `/ptmp/oldu/stmfit/data_10_20mer` (10–20mers). The master
+copy of the raw (NKN)2 scans is the institute share
+`hive.fkf.mpg.de/esi/DATA/STM/STM_DATA/(NKN)2`; the `origine` column of
+`LISTE.tsv` gives each scan's `<session>/<file>` there. Files under `raw/` that
+also sit in `/home/durif/Rebecca/data` are hard links (one copy on disk).
 
 The manifests in `benchmarks/` hold external grading metadata only (quality
 classes, expected counts, control sequences). No fitting, selection or

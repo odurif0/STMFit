@@ -11,8 +11,8 @@ if all(f -> isfile(joinpath(RAW, f)), SCANS)
     @testset "triage" begin
         mktempdir() do tmp
             a = mkpath(joinpath(tmp, "rootA", "20240817_LHe_Cu100")); b = mkpath(joinpath(tmp, "rootB", "copy"))
-            for f in SCANS; cp(joinpath(RAW, f), joinpath(a, f)); end
-            cp(joinpath(RAW, SCANS[1]), joinpath(b, "same_bytes.sxm"))
+            for f in SCANS; cp(joinpath(RAW, f), joinpath(a, f); follow_symlinks=true); end
+            cp(joinpath(RAW, SCANS[1]), joinpath(b, "same_bytes.sxm"); follow_symlinks=true)
             cfg = ["--consensus-config", joinpath(@__DIR__, "..", "config", "molecule_consensus.toml"),
                    "--count-config", joinpath(@__DIR__, "..", "config", "chitosan.toml")]
             redirect_stdout(devnull) do

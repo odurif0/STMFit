@@ -205,7 +205,7 @@ function main(args=ARGS)
             r["status"] == "usable" || continue
             name = names[r["file"]] == 1 && !(r["file"] in taken) ? r["file"] : string(get(r, "session", "unknown"), "_", r["file"])
             name in taken && error("Central name collision: $name")
-            cp(r["path"], joinpath(dest, name)); push!(taken, name); r["central_name"] = name
+            cp(r["path"], joinpath(dest, name); follow_symlinks=true); push!(taken, name); r["central_name"] = name
             push!(added, merge(r, Dict("source_path" => r["path"], "added" => string(Dates.today()))))
         end
         manifest = vcat(central, [Dict(c => replace(get(r, c, ""), '\t' => ' ', '\n' => ' ') for c in mcols) for r in added])
