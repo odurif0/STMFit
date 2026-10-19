@@ -31,7 +31,7 @@ Host viper raven
     ControlPath ~/.ssh/master-%C
 ```
 
-Julia 1.13.2 on Viper (keep it at the latest release, as locally): `/viper/u1/oldu/software/julia-1.13.2/bin/julia`. Code
+Julia 1.13.2 on Viper (keep it at the latest release, as locally): `/viper/u1/<user>/software/julia-1.13.2/bin/julia`. Code
 lives under `/u/<user>/code/`, data and outputs under `/ptmp/<user>/stmfit/`.
 
 ## Promoted-method run (`run_molecule_consensus.sbatch`)
@@ -51,7 +51,7 @@ the runbook (`docs/src/chitosan_runbook.md`).
 
 ## Limits
 
-- **Raven group quota (account `oldu`): 8 CPUs** in total.
+- **Raven group quota: 8 CPUs** in total.
 - `batch_full.jl` uses at most 4 Julia threads per task; the sbatch scripts set
   `OMP_NUM_THREADS = OPENBLAS_NUM_THREADS = 1`.
 - On Viper, do not set `--partition` (the submit filter chooses). On Raven,

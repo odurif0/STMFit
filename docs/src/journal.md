@@ -29,13 +29,19 @@ exact chains, 865/870 classified, 94 errors, against the previous record
 **Positions:** lobe positions repeat to 0.07 nm along and 0.09–0.11 nm across
 the chain over repeated scans (2026-10-04).
 
-**Data (2026-10-18):** all data live in the untracked `data/` folder: one copy
-of every raw file in `data/raw/` (`NKN2/<session>`, `10_20mer/<session>`,
-`notes/`), working sets as links in `data/sets/` (`6mer_Cu100_benchmark` 146,
-`6mer_Cu100_candidates` 380 awaiting the user's decision, `10_20mer_targets`
-25) and `data/INDEX.tsv` (3,101 raw scans with their decision), rebuilt from
-the tables in `benchmarks/` by `test/report_data_sets.jl`. Discarded scans
-(623) have no folder, only a motif.
+**Data (2026-10-19):** all data live in the untracked `data/` folder.
+- One copy of every raw file is in `data/raw/` (`NKN2/<session>`,
+  `10_20mer/<session>`, `notes/`).
+- Working sets are links in `data/sets/`: `6mer_Cu100_benchmark` (493 =
+  145 graded + `240310_Cu100009` + 347 candidates validated by the user on
+  2026-10-19) and `10_20mer_targets` (25).
+- `data/INDEX.tsv` lists 3,101 raw scans with their decision.
+- The sets and the index are rebuilt from the tables in `benchmarks/` by
+  `scripts/grading/report_data_sets.jl`.
+- Discarded scans (656) have no folder, only a motif.
+- The grading manifest is still the 145-scan
+  `chitosan_6mer_counting_confirmed.toml`. The additions are graded in step
+  1.5.
 
 **Limits:** NKNNKN edge-adjacency confound. The benchmark GlcNAc signal is
 the contrast with the dimmer terminal lobe; without it the image features
@@ -975,7 +981,7 @@ cleanup. No scientific behavior changes.
       (`a977a3a`).
     - The outputs are in `results/{quickstart,full146}_refactor_b8986a0/`.
 - **Viper Julia.** Julia 1.13.2 is installed in
-  `/viper/u1/oldu/software/julia-1.13.2` (official tarball, checksum
+  `/viper/u1/<user>/software/julia-1.13.2` (official tarball, checksum
   verified); the 1.13.0 install is no longer used. The user opens the Viper
   connection with `mpcdf-ssh viper`.
 - **`release-prep`** (local branch) was rebased onto this layout. Its archive
@@ -1014,4 +1020,24 @@ aggregates, cut molecules and non-chitosan objects stay out.
 - **Next.** The user's decisions, exported from the page, go into the triage
   table (source `revue_utilisateur`). The data sets are then rebuilt, and the
   frozen method is graded on the additions (step 1.5).
+
+### 2026-10-19 — Candidates decided; HPC account removed from the docs
+
+- **Candidates.** The user accepted the suggestions of the review page: 347
+  candidates enter the benchmark set and 33 are discarded (motif `incertain`,
+  or `plusieurs_objets` for one), with source `validation_utilisateur`.
+  - `data/sets/6mer_Cu100_benchmark` now holds 493 scans; the candidate set is
+    empty and was removed.
+  - The 145-scan grading manifest is unchanged. Grading the frozen method on
+    the 347 additions needs an extended manifest and a Viper run (step 1.5).
+    The 2025 sessions should be reported apart, as they are the only new
+    molecules; the 2024 additions are mostly repeat scans of benchmark
+    molecules.
+- **HPC account.** The repository is public. At the user's request, the MPCDF
+  account name was replaced by `<user>` in every tracked file (paths
+  `/u/<user>/`, `/ptmp/<user>/`, `/viper/u1/<user>/`). No password, token, key
+  or OTP material was ever committed: the history was checked. Access needs
+  the user's password and OTP, which stay on the local machine. Earlier
+  commits still contain the account name; it is not a credential, and
+  rewriting the public history was not done.
 

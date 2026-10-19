@@ -129,7 +129,7 @@ changing selection logic.
   `sbatch --export=NONE,VAR=...`; shell variables before `sbatch` are not seen.
 - Run cohort fits, multi-file batches and exhaustive searches on Viper, not
   locally. Local runs are for single-file checks and tests.
-- Raven account `oldu` has an 8-CPU group quota. `batch_full.jl` uses at most
+- The Raven group account has an 8-CPU quota. `batch_full.jl` uses at most
   4 threads per task.
 - Long 10–20mer counting may need 8 h or more. QE jobs stay sequential under the
   one-node QOS limit.

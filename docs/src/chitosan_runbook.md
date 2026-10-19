@@ -27,7 +27,7 @@ one copy of every raw file in `data/raw/`, working sets as links in
 `data/sets/` (the cohort is `data/sets/6mer_Cu100_benchmark/`), and
 `data/INDEX.tsv` with every scan and its decision. The sets and the index are
 rebuilt from the tables in `benchmarks/` by `scripts/grading/report_data_sets.jl`. On
-Viper, the staged cohort is `/ptmp/oldu/stmfit/full146_v1_inputs/full146_raw`
+Viper, the staged cohort is `/ptmp/<user>/stmfit/full146_v1_inputs/full146_raw`
 (symlinks, unique basenames).
 
 ## Run the promoted method on Viper
@@ -38,17 +38,17 @@ variable on the `sbatch` command line.
 
 ```bash
 # local: sync the committed tree (+ the ignored Manifest.toml) to a new directory
-C=$(git rev-parse --short HEAD); D=/u/oldu/code/STMFit_$C
+C=$(git rev-parse --short HEAD); D=/u/<user>/code/STMFit_$C
 git ls-files > /tmp/files.txt && echo Manifest.toml >> /tmp/files.txt
 rsync -a --files-from=/tmp/files.txt ./ viper:$D/
 
 # on the login node: instantiate only (compute nodes have no internet)
-ssh viper "cd $D && /viper/u1/oldu/software/julia-1.13.2/bin/julia --project=. \
+ssh viper "cd $D && /viper/u1/<user>/software/julia-1.13.2/bin/julia --project=. \
     -e 'using Pkg; Pkg.instantiate(); Pkg.precompile()'"
 
 # dry-run, then one submission
-ssh viper "cd $D && J=/viper/u1/oldu/software/julia-1.13.2/bin/julia \
-  IN=/ptmp/oldu/stmfit/full146_v1_inputs OUT=/ptmp/oldu/stmfit/run_$C && \
+ssh viper "cd $D && J=/viper/u1/<user>/software/julia-1.13.2/bin/julia \
+  IN=/ptmp/<user>/stmfit/full146_v1_inputs OUT=/ptmp/<user>/stmfit/run_$C && \
   STMFIT_PROJECT_DIR=\$PWD STMFIT_INPUT_DIR=\$IN STMFIT_OUTDIR=\$OUT JULIA_BIN=\$J \
     bash hpc/run_molecule_consensus.sbatch --dry-run && \
   sbatch --no-requeue --time=04:00:00 --output=\$OUT-%j.log \
@@ -56,8 +56,8 @@ ssh viper "cd $D && J=/viper/u1/oldu/software/julia-1.13.2/bin/julia \
     hpc/run_molecule_consensus.sbatch"
 
 # poll, then fetch everything back (/ptmp is temporary)
-ssh viper "squeue -u oldu"
-rsync -a viper:/ptmp/oldu/stmfit/run_$C results/ && rsync -a "viper:/ptmp/oldu/stmfit/run_$C-*.log" results/
+ssh viper "squeue -u <user>"
+rsync -a viper:/ptmp/<user>/stmfit/run_$C results/ && rsync -a "viper:/ptmp/<user>/stmfit/run_$C-*.log" results/
 ```
 
 Optional variables: `STMFIT_RAW_SUBDIR` (default `full146_raw`),

@@ -12,9 +12,8 @@ data/
     10_20mer/<session>/  10-20mer sessions, Cu(100) and Ag(111)
     notes/               SequenceAnalysis.xlsx, manual annotations, slides, profiles
   sets/          working sets: relative symlinks into raw/ (generated)
-    6mer_Cu100_benchmark/    the scans the benchmark runs use
-    6mer_Cu100_candidates/   kept by the first visual pass, to move to the
-                             benchmark or discard
+    6mer_Cu100_benchmark/    benchmark scans (493: the 145-scan graded cohort,
+                             240310_Cu100009, 347 added on 2026-10-19)
     10_20mer_targets/        the 25 unknown 10-20mer targets
 ```
 
@@ -59,8 +58,8 @@ data/
 - The review sheets of the first triage pass are in
   `results/data_review/6mer_Cu100_first_pass_20261005/`.
 - On Viper, the staged copies are temporary:
-  `/ptmp/oldu/stmfit/full146_v1_inputs/full146_raw/` (6-mer cohort) and
-  `/ptmp/oldu/stmfit/data_10_20mer` (10-20mers).
+  `/ptmp/<user>/stmfit/full146_v1_inputs/full146_raw/` (6-mer cohort) and
+  `/ptmp/<user>/stmfit/data_10_20mer` (10-20mers).
 
 The manifests in `benchmarks/` hold external grading metadata only (quality
 classes, expected counts, control sequences, triage). No fitting, selection
