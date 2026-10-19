@@ -3,7 +3,12 @@
 #
 # Usage:
 #   julia --project=. scripts/grading/grade_consensus_run.jl --run RUN_DIR --outdir NEW_DIR \
-#       [--data-dir RAW_DIR] [--verify-only] [--profile NAME=PREDICTIONS.tsv ...]
+#       [--data-dir RAW_DIR] [--verify-only] [--profile NAME=PREDICTIONS.tsv ...] \
+#       [--manifest TOML] [--cohort NAME]
+# --manifest picks the benchmark manifest (default: the 145-scan
+# benchmarks/chitosan_6mer_counting_confirmed.toml); --cohort grades only the
+# manifest files whose `cohort` field equals NAME (the filtered manifest is
+# written to OUTDIR/inputs/manifest.toml).
 #
 # 1. Label-free integrity checks on the run (cohort, per-stage counts,
 #    consensus provenance, fusion integrity; raw SXM hashes when --data-dir is
@@ -29,7 +34,7 @@ function grade_options(args)
     while i <= length(args)
         k = args[i]
         if k == "--verify-only"; o[k] = "true"; i += 1; continue; end
-        k in ("--run", "--outdir", "--data-dir", "--profile") && i < length(args) || error("Unknown option or missing value: $k")
+        k in ("--run", "--outdir", "--data-dir", "--profile", "--manifest", "--cohort") && i < length(args) || error("Unknown option or missing value: $k")
         if k == "--profile"
             name, path = split(args[i+1], '='; limit=2)
             push!(profiles, String(name) => String(path))
@@ -113,11 +118,23 @@ function membership_filter(predictions, out, files)
     write_table(out, header, [r for r in rows if basename(r["file"]) in files])
 end
 
-function grade_run(run, outdir, profiles)
-    files = Set(String.(keys(TOML.parsefile(MANIFEST)["files"])))
+"Manifest to grade against: --manifest (default MANIFEST), restricted to --cohort when given."
+function grading_manifest(o, inputs)
+    path = get(o, "--manifest", MANIFEST)
+    haskey(o, "--cohort") || return path
+    m = TOML.parsefile(path)
+    m["files"] = Dict(k => v for (k, v) in m["files"] if get(v, "cohort", "") == o["--cohort"])
+    isempty(m["files"]) && error("No manifest file has cohort $(o["--cohort"])")
+    out = joinpath(inputs, "manifest.toml")
+    open(io -> TOML.print(io, m; sorted=true), out, "w")
+    return out
+end
+
+function grade_run(run, outdir, profiles, manifest=MANIFEST)
+    files = Set(String.(keys(TOML.parsefile(manifest)["files"])))
     inputs = joinpath(outdir, "inputs"); mkpath(inputs)
     sources = vcat(["final" => joinpath(run, "predictions.tsv"), "per_scan" => joinpath(run, "assignment", "predictions.tsv")], profiles)
-    args = ["--full145-own-n", "--outdir", joinpath(outdir, "units")]
+    args = ["--full145-own-n", "--manifest", manifest, "--outdir", joinpath(outdir, "units")]
     for (name, path) in sources
         filtered = joinpath(inputs, name * ".tsv")
         membership_filter(path, filtered, files)
@@ -127,7 +144,7 @@ function grade_run(run, outdir, profiles)
     cd(() -> run_cmd(`$julia --project=$ROOT $(joinpath(ROOT, "scripts", "grading", "report_unit_assignment_benchmark.jl")) $args`), ROOT)
     for (name, summary) in (("final", joinpath(run, "consensus", "consensus_summary_final.tsv")),
                             ("per_scan", joinpath(run, "counting_summary.tsv")))
-        cd(() -> run_cmd(`$julia --project=$ROOT $(joinpath(ROOT, "scripts", "grading", "grade_chitosan_benchmark.jl")) --manifest $MANIFEST
+        cd(() -> run_cmd(`$julia --project=$ROOT $(joinpath(ROOT, "scripts", "grading", "grade_chitosan_benchmark.jl")) --manifest $manifest
                           --results $summary --column N_selected --out $(joinpath(outdir, "counts_" * name * ".tsv"))`), ROOT)
     end
 end
@@ -186,13 +203,15 @@ end
 function main(args=ARGS)
     parsed = grade_options(args)
     if parsed === nothing
-        println("grade_consensus_run.jl --run RUN_DIR --outdir NEW_DIR [--data-dir RAW_DIR] [--verify-only] [--profile NAME=TSV ...]")
+        println("grade_consensus_run.jl --run RUN_DIR --outdir NEW_DIR [--data-dir RAW_DIR] [--verify-only] [--profile NAME=TSV ...] [--manifest TOML] [--cohort NAME]")
         return
     end
     o, profiles = parsed
     verify_run(o["--run"]; data_dir=get(o, "--data-dir", "")) || error("Integrity checks failed; no grade emitted")
     haskey(o, "--verify-only") && return println("ALL PASS")
-    grade_run(abspath(o["--run"]), abspath(o["--outdir"]), profiles)
+    mkpath(joinpath(abspath(o["--outdir"]), "inputs"))
+    manifest = grading_manifest(o, joinpath(abspath(o["--outdir"]), "inputs"))
+    grade_run(abspath(o["--run"]), abspath(o["--outdir"]), profiles, abspath(manifest))
     if haskey(o, "--data-dir")
         grade_plots(abspath(o["--run"]), abspath(o["--outdir"]), abspath(o["--data-dir"]))
     else

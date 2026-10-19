@@ -1041,3 +1041,26 @@ aggregates, cut molecules and non-chitosan objects stay out.
   commits still contain the account name; it is not a credential, and
   rewriting the public history was not done.
 
+### 2026-10-19 — Step 1.5 launched: frozen method on the 493-scan benchmark
+
+- **Manifest.** `benchmarks/chitosan_6mer_benchmark_v2.toml` lists the 493
+  scans of `data/sets/6mer_Cu100_benchmark`, with a `cohort` field: `full145`
+  (145), `added_2024` (260, including `240310_Cu100009`) and `added_2025`
+  (88). Keys are the set names, and `raw_path` gives the raw file. The
+  145-scan manifest stays the default.
+- **Grader.** `grade_consensus_run.jl` gains `--manifest` and `--cohort`.
+  Checked on the verified full146 run: the default grade reproduces
+  771/88/865/94, and `--manifest v2 --cohort full145` gives identical
+  grades.
+- **Run.** Viper job 12278834 runs the frozen pipeline (code `b8986a0`,
+  identical to HEAD for the pipeline, packages, configs and molds; Julia
+  1.13.2) on the 493 scans. The inputs, uploaded to
+  `/ptmp/<user>/stmfit/bench493_v1_inputs/raw`, are checksum-identical to the
+  local set.
+- **Two caveats** for reading the results:
+  - The consensus now sees more repeat scans, so the full145 grades may
+    differ from run A; that difference is the effect of the larger cohort,
+    not a code change.
+  - The 88 scans of 2025 are about a dozen molecules, one of them imaged
+    45 times, so results are also reported per molecule.
+
