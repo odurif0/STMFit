@@ -377,3 +377,13 @@ end
         end
     end
 end
+
+@testset "selected N with only flagged fits is still described" begin
+    fit(n, gcv; valid=true) = (n=n, gcv=gcv, success=true, valid=valid, reason=valid ? "" : "residual high")
+    results = [fit(5, 1.0), fit(6, 0.9; valid=false), fit(6, 0.8; valid=false)]
+    @test !haskey(Extractor._best_by_n(results, "gcv"), 6)             # the strict choice drops flagged fits
+    flagged = Extractor._best_by_n(results, "gcv"; flagged_ok=true)
+    @test flagged[6].gcv == 0.8 && flagged[5].gcv == 1.0                # best flagged fit kept for the counted N
+    r, source = Extractor._best_for_n(Dict{Int,Any}(), flagged, 6, "gcv")
+    @test r.gcv == 0.8 && source == "circ"
+end

@@ -965,7 +965,7 @@ cleanup. No scientific behavior changes.
   only stdlib JLLs moved.
 - **Verification.**
   - The pre-refactor suite passed in full: 19 files plus the end-to-end run.
-  - After the refactor, `test/runtests.jl` passes all 21 runs.
+  - After the refactor, `test/runtests.jl` passes all 18 runs (17 test files and package tests, plus the end-to-end run).
   - One test had reached `ScriptUtils` through a script module; it now uses
     `STMFit.ScriptUtils`.
   - Byte-for-byte check on real data, done on Viper with Julia 1.13.2 at
@@ -1063,4 +1063,29 @@ aggregates, cut molecules and non-chitosan objects stay out.
     not a code change.
   - The 88 scans of 2025 are about a dozen molecules, one of them imaged
     45 times, so results are also reported per molecule.
+
+### 2026-10-19 — Step 1.5, first run failed: geometry refit rejected flagged fits
+
+- **Failure.** Viper job 12278834 failed after 3 h 28 in the scan-geometry
+  stage, on 12 of the 493 scans (`240313_Cu100023`, `026`, `066`;
+  `240314_Cu100_043`; `241113_045`, `097`, `129`, `130`; `250430_022`, `028`,
+  `029`, `041`).
+  - For these scans the counting step had selected an N (for example 6 for
+    `250430_022`, via `support_midpoint_down`) whose fits all carry a quality
+    flag (`residual high`).
+  - `batch_full.jl` falls back to the best fit in that case, but
+    `extract_lobe_features.jl` kept only unflagged fits. It found no fit and
+    skipped the scan, and the orchestrator then stopped on the coverage check
+    (no partial result).
+  - The 146-scan cohort never hits this case.
+- **Fix** (`extract_lobe_features.jl`). When the counted N has only flagged
+  fits, the geometry describes that same model: the best flagged fit, with
+  source `ell_flagged` or `circ_flagged`.
+  - The code path runs only where a run used to stop, so every run that
+    completed before is unchanged, the verified full146 run included.
+  - All 12 scans now give N lobes.
+  - A unit test covers the fallback, and all tests pass.
+- **Rerun.** The counting summary of the failed run is reused
+  (`STMFIT_SELECTED_SUMMARY`; the counting code is unchanged and
+  deterministic).
 

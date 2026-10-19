@@ -253,10 +253,10 @@ _score(r, criterion) = lowercase(String(criterion)) == "gcv" ? r.gcv :
                        lowercase(String(criterion)) == "cv" ? r.cv_nll_mean : r.bic
 _valid(r, criterion) = r.success && r.valid && isfinite(_score(r, criterion))
 
-function _best_by_n(results, criterion)
+function _best_by_n(results, criterion; flagged_ok=false)
     by_n = Dict{Int,Any}()
     for r in results
-        _valid(r, criterion) || continue
+        (flagged_ok ? r.success && isfinite(_score(r, criterion)) : _valid(r, criterion)) || continue
         if !haskey(by_n, r.n) || _score(r, criterion) < _score(by_n[r.n], criterion)
             by_n[r.n] = r
         end
@@ -443,6 +443,17 @@ function main()
                 if haskey(selected_contexts, fn)
                     best_n = selected_contexts[fn].n
                     best_r, best_source = _best_for_n(by_ell, by_circ, best_n, criterion)
+                    if best_r === nothing
+                        # Counting (batch_full.jl) may select an N whose fit carries a quality
+                        # flag (it falls back to the best fit); describe that same model and
+                        # mark it in the source column.
+                        best_r, best_source = _best_for_n(_best_by_n(results_ell, criterion; flagged_ok=true),
+                                                          _best_by_n(results_circ, criterion; flagged_ok=true), best_n, criterion)
+                        if best_r !== nothing
+                            @warn "Selected N=$best_n of $fn has only flagged fits ($(best_r.reason)); using the best one"
+                            best_source *= "_flagged"
+                        end
+                    end
                 else
                     best_n, best_r, best_source = _effective_best(by_ell, by_circ, criterion)
                 end
@@ -452,7 +463,7 @@ function main()
                     continue
                 end
 
-                ccfg_sel = best_source == "circ" ? ccfg_circ : ccfg
+                ccfg_sel = startswith(best_source, "circ") ? ccfg_circ : ccfg
                 b0, feats, ts, us, spars, sperps = GaussianFit2D._decode_chain(
                     best_r.params, best_r.n, ctx.axisctx, ccfg_sel;
                     amp_min=best_r.amp_min, amp_range=best_r.amp_range)
