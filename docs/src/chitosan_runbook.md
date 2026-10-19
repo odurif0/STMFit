@@ -165,5 +165,6 @@ compares the native mold builder with the Python reference
 | `scripts/data/catalog_sxm_candidates.jl --roots DIR[,DIR] ... --outdir NEW [--exclude TSV] [--copy-to CENTRAL]` | Technical triage of raw scans (no fit, no label), contact sheets, deduplicated central folder |
 | `scripts/grading/report_benchmark_candidates.jl --catalog TSV --count-config TOML --outdir NEW` | Grading side: usable scans not yet in the benchmark, with review sheets |
 | `scripts/grading/report_benchmark_triage.jl --catalog TSV ... --count-config TOML --sheets NEW` | Grading side: fixed-scale review sheets for the visual triage |
+| `scripts/grading/report_candidate_review.jl --data data --triage TSV --outdir NEW [--suggestions TSV]` | Grading side: local review page (cards grouped by molecule, decision export) for benchmark candidates |
 | `scripts/grading/report_data_sets.jl --data data --table TSV ...` | Grading side: rebuild `data/sets/` and `data/INDEX.tsv` from the decision tables |
 | `scripts/pipeline/report_position_repeatability.jl --run RUN --data-dir RAW --outdir NEW` | Label-free lobe-position repeatability across repeated scans ([Pipeline](pipeline.md)) |

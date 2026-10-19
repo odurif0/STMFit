@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Candidats 6-mères</title>
+<style>
+:root {
+  --bg: #f6f5f2; --panel: #ffffff; --ink: #1d1d1f; --muted: #6b6b70; --line: #e2e0da;
+  --ok: #1f7a4d; --ok-bg: #e3f3ea; --no: #b3261e; --no-bg: #fbe5e3; --accent: #2b5fb4; --warn: #9a6700;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #161618; --panel: #202023; --ink: #ececee; --muted: #9a9aa2; --line: #34343a;
+          --ok: #5cc28a; --ok-bg: #1c3327; --no: #f2867d; --no-bg: #3a1f1d; --accent: #7aa7ff; --warn: #e3b341; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+header { position: sticky; top: 0; z-index: 5; background: var(--panel); border-bottom: 1px solid var(--line); padding: 10px 16px; }
+h1 { font-size: 17px; margin: 0 0 4px; }
+.crit { color: var(--muted); margin: 0 0 8px; max-width: 980px; }
+.bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.stats { font-variant-numeric: tabular-nums; margin-right: 8px; }
+button, select, input { font: inherit; color: inherit; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 4px 9px; }
+button { cursor: pointer; }
+button:hover { border-color: var(--accent); }
+button.on { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+main { padding: 12px 16px 60px; max-width: 1500px; margin: 0 auto; }
+details.refs { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; margin-bottom: 14px; }
+.refgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 8px; margin-top: 8px; }
+.refgrid figure { margin: 0; } .refgrid img { width: 100%; border-radius: 4px; }
+.refgrid figcaption { color: var(--muted); font-size: 12px; }
+section.group { margin: 18px 0; }
+.ghead { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; border-bottom: 1px solid var(--line); padding-bottom: 4px; margin-bottom: 8px; }
+.ghead h2 { font-size: 15px; margin: 0; }
+.ghead .muted { color: var(--muted); }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 470px), 1fr)); gap: 10px; }
+.card { background: var(--panel); border: 2px solid var(--line); border-radius: 8px; padding: 8px; }
+.card.benchmark { border-color: var(--ok); background: var(--ok-bg); }
+.card.ecarte { border-color: var(--no); background: var(--no-bg); }
+.card img { width: 100%; border-radius: 4px; cursor: zoom-in; display: block; }
+.meta { display: flex; justify-content: space-between; gap: 6px; flex-wrap: wrap; margin: 4px 0; }
+.file { font-weight: 600; font-family: ui-monospace, monospace; }
+.small { color: var(--muted); font-size: 12px; }
+.pill { font-size: 12px; border-radius: 999px; padding: 1px 8px; border: 1px solid var(--line); }
+.pill.benchmark { color: var(--ok); border-color: var(--ok); } .pill.ecarte { color: var(--no); border-color: var(--no); }
+.actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: 6px; }
+.actions input { flex: 1; min-width: 120px; }
+.disagree { color: var(--warn); font-size: 12px; }
+#zoom { position: fixed; inset: 0; background: rgba(0,0,0,.85); display: none; align-items: center; justify-content: center; z-index: 10; cursor: zoom-out; }
+#zoom img { max-width: 96vw; max-height: 94vh; }
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Candidats 6-mères (NKN)2 sur Cu(100) : entrée au benchmark</h1>
+  <p class="crit">Benchmark = <b>une molécule (NKN)2 entière, isolée et entièrement imagée</b> (vérité NKNNKN, 6 unités).
+  Écarter les fragments, agrégats, molécules coupées, images dominées par un artefact, et ce qui n'est pas du chitosan.
+  On juge l'image, jamais les sorties de la méthode. Raccourcis : survoler une carte puis <b>b</b> (benchmark), <b>e</b> (écarter), <b>u</b> (annuler).</p>
+  <div class="bar">
+    <span class="stats" id="stats"></span>
+    <button data-filter="all" class="on">Tous</button>
+    <button data-filter="todo">Non décidés</button>
+    <button data-filter="disagree">Différents de la suggestion</button>
+    <button id="fill">Suggestions → non décidés</button>
+    <button id="export">Exporter (TSV)</button>
+    <button id="reset">Tout effacer</button>
+  </div>
+</header>
+<main>
+  <details class="refs"><summary>Référence : un scan du benchmark actuel par session</summary><div class="refgrid" id="refs"></div></details>
+  <div id="groups"></div>
+</main>
+<div id="zoom"><img alt=""></div>
+<script>
+const SCANS = [
+/*SCANS*/
+];
+const REFS = [
+/*REFS*/
+];
+const MOTIFS = [/*MOTIFS*/];
+const KEY = "stmfit_6mer_candidates_v1";
+let D = {};
+try { D = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { D = {}; }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e) {} };
+let filter = "all", hovered = null;
+const el = (tag, cls, text) => { const x = document.createElement(tag); if (cls) x.className = cls; if (text !== undefined) x.textContent = text; return x; };
+const motifSelect = (value) => { const s = el("select"); for (const m of MOTIFS) { const o = el("option", "", m); o.value = m; s.appendChild(o); } s.value = value || "incertain"; return s; };
+
+const refs = document.getElementById("refs");
+for (const r of REFS) { const f = el("figure"); const im = el("img"); im.src = r.i; im.loading = "lazy"; im.alt = r.f; f.appendChild(im); f.appendChild(el("figcaption", "", r.s + " · " + r.f)); refs.appendChild(f); }
+
+const cards = {};
+const groupsEl = document.getElementById("groups");
+const bygroup = new Map();
+for (const s of SCANS) { if (!bygroup.has(s.g)) bygroup.set(s.g, []); bygroup.get(s.g).push(s); }
+for (const [g, list] of bygroup) {
+  const sec = el("section", "group"); sec.dataset.g = g;
+  const h = el("div", "ghead");
+  h.appendChild(el("h2", "", "Molécule " + g));
+  h.appendChild(el("span", "muted", list[0].s + " · " + list.length + " scan" + (list.length > 1 ? "s" : "")));
+  const all1 = el("button", "", "Tout → benchmark"); all1.onclick = () => { for (const s of list) setDecision(s.f, "benchmark"); };
+  const gm = motifSelect("incertain");
+  const all0 = el("button", "", "Tout → écarter"); all0.onclick = () => { for (const s of list) setDecision(s.f, "ecarte", gm.value); };
+  h.append(all1, all0, gm); sec.appendChild(h);
+  const grid = el("div", "cards");
+  for (const s of list) grid.appendChild(makeCard(s));
+  sec.appendChild(grid); groupsEl.appendChild(sec);
+}
+
+function makeCard(s) {
+  const c = el("div", "card"); c.dataset.f = s.f;
+  const im = el("img"); im.src = s.i; im.loading = "lazy"; im.alt = s.f; im.onclick = () => zoom(s.i); c.appendChild(im);
+  const m = el("div", "meta");
+  m.appendChild(el("span", "file", s.f));
+  m.appendChild(el("span", "small", s.fr + " nm" + (s.fl ? " · " + s.fl : "")));
+  c.appendChild(m);
+  const sg = el("div", "meta");
+  const pill = el("span", "pill " + s.sg, "suggestion : " + (s.sg === "benchmark" ? "benchmark" : "écarter" + (s.sm ? " (" + s.sm + ")" : "")));
+  sg.appendChild(pill);
+  if (s.n || s.sn) sg.appendChild(el("span", "small", [s.n, s.sn].filter(Boolean).join(" · ")));
+  c.appendChild(sg);
+  const a = el("div", "actions");
+  const b1 = el("button", "", "Benchmark"); b1.onclick = () => setDecision(s.f, "benchmark");
+  const sel = motifSelect(s.sm);
+  const b0 = el("button", "", "Écarter"); b0.onclick = () => setDecision(s.f, "ecarte", sel.value);
+  sel.onchange = () => { if ((D[s.f] || {}).d === "ecarte") setDecision(s.f, "ecarte", sel.value); };
+  const note = el("input"); note.placeholder = "note (facultatif)"; note.value = (D[s.f] || {}).n || "";
+  note.onchange = () => { D[s.f] = Object.assign(D[s.f] || {}, { n: note.value }); save(); };
+  const dis = el("span", "disagree");
+  a.append(b1, b0, sel, note, dis); c.appendChild(a);
+  c.onmouseenter = () => { hovered = s; };
+  cards[s.f] = { c, b1, b0, sel, dis, s };
+  return c;
+}
+
+function setDecision(f, d, motif) {
+  if (d === null) { if (D[f]) { delete D[f].d; delete D[f].m; } }
+  else D[f] = Object.assign(D[f] || {}, { d, m: d === "ecarte" ? (motif || "incertain") : "" });
+  save(); paint(f); refresh();
+}
+function paint(f) {
+  const k = cards[f], x = D[f] || {};
+  k.c.classList.toggle("benchmark", x.d === "benchmark");
+  k.c.classList.toggle("ecarte", x.d === "ecarte");
+  k.b1.classList.toggle("on", x.d === "benchmark"); k.b0.classList.toggle("on", x.d === "ecarte");
+  if (x.d === "ecarte" && x.m) k.sel.value = x.m;
+  k.dis.textContent = x.d && x.d !== k.s.sg ? "≠ suggestion" : "";
+}
+function refresh() {
+  let n = 0, b = 0, e = 0;
+  for (const s of SCANS) { const d = (D[s.f] || {}).d; if (d) n++; if (d === "benchmark") b++; if (d === "ecarte") e++; }
+  document.getElementById("stats").textContent = `décidés ${n}/${SCANS.length} · benchmark ${b} · écartés ${e}`;
+  for (const s of SCANS) {
+    const d = (D[s.f] || {}).d;
+    const show = filter === "all" || (filter === "todo" && !d) || (filter === "disagree" && d && d !== s.sg);
+    cards[s.f].c.classList.toggle("hidden", !show);
+  }
+  for (const sec of document.querySelectorAll("section.group"))
+    sec.classList.toggle("hidden", !sec.querySelector(".card:not(.hidden)"));
+}
+function zoom(src) { const z = document.getElementById("zoom"); z.querySelector("img").src = src; z.style.display = "flex"; }
+document.getElementById("zoom").onclick = (ev) => { ev.currentTarget.style.display = "none"; };
+for (const b of document.querySelectorAll("[data-filter]")) b.onclick = () => {
+  filter = b.dataset.filter; for (const x of document.querySelectorAll("[data-filter]")) x.classList.toggle("on", x === b); refresh(); };
+document.getElementById("fill").onclick = () => { for (const s of SCANS) if (!(D[s.f] || {}).d) D[s.f] = Object.assign(D[s.f] || {}, { d: s.sg, m: s.sm }); save(); for (const s of SCANS) paint(s.f); refresh(); };
+document.getElementById("reset").onclick = () => { if (confirm("Effacer toutes les décisions de cette page ?")) { D = {}; save(); for (const s of SCANS) paint(s.f); refresh(); } };
+document.getElementById("export").onclick = () => {
+  const rows = ["file\tdecision\tmotif\tnote\tsuggestion"];
+  for (const s of SCANS) { const x = D[s.f] || {}; rows.push([s.f, x.d || "", x.d === "ecarte" ? (x.m || "") : "", (x.n || "").replace(/[\t\n]/g, " "), s.sg].join("\t")); }
+  const blob = new Blob([rows.join("\n") + "\n"], { type: "text/tab-separated-values" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "decisions_candidats_6mer.tsv"; a.click();
+};
+document.addEventListener("keydown", (ev) => {
+  if (!hovered || ev.target.tagName === "INPUT" || ev.target.tagName === "SELECT") return;
+  if (ev.key === "b") setDecision(hovered.f, "benchmark");
+  else if (ev.key === "e") setDecision(hovered.f, "ecarte", cards[hovered.f].sel.value);
+  else if (ev.key === "u") setDecision(hovered.f, null);
+});
+for (const s of SCANS) paint(s.f);
+refresh();
+</script>
+</body>
+</html>

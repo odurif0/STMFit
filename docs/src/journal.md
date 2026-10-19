@@ -962,12 +962,56 @@ cleanup. No scientific behavior changes.
   - After the refactor, `test/runtests.jl` passes all 21 runs.
   - One test had reached `ScriptUtils` through a script module; it now uses
     `STMFit.ScriptUtils`.
-  - The byte-for-byte check on real data (quickstart checksums and the full146
-    run against run A) is pending: Viper was unreachable (expired gateway
-    session).
-- **Viper Julia.** The docs now point to
-  `/viper/u1/oldu/software/julia-1.13.2`. This install must still be done
-  when Viper is reachable again; the 1.13.0 install is no longer used.
+  - Byte-for-byte check on real data, done on Viper with Julia 1.13.2 at
+    `b8986a0` (jobs 12272560 and 12272561):
+    - The 12-scan quickstart reproduces all 8 reference checksums.
+    - The full146 run matches run A (`486ddec`) and the run with positions
+      (`08c7087`) on 361 of 367 common files.
+    - The remaining differences are only absolute-path columns (`best_plot`,
+      `file_dir`, `path`) in the counting summaries and `input_hashes.tsv`.
+    - The molecule plots are byte-identical between the pre- and
+      post-refactor scripts, and between this machine and Viper. They differ
+      from the `a80cad7` quickstart only through the earlier fused-image fix
+      (`a977a3a`).
+    - The outputs are in `results/{quickstart,full146}_refactor_b8986a0/`.
+- **Viper Julia.** Julia 1.13.2 is installed in
+  `/viper/u1/oldu/software/julia-1.13.2` (official tarball, checksum
+  verified); the 1.13.0 install is no longer used. The user opens the Viper
+  connection with `mpcdf-ssh viper`.
 - **`release-prep`** (local branch) was rebased onto this layout. Its archive
   list, READMEs, examples and containers use the new paths.
+
+### 2026-10-19 — Review page for the 380 benchmark candidates
+
+User request: help deciding which 6-mer candidates enter the benchmark. A
+candidate enters only if it shows one intact (NKN)2 molecule, isolated and
+fully imaged, because the benchmark truth is NKNNKN with 6 units. Fragments,
+aggregates, cut molecules and non-chitosan objects stay out.
+
+- **Tool.** `scripts/grading/report_candidate_review.jl` builds a local page
+  (`index.html`, no upload) with one card per candidate. Each card shows the
+  whole frame, an 8 × 8 nm window and the suggestion, with buttons to decide
+  and an export of the decisions as TSV.
+  - Repeat scans of one molecule are grouped (same session, ≤ 30 min,
+    frame centres ≤ 5 nm apart, from the consensus collection settings): 88
+    groups for the 380 candidates.
+  - One benchmark scan per session is shown for reference.
+  - GR plotting is not thread-safe, so the images are drawn serially.
+  - The template is `scripts/grading/candidate_review_template.html`.
+- **Second visual pass** (assistant suggestions, saved in
+  `results/data_review/suggestions_candidats_6mer.tsv`): 347 suggested for the
+  benchmark, 33 suggested to discard.
+  - Two big lobes only, with no recognisable chain (`240310_Cu100046`–`053`,
+    `240313_Cu100031`).
+  - Blurred spots: `240312_Cu100006`, `014`–`017`, and `250306_009`–`012`.
+  - Folded V shapes, which could be a folded 6-mer or fragments:
+    `240815_104`–`110` and `240312_Cu100073`.
+  - A lobe detached from one end (`240311_Cu100015`–`018`).
+  - A ragged, unstable-tip image (`240815_022`–`023`).
+  - A chain against another object (`241113_034`).
+  - Blurred scans of a molecule already in the benchmark were kept with it
+    (`241114_029`–`030`).
+- **Next.** The user's decisions, exported from the page, go into the triage
+  table (source `revue_utilisateur`). The data sets are then rebuilt, and the
+  frozen method is graded on the additions (step 1.5).
 
