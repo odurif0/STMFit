@@ -43,6 +43,15 @@ the chain over repeated scans (2026-10-04).
   `chitosan_6mer_counting_confirmed.toml`. The additions are graded in step
   1.5.
 
+**Extended benchmark (2026-10-19, 493 scans, job 12282486):**
+- Counting after consensus gives 391/493 exact N (79%) and 489/493 within
+  one. The 145 originals are unchanged at 137/145; the 2024 additions reach
+  68% and the 2025 additions 87.5%.
+- The assignment is cohort-dependent. On the same 145 scans it drops from
+  771/870 to 692/870 (28 exact chains) when the run also holds the 348
+  added scans, and the fusion prevalence π rises from 0.34 to 0.45 (truth
+  0.33). See the 2026-10-19 entry.
+
 **Limits:** NKNNKN edge-adjacency confound. The benchmark GlcNAc signal is
 the contrast with the dimmer terminal lobe; without it the image features
 separate the classes only weakly (AUC ≤ 0.66, amplitude) or not at all
@@ -74,6 +83,12 @@ empirical templates; 10–20mer outputs not validated.
    completed. A qualified constant-current observable is open.
 6. **Calibrated uncertainty.** Fused posteriors are model posteriors under the
    latent-class model. Unfused confidences are uncalibrated vote margins.
+8. **Cohort dependence of the assignment (2026-10-19).** The assignment is
+   learned without labels on the run's own scans, so adding sessions changes
+   the clusters and the fusion prevalence. On the 145-scan benchmark,
+   accuracy goes from 88.6% (146-scan run) to 79.5% (493-scan run). Should
+   the assignment be trained per session, normalised per session, or frozen
+   on a reference cohort? Any of these is a new method campaign.
 7. **Assignment fragility — answered 2026-09-30.** The benchmark signal is
    the contrast with the dimmer terminal lobe. Without it, amplitude separates
    GlcNAc from GlcN at non-terminal positions with AUC ≤ 0.66, and shape, DFT
@@ -1088,4 +1103,64 @@ aggregates, cut molecules and non-chitosan objects stay out.
 - **Rerun.** The counting summary of the failed run is reused
   (`STMFIT_SELECTED_SUMMARY`; the counting code is unchanged and
   deterministic).
+
+### 2026-10-19 — Step 1.5 results: the frozen method on the 493-scan benchmark
+
+- **Run and grades.**
+  - The run is Viper job 12282486 (`a2bcb15`, 1 h 32; counting reused from
+    job 12278834). Outputs are in `results/bench493_a2bcb15/`; grades by
+    cohort are in `results/bench493_a2bcb15_grade/{all,full145,added_2024,added_2025}/`.
+  - Plots sorted by outcome are in `all_with_plots/plots/`.
+  - `report_unit_assignment_benchmark.jl` now checks that the graded
+    denominator equals the manifest (its files times the control length):
+    still 145/870 for the default manifest.
+- **Counting** (exact N, and within one, before → after consensus):
+
+  | Cohort | Scans | Per scan | After consensus | Within one |
+  |---|---:|---:|---:|---:|
+  | full145 | 145 | 123 (84.8%) | 137 (94.5%) | 145 |
+  | added_2024 | 260 | 170 (65.4%) | 177 (68.1%) | 256 |
+  | added_2025 | 88 | 68 (77.3%) | 77 (87.5%) | 88 |
+  | all | 493 | 361 (73.2%) | 391 (79.3%) | 489 |
+
+- **Assignment** (fused calls; correct lobes / possible, exact chains,
+  errors):
+
+  | Cohort | Correct | Exact chains | Errors | Per-scan calls (correct) |
+  |---|---:|---:|---:|---:|
+  | full145 | 692/870 (79.5%) | 28 | 173 | 666 (76.6%) |
+  | added_2024 | 1155/1560 (74.0%) | 76 | 343 | 1136 (72.8%) |
+  | added_2025 | 361/528 (68.4%) | 17 | 165 | 321 (60.8%) |
+  | all | 2208/2958 (74.6%) | 121 | 681 | 2123 (71.8%) |
+
+- **Per molecule** (118 consensus tracks; molecule means):
+
+  | Molecules | Count | Scans | N exact | Assignment |
+  |---|---:|---:|---:|---:|
+  | Only original scans | 25 | 117 | 88.0% | 78.5% |
+  | Original plus 2024 additions | 15 | 127 | 79.2% | 74.8% |
+  | Only 2024 additions | 62 | 161 | 63.9% | 67.9% |
+  | 2025 (new) | 16 | 88 | 75.0% | 78.3% |
+
+  The 2025 per-scan figures are dominated by `250430`. The consensus splits
+  this molecule into a 36-scan track (N always right, assignment 50%) and an
+  8-scan track (N wrong).
+- **Findings.**
+  1. **Counting.** It is stable on the original scans but clearly lower on
+     scans that were not in the benchmark. Part of the original 145 was
+     chosen with fit outputs (pre-assignment rows used `N_selected`), so its
+     94.5% likely overstates accuracy on unselected scans. Some additions may
+     also not be intact 6-mers (first-pass triage); the N-wrong plots let the
+     user check this before any conclusion on accuracy.
+  2. **Assignment.** It is cohort-dependent. The same 145 scans fall from
+     771/870 (88 exact chains) to 692/870 (28 exact chains) once the run
+     holds the additions. The corroborated k-means/GMM and the fusion EM are
+     fitted on the run's own scans; with the added sessions, π goes from
+     0.34 to 0.45 (truth 0.33), i.e. too many GlcNAc calls.
+  3. **Consequence.** Assignment accuracy is not a property of the method
+     alone. This matters for the 10–20mer application, which also mixes
+     sessions (open question 8).
+- **Headlines.** The 145-scan headline (771/88/865/94) remains the result of
+  the 146-scan cohort run and stays as cited. The 493-scan figures are
+  recorded here and in Current state.
 

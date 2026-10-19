@@ -150,6 +150,12 @@ function _grade_path(outdir::String, profile_name::String)
     return path
 end
 
+"Expected files and lobes of a manifest grade: every manifest file, with the control sequence length."
+function _manifest_denominator(opt::Options)
+    n = length(TOML.parsefile(opt.manifest)["files"])
+    return n, n * length(opt.control_sequence)
+end
+
 function _write_full145_truth(opt::Options)
     path = abspath(joinpath(opt.outdir, "control_full145_truth.tsv"))
     _reject_symlink_leaf(path)
@@ -195,8 +201,8 @@ function _summarize_grade(profile::ProfileSpec, grade_path::String, opt::Options
     oracle_total = sum(parse(Int, r["N_classified"]) for r in rows)
     oracle_correct = sum(parse(Int, r["oracle_correct"]) for r in rows)
     errors = classified - correct
-    if opt.full145 && (length(rows) != 145 || possible != 870)
-        error("Profile $(profile.name) did not grade the full145 denominator: got $(length(rows)) files / $possible lobes")
+    if opt.full145 && (length(rows), possible) != _manifest_denominator(opt)
+        error("Profile $(profile.name) did not grade the manifest denominator $(_manifest_denominator(opt)): got $(length(rows)) files / $possible lobes")
     elseif !opt.full145 && opt.primary_only && truth_path == DEFAULT_TRUTH && (length(rows) != 35 || possible != 210)
         error("Profile $(profile.name) did not grade the strict default denominator: got $(length(rows)) files / $possible lobes")
     end
@@ -338,8 +344,8 @@ function main(args=ARGS)
     truth_path = opt.full145 ? _write_full145_truth(opt) : opt.truth
     truth = load_truth(truth_path, opt.primary_only)
     total_lobes = sum(length(seq) for seq in values(truth))
-    if opt.full145 && (length(truth) != 145 || total_lobes != 870)
-        error("Full145 denominator changed: expected 145 files / 870 lobes, got $(length(truth)) / $total_lobes")
+    if opt.full145 && (length(truth), total_lobes) != _manifest_denominator(opt)
+        error("Manifest denominator changed: expected $(_manifest_denominator(opt)) files / lobes, got $(length(truth)) / $total_lobes")
     elseif !opt.full145 && opt.primary_only && truth_path == DEFAULT_TRUTH && (length(truth) != 35 || total_lobes != 210)
         error("Strict default denominator changed: expected 35 files / 210 lobes, got $(length(truth)) / $total_lobes")
     end
