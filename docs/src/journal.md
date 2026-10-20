@@ -51,6 +51,9 @@ the chain over repeated scans (2026-10-04).
   771/870 to 692/870 (28 exact chains) when the run also holds the 348
   added scans, and the fusion prevalence π rises from 0.34 to 0.45 (truth
   0.33). See the 2026-10-19 entry.
+- Campaign B (2026-10-20) did not generalise: choosing the reference cohort
+  by the benchmark score gave 316/528 on sealed 2025, against 349 for a
+  label-free frozen model and 361 for the promoted method.
 
 **Limits:** NKNNKN edge-adjacency confound. The benchmark GlcNAc signal is
 the contrast with the dimmer terminal lobe; without it the image features
@@ -89,9 +92,12 @@ empirical templates; 10–20mer outputs not validated.
    accuracy goes from 88.6% (146-scan run) to 79.5% (493-scan run). Should
    the assignment be trained per session, normalised per session, or frozen
    on a reference cohort? Any of these is a new method campaign. Campaign B
-   (2026-10-20, running) freezes the assignment on a reference cohort chosen
-   by its benchmark score, with nested validation, a noise floor and sealed
-   2025 sessions.
+   (2026-10-20) chose the reference cohort by its benchmark score. It failed
+   its pre-registered rules: its in-sample gain was within the noise floor,
+   and on sealed 2025 it scored 316/528, against 349 for the frozen pool and
+   361 for the promoted method. Freezing on all corroborated reference scans
+   without labels (campaign A) matched the transductive method
+   (1871 vs 1847 held-out in 2024, 349 vs 361 in 2025) and remains open.
 7. **Assignment fragility — answered 2026-09-30.** The benchmark signal is
    the contrast with the dimmer terminal lobe. Without it, amplitude separates
    GlcNAc from GlcN at non-terminal positions with AUC ≤ 0.66, and shape, DFT
@@ -1255,3 +1261,73 @@ aggregates, cut molecules and non-chitosan objects stay out.
 - **Execution.** `hpc/run_reference_cohort_search.sbatch` runs the 34
   searches as independent processes on one Viper node (16 × 8 threads),
   then `--mode report`. Results follow in a separate entry.
+
+### 2026-10-20 — Campaign B results: the score-chosen reference cohort does not generalise
+
+- **Runs.**
+  - Viper job 12301311 (`e67033a`) ran all 34 searches on one node in 1 h 59
+    (the final search alone needed 3,025 trainings). Outputs are in
+    `results/cohort_search_e67033a/`.
+  - The merged report is in `results/cohort_search_e67033a_report/`, rebuilt
+    locally with `e23ef44`, which adds the transductive reference and one
+    vote per molecule pooled over held-out sessions.
+  - The sealed verdict is in `results/cohort_search_e67033a_sealed/`. It was
+    graded once, and `report_unit_assignment_benchmark.jl` gives the same
+    numbers.
+- **Nested estimate** (the 13 development sessions, each held out once; 405
+  scans, 102 molecules):
+
+  | Reference cohort | Correct | Exact chains | Errors | Molecule accuracy | Molecules majority exact |
+  |---|---:|---:|---:|---:|---:|
+  | Pool (all 39 units, frozen) | 1871/2430 | 118 | 492 | 0.712 | 20 |
+  | Selected by the search | 1964/2430 | 176 | 399 | 0.723 | 17 |
+  | Promoted method, transductive 493-scan run | 1847/2430 | 104 | 516 | 0.698 | 17 |
+
+  - The held-out gain (+93 units) comes mostly from 20240817 (+43) and
+    20240313 (+27).
+  - Three sessions lose units (20240815 −11, 20240314 −4, 20240310 −1).
+- **Final search** (13 sessions, in-sample).
+  - It goes from 1871 to 2010 correct units (+139).
+  - It removes 5 tracks (23, 25, 39, 46, 22) and keeps 34.
+  - Molecule accuracy goes from 0.712 to 0.748.
+- **Noise floor.** On random palindromic truths, the 20 null searches gain 36
+  to 185 units in-sample (median 112). The real gain ranks above 13 of the 20.
+- **Stability.**
+  - Each fold's search removes 2 to 8 units, and 29 of the 39 units are
+    removed in at least one fold.
+  - Tracks 23 and 22, removed by the final search, are removed in no fold.
+- **Sealed verdict** (2025, 88 scans, 16 molecules, read once):
+
+  | Reference cohort | Correct | Exact chains | Errors | Molecule accuracy | Molecules majority exact |
+  |---|---:|---:|---:|---:|---:|
+  | Pool (frozen) | 349/528 | 10 | 177 | 0.729 | 3 |
+  | Selected | 316/528 | 10 | 210 | 0.729 | 3 |
+  | Promoted method, transductive | 361/528 | 17 | 165 | 0.771 | 6 |
+
+  The whole loss of the selected cohort is the 36-scan track of `250430`
+  (108 → 72 correct). The other 15 molecules gain 3 units, and the molecule
+  vote is unchanged.
+- **Decision** (rules fixed in the declaration).
+  1. Nested gain positive: yes (+93).
+  2. In-sample gain above every null gain: **no** (13 of 20).
+  3. Per-molecule criterion: mixed. Accuracy is +0.011, but molecules with
+     a majority of exact chains fall from 20 to 17.
+
+  The search therefore does not count as a real gain, and the sealed
+  sessions agree. The selected model is not used.
+- **Interpretation.**
+  - Choosing training data by the benchmark score fits noise and
+    session-specific structure: the search gains about as much on random
+    truths, and its choices change from fold to fold.
+  - The 2024 held-out gain does not transfer to 2025. This is the winner's
+    curse discussed before the campaign.
+- **For campaign A.** The frozen pool model is learned on every corroborated
+  scan of the reference sessions, without any label. It is as good as the
+  transductive method:
+  - 1871 vs 1847 on held-out 2024 sessions;
+  - 349 vs 361 on 2025;
+  - molecule accuracy 0.712 vs 0.698 (2024) and 0.729 vs 0.771 (2025).
+
+  Freezing removes the cohort dependence at no clear cost, so it is the
+  natural starting point for A.
+- **Headlines.** Unchanged; nothing is promoted.
