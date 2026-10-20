@@ -61,6 +61,7 @@ struct Setup
     file_track::Dict{String,Int}
     session_rows::Dict{String,Vector{Int}}
     session_files::Dict{String,Vector{String}}
+    transductive::Vector{Int8}           # final calls of the run itself (promoted method, run cohort)
     units::Dict{Int,Vector{Int}}          # track => rows of its corroborated scans
     unit_session::Dict{Int,String}
     development::Vector{String}
@@ -85,6 +86,8 @@ function load_setup(protocol)
     Set(files) == Set(keys(manifest)) == Set(keys(rule)) || error("Run cohort and manifest differ")
     session = [manifest[f]["session"] for f in data.file]
     physical = [fused[(data.file[i], data.lobe[i])]["physical_lobe"] for i in eachindex(data.file)]
+    call(x) = x == "?" ? Int8(-1) : parse(Int8, x)
+    transductive = [call(fused[(data.file[i], data.lobe[i])]["predicted"]) for i in eachindex(data.file)]
     file_rows = Dict(f => Int[] for f in files); session_rows = Dict{String,Vector{Int}}()
     for i in eachindex(data.file)
         push!(file_rows[data.file[i]], i); push!(get!(session_rows, session[i], Int[]), i)
@@ -102,7 +105,7 @@ function load_setup(protocol)
     isempty(intersect(dev, sealed)) || error("Development and sealed sessions overlap")
     fusion = load_fusion_settings(cfg)
     return Setup(data, cfg, fusion, Float64(cfg["selection"]["fusion_prior_pi"]), Float64(cfg["selection"]["vote_threshold"]),
-                 session, physical, file_rows, track, session_rows, session_files, units, unit_session, dev, sealed)
+                 session, physical, file_rows, track, session_rows, session_files, transductive, units, unit_session, dev, sealed)
 end
 
 "Units (tracks with corroborated scans) of the given sessions."
@@ -337,11 +340,17 @@ end
 
 "Merge one campaign directory: nested_<session>/, final/, null_<seed>/."
 function run_report(S::Setup, protocol, out, dir)
+    truth = benchmark_truth(S, protocol["data"]["control_sequence"])
     outer = Dict{String,String}[]; ofiles = Dict{String,String}[]
     for o in S.development
         d = joinpath(dir, "nested_$o")
         isfile(joinpath(d, "outer.tsv")) || error("Missing nested output for $o")
         append!(outer, last(read_grading(joinpath(d, "outer.tsv")))); append!(ofiles, last(read_grading(joinpath(d, "outer_files.tsv"))))
+        # reference: the promoted transductive method of the run (learned on every scan of the run, label-free)
+        g = grade_session(S, o, S.transductive[S.session_rows[o]], truth)
+        push!(outer, Dict("outer" => o, "cohort" => "transductive_run", "units" => "", "removed" => "", "emission_fit" => "",
+                          "theta0" => "", "theta1" => "", stat_strings(summarize(g, truth))...))
+        append!(ofiles, file_rows_out(g, Dict("outer" => o, "cohort" => "transductive_run")))
     end
     write_table(joinpath(out, "outer.tsv"), OUTER_COLUMNS, outer)
     write_table(joinpath(out, "outer_files.tsv"), vcat(["outer", "cohort"], FILE_COLUMNS), ofiles)
@@ -358,23 +367,33 @@ function run_report(S::Setup, protocol, out, dir)
     end
     write_table(joinpath(out, "null_summary.tsv"), ["seed", "units", "steps", "start_correct", "end_correct", "gain",
         "start_molecule_accuracy", "end_molecule_accuracy"], nulls)
+    cohorts = ("pool", "selected", "transductive_run")
     tot(c, k) = sum(parse(Int, r[k]) for r in outer if r["cohort"] == c)
-    macc(c) = [parse(Float64, r["molecule_accuracy"]) for r in outer if r["cohort"] == c]
     gains = [parse(Int, r["gain"]) for r in nulls]
     fgain = parse(Int, final[end]["correct"]) - parse(Int, final[1]["correct"])
     open(joinpath(out, "report.md"), "w") do io
         println(io, "# Campaign B: reference-cohort search\n")
         println(io, "Development sessions: $(length(S.development)); pool: $(length(pool_units(S, S.development))) units.\n")
         println(io, "## Nested leave-one-session-out (honest estimate)\n")
-        println(io, "| cohort | correct | classified | errors | exact chains | files | per-molecule accuracy (mean over outer sessions) |")
-        println(io, "|---|---|---|---|---|---|---|")
-        for c in ("pool", "selected")
-            m = filter(isfinite, macc(c))
-            @printf(io, "| %s | %d/%d | %d | %d | %d | %d | %.3f |\n", c, tot(c, "correct"), tot(c, "possible"), tot(c, "classified"),
-                    tot(c, "errors"), tot(c, "exact"), tot(c, "files"), isempty(m) ? NaN : sum(m) / length(m))
+        println(io, "Held-out sessions only. `transductive_run` is the promoted method of the run itself (learned without labels " *
+                    "on all 493 scans, held-out session included), for reference.\n")
+        println(io, "| cohort | correct | classified | errors | exact chains | molecules | molecule accuracy | molecules majority exact |")
+        println(io, "|---|---|---|---|---|---|---|---|")
+        for c in cohorts
+            m = molecule_stats([r for r in ofiles if r["cohort"] == c], truth)
+            @printf(io, "| %s | %d/%d | %d | %d | %d | %d | %.3f | %d |\n", c, tot(c, "correct"), tot(c, "possible"),
+                    tot(c, "classified"), tot(c, "errors"), tot(c, "exact"), m.tracks, m.accuracy, m.majority_exact)
         end
         println(io, "\nGain of the search on held-out sessions: $(tot("selected", "correct") - tot("pool", "correct")) correct units.\n")
-        println(io, "## Final search ($(length(S.development)) sessions, in-sample objective)\n")
+        println(io, "| held-out session | files | pool | selected | transductive_run | units kept / pool |")
+        println(io, "|---|---|---|---|---|---|")
+        for o in S.development
+            r = Dict(x["cohort"] => x for x in outer if x["outer"] == o)
+            pool_n = parse(Int, r["pool"]["units"]); kept = parse(Int, r["selected"]["units"])
+            println(io, "| $o | $(r["pool"]["files"]) | $(r["pool"]["correct"]) | $(r["selected"]["correct"]) | " *
+                        "$(r["transductive_run"]["correct"]) | $kept / $pool_n |")
+        end
+        println(io, "\n## Final search ($(length(S.development)) sessions, in-sample objective)\n")
         println(io, "Start $(final[1]["correct"]) -> end $(final[end]["correct"]) correct units (gain $fgain); " *
                     "$(final[end]["units"]) of $(final[1]["units"]) units kept; per-molecule accuracy " *
                     "$(final[1]["molecule_accuracy"]) -> $(final[end]["molecule_accuracy"]).\n")
@@ -384,6 +403,15 @@ function run_report(S::Setup, protocol, out, dir)
                         "max $(maximum(gains)); real gain $fgain ranks above $(count(<(fgain), gains)) of $(length(gains)) null gains.")
     end
     print(read(joinpath(out, "report.md"), String))
+end
+
+"One vote per physical molecule over file-level rows (tracks pooled across sessions)."
+function molecule_stats(rows, truth)
+    tracks = Dict{String,Vector{Dict{String,String}}}()
+    for r in rows; push!(get!(tracks, r["track"], Dict{String,String}[]), r); end
+    acc = [sum(parse(Int, r["correct"]) for r in v) / sum(length(truth[r["file"]]) for r in v) for v in values(tracks)]
+    maj = count(v -> 2count(r -> r["exact"] == "true", v) > length(v), values(tracks))
+    return (tracks=length(tracks), accuracy=isempty(acc) ? NaN : sum(acc) / length(acc), majority_exact=maj)
 end
 
 "Grading-side TSV reader (the method reader refuses label-like columns)."
@@ -417,6 +445,10 @@ function run_sealed(S::Setup, protocol, out, models)
                             "pi" => @sprintf("%.3f", model.pi), stat_strings(summarize(grades, truth))...))
         append!(files, file_rows_out(grades, Dict("cohort" => name)))
     end
+    grades = reduce(vcat, [grade_session(S, s, S.transductive[S.session_rows[s]], truth) for s in S.sealed])
+    push!(summary, Dict("cohort" => "transductive_run", "theta0" => "", "theta1" => "", "pi" => "",
+                        stat_strings(summarize(grades, truth))...))
+    append!(files, file_rows_out(grades, Dict("cohort" => "transductive_run")))
     write_table(joinpath(out, "sealed.tsv"), vcat(["cohort", "theta0", "theta1", "pi"], STAT_COLUMNS), summary)
     write_table(joinpath(out, "sealed_files.tsv"), vcat(["cohort"], FILE_COLUMNS), files)
 end
