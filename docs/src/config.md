@@ -13,6 +13,7 @@ must update this page and [Calibration](calibration.md).
 | `molecule_consensus.toml` | Registration, consensus, repeat-scan collection, fusion | Promoted |
 | `unit_assignment_corroborated_training.toml` | Per-scan assignment | Promoted |
 | `unit_assignment_patch_support.toml` | Same, learning on all scans | Previous reference (control) |
+| `unit_assignment_frozen_reference.toml` | Frozen assignment learned on a reference cohort (campaign B, `src/frozen_assignment.jl`) | Experiment (2026-10-20) |
 | `unit_assignment_reconstructed.toml`, `_matched_residual.toml`, `_transverse_fisher.toml` | Lineage and test fixtures | Not for production |
 | `calibration_measurements.toml` | `scripts/calibration/measure_calibration.jl` audit | Diagnostic |
 | `template.toml` | Starting point for a new molecule | Template |
@@ -94,6 +95,17 @@ Values of the promoted `unit_assignment_corroborated_training.toml`:
 | k-means and vote | `kmeans_seeds = 20`, `first_seed = 0`, `interactions = true`, `vote_threshold = 0.5` |
 | Training | `assignment_training_support = "all_admissible"`, `assignment_training_scans = "corroborated_counts"` |
 | Patches | `assignment_patch_support = "complete_disk_symmetric"`, `patch_residual_filter = "smooth_residual"`, `pixel_order = "u_outer_t_inner"` |
+
+`unit_assignment_frozen_reference.toml` keeps every value above (name
+`cc_soft_patch_support_frozen_reference_v1`) and adds:
+
+| Key | Value | Meaning |
+|---|---|---|
+| `selection.assignment_model` | `"frozen_reference"` | k-means, GMM and naming learned once on a reference cohort, applied unchanged |
+| `selection.fusion`, `fusion_min_scans` | `"latent_class"`, 3 | Fusion of the frozen calls within a track, as `molecule_consensus.toml` |
+| `model.fusion_em_max_iter`, `fusion_em_tol`, `fusion_init_pi`, `fusion_init_theta0`, `fusion_init_theta1` | 500, 1e-10, 0.5, 0.1, 0.9 | EM of the emission rates, as `molecule_consensus.toml` |
+| `selection.fusion_emission_source` | `"reference_sessions_all_scans"` | θ0, θ1 fitted on the frozen model's per-scan calls of every scan of the reference sessions |
+| `selection.fusion_prior_pi` | 0.5 | Fixed prior at application; the fitted π is not carried over |
 
 Several keys are policy switches whose other historical values were rejected.
 `scripts/pipeline/build_labelfree_gmm_predictions.jl` now accepts only the promoted value and

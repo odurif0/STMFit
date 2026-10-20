@@ -1,0 +1,50 @@
+# Campaign B protocol (declared 2026-10-20, before any search result): search
+# of the reference cohort of a frozen unit assignment by its benchmark score.
+#
+# Grading side only: scripts/grading/search_reference_cohort.jl reads this file
+# and the benchmark labels. The selected cohort is a label-informed choice of
+# training data (supervised selection); the frozen model it produces reads no
+# label at inference. Approved scope: user, 2026-10-20 ("focus sur B en
+# recherche de l'optimum"), time box three days.
+
+[data]
+run = "results/bench493_a2bcb15"                     # features, consensus, physical lobes (label-free)
+manifest = "benchmarks/chitosan_6mer_benchmark_v2.toml"
+control_sequence = "010010"                           # NKNNKN, every manifest file
+config = "config/unit_assignment_frozen_reference.toml"
+
+[split]
+# Development: the 13 sessions of 2024. Sealed: the 5 sessions of 2025, read
+# once, by --mode sealed, after the final model is written.
+development_cohorts = ["full145", "added_2024"]
+sealed_cohorts = ["added_2025"]
+
+[search]
+# Unit: one physical molecule (a molecule-consensus track; tracks never cross
+# sessions). Its training scans are its corroborated scans (count_rule =
+# agrees), as in the promoted method; units without one cannot change a model.
+unit = "track"
+# Objective: absolute number of correct final (fused) units, summed over the
+# held-out session of every leave-one-session-out fold of the search sessions.
+# Scoring rule of grade_unit_assignment.jl (own N, first min(N, 6) positions,
+# identity or reverse alignment by accuracy).
+objective = "correct_units"
+# Floating backward elimination from the full pool: remove the unit whose
+# removal raises the objective most; then re-add removed units while that
+# raises it. A step needs a gain of at least min_gain units. Ties: smallest
+# track id. Stops when no removal reaches min_gain.
+min_gain = 1
+floating = true
+
+[report]
+# Secondary criterion, fixed before any result: one vote per physical molecule
+# (track), i.e. the mean over tracks of the track's fraction of correct units,
+# and the number of tracks with a strict majority of exact chains.
+secondary = "per_molecule"
+
+[null]
+# Noise floor: the same final search with per-track random truths drawn
+# uniformly from the palindromic 2-of-6 patterns (same composition and
+# symmetry as NKNNKN, unrelated to the molecules).
+patterns = ["100001", "010010", "001100"]
+seeds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]

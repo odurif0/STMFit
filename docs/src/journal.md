@@ -88,7 +88,10 @@ empirical templates; 10–20mer outputs not validated.
    the clusters and the fusion prevalence. On the 145-scan benchmark,
    accuracy goes from 88.6% (146-scan run) to 79.5% (493-scan run). Should
    the assignment be trained per session, normalised per session, or frozen
-   on a reference cohort? Any of these is a new method campaign.
+   on a reference cohort? Any of these is a new method campaign. Campaign B
+   (2026-10-20, running) freezes the assignment on a reference cohort chosen
+   by its benchmark score, with nested validation, a noise floor and sealed
+   2025 sessions.
 7. **Assignment fragility — answered 2026-09-30.** The benchmark signal is
    the contrast with the dimmer terminal lobe. Without it, amplitude separates
    GlcNAc from GlcN at non-terminal positions with AUC ≤ 0.66, and shape, DFT
@@ -1164,3 +1167,91 @@ aggregates, cut molecules and non-chitosan objects stay out.
   the 146-scan cohort run and stays as cited. The 493-scan figures are
   recorded here and in Current state.
 
+### 2026-10-20 — Declared campaign B: frozen assignment, reference cohort chosen by its benchmark score
+
+- **Deliverable.** A frozen unit assignment whose reference cohort is the one
+  that maximises the absolute number of correct units, with:
+  - an honest estimate (nested leave-one-session-out);
+  - a noise floor (the same search on random truths);
+  - one verdict on sealed sessions.
+
+  Done when the merged report, the sealed verdict and a results entry exist.
+  Scope approved by the user on 2026-10-20 ("focus sur B en recherche de
+  l'optimum, avec la cohorte optimum, on fera A"), time box three days. A
+  (reference fixed without labels) is deferred.
+- **Status of B.** The model reads no label at inference. The choice of its
+  training scans uses the benchmark labels, so B is a supervised selection of
+  training data. Under the scientific invariants it is an experiment and a
+  comparison, not a label-free method. Promoting it would need an explicit
+  decision by the user.
+- **Engine** (`src/frozen_assignment.jl`, module `FrozenAssignment`).
+  - It learns the cohort-level parts of the promoted assignment on given
+    scans: k-means centroids of the 4 views, GMM of `v_cc`, physical naming.
+    It then applies them unchanged to any scan. Features stay standardised
+    within each scan, so a lobe's features do not depend on the other scans.
+  - Trained on the corroborated scans of the 493-scan run, it reproduces
+    that run exactly: `pred_kmeans`, `pred_gmm`, vote and fused calls
+    (0 differences out of 2,927 lobes), and fusion π/θ0/θ1 to the printed
+    digits.
+  - The GMM computes each Cholesky factor once per iteration and uses
+    buffers. It is bitwise identical to the production script on random
+    subsets, at about 2 s per training instead of minutes.
+  - `test/test_frozen_assignment.jl` covers this against the production
+    scripts on synthetic data, plus fusion, model I/O and the search.
+- **Config** `config/unit_assignment_frozen_reference.toml`. It is the
+  corroborated config plus:
+  - `assignment_model = "frozen_reference"`;
+  - the fusion EM keys;
+  - `fusion_emission_source = "reference_sessions_all_scans"`: θ0, θ1 fitted
+    on the frozen model's per-scan calls of every scan of the reference
+    sessions;
+  - `fusion_prior_pi = 0.5`: a neutral prior, so no GlcNAc fraction is
+    carried from the reference molecules.
+- **Protocol** (`benchmarks/reference_cohort_search_v1.toml`, fixed before any
+  result).
+  - **Split.**
+    - Development: the 13 sessions of 2024 (405 scans).
+    - Sealed: the 5 sessions of 2025 (88 scans), read once by `--mode sealed`
+      after the final model is written.
+  - **Unit.** A physical molecule (consensus track; tracks never cross
+    sessions). Its training scans are its corroborated scans. 39 development
+    tracks have one; the others cannot change a model.
+  - **Objective.** Correct final (fused) units, summed over the held-out
+    session of every leave-one-session-out fold, with the
+    `grade_unit_assignment.jl` rule. The rule reproduces the official
+    2208/2889/121 on the 493 run.
+  - **Search.** Floating backward elimination from the full pool. Each step
+    removes the unit whose removal gains most, then re-adds removed units
+    while that gains. A step needs a gain of at least 1. Ties go to the
+    smallest track id.
+  - **Honest estimate.** Nested: each development session is held out in
+    turn, the whole search runs on the other 12, and the selected cohort and
+    the full pool are graded on the held-out session.
+  - **Noise floor.** The final search is repeated with per-track random
+    truths among the palindromic 2-of-6 patterns (100001, 010010, 001100),
+    for 20 seeds.
+  - **Secondary criterion** (added the same day, before any result, after a
+    review note). Repeat scans of one physical molecule are not independent:
+    the 2025 track of `250430` holds 36 of the 88 sealed scans. Every report
+    therefore also gives one vote per molecule: the mean over tracks of the
+    fraction of correct units, and the number of tracks with a strict
+    majority of exact chains.
+- **Decision rules** (fixed now).
+  - The search counts as a real gain only if three conditions hold:
+    1. the nested gain over the pool on held-out sessions is positive;
+    2. the in-sample gain of the final search exceeds every null gain;
+    3. the per-molecule criterion does not fall.
+  - The sealed verdict compares the selected model, the pool model and the
+    promoted transductive method on the same 88 scans (361/528 in the
+    493-scan run).
+  - No parameter of the protocol changes after a result.
+- **Limitation.** The empirical Fisher feature is computed once, label-free
+  and transductively, on the 493-scan run (lobe-parity CV, 2025 scans
+  included). It is not re-learned per cohort; only k-means, GMM, naming and
+  emission rates follow the cohort.
+- **Disclosure.** A local timing run of the final search was stopped after two
+  steps. It showed 1871 correct units for the pool and 1981 after two
+  removals (in-sample). The protocol was already written and is unchanged.
+- **Execution.** `hpc/run_reference_cohort_search.sbatch` runs the 34
+  searches as independent processes on one Viper node (16 × 8 threads),
+  then `--mode report`. Results follow in a separate entry.

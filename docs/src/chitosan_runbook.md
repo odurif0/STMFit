@@ -167,4 +167,5 @@ compares the native mold builder with the Python reference
 | `scripts/grading/report_benchmark_triage.jl --catalog TSV ... --count-config TOML --sheets NEW` | Grading side: fixed-scale review sheets for the visual triage |
 | `scripts/grading/report_candidate_review.jl --data data --triage TSV --outdir NEW [--suggestions TSV]` | Grading side: local review page (cards grouped by molecule, decision export) for benchmark candidates |
 | `scripts/grading/report_data_sets.jl --data data --table TSV ...` | Grading side: rebuild `data/sets/` and `data/INDEX.tsv` from the decision tables |
+| `scripts/grading/search_reference_cohort.jl --protocol TOML --mode nested\|final\|null\|report\|sealed --outdir NEW` | Grading side, campaign B: reference cohort of a frozen assignment chosen by its benchmark score (`benchmarks/reference_cohort_search_v1.toml`; Viper: `hpc/run_reference_cohort_search.sbatch`) |
 | `scripts/pipeline/report_position_repeatability.jl --run RUN --data-dir RAW --outdir NEW` | Label-free lobe-position repeatability across repeated scans ([Pipeline](pipeline.md)) |

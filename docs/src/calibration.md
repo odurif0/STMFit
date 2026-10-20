@@ -59,6 +59,15 @@ descriptor, training-mean Fisher centring, complete-disk patch support) →
 scans; promoted). `unit_assignment_transverse_fisher.toml` is a test fixture
 for the physical Fisher layout.
 
+`unit_assignment_frozen_reference.toml` (campaign B, 2026-10-20) changes no
+learned setting. Its new keys are design choices fixed before any grade:
+- the fusion EM settings are copied from `molecule_consensus.toml`;
+- the emission rates come from every scan of the reference sessions, because
+  application scans are not all corroborated;
+- `fusion_prior_pi = 0.5` is the neutral prior. A fitted π would carry the
+  reference molecules' GlcNAc fraction (a composition prior) to new
+  molecules.
+
 The mold construction height (0.50 nm target) and isovalue grid come from the
 DFT workflow, not from grades. The history of these choices is in the
 [journal](journal.md): many single-change variants were graded and rejected,
