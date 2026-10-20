@@ -8,7 +8,7 @@ have no internet. `/ptmp` is purged after about 12 weeks, so always fetch result
 | Script | Purpose |
 |---|---|
 | `run_molecule_consensus.sbatch` | One raw-to-prediction run of the promoted method (4 CPUs, 16 GB, ~1.5 h for 146 scans) |
-| `run_reference_cohort_search.sbatch` | Campaign B: the 34 reference-cohort searches of `benchmarks/reference_cohort_search_v1.toml` (one node, 128 CPUs; grading side). Needs the protocol's run tables under `results/` in the checkout |
+| `run_reference_cohort_search.sbatch` | Campaign B: every search of a reference-cohort protocol (`STMFIT_PROTOCOL`, default `benchmarks/reference_cohort_search_v1.toml`: 34 searches; `_v2.toml`: 108 single-start processes) on one node, then the report (grading side). Needs the protocol's run tables under `results/` in the checkout |
 
 ## One-time setup
 

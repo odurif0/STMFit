@@ -1,0 +1,48 @@
+# Campaign B, option 1 (declared 2026-10-20, after the v1 results and before
+# any v2 result): is the v1 cohort a poor optimum, and would a stronger search
+# generalise better? Same data, split, unit, objective and secondary
+# criterion as reference_cohort_search_v1.toml; only the search changes.
+#
+# Grading side only (scripts/grading/search_reference_cohort.jl). Approved by
+# the user on 2026-10-20 ("lance l'option 1"), inside the campaign time box.
+
+[data]
+run = "results/bench493_a2bcb15"
+manifest = "benchmarks/chitosan_6mer_benchmark_v2.toml"
+control_sequence = "010010"
+config = "config/unit_assignment_frozen_reference.toml"
+
+[split]
+# The 2025 sessions were read once by v1 (2026-10-20). Here they are a
+# secondary check only; the evidence is the nested estimate on 2024.
+development_cohorts = ["full145", "added_2024"]
+sealed_cohorts = ["added_2025"]
+
+[search]
+unit = "track"
+objective = "correct_units"
+# Steepest ascent with flips (remove or add any unit) and, when no flip gains,
+# swaps among the swap_top best removals and additions of the last flip
+# round; from 1 + length(start_seeds) starts: the full pool (start 0) and
+# seeded random subsets keeping each unit with start_keep_probability. The
+# best end (in-sample objective; ties: lowest start) is the selected cohort,
+# in the final search and inside every nested fold.
+strategy = "multistart_flip_swap"
+min_gain = 1
+swap_top = 5
+start_keep_probability = 0.75
+start_seeds = [1, 2, 3, 4, 5]
+
+[report]
+secondary = "per_molecule"
+
+[null]
+patterns = ["100001", "010010", "001100"]
+seeds = [1, 2, 3, 4]
+
+[decision]
+# The stronger search supports "a better optimum generalises" only if all
+# three hold on the nested held-out sessions: (1) its gain over the pool
+# exceeds the v1 gain (+93 units); (2) the bootstrap 95% interval over
+# molecules of that gain excludes 0; (3) more molecules improve than worsen.
+v1_nested_gain = 93

@@ -20,6 +20,11 @@
 #   sealed --models DIR     apply the frozen models of a final output to the
 #                           sealed sessions and grade them once (sealed.tsv,
 #                           sealed_files.tsv, predictions_<model>.tsv)
+# Multistart protocols ([search] strategy = "multistart_flip_swap"): nested,
+# final and null take --start K (0 = the pool, K >= 1 a seeded random subset)
+# and write only trace.tsv, start.units and end.units; report picks the best
+# start of every target, grades the held-out sessions and writes the final
+# models (report.md, outer.tsv, outer_files.tsv, null_summary.tsv, cohort.tsv).
 #
 # The model, its training and its application are label-free
 # (src/frozen_assignment.jl); labels enter only the objective here. Trainings
@@ -35,7 +40,7 @@ function search_options(args)
     o = Dict{String,String}(); i = 1
     while i <= length(args)
         k = args[i]
-        k in ("--protocol", "--mode", "--outdir", "--outer", "--seed", "--campaign", "--models") && i < length(args) ||
+        k in ("--protocol", "--mode", "--outdir", "--outer", "--seed", "--start", "--campaign", "--models") && i < length(args) ||
             error("Unknown option or missing value: $k")
         haskey(o, k) && error("Repeated option $k")
         o[k] = args[i+1]; i += 2
@@ -239,6 +244,58 @@ function floating_search(pool::Vector{Int}, objective; min_gain::Integer=1, floa
     return C, value, trace
 end
 
+"""
+    local_search(pool, start, objective; min_gain=1, swap_top=5)
+
+Steepest ascent from `start`: every step evaluates flipping each unit of
+`pool` (remove it if in the set, add it otherwise) and takes the best flip.
+When no flip gains >= min_gain, it evaluates swaps (remove one unit, add
+one) among the swap_top best removals and the swap_top best additions of
+that flip round. Stops when neither gains. Ties go to the smallest ids.
+Returns (set, value, trace); swaps record the added unit in `added`.
+"""
+function local_search(pool::Vector{Int}, start::Vector{Int}, objective; min_gain::Integer=1, swap_top::Integer=5, log=nothing)
+    pool = sort(pool); C = sort(start); value = only(objective([C]))
+    trace = [(step=0, action="start", unit=0, added=0, value=value, gain=0, size=length(C))]
+    note(t) = (push!(trace, t); log === nothing || log(t))
+    log === nothing || log(trace[1])
+    while true
+        flips = [u in C ? filter(!=(u), C) : sort(vcat(C, u)) for u in pool]
+        values = objective(flips)
+        gains = values .- value
+        gain, k = findmax(gains)
+        if gain >= min_gain
+            action = pool[k] in C ? "remove" : "add"
+            C = flips[k]; value = values[k]
+            note((step=length(trace), action=action, unit=pool[k], added=0, value=value, gain=gain, size=length(C)))
+            continue
+        end
+        inside = [i for i in eachindex(pool) if pool[i] in C]; outside = [i for i in eachindex(pool) if !(pool[i] in C)]
+        (swap_top > 0 && !isempty(inside) && !isempty(outside)) || break
+        best(ix) = sort(sort(ix; by=i -> (-gains[i], pool[i]))[1:min(swap_top, length(ix))])
+        pairs = [(pool[i], pool[j]) for i in best(inside) for j in best(outside)]
+        sets = [sort(vcat(filter(!=(u), C), r)) for (u, r) in pairs]
+        values = objective(sets)
+        gain, k = findmax(values .- value)
+        gain >= min_gain || break
+        C = sets[k]; value = values[k]
+        note((step=length(trace), action="swap", unit=pairs[k][1], added=pairs[k][2], value=value, gain=gain, size=length(C)))
+    end
+    return C, value, trace
+end
+
+"Start set k of a multistart search: 0 is the pool, k >= 1 a seeded random subset."
+function start_set(pool::Vector{Int}, sp, k::Integer)
+    k == 0 && return sort(pool)
+    1 <= k <= length(sp["start_seeds"]) || error("Start $k is not declared in the protocol")
+    rng = MersenneTwister(sp["start_seeds"][k])
+    C = [u for u in sort(pool) if rand(rng) < sp["start_keep_probability"]]
+    isempty(C) && error("Empty start set $k")
+    return C
+end
+
+multistart(protocol) = get(protocol["search"], "strategy", "floating_backward") == "multistart_flip_swap"
+
 function benchmark_truth(S::Setup, sequence::AbstractString)
     t = Int8[c == '1' ? 1 : 0 for c in sequence]
     return Dict(f => t for f in keys(S.file_rows))
@@ -252,26 +309,38 @@ function null_truth(S::Setup, patterns, seed)
 end
 
 "One search on `sessions`; writes the trace with the totals of every step."
-function run_search(S::Setup, protocol, sessions, truth; label="")
+function run_search(S::Setup, protocol, sessions, truth; label="", start=nothing)
     sp = protocol["search"]
     pool = pool_units(S, sessions)
     objective(sets) = [summarize(g, truth).correct for g in loso_grades(S, sets, sessions, truth)]
     t0 = time()
-    logger(t) = (@printf("%s step %d %s unit=%d correct=%d gain=%d units=%d trainings=%d %.0f s\n", label, t.step,
-                         t.action, t.unit, t.value, t.gain, t.size, TRAININGS[], time() - t0); flush(stdout))
-    C, value, trace = floating_search(pool, objective; min_gain=sp["min_gain"], floating=sp["floating"], log=logger)
+    logger(t) = (@printf("%s step %d %s unit=%d%s correct=%d gain=%d units=%d trainings=%d %.0f s\n", label, t.step,
+                         t.action, t.unit, get(t, :added, 0) == 0 ? "" : "+$(t.added)", t.value, t.gain, t.size,
+                         TRAININGS[], time() - t0); flush(stdout))
+    if multistart(protocol)
+        start === nothing && error("A multistart protocol needs --start")
+        first_set = start_set(pool, sp, start)
+        C, value, trace = local_search(pool, first_set, objective; min_gain=sp["min_gain"], swap_top=sp["swap_top"], log=logger)
+    else
+        start === nothing || error("--start is only defined for a multistart protocol")
+        first_set = pool
+        C, value, trace = floating_search(pool, objective; min_gain=sp["min_gain"], floating=sp["floating"], log=logger)
+    end
     rows = Dict{String,String}[]
-    current = copy(pool)
+    current = copy(first_set)
     for t in trace
         t.action == "remove" && filter!(!=(t.unit), current)
         t.action == "add" && (current = sort(vcat(current, t.unit)))
+        t.action == "swap" && (current = sort(vcat(filter(!=(t.unit), current), t.added)))
         s = summarize(only(loso_grades(S, [current], sessions, truth)), truth)
         push!(rows, Dict("step" => string(t.step), "action" => t.action, "unit" => string(t.unit),
+            "unit_added" => get(t, :added, 0) == 0 ? "" : string(t.added),
             "unit_session" => t.unit == 0 ? "" : S.unit_session[t.unit],
             "unit_scans" => t.unit == 0 ? "" : string(length(unique(S.data.file[S.units[t.unit]]))),
             "gain" => string(t.gain), "units" => string(t.size), stat_strings(s)...))
     end
-    return C, pool, rows
+    current == C || error("Trace replay does not reach the search result")
+    return C, pool, rows, first_set
 end
 
 stat_strings(s) = ["files" => string(s.files), "possible" => string(s.possible), "correct" => string(s.correct),
@@ -280,7 +349,7 @@ stat_strings(s) = ["files" => string(s.files), "possible" => string(s.possible),
     "molecule_accuracy" => @sprintf("%.4f", s.molecule_accuracy), "tracks_majority_exact" => string(s.tracks_majority_exact)]
 const STAT_COLUMNS = ["files", "possible", "correct", "classified", "errors", "unclassified", "exact", "tracks",
                       "molecule_accuracy", "tracks_majority_exact"]
-const TRACE_COLUMNS = vcat(["step", "action", "unit", "unit_session", "unit_scans", "gain", "units"], STAT_COLUMNS)
+const TRACE_COLUMNS = vcat(["step", "action", "unit", "unit_added", "unit_session", "unit_scans", "gain", "units"], STAT_COLUMNS)
 
 file_rows_out(grades, extra) = [merge(Dict("file" => g.file, "session" => g.session, "track" => string(g.track),
     "N" => string(g.n), "correct" => string(g.correct), "classified" => string(g.classified),
@@ -291,7 +360,7 @@ function run_nested(S::Setup, protocol, out, o)
     truth = benchmark_truth(S, protocol["data"]["control_sequence"])
     o in S.development || error("--outer must be a development session")
     inner = filter(!=(o), S.development)
-    C, pool, trace = run_search(S, protocol, inner, truth; label=o)
+    C, pool, trace, _ = run_search(S, protocol, inner, truth; label=o)
     write_table(joinpath(out, "trace.tsv"), TRACE_COLUMNS, trace)
     summary = Dict{String,String}[]; files = Dict{String,String}[]
     for (name, units) in (("pool", pool), ("selected", C))
@@ -312,7 +381,7 @@ const OUTER_COLUMNS = vcat(["outer", "cohort", "units", "removed", "emission_fit
 
 function run_final(S::Setup, protocol, out)
     truth = benchmark_truth(S, protocol["data"]["control_sequence"])
-    C, pool, trace = run_search(S, protocol, S.development, truth; label="final")
+    C, pool, trace, _ = run_search(S, protocol, S.development, truth; label="final")
     write_table(joinpath(out, "trace.tsv"), TRACE_COLUMNS, trace)
     removed_at = Dict{Int,String}()
     for r in trace
@@ -334,7 +403,7 @@ end
 function run_null(S::Setup, protocol, out, seed)
     np = protocol["null"]
     seed in np["seeds"] || error("Seed $seed is not declared in the protocol")
-    C, _, trace = run_search(S, protocol, S.development, null_truth(S, np["patterns"], seed); label="null$seed")
+    C, _, trace, _ = run_search(S, protocol, S.development, null_truth(S, np["patterns"], seed); label="null$seed")
     write_table(joinpath(out, "trace.tsv"), TRACE_COLUMNS, trace)
 end
 
@@ -414,6 +483,147 @@ function molecule_stats(rows, truth)
     return (tracks=length(tracks), accuracy=isempty(acc) ? NaN : sum(acc) / length(acc), majority_exact=maj)
 end
 
+"One start of a multistart search on a nested, final or null target: trace and cohorts only."
+function run_start(S::Setup, protocol, out, mode, o, k)
+    if mode == "nested"
+        o in S.development || error("--outer must be a development session")
+        sessions = filter(!=(o), S.development); truth = benchmark_truth(S, protocol["data"]["control_sequence"]); label = "$(o)_$k"
+    elseif mode == "final"
+        sessions = S.development; truth = benchmark_truth(S, protocol["data"]["control_sequence"]); label = "final_$k"
+    else
+        seed = parse(Int, o)
+        seed in protocol["null"]["seeds"] || error("Seed $seed is not declared in the protocol")
+        sessions = S.development; truth = null_truth(S, protocol["null"]["patterns"], seed); label = "null$(seed)_$k"
+    end
+    C, _, trace, first_set = run_search(S, protocol, sessions, truth; label, start=k)
+    write_table(joinpath(out, "trace.tsv"), TRACE_COLUMNS, trace)
+    for (name, units) in (("start", first_set), ("end", C))
+        open(joinpath(out, "$name.units"), "w") do io; foreach(u -> println(io, u), units); end
+    end
+end
+
+"Best end of the starts <prefix>_0 ... <prefix>_n (ties: lowest start; start 0 is the pool)."
+function best_start(dir, prefix, n)
+    ends = Int[]; units = Vector{Int}[]; pool_value = 0
+    for k in 0:n
+        d = joinpath(dir, "$(prefix)_$k")
+        isfile(joinpath(d, "end.units")) || error("Missing start output: $d")
+        tr = last(read_grading(joinpath(d, "trace.tsv")))
+        push!(ends, parse(Int, tr[end]["correct"]))
+        push!(units, parse.(Int, filter(!isempty, readlines(joinpath(d, "end.units")))))
+        k == 0 && (pool_value = parse(Int, tr[1]["correct"]))
+    end
+    v, i = findmax(ends)
+    return (start=i - 1, units=units[i], value=v, ends=ends, pool_value=pool_value)
+end
+
+"Per-molecule paired difference b - a of correct units, with a bootstrap over molecules."
+function paired_molecules(ofiles, a, b; draws=20000)
+    sums = Dict{Tuple{String,String},Int}()
+    for r in ofiles
+        r["cohort"] in (a, b) || continue
+        k = (r["track"], r["cohort"]); sums[k] = get(sums, k, 0) + parse(Int, r["correct"])
+    end
+    tracks = sort(unique(first.(collect(keys(sums)))))
+    d = [sums[(t, b)] - sums[(t, a)] for t in tracks]
+    rng = MersenneTwister(1)
+    boot = sort([sum(d[rand(rng, 1:length(d), length(d))]) for _ in 1:draws])
+    return (molecules=length(d), better=count(>(0), d), worse=count(<(0), d), same=count(==(0), d), total=sum(d),
+            lo=boot[round(Int, 0.025draws)], hi=boot[round(Int, 0.975draws)],
+            largest=sort(collect(zip(tracks, d)); by=x -> -abs(x[2]))[1:min(5, length(d))])
+end
+
+const OUTER2_COLUMNS = vcat(["outer", "cohort", "start", "in_sample", "in_sample_pool", "starts_end", "units", "removed",
+                             "emission_fit", "theta0", "theta1"], STAT_COLUMNS)
+
+"Merge a multistart campaign: nested_<session>_<k>/, final_<k>/, null_<seed>_<k>/."
+function run_report_multistart(S::Setup, protocol, out, dir)
+    truth = benchmark_truth(S, protocol["data"]["control_sequence"])
+    n = length(protocol["search"]["start_seeds"])
+    outer = Dict{String,String}[]; ofiles = Dict{String,String}[]
+    for o in S.development
+        b = best_start(dir, "nested_$o", n)
+        inner = filter(!=(o), S.development); pool = pool_units(S, inner)
+        for (name, units) in (("pool", pool), ("selected", b.units))
+            model, ok = frozen_model(S, units, inner)
+            calls, _ = final_calls(S, model, S.session_rows[o])
+            g = grade_session(S, o, calls, truth)
+            push!(outer, Dict("outer" => o, "cohort" => name, "start" => name == "pool" ? "" : string(b.start),
+                "in_sample" => string(name == "pool" ? b.pool_value : b.value), "in_sample_pool" => string(b.pool_value),
+                "starts_end" => join(b.ends, ","), "units" => string(length(units)), "removed" => join(setdiff(pool, units), ","),
+                "emission_fit" => string(ok), "theta0" => @sprintf("%.6f", model.theta0), "theta1" => @sprintf("%.6f", model.theta1),
+                stat_strings(summarize(g, truth))...))
+            append!(ofiles, file_rows_out(g, Dict("outer" => o, "cohort" => name)))
+        end
+        g = grade_session(S, o, S.transductive[S.session_rows[o]], truth)
+        push!(outer, Dict("outer" => o, "cohort" => "transductive_run", stat_strings(summarize(g, truth))...))
+        append!(ofiles, file_rows_out(g, Dict("outer" => o, "cohort" => "transductive_run")))
+    end
+    write_table(joinpath(out, "outer.tsv"), OUTER2_COLUMNS, outer)
+    write_table(joinpath(out, "outer_files.tsv"), vcat(["outer", "cohort"], FILE_COLUMNS), ofiles)
+    f = best_start(dir, "final", n); pool = pool_units(S, S.development)
+    write_table(joinpath(out, "cohort.tsv"), ["track", "session", "status", "corroborated_scans"],
+        [Dict("track" => string(u), "session" => S.unit_session[u], "status" => u in f.units ? "selected" : "removed",
+              "corroborated_scans" => string(length(unique(S.data.file[S.units[u]])))) for u in pool])
+    for (name, units) in (("pool", pool), ("selected", f.units))
+        model, ok = frozen_model(S, units, S.development)
+        ok || error("Emission rates could not be fitted for the $name model")
+        write_frozen_model(joinpath(out, "model_$(name).tsv"), model)
+        open(joinpath(out, "model_$(name).units"), "w") do io; foreach(u -> println(io, u), units); end
+    end
+    nulls = Dict{String,String}[]
+    for seed in protocol["null"]["seeds"]
+        b = best_start(dir, "null_$seed", n)
+        push!(nulls, Dict("seed" => string(seed), "start" => string(b.start), "pool_correct" => string(b.pool_value),
+                          "best_correct" => string(b.value), "gain" => string(b.value - b.pool_value), "starts_end" => join(b.ends, ",")))
+    end
+    write_table(joinpath(out, "null_summary.tsv"), ["seed", "start", "pool_correct", "best_correct", "gain", "starts_end"], nulls)
+    tot(c, k) = sum(parse(Int, r[k]) for r in outer if r["cohort"] == c)
+    pm = paired_molecules(ofiles, "pool", "selected")
+    gains = [parse(Int, r["gain"]) for r in nulls]; fgain = f.value - f.pool_value
+    dec = get(protocol, "decision", Dict())
+    open(joinpath(out, "report.md"), "w") do io
+        println(io, "# Campaign B, option 1: multistart flip/swap search\n")
+        println(io, "Development sessions: $(length(S.development)); pool: $(length(pool)) units; starts: pool + $n random.\n")
+        println(io, "## Nested leave-one-session-out (honest estimate)\n")
+        println(io, "| cohort | correct | classified | errors | exact chains | molecules | molecule accuracy | molecules majority exact |")
+        println(io, "|---|---|---|---|---|---|---|---|")
+        for c in ("pool", "selected", "transductive_run")
+            m = molecule_stats([r for r in ofiles if r["cohort"] == c], truth)
+            @printf(io, "| %s | %d/%d | %d | %d | %d | %d | %.3f | %d |\n", c, tot(c, "correct"), tot(c, "possible"),
+                    tot(c, "classified"), tot(c, "errors"), tot(c, "exact"), m.tracks, m.accuracy, m.majority_exact)
+        end
+        gain = tot("selected", "correct") - tot("pool", "correct")
+        println(io, "\nHeld-out gain over the pool: $gain correct units. Per molecule (selected - pool): $(pm.better) better, " *
+                    "$(pm.worse) worse, $(pm.same) unchanged of $(pm.molecules); bootstrap 95% interval over molecules " *
+                    "[$(pm.lo), $(pm.hi)]; largest changes $(pm.largest).\n")
+        println(io, "| held-out session | files | pool | selected | transductive_run | chosen start | in-sample pool -> best | ends per start |")
+        println(io, "|---|---|---|---|---|---|---|---|")
+        for o in S.development
+            r = Dict(x["cohort"] => x for x in outer if x["outer"] == o)
+            println(io, "| $o | $(r["pool"]["files"]) | $(r["pool"]["correct"]) | $(r["selected"]["correct"]) | " *
+                        "$(r["transductive_run"]["correct"]) | $(r["selected"]["start"]) | $(r["pool"]["in_sample"]) -> " *
+                        "$(r["selected"]["in_sample"]) | $(r["selected"]["starts_end"]) |")
+        end
+        println(io, "\n## Final search ($(length(S.development)) sessions, in-sample objective)\n")
+        println(io, "Pool $(f.pool_value) -> best $(f.value) correct units (gain $fgain, start $(f.start)); ends per start " *
+                    "$(join(f.ends, ", ")); $(length(f.units)) of $(length(pool)) units kept.\n")
+        println(io, "## Null searches (random palindromic truths, same multistart search)\n")
+        println(io, isempty(gains) ? "No null output." :
+            "$(length(gains)) seeds; in-sample gains $(join(gains, ", ")); the real gain $fgain ranks above " *
+            "$(count(<(fgain), gains)) of $(length(gains)).")
+        if !isempty(dec)
+            println(io, "\n## Pre-registered decision (protocol [decision])\n")
+            c1 = gain > dec["v1_nested_gain"]; c2 = pm.lo > 0; c3 = pm.better > pm.worse
+            println(io, "1. Held-out gain $gain > v1 gain $(dec["v1_nested_gain"]): $(c1 ? "yes" : "no")")
+            println(io, "2. Bootstrap lower bound $(pm.lo) > 0: $(c2 ? "yes" : "no")")
+            println(io, "3. More molecules better ($(pm.better)) than worse ($(pm.worse)): $(c3 ? "yes" : "no")")
+            println(io, "\nThe stronger search supports the hypothesis that a better optimum generalises: $(c1 && c2 && c3 ? "yes" : "no").")
+        end
+    end
+    print(read(joinpath(out, "report.md"), String))
+end
+
 "Grading-side TSV reader (the method reader refuses label-like columns)."
 function read_grading(path)
     lines = filter(!isempty, readlines(path))
@@ -456,7 +666,7 @@ end
 function search_main(args=ARGS)
     o = search_options(args)
     o === nothing && return println("search_reference_cohort.jl --protocol TOML --mode nested|final|null|report|sealed --outdir NEW_DIR " *
-                                    "[--outer SESSION] [--seed K] [--campaign DIR] [--models DIR]")
+                                    "[--outer SESSION] [--seed K] [--start K] [--campaign DIR] [--models DIR]")
     BLAS.set_num_threads(1)
     protocol = TOML.parsefile(o["--protocol"])
     S = load_setup(protocol)
@@ -465,10 +675,16 @@ function search_main(args=ARGS)
     @printf("Julia %s, %d threads; development %d sessions, sealed %d; pool %d units\n", VERSION, Threads.nthreads(),
             length(S.development), length(S.sealed), length(pool_units(S, S.development)))
     mode = o["--mode"]
-    mode == "nested" && run_nested(S, protocol, out, o["--outer"])
-    mode == "final" && run_final(S, protocol, out)
-    mode == "null" && run_null(S, protocol, out, parse(Int, o["--seed"]))
-    mode == "report" && run_report(S, protocol, out, o["--campaign"])
+    if multistart(protocol) && mode in ("nested", "final", "null")
+        haskey(o, "--start") || error("A multistart protocol needs --start K")
+        run_start(S, protocol, out, mode, mode == "nested" ? o["--outer"] : get(o, "--seed", ""), parse(Int, o["--start"]))
+    else
+        haskey(o, "--start") && error("--start is only defined for a multistart protocol")
+        mode == "nested" && run_nested(S, protocol, out, o["--outer"])
+        mode == "final" && run_final(S, protocol, out)
+        mode == "null" && run_null(S, protocol, out, parse(Int, o["--seed"]))
+        mode == "report" && (multistart(protocol) ? run_report_multistart : run_report)(S, protocol, out, o["--campaign"])
+    end
     mode == "sealed" && run_sealed(S, protocol, out, o["--models"])
     println("Done: $(TRAININGS[]) trainings -> $out")
 end

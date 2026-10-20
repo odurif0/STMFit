@@ -1345,3 +1345,39 @@ aggregates, cut molecules and non-chitosan objects stay out.
   Freezing removes the cohort dependence at no clear cost, so it is the
   natural starting point for A.
 - **Headlines.** Unchanged; nothing is promoted.
+
+### 2026-10-20 — Declared: campaign B option 1, a stronger cohort search
+
+- **Question** (raised by the user after the v1 results). Is the v1 cohort a
+  poor local optimum? Would a stronger search find a cohort that generalises
+  better? The user approved testing it ("lance l'option 1"), inside the
+  campaign time box.
+- **Protocol** (`benchmarks/reference_cohort_search_v2.toml`, fixed before any
+  v2 result). Data, split, unit, objective and secondary criterion are those
+  of v1. Only the search changes:
+  - **Moves.** Each step takes the best flip: remove or add any unit.
+  - **Swaps.** When no flip gains at least 1 unit, the search tries swaps:
+    one removal plus one addition, among the 5 best removals and the 5 best
+    additions of that flip round.
+  - **Starts.** Six starts: the full pool, plus five seeded random subsets
+    that keep each unit with probability 0.75.
+  - **Selection.** The best end of the six (in-sample objective; ties go to
+    the lowest start) is the selected cohort, both in the final search and
+    inside every nested fold.
+  - **Null.** 4 null seeds (random palindromic truths) run the same
+    multistart search.
+- **Evaluation.**
+  - **Evidence.** The nested estimate on the 13 sessions of 2024, compared
+    with the pool and with v1 (+93 units held out).
+  - **2025.** The 2025 sessions were already read once by v1, so here they
+    are a secondary check only.
+- **Decision rule** (protocol `[decision]`). The stronger search supports
+  "a better optimum generalises" only if all three hold on the held-out
+  sessions:
+  1. its gain over the pool exceeds +93 units;
+  2. the bootstrap 95% interval over molecules excludes 0;
+  3. more molecules improve than worsen.
+- **Execution.** `hpc/run_reference_cohort_search.sbatch` now takes
+  `STMFIT_PROTOCOL`. Each start is its own single-thread process, which
+  makes 108 processes on one Viper node. `--mode report` then picks the best
+  start of every target and grades the held-out sessions.

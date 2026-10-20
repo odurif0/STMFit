@@ -119,4 +119,19 @@ end
     C, value, trace = Search.floating_search([1, 2, 3, 4], sets -> [get(v, Set(c), 0) for c in sets])
     @test C == [1, 4] && value == 9
     @test [(x.action, x.unit) for x in trace] == [("start", 0), ("remove", 1), ("remove", 2), ("remove", 3), ("add", 1)]
+    # local search: flips reach the target from a random start; swaps escape a flip optimum
+    target = Set([1, 2, 4, 6])
+    f(sets) = [10 - length(symdiff(Set(c), target)) for c in sets]
+    C, value, trace = Search.local_search([1, 2, 3, 4, 5, 6], [3, 4], f)
+    @test Set(C) == target && value == 10
+    @test [x.action for x in trace] == ["start", "add", "add", "remove", "add"]
+    w = Dict(Set([1, 2]) => 3, Set([1, 3]) => 5)          # from {1,2}: no flip gains, the swap 2 -> 3 does
+    C, value, trace = Search.local_search([1, 2, 3], [1, 2], sets -> [get(w, Set(c), 0) for c in sets])
+    @test C == [1, 3] && value == 5 && (trace[end].action, trace[end].unit, trace[end].added) == ("swap", 2, 3)
+    C, _, _ = Search.local_search([1, 2, 3], [1, 2], sets -> [get(w, Set(c), 0) for c in sets]; swap_top=0)
+    @test C == [1, 2]
+    sp = Dict("start_seeds" => [1, 2], "start_keep_probability" => 0.75)
+    @test Search.start_set([5, 1, 3], sp, 0) == [1, 3, 5]
+    @test Search.start_set(collect(1:40), sp, 1) == Search.start_set(collect(1:40), sp, 1) != Search.start_set(collect(1:40), sp, 2)
+    @test_throws ErrorException Search.start_set([1, 2], sp, 3)
 end
