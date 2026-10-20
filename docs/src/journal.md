@@ -1315,12 +1315,26 @@ aggregates, cut molecules and non-chitosan objects stay out.
 
   The search therefore does not count as a real gain, and the sealed
   sessions agree. The selected model is not used.
+- **Paired per-molecule check** (added after the verdict, at the user's
+  question; selected minus pool, correct units per physical molecule).
+  - **Nested 2024.** Of 102 molecules, 21 are better, 18 worse and 63
+    unchanged. The total is +93, with a bootstrap 95% interval over
+    molecules of [−1, +214]. Track 58 alone gives +43; without it the gain
+    is +50.
+  - **Sealed 2025.** Of 16 molecules, 2 are better, 2 worse and 12
+    unchanged. The total is −33, interval [−108, +8]. The whole loss is one
+    fused physical lobe (`track117_5`, called 1 by the pool and 0 by the
+    selection) repeated over 36 scans.
 - **Interpretation.**
-  - Choosing training data by the benchmark score fits noise and
-    session-specific structure: the search gains about as much on random
-    truths, and its choices change from fold to fold.
-  - The 2024 held-out gain does not transfer to 2025. This is the winner's
-    curse discussed before the campaign.
+  - The effects in both directions come from single molecules. At the
+    molecule level the selection and the pool are a draw. The correct
+    conclusion is "no evidence of a gain", not "a demonstrated loss".
+  - The in-sample gain is within what the same search finds on random
+    truths, and the choices change from fold to fold. This is consistent
+    with the winner's curse discussed before the campaign.
+  - One caveat on rule 2: the null searches start from lower accuracy
+    (1120–1531 vs 1871 correct), so their gains are not strictly on the same
+    scale.
 - **For campaign A.** The frozen pool model is learned on every corroborated
   scan of the reference sessions, without any label. It is as good as the
   transductive method:
