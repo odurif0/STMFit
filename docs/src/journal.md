@@ -51,9 +51,11 @@ the chain over repeated scans (2026-10-04).
   771/870 to 692/870 (28 exact chains) when the run also holds the 348
   added scans, and the fusion prevalence π rises from 0.34 to 0.45 (truth
   0.33). See the 2026-10-19 entry.
-- Campaign B (2026-10-20) did not generalise: choosing the reference cohort
-  by the benchmark score gave 316/528 on sealed 2025, against 349 for a
-  label-free frozen model and 361 for the promoted method.
+- Campaign B (2026-10-20/21) did not generalise to new data. Choosing the
+  reference cohort by the benchmark score gave 316/528 on sealed 2025, or
+  335 with a stronger search, against 349 for a label-free frozen model and
+  361 for the promoted method. The stronger search did gain within 2024
+  (+132 units on held-out sessions).
 
 **Limits:** NKNNKN edge-adjacency confound. The benchmark GlcNAc signal is
 the contrast with the dimmer terminal lobe; without it the image features
@@ -95,9 +97,12 @@ empirical templates; 10–20mer outputs not validated.
    (2026-10-20) chose the reference cohort by its benchmark score. It failed
    its pre-registered rules: its in-sample gain was within the noise floor,
    and on sealed 2025 it scored 316/528, against 349 for the frozen pool and
-   361 for the promoted method. Freezing on all corroborated reference scans
-   without labels (campaign A) matched the transductive method
-   (1871 vs 1847 held-out in 2024, 349 vs 361 in 2025) and remains open.
+   361 for the promoted method. A stronger multistart search (option 1,
+   2026-10-21) generalised within 2024 (+132 units held out over the pool,
+   33 molecules better and 19 worse) but not to 2025 (335 vs 349). Freezing
+   on all corroborated reference scans without labels (campaign A) matched
+   the transductive method (1871 vs 1847 held-out in 2024, 349 vs 361 in
+   2025) and remains open.
 7. **Assignment fragility — answered 2026-09-30.** The benchmark signal is
    the contrast with the dimmer terminal lobe. Without it, amplitude separates
    GlcNAc from GlcN at non-terminal positions with AUC ≤ 0.66, and shape, DFT
@@ -1381,3 +1386,58 @@ aggregates, cut molecules and non-chitosan objects stay out.
   `STMFIT_PROTOCOL`. Each start is its own single-thread process, which
   makes 108 processes on one Viper node. `--mode report` then picks the best
   start of every target and grades the held-out sessions.
+
+### 2026-10-21 — Option 1 results: the stronger search generalises within 2024, not to 2025
+
+- **Run.**
+  - Viper job 12302813 (`6461ce4`) ran 108 single-thread processes on one
+    node in 36 min. Single-thread processes are about 10 times faster per
+    training than the 8-thread processes of v1, presumably because threads
+    share garbage collection.
+  - Outputs are in `results/cohort_search_v2_6461ce4/` (report in
+    `report/`). The 2025 check is in
+    `results/cohort_search_v2_6461ce4_check2025/`, confirmed by
+    `report_unit_assignment_benchmark.jl`.
+- **Nested estimate** (2024 sessions held out, 405 scans, 102 molecules):
+
+  | Reference cohort | Correct | Exact chains | Errors | Molecule accuracy | Molecules majority exact |
+  |---|---:|---:|---:|---:|---:|
+  | Pool | 1871/2430 | 118 | 492 | 0.712 | 20 |
+  | v1 selection (floating) | 1964/2430 | 176 | 399 | 0.723 | 17 |
+  | v2 selection (multistart flip/swap) | 2003/2430 | 175 | 360 | 0.742 | 15 |
+  | Promoted method, transductive | 1847/2430 | 104 | 516 | 0.698 | 17 |
+
+  - **Paired per molecule** (v2 selection minus pool): 33 better, 19 worse
+    and 50 unchanged. The total is +132, with a bootstrap 95% interval of
+    [29, 260]. Track 58 gives +43; without it the gain is +89.
+  - **Pre-registered rule.** All three conditions hold (+132 > +93; interval
+    excludes 0; 33 > 19). Within 2024, a better optimum does generalise to
+    held-out sessions.
+  - The number of molecules with a majority of exact chains still falls
+    (20 → 15). It was not part of the v2 rule.
+- **Final search** (13 sessions).
+  - The six starts end at 2010, 2026, 2017, 2027, 2038 and 2000; the best is
+    start 4.
+  - That cohort keeps 24 of 39 units. Among the dropped tracks are three of
+    the largest (43, 47, 44).
+  - The in-sample gain is +167. The 4 null searches gain 169, 254, 224 and
+    75, so the real gain ranks above only one of them.
+- **2025 check** (secondary: the sessions were already read by v1):
+  - The v2 selection gives 335/528 (9 exact chains, molecule accuracy 0.708).
+  - The pool gives 349 (10 exact, 0.729) and the promoted method 361 (17
+    exact, 0.771).
+  - Per molecule: 2 better, 4 worse and 10 unchanged; total −14, interval
+    [−44, +6].
+- **Reading.**
+  - A stronger search does find cohorts that score better on held-out 2024
+    sessions, so the user's suspicion that v1 was a poor optimum is
+    confirmed within 2024.
+  - The benefit does not reach 2025, a later measurement campaign, where the
+    selection is again below the pool and the promoted method.
+  - The 10–20mer targets come from December 2025 to March 2026, so transfer
+    to new campaigns is what matters for the application.
+  - Choosing training data by the score therefore fits structure shared by
+    the 2024 sessions, not structure that carries to new data.
+  - The in-sample gains remain inside the null range.
+- **Decision.** No score-chosen cohort is adopted. The label-free frozen pool
+  remains the candidate for campaign A. Headlines unchanged.
