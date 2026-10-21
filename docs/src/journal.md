@@ -56,6 +56,10 @@ the chain over repeated scans (2026-10-04).
   335 with a stronger search, against 349 for a label-free frozen model and
   361 for the promoted method. The stronger search did gain within 2024
   (+132 units on held-out sessions).
+- Campaign A (2026-10-21) is a fully frozen, label-free assignment. Its calls
+  are invariant across runs, and it gains on held-out 2024 sessions
+  (1979/2430 and 188 exact chains, vs 1847 and 104). It transfers worse to
+  2025 (305/528 vs 361). It is a candidate, not promoted.
 
 **Limits:** NKNNKN edge-adjacency confound. The benchmark GlcNAc signal is
 the contrast with the dimmer terminal lobe; without it the image features
@@ -100,9 +104,14 @@ empirical templates; 10–20mer outputs not validated.
    361 for the promoted method. A stronger multistart search (option 1,
    2026-10-21) generalised within 2024 (+132 units held out over the pool,
    33 molecules better and 19 worse) but not to 2025 (335 vs 349). Freezing
-   on all corroborated reference scans without labels (campaign A) matched
-   the transductive method (1871 vs 1847 held-out in 2024, 349 vs 361 in
-   2025) and remains open.
+   on all corroborated reference scans without labels matched the
+   transductive method (1871 vs 1847 held-out in 2024, 349 vs 361 in 2025).
+   Campaign A (2026-10-21) freezes everything, Fisher included, on a capped
+   label-free reference. It makes calls invariant (142/142 scans across runs,
+   against 41/142 for the transductive method) and gains on held-out 2024
+   sessions (1979 vs 1847). But it transfers worse to 2025 (305 vs 361).
+   Open: why the later campaign loses, and whether a reference from the
+   application's own campaign is needed.
 9. **A model built on the labelled data, label-free at inference (kept in
    mind at the user's request, 2026-10-21).** Campaign B chose training data
    by the benchmark score. It gained on held-out 2024 sessions but not on
@@ -1498,3 +1507,55 @@ aggregates, cut molecules and non-chitosan objects stay out.
   at least as many correct units and at least the same molecule accuracy as
   the transductive method. Promotion would still need the user's decision
   and a full pipeline run.
+
+### 2026-10-21 — Campaign A results: frozen and label-free, better on held-out 2024, worse on 2025
+
+- **Run.** Local, single shot: `grade_frozen_assignment.jl` (`8e6a846`) on
+  the 493-scan run, with `--other-run` set to the 146-scan run. Outputs are in
+  `results/frozen_labelfree_8e6a846/`.
+- **Held-out 2024 sessions** (each graded with a model built without it;
+  405 scans, 102 molecules):
+
+  | Assignment | Correct | Exact chains | Errors | Molecule accuracy | Molecules majority exact |
+  |---|---:|---:|---:|---:|---:|
+  | Frozen, label-free (A) | 1979/2430 | 188 | 384 | 0.736 | 23 |
+  | Promoted method, transductive 493-scan run | 1847/2430 | 104 | 516 | 0.698 | 17 |
+
+  - **Paired per molecule** (A minus transductive): 32 better, 14 worse,
+    56 unchanged. The total is +132, with a bootstrap 95% interval of
+    [41, 251].
+  - **Comparison with campaign B.** Without any label, A matches the
+    score-chosen cohorts on these sessions (v1 1964, v2 2003) and has the
+    most exact chains.
+- **Transfer** (model built on all 2024 sessions, applied to 2025; these
+  sessions were already read by campaign B):
+
+  | Assignment | Correct | Exact chains | Errors | Molecule accuracy | Molecules majority exact |
+  |---|---:|---:|---:|---:|---:|
+  | Frozen, label-free (A) | 305/528 | 10 | 221 | 0.740 | 3 |
+  | Promoted method, transductive | 361/528 | 17 | 165 | 0.771 | 6 |
+
+  - Per molecule: 2 better, 6 worse, 8 unchanged. The total is −56, with an
+    interval of [−139, −3]. Track 117 (36 scans) gives −36 and track 109
+    (13 scans) gives −13.
+  - The campaign-B pool model (uncapped, learned weights, Fisher from the
+    run) gave 349 on the same scans.
+- **Invariance** (2024 model applied in both runs).
+  - Of the 146 shared scans, 142 have identical inputs. Their per-scan
+    frozen calls are identical in 142 of 142.
+  - Fused calls are identical in 133, because tracks can differ between
+    runs.
+  - The transductive calls of the two runs agree on only 41 of the 142
+    scans. This is the cohort dependence of the promoted method, now
+    measured directly.
+- **Decision** (rule fixed in the declaration). Invariance holds, and on
+  held-out 2024 sessions A has more correct units (1979 vs 1847) and a higher
+  molecule accuracy (0.736 vs 0.698). A is therefore a candidate to replace
+  the transductive assignment, but it is not promoted:
+  - The transfer to a later campaign is worse than transductive learning on
+    that campaign itself (305 vs 361, 6 molecules worse and 2 better). The
+    10–20mer targets come from such later campaigns.
+  - The cause is not identified. Candidates are the 2024 Fisher model, the
+    equal GMM weights, the cap, or a campaign shift in the features. Any
+    diagnosis on 2025 is now exploratory.
+  - Promotion needs the user's decision and a full pipeline run.
