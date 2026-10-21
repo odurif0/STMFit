@@ -14,6 +14,7 @@ must update this page and [Calibration](calibration.md).
 | `unit_assignment_corroborated_training.toml` | Per-scan assignment | Promoted |
 | `unit_assignment_patch_support.toml` | Same, learning on all scans | Previous reference (control) |
 | `unit_assignment_frozen_reference.toml` | Frozen assignment learned on a reference cohort (campaign B, `src/frozen_assignment.jl`) | Experiment (2026-10-20) |
+| `unit_assignment_frozen_labelfree.toml` | Fully frozen, label-free assignment (campaign A; `build_frozen_assignment.jl`, `apply_frozen_assignment.jl`) | Experiment (2026-10-21) |
 | `unit_assignment_reconstructed.toml`, `_matched_residual.toml`, `_transverse_fisher.toml` | Lineage and test fixtures | Not for production |
 | `calibration_measurements.toml` | `scripts/calibration/measure_calibration.jl` audit | Diagnostic |
 | `template.toml` | Starting point for a new molecule | Template |
@@ -106,6 +107,18 @@ Values of the promoted `unit_assignment_corroborated_training.toml`:
 | `model.fusion_em_max_iter`, `fusion_em_tol`, `fusion_init_pi`, `fusion_init_theta0`, `fusion_init_theta1` | 500, 1e-10, 0.5, 0.1, 0.9 | EM of the emission rates, as `molecule_consensus.toml` |
 | `selection.fusion_emission_source` | `"reference_sessions_all_scans"` | θ0, θ1 fitted on the frozen model's per-scan calls of every scan of the reference sessions |
 | `selection.fusion_prior_pi` | 0.5 | Fixed prior at application; the fitted π is not carried over |
+
+`unit_assignment_frozen_labelfree.toml` (name
+`cc_soft_patch_support_frozen_labelfree_v1`) keeps every frozen-reference
+value and adds:
+
+| Key | Value | Meaning |
+|---|---|---|
+| `selection.reference_scans` | `"corroborated_counts"` | Reference cohort: scans whose count agrees with the molecule consensus |
+| `selection.reference_max_scans_per_track` | 5 | At most this many reference scans per molecule track |
+| `selection.reference_scan_order` | `"file_name"` | Which scans of a track are kept: the first in file-name (acquisition-number) order |
+| `selection.frozen_fisher` | `"reference_lobe_parity"` | Empirical Fisher frozen as one model per lobe parity, fitted on the reference lobes |
+| `selection.frozen_gmm_weights` | `"equal"` | GMM mixing weights set to 1/2 after learning (no class fraction carried over) |
 
 Several keys are policy switches whose other historical values were rejected.
 `scripts/pipeline/build_labelfree_gmm_predictions.jl` now accepts only the promoted value and

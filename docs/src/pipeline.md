@@ -36,6 +36,15 @@ One command runs all seven stages:
 `hpc/run_molecule_consensus.sbatch`). External verification and grading are a
 separate step: `scripts/grading/grade_consensus_run.jl`. See the [runbook](chitosan_runbook.md).
 
+**Frozen assignment (campaign A, experimental).** Stages 4–5 learn their
+clusters, Fisher feature and fusion rates on the run's own scans, so the
+calls of a scan depend on the other scans of the run. A frozen model is
+learned once on a reference run and then applied unchanged:
+`scripts/pipeline/build_frozen_assignment.jl --run REF_RUN --config
+config/unit_assignment_frozen_labelfree.toml --out MODEL.tsv`, then
+`scripts/pipeline/apply_frozen_assignment.jl --run RUN --model MODEL.tsv
+--config ... --outdir NEW` (both label-free; `src/frozen_assignment.jl`).
+
 ## Run directory
 
 | Path | Content |

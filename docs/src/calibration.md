@@ -68,6 +68,17 @@ learned setting. Its new keys are design choices fixed before any grade:
   reference molecules' GlcNAc fraction (a composition prior) to new
   molecules.
 
+`unit_assignment_frozen_labelfree.toml` (campaign A, 2026-10-21) adds
+reference and freezing rules, all fixed before any grade:
+- **Cap of 5 scans per molecule track.** Repeat scans of one molecule are
+  not independent, and the campaign B runs showed that a few heavily scanned
+  tracks dominate the learning. The value 5 is a round cap just above the
+  median number of corroborated scans per track in the 493-scan run (4;
+  mean 6.6, maximum 39), not tuned on any grade.
+- **Equal GMM weights.** For the same reason as π = 0.5: a learned weight
+  would carry the reference class fraction to new molecules.
+- **Frozen Fisher.** It follows the production lobe-parity scheme exactly.
+
 The mold construction height (0.50 nm target) and isovalue grid come from the
 DFT workflow, not from grades. The history of these choices is in the
 [journal](journal.md): many single-change variants were graded and rejected,

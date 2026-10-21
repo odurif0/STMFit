@@ -16,14 +16,25 @@
 # a frozen model uses the reference emission rates and a fixed prior pi
 # (config: fusion_prior_pi), so the reference cohort's composition is not
 # carried to new molecules.
+#
+# A fully frozen model (train_reference_model, apply_reference_model) also
+# freezes the empirical Fisher feature, the only other feature learned across
+# scans: one Fisher model per lobe parity is fitted on the reference lobes and
+# scores the lobes of the other parity, as the production lobe-parity CV does
+# on a run. With the whole run as reference it reproduces the run's
+# fisher_cv.tsv.
 module FrozenAssignment
 
 using Clustering, LinearAlgebra, Printf, Random, Statistics
 using ..ReconstructedUnitAssignment: read_table, lobe_table
-using ..MoleculeFusion: FusionSettings, fit_latent_class
+using ..MoleculeFusion: FusionSettings, fit_latent_class, load_fusion_settings
+using ..EmpiricalFisherNative: load_fisher_config, load_patches, fit_fisher, FisherFitError, flip_u_disk,
+                               PatchTable, FisherOptions
 
-export AssignmentData, FrozenModel, load_assignment_data, train_frozen, predict_frozen,
-       fuse_calls, fit_emission_rates, write_frozen_model, read_frozen_model, KMEANS_VIEWS, GMM_VIEW
+export AssignmentData, FrozenModel, FrozenFisher, FisherData, load_assignment_data, train_frozen, predict_frozen,
+       fuse_calls, fit_emission_rates, write_frozen_model, read_frozen_model, KMEANS_VIEWS, GMM_VIEW,
+       load_fisher_data, train_fisher, fisher_feature, with_emp_fisher, reference_files, load_frozen_settings,
+       train_reference_model, apply_reference_model, load_run_assignment
 
 const BASE4 = ["amp_prominence", "amp_neighbor_ratio", "integrated_prominence", "amp_rel"]
 # Views of the production driver (scripts/pipeline/run_reconstructed_chitosan.jl).
@@ -44,6 +55,14 @@ struct AssignmentData
     amplitude::Vector{Float64}
     kmeans::Vector{ViewMatrix}
     gmm::ViewMatrix
+    gmm_raw::Matrix{Float64}       # unstandardized GMM view columns (lobe x feature)
+    scale_fallback::Float64
+end
+
+"Fisher direction and origin of one lobe parity (score = dot(x - mid, w_p))."
+struct FrozenFisher
+    w_p::Vector{Float64}
+    mid::Vector{Float64}
 end
 
 struct GMMSeed
@@ -62,6 +81,9 @@ struct FrozenModel
     theta0::Float64
     theta1::Float64
     pi::Float64
+    # fisher[1]: fitted on even lobes, scores odd lobes; fisher[2]: the reverse.
+    # Empty when the Fisher feature is taken from the run (not frozen).
+    fisher::Vector{Union{Nothing,FrozenFisher}}
 end
 
 _value(s) = something(tryparse(Float64, strip(String(s))), NaN)
@@ -138,8 +160,9 @@ function load_assignment_data(features::AbstractString, patches::AbstractString;
                    [_value(rows[k][name]) for k in keys_sorted]
     rawview(names) = reduce(hcat, [column(n) for n in names])
     kviews = [_view(rawview(names), file, 1.0) for (_, names) in KMEANS_VIEWS]
-    gview = _view(rawview(last(GMM_VIEW)), file, Float64(scale_fallback))
-    return AssignmentData(file, lobe, amplitude, kviews, gview)
+    graw = rawview(last(GMM_VIEW))
+    gview = _view(graw, file, Float64(scale_fallback))
+    return AssignmentData(file, lobe, amplitude, kviews, gview, graw, Float64(scale_fallback))
 end
 
 # --- GMM, identical arithmetic to build_labelfree_gmm_predictions.jl; the
@@ -271,9 +294,11 @@ end
 Learns k-means centroids, GMM components and their physical naming (higher
 mean raw amplitude = GlcNAc) on `train_rows` (indices into `data`). Settings
 come from the assignment config `cfg` (seeds, selftrain, GMM numerics).
-Returns a FrozenModel without emission rates (theta0 = theta1 = NaN).
+Returns a FrozenModel without emission rates (theta0 = theta1 = NaN). With
+equal_weights, the GMM mixing weights are set to 1/2 after learning, for
+naming and scoring (no class fraction carried from the training scans).
 """
-function train_frozen(data::AssignmentData, train_rows::AbstractVector{<:Integer}, cfg::AbstractDict)
+function train_frozen(data::AssignmentData, train_rows::AbstractVector{<:Integer}, cfg::AbstractDict; equal_weights::Bool=false)
     sel = cfg["selection"]; m = cfg["model"]
     first_seed = Int(sel["first_seed"])
     kcenters = Vector{Vector{Matrix{Float64}}}(); khigh = Vector{Vector{Int}}()
@@ -301,6 +326,7 @@ function train_frozen(data::AssignmentData, train_rows::AbstractVector{<:Integer
             means, covs, weights = _gmm_fit(X, seed; ridge, max_iter=Int(m["gmm_learning_maxiter"]),
                                             tol=Float64(m["gmm_learning_tolerance"]), min_mass=Float64(m["gmm_learning_min_mass"]))
             selftrain > 0 && ((means, covs, weights) = _self_train(X, means, covs, weights; iters=selftrain, ridge))
+            equal_weights && (weights = fill(1.0 / length(weights), length(weights)))
             g = GMMSeed(means, covs, weights, 0)
             assign = _gmm_assign(X, g, selftrain)
             values = Dict(1 => Float64[], 2 => Float64[])
@@ -312,7 +338,7 @@ function train_frozen(data::AssignmentData, train_rows::AbstractVector{<:Integer
             push!(seeds, GMMSeed(means, covs, weights, high))
         end
     end
-    return FrozenModel(kcenters, khigh, seeds, selftrain, NaN, NaN, NaN)
+    return FrozenModel(kcenters, khigh, seeds, selftrain, NaN, NaN, NaN, Union{Nothing,FrozenFisher}[])
 end
 
 _round8(p) = isfinite(p) ? parse(Float64, @sprintf("%.8f", p)) : NaN
@@ -420,13 +446,16 @@ function fuse_calls(calls::AbstractVector{Int8}, physical::AbstractVector{<:Abst
 end
 
 with_fusion(m::FrozenModel, theta0, theta1, pi) =
-    FrozenModel(m.kmeans_centers, m.kmeans_high, m.gmm, m.selftrain, Float64(theta0), Float64(theta1), Float64(pi))
+    FrozenModel(m.kmeans_centers, m.kmeans_high, m.gmm, m.selftrain, Float64(theta0), Float64(theta1), Float64(pi), m.fisher)
+with_fisher(m::FrozenModel, fisher) =
+    FrozenModel(m.kmeans_centers, m.kmeans_high, m.gmm, m.selftrain, m.theta0, m.theta1, m.pi, fisher)
 
 """
     write_frozen_model(path, model)
 
 Long TSV: part, view, seed, index, i, j, value (%.17g). part is kmeans_center,
-kmeans_high, gmm_mean, gmm_cov, gmm_weight, gmm_high or scalar.
+kmeans_high, gmm_mean, gmm_cov, gmm_weight, gmm_high, fisher_present,
+fisher_wp, fisher_mid (view = parity model) or scalar.
 """
 function write_frozen_model(path::AbstractString, m::FrozenModel)
     (ispath(path) || islink(path)) && error("Output already exists: $path")
@@ -446,6 +475,12 @@ function write_frozen_model(path::AbstractString, m::FrozenModel)
             end
             line("gmm_high", 0, s, 0, 0, 0, g.high)
         end
+        for (k, ff) in enumerate(m.fisher)
+            line("fisher_present", k, 0, 0, 0, 0, ff === nothing ? 0 : 1)
+            ff === nothing && continue
+            for i in eachindex(ff.w_p); line("fisher_wp", k, 0, 0, i, 0, f(ff.w_p[i])); end
+            for i in eachindex(ff.mid); line("fisher_mid", k, 0, 0, i, 0, f(ff.mid[i])); end
+        end
         for (name, x) in (("selftrain", m.selftrain), ("theta0", m.theta0), ("theta1", m.theta1), ("pi", m.pi))
             line("scalar_" * name, 0, 0, 0, 0, 0, x isa Integer ? x : f(x))
         end
@@ -461,9 +496,16 @@ function read_frozen_model(path::AbstractString)
     nview = maximum((ints(r)[1] for r in rows if startswith(r[1], "kmeans")); init=0)
     kc = [Matrix{Float64}[] for _ in 1:nview]; kh = [Int[] for _ in 1:nview]
     gm = Dict{Int,Dict{Symbol,Any}}(); scal = Dict{String,String}()
+    fpresent = Dict{Int,Bool}(); fwp = Dict{Int,Dict{Int,Float64}}(); fmid = Dict{Int,Dict{Int,Float64}}()
     for r in rows
         v, s, c, i, j = ints(r)
-        if r[1] == "kmeans_center"
+        if r[1] == "fisher_present"
+            fpresent[v] = r[7] == "1"
+        elseif r[1] == "fisher_wp"
+            get!(fwp, v, Dict{Int,Float64}())[i] = parse(Float64, r[7])
+        elseif r[1] == "fisher_mid"
+            get!(fmid, v, Dict{Int,Float64}())[i] = parse(Float64, r[7])
+        elseif r[1] == "kmeans_center"
             while length(kc[v]) < s; push!(kc[v], zeros(0, 2)); end
             C = kc[v][s]
             size(C, 1) < i && (C = vcat(C, zeros(i - size(C, 1), 2)); kc[v][s] = C)
@@ -489,8 +531,164 @@ function read_frozen_model(path::AbstractString)
         covs = [[g[:cov][(c, i, j)] for i in 1:p, j in 1:p] for c in 1:k]
         push!(seeds, GMMSeed(means, covs, [g[:weight][c] for c in 1:k], g[:high]))
     end
+    vec_of(d) = [d[i] for i in 1:length(d)]
+    fisher = Union{Nothing,FrozenFisher}[fpresent[k] ? FrozenFisher(vec_of(fwp[k]), vec_of(fmid[k])) : nothing
+                                         for k in sort(collect(keys(fpresent)))]
     return FrozenModel(kc, kh, seeds, parse(Int, scal["selftrain"]), parse(Float64, scal["theta0"]),
-                       parse(Float64, scal["theta1"]), parse(Float64, scal["pi"]))
+                       parse(Float64, scal["theta1"]), parse(Float64, scal["pi"]), fisher)
+end
+
+# --- fully frozen model: Fisher feature, reference rule, training and application
+
+"Forward 17x17 residual patches in the Fisher layout, with the production validity rule."
+struct FisherData
+    options::FisherOptions
+    table::PatchTable
+    valid::BitVector
+end
+
+"Frozen-model settings of a frozen_reference config, checked."
+function load_frozen_settings(cfg::AbstractDict)
+    sel = cfg["selection"]
+    get(sel, "assignment_model", "") == "frozen_reference" || error("Config is not a frozen_reference assignment")
+    get(sel, "fusion_emission_source", "") == "reference_sessions_all_scans" || error("Unsupported fusion_emission_source")
+    get(sel, "reference_scans", "") == "corroborated_counts" || error("reference_scans must be corroborated_counts")
+    cap = get(sel, "reference_max_scans_per_track", 0)
+    cap isa Integer && cap > 0 || error("reference_max_scans_per_track must be a positive integer")
+    get(sel, "reference_scan_order", "") == "file_name" || error("reference_scan_order must be file_name")
+    get(sel, "frozen_fisher", "") == "reference_lobe_parity" || error("frozen_fisher must be reference_lobe_parity")
+    weights = get(sel, "frozen_gmm_weights", "")
+    weights in ("equal", "learned") || error("frozen_gmm_weights must be equal or learned")
+    pi = Float64(sel["fusion_prior_pi"]); 0 < pi < 1 || error("fusion_prior_pi must be in (0, 1)")
+    return (max_per_track=Int(cap), equal_weights=weights == "equal", pi=pi, fusion=load_fusion_settings(cfg))
+end
+
+"""
+    load_fisher_data(patches_fwd17, cfg, data)
+
+Reads assignment/patches_fwd17.tsv (prefix res) with the config's Fisher
+settings; its lobes must be those of `data`, in the same order.
+"""
+function load_fisher_data(path::AbstractString, cfg::AbstractDict, data::AssignmentData)
+    options = load_fisher_config(cfg)
+    options.patch_projection == "none" || error("The frozen Fisher supports fisher_patch_projection = none only")
+    options.cv_scheme == "lobe_parity" || error("The frozen Fisher follows fisher_cv_scheme = lobe_parity")
+    options.training_support == "all_admissible" || error("The frozen Fisher needs assignment_training_support = all_admissible")
+    table = load_patches(path, "res", options)
+    table.keys == collect(zip(data.file, data.lobe)) || error("Forward patches and features cover different lobes")
+    valid = BitVector([isempty(table.invalid_reasons[i]) && all(isfinite, table.X[i, :]) && isfinite(table.amplitudes[i])
+                       for i in eachindex(table.keys)])
+    return FisherData(options, table, valid)
+end
+
+"Two parity models fitted on the valid reference rows (nothing when a fit fails)."
+function train_fisher(fd::FisherData, rows::AbstractVector{<:Integer})
+    out = Union{Nothing,FrozenFisher}[]
+    for parity in (0, 1)
+        train = [i for i in sort(rows) if fd.valid[i] && mod(fd.table.keys[i][2], 2) == parity]
+        model = try
+            fit_fisher(fd.table.X[train, :], fd.table.amplitudes[train], fd.options)
+        catch err
+            err isa FisherFitError || rethrow()
+            nothing
+        end
+        push!(out, model === nothing ? nothing : FrozenFisher(model.w_p, model.mid))
+    end
+    return out
+end
+
+"""
+    fisher_feature(fd, fisher, i)
+
+emp_fisher of lobe i: the mirrored Fisher margin of the opposite-parity
+model, rounded and negated as the production files carry it (fisher_cv.tsv
+%.6f, then features_predictor.tsv %.8g of the negated score). NaN if the
+patch is invalid or the model is missing.
+"""
+function fisher_feature(fd::FisherData, fisher::AbstractVector, i::Integer)
+    fd.valid[i] || return NaN
+    m = fisher[mod(fd.table.keys[i][2], 2) == 1 ? 1 : 2]
+    m === nothing && return NaN
+    x = fd.table.X[i, :]
+    v = max(dot(x - m.mid, m.w_p), dot(flip_u_disk(x, fd.table.grid) - m.mid, m.w_p))
+    isfinite(v) || return NaN
+    return parse(Float64, @sprintf("%.8g", -parse(Float64, @sprintf("%.6f", v))))
+end
+
+"`data` with the emp_fisher column replaced (GMM view rebuilt per scan)."
+function with_emp_fisher(data::AssignmentData, values::AbstractVector{<:Real})
+    length(values) == length(data.file) || error("One emp_fisher value per lobe is required")
+    raw = copy(data.gmm_raw)
+    raw[:, findfirst(==("emp_fisher"), last(GMM_VIEW))] .= values
+    return AssignmentData(data.file, data.lobe, data.amplitude, data.kmeans, _view(raw, data.file, data.scale_fallback),
+                          raw, data.scale_fallback)
+end
+
+"""
+    reference_files(rows, max_per_track)
+
+Reference scans from molecule-consensus summary rows (filepath, track,
+count_rule): the corroborated scans (count_rule = agrees), at most
+max_per_track per track, first in file-name (acquisition-number) order.
+"""
+function reference_files(rows, max_per_track::Integer)
+    by_track = Dict{String,Vector{String}}()
+    for r in rows
+        r["count_rule"] == "agrees" || continue
+        push!(get!(by_track, r["track"], String[]), basename(r["filepath"]))
+    end
+    return Set(f for v in values(by_track) for f in sort(v)[1:min(max_per_track, length(v))])
+end
+
+"""
+    train_reference_model(data, fd, ref_rows, theta_rows, physical, cfg)
+
+Fully frozen model: Fisher per parity on `ref_rows`, emp_fisher recomputed
+for every lobe, k-means/GMM/naming on `ref_rows`, emission rates fitted on
+the per-scan calls of `theta_rows`, prior pi from the config. Throws if the
+emission rates cannot be fitted.
+"""
+function train_reference_model(data::AssignmentData, fd::FisherData, ref_rows, theta_rows, physical, cfg::AbstractDict)
+    st = load_frozen_settings(cfg)
+    fisher = train_fisher(fd, ref_rows)
+    d = with_emp_fisher(data, [fisher_feature(fd, fisher, i) for i in eachindex(data.file)])
+    model = with_fisher(train_frozen(d, ref_rows, cfg; equal_weights=st.equal_weights), fisher)
+    p = predict_frozen(model, d, theta_rows; vote_threshold=cfg["selection"]["vote_threshold"])
+    fit = fit_emission_rates(p.call, physical[theta_rows], st.fusion)
+    return with_fusion(model, fit.theta0, fit.theta1, st.pi)
+end
+
+"""
+    apply_reference_model(model, data, fd, rows, physical, cfg) -> (fused, per_scan)
+
+Per-scan calls of `rows` and their fusion within tracks (physical-lobe keys),
+with the model's Fisher, clusters, emission rates and prior.
+"""
+function apply_reference_model(model::FrozenModel, data::AssignmentData, fd::FisherData, rows, physical, cfg::AbstractDict)
+    length(model.fisher) == 2 || error("Not a fully frozen model (no Fisher parity models)")
+    st = load_frozen_settings(cfg)
+    d = with_emp_fisher(data, [fisher_feature(fd, model.fisher, i) for i in eachindex(data.file)])
+    p = predict_frozen(model, d, rows; vote_threshold=cfg["selection"]["vote_threshold"])
+    return fuse_calls(p.call, physical[rows], model.theta0, model.theta1, model.pi, st.fusion.min_scans), p
+end
+
+"""
+    load_run_assignment(run, cfg) -> (data, fisher, physical, consensus)
+
+Assignment inputs of a run of run_molecule_consensus_chitosan.jl: features
+and patches (assignment/), physical-lobe keys (fusion/predictions_fused.tsv)
+and the final consensus summary rows. Label-free.
+"""
+function load_run_assignment(run::AbstractString, cfg::AbstractDict)
+    a = joinpath(run, "assignment")
+    data = load_assignment_data(joinpath(a, "features_predictor.tsv"), joinpath(a, "patches_bwd17.tsv");
+                                scale_fallback=cfg["preprocessing"]["gmm_scale_fallback"])
+    fd = load_fisher_data(joinpath(a, "patches_fwd17.tsv"), cfg, data)
+    _, fused = lobe_table(joinpath(run, "fusion", "predictions_fused.tsv"); required=["physical_lobe"])
+    physical = [fused[(data.file[i], data.lobe[i])]["physical_lobe"] for i in eachindex(data.file)]
+    _, cons = read_table(joinpath(run, "consensus", "consensus_summary_final.tsv"))
+    Set(basename(r["filepath"]) for r in cons) == Set(data.file) || error("Consensus and assignment cover different scans")
+    return (data=data, fisher=fd, physical=physical, consensus=cons)
 end
 
 end

@@ -103,6 +103,12 @@ empirical templates; 10–20mer outputs not validated.
    on all corroborated reference scans without labels (campaign A) matched
    the transductive method (1871 vs 1847 held-out in 2024, 349 vs 361 in
    2025) and remains open.
+9. **A model built on the labelled data, label-free at inference (kept in
+   mind at the user's request, 2026-10-21).** Campaign B chose training data
+   by the benchmark score. It gained on held-out 2024 sessions but not on
+   2025. A supervised model or selection needs more independent labelled
+   molecules (or reference oligomers) from several campaigns before its
+   transfer to new data can be shown.
 7. **Assignment fragility — answered 2026-09-30.** The benchmark signal is
    the contrast with the dimmer terminal lobe. Without it, amplitude separates
    GlcNAc from GlcN at non-terminal positions with AUC ≤ 0.66, and shape, DFT
@@ -1441,3 +1447,54 @@ aggregates, cut molecules and non-chitosan objects stay out.
   - The in-sample gains remain inside the null range.
 - **Decision.** No score-chosen cohort is adopted. The label-free frozen pool
   remains the candidate for campaign A. Headlines unchanged.
+
+### 2026-10-21 — Declared campaign A: fully frozen, label-free assignment
+
+- **Deliverable.** A unit assignment whose cross-scan parts are learned once
+  on a reference cohort fixed without labels, then applied unchanged to any
+  scan.
+  - Done when four things exist: a build/apply path in `scripts/pipeline/`;
+    an invariance check; the held-out grade on 2024 sessions; the 2024 →
+    2025 transfer grade.
+  - Approved by the user on 2026-10-21 ("lançons le modèle A"). They also
+    asked to keep in mind a model built on the labelled data but label-free
+    at inference (open question 9).
+- **What is frozen.** Every part learned across scans:
+  - the empirical Fisher feature: one model per lobe parity, fitted on the
+    reference lobes, scoring the other parity, as the production lobe-parity
+    CV does. With the whole run as reference it reproduces both runs'
+    `fisher_cv.tsv` (2927/2927 and 876/876 lobes);
+  - the k-means centroids, the GMM components and the physical naming;
+  - the fusion emission rates, fitted on every scan of the reference
+    sessions.
+
+  All other features are computed scan by scan.
+- **Config** `config/unit_assignment_frozen_labelfree.toml`. It is the
+  frozen-reference config plus five keys:
+  - `reference_scans = "corroborated_counts"`;
+  - `reference_max_scans_per_track = 5`, first scans in `file_name` order:
+    repeat scans of one molecule are not independent, and v1/v2 showed that
+    heavy tracks dominate;
+  - `frozen_fisher = "reference_lobe_parity"`;
+  - `frozen_gmm_weights = "equal"`: the GMM mixing weights are set to 1/2
+    after learning, so no class fraction is carried to new molecules (as
+    `fusion_prior_pi = 0.5`).
+
+  These choices are fixed before any grade of A. A is graded once, with no
+  variant.
+- **Evaluation** (`scripts/grading/grade_frozen_assignment.jl`, on the
+  493-scan run).
+  1. **Held-out 2024.** Each 2024 session is graded with a model built
+     without it: reference rule applied to the other sessions, emission
+     rates from all their scans. The comparison is the promoted transductive
+     method on the same scans.
+  2. **Transfer.** A model built on all 2024 sessions is applied to the 2025
+     sessions. These were already read by campaign B, so this is secondary.
+  3. **Invariance.** The 2024 model is applied to the 145 original scans as
+     they appear in the 146-scan run and in the 493-scan run. Per-scan calls
+     must be identical wherever a scan's inputs are identical.
+- **Decision rule** (fixed now). A is a candidate to replace the transductive
+  assignment if invariance holds, and if on held-out 2024 sessions it gives
+  at least as many correct units and at least the same molecule accuracy as
+  the transductive method. Promotion would still need the user's decision
+  and a full pipeline run.

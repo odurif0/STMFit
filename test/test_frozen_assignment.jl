@@ -2,7 +2,7 @@
 # helpers (scripts/grading/search_reference_cohort.jl).
 #   julia --project=. test/test_frozen_assignment.jl
 using Test, Random, Printf, LinearAlgebra
-using STMFit, STMFit.FrozenAssignment, STMFit.ReconstructedUnitAssignment, STMFit.MoleculeFusion
+using STMFit, STMFit.FrozenAssignment, STMFit.ReconstructedUnitAssignment, STMFit.MoleculeFusion, STMFit.EmpiricalFisherNative
 module KM
 include(joinpath(@__DIR__, "..", "scripts", "pipeline", "build_labelfree_unit_predictions.jl"))
 end
@@ -15,6 +15,7 @@ end
 const ROOT = dirname(@__DIR__)
 const CORROBORATED = joinpath(ROOT, "config", "unit_assignment_corroborated_training.toml")
 const FROZEN = joinpath(ROOT, "config", "unit_assignment_frozen_reference.toml")
+const LABELFREE = joinpath(ROOT, "config", "unit_assignment_frozen_labelfree.toml")
 const FEATURES = ["amp_prominence", "amp_neighbor_ratio", "integrated_prominence", "amp_rel",
                   "patch_u_asym_reconstructed", "mold_cc_fwd", "mold_cc_bwd", "emp_fisher", "split_log_skew"]
 BLAS.set_num_threads(1)
@@ -23,14 +24,15 @@ BLAS.set_num_threads(1)
 function synthetic_run(dir)
     rng = MersenneTwister(11)
     feats = joinpath(dir, "features_predictor.tsv"); patches = joinpath(dir, "patches_bwd17.tsv")
-    summary = joinpath(dir, "consensus_summary_final.tsv")
-    open(feats, "w") do f; open(patches, "w") do p; open(summary, "w") do s
+    summary = joinpath(dir, "consensus_summary_final.tsv"); fwd = joinpath(dir, "patches_fwd17.tsv")
+    open(feats, "w") do f; open(patches, "w") do p; open(summary, "w") do s; open(fwd, "w") do fw
         println(f, join(vcat(["file", "lobe", "amplitude"], FEATURES), '\t'))
         println(p, join(vcat(["file", "lobe"], [@sprintf("bwd_res_p%03d", i) for i in 1:289]), '\t'))
-        println(s, "filepath\tN_selected\tcount_rule")
+        println(fw, join(vcat(["file", "lobe"], [@sprintf("res_p%03d", i) for i in 1:289]), '\t'))
+        println(s, "filepath\tN_selected\tcount_rule\ttrack")
         for scan in 1:50
             file = @sprintf("s%02d.sxm", scan)
-            println(s, file, "\t6\t", scan % 3 == 0 ? "consensus_applied" : "agrees")
+            println(s, file, "\t6\t", scan % 3 == 0 ? "consensus_applied" : "agrees", "\t", cld(scan, 10))
             for lobe in 1:6
                 hi = lobe in (2, 5)
                 vals = [(hi ? 1.0 : 0.0) + 0.6randn(rng) for _ in FEATURES]
@@ -40,15 +42,18 @@ function synthetic_run(dir)
                 px = [@sprintf("%.5f", randn(rng) - (hi ? 0.3 : 0.0)) for _ in 1:289]
                 scan == 9 && lobe == 1 && (px[5] = "NaN")
                 println(p, join(vcat([file, string(lobe)], px), '\t'))
+                fx = [@sprintf("%.5f", randn(rng) + (hi ? 0.5 * exp(-((i - 145)^2) / 400) : 0.0)) for i in 1:289]
+                scan == 11 && lobe == 2 && (fx[145] = "NaN")
+                println(fw, join(vcat([file, string(lobe)], fx), '\t'))
             end
         end
-    end; end; end
-    return feats, patches, summary
+    end; end; end; end
+    return feats, patches, summary, fwd
 end
 
 @testset "training on the corroborated scans reproduces the production scripts" begin
     mktempdir() do dir
-        feats, patches, summary = synthetic_run(dir)
+        feats, patches, summary, _ = synthetic_run(dir)
         base4 = join(FEATURES[1:4], ",")
         KM.main(["--features", feats, "--patches", patches, "--out", joinpath(dir, "km.tsv"), "--first-seed", "0",
                  "--seeds", "20", "--interactions", "--training-scans", summary,
@@ -81,6 +86,45 @@ end
         @test predict_frozen(m3, data, sub).call == pred.call[13:60]
         @test (m3.theta0, m3.theta1, m3.pi) == (0.05, 0.8, 0.5)
         @test_throws ErrorException write_frozen_model(joinpath(dir, "model.tsv"), m2)
+    end
+end
+
+@testset "fully frozen model: Fisher per parity, reference rule, application" begin
+    mktempdir() do dir
+        feats, patches, summary, fwd = synthetic_run(dir)
+        cfg = load_config(LABELFREE)
+        st = load_frozen_settings(cfg)
+        @test st.max_per_track == 5 && st.equal_weights && st.pi == 0.5
+        data = load_assignment_data(feats, patches)
+        fd = load_fisher_data(fwd, cfg, data)
+        rows = collect(eachindex(data.file))
+        # whole cohort as reference = the production lobe-parity CV, as the files carry it
+        cv = cv_scores(load_patches(fwd, "res", load_fisher_config(cfg)), load_fisher_config(cfg))
+        fisher = train_fisher(fd, rows)
+        expect(x) = isfinite(x.score) ? parse(Float64, @sprintf("%.8g", -parse(Float64, @sprintf("%.6f", x.score)))) : NaN
+        @test isequal([fisher_feature(fd, fisher, i) for i in rows], expect.(cv))
+        @test isnan(fisher_feature(fd, fisher, findfirst(i -> data.file[i] == "s11.sxm" && data.lobe[i] == 2, rows)))
+        # reference rule: corroborated scans, at most 5 per track, first by file name
+        _, cons = read_table(summary)
+        ref = reference_files(cons, 5)
+        @test ref == Set(["s01.sxm", "s02.sxm", "s04.sxm", "s05.sxm", "s07.sxm", "s11.sxm", "s13.sxm", "s14.sxm", "s16.sxm",
+                          "s17.sxm", "s22.sxm", "s23.sxm", "s25.sxm", "s26.sxm", "s28.sxm", "s31.sxm", "s32.sxm", "s34.sxm",
+                          "s35.sxm", "s37.sxm", "s41.sxm", "s43.sxm", "s44.sxm", "s46.sxm", "s47.sxm"])
+        @test all(length([f for f in ref if cld(parse(Int, f[2:3]), 10) == t]) <= 5 for t in 1:5)
+        physical = ["track$(cld(parse(Int, f[2:3]), 10))_$(l)" for (f, l) in zip(data.file, data.lobe)]
+        ref_rows = findall(in(ref), data.file)
+        model = train_reference_model(data, fd, ref_rows, rows, physical, cfg)
+        @test length(model.fisher) == 2 && model.pi == 0.5 && model.theta1 > model.theta0
+        @test all(g.weights == [0.5, 0.5] for g in model.gmm)
+        fused, p = apply_reference_model(model, data, fd, rows, physical, cfg)
+        # the model never sees the other scans: applying to a subset gives the same per-scan calls
+        sub = findall(f -> f in ("s03.sxm", "s30.sxm"), data.file)
+        _, psub = apply_reference_model(model, data, fd, sub, physical, cfg)
+        @test psub.call == p.call[sub]
+        write_frozen_model(joinpath(dir, "m.tsv"), model)
+        m2 = read_frozen_model(joinpath(dir, "m.tsv"))
+        @test apply_reference_model(m2, data, fd, rows, physical, cfg)[1] == fused
+        @test [x === nothing ? nothing : (x.w_p, x.mid) for x in m2.fisher] == [x === nothing ? nothing : (x.w_p, x.mid) for x in model.fisher]
     end
 end
 
