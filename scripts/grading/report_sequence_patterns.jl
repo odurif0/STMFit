@@ -7,14 +7,16 @@
 #   julia --project=. scripts/grading/report_sequence_patterns.jl --run RUN_DIR \
 #       --subsets TSV --manual benchmarks/chitosan_10_20mer_manual_sequences.tsv \
 #       --config config/unit_assignment_frozen_labelfree.toml --outdir NEW_DIR \
-#       [--campaign-gap-days 7] [--permutations 10000]
+#       [--campaign-gap-days 7] [--permutations 10000] [--model NAME=MODEL.tsv ...]
 #
 # Assignments compared:
 #   transductive  the run's own final (fused) calls (promoted method);
 #   frozen        the fully frozen label-free model built per measurement
 #                 campaign (src/frozen_assignment.jl, config reference rule);
 #                 a campaign is a run of sessions whose acquisition dates are
-#                 at most --campaign-gap-days apart.
+#                 at most --campaign-gap-days apart;
+#   NAME          (--model, repeatable) a frozen model built elsewhere, for
+#                 example on the 6-mer benchmark, applied unchanged.
 # A molecule is a consensus track; its sequence takes, for every physical lobe
 # (rank along the chain axis), the majority of the final calls of its scans
 # ("?" if none or tied). Orientation is unknown, so every statistic is either
@@ -35,11 +37,11 @@ const TEMPLATE_HEAD = Int8[1, 0, 1, 0]
 
 function pattern_options(args)
     ("--help" in args || "-h" in args || isempty(args)) && return nothing
-    o = Dict{String,String}("--campaign-gap-days" => "7", "--permutations" => "10000"); i = 1
+    o = Dict{String,String}("--campaign-gap-days" => "7", "--permutations" => "10000", "--model" => ""); i = 1
     while i <= length(args)
-        args[i] in ("--run", "--subsets", "--manual", "--config", "--outdir", "--campaign-gap-days", "--permutations") &&
+        args[i] in ("--run", "--subsets", "--manual", "--config", "--outdir", "--campaign-gap-days", "--permutations", "--model") &&
             i < length(args) || error("Unknown option or missing value: $(args[i])")
-        o[args[i]] = args[i+1]; i += 2
+        o[args[i]] = args[i] == "--model" && !isempty(o["--model"]) ? o["--model"] * ";" * args[i+1] : args[i+1]; i += 2
     end
     all(haskey(o, k) for k in ("--run", "--subsets", "--manual", "--config", "--outdir")) ||
         error("Required: --run --subsets --manual --config --outdir")
@@ -192,6 +194,13 @@ function pattern_main(args=ARGS)
     write_table(joinpath(out, "campaigns.tsv"), ["campaign", "sessions", "first_date", "scans", "reference_scans", "status", "theta0", "theta1"], cinfo)
     # molecule sequences
     seqs = Dict("transductive" => track_sequences(R.data, R.physical, trans), "frozen" => track_sequences(R.data, R.physical, frozen))
+    extra = Dict{String,Vector{Int8}}()
+    for spec in split(o["--model"], ";"; keepempty=false)
+        name, path = split(spec, "="; limit=2)
+        f, _ = apply_reference_model(read_frozen_model(path), R.data, R.fisher, collect(eachindex(R.data.file)), R.physical, cfg)
+        extra[name] = f; seqs[name] = track_sequences(R.data, R.physical, f)
+    end
+    assignments = vcat(["transductive", "frozen"], sort(collect(keys(extra))))
     trackfiles = Dict{String,Vector{String}}()
     for f in files; push!(get!(trackfiles, "track" * cons[f]["track"], String[]), f); end
     majority(v) = (c = Dict{String,Int}(); for x in v; c[x] = get(c, x, 0) + 1; end; first(sort(collect(c); by=p -> (-p[2], p[1])))[1])
@@ -199,14 +208,15 @@ function pattern_main(args=ARGS)
     trows = [Dict("track" => t, "scans" => string(length(trackfiles[t])), "subset" => majority([get(subset, f, "?") for f in trackfiles[t]]),
                   "campaign" => string(camp[session[first(trackfiles[t])]]), "N" => string(length(seqs["transductive"][t])),
                   "files" => join(trackfiles[t], ","), "seq_transductive" => seqstr(seqs["transductive"][t]),
-                  "seq_frozen" => seqstr(get(seqs["frozen"], t, Int8[]))) for t in tracks]
-    write_table(joinpath(out, "tracks.tsv"), ["track", "scans", "subset", "campaign", "N", "seq_transductive", "seq_frozen", "files"], trows)
+                  "seq_frozen" => seqstr(get(seqs["frozen"], t, Int8[])),
+                  ["seq_" * a => seqstr(get(seqs[a], t, Int8[])) for a in keys(extra)]...) for t in tracks]
+    write_table(joinpath(out, "tracks.tsv"), vcat(["track", "scans", "subset", "campaign", "N"], "seq_" .* assignments, ["files"]), trows)
     # statistics with permutation nulls, per assignment and molecule group
     rng = MersenneTwister(1); nperm = parse(Int, o["--permutations"])
     srows = Dict{String,String}[]
     groups = [("all", t -> true), ("N>=7", t -> parse(Int, t["N"]) >= 7), ("selection+target", t -> t["subset"] in ("selection", "target")),
               ("short_chain", t -> t["subset"] == "short_chain")]
-    for a in ("transductive", "frozen"), (gname, keep) in groups
+    for a in assignments, (gname, keep) in groups
         S = [seqs[a][t["track"]] for t in trows if keep(t) && haskey(seqs[a], t["track"]) && length(seqs[a][t["track"]]) >= 4 &&
              all(>=(0), seqs[a][t["track"]])]
         length(S) >= 3 || continue
@@ -218,7 +228,7 @@ function pattern_main(args=ARGS)
     end
     write_table(joinpath(out, "stats.tsv"), ["assignment", "group", "molecules", "stat", "observed", "null_mean", "p_low", "p_high"], srows)
     prows = Dict{String,String}[]
-    for a in ("transductive", "frozen")
+    for a in assignments
         S = [seqs[a][t["track"]] for t in trows if haskey(seqs[a], t["track"]) && length(seqs[a][t["track"]]) >= 4 && all(>=(0), seqs[a][t["track"]])]
         for p in profile(S, 20)
             push!(prows, Dict("assignment" => a, "position" => string(p.pos), "molecules" => string(p.n), "glcnac" => @sprintf("%.3f", p.glcnac)))
@@ -236,7 +246,8 @@ function pattern_main(args=ARGS)
             t = "track" * cons[f]["track"]
             row["N_scan"] = cons[f]["N_scan"]; row["N_final"] = string(final_n[f]); row["track"] = t
             row["subset"] = get(subset, f, "?")
-            for (name, c) in (("scan", trans_scan[idx]), ("transductive", trans[idx]), ("frozen", frozen[idx]))
+            for (name, c) in vcat([("scan", trans_scan[idx]), ("transductive", trans[idx]), ("frozen", frozen[idx])],
+                                  [(a, extra[a][idx]) for a in sort(collect(keys(extra)))])
                 row["calls_" * name] = seqstr(c)
                 if m["status"] == "read"
                     a = manual_agreement(c, m["sequence"]); row["agree_" * name] = "$(a.agree)/$(a.compared)"
@@ -246,8 +257,9 @@ function pattern_main(args=ARGS)
         end
         push!(mrows, row)
     end
-    mcols = ["file", "status", "manual", "manual_N", "in_run", "subset", "N_scan", "N_final", "track", "calls_scan", "agree_scan",
-             "calls_transductive", "agree_transductive", "calls_frozen", "agree_frozen", "track_seq_transductive"]
+    mcols = vcat(["file", "status", "manual", "manual_N", "in_run", "subset", "N_scan", "N_final", "track", "calls_scan", "agree_scan",
+                  "calls_transductive", "agree_transductive", "calls_frozen", "agree_frozen"],
+                 vcat([["calls_" * a, "agree_" * a] for a in sort(collect(keys(extra)))]...), ["track_seq_transductive"])
     write_table(joinpath(out, "manual_comparison.tsv"), mcols, mrows)
     # report
     open(joinpath(out, "report.md"), "w") do io
