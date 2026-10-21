@@ -1,0 +1,23 @@
+# Manual sequence readings of 10-20mer scans (data/raw/notes/SequenceAnalysis.xlsx, sheet Data; read by eye, non-reducing
+# to reducing end; 1/0 as in the sheet, ? = unreadable unit). External labels for comparison only: no method code reads this.
+# status: read or reject (image rejected by the reader).
+file	sequence	status
+260115_016.sxm	1010111	read
+260222_070.sxm	1010111	read
+260115_040.sxm	10101111	read
+260116_040.sxm	10101111	read
+251206_034.sxm	101011111	read
+251210_018.sxm	1010111111	read
+260220_030.sxm	?01111111	read
+260222_043.sxm	?10111	read
+251210_025.sxm	0101111	read
+260222_017.sxm	01011111	read
+260221_044.sxm	1010?11111?	read
+260222_040.sxm	101011?1111	read
+251206_013.sxm	101011111?11	read
+260222_082.sxm	1011111??	read
+251206_038.sxm	11111?111111100011	read
+260130_027.sxm		reject
+260220_083.sxm		reject
+260221_056.sxm		reject
+260222_010.sxm		reject
