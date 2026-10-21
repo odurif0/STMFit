@@ -24,16 +24,18 @@
 # same procedure to sequences shuffled within each chain (composition kept).
 # Statistics: GlcNAc (1) fraction; blockiness P = f(01+10) / (2 f0 f1)
 # (1 Bernoulli, < 1 blocks, > 1 alternation); mean run length; ends vs
-# interior; longest alternating end segment; agreement with the manual
-# template "1010" + "1"s; profile along the chain oriented by its longer
-# alternating end. --subsets (file, subset, session, date dd.mm.yyyy)
+# interior; longest alternating end segment, the alternating segment at the
+# other end and the fraction of chains alternating at one end only (>= 3
+# units, other end <= 1); agreement with the manual template "1010" + "1"s
+# and with its 0/1 inverse (the manual convention is not documented);
+# profile along the chain oriented by its longer alternating end. --subsets (file, subset, session, date dd.mm.yyyy)
 # describes the run's scans (subset, for example selection / short_chain /
 # target; a track takes its scans' majority subset). Manual comparison: N and units (better of the two
 # orientations, unreadable manual units excluded) for the scans read by hand.
 using STMFit.FrozenAssignment, STMFit.ReconstructedUnitAssignment
 using Dates, LinearAlgebra, Printf, Random, Statistics
 
-const TEMPLATE_HEAD = Int8[1, 0, 1, 0]
+const TEMPLATE_HEAD = Int8[1, 0, 1, 0]   # manual pattern as written: 1010 then 1s
 
 function pattern_options(args)
     ("--help" in args || "-h" in args || isempty(args)) && return nothing
@@ -92,9 +94,10 @@ end
 
 alt_prefix(s) = (k = 1; while k < length(s) && s[k] != s[k+1]; k += 1; end; k)
 alt_end(s) = max(alt_prefix(s), alt_prefix(reverse(s)))
-template(n) = vcat(TEMPLATE_HEAD[1:min(4, n)], fill(Int8(1), max(0, n - 4)))
+template(n; flip=false) = (t = vcat(TEMPLATE_HEAD[1:min(4, n)], fill(Int8(1), max(0, n - 4))); flip ? Int8(1) .- t : t)
 agree(s, t) = count(i -> s[i] == t[i], eachindex(s)) / length(s)
-template_agreement(s) = max(agree(s, template(length(s))), agree(reverse(s), template(length(s))))
+template_agreement(s; flip=false) = max(agree(s, template(length(s); flip)), agree(reverse(s), template(length(s); flip)))
+alt_min(s) = min(alt_prefix(s), alt_prefix(reverse(s)))
 oriented(s) = alt_prefix(reverse(s)) > alt_prefix(s) ? reverse(s) : s
 
 "Statistics over complete sequences (no unknown unit), each returning one number."
@@ -112,7 +115,10 @@ function seq_stats(seqs)
                 "mean_run_length" => mean(length.(seqs) ./ runs),
                 "ends_glcnac" => mean(ends .== 1), "interior_glcnac" => isempty(interior) ? NaN : mean(interior .== 1),
                 "alternating_end" => mean(alt_end.(seqs)),
-                "template_agreement" => mean(template_agreement.(seqs)))
+                "alternating_other_end" => mean(alt_min.(seqs)),
+                "one_sided_alternation" => mean([alt_end(s) >= 3 && alt_min(s) <= 1 for s in seqs]),
+                "template_agreement" => mean(template_agreement.(seqs)),
+                "template_flipped_agreement" => mean([template_agreement(s; flip=true) for s in seqs]))
 end
 
 "Two-sided permutation p-values: shuffle within each chain, recompute every statistic."
@@ -135,9 +141,9 @@ function profile(seqs, maxpos)
       glcnac=(v = [s[p] for s in os if length(s) >= p]; isempty(v) ? NaN : mean(v))) for p in 1:maxpos]
 end
 
-"Units of a manual reading against calls: better orientation, unreadable manual units excluded."
-function manual_agreement(calls, manual)
-    m = [c == '?' ? Int8(-1) : parse(Int8, c) for c in manual]
+"Units of a manual reading against calls: better orientation, unreadable manual units excluded (flip: 0/1 inverted)."
+function manual_agreement(calls, manual; flip=false)
+    m = [c == '?' ? Int8(-1) : (flip ? Int8(1) - parse(Int8, c) : parse(Int8, c)) for c in manual]
     best = (agree=0, compared=0)
     for c in (calls, reverse(calls))
         n = min(length(c), length(m))
@@ -251,15 +257,16 @@ function pattern_main(args=ARGS)
                 row["calls_" * name] = seqstr(c)
                 if m["status"] == "read"
                     a = manual_agreement(c, m["sequence"]); row["agree_" * name] = "$(a.agree)/$(a.compared)"
+                    a = manual_agreement(c, m["sequence"]; flip=true); row["agreeflip_" * name] = "$(a.agree)/$(a.compared)"
                 end
             end
             row["track_seq_transductive"] = seqstr(seqs["transductive"][t])
         end
         push!(mrows, row)
     end
-    mcols = vcat(["file", "status", "manual", "manual_N", "in_run", "subset", "N_scan", "N_final", "track", "calls_scan", "agree_scan",
-                  "calls_transductive", "agree_transductive", "calls_frozen", "agree_frozen"],
-                 vcat([["calls_" * a, "agree_" * a] for a in sort(collect(keys(extra)))]...), ["track_seq_transductive"])
+    mcols = vcat(["file", "status", "manual", "manual_N", "in_run", "subset", "N_scan", "N_final", "track"],
+                 vcat([["calls_" * a, "agree_" * a, "agreeflip_" * a] for a in vcat(["scan", "transductive", "frozen"], sort(collect(keys(extra))))]...),
+                 ["track_seq_transductive"])
     write_table(joinpath(out, "manual_comparison.tsv"), mcols, mrows)
     # report
     open(joinpath(out, "report.md"), "w") do io
@@ -274,6 +281,17 @@ function pattern_main(args=ARGS)
         println(io, "|---|---|---|---|---|---|---|---|")
         for r in srows
             println(io, "| $(r["assignment"]) | $(r["group"]) | $(r["molecules"]) | $(r["stat"]) | $(r["observed"]) | $(r["null_mean"]) | $(r["p_low"]) | $(r["p_high"]) |")
+        end
+        println(io, "\n## Manual readings: totals (units; N exact / within one)\n")
+        read = [r for r in mrows if r["status"] == "read" && r["in_run"] == "true"]
+        nex = count(r -> parse(Int, r["N_final"]) == parse(Int, r["manual_N"]), read)
+        n1 = count(r -> abs(parse(Int, r["N_final"]) - parse(Int, r["manual_N"])) <= 1, read)
+        println(io, "$(length(read)) read scans in the run; final N equals the manual length in $nex, within one in $n1.\n")
+        println(io, "| calls | agreement, manual as written | agreement, manual 0/1 inverted |"); println(io, "|---|---|---|")
+        for a in vcat(["scan", "transductive", "frozen"], sort(collect(keys(extra))))
+            tot(k) = (v = [parse.(Int, split(r[k], "/")) for r in read]; (sum(first.(v)), sum(last.(v))))
+            x = tot("agree_" * a); y = tot("agreeflip_" * a)
+            @printf(io, "| %s | %d/%d (%.0f%%) | %d/%d (%.0f%%) |\n", a, x[1], x[2], 100x[1] / x[2], y[1], y[2], 100y[1] / y[2])
         end
         println(io, "\n## Manual readings\n")
         println(io, "| file | manual | N final | per-scan calls | agree | final (transductive) | agree | frozen | agree |")

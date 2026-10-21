@@ -43,6 +43,10 @@ the chain over repeated scans (2026-10-04).
   `data/sets/10_20mer_candidates` for the user's review (first pass: 279
   kept, 595 discarded), with the decisions in
   `benchmarks/chitosan_10_20mer_cu100_triage.tsv`.
+- 10–20mer test run (2026-10-21, 440 scans): the predicted unit order does
+  not match the 15 manual readings beyond chance once composition is
+  accounted for. The only robust structure is the edge signature (terminal
+  units called GlcN, alternation near both ends).
 - The grading manifest is still the 145-scan
   `chitosan_6mer_counting_confirmed.toml`. The additions are graded in step
   1.5.
@@ -1690,3 +1694,80 @@ aggregates, cut molecules and non-chitosan objects stay out.
   listed) and applied to the table (set `10_20mer_application` for kept
   scans), then the sets are rebuilt. Only after that comes step 3, the
   application run.
+
+### 2026-10-21 — 10–20mer test run and sequence-pattern analysis
+
+- **Request.** "With the selection already made, launch the 10–20mer test;
+  try to identify a pattern."
+- **Input** (440 Cu(100) scans, staged on Viper as
+  `/ptmp/<user>/stmfit/app1020_inputs/raw`):
+  - the 279 scans of the assistant's first pass;
+  - the 25 targets;
+  - 136 whole short chains (7–8 units) that the first pass had set aside
+    only for their length.
+
+  The manual readings in `data/raw/notes/SequenceAnalysis.xlsx` contain
+  7–8-unit chains (for example `251210_025`, read `0101111`), so the 4 nm
+  length rule was too strict. The short chains are reported as their own
+  subset. The manual readings are now
+  `benchmarks/chitosan_10_20mer_manual_sequences.tsv` (grading side only).
+- **Run.**
+  - Viper job 12310547 (`5b706ca`), promoted method with the long-chain
+    counting config. Counting ran as 96 single-thread shards (new driver
+    option `--count-shards`, results independent of the shard count), so
+    the whole run took 1 h 34.
+  - Outputs are in `results/app1020_5b706ca/`; `grade_consensus_run.jl
+    --verify-only` gives ALL PASS.
+  - Final count rules: 131 agree, 40 consensus applied, 4 registered ROI,
+    88 tracks too short, and 177 without a strict majority. Repeat scans
+    of one molecule often disagree on the count.
+  - Fusion: π 0.385, θ0 0.191, θ1 0.619 (previous run θ0 0.45; 6-mers
+    0.05).
+- **Pattern report** (`scripts/grading/report_sequence_patterns.jl`, outputs
+  in `results/app1020_5b706ca_patterns/`).
+  - There are 133 molecules (tracks), with a median N of 8 (range 2–18);
+    99 have N ≥ 7.
+  - Three assignments are compared: the run's transductive calls, a frozen
+    label-free model per campaign (5 campaigns; the last, with 3 scans, has
+    no model, and the second has only 5 reference scans), and the frozen
+    6-mer model of campaign A.
+  - Every statistic is tested against 10,000 shuffles within each chain
+    (composition kept).
+- **Results.**
+  - **Composition.** GlcNAc (1) fractions are 0.35 (transductive), 0.40
+    (frozen per campaign) and 0.36 (6-mer model).
+  - **Ends.** All three call the terminal units GlcN more often than chance
+    (ends 0.29 vs 0.36 for the transductive calls, p = 0.01; 0.16 vs 0.35
+    for the 6-mer model, p < 0.0001). The interior is enriched in GlcNAc.
+  - **Alternation.** There is more alternation near the ends than chance
+    (longest alternating end segment 2.78 vs 2.53, p = 0.04; 6-mer model
+    3.31 vs 2.56, p < 0.0001). With the frozen models the other end
+    alternates too (p < 0.0001), and the share of chains alternating at one
+    end only is not above chance (p 0.05–0.5).
+  - **Manual template.** Agreement with the manual template "1010" + "1"s,
+    or with its 0/1 inverse, is at or barely above chance (transductive,
+    inverse: 0.660 vs 0.650, p = 0.23).
+- **Manual readings** (15 scans read by hand, all in the run).
+  - **Length.** The final N equals the manual length for 6 scans and is
+    within one for 13. `251206_013` stays at 4 (manual 12).
+  - **Convention.** Per-unit agreement is 43–49% with the readings as
+    written and 63–70% with 0/1 inverted. The manual convention is not
+    documented: the composition (about 75% "1" in the readings) suggests
+    the readings' 1 is the dimmer unit, the method's 0.
+  - **Order.** In both conventions the agreement is at chance level against
+    a composition-preserving shuffle of the calls. For example, the
+    transductive calls with the inverted convention give 83 observed vs 83
+    expected (p = 0.55); the frozen models reach p 0.05–0.09. The agreement
+    comes from composition, not from unit order.
+- **Reading.**
+  - The method does not recover the manual sequence order on these scans.
+  - The only robust structure it finds is the 6-mer edge signature:
+    terminal units called GlcN, a relatively bright neighbour, alternation
+    near both ends. That is the known edge-adjacency confound, not a
+    one-sided chemical motif.
+  - The repeat scans disagree often, both on counts (177 without a
+    majority) and on calls (θ0 0.19). Long-chain counting and per-scan
+    assignment consistency (open questions 2 and 3) remain the limits.
+- **Not done.** No parameter was changed; this is a test of the promoted
+  method plus label-free frozen variants. The meaning of 0/1 in the manual
+  sheet is a question for the user.
