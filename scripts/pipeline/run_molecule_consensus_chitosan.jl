@@ -6,8 +6,12 @@
 #       --data-dir RAW_DIR --count-config config/chitosan.toml \
 #       --config config/unit_assignment_corroborated_training.toml \
 #       --consensus-config config/molecule_consensus.toml \
-#       --templates dft/molds/chitosan_cc_molds_native_v1.tsv --outdir NEW_DIR [--selected-summary TSV] [--dry-run]
+#       --templates dft/molds/chitosan_cc_molds_native_v1.tsv --outdir NEW_DIR [--selected-summary TSV] \
+#       [--count-shards N] [--dry-run]
 #
+# --count-shards N runs the per-scan counting as N single-thread processes
+# (default: min(scans, 4)), for a full cluster node. Every scan is counted
+# independently, so the shard count does not change any result.
 # --selected-summary reuses a label-free per-scan counting summary instead of
 # counting again (development only). Every other stage is recomputed from raw
 # pixels. No benchmark label, expected count, sequence, grade or reference
@@ -18,7 +22,7 @@ using STMFit.MoleculeConsensus: load_consensus_settings
 using SHA, Statistics
 
 const REQUIRED = Set(["--data-dir", "--count-config", "--config", "--consensus-config", "--templates", "--outdir"])
-const OPTIONAL = Set(["--selected-summary"])
+const OPTIONAL = Set(["--selected-summary", "--count-shards"])
 
 function run_options(args)
     ("--help" in args || "-h" in args) && return nothing
@@ -37,6 +41,7 @@ function run_options(args)
         haskey(o, k) && !isfile(o[k]) && error("Missing input $k")
     end
     (ispath(o["--outdir"]) || islink(o["--outdir"])) && error("Output exists")
+    haskey(o, "--count-shards") && something(tryparse(Int, o["--count-shards"]), 0) < 1 && error("--count-shards must be a positive integer")
     return o
 end
 
@@ -139,7 +144,7 @@ function execute_run(o; runner=run_stage, thread_budget=min(Threads.nthreads(), 
     assignment["preprocessing"]["patch_residual_filter"] == "smooth_residual" || error("Symmetric residuals required")
     load_consensus_settings(TOML.parsefile(o["--consensus-config"]))
     rawfiles = raw_index(o["--data-dir"]); files = sort(collect(keys(rawfiles)))
-    nchunks = min(length(files), thread_budget, 4)
+    nchunks = haskey(o, "--count-shards") ? min(length(files), parse(Int, o["--count-shards"])) : min(length(files), thread_budget, 4)
     tag = @sprintf("%03d", round(Int, 100cfg["model"]["max_overlap"]))
     reuse = haskey(o, "--selected-summary")
     println("$(length(files)) raw scans; ", reuse ? "reused per-scan counts" : "$nchunks counting shards",
@@ -233,7 +238,7 @@ end
 
 function main(args=ARGS)
     o = run_options(args)
-    o === nothing ? println("run_molecule_consensus_chitosan.jl --data-dir DIR --count-config TOML --config TOML --consensus-config TOML --templates TSV --outdir NEW_DIR [--selected-summary TSV] [--dry-run]") :
+    o === nothing ? println("run_molecule_consensus_chitosan.jl --data-dir DIR --count-config TOML --config TOML --consensus-config TOML --templates TSV --outdir NEW_DIR [--selected-summary TSV] [--count-shards N] [--dry-run]") :
         execute_run(o)
 end
 end

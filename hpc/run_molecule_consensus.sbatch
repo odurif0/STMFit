@@ -11,8 +11,9 @@ set -euo pipefail
 # Export the four required paths with sbatch --export. Optional overrides:
 # STMFIT_RAW_SUBDIR (raw subdirectory of STMFIT_INPUT_DIR, default full146_raw),
 # STMFIT_COUNT_CONFIG (e.g. the 10-20mer config), STMFIT_ASSIGNMENT_CONFIG,
-# STMFIT_TEMPLATES (default: tracked frozen molds) and STMFIT_SELECTED_SUMMARY
-# (reuse per-scan counts; development only).
+# STMFIT_TEMPLATES (default: tracked frozen molds), STMFIT_SELECTED_SUMMARY
+# (reuse per-scan counts; development only) and STMFIT_COUNT_SHARDS (count in
+# that many single-thread processes; request as many CPUs).
 if [[ $# -gt 1 ]] || [[ $# -eq 1 && "$1" != "--dry-run" ]]; then
     echo "Usage: $0 [--dry-run]" >&2; exit 2
 fi
@@ -35,4 +36,5 @@ exec "$JULIA_BIN" --startup-file=no -t 4 --project=. scripts/pipeline/run_molecu
     --config "${STMFIT_ASSIGNMENT_CONFIG:-config/unit_assignment_corroborated_training.toml}" \
     --consensus-config config/molecule_consensus.toml \
     --templates "${STMFIT_TEMPLATES:-dft/molds/chitosan_cc_molds_native_v1.tsv}" --outdir "$STMFIT_OUTDIR" \
-    ${STMFIT_SELECTED_SUMMARY:+--selected-summary "$STMFIT_SELECTED_SUMMARY"} "$@"
+    ${STMFIT_SELECTED_SUMMARY:+--selected-summary "$STMFIT_SELECTED_SUMMARY"} \
+    ${STMFIT_COUNT_SHARDS:+--count-shards "$STMFIT_COUNT_SHARDS"} "$@"
