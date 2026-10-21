@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Candidats 6-mères</title>
+<title>/*TITLE*/</title>
 <style>
 :root {
   --bg: #f6f5f2; --panel: #ffffff; --ink: #1d1d1f; --muted: #6b6b70; --line: #e2e0da;
@@ -35,14 +35,14 @@ section.group { margin: 18px 0; }
 .ghead .muted { color: var(--muted); }
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 470px), 1fr)); gap: 10px; }
 .card { background: var(--panel); border: 2px solid var(--line); border-radius: 8px; padding: 8px; }
-.card.benchmark { border-color: var(--ok); background: var(--ok-bg); }
+.card./*KEEP*/ { border-color: var(--ok); background: var(--ok-bg); }
 .card.ecarte { border-color: var(--no); background: var(--no-bg); }
 .card img { width: 100%; border-radius: 4px; cursor: zoom-in; display: block; }
 .meta { display: flex; justify-content: space-between; gap: 6px; flex-wrap: wrap; margin: 4px 0; }
 .file { font-weight: 600; font-family: ui-monospace, monospace; }
 .small { color: var(--muted); font-size: 12px; }
 .pill { font-size: 12px; border-radius: 999px; padding: 1px 8px; border: 1px solid var(--line); }
-.pill.benchmark { color: var(--ok); border-color: var(--ok); } .pill.ecarte { color: var(--no); border-color: var(--no); }
+.pill./*KEEP*/ { color: var(--ok); border-color: var(--ok); } .pill.ecarte { color: var(--no); border-color: var(--no); }
 .actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: 6px; }
 .actions input { flex: 1; min-width: 120px; }
 .disagree { color: var(--warn); font-size: 12px; }
@@ -53,10 +53,7 @@ section.group { margin: 18px 0; }
 </head>
 <body>
 <header>
-  <h1>Candidats 6-mères (NKN)2 sur Cu(100) : entrée au benchmark</h1>
-  <p class="crit">Benchmark = <b>une molécule (NKN)2 entière, isolée et entièrement imagée</b> (vérité NKNNKN, 6 unités).
-  Écarter les fragments, agrégats, molécules coupées, images dominées par un artefact, et ce qui n'est pas du chitosan.
-  On juge l'image, jamais les sorties de la méthode. Raccourcis : survoler une carte puis <b>b</b> (benchmark), <b>e</b> (écarter), <b>u</b> (annuler).</p>
+/*HEADER*/
   <div class="bar">
     <span class="stats" id="stats"></span>
     <button data-filter="all" class="on">Tous</button>
@@ -68,7 +65,7 @@ section.group { margin: 18px 0; }
   </div>
 </header>
 <main>
-  <details class="refs"><summary>Référence : un scan du benchmark actuel par session</summary><div class="refgrid" id="refs"></div></details>
+  <details class="refs"><summary>/*REFS_TITLE*/</summary><div class="refgrid" id="refs"></div></details>
   <div id="groups"></div>
 </main>
 <div id="zoom"><img alt=""></div>
@@ -80,7 +77,7 @@ const REFS = [
 /*REFS*/
 ];
 const MOTIFS = [/*MOTIFS*/];
-const KEY = "stmfit_6mer_candidates_v1";
+const KEY = "/*KEY*/";
 let D = {};
 try { D = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { D = {}; }
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e) {} };
@@ -100,7 +97,7 @@ for (const [g, list] of bygroup) {
   const h = el("div", "ghead");
   h.appendChild(el("h2", "", "Molécule " + g));
   h.appendChild(el("span", "muted", list[0].s + " · " + list.length + " scan" + (list.length > 1 ? "s" : "")));
-  const all1 = el("button", "", "Tout → benchmark"); all1.onclick = () => { for (const s of list) setDecision(s.f, "benchmark"); };
+  const all1 = el("button", "", "Tout → /*KEEP*/"); all1.onclick = () => { for (const s of list) setDecision(s.f, "/*KEEP*/"); };
   const gm = motifSelect("incertain");
   const all0 = el("button", "", "Tout → écarter"); all0.onclick = () => { for (const s of list) setDecision(s.f, "ecarte", gm.value); };
   h.append(all1, all0, gm); sec.appendChild(h);
@@ -117,12 +114,12 @@ function makeCard(s) {
   m.appendChild(el("span", "small", s.fr + " nm" + (s.fl ? " · " + s.fl : "")));
   c.appendChild(m);
   const sg = el("div", "meta");
-  const pill = el("span", "pill " + s.sg, "suggestion : " + (s.sg === "benchmark" ? "benchmark" : "écarter" + (s.sm ? " (" + s.sm + ")" : "")));
+  const pill = el("span", "pill " + s.sg, "suggestion : " + (s.sg === "/*KEEP*/" ? "/*KEEP*/" : "écarter" + (s.sm ? " (" + s.sm + ")" : "")));
   sg.appendChild(pill);
   if (s.n || s.sn) sg.appendChild(el("span", "small", [s.n, s.sn].filter(Boolean).join(" · ")));
   c.appendChild(sg);
   const a = el("div", "actions");
-  const b1 = el("button", "", "Benchmark"); b1.onclick = () => setDecision(s.f, "benchmark");
+  const b1 = el("button", "", "/*KEEP_LABEL*/"); b1.onclick = () => setDecision(s.f, "/*KEEP*/");
   const sel = motifSelect(s.sm);
   const b0 = el("button", "", "Écarter"); b0.onclick = () => setDecision(s.f, "ecarte", sel.value);
   sel.onchange = () => { if ((D[s.f] || {}).d === "ecarte") setDecision(s.f, "ecarte", sel.value); };
@@ -142,16 +139,16 @@ function setDecision(f, d, motif) {
 }
 function paint(f) {
   const k = cards[f], x = D[f] || {};
-  k.c.classList.toggle("benchmark", x.d === "benchmark");
+  k.c.classList.toggle("/*KEEP*/", x.d === "/*KEEP*/");
   k.c.classList.toggle("ecarte", x.d === "ecarte");
-  k.b1.classList.toggle("on", x.d === "benchmark"); k.b0.classList.toggle("on", x.d === "ecarte");
+  k.b1.classList.toggle("on", x.d === "/*KEEP*/"); k.b0.classList.toggle("on", x.d === "ecarte");
   if (x.d === "ecarte" && x.m) k.sel.value = x.m;
   k.dis.textContent = x.d && x.d !== k.s.sg ? "≠ suggestion" : "";
 }
 function refresh() {
   let n = 0, b = 0, e = 0;
-  for (const s of SCANS) { const d = (D[s.f] || {}).d; if (d) n++; if (d === "benchmark") b++; if (d === "ecarte") e++; }
-  document.getElementById("stats").textContent = `décidés ${n}/${SCANS.length} · benchmark ${b} · écartés ${e}`;
+  for (const s of SCANS) { const d = (D[s.f] || {}).d; if (d) n++; if (d === "/*KEEP*/") b++; if (d === "ecarte") e++; }
+  document.getElementById("stats").textContent = `décidés ${n}/${SCANS.length} · /*KEEP*/ ${b} · écartés ${e}`;
   for (const s of SCANS) {
     const d = (D[s.f] || {}).d;
     const show = filter === "all" || (filter === "todo" && !d) || (filter === "disagree" && d && d !== s.sg);
@@ -170,11 +167,11 @@ document.getElementById("export").onclick = () => {
   const rows = ["file\tdecision\tmotif\tnote\tsuggestion"];
   for (const s of SCANS) { const x = D[s.f] || {}; rows.push([s.f, x.d || "", x.d === "ecarte" ? (x.m || "") : "", (x.n || "").replace(/[\t\n]/g, " "), s.sg].join("\t")); }
   const blob = new Blob([rows.join("\n") + "\n"], { type: "text/tab-separated-values" });
-  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "decisions_candidats_6mer.tsv"; a.click();
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "/*DOWNLOAD*/"; a.click();
 };
 document.addEventListener("keydown", (ev) => {
   if (!hovered || ev.target.tagName === "INPUT" || ev.target.tagName === "SELECT") return;
-  if (ev.key === "b") setDecision(hovered.f, "benchmark");
+  if (ev.key === "b") setDecision(hovered.f, "/*KEEP*/");
   else if (ev.key === "e") setDecision(hovered.f, "ecarte", cards[hovered.f].sel.value);
   else if (ev.key === "u") setDecision(hovered.f, null);
 });

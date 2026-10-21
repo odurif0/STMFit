@@ -40,9 +40,9 @@ function scan_universe(cats)
     return rows
 end
 
-function review_tile(r, v, tag)
+function review_tile(r, v, tag; crop_nm=CROP_NM)
     z = copy(v.z); z[.!v.observed] .= NaN
-    w = Float64.(v.mask .& v.observed); s = sum(w); h = CROP_NM / 2
+    w = Float64.(v.mask .& v.observed); s = sum(w); h = crop_nm / 2
     cx = s > 0 ? sum(w .* v.xs') / s : (first(v.xs) + last(v.xs)) / 2
     cy = s > 0 ? sum(w .* v.ys) / s : (first(v.ys) + last(v.ys)) / 2
     ix = findall(x -> abs(x - cx) <= h, v.xs); iy = findall(y -> abs(y - cy) <= h, v.ys)
@@ -58,11 +58,11 @@ function review_tile(r, v, tag)
 end
 
 "Review sheets, 20 tiles per page, in the given order; `tag(r)` prefixes each title."
-function review_sheets(rows, views, outdir, title; tag=r -> "")
+function review_sheets(rows, views, outdir, title; tag=r -> "", crop_nm=CROP_NM)
     mkpath(outdir); per = 20; pages = cld(length(rows), per)
     for p in 1:pages
         part = rows[(p-1)*per+1:min(p * per, length(rows))]
-        panels = [review_tile(r, views[r["sha256"]], tag(r)) for r in part]
+        panels = [review_tile(r, views[r["sha256"]], tag(r); crop_nm) for r in part]
         fig = plot(panels...; layout=(cld(length(panels), 5), 5), size=(1600, 340 * cld(length(panels), 5)),
                    plot_title="$title — page $p/$pages", plot_titlefontsize=12)
         savefig(fig, joinpath(outdir, @sprintf("page_%03d.png", p)))

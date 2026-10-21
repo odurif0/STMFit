@@ -39,6 +39,10 @@ the chain over repeated scans (2026-10-04).
 - The sets and the index are rebuilt from the tables in `benchmarks/` by
   `scripts/grading/report_data_sets.jl`.
 - Discarded scans (656) have no folder, only a motif.
+- 10–20mers (2026-10-21): 874 usable Cu(100) scans are in
+  `data/sets/10_20mer_candidates` for the user's review (first pass: 279
+  kept, 595 discarded), with the decisions in
+  `benchmarks/chitosan_10_20mer_cu100_triage.tsv`.
 - The grading manifest is still the 145-scan
   `chitosan_6mer_counting_confirmed.toml`. The additions are graded in step
   1.5.
@@ -1613,3 +1617,59 @@ aggregates, cut molecules and non-chitosan objects stay out.
   - For the 10–20mer campaigns this argues for a reference taken from the
     application's own campaign (frozen per campaign), or for a label-free
     per-campaign calibration of the boundary.
+
+### 2026-10-21 — 10–20mer triage: catalog and first visual pass
+
+- **Deliverable** (roadmap step 2, approved by the user: "go"). The usable
+  Cu(100) 10–20mer scans, grouped by molecule and decided by the user,
+  recorded in a tracked table. That set is the input of the application run
+  (step 3).
+- **Catalog** (`catalog_sxm_candidates.jl` on the 33 Cu(100) sessions of
+  `data/raw/10_20mer`, outputs in
+  `results/data_review/10_20mer_catalog_20261021/`). Of 1553 scans:
+  - 898 usable;
+  - 582 overviews (frame larger than 20 nm);
+  - 70 with the object crossing the frame;
+  - 2 unreadable;
+  - 1 byte-identical copy.
+
+  The Ag(111) sessions are left out, because the method is calibrated on
+  Cu(100).
+- **Table** `benchmarks/chitosan_10_20mer_cu100_triage.tsv`.
+  - One row per scan except the 25 targets (own table) and the copy, so
+    1527 rows: 874 in set `10_20mer_candidates`, the rest discarded by the
+    catalog status.
+  - Two different scans named `260130_001.sxm` (sessions of 29 and
+    30 January) take their session as prefix.
+  - `data/sets/10_20mer_candidates/` and `data/INDEX.tsv` were rebuilt.
+- **Review page** (`report_candidate_review.jl --profile 10_20mer`).
+  - The page now has profiles: candidate and reference sets, decision word
+    (`garder`), motifs, texts, and a 16 nm window instead of 8 nm.
+  - With the 6-mer profile the rendered template is byte-identical to
+    before.
+  - The page is at `results/data_review/10_20mer_candidates_review/index.html`:
+    372 molecule groups, with one target per session as reference.
+- **First visual pass (assistant).** It suggests 279 scans to keep and 595 to
+  discard:
+  - 234 short fragments;
+  - 95 several objects;
+  - 94 folded, looped or crossed chains;
+  - 51 images with no molecule;
+  - 44 objects that do not look like chitosan;
+  - 44 uncertain;
+  - 25 chains cut by the frame or the end of the scan;
+  - 8 tip artifacts.
+
+  Suggestions are in `results/data_review/suggestions_candidats_10_20mer.tsv`.
+  - **Length criterion.** The 6-mer control molecules measure about 3 nm on
+    these tiles, so a straight chain shorter than about 4 nm has the length
+    of a 6–7-mer, not of a 10–20mer, and is suggested as `fragment_court`.
+    Several long series (for example `260129_003`–`025`, 23 scans of one
+    3 nm molecule) fall here.
+  - **Kept chains with features to check.** These carry a note: chains
+    crossing a step, chains with a bright end blob (possible adsorbate,
+    `260218_021`–`038`), a faint parallel ghost (double tip), and a few
+    long irregular chains.
+- **Next.** The user reviews the page and exports the decisions. They are
+  then applied to the table (set `10_20mer_application` for kept scans) and
+  the sets are rebuilt. Only after that comes step 3, the application run.

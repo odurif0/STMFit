@@ -119,6 +119,11 @@ reproduce ([journal](journal.md)).
 
 ## Unknown 10–20mer application
 
+0. Triage the raw scans (done for the Cu(100) 10–20mer tree on 2026-10-21):
+   `scripts/data/catalog_sxm_candidates.jl` for the technical status, then
+   `scripts/grading/report_candidate_review.jl --profile 10_20mer` for the
+   review page of the usable scans (decisions go to
+   `benchmarks/chitosan_10_20mer_cu100_triage.tsv`).
 1. Collect repeat-scan candidates of the target molecules (headers only):
    ```bash
    julia --project=. scripts/data/collect_repeat_scans.jl --targets targets.txt \
@@ -165,7 +170,7 @@ compares the native mold builder with the Python reference
 | `scripts/data/catalog_sxm_candidates.jl --roots DIR[,DIR] ... --outdir NEW [--exclude TSV] [--copy-to CENTRAL]` | Technical triage of raw scans (no fit, no label), contact sheets, deduplicated central folder |
 | `scripts/grading/report_benchmark_candidates.jl --catalog TSV --count-config TOML --outdir NEW` | Grading side: usable scans not yet in the benchmark, with review sheets |
 | `scripts/grading/report_benchmark_triage.jl --catalog TSV ... --count-config TOML --sheets NEW` | Grading side: fixed-scale review sheets for the visual triage |
-| `scripts/grading/report_candidate_review.jl --data data --triage TSV --outdir NEW [--suggestions TSV]` | Grading side: local review page (cards grouped by molecule, decision export) for benchmark candidates |
+| `scripts/grading/report_candidate_review.jl --data data --triage TSV --outdir NEW [--suggestions TSV] [--profile 6mer\|10_20mer]` | Grading side: local review page (cards grouped by molecule, decision export) for 6-mer benchmark candidates or 10–20mer application scans |
 | `scripts/grading/report_data_sets.jl --data data --table TSV ...` | Grading side: rebuild `data/sets/` and `data/INDEX.tsv` from the decision tables |
 | `scripts/grading/search_reference_cohort.jl --protocol TOML --mode nested\|final\|null\|report\|sealed --outdir NEW` | Grading side, campaign B: reference cohort of a frozen assignment chosen by its benchmark score (`benchmarks/reference_cohort_search_v1.toml`, multistart `_v2.toml`; Viper: `hpc/run_reference_cohort_search.sbatch`) |
 | `scripts/pipeline/build_frozen_assignment.jl --run RUN --config TOML --out MODEL.tsv`, `scripts/pipeline/apply_frozen_assignment.jl --run RUN --model MODEL.tsv --config TOML --outdir NEW` | Campaign A: build a fully frozen, label-free assignment model on a reference run, and apply it unchanged to any run ([Pipeline](pipeline.md)) |

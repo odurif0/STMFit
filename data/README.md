@@ -15,6 +15,8 @@ data/
     6mer_Cu100_benchmark/    benchmark scans (493: the 145-scan graded cohort,
                              240310_Cu100009, 347 added on 2026-10-19)
     10_20mer_targets/        the 25 unknown 10-20mer targets
+    10_20mer_candidates/     usable Cu(100) 10-20mer scans awaiting the visual
+                             review (2026-10-21)
 ```
 
 **Rules.**
@@ -25,11 +27,15 @@ data/
     scan. A non-empty `set` places the scan in that set; an empty `set` means
     discarded, and `motif` says why. Discarded scans get no folder.
   - `benchmarks/chitosan_10_20mer_targets.tsv` lists the 10-20mer targets.
+  - `benchmarks/chitosan_10_20mer_cu100_triage.tsv` holds one row per other
+    Cu(100) 10-20mer scan: `10_20mer_candidates` (usable, to review) or
+    discarded with a motif (overview, cut by the frame, unreadable).
 - To change a decision, edit the table, then rebuild:
 
   ```bash
   julia -t 4 --project=. scripts/grading/report_data_sets.jl --data data \
-      --table benchmarks/chitosan_6mer_cu100_triage.tsv --table benchmarks/chitosan_10_20mer_targets.tsv
+      --table benchmarks/chitosan_6mer_cu100_triage.tsv --table benchmarks/chitosan_10_20mer_targets.tsv \
+      --table benchmarks/chitosan_10_20mer_cu100_triage.tsv
   ```
 
   This rewrites `sets/` and `INDEX.tsv` (about 40 s). It refuses to run if a
