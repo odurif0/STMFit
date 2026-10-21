@@ -646,12 +646,15 @@ end
 Fully frozen model: Fisher per parity on `ref_rows`, emp_fisher recomputed
 for every lobe, k-means/GMM/naming on `ref_rows`, emission rates fitted on
 the per-scan calls of `theta_rows`, prior pi from the config. Throws if the
-emission rates cannot be fitted.
+emission rates cannot be fitted. freeze_fisher=false keeps the run's own
+(transductive) emp_fisher; it exists for diagnostics, not production.
 """
-function train_reference_model(data::AssignmentData, fd::FisherData, ref_rows, theta_rows, physical, cfg::AbstractDict)
+function train_reference_model(data::AssignmentData, fd::FisherData, ref_rows, theta_rows, physical, cfg::AbstractDict;
+                               freeze_fisher::Bool=true)
     st = load_frozen_settings(cfg)
-    fisher = train_fisher(fd, ref_rows)
-    d = with_emp_fisher(data, [fisher_feature(fd, fisher, i) for i in eachindex(data.file)])
+    # freeze_fisher=false (diagnostics only): keep the run's transductive emp_fisher
+    fisher = freeze_fisher ? train_fisher(fd, ref_rows) : Union{Nothing,FrozenFisher}[]
+    d = freeze_fisher ? with_emp_fisher(data, [fisher_feature(fd, fisher, i) for i in eachindex(data.file)]) : data
     model = with_fisher(train_frozen(d, ref_rows, cfg; equal_weights=st.equal_weights), fisher)
     p = predict_frozen(model, d, theta_rows; vote_threshold=cfg["selection"]["vote_threshold"])
     fit = fit_emission_rates(p.call, physical[theta_rows], st.fusion)
@@ -664,10 +667,11 @@ end
 Per-scan calls of `rows` and their fusion within tracks (physical-lobe keys),
 with the model's Fisher, clusters, emission rates and prior.
 """
-function apply_reference_model(model::FrozenModel, data::AssignmentData, fd::FisherData, rows, physical, cfg::AbstractDict)
-    length(model.fisher) == 2 || error("Not a fully frozen model (no Fisher parity models)")
+function apply_reference_model(model::FrozenModel, data::AssignmentData, fd::FisherData, rows, physical, cfg::AbstractDict;
+                               freeze_fisher::Bool=true)
+    length(model.fisher) == (freeze_fisher ? 2 : 0) || error("Fisher parity models do not match freeze_fisher=$freeze_fisher")
     st = load_frozen_settings(cfg)
-    d = with_emp_fisher(data, [fisher_feature(fd, model.fisher, i) for i in eachindex(data.file)])
+    d = freeze_fisher ? with_emp_fisher(data, [fisher_feature(fd, model.fisher, i) for i in eachindex(data.file)]) : data
     p = predict_frozen(model, d, rows; vote_threshold=cfg["selection"]["vote_threshold"])
     return fuse_calls(p.call, physical[rows], model.theta0, model.theta1, model.pi, st.fusion.min_scans), p
 end

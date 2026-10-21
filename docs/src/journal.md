@@ -110,8 +110,10 @@ empirical templates; 10–20mer outputs not validated.
    label-free reference. It makes calls invariant (142/142 scans across runs,
    against 41/142 for the transductive method) and gains on held-out 2024
    sessions (1979 vs 1847). But it transfers worse to 2025 (305 vs 361).
-   Open: why the later campaign loses, and whether a reference from the
-   application's own campaign is needed.
+   The exploratory diagnosis traces the 2025 loss to the per-track cap. The
+   cap moves the GlcNAc boundary, which helps 2024 and hurts 2025, so the
+   best boundary differs between campaigns. Open: freeze per campaign, or
+   calibrate the boundary per campaign without labels.
 9. **A model built on the labelled data, label-free at inference (kept in
    mind at the user's request, 2026-10-21).** Campaign B chose training data
    by the benchmark score. It gained on held-out 2024 sessions but not on
@@ -1559,3 +1561,55 @@ aggregates, cut molecules and non-chitosan objects stay out.
     equal GMM weights, the cap, or a campaign shift in the features. Any
     diagnosis on 2025 is now exploratory.
   - Promotion needs the user's decision and a full pipeline run.
+
+### 2026-10-21 — Campaign A diagnosis (exploratory): the per-track cap moves the GlcNAc boundary, in opposite directions for 2024 and 2025
+
+- **Why exploratory.** Asked by the user after the A results. The 2025
+  sessions have now been read several times, so nothing here selects a
+  setting.
+- **Method.** `grade_frozen_assignment.jl --ablate` undoes the A choices one
+  at a time:
+  - `cap`: no per-track cap;
+  - `weights`: learned GMM weights;
+  - `fisher`: the run's transductive emp_fisher instead of a frozen Fisher.
+
+  The report also gives the GlcNAc call rate and the errors by position on
+  six-lobe scans. Outputs are in `results/frozen_ablation_20261021/`.
+- **Results** (correct units; exact chains; molecule accuracy):
+
+  | Variant | Held-out 2024 (/2430) | 2025 (/528) | GlcNAc call rate 2024 / 2025 |
+  |---|---|---|---|
+  | A | 1979; 188; 0.736 | 305; 10; 0.740 | 0.316 / 0.376 |
+  | A without the cap | 1892; 131; 0.718 | 359; 16; 0.750 | 0.388 / 0.462 |
+  | A with learned weights | 1976; 185; 0.735 | 305; 10; 0.740 | 0.312 / 0.376 |
+  | A with the run's Fisher | 1978; 185; 0.729 | 301; 10; 0.719 | 0.322 / 0.379 |
+  | All three undone (= campaign-B pool) | 1871; 118; 0.712 | 349; 10; 0.729 | 0.359 / 0.477 |
+  | Promoted method, transductive | 1847; 104; 0.698 | 361; 17; 0.771 | 0.428 / 0.458 |
+
+  Undoing all three reproduces the campaign-B pool exactly (1871, 349),
+  which checks the code paths.
+- **Reading.**
+  - **Only the cap matters.** The weights and the Fisher change almost
+    nothing.
+  - **The cap lowers the GlcNAc call rate.** The heavily scanned tracks
+    (for example track 58, 39 scans) no longer dominate the clusters.
+    - On held-out 2024 this removes false GlcNAc in the middle of the chain
+      (171 → 74 at positions 3 and 4).
+    - On 2025 it misses true GlcNAc (38 → 88 at positions 2 and 5). There,
+      the transductive method and the uncapped model both call about 46%
+      GlcNAc.
+  - **Per molecule, uncapped minus A.**
+    - 2024: 13 better, 21 worse; −87 units, interval [−198, −11].
+    - 2025: 6 better, 4 worse; +54 units, interval [+1, +137].
+  - **The large swings each come from one long track.** One physical lobe
+    is fused differently across all its scans: track 58 accounts for −43,
+    tracks 117 and 109 for +36 and +13.
+- **Conclusion.**
+  - The best GlcNAc decision boundary differs between the 2024 and 2025
+    campaigns. No single frozen reference is best for both, and the cap
+    cannot be chosen from these data.
+  - The transductive method adapts its boundary to each run without labels,
+    at the price of cohort dependence.
+  - For the 10–20mer campaigns this argues for a reference taken from the
+    application's own campaign (frozen per campaign), or for a label-free
+    per-campaign calibration of the boundary.
