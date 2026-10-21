@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr">
+<html lang="/*LANG*/">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -36,13 +36,13 @@ section.group { margin: 18px 0; }
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 470px), 1fr)); gap: 10px; }
 .card { background: var(--panel); border: 2px solid var(--line); border-radius: 8px; padding: 8px; }
 .card./*KEEP*/ { border-color: var(--ok); background: var(--ok-bg); }
-.card.ecarte { border-color: var(--no); background: var(--no-bg); }
+.card./*DISCARD*/ { border-color: var(--no); background: var(--no-bg); }
 .card img { width: 100%; border-radius: 4px; cursor: zoom-in; display: block; }
 .meta { display: flex; justify-content: space-between; gap: 6px; flex-wrap: wrap; margin: 4px 0; }
 .file { font-weight: 600; font-family: ui-monospace, monospace; }
 .small { color: var(--muted); font-size: 12px; }
 .pill { font-size: 12px; border-radius: 999px; padding: 1px 8px; border: 1px solid var(--line); }
-.pill./*KEEP*/ { color: var(--ok); border-color: var(--ok); } .pill.ecarte { color: var(--no); border-color: var(--no); }
+.pill./*KEEP*/ { color: var(--ok); border-color: var(--ok); } .pill./*DISCARD*/ { color: var(--no); border-color: var(--no); }
 .actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: 6px; }
 .actions input { flex: 1; min-width: 120px; }
 .disagree { color: var(--warn); font-size: 12px; }
@@ -55,13 +55,13 @@ section.group { margin: 18px 0; }
 <header>
 /*HEADER*/
   <div class="bar">
-    <span class="stats" id="stats"></span>
-    <button data-filter="all" class="on">Tous</button>
-    <button data-filter="todo">Non décidés</button>
-    <button data-filter="disagree">Différents de la suggestion</button>
-    <button id="fill">Suggestions → non décidés</button>
-    <button id="export">Exporter (TSV)</button>
-    <button id="reset">Tout effacer</button>
+    <span class="stats" id="stats"></span>/*REVIEWER_INPUT*/
+    <button data-filter="all" class="on">/*T_ALL*/</button>
+    <button data-filter="todo">/*T_TODO*/</button>
+    <button data-filter="disagree">/*T_DISAGREE*/</button>
+    <button id="fill">/*T_FILL*/</button>
+    <button id="export">/*T_EXPORT*/</button>
+    <button id="reset">/*T_RESET*/</button>
   </div>
 </header>
 <main>
@@ -80,10 +80,10 @@ const MOTIFS = [/*MOTIFS*/];
 const KEY = "/*KEY*/";
 let D = {};
 try { D = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { D = {}; }
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e) {} };
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e) {} };/*REVIEWER_JS*/
 let filter = "all", hovered = null;
 const el = (tag, cls, text) => { const x = document.createElement(tag); if (cls) x.className = cls; if (text !== undefined) x.textContent = text; return x; };
-const motifSelect = (value) => { const s = el("select"); for (const m of MOTIFS) { const o = el("option", "", m); o.value = m; s.appendChild(o); } s.value = value || "incertain"; return s; };
+const motifSelect = (value) => { const s = el("select"); for (const m of MOTIFS) { const o = el("option", "", m); o.value = m; s.appendChild(o); } s.value = value || "/*DEFAULT_MOTIF*/"; return s; };
 
 const refs = document.getElementById("refs");
 for (const r of REFS) { const f = el("figure"); const im = el("img"); im.src = r.i; im.loading = "lazy"; im.alt = r.f; f.appendChild(im); f.appendChild(el("figcaption", "", r.s + " · " + r.f)); refs.appendChild(f); }
@@ -95,11 +95,11 @@ for (const s of SCANS) { if (!bygroup.has(s.g)) bygroup.set(s.g, []); bygroup.ge
 for (const [g, list] of bygroup) {
   const sec = el("section", "group"); sec.dataset.g = g;
   const h = el("div", "ghead");
-  h.appendChild(el("h2", "", "Molécule " + g));
+  h.appendChild(el("h2", "", "/*T_MOLECULE*/ " + g));
   h.appendChild(el("span", "muted", list[0].s + " · " + list.length + " scan" + (list.length > 1 ? "s" : "")));
-  const all1 = el("button", "", "Tout → /*KEEP*/"); all1.onclick = () => { for (const s of list) setDecision(s.f, "/*KEEP*/"); };
-  const gm = motifSelect("incertain");
-  const all0 = el("button", "", "Tout → écarter"); all0.onclick = () => { for (const s of list) setDecision(s.f, "ecarte", gm.value); };
+  const all1 = el("button", "", "/*T_ALL_TO*/ /*KEEP*/"); all1.onclick = () => { for (const s of list) setDecision(s.f, "/*KEEP*/"); };
+  const gm = motifSelect("/*DEFAULT_MOTIF*/");
+  const all0 = el("button", "", "/*T_ALL_TO*/ /*DISCARD_VERB*/"); all0.onclick = () => { for (const s of list) setDecision(s.f, "/*DISCARD*/", gm.value); };
   h.append(all1, all0, gm); sec.appendChild(h);
   const grid = el("div", "cards");
   for (const s of list) grid.appendChild(makeCard(s));
@@ -114,16 +114,16 @@ function makeCard(s) {
   m.appendChild(el("span", "small", s.fr + " nm" + (s.fl ? " · " + s.fl : "")));
   c.appendChild(m);
   const sg = el("div", "meta");
-  const pill = el("span", "pill " + s.sg, "suggestion : " + (s.sg === "/*KEEP*/" ? "/*KEEP*/" : "écarter" + (s.sm ? " (" + s.sm + ")" : "")));
+  const pill = el("span", "pill " + s.sg, "/*T_SUGGESTION*/" + (s.sg === "/*KEEP*/" ? "/*KEEP*/" : "/*DISCARD_VERB*/" + (s.sm ? " (" + s.sm + ")" : "")));
   sg.appendChild(pill);
   if (s.n || s.sn) sg.appendChild(el("span", "small", [s.n, s.sn].filter(Boolean).join(" · ")));
   c.appendChild(sg);
   const a = el("div", "actions");
   const b1 = el("button", "", "/*KEEP_LABEL*/"); b1.onclick = () => setDecision(s.f, "/*KEEP*/");
   const sel = motifSelect(s.sm);
-  const b0 = el("button", "", "Écarter"); b0.onclick = () => setDecision(s.f, "ecarte", sel.value);
-  sel.onchange = () => { if ((D[s.f] || {}).d === "ecarte") setDecision(s.f, "ecarte", sel.value); };
-  const note = el("input"); note.placeholder = "note (facultatif)"; note.value = (D[s.f] || {}).n || "";
+  const b0 = el("button", "", "/*DISCARD_LABEL*/"); b0.onclick = () => setDecision(s.f, "/*DISCARD*/", sel.value);
+  sel.onchange = () => { if ((D[s.f] || {}).d === "/*DISCARD*/") setDecision(s.f, "/*DISCARD*/", sel.value); };
+  const note = el("input"); note.placeholder = "/*T_NOTE*/"; note.value = (D[s.f] || {}).n || "";
   note.onchange = () => { D[s.f] = Object.assign(D[s.f] || {}, { n: note.value }); save(); };
   const dis = el("span", "disagree");
   a.append(b1, b0, sel, note, dis); c.appendChild(a);
@@ -134,21 +134,21 @@ function makeCard(s) {
 
 function setDecision(f, d, motif) {
   if (d === null) { if (D[f]) { delete D[f].d; delete D[f].m; } }
-  else D[f] = Object.assign(D[f] || {}, { d, m: d === "ecarte" ? (motif || "incertain") : "" });
+  else D[f] = Object.assign(D[f] || {}, { d, m: d === "/*DISCARD*/" ? (motif || "/*DEFAULT_MOTIF*/") : "" });
   save(); paint(f); refresh();
 }
 function paint(f) {
   const k = cards[f], x = D[f] || {};
   k.c.classList.toggle("/*KEEP*/", x.d === "/*KEEP*/");
-  k.c.classList.toggle("ecarte", x.d === "ecarte");
-  k.b1.classList.toggle("on", x.d === "/*KEEP*/"); k.b0.classList.toggle("on", x.d === "ecarte");
-  if (x.d === "ecarte" && x.m) k.sel.value = x.m;
+  k.c.classList.toggle("/*DISCARD*/", x.d === "/*DISCARD*/");
+  k.b1.classList.toggle("on", x.d === "/*KEEP*/"); k.b0.classList.toggle("on", x.d === "/*DISCARD*/");
+  if (x.d === "/*DISCARD*/" && x.m) k.sel.value = x.m;
   k.dis.textContent = x.d && x.d !== k.s.sg ? "≠ suggestion" : "";
 }
 function refresh() {
   let n = 0, b = 0, e = 0;
-  for (const s of SCANS) { const d = (D[s.f] || {}).d; if (d) n++; if (d === "/*KEEP*/") b++; if (d === "ecarte") e++; }
-  document.getElementById("stats").textContent = `décidés ${n}/${SCANS.length} · /*KEEP*/ ${b} · écartés ${e}`;
+  for (const s of SCANS) { const d = (D[s.f] || {}).d; if (d) n++; if (d === "/*KEEP*/") b++; if (d === "/*DISCARD*/") e++; }
+  document.getElementById("stats").textContent = `/*T_DECIDED*/ ${n}/${SCANS.length} · /*KEEP*/ ${b} · /*T_DISCARDED*/ ${e}`;
   for (const s of SCANS) {
     const d = (D[s.f] || {}).d;
     const show = filter === "all" || (filter === "todo" && !d) || (filter === "disagree" && d && d !== s.sg);
@@ -162,17 +162,17 @@ document.getElementById("zoom").onclick = (ev) => { ev.currentTarget.style.displ
 for (const b of document.querySelectorAll("[data-filter]")) b.onclick = () => {
   filter = b.dataset.filter; for (const x of document.querySelectorAll("[data-filter]")) x.classList.toggle("on", x === b); refresh(); };
 document.getElementById("fill").onclick = () => { for (const s of SCANS) if (!(D[s.f] || {}).d) D[s.f] = Object.assign(D[s.f] || {}, { d: s.sg, m: s.sm }); save(); for (const s of SCANS) paint(s.f); refresh(); };
-document.getElementById("reset").onclick = () => { if (confirm("Effacer toutes les décisions de cette page ?")) { D = {}; save(); for (const s of SCANS) paint(s.f); refresh(); } };
-document.getElementById("export").onclick = () => {
-  const rows = ["file\tdecision\tmotif\tnote\tsuggestion"];
-  for (const s of SCANS) { const x = D[s.f] || {}; rows.push([s.f, x.d || "", x.d === "ecarte" ? (x.m || "") : "", (x.n || "").replace(/[\t\n]/g, " "), s.sg].join("\t")); }
+document.getElementById("reset").onclick = () => { if (confirm("/*T_CONFIRM*/")) { D = {}; save(); for (const s of SCANS) paint(s.f); refresh(); } };
+document.getElementById("export").onclick = () => {/*EXPORT_CHECK*/
+  const rows = ["file\tdecision\tmotif\tnote\tsuggestion"/*EXPORT_HEAD*/];
+  for (const s of SCANS) { const x = D[s.f] || {}; rows.push([s.f, x.d || "", x.d === "/*DISCARD*/" ? (x.m || "") : "", (x.n || "").replace(/[\t\n]/g, " "), s.sg/*EXPORT_COL*/].join("\t")); }
   const blob = new Blob([rows.join("\n") + "\n"], { type: "text/tab-separated-values" });
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "/*DOWNLOAD*/"; a.click();
 };
 document.addEventListener("keydown", (ev) => {
   if (!hovered || ev.target.tagName === "INPUT" || ev.target.tagName === "SELECT") return;
-  if (ev.key === "b") setDecision(hovered.f, "/*KEEP*/");
-  else if (ev.key === "e") setDecision(hovered.f, "ecarte", cards[hovered.f].sel.value);
+  if (ev.key === "/*KEY_KEEP*/") setDecision(hovered.f, "/*KEEP*/");
+  else if (ev.key === "/*KEY_DISCARD*/") setDecision(hovered.f, "/*DISCARD*/", cards[hovered.f].sel.value);
   else if (ev.key === "u") setDecision(hovered.f, null);
 });
 for (const s of SCANS) paint(s.f);

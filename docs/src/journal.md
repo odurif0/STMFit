@@ -1670,6 +1670,23 @@ aggregates, cut molecules and non-chitosan objects stay out.
     crossing a step, chains with a bright end blob (possible adsorbate,
     `260218_021`–`038`), a faint parallel ghost (double tip), and a few
     long irregular chains.
-- **Next.** The user reviews the page and exports the decisions. They are
-  then applied to the table (set `10_20mer_application` for kept scans) and
-  the sets are rebuilt. Only after that comes step 3, the application run.
+- **English page for colleagues** (same day, at the user's request).
+  - The `10_20mer` profile is now in English: interface, motifs
+    (`not_chitosan`, `cut_chain`, `folded_or_crossed`, `several_objects`,
+    `short_fragment`, `tip_artifact`, `no_molecule`, `uncertain`), decisions
+    `keep`/`discard`, tile titles, and a guide to the 4 nm length criterion.
+  - A "Your name" field is required for export and written in a `reviewer`
+    column, so the files of several reviewers can be merged.
+  - The first-pass notes were translated into
+    `results/data_review/suggestions_candidates_10_20mer_en.tsv`.
+  - The page is in `results/data_review/10_20mer_candidates_review_en/`.
+    pngquant compression takes it from 203 to 55 MB; a README for the
+    reviewers is included, and `10_20mer_candidates_review_en.zip` is ready
+    to share.
+  - The 6-mer page still renders byte-identically to the original.
+  - The images are unpublished raw data, shared only within the group.
+- **Next.** The reviewers export their decisions. These are merged (the
+  English motifs map to the table's French codes; disagreements are
+  listed) and applied to the table (set `10_20mer_application` for kept
+  scans), then the sets are rebuilt. Only after that comes step 3, the
+  application run.
