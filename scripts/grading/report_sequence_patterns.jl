@@ -31,7 +31,8 @@
 # profile along the chain oriented by its longer alternating end. --subsets (file, subset, session, date dd.mm.yyyy)
 # describes the run's scans (subset, for example selection / short_chain /
 # target; a track takes its scans' majority subset). Manual comparison: N and units (better of the two
-# orientations, unreadable manual units excluded) for the scans read by hand.
+# orientations, unreadable manual units excluded) for the scans read by hand, against a
+# null that shuffles each scan's calls (composition kept).
 using STMFit.FrozenAssignment, STMFit.ReconstructedUnitAssignment
 using Dates, LinearAlgebra, Printf, Random, Statistics
 
@@ -155,6 +156,15 @@ function manual_agreement(calls, manual; flip=false)
     return best
 end
 
+"Summed agreement with the manual readings and its null: calls shuffled within each scan (composition and '?' kept)."
+function manual_null(calls, manuals, nperm, rng; flip=false)
+    total(cs) = sum(manual_agreement(c, m; flip).agree for (c, m) in zip(cs, manuals); init=0)
+    mix(c) = (d = copy(c); k = findall(>=(0), d); d[k] = shuffle(rng, d[k]); d)
+    null = [total(mix.(calls)) for _ in 1:nperm]
+    obs = total(calls)
+    return (null_mean=mean(null), p=mean(null .>= obs))
+end
+
 function pattern_main(args=ARGS)
     o = pattern_options(args)
     o === nothing && return println("report_sequence_patterns.jl --run DIR --subsets TSV --manual TSV --config TOML --outdir NEW_DIR [--campaign-gap-days 7] [--permutations 10000]")
@@ -242,7 +252,7 @@ function pattern_main(args=ARGS)
     end
     write_table(joinpath(out, "profile.tsv"), ["assignment", "position", "molecules", "class1"], prows)
     # manual readings
-    mrows = Dict{String,String}[]
+    mrows = Dict{String,String}[]; mcalls = Dict{String,Vector{Vector{Int8}}}(); mseqs = String[]
     for m in tsv(o["--manual"])
         f = m["file"]
         row = Dict("file" => f, "status" => m["status"], "manual" => m["sequence"], "manual_N" => string(length(m["sequence"])),
@@ -252,10 +262,12 @@ function pattern_main(args=ARGS)
             t = "track" * cons[f]["track"]
             row["N_scan"] = cons[f]["N_scan"]; row["N_final"] = string(final_n[f]); row["track"] = t
             row["subset"] = get(subset, f, "?")
+            m["status"] == "read" && push!(mseqs, m["sequence"])
             for (name, c) in vcat([("scan", trans_scan[idx]), ("transductive", trans[idx]), ("frozen", frozen[idx])],
                                   [(a, extra[a][idx]) for a in sort(collect(keys(extra)))])
                 row["calls_" * name] = seqstr(c)
                 if m["status"] == "read"
+                    push!(get!(mcalls, name, Vector{Int8}[]), c)
                     a = manual_agreement(c, m["sequence"]); row["agree_" * name] = "$(a.agree)/$(a.compared)"
                     a = manual_agreement(c, m["sequence"]; flip=true); row["agreeflip_" * name] = "$(a.agree)/$(a.compared)"
                 end
@@ -287,11 +299,17 @@ function pattern_main(args=ARGS)
         nex = count(r -> parse(Int, r["N_final"]) == parse(Int, r["manual_N"]), read)
         n1 = count(r -> abs(parse(Int, r["N_final"]) - parse(Int, r["manual_N"])) <= 1, read)
         println(io, "$(length(read)) read scans in the run; final N equals the manual length in $nex, within one in $n1.\n")
-        println(io, "| calls | agreement, manual as written | agreement, manual 0/1 inverted |"); println(io, "|---|---|---|")
+        println(io, "Null: calls shuffled within each scan ($nperm shuffles, composition kept); p = P(null ≥ observed).\n")
+        println(io, "| calls | agreement, manual as written | null mean | p | agreement, manual 0/1 inverted | null mean | p |")
+        println(io, "|---|---|---|---|---|---|---|")
+        mrng = MersenneTwister(2)
         for a in vcat(["scan", "transductive", "frozen"], sort(collect(keys(extra))))
+            isempty(read) && break
             tot(k) = (v = [parse.(Int, split(r[k], "/")) for r in read]; (sum(first.(v)), sum(last.(v))))
             x = tot("agree_" * a); y = tot("agreeflip_" * a)
-            @printf(io, "| %s | %d/%d (%.0f%%) | %d/%d (%.0f%%) |\n", a, x[1], x[2], 100x[1] / x[2], y[1], y[2], 100y[1] / y[2])
+            nx = manual_null(mcalls[a], mseqs, nperm, mrng); ny = manual_null(mcalls[a], mseqs, nperm, mrng; flip=true)
+            @printf(io, "| %s | %d/%d (%.0f%%) | %.1f | %.3f | %d/%d (%.0f%%) | %.1f | %.3f |\n", a, x[1], x[2], 100x[1] / x[2],
+                    nx.null_mean, nx.p, y[1], y[2], 100y[1] / y[2], ny.null_mean, ny.p)
         end
         println(io, "\n## Manual readings\n")
         println(io, "| file | manual | N final | per-scan calls | agree | final (transductive) | agree | frozen | agree |")

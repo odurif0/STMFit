@@ -52,7 +52,10 @@ the chain over repeated scans (2026-10-04).
 - 10–20mer test run (2026-10-21, 440 scans): the predicted unit order does
   not match the 15 manual readings beyond chance once composition is
   accounted for. The only robust structure is the edge signature (terminal
-  units in the dimmer class 0, alternation near both ends).
+  units in the dimmer class 0, alternation near both ends). Against 16
+  acetylation readings by the experimenters (2026-10-22, untracked), no
+  assignment recovers the order beyond a composition-preserving shuffle, and
+  the readings have no end effect: the edge signature is positional.
 - 10–20mer provenance (2026-10-22): the files are authentic copies of the
   share folder `Chitosan_10_20mer`, but nothing in the data documents the
   deposited compound. The "manual sequences" encode ring orientation, not
@@ -1905,3 +1908,43 @@ aggregates, cut molecules and non-chitosan objects stay out.
 - **10–20mer targets.** The 25 targets are the scans of the former STMFit
   `10_20mer_analysis` run. A copy of those outputs (counts and plots) sits
   in the experimenters' share, so it is not an independent reading.
+
+### 2026-10-22 — 10–20mer: comparison with the experimenters' acetylation readings
+
+- **Source.** At the user's request, the experimenters' 10–20mer analysis
+  folder was copied to `data/raw/notes/10_20mer_analysis/` (untracked,
+  unpublished).
+  - `final_results.md`/`.tsv` and the 25 `*_best.png` are outputs of the
+    former STMFit `10_20mer_analysis` run (the 25 targets), not an
+    independent reading.
+  - The deck `Corrected 10-20mer.pptx` holds manual acetylation readings of
+    18 molecules (DP, DA and sequence). Its DA is the fraction of 1s and the
+    molar mass from DP and DA matches the mass spectrum, so 1 = GlcNAc.
+    These are the first acetylation labels for the 10–20mers.
+  - They are in the local table `acetylation_readings.tsv` (grading side
+    only). One scan holds several molecules and is not compared, and one is
+    not in the run, which leaves 16.
+- **Report change.** `report_sequence_patterns.jl` now tests the manual
+  agreement against a null that shuffles each scan's calls (composition
+  kept). The 2026-10-21 statement "at chance once composition is accounted
+  for" is now reproducible; its tables are unchanged.
+- **Results** (run `app1020_5b706ca`, 10,000 shuffles; output in
+  `data/raw/notes/10_20mer_analysis/comparison_app1020_5b706ca/`).
+  - **Counting.** The final N equals the read length in 4 of 16 scans and is
+    within one in 14.
+  - **Bright class read as GlcN.** 64–67% of units agree, but the null gives
+    76–85 of 128 (p 0.08–0.68).
+  - **Bright class read as GlcNAc.** 45–49%, below the null (p ≥ 0.88).
+  - No assignment (per-scan, transductive, frozen per campaign, frozen 6-mer
+    model) recovers the acetylation order. The apparent preference for
+    "bright = GlcN" comes from composition: class 1 is the minority class,
+    like GlcN in the readings.
+  - **Ends.** The readings show no end effect: the GlcNAc fraction at the
+    chain ends equals the interior one. The calls put the dim class at the
+    ends (class-1 fraction 0.22 at the ends vs 0.30 inside for the
+    transductive calls, 0.09 vs 0.45 for the 6-mer model). The edge
+    signature is positional, not chemical.
+- **Reading.** On these 16 molecules the method gives counts close to the
+  manual ones but no acetylation information beyond composition. Better unit
+  calls need new information, not another classifier variant (open
+  question 7).

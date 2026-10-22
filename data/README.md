@@ -10,7 +10,9 @@ data/
   raw/           one copy of every raw file, by sample then session; never edited
     NKN2/<session>/      6-mer (NKN)2: Cu(100) 2024 and 2025, Ag(111) 2025
     10_20mer/<session>/  10-20mer sessions, Cu(100) and Ag(111)
-    notes/               SequenceAnalysis.xlsx, manual annotations, slides, profiles
+    notes/               SequenceAnalysis.xlsx, manual annotations, slides, profiles;
+                         10_20mer_analysis/: the experimenters' acetylation readings
+                         (deck, local table acetylation_readings.tsv, never tracked)
   sets/          working sets: relative symlinks into raw/ (generated)
     6mer_Cu100_benchmark/    benchmark scans (493: the 145-scan graded cohort,
                              240310_Cu100009, 347 added on 2026-10-19)
