@@ -10,7 +10,7 @@
 # the motifs, the language and the window size (6mer, the default: French,
 # sets 6mer_Cu100_candidates / 6mer_Cu100_benchmark, decisions
 # benchmark|ecarte, 8 nm; 10_20mer: English for several reviewers, sets
-# 10_20mer_candidates / 10_20mer_targets, decisions keep|discard, 16 nm, a
+# 10_20mer_candidates / 10_20mer_curated, decisions keep|discard, 16 nm, a
 # reviewer name exported with every decision).
 #
 # Takes the scans of the candidate set and groups repeat scans of one
@@ -47,9 +47,9 @@ const PROFILES = Dict(
             "  Écarter les fragments, agrégats, molécules coupées, images dominées par un artefact, et ce qui n'est pas du chitosan.",
             "  On juge l'image, jamais les sorties de la méthode. Raccourcis : survoler une carte puis <b>b</b> (benchmark), <b>e</b> (écarter), <b>u</b> (annuler).</p>"], "\n"))),
     # English page for several reviewers: each enters a name, exported with every decision.
-    "10_20mer" => (candidates="10_20mer_candidates", reference="10_20mer_targets", keep="keep", keep_label="Keep",
+    "10_20mer" => (candidates="10_20mer_candidates", reference="10_20mer_curated", keep="keep", keep_label="Keep",
         window_nm=16.0, title="10–20mer candidates", key="stmfit_10_20mer_candidates_en_v1", download="triage_decisions_10_20mer.tsv",
-        refs_title="Reference: one 10–20mer target per session",
+        refs_title="Reference: one scan per session that the experimenters selected",
         motifs=["not_chitosan", "cut_chain", "folded_or_crossed", "several_objects", "short_fragment",
                 "tip_artifact", "no_molecule", "uncertain"],
         header=join(["  <h1>Chitosan 10–20mer scans on Cu(100): triage for the application</h1>",

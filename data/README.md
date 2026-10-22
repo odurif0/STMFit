@@ -16,7 +16,9 @@ data/
   sets/          working sets: relative symlinks into raw/ (generated)
     6mer_Cu100_benchmark/    benchmark scans (493: the 145-scan graded cohort,
                              240310_Cu100009, 347 added on 2026-10-19)
-    10_20mer_targets/        the 25 unknown 10-20mer targets
+    10_20mer_curated/        the 19 usable 10-20mer scans selected by the
+                             experimenters (2026-10-22): the working set
+    10_20mer_targets/        11 former targets that no experimenter selected
     10_20mer_candidates/     usable Cu(100) 10-20mer scans awaiting the visual
                              review (2026-10-21)
 ```
@@ -28,7 +30,11 @@ data/
   - `benchmarks/chitosan_6mer_cu100_triage.tsv` holds one row per 6-mer Cu(100)
     scan. A non-empty `set` places the scan in that set; an empty `set` means
     discarded, and `motif` says why. Discarded scans get no folder.
-  - `benchmarks/chitosan_10_20mer_targets.tsv` lists the 10-20mer targets.
+  - `benchmarks/chitosan_10_20mer_curated.tsv` lists the scans the
+    experimenters selected: `10_20mer_curated` (usable) or set aside with a
+    motif (several molecules, cut chain, broken molecule).
+  - `benchmarks/chitosan_10_20mer_targets.tsv` lists the 11 remaining former
+    targets.
   - `benchmarks/chitosan_10_20mer_cu100_triage.tsv` holds one row per other
     Cu(100) 10-20mer scan: `10_20mer_candidates` (usable, to review) or
     discarded with a motif (overview, cut by the frame, unreadable).
@@ -37,7 +43,7 @@ data/
   ```bash
   julia -t 4 --project=. scripts/grading/report_data_sets.jl --data data \
       --table benchmarks/chitosan_6mer_cu100_triage.tsv --table benchmarks/chitosan_10_20mer_targets.tsv \
-      --table benchmarks/chitosan_10_20mer_cu100_triage.tsv
+      --table benchmarks/chitosan_10_20mer_cu100_triage.tsv --table benchmarks/chitosan_10_20mer_curated.tsv
   ```
 
   This rewrites `sets/` and `INDEX.tsv` (about 40 s). It refuses to run if a

@@ -40,7 +40,8 @@ the chain over repeated scans (2026-10-04).
   `10_20mer/<session>`, `notes/`).
 - Working sets are links in `data/sets/`: `6mer_Cu100_benchmark` (493 =
   145 graded + `240310_Cu100009` + 347 candidates validated by the user on
-  2026-10-19) and `10_20mer_targets` (25).
+  2026-10-19), `10_20mer_curated` (19, since 2026-10-22) and
+  `10_20mer_targets` (11 former targets in no experimenter list).
 - `data/INDEX.tsv` lists 3,101 raw scans with their decision.
 - The sets and the index are rebuilt from the tables in `benchmarks/` by
   `scripts/grading/report_data_sets.jl`.
@@ -48,7 +49,11 @@ the chain over repeated scans (2026-10-04).
 - 10–20mers (2026-10-21): 874 usable Cu(100) scans are in
   `data/sets/10_20mer_candidates` for the user's review (first pass: 279
   kept, 595 discarded), with the decisions in
-  `benchmarks/chitosan_10_20mer_cu100_triage.tsv`.
+  `benchmarks/chitosan_10_20mer_cu100_triage.tsv`. The user finds them
+  mostly unusable. Since 2026-10-22 the working set is
+  `data/sets/10_20mer_curated`: the 19 usable scans the experimenters
+  selected (`benchmarks/chitosan_10_20mer_curated.tsv`); 865 candidates
+  remain.
 - 10–20mer test run (2026-10-21, 440 scans): the predicted unit order does
   not match the 15 manual readings beyond chance once composition is
   accounted for. The only robust structure is the edge signature (terminal
@@ -1948,3 +1953,41 @@ aggregates, cut molecules and non-chitosan objects stay out.
   manual ones but no acetylation information beyond composition. Better unit
   calls need new information, not another classifier variant (open
   question 7).
+
+### 2026-10-22 — 10–20mer working set: the experimenters' selection (19 scans)
+
+- **Why.** The user's partial review finds the bulk 10–20mer candidates
+  mostly unusable (not chitosan, fragments, several objects). The user asked
+  for the experimenters' exploitable list instead, even if much shorter.
+- **Sources** (searched read-only: the group chat and the experimenters'
+  share). No complete list is published. Three partial selections exist:
+  - their acetylation readings (corrected slide deck): 18 molecules in 17
+    scans, one scan with several molecules, one broken molecule;
+  - their January 2026 slides on the December sessions: 8 scans, 4 with
+    acetyls read and 4 with lengths only;
+  - the third-party list of `benchmarks/chitosan_10_20mer_manual_sequences.tsv`
+    (19 scans, 15 read and 4 rejected), which is also the experimenters'
+    folder of 19 scans.
+  - The chat mentions larger January and February selections whose lists
+    are not available.
+- **Union: 23 scans**, in `benchmarks/chitosan_10_20mer_curated.tsv`.
+  - 19 are usable (`10_20mer_curated`): 17 with an acetylation reading (two
+    possibly fragments), 1 with a length only (`251210_029`), and 1 read
+    only by the third party (`251206_013`).
+  - 4 are set aside: `251206_019` and `260222_010` (several molecules in the
+    frame, while the method analyses one chain per scan), `251212_011` (cut
+    chain, user's triage) and `260221_044` (broken molecule, per the
+    experimenters).
+- **Former targets.** 14 of the 25 targets are in the selection. The other
+  11 are in no experimenter list (they came from the former STMFit analysis
+  folder). They stay in `chitosan_10_20mer_targets.tsv` (set
+  `10_20mer_targets`) and are not part of the working set.
+- **Tables.** The 23 rows left the targets table (11 rows remain) and the
+  triage table (9 candidates left, 865 remain). `data/sets/10_20mer_curated`
+  holds 19 links, and `INDEX.tsv` was rebuilt. The review page now takes its
+  reference tiles from the curated set; the page itself was not regenerated.
+- **Coverage.** 18 of the 19 usable scans were in run `app1020_5b706ca`
+  (`260221_056` was not); 16 of them carry acetylation readings (previous
+  entry).
+- **Next.** Ask the experimenters for their complete January and February
+  selections, then run the method on the curated set only.

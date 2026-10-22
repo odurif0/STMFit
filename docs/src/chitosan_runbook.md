@@ -123,7 +123,10 @@ reproduce ([journal](journal.md)).
    `scripts/data/catalog_sxm_candidates.jl` for the technical status, then
    `scripts/grading/report_candidate_review.jl --profile 10_20mer` for the
    review page of the usable scans (decisions go to
-   `benchmarks/chitosan_10_20mer_cu100_triage.tsv`).
+   `benchmarks/chitosan_10_20mer_cu100_triage.tsv`). The working set is
+   `data/sets/10_20mer_curated` (19 scans the experimenters selected,
+   `benchmarks/chitosan_10_20mer_curated.tsv`, 2026-10-22); the bulk
+   candidates are mostly unusable.
 1. Collect repeat-scan candidates of the target molecules (headers only):
    ```bash
    julia --project=. scripts/data/collect_repeat_scans.jl --targets targets.txt \

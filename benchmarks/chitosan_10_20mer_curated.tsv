@@ -1,0 +1,29 @@
+# 10-20mer scans selected by the experimenters themselves (2026-10-22): their acetylation readings (slide decks of January
+# and after February 2026) and the third-party list of benchmarks/chitosan_10_20mer_manual_sequences.tsv. The readings are not
+# in the repository. set: 10_20mer_curated = usable working set; empty = not usable here, for the reason in motif (one
+# chain per scan is analysed, so frames with several molecules are set aside). The experimenters' complete January and
+# February selections are not available yet. These rows left the targets and triage tables. raw: path under data/raw/.
+file	session	set	motif	source	note	sha256	raw
+251206_013.sxm	Cu100LHe06122025	10_20mer_curated		experimenters	read by the third party only (ring orientation, benchmarks/chitosan_10_20mer_manual_sequences.tsv)	0d8feee45bc4f72625c7a31270ba5cfd02eb37294941aeafd74dae7ae9fd60eb	10_20mer/Cu100LHe06122025/251206_013.sxm
+251206_014.sxm	Cu100LHe06122025	10_20mer_curated		experimenters	acetylation sequence read by the experimenters	cc1df3702a0c40d8e416d5cd60717995ab3ffa3a4b9912ba226d6bf4610f763b	10_20mer/Cu100LHe06122025/251206_014.sxm
+251206_019.sxm	Cu100LHe06122025		several_molecules	experimenters	four molecules in the frame; the experimenters read their lengths only	edc1f991e9ef82502e72ba1f4a872f4e970f4f2675f37d2858cf524cbf0c4356	10_20mer/Cu100LHe06122025/251206_019.sxm
+251206_034.sxm	Cu100LHe06122025	10_20mer_curated		experimenters	acetylation sequence read by the experimenters	3c43f396474cc368da04761b00207621e1d381ecd8328ad5716c91695e53619a	10_20mer/Cu100LHe06122025/251206_034.sxm
+251206_038.sxm	Cu100LHe06122025	10_20mer_curated		experimenters	acetylation sequence read by the experimenters	9a14683c27fa46ac4348fdf5f0637d2692cf8d2d8b97a39a7dae977f2a88a9d1	10_20mer/Cu100LHe06122025/251206_038.sxm
+251210_018.sxm	Cu100LHe10122025	10_20mer_curated		experimenters	acetylation sequence read by the experimenters	e8ea50f8f653067d2daff76a33dd912e3042d2d7277a2e711c8d302974586d98	10_20mer/Cu100LHe11122025/Cu100LHe10122025/251210_018.sxm
+251210_025.sxm	Cu100LHe10122025	10_20mer_curated		experimenters	acetylation sequence read by the experimenters	ac2da25f48898a011eb39445f9a3c772224481ba23b6b6a11d812cfcdb8bb41f	10_20mer/Cu100LHe11122025/Cu100LHe10122025/251210_025.sxm
+251210_029.sxm	Cu100LHe10122025	10_20mer_curated		experimenters	length read by the experimenters (acetyls not visible)	c9e5a60a200278c20554779596a71aa6d7f6b813a0af15690c513f277842e293	10_20mer/Cu100LHe11122025/Cu100LHe10122025/251210_029.sxm
+251212_011.sxm	Cu100LHe12122025		cut_chain	experimenters	user triage 2026-10-22; the experimenters read a length (acetyls not visible)	63d5afc093349c546c62a9fab57737c366bccec89922944e5ab17d9518572d6b	10_20mer/Cu100LHe12122025/251212_011.sxm
+260115_016.sxm	Cu100LHe15012026	10_20mer_curated		experimenters	acetylation sequence read by the experimenters	f829d43d3165e94e3e8897edcfc94f68e3063eb9b304047cb3ff7155a19284ec	10_20mer/Cu100LHe15012026/260115_016.sxm
+260115_040.sxm	Cu100LHe15012026	10_20mer_curated		experimenters	acetylation sequence read by the experimenters	31a8c6caf16e83833cff265f58133c0a153b2173698d2f10acb89a8053ae6e25	10_20mer/Cu100LHe15012026/260115_040.sxm
+260116_040.sxm	Cu100LHe16012026	10_20mer_curated		experimenters	acetylation sequence read by the experimenters	f7d1404d6fb61d9dce3a9994ed571629c7d847138e98d60e65d01cead643a8c7	10_20mer/Cu100LHe16012026/260116_040.sxm
+260130_027.sxm	Cu100LHe30012026	10_20mer_curated		experimenters	acetylation sequence read by the experimenters; possibly a fragment	49b3a5c5f9abf4d6a5aa4cfa0b7f130de47b982a7ab3bd4e2da145755f2e3c15	10_20mer/Cu100LHe30012026/260130_027.sxm
+260220_030.sxm	Cu100LHe20022026	10_20mer_curated		experimenters	acetylation sequence read by the experimenters	e8318b8bef2de603333b735c48ca6b98b1cbad8c7b93dbf759eb9e4d9eb8fa51	10_20mer/Cu100LHe20022026/260220_030.sxm
+260220_083.sxm	Cu100LHe20022026	10_20mer_curated		experimenters	acetylation sequence read by the experimenters	178969e8521b898fb2aa9b930ae204a345c3e9a1a71b31ec0041e500ae8b6644	10_20mer/Cu100LHe20022026/260220_083.sxm
+260221_044.sxm	Cu100LHe21022026		broken_molecule	experimenters	probably broken, not worth using (experimenters)	27cb0e49d2ea016b4d20dd03c91f5505864f1c0569e8eea0b5d05632d7085648	10_20mer/Cu100LHe21022026/260221_044.sxm
+260221_056.sxm	Cu100LHe21022026	10_20mer_curated		experimenters	acetylation sequence read by the experimenters	3086e7196b9d70bfd2c0bbdcce0aeca06c12d2260a704e9ecdc52ba52b97e13b	10_20mer/Cu100LHe21022026/260221_056.sxm
+260222_010.sxm	Cu100LHe22022026		several_molecules	experimenters	two or more molecules in the frame, one probably broken (experimenters)	b4e141358971ab00f6ff9d7599843b0f14b13b74d845355f1671e7dc9cef510a	10_20mer/Cu100LHe22022026/260222_010.sxm
+260222_017.sxm	Cu100LHe22022026	10_20mer_curated		experimenters	acetylation sequence read by the experimenters	b492db6bd98efc4ee3b65fef15f64cd59d251f70f099dfa5fce31f02ea51756c	10_20mer/Cu100LHe22022026/260222_017.sxm
+260222_040.sxm	Cu100LHe22022026	10_20mer_curated		experimenters	acetylation sequence read by the experimenters	97e08b444bd43d7d6f2d3130a7440939c6045d97d21a24923c6d50857a83fd57	10_20mer/Cu100LHe22022026/260222_040.sxm
+260222_043.sxm	Cu100LHe22022026	10_20mer_curated		experimenters	acetylation sequence read by the experimenters; possibly a fragment	f26b08fe5ab86baf0ab8f8883fab3565709ab094d2c8e748483414da4116f686	10_20mer/Cu100LHe22022026/260222_043.sxm
+260222_070.sxm	Cu100LHe22022026	10_20mer_curated		experimenters	acetylation sequence read by the experimenters	108b6202926013527c7e5681e165c1836186d6c8b5e4dd108b42412c20f15094	10_20mer/Cu100LHe22022026/260222_070.sxm
+260222_082.sxm	Cu100LHe22022026	10_20mer_curated		experimenters	acetylation sequence read by the experimenters	e70f63e63ba5f6a5f7e513d571233a03cdaf77ca7be1ed5bab4cfee7d370904f	10_20mer/Cu100LHe22022026/260222_082.sxm

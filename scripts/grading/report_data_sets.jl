@@ -3,7 +3,8 @@
 #
 # Usage:
 #   julia -t 4 --project=. scripts/grading/report_data_sets.jl --data data \
-#       --table benchmarks/chitosan_6mer_cu100_triage.tsv --table benchmarks/chitosan_10_20mer_targets.tsv
+#       --table benchmarks/chitosan_6mer_cu100_triage.tsv --table benchmarks/chitosan_10_20mer_targets.tsv \
+#       --table benchmarks/chitosan_10_20mer_cu100_triage.tsv --table benchmarks/chitosan_10_20mer_curated.tsv
 #
 # DATA/raw/ holds one copy of every raw file, by sample and session. Each
 # table (columns file, set, motif, source, note, sha256, raw; one row per
