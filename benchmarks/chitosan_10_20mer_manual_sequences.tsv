@@ -1,5 +1,7 @@
-# Manual sequence readings of 10-20mer scans (data/raw/notes/SequenceAnalysis.xlsx, sheet Data; read by eye, non-reducing
-# to reducing end; 1/0 as in the sheet, ? = unreadable unit). External labels for comparison only: no method code reads this.
+# Manual sequence readings of 10-20mer scans by a third party (data/raw/notes/SequenceAnalysis.xlsx, sheet Data, and the
+# slides data/raw/notes/_KA_SOLVE.pptx), non-reducing to reducing end. Per the slides, 1 = bright blob = "3H-up" and
+# 0 = dimmer blob = "2H-up": ring orientation states of the units (labelled "Glc"), NOT GlcNAc/GlcN; ? = unreadable unit.
+# Not acetylation labels: no comparison with the GlcN/GlcNAc assignment is meaningful. No method code reads this.
 # status: read or reject (image rejected by the reader).
 file	sequence	status
 260115_016.sxm	1010111	read

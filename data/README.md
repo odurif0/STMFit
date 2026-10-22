@@ -60,7 +60,11 @@ data/
 - Substrate in `INDEX.tsv` comes from the session name (`Cu100`, `Ag111`); it
   stays empty for `10_20mer/CuLHe03262026_depo2`, whose name gives no facet.
 - `raw/10_20mer` keeps the files of the original tree, including derived
-  `.pkl`/`.npy`/`.pysxm` and one `- Copy` duplicate, listed as such.
+  `.pkl`/`.npy`/`.pysxm` and one `- Copy` duplicate, listed as such. It is
+  identical (names, sizes; 6503 files, checked 2026-10-22) to the share
+  folder `STM_DATA/Chitosan_10_20mer`. The deposited compound is not
+  documented in the files (empty header comments); see the journal,
+  2026-10-22.
 - The review sheets of the first triage pass are in
   `results/data_review/6mer_Cu100_first_pass_20261005/`.
 - On Viper, the staged copies are temporary:

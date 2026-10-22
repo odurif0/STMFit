@@ -47,6 +47,12 @@ the chain over repeated scans (2026-10-04).
   not match the 15 manual readings beyond chance once composition is
   accounted for. The only robust structure is the edge signature (terminal
   units called GlcN, alternation near both ends).
+- 10–20mer provenance (2026-10-22): the files are authentic copies of the
+  share folder `Chitosan_10_20mer`, but nothing in the data documents the
+  deposited compound. The "manual sequences" encode ring orientation, not
+  acetylation. The user's partial triage keeps few scans outside December
+  and January. The application is on hold until the sample is
+  identified.
 - The grading manifest is still the 145-scan
   `chitosan_6mer_counting_confirmed.toml`. The additions are graded in step
   1.5.
@@ -1751,9 +1757,9 @@ aggregates, cut molecules and non-chitosan objects stay out.
   - **Length.** The final N equals the manual length for 6 scans and is
     within one for 13. `251206_013` stays at 4 (manual 12).
   - **Convention.** Per-unit agreement is 43–49% with the readings as
-    written and 63–70% with 0/1 inverted. The manual convention is not
-    documented: the composition (about 75% "1" in the readings) suggests
-    the readings' 1 is the dimmer unit, the method's 0.
+    written and 63–70% with 0/1 inverted. (Corrected on 2026-10-22: the
+    readings encode ring orientation, 1 = bright "3H-up", not GlcNAc/GlcN;
+    see the provenance entry.)
   - **Order.** In both conventions the agreement is at chance level against
     a composition-preserving shuffle of the calls. For example, the
     transductive calls with the inverted convention give 83 observed vs 83
@@ -1771,3 +1777,65 @@ aggregates, cut molecules and non-chitosan objects stay out.
 - **Not done.** No parameter was changed; this is a test of the promoted
   method plus label-free frozen variants. The meaning of 0/1 in the manual
   sheet is a question for the user.
+
+### 2026-10-22 — 10–20mer provenance check: authentic files, unverified sample
+
+- **Trigger.** After a partial visual triage, the user doubts that many of
+  the imaged molecules are chitosan, and questions the provenance of the
+  files.
+- **User's partial triage** (`/home/durif/tmp/triage_decisions_10_20mer.tsv`,
+  reviewer olivier; 362 of 874 cards decided).
+  - 67 kept and 295 discarded. The discards include 72 "not chitosan" and
+    54 "uncertain", the latter often noted "what is this molecule?".
+  - The kept scans come from 6 and 10 December 2025 and 16 and 29 January
+    2026. Of the February sessions only 2 scans are kept. The 25 March
+    session has 25 "not chitosan".
+  - The user agrees with 311 of the assistant's first-pass suggestions and
+    disagrees with 51.
+- **Chain of custody.**
+  - `data/raw/10_20mer` is identical to the institute share folder
+    `STM_DATA/Chitosan_10_20mer`: 6503 files, same names and sizes.
+  - Every SXM header names that folder as the acquisition location
+    (`SCAN_FILE` and Nanonis session path
+    `Z:\DATA\STM\STM_DATA\Chitosan_10_20mer\<session>`).
+  - The imaging conditions match the (NKN)2 sessions: −0.3 V, 1 pA, same
+    instrument.
+  - There is no local mix-up: the files are what the instrument saved under
+    that project name.
+- **Sample identity is not documented in the data.**
+  - The header comments are empty in all 1637 SXM files, and the session
+    `.ini` files carry no sample note.
+  - Only the folder name says "chitosan 10–20mer".
+  - The share also holds other chitosan projects (`Chitosan`, `Mucor
+    chitosan 1`, `Random_chitosan_polymer_Fabian`) and many sugar or
+    glycan projects.
+- **The "manual sequences" are not acetylation labels** (correction of the
+  2026-10-21 entry).
+  - `SequenceAnalysis.xlsx` and the 25 targets come from a third-party
+    analysis, `data/raw/notes/_KA_SOLVE.pptx`.
+  - Its key reads: bright blob = "3H-up", dimmer blob = "2H-up", which are
+    ring orientation states. Units are labelled "Glc". It notes a
+    room-temperature deposition with fragmented dimers next to oligomers.
+  - So 1/0 there encode an orientation, not GlcNAc/GlcN. The 2026-10-21
+    comparison and the "inverted convention" were not meaningful; the
+    conclusion that unit order agrees only at chance level stands
+    regardless.
+  - The table header of `benchmarks/chitosan_10_20mer_manual_sequences.tsv`
+    now says so.
+- **Physical signature** (median lobe spacing per scan from the
+  2026-10-21 run, label-free).
+  - 6-mer benchmark: 0.597 nm.
+  - Closest: 10 December (0.598) and 29–31 January (0.58–0.61).
+  - Larger in most February sessions: 0.63–0.71 nm (18 February 0.683,
+    19 February 0.705).
+  - The sessions the user keeps are among the closest to the 6-mer
+    reference. Much of the February material is physically different
+    (another molecule, or another adsorption state).
+- **Consequence.**
+  - The 10–20mer application is on hold until the deposited sample is
+    identified: compound, supplier, DP and DA, deposition method and date,
+    from the lab notebook or the experimenter.
+  - A GlcN/GlcNAc assignment is meaningless on molecules that are not
+    chitosan.
+  - The triage table is unchanged, because the user's review is
+    incomplete.
