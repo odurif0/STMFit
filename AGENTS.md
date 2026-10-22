@@ -1,8 +1,8 @@
 # STMFit agent notes
 
 STMFit is a Julia repo for label-free reconstruction of chitosan chains from raw
-STM images: unit counting, positions, and GlcN/GlcNAc assignment with explicit
-uncertainty. Read `docs/src/journal.md` (current state, open questions,
+STM images: unit counting, positions, and a two-class unit assignment with
+explicit uncertainty (the chemical identity of the classes is not established). Read `docs/src/journal.md` (current state, open questions,
 rejected approaches) before changing scientific behavior. The full pre-2026-09-29
 history is at the tag `archive/pre-cleanup-20260929`.
 
@@ -14,7 +14,13 @@ history is at the tag `archive/pre-cleanup-20260929`.
   external grading/report scripts, all in `scripts/grading/`. Nothing in
   `scripts/pipeline/` or `src/` may read a label file.
 - Unit assignment has no composition prior. "Choose the top k lobes" is not a
-  valid label-free method. Cluster naming is physical (brighter = GlcNAc).
+  valid label-free method. Cluster naming is physical and chemically neutral:
+  class 1 = brighter (higher mean raw amplitude), class 0 = dimmer. Method code
+  does not call the classes GlcN/GlcNAc; the former rule "brighter = GlcNAc"
+  is contradicted by the 6-mer control (2026-10-22 journal entry).
+- NKNNKN: N = GlcNAc (N-acetyl), K = GlcN. The control has GlcNAc at
+  positions 1, 3, 4, 6 and GlcN at 2, 5; the truth strings `010010` mark the
+  GlcN.
 - GCV drives base model selection. BIC/AICc are diagnostics or guards because
   spatially correlated residuals make absolute iid information criteria
   unreliable. Do not reinterpret or retune the `n_eff = n ÷ 9` placeholder.
@@ -25,8 +31,9 @@ history is at the tag `archive/pre-cleanup-20260929`.
   Promoted configs are frozen; a change is a new declared experiment.
 - Keep benchmark and application claims separate: the 6-mer set has external
   labels; 10–20mer data do not. "Processed" or visually plausible is not
-  validation. NKNNKN confounds GlcNAc with edge adjacency, so benchmark
-  accuracy is not chemical validation.
+  validation. In NKNNKN the two GlcN sit next to the chain ends, so the
+  bright class coincides with both GlcN and edge adjacency; benchmark accuracy
+  is not chemical validation.
 - The DFT molds (`dft/molds/chitosan_cc_molds_native_v1.tsv`) are empirical
   templates from the accepted cubes (5e-5 Ry criterion). They keep a legacy
   cube addressing and read a signed LDOS quantity. Read

@@ -9,7 +9,12 @@
 #   file        SXM basename (e.g. 240817_002.sxm)
 #   sequence    ordered string of 0/1 along the chain (t_nm increasing, the
 #               code's PCA convention: "increasing y, then x").
-#               0 = GlcN (glucosamine), 1 = GlcNAc (N-acetyl-glucosamine).
+#               1 = GlcN (K, glucosamine), 0 = GlcNAc (N, N-acetyl-glucosamine).
+#               NKNNKN has GlcNAc at positions 1, 3, 4, 6 and GlcN at 2, 5.
+#               Until 2026-10-22 this line said 1 = GlcNAc (inverted); the
+#               strings and every grade are unchanged. Graders compare them
+#               with the method's class codes (class 1 = brighter cluster),
+#               so a grade measures bright <-> GlcN agreement.
 #               Length = N_selected (should match the fitted lobe count).
 #               Leave empty if the sequence is not yet available.
 #   quality     benchmark quality class (clean / clean_target / poor_quality)

@@ -1,7 +1,7 @@
 #!/usr/bin/env julia
 
 # ──────────────────────────────────────────────────────────────────────────────
-# grade_unit_assignment.jl — Grade GlcNAc/GlcN (0/1/?) unit assignment per lobe
+# grade_unit_assignment.jl — Grade the two-class (0/1/?) unit assignment per lobe
 #
 # This script evaluates predicted unit assignments against the ground-truth
 # sequence. It is INTENTIONALLY OUTSIDE the fitting/model-selection path:
@@ -10,7 +10,8 @@
 # grade_chitosan_benchmark.jl).
 #
 # Two conventions are reported:
-#   1. Physical (label-free): GlcNAc = highest-amplitude cluster. The 0↔1
+#   1. Physical (label-free): class 1 = highest-amplitude cluster, compared
+#      with truth 1 (for NKNNKN the two GlcN, N = GlcNAc, K = GlcN). The 0↔1
 #      flip is fixed by physics (amplitude), not by the truth. Only the
 #      sequence orientation (identity vs reverse) is tested (2 alignments).
 #   2. Oracle (supervised upper bound): best of 4 alignments (identity,
@@ -268,7 +269,7 @@ function _grade_one(pred_seq, truth_seq::Vector{Int}, alignment::String)
 end
 
 # Determine physical mapping: which label (0 or 1) corresponds to the
-# higher-amplitude cluster (GlcNAc). Returns a remapping function.
+# higher-amplitude cluster (class 1). Returns a remapping function.
 # This is label-free: it uses only the amplitude, not the truth.
 function _physical_remap(pred_rows::Vector{Dict{String,String}}, opt::GradeOptions)
     isempty(pred_rows) && return identity
@@ -287,7 +288,7 @@ function _physical_remap(pred_rows::Vector{Dict{String,String}}, opt::GradeOptio
         push!(get!(amps_by_label, label, Float64[]), amp)
     end
     mean_amp = Dict(k => sum(v) / length(v) for (k, v) in amps_by_label if !isempty(v))
-    # GlcNAc (label 1 in truth) = higher amplitude
+    # Class 1 (compared with truth 1) = higher amplitude
     labels = collect(keys(mean_amp))
     length(labels) < 2 && return identity
     high_label = first(sort(labels; by=k -> mean_amp[k], rev=true))
@@ -433,7 +434,7 @@ function main(args=ARGS)
     println("  classified:     ", physical_total, "/", n_possible,
             " (", _pct(physical_total, n_possible), ")")
     println()
-    println("  Physical convention (label-free, GlcNAc=amp max):")
+    println("  Physical convention (label-free, class 1 = amp max vs truth 1):")
     println("    per-blob accuracy: ", physical_correct, "/", physical_total,
             " (", _pct(physical_correct, physical_total), ")")
     println("    sequence match:    ", physical_seq_match, "/", n_files_graded)

@@ -5,7 +5,7 @@
 # This script is deliberately prediction-only: it never reads benchmark truth,
 # expected sequences, or composition priors. Cluster labels are mapped by the
 # physical convention already used by the grader: the higher-amplitude cluster is
-# GlcNAc (1). Use grade_unit_assignment.jl or report_unit_assignment_benchmark.jl
+# class 1 (brighter; no chemical name). Use grade_unit_assignment.jl or report_unit_assignment_benchmark.jl
 # only after this TSV has been written.
 
 using Clustering

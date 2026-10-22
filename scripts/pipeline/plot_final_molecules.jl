@@ -7,7 +7,7 @@
 #
 # Each plot shows the image the fit used (mean of the flattened forward and
 # backward Z scans) around the chain, the final lobes
-# (colour = final call, label = lobe index and P(GlcNAc)), their 2-sigma position
+# (colour = final call, label = lobe index and P(class 1)), their 2-sigma position
 # ellipses from positions.tsv, and a title with the final and per-scan counts,
 # the consensus rule, the call sequence and the confidence. Label-free: plots
 # go to all/ and to folders by consensus outcome (consensus_agrees,
@@ -22,7 +22,7 @@ using GaussianFit2D, STMSXMIO, Plots, Printf, TOML
 const G = GaussianFit2D
 
 const COLORS = Dict("0" => "#2166ac", "1" => "#d6604d", "?" => "#bdbdbd")
-const NAMES = Dict("0" => "GlcN (0)", "1" => "GlcNAc (1)", "?" => "uncertain (?)")
+const NAMES = Dict("0" => "dimmer (0)", "1" => "brighter (1)", "?" => "uncertain (?)")
 const CORRECTED = ("consensus_applied", "consensus_registered_roi")
 
 function plot_options(args)

@@ -31,7 +31,7 @@ function check_panel_content(sp)
     @test sp[:xaxis][:guide] == "x (nm)"
     @test sp[:yaxis][:guide] == "y (nm)"
     @test [a[3].str for a in sp[:annotations]] == ["0", "1", "?"]
-    @test [s[:label] for s in sp.series_list[2:4]] == ["GlcN (0)", "GlcNAc (1)", "uncertain (?)"]
+    @test [s[:label] for s in sp.series_list[2:4]] == ["dimmer (0)", "brighter (1)", "uncertain (?)"]
     @test [s[:markercolor] for s in sp.series_list[2:4]] ==
           [Plots.plot_color(c) for c in ("#2166ac", "#b2182b", "#8c8c8c")]
     @test all(s[:markersize] == 9 for s in sp.series_list[2:4])

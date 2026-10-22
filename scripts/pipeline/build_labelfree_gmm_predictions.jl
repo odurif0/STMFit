@@ -6,7 +6,7 @@
 # Per view: per-scan standardization (+ pairwise interactions), EM with a full
 # covariance (k-means start, ridge-regularized), hard Mahalanobis self-training,
 # Mahalanobis scoring, and physical naming (the component with the higher mean
-# raw amplitude is class 1, GlcNAc). Seeds are combined by a hard vote. With
+# raw amplitude is class 1, brighter). Seeds are combined by a hard vote. With
 # assignment_training_scans = "corroborated_counts", the mixture is learned only
 # on scans whose count agrees with the repeated-scan molecule consensus; every
 # scan is still standardized and assigned.

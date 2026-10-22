@@ -1,8 +1,11 @@
 # STMFit
 
 Label-free analysis of STM images of molecular chains (chitosan on Cu(100)):
-count the units of each chain, locate them, and assign each unit GlcN (0) or
-GlcNAc (1) with an explicit uncertainty, starting from raw Nanonis `.sxm` scans.
+count the units of each chain, locate them, and assign each unit to one of two
+physical classes (0 = dimmer, 1 = brighter) with an explicit uncertainty,
+starting from raw Nanonis `.sxm` scans. The chemical identity of the classes
+(GlcN or GlcNAc) is not established: on the 6-mer control the brighter class
+falls on the two GlcN (journal, 2026-10-22).
 
 ## Current method and benchmark result
 
@@ -27,7 +30,8 @@ benchmark label, expected count, sequence or class proportion:
    reported per-lobe uncertainty.
 
 Fresh raw-to-prediction run (Viper job 12042058, source `486ddec`), external
-grading on the 145-scan NKNNKN 6-mer benchmark (870 positions):
+grading on the 145-scan NKNNKN 6-mer benchmark (870 positions; N = GlcNAc,
+K = GlcN; "correct" means the brighter class falls on the two GlcN):
 
 | full145 own-N | Exact N /145 | Correct /870 | Exact chains /145 | Classified /870 | Errors |
 |---|---:|---:|---:|---:|---:|
@@ -38,11 +42,13 @@ grading on the 145-scan NKNNKN 6-mer benchmark (870 positions):
 All 145 counts are within one lobe. Since 2026-09-30 the fits are
 deterministic: identical runs give identical outputs. The earlier time-limited
 runs gave 772, 772, 772 and 769 correct, each with 88 exact chains and 137/145
-exact N. **Limits:** the NKNNKN control confounds
-GlcNAc with edge adjacency, so benchmark accuracy is not chemical validation.
-The assignment's benchmark signal is the contrast with the dimmer terminal
-lobe. Without it, the image features separate GlcNAc from GlcN only weakly
-(AUC ≤ 0.66) and the DFT molds not at all ([journal](docs/src/journal.md)).
+exact N. **Limits:** in the NKNNKN control the two GlcN sit next to the chain
+ends, so the brighter class coincides with both GlcN and edge adjacency, and
+benchmark accuracy is not chemical validation. The former naming rule
+"brighter = GlcNAc" is contradicted by the control. The assignment's benchmark
+signal is the contrast with the dimmer terminal lobe. Without it, amplitude is
+only weakly higher at GlcN than at interior GlcNAc (AUC ≤ 0.66) and the DFT
+molds barely separate them ([journal](docs/src/journal.md)).
 Exact chains come in molecule-sized blocks (43 of 88 from one 43-scan molecule).
 Only repeatedly imaged molecules are fused. The counting parameters keep their
 historical benchmark-informed provenance ([calibration](docs/src/calibration.md)).
@@ -116,7 +122,7 @@ julia --project=. test/runtests.jl --fast   # without the end-to-end run
 
 - [Pipeline](docs/src/pipeline.md): data flow, stages and outputs.
 - [Model selection](docs/src/selection.md): per-scan count selection and molecule consensus.
-- [Unit assignment](docs/src/unit_assignment.md): GlcN/GlcNAc assignment and fusion.
+- [Unit assignment](docs/src/unit_assignment.md): two-class unit assignment and fusion.
 - [Configuration](docs/src/config.md) and [Calibration](docs/src/calibration.md).
 - [Runbook](docs/src/chitosan_runbook.md): benchmark, grading and 10–20mer application.
 - [DFT molds](docs/src/qe_stm_molds.md) and [DFT calculation note](docs/src/dft_calculation_note.md).

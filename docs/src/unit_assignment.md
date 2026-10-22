@@ -1,20 +1,26 @@
-# Unit assignment (GlcN/GlcNAc per lobe)
+# Unit assignment (two classes per lobe)
 
-Chitosan is a β-(1→4) copolymer of GlcN (glucosamine, class 0) and GlcNAc
-(N-acetylglucosamine, class 1). Assigning every fitted lobe a class gives an
-ordered acetylation map of the chain. Counting (`N_selected`) and assignment are
-separate stages; assignment works at the final molecule-consensus counts.
+Chitosan is a β-(1→4) copolymer of GlcN (glucosamine, K) and GlcNAc
+(N-acetylglucosamine, N). The method assigns every fitted lobe one of two
+physical classes, 0 (dimmer) or 1 (brighter). Which class, if either, is GlcNAc
+is not established: on the NKNNKN control the brighter class falls on the two
+GlcN (positions 2 and 5), which are also the units next to the chain ends.
+Counting (`N_selected`) and assignment are separate stages; assignment works at
+the final molecule-consensus counts.
 
 ## Label-free rules
 
 - No benchmark label, control sequence (`NKNNKN`), expected count or class
   proportion enters features, learning, thresholds, abstention or fusion.
   Labels are read only by `grade_*`/`report_*` scripts.
-- No composition prior: rules such as "the two brightest lobes are GlcNAc" are
-  not label-free methods.
-- **Physical naming.** Clusters are unnamed until the cluster with the higher
-  mean raw amplitude is called GlcNAc (the acetyl group is larger). This
-  convention is fixed; the truth is never used to choose the 0↔1 flip.
+- No composition prior: rules such as "the two brightest lobes are class 1"
+  are not label-free methods.
+- **Physical naming.** The cluster with the higher mean raw amplitude is
+  class 1 (brighter), the other class 0. The truth is never used to choose the
+  0↔1 flip. Until 2026-10-22 class 1 was called GlcNAc ("the acetyl group is
+  larger") and the control's truth header said the same; the control has its
+  GlcNAc at positions 1, 3, 4, 6, so that naming was the inverse of what the
+  benchmark shows. The classes now carry no chemical name.
 
 ## Per-scan assignment (`scripts/pipeline/run_reconstructed_chitosan.jl`)
 
@@ -112,13 +118,16 @@ same fusion gives identical numbers.
 
 ## Limits
 
-1. **Edge-adjacency confound.** In NKNNKN both GlcNAc sit next to a chain end.
+1. **Edge-adjacency confound.** In NKNNKN both GlcN sit next to a chain end.
    The benchmark signal is the neighbour contrast with the dimmer terminal
    lobe (AUC 0.75 at positions 2–5). Referenced to non-terminal lobes only,
-   amplitude reaches AUC ≤ 0.66, while patch shape, the DFT molds and the
-   Fisher margin reach 0.41–0.57 (2026-09-30). The calls also move when end
-   lobes move by less than 0.1 nm. Fusion amplifies whatever the per-scan calls
-   detect; it neither creates nor removes this confound.
+   amplitude is higher at the GlcN than at the GlcNAc with AUC ≤ 0.66, while
+   patch shape, the DFT molds and the Fisher margin reach 0.41–0.57
+   (2026-09-30). The signed DFT mold margin (cost GlcN − cost GlcNAc), which
+   the method does not use, favours the GlcNAc mold slightly more at the
+   interior GlcNAc than at the GlcN (AUC 0.56–0.57, 2026-10-22). The calls also
+   move when end lobes move by less than 0.1 nm. Fusion amplifies whatever the
+   per-scan calls detect; it neither creates nor removes this confound.
 2. **Correlated exact chains.** Exact chains come in molecule-sized blocks.
 3. **Coverage of fusion.** Only repeatedly imaged molecules are fused.
 4. **Application.** On unknown 10–20mers the per-scan calls are inconsistent
@@ -127,6 +136,8 @@ same fusion gives identical numbers.
 
 ## Grading conventions
 
+The truth strings mark the two GlcN of NKNNKN with 1, so every grade measures
+how often the brighter class falls on the GlcN.
 `scripts/grading/grade_unit_assignment.jl` grades per lobe under the physical convention.
 It tests only the sequence orientation (identity/reverse), because the chain
 axis has an arbitrary direction. The supervised "oracle" convention (best of

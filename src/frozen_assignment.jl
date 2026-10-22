@@ -72,7 +72,7 @@ struct GMMSeed
     high::Int          # 0: physical naming failed, the seed does not vote
 end
 
-"Cohort-level parameters of the assignment; centers[v][s] is p x 2, high the GlcNAc cluster."
+"Cohort-level parameters of the assignment; centers[v][s] is p x 2, high the class-1 (brighter) cluster."
 struct FrozenModel
     kmeans_centers::Vector{Vector{Matrix{Float64}}}
     kmeans_high::Vector{Vector{Int}}
@@ -292,7 +292,7 @@ end
     train_frozen(data, train_rows, cfg; fusion=nothing)
 
 Learns k-means centroids, GMM components and their physical naming (higher
-mean raw amplitude = GlcNAc) on `train_rows` (indices into `data`). Settings
+mean raw amplitude = class 1) on `train_rows` (indices into `data`). Settings
 come from the assignment config `cfg` (seeds, selftrain, GMM numerics).
 Returns a FrozenModel without emission rates (theta0 = theta1 = NaN). With
 equal_weights, the GMM mixing weights are set to 1/2 after learning, for

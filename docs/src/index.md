@@ -1,9 +1,10 @@
 # STMFit
 
 STMFit reconstructs molecular chains from raw STM images without labels. It
-counts the units of each chain, locates them, and assigns each unit GlcN (0) or
-GlcNAc (1) with an explicit posterior uncertainty. The reference system is
-chitosan on Cu(100).
+counts the units of each chain, locates them, and assigns each unit to one of
+two physical classes (0 = dimmer, 1 = brighter) with an explicit posterior
+uncertainty. The chemical identity of the classes is not established. The
+reference system is chitosan on Cu(100).
 
 ## Current state (2026-09-29)
 
@@ -28,9 +29,10 @@ What this does and does not establish:
 - The counting parameters in `config/chitosan.toml` were historically chosen
   with benchmark grades. They are frozen, but they are not independently
   calibrated ([Calibration](calibration.md)).
-- NKNNKN places GlcNAc next to the chain ends, so edge adjacency and chemistry
-  are confounded. A control molecule with another sequence is needed for
-  chemical validation.
+- NKNNKN (N = GlcNAc, K = GlcN) places its two GlcN next to the chain ends.
+  The brighter class falls on them, which contradicts the former naming rule
+  "brighter = GlcNAc", and edge adjacency and chemistry are confounded. A
+  control molecule with another sequence is needed for chemical validation.
 - The unknown 10–20mer application runs, but its counts and calls are not
   validated ([Runbook](chitosan_runbook.md)).
 

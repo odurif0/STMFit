@@ -21,7 +21,7 @@
 #      inputs (assignment features other than emp_fisher, forward and backward
 #      patches) agree (invariance.tsv).
 # report.md summarises all three, with one vote per molecule, a paired
-# bootstrap over molecules (frozen minus transductive), the GlcNAc call rate
+# bootstrap over molecules (frozen minus transductive), the class-1 call rate
 # and the errors by chain position (six-lobe scans).
 # --ablate (exploratory diagnostics, 2026-10-21) undoes choices of the config:
 # cap (no per-track cap on the reference), weights (learned GMM weights),
@@ -60,10 +60,10 @@ function session_model(S, R, cfg, st, sessions; freeze_fisher=true)
     return train_reference_model(R.data, R.fisher, ref_rows, rows_of(S, sessions), R.physical, cfg; freeze_fisher), length(ref)
 end
 
-"GlcNAc call rate and, on six-lobe scans, errors by position (positions 1/6, 2/5, 3/4)."
+"Class-1 (brighter) call rate and, on six-lobe scans, errors by position (positions 1/6, 2/5, 3/4)."
 function call_profile(S, files_calls, truth)
     called = classified = 0
-    err = Dict(k => [0, 0] for k in ("ends_1_6", "glcnac_2_5", "middle_3_4"))   # [false GlcNAc, missed GlcNAc]
+    err = Dict(k => [0, 0] for k in ("ends_1_6", "glcn_2_5", "middle_3_4"))   # [false class 1, missed class 1]
     n6 = 0
     for (f, calls) in files_calls
         classified += count(>=(0), calls); called += count(==(1), calls)
@@ -71,7 +71,7 @@ function call_profile(S, files_calls, truth)
         n6 += 1; t = truth[f]
         for i in 1:6
             calls[i] < 0 && continue
-            k = i in (1, 6) ? "ends_1_6" : i in (2, 5) ? "glcnac_2_5" : "middle_3_4"
+            k = i in (1, 6) ? "ends_1_6" : i in (2, 5) ? "glcn_2_5" : "middle_3_4"
             calls[i] == 1 && t[i] == 0 && (err[k][1] += 1)
             calls[i] == 0 && t[i] == 1 && (err[k][2] += 1)
         end
@@ -196,13 +196,13 @@ function frozen_main(args=ARGS)
                     ("held-out 2024, transductive", call_profile(S, tcalls(dev_files), truth)),
                     ("2025, frozen", call_profile(S, [(f, fused[[pos[r] for r in S.file_rows[f]]]) for f in later_files], truth)),
                     ("2025, transductive", call_profile(S, tcalls(later_files), truth)))
-        println(io, "## Call profile (truth NKNNKN: GlcNAc fraction 1/3 at positions 2 and 5)\n")
-        println(io, "| calls | GlcNAc call rate | six-lobe scans | false GlcNAc at ends 1,6 | false GlcNAc at middle 3,4 | missed GlcNAc at 2,5 |")
+        println(io, "## Call profile (truth NKNNKN: the two GlcN at positions 2 and 5 are class 1, fraction 1/3)\n")
+        println(io, "| calls | class-1 call rate | six-lobe scans | false class 1 at ends 1,6 (GlcNAc) | false class 1 at middle 3,4 (GlcNAc) | missed class 1 at 2,5 (GlcN) |")
         println(io, "|---|---|---|---|---|---|")
         for (name, p) in profiles
             e = p.errors
             @printf(io, "| %s | %.3f | %d | %d | %d | %d |\n", name, p.rate, p.scans6, e["ends_1_6"][1], e["middle_3_4"][1],
-                    e["glcnac_2_5"][2])
+                    e["glcn_2_5"][2])
         end
         println(io)
         println(io, "| held-out session | files | frozen | transductive_run | reference scans |")

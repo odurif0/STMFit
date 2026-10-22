@@ -4,6 +4,12 @@ Dated record of decisions, experiments (including failures) and their reasons.
 Add an entry for every experiment, scientific decision, failed approach, bug
 fix or parameter change. Keep **Open questions** current.
 
+**Notation (2026-10-22).** In the control NKNNKN, N = GlcNAc and K = GlcN.
+Entries before 2026-10-22 call the class of positions 2 and 5 "GlcNAc"; those
+units are GlcN. There, read "GlcNAc" as "class 1 (brighter)" and "GlcN" as
+"class 0 (dimmer)", except in DFT and mold statements, which are defined
+chemically.
+
 The complete journal up to the 2026-09-29 consolidation (about 24,000 lines,
 with every job, hash and intermediate result) is preserved at the git tag
 `archive/pre-cleanup-20260929`:
@@ -46,7 +52,7 @@ the chain over repeated scans (2026-10-04).
 - 10–20mer test run (2026-10-21, 440 scans): the predicted unit order does
   not match the 15 manual readings beyond chance once composition is
   accounted for. The only robust structure is the edge signature (terminal
-  units called GlcN, alternation near both ends).
+  units in the dimmer class 0, alternation near both ends).
 - 10–20mer provenance (2026-10-22): the files are authentic copies of the
   share folder `Chitosan_10_20mer`, but nothing in the data documents the
   deposited compound. The "manual sequences" encode ring orientation, not
@@ -75,18 +81,22 @@ the chain over repeated scans (2026-10-04).
   (1979/2430 and 188 exact chains, vs 1847 and 104). It transfers worse to
   2025 (305/528 vs 361). It is a candidate, not promoted.
 
-**Limits:** NKNNKN edge-adjacency confound. The benchmark GlcNAc signal is
+**Limits:** NKNNKN edge-adjacency confound (N = GlcNAc, K = GlcN). The
+benchmark signal, the bright class on the two GlcN at positions 2 and 5, is
 the contrast with the dimmer terminal lobe; without it the image features
 separate the classes only weakly (AUC ≤ 0.66, amplitude) or not at all
-(shape, DFT molds). Also: exact chains in molecule-sized
+(shape, DFT molds). The former naming "brighter = GlcNAc" is contradicted by
+the control (2026-10-22). Also: exact chains in molecule-sized
 blocks; counting parameters with benchmark-informed provenance; molds are
 empirical templates; 10–20mer outputs not validated.
 
 ## Open questions
 
-1. **Chemical validation.** Does the method detect acetyl groups, or the
-   edge-adjacent position that NKNNKN happens to share with GlcNAc? A control
-   molecule with a non-palindromic or homo-oligomer sequence is needed.
+1. **Chemical validation.** Does the bright class detect a chemical
+   difference, or the edge-adjacent position that NKNNKN happens to share
+   with its two GlcN? Either way it falls on the GlcN, opposite to the former
+   rule "brighter = GlcNAc" (2026-10-22). A control molecule with a
+   non-palindromic or homo-oligomer sequence is needed.
    Position-neutral features recover edge versus interior, not chemistry.
 2. **Long-chain counting vs assignment geometry.** The capped support rule
    (`half_maximum_cap`, 2026-09-30) fixes long-chain supports. Mean
@@ -125,7 +135,7 @@ empirical templates; 10–20mer outputs not validated.
    against 41/142 for the transductive method) and gains on held-out 2024
    sessions (1979 vs 1847). But it transfers worse to 2025 (305 vs 361).
    The exploratory diagnosis traces the 2025 loss to the per-track cap. The
-   cap moves the GlcNAc boundary, which helps 2024 and hurts 2025, so the
+   cap moves the class boundary, which helps 2024 and hurts 2025, so the
    best boundary differs between campaigns. Open: freeze per campaign, or
    calibrate the boundary per campaign without labels.
 9. **A model built on the labelled data, label-free at inference (kept in
@@ -135,9 +145,11 @@ empirical templates; 10–20mer outputs not validated.
    molecules (or reference oligomers) from several campaigns before its
    transfer to new data can be shown.
 7. **Assignment fragility — answered 2026-09-30.** The benchmark signal is
-   the contrast with the dimmer terminal lobe. Without it, amplitude separates
-   GlcNAc from GlcN at non-terminal positions with AUC ≤ 0.66, and shape, DFT
-   molds and Fisher margin do not separate them at all. A robust and accurate
+   the contrast with the dimmer terminal lobe. Without it, amplitude is higher
+   at GlcN than at GlcNAc at non-terminal positions with AUC ≤ 0.66 (names
+   corrected on 2026-10-22), and shape, DFT molds and Fisher margin do not
+   separate them at all. The signed mold margin, which the method does not
+   use, reaches AUC 0.56 in the chemical direction (2026-10-22). A robust and accurate
    assignment needs new information (reference oligomers of known
    composition, other imaging conditions), not another classifier variant.
 
@@ -1839,3 +1851,57 @@ aggregates, cut molecules and non-chitosan objects stay out.
     chitosan.
   - The triage table is unchanged, because the user's review is
     incomplete.
+
+### 2026-10-22 — Notation correction: N is GlcNAc in NKNNKN; the classes lose their chemical names
+
+- **Error.** In the control NKNNKN, N = GlcNAc (N-acetyl) and K = GlcN
+  (confirmed with the user). The control has four GlcNAc (positions 1, 3, 4,
+  6) and two GlcN (positions 2, 5). The truth header
+  (`benchmarks/chitosan_240817_unit_sequences.tsv`) defined `010010` with
+  1 = GlcNAc, which put the GlcNAc at 2 and 5, and every document repeated it.
+- **Unchanged.** The 0/1 strings, every count and every grade. The graders
+  compare the method's class codes with the strings, whatever their chemical
+  names, so campaigns B, option 1 and A stand as reported.
+- **Changed meaning.**
+  - The method's class 1 is the brighter cluster (higher mean raw
+    amplitude). On the control it falls on the two GlcN. The rule "brighter =
+    GlcNAc (the acetyl group is larger)" is contradicted by the benchmark,
+    not supported by it. "Correct" in earlier entries means "the bright class
+    falls on the GlcN".
+  - If the contrast is chemical, the bright units are GlcN; if it is
+    positional, they are the neighbours of the chain ends. The control cannot
+    tell the two apart (open question 1).
+  - The per-feature AUCs of 2026-09-30 used the old names: amplitude is
+    higher at the GlcN than at the interior GlcNAc (AUC ≤ 0.66).
+  - On the 10–20mers the "edge signature" means terminal units in the dimmer
+    class and a bright class enriched in the interior. It says nothing about
+    acetylation.
+- **DFT molds** (exploratory check, 391 six-lobe scans of
+  `results/bench493_a2bcb15`).
+  - The molds are defined chemically (GlcN and GlcNAc trimer cubes), so the
+    correction does not touch them. The method uses the absolute mold margin.
+  - The signed margin, cost(GlcN) − cost(GlcNAc), favours the GlcNAc mold
+    slightly more at the interior GlcNAc (3, 4) than at the GlcN (2, 5):
+    AUC 0.56 (forward) and 0.57 (backward).
+  - The decoded GlcNAc fraction is 0.53–0.60 at the GlcNAc positions and
+    0.48–0.53 at the GlcN.
+  - That is the chemical direction, but weak, and scans of one molecule are
+    correlated. Signed CC margins were rejected on 2026-09-21 when graded
+    against the inverted names. Reopening them is a new declared experiment,
+    not done here.
+- **Changes.** No method behaviour changed and numeric outputs are
+  identical.
+  - Truth header corrected; strings unchanged.
+  - Method code, plots and graders call the classes "class 1 (brighter)" and
+    "class 0 (dimmer)". Plot legends read "dimmer (0)" and "brighter (1)".
+  - The pattern report columns become `class1_fraction`, `ends_class1`,
+    `interior_class1` and, in `profile.tsv`, `class1`.
+  - The call profile of `grade_frozen_assignment.jl` names the positions by
+    their chemistry.
+  - The comments of the two frozen assignment configs now say "no class
+    fraction assumed". The edit is comment-only, but their sha256 changes.
+  - AGENTS.md (the naming invariant is now physical and chemically neutral),
+    README, index, unit assignment, pipeline and calibration pages.
+- **10–20mer targets.** The 25 targets are the scans of the former STMFit
+  `10_20mer_analysis` run. A copy of those outputs (counts and plots) sits
+  in the experimenters' share, so it is not an independent reading.

@@ -65,7 +65,7 @@ learned setting. Its new keys are design choices fixed before any grade:
 - the emission rates come from every scan of the reference sessions, because
   application scans are not all corroborated;
 - `fusion_prior_pi = 0.5` is the neutral prior. A fitted π would carry the
-  reference molecules' GlcNAc fraction (a composition prior) to new
+  reference molecules' class-1 fraction (a composition prior) to new
   molecules.
 
 `unit_assignment_frozen_labelfree.toml` (campaign A, 2026-10-21) adds

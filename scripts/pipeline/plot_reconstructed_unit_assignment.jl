@@ -25,7 +25,7 @@ function render_maps(features, predictions, outdir)
     mkpath(joinpath(outdir, "standalone"))
     files = sort(unique(first.(collect(keys(geometry)))))
     colors = Dict("0" => "#2166ac", "1" => "#b2182b", "?" => "#8c8c8c")
-    labels = Dict("0" => "GlcN (0)", "1" => "GlcNAc (1)", "?" => "uncertain (?)")
+    labels = Dict("0" => "dimmer (0)", "1" => "brighter (1)", "?" => "uncertain (?)")
     panels = Any[]
     for file in files
         keys_ = sort([key for key in keys(geometry) if first(key) == file]; by=last)

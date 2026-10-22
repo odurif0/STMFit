@@ -22,7 +22,7 @@
 # ("?" if none or tied). Orientation is unknown, so every statistic is either
 # orientation-free or takes the better orientation, and every null applies the
 # same procedure to sequences shuffled within each chain (composition kept).
-# Statistics: GlcNAc (1) fraction; blockiness P = f(01+10) / (2 f0 f1)
+# Statistics: class-1 (brighter) fraction; blockiness P = f(01+10) / (2 f0 f1)
 # (1 Bernoulli, < 1 blocks, > 1 alternation); mean run length; ends vs
 # interior; longest alternating end segment, the alternating segment at the
 # other end and the fraction of chains alternating at one end only (>= 3
@@ -110,10 +110,10 @@ function seq_stats(seqs)
     runs = [count(i -> i == 1 || s[i] != s[i-1], eachindex(s)) for s in seqs]
     ends = [x for s in seqs for x in (s[1], s[end])]
     interior = reduce(vcat, [s[2:end-1] for s in seqs if length(s) > 2]; init=Int8[])
-    return Dict("glcnac_fraction" => f1,
+    return Dict("class1_fraction" => f1,
                 "blockiness_P" => f1 in (0.0, 1.0) ? NaN : mixed / (2 * f1 * (1 - f1)),
                 "mean_run_length" => mean(length.(seqs) ./ runs),
-                "ends_glcnac" => mean(ends .== 1), "interior_glcnac" => isempty(interior) ? NaN : mean(interior .== 1),
+                "ends_class1" => mean(ends .== 1), "interior_class1" => isempty(interior) ? NaN : mean(interior .== 1),
                 "alternating_end" => mean(alt_end.(seqs)),
                 "alternating_other_end" => mean(alt_min.(seqs)),
                 "one_sided_alternation" => mean([alt_end(s) >= 3 && alt_min(s) <= 1 for s in seqs]),
@@ -134,11 +134,11 @@ function permutation_test(seqs, nperm, rng)
              p_low=mean(filter(isfinite, null[k]) .<= obs[k]), p_high=mean(filter(isfinite, null[k]) .>= obs[k])) for k in names]
 end
 
-"Fraction of GlcNAc by position (from the oriented end), positions 1..maxpos."
+"Fraction of class 1 by position (from the oriented end), positions 1..maxpos."
 function profile(seqs, maxpos)
     os = oriented.(seqs)
     [(pos=p, n=count(s -> length(s) >= p, os),
-      glcnac=(v = [s[p] for s in os if length(s) >= p]; isempty(v) ? NaN : mean(v))) for p in 1:maxpos]
+      class1=(v = [s[p] for s in os if length(s) >= p]; isempty(v) ? NaN : mean(v))) for p in 1:maxpos]
 end
 
 "Units of a manual reading against calls: better orientation, unreadable manual units excluded (flip: 0/1 inverted)."
@@ -237,10 +237,10 @@ function pattern_main(args=ARGS)
     for a in assignments
         S = [seqs[a][t["track"]] for t in trows if haskey(seqs[a], t["track"]) && length(seqs[a][t["track"]]) >= 4 && all(>=(0), seqs[a][t["track"]])]
         for p in profile(S, 20)
-            push!(prows, Dict("assignment" => a, "position" => string(p.pos), "molecules" => string(p.n), "glcnac" => @sprintf("%.3f", p.glcnac)))
+            push!(prows, Dict("assignment" => a, "position" => string(p.pos), "molecules" => string(p.n), "class1" => @sprintf("%.3f", p.class1)))
         end
     end
-    write_table(joinpath(out, "profile.tsv"), ["assignment", "position", "molecules", "glcnac"], prows)
+    write_table(joinpath(out, "profile.tsv"), ["assignment", "position", "molecules", "class1"], prows)
     # manual readings
     mrows = Dict{String,String}[]
     for m in tsv(o["--manual"])

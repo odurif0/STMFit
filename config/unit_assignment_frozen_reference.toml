@@ -71,7 +71,7 @@ assignment_model = "frozen_reference"
 fusion = "latent_class"
 fusion_min_scans = 3
 # Emission rates from the reference sessions' per-scan calls; neutral prior at
-# application (0.5: no GlcNAc fraction assumed).
+# application (0.5: no class fraction assumed).
 fusion_emission_source = "reference_sessions_all_scans"
 fusion_prior_pi = 0.5
 

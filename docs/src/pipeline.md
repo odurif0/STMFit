@@ -61,7 +61,7 @@ config/unit_assignment_frozen_labelfree.toml --out MODEL.tsv`, then
 | `chain_report.tsv` | One row per scan: counts, rule, track, assignment string, confidence summary |
 | `positions.tsv` | Every lobe: image and absolute position, physical lobe, position uncertainty along/across the chain (1σ) and its source (`track` or `cohort`) |
 | `position_repeatability/` | Per-lobe scatter, per-scan rotations, summary ([Position uncertainty](#Position-uncertainty)) |
-| `plots/` | One image per molecule scan: STM image, final calls with P(GlcNAc), 2σ position ellipses, counts and consensus outcome. Folders `all/`, `consensus_agrees/`, `consensus_corrected/`, `not_checked_by_consensus/`, `with_uncertain_calls/`, plus `index.tsv` |
+| `plots/` | One image per molecule scan: STM image, final calls with P(class 1), 2σ position ellipses, counts and consensus outcome. Folders `all/`, `consensus_agrees/`, `consensus_corrected/`, `not_checked_by_consensus/`, `with_uncertain_calls/`, plus `index.tsv` |
 | `failures.tsv` | Present only if a stage failed (stage and reason) |
 
 ## Position uncertainty
