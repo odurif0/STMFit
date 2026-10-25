@@ -2607,3 +2607,23 @@ aggregates, cut molecules and non-chitosan objects stay out.
     data show no such difference inside the chain. The brightness may track
     ring orientation (the experimenters' readings encode "3H-up") more than
     the substituent. Not tested.
+
+- **Follow-up, same day: K against the interior N with three brightness
+  measures** (105 molecules, ratio K (2, 5) / interior N (3, 4) per molecule,
+  bootstrap over molecules). Earlier figure above: +0.034 on the 0–1
+  relative-amplitude scale, about +4%, a difference of means. As a ratio
+  per molecule:
+  - absolute amplitude +6.3% [+2.6, +10.1], N brighter in 36 of 105 molecules;
+  - amplitude over the chain maximum +6.2% [+2.3, +10.0], N brighter in 35 of 105;
+  - integrated (amplitude × widths) +9.8% [+3.7, +16.3], N brighter in 39 of 105.
+- **By session** (amplitude over the chain maximum, sessions with at least 4
+  molecules): K minus interior N goes from −4.3% (20241114, N brighter in 5
+  of 8 molecules) and −2.2% (20240310) to +17.7% (20240815). The sign
+  changes with the session, so tip or session effects are as large as the
+  K–N difference.
+- **Reading.** K is slightly brighter than the interior N on average, a few
+  percent to about ten, but N is brighter in about a third of the molecules,
+  and in two of eleven sessions on average. The brightness contrast between
+  the two chemistries is small against the variation between molecules and
+  sessions. The weighted position profile (all scans, 43-scan molecule
+  included) differs from the per-molecule one and is not used.
