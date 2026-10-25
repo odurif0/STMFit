@@ -55,8 +55,9 @@ history is at the tag `archive/pre-cleanup-20260929`.
   method.
 - Optimize with held-out sessions or molecules. Prefer correct units, errors
   and per-molecule scores to exact chains, which come in molecule blocks.
-  NKNNKN confounds K with edge adjacency and has no interior K, so it cannot
-  validate interior assignment.
+  In NKNNKN both K (positions 2 and 5) are next to a chain end, and no K has
+  two interior neighbours. So K is confounded with edge adjacency, and the
+  benchmark cannot validate K deep inside a chain, as in the 10–20mer.
 - The user's 10–20mer N/K pattern, once given, is a final test, never an
   optimization target.
 - The optimization dataset decides the result. Its image quality must be

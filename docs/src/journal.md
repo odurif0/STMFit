@@ -2220,8 +2220,10 @@ aggregates, cut molecules and non-chitosan objects stay out.
   assignment included where possible, because transductive re-learning on
   the 10–20mer cohort is not the same method. Optimization uses held-out
   sessions or molecules and block-robust measures (correct units, errors,
-  per-molecule scores). NKNNKN cannot validate interior assignment: it has
-  no interior K.
+  per-molecule scores). In NKNNKN both K are next to a chain end, and no K
+  has two interior neighbours. So the benchmark cannot validate K deep
+  inside a chain. (Wording corrected the same day: positions 2 and 5 are
+  interior units, but each borders a terminal unit.)
 - **Dataset.** The optimization set must have impeccable image quality.
   More images is not better when they are unusable: the 493-scan extension
   lowered both counting and assignment (2026-10-19). Scans are selected on
