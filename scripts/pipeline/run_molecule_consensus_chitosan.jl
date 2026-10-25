@@ -12,6 +12,10 @@
 # --count-shards N runs the per-scan counting as N single-thread processes
 # (default: min(scans, 4)), for a full cluster node. Every scan is counted
 # independently, so the shard count does not change any result.
+# If the counting config sets model.geometry_support_threshold_rule to another
+# rule than support_threshold_rule, N is counted on the counting support and
+# every later fixed-N refit uses the geometry support, or the counting support
+# for scans whose fit fails there (geometry_summary.tsv records the choice).
 # --selected-summary reuses a label-free per-scan counting summary instead of
 # counting again (development only). Every other stage is recomputed from raw
 # pixels. No benchmark label, expected count, sequence, grade or reference
@@ -65,6 +69,55 @@ function merge_count_shards(paths, files, output; policy="support_midpoint_hybri
     sort!(rows; by=r -> basename(r["filepath"]))
     write_table(output, header, rows)
     return selected_counts(output)
+end
+
+const SUPPORT_RULES = ("profile_quantile_noise", "half_maximum_cap")
+
+"Counting and geometry support rules of a counting config (geometry defaults to counting)."
+function support_rules(model)
+    count_rule = String(get(model, "support_threshold_rule", "profile_quantile_noise"))
+    geometry_rule = String(get(model, "geometry_support_threshold_rule", count_rule))
+    count_rule in SUPPORT_RULES && geometry_rule in SUPPORT_RULES || error("Unknown support threshold rule")
+    return count_rule, geometry_rule
+end
+
+"Copy of a counting summary with a per-scan `support_threshold_rule` column."
+function write_support_rules(summary, output, rule_of)
+    header, rows = read_table(summary)
+    "support_threshold_rule" in header || push!(header, "support_threshold_rule")
+    for r in rows; r["support_threshold_rule"] = rule_of(basename(r["filepath"])); end
+    return write_table(output, header, rows)
+end
+
+"""
+Decoupled supports (`geometry_support_threshold_rule`): `initial` holds every
+scan refit at its counted N on the geometry support. A scan whose fit there is
+missing or flagged is refit on the counting support instead. The returned
+`geometry_summary.tsv` records each scan's rule, which every later fixed-N refit
+replays. Only fit success decides. Returns (summary, geometry, moved scans).
+"""
+function geometry_fallback(out, raw, count_config, selected, initial, counts, rules, runner)
+    count_rule, geometry_rule = rules
+    _, lobes = lobe_table(initial)
+    fitted = Dict{String,Int}(); flagged = Set{String}()
+    for ((f, _), r) in lobes
+        fitted[f] = get(fitted, f, 0) + 1
+        endswith(r["source"], "_flagged") && push!(flagged, f)
+    end
+    moved = sort([f for (f, n) in counts if get(fitted, f, 0) != n || f in flagged])
+    summary = write_support_rules(selected, joinpath(out, "geometry_summary.tsv"),
+                                  f -> f in moved ? count_rule : geometry_rule)
+    geometry = joinpath(out, "scan_geometry.tsv")
+    isempty(moved) && return summary, cp(initial, geometry), moved
+    part = joinpath(out, "scan_geometry_count_support.tsv")
+    runner(out, "scan_geometry_count_support", "extract_lobe_features.jl", ["--config", count_config, "--data-dir", raw,
+        "--selected-summary", summary, "--files", join(moved, ","), "--out", part]; threads=1)
+    header, kept = read_table(initial)
+    part_header, refit = read_table(part)
+    part_header == header || error("Fallback geometry schema differs")
+    rows = vcat([r for r in kept if !(r["file"] in moved)], refit)
+    sort!(rows; by=r -> (r["file"], parse(Int, r["lobe"])))
+    return summary, write_table(geometry, header, rows), moved
 end
 
 """
@@ -140,6 +193,7 @@ function execute_run(o; runner=run_stage, thread_budget=min(Threads.nthreads(), 
     cfg["model"]["selection_criterion"] == "gcv" || error("GCV required")
     policy = cfg["model"]["selection_policy"]
     policy in COUNT_POLICIES || error("Counting policy must be one of $(join(COUNT_POLICIES, ", "))")
+    rules = support_rules(cfg["model"]); decoupled = rules[2] != rules[1]
     assignment = load_config(o["--config"])
     assignment["preprocessing"]["patch_residual_filter"] == "smooth_residual" || error("Symmetric residuals required")
     load_consensus_settings(TOML.parsefile(o["--consensus-config"]))
@@ -149,6 +203,7 @@ function execute_run(o; runner=run_stage, thread_budget=min(Threads.nthreads(), 
     reuse = haskey(o, "--selected-summary")
     println("$(length(files)) raw scans; ", reuse ? "reused per-scan counts" : "$nchunks counting shards",
             " -> scan geometry -> molecule consensus -> assignment -> molecule fusion (if configured) -> positions -> plots")
+    decoupled && println("Counting support: $(rules[1]); geometry support: $(rules[2]), counting support where that fit fails")
     haskey(o, "--dry-run") && return println("Dry-run: no pixels read, no output written; no labels or grades are inputs")
     out = abspath(o["--outdir"]); mkpath(joinpath(out, "logs")); stage = "inputs"
     try
@@ -180,14 +235,25 @@ function execute_run(o; runner=run_stage, thread_budget=min(Threads.nthreads(), 
         end
         counts = selected_counts(selected)
         stage = "scan_geometry"
-        geometry = joinpath(out, "scan_geometry.tsv")
-        export_features(out, stage, "extract_lobe_features.jl", ["--config", abspath(o["--count-config"]),
-            "--data-dir", raw, "--selected-summary", selected], geometry; nfiles=length(files),
-            thread_budget, runner)
+        support_summary = selected
+        if decoupled
+            initial_summary = write_support_rules(selected, joinpath(out, "geometry_summary_initial.tsv"), _ -> rules[2])
+            initial = export_features(out, stage, "extract_lobe_features.jl", ["--config", abspath(o["--count-config"]),
+                "--data-dir", raw, "--selected-summary", initial_summary], joinpath(out, "scan_geometry_initial.tsv");
+                nfiles=length(files), thread_budget, runner)
+            support_summary, geometry, moved = geometry_fallback(out, raw, abspath(o["--count-config"]), selected,
+                initial, counts, rules, runner)
+            println("Geometry on the counting support for $(length(moved)) of $(length(files)) scans")
+        else
+            geometry = joinpath(out, "scan_geometry.tsv")
+            export_features(out, stage, "extract_lobe_features.jl", ["--config", abspath(o["--count-config"]),
+                "--data-dir", raw, "--selected-summary", selected], geometry; nfiles=length(files),
+                thread_budget, runner)
+        end
         check_counts(geometry, counts)
         stage = "consensus"
         consensus_dir = joinpath(out, "consensus")
-        runner(out, stage, "build_molecule_consensus.jl", ["--data-dir", raw, "--selected-summary", selected,
+        runner(out, stage, "build_molecule_consensus.jl", ["--data-dir", raw, "--selected-summary", support_summary,
             "--features", geometry, "--config", abspath(o["--consensus-config"]), "--outdir", consensus_dir]; threads=1)
         proposed = joinpath(consensus_dir, "consensus_summary.tsv")
         stage = "consensus_refit_check"

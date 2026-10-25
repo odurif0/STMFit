@@ -32,8 +32,10 @@ function consensus_options(args)
     return o
 end
 
-# Per-scan support metadata replayed by the fixed-N extractor (adaptive runs).
-const SUPPORT_COLUMNS = ("selection_policy", "refined_policy", "selection_source", "refined_source")
+# Per-scan support metadata replayed by the fixed-N extractor (adaptive runs,
+# and the geometry support rule when it differs from the counting rule).
+const SUPPORT_COLUMNS = ("selection_policy", "refined_policy", "selection_source", "refined_source",
+                         "support_threshold_rule")
 
 function scan_support(path)
     header, rows = read_table(path)

@@ -10,6 +10,7 @@ must update this page and [Calibration](calibration.md).
 |---|---|---|
 | `chitosan.toml` | Per-scan counting (6-mer benchmark, default) | Promoted |
 | `chitosan_10_20mer_adaptive_support_rescue.toml` | Counting for 10–20mer application | Application config |
+| `chitosan_decoupled_support.toml`, `chitosan_10_20mer_decoupled_support.toml` | Counting on the capped support, geometry on the legacy support (the two configs above otherwise unchanged) | Experiment (2026-10-25) |
 | `molecule_consensus.toml` | Registration, consensus, repeat-scan collection, fusion | Promoted |
 | `unit_assignment_corroborated_training.toml` | Per-scan assignment | Promoted |
 | `unit_assignment_patch_support.toml` | Same, learning on all scans | Previous reference (control) |
@@ -33,6 +34,7 @@ must update this page and [Calibration](calibration.md).
 | `support_noise_k`, `support_padding_nm`, `support_min_length_nm`, `support_baseline_quantile` | 2.5, 0.25, 1.0, 0.10 | Axial support detection |
 | `global_maxtime`, `global_maxiter`, `max_iter`, `multistart` | 0, 10000, 300, 1 | NLopt and LsqFit budgets. `global_maxtime = 0` disables the time limit, so the global search is bounded by `global_maxiter` and fits are deterministic (2026-09-30) |
 | `support_threshold_rule`, `support_threshold_fraction` | `profile_quantile_noise`, 0.5 | Axial support threshold. `half_maximum_cap` caps the legacy threshold at off-ROI background + fraction × (peak − background); available, not selected ([Model selection](selection.md)) |
+| `geometry_support_threshold_rule` | absent (= `support_threshold_rule`) | Support rule of every fixed-N refit after counting (scan geometry, consensus refits, assignment features), read by `run_molecule_consensus_chitosan.jl`. A scan whose fit fails or is flagged on it keeps the counting support; `geometry_summary.tsv` records the choice (experiment 2026-10-25) |
 | `selection_criterion`, `cv_method` | `gcv`, `gcv` | Per-candidate score (`bic`, `aicc`, `cv` are diagnostics) |
 | `selection_policy` | `support_midpoint_hybrid` | Batch policy ([Model selection](selection.md)); 10–20mer: `adaptive_support_rescue` |
 | `cv_folds`, `bic_cv_margin`, `cv_ratio_threshold` | 5, 100, 2.0 | Used only by k-fold CV diagnostics |

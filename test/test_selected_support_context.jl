@@ -200,6 +200,33 @@ end
     end
 end
 
+@testset "per-scan support rule replaces the config rule only for its scan" begin
+    mktempdir() do dir
+        @test isempty(Extractor._read_selected_rules(""))
+        path = write_summary(dir, ["filepath", "N_selected"], [["alpha.sxm", "9"]])
+        @test isempty(Extractor._read_selected_rules(path))
+        path = write_summary(dir, ["filepath", "N_selected", "support_threshold_rule"],
+            [["/synthetic/alpha.sxm", "9", "half_maximum_cap"], ["beta.sxm", "7", "profile_quantile_noise"], ["gamma.sxm", "5", ""]])
+        @test Extractor._read_selected_rules(path) ==
+            Dict("alpha.sxm" => "half_maximum_cap", "beta.sxm" => "profile_quantile_noise")
+        path = write_summary(dir, ["filepath", "N_selected", "support_threshold_rule"], [["alpha.sxm", "9", "half_maximum"]])
+        @test_throws ErrorException Extractor._read_selected_rules(path)
+
+        cfg = TOML.parsefile(SUPPORT_CONFIG)
+        model, preproc = cfg["model"], cfg["preprocessing"]
+        model_before = deepcopy(model)
+        context = mode_contexts(dir)["scan_1.sxm"]
+        _, base_ell, base_circ = Extractor._configs(model, preproc, dir; selected_context=context)
+        _, ell, circ = Extractor._configs(model, preproc, dir; selected_context=context, support_rule="half_maximum_cap")
+        for (chain, base) in ((ell, base_ell), (circ, base_circ))
+            @test base.support_threshold_rule == model["support_threshold_rule"] == "profile_quantile_noise"
+            @test chain.support_threshold_rule == "half_maximum_cap"
+            @test changed_fields(chain, base) == Set((:support_threshold_rule,))
+        end
+        @test isequal(model, model_before)
+    end
+end
+
 @testset "accepted rescue requires explicit finite physical settings" begin
     mktempdir() do dir
         contexts = mode_contexts(dir)

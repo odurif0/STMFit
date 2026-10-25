@@ -111,6 +111,8 @@ function _parse_cli(args)
                                     the summary instead of raw best GCV.
                                     Adaptive runs also require refined_policy to
                                     replay the selected support (base and split).
+                                    An optional support_threshold_rule column
+                                    replaces the config's rule per scan.
               --manifest M      Optional benchmark manifest for quality filtering
               --primary-only    With --manifest, keep only clean/clean_target files
             """)
@@ -218,6 +220,32 @@ function _read_selected_context(path::String; selection_policy::AbstractString="
     return selected
 end
 
+# Optional per-scan support rule (column support_threshold_rule, written by the
+# molecule-consensus driver when geometry and counting use different supports).
+# It replaces the config's rule for that scan's fixed-N refit; empty = config.
+const SUPPORT_RULES = ("profile_quantile_noise", "half_maximum_cap")
+
+function _read_selected_rules(path::String)
+    rules = Dict{String,String}()
+    isempty(path) && return rules
+    header, rows = _summary_rows(path)
+    "support_threshold_rule" in header || return rules
+    for row in rows
+        rule = row["support_threshold_rule"]
+        isempty(rule) && continue
+        rule in SUPPORT_RULES || error("Unknown support_threshold_rule $(repr(rule)) for $(row["filepath"])")
+        rules[basename(row["filepath"])] = rule
+    end
+    return rules
+end
+
+function _summary_rows(path::String)
+    lines = readlines(path)
+    header = String.(strip.(split(lines[1], '\t'; keepempty=true)))
+    rows = [Dict(zip(header, String.(strip.(split(line, '\t'; keepempty=true))))) for line in lines[2:end] if !isempty(strip(line))]
+    return header, rows
+end
+
 # The replay requires the actual configured values, not new physical defaults.
 function _selected_rescue_settings(model)
     for key in ("adaptive_rescue_support_noise_k", "adaptive_rescue_support_padding_nm")
@@ -320,7 +348,7 @@ function _refine_circ_to_ell(results_circ, img, pcfg, ccfg_ell, ctx_circ)
     return refined
 end
 
-function _configs(model, preproc, output_dir; selected_context=nothing)
+function _configs(model, preproc, output_dir; selected_context=nothing, support_rule="")
     pcfg = PatternConfig(filepath="", channel="Z", direction="fwd",
         stride=get(preproc, "stride", 1),
         flatten=get(preproc, "flatten", "plane+rows"),
@@ -353,6 +381,7 @@ function _configs(model, preproc, output_dir; selected_context=nothing)
         peak_profile=Symbol(String(get(model, "peak_profile", "gaussian"))),
         skew_ratio_max=Float64(get(model, "skew_ratio_max", 2.0)),
         intelligent_sweep=true, fuse_z_bwd=true)
+    isempty(support_rule) || (ccfg.support_threshold_rule = support_rule)
     if selected_context !== nothing
         selected_context.n > 0 || error("Selected N must be positive")
         # This is a fixed-N refit on the already selected support, including for
@@ -375,6 +404,7 @@ function main()
     criterion = get(model, "selection_criterion", "gcv")
     selected_contexts = _read_selected_context(selected_summary;
         selection_policy=String(get(model, "selection_policy", "")))
+    selected_rules = _read_selected_rules(selected_summary)
     manifest_quality = _read_manifest_quality(manifest_file)
 
     # Determine file list
@@ -432,7 +462,7 @@ function main()
                 xoff, yoff = 0.0, 0.0
                 roi === nothing || ((img, xoff, yoff) = _crop_image(img, roi))
                 pcfg, ccfg, ccfg_circ = _configs(model, preproc, dirname(out_tsv);
-                    selected_context=get(selected_contexts, fn, nothing))
+                    selected_context=get(selected_contexts, fn, nothing), support_rule=get(selected_rules, fn, ""))
                 pcfg.filepath = fp
 
                 results_circ, _, ctx = chain_gaussian_sweep(img, pcfg, ccfg_circ)

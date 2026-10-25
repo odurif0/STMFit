@@ -162,3 +162,54 @@ end
         @test b2["N_selected"] == "6" && b2["count_rule"] == "consensus_registered_roi" && b2["refit_support"] == "registered_roi"
     end
 end
+
+@testset "decoupled supports: geometry falls back to the counting support only where its fit fails" begin
+    R = MCRun.MoleculeConsensusRun
+    repo = dirname(dirname(@__DIR__))
+    @test R.support_rules(Dict{String,Any}()) == ("profile_quantile_noise", "profile_quantile_noise")
+    @test R.support_rules(Dict{String,Any}("support_threshold_rule" => "half_maximum_cap")) == ("half_maximum_cap", "half_maximum_cap")
+    @test_throws ErrorException R.support_rules(Dict{String,Any}("geometry_support_threshold_rule" => "half"))
+    # The experiment configs differ from the promoted counting configs only in the two support rules.
+    for (base, decoupled) in (("chitosan.toml", "chitosan_decoupled_support.toml"),
+                              ("chitosan_10_20mer_adaptive_support_rescue.toml", "chitosan_10_20mer_decoupled_support.toml"))
+        a = TOML.parsefile(joinpath(repo, "config", base)); b = TOML.parsefile(joinpath(repo, "config", decoupled))
+        @test R.support_rules(a["model"]) == ("profile_quantile_noise", "profile_quantile_noise")
+        @test R.support_rules(b["model"]) == ("half_maximum_cap", "profile_quantile_noise")
+        delete!(b["model"], "geometry_support_threshold_rule"); b["model"]["support_threshold_rule"] = "profile_quantile_noise"
+        @test a == b
+    end
+    mktempdir() do dir
+        selected = joinpath(dir, "counting_summary.tsv")
+        R.write_table(selected, ["filepath", "status", "N_selected"],
+            [Dict("filepath" => "/raw/$f.sxm", "status" => "ok", "N_selected" => "3") for f in ("a", "b", "c")])
+        initial = joinpath(dir, "scan_geometry_initial.tsv")
+        # a fits on the geometry support, b has no fit there, c only a flagged one
+        R.write_table(initial, ["file", "lobe", "x_nm", "source"],
+            vcat([Dict("file" => "a.sxm", "lobe" => string(k), "x_nm" => "1", "source" => "ell") for k in 1:3],
+                 [Dict("file" => "c.sxm", "lobe" => string(k), "x_nm" => "1", "source" => "ell_flagged") for k in 1:3]))
+        calls = Vector{Vector{String}}()
+        fake(out, name, script, args; threads=1) = begin
+            push!(calls, args); outpath = args[findfirst(==("--out"), args) + 1]
+            R.write_table(outpath, ["file", "lobe", "x_nm", "source"],
+                [Dict("file" => f, "lobe" => string(k), "x_nm" => "2", "source" => "ell") for f in ("b.sxm", "c.sxm") for k in 1:3])
+        end
+        counts = Dict("a.sxm" => 3, "b.sxm" => 3, "c.sxm" => 3)
+        summary, geometry, moved = R.geometry_fallback(dir, dir, "count.toml", selected, initial, counts,
+            ("half_maximum_cap", "profile_quantile_noise"), fake)
+        @test moved == ["b.sxm", "c.sxm"]
+        @test length(calls) == 1 && calls[1][findfirst(==("--files"), calls[1]) + 1] == "b.sxm,c.sxm"
+        @test calls[1][findfirst(==("--selected-summary"), calls[1]) + 1] == summary
+        _, srows = R.read_table(summary)
+        @test Dict(basename(r["filepath"]) => r["support_threshold_rule"] for r in srows) ==
+            Dict("a.sxm" => "profile_quantile_noise", "b.sxm" => "half_maximum_cap", "c.sxm" => "half_maximum_cap")
+        _, grows = R.read_table(geometry)
+        @test [(r["file"], r["lobe"], r["x_nm"]) for r in grows] ==
+            [(f, string(k), f == "a.sxm" ? "1" : "2") for f in ("a.sxm", "b.sxm", "c.sxm") for k in 1:3]
+        R.check_counts(geometry, counts)
+        # Nothing to move: the initial geometry is kept as it is, without refits.
+        dir2 = mkpath(joinpath(dir, "second")); calls2 = Vector{Vector{String}}()
+        summary2, geometry2, moved2 = R.geometry_fallback(dir2, dir2, "count.toml", selected, initial,
+            Dict("a.sxm" => 3), ("half_maximum_cap", "profile_quantile_noise"), (a...; k...) -> push!(calls2, a[4]))
+        @test isempty(moved2) && isempty(calls2) && read(geometry2) == read(initial)
+    end
+end

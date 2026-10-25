@@ -14,6 +14,7 @@ which condition.
 | `max_overlap` | 0.60 | Physical constraint on adjacent-lobe overlap. If high-N fits disappear, inspect it before changing selection logic |
 | `fit_width_nm` | 0.16 | Tube half-width. Chosen 0.15 → 0.16 on benchmark counting sweeps |
 | `support_noise_k`, `support_padding_nm` | 2.5, 0.25 | Support threshold and padding. Padding chosen 0.20 → 0.25 on benchmark sweeps |
+| `support_threshold_rule`, `geometry_support_threshold_rule` | `profile_quantile_noise` (both) | The capped rule was declared from label-free profiles only (2026-09-30). Its use for counting with a legacy geometry support is a declared experiment (2026-10-25); the experiment's criteria use grades and length readings |
 | `kappa_max` | 10 | Condition-number penalty. Chosen 8 → 10 on benchmark sweeps |
 | `selection_criterion` | `gcv` | Methodological choice ([Model selection](selection.md)) |
 | `robust_guard_nu`, `gcv_ambiguity_rel_threshold`, `support_midpoint_up_gcv_rel_threshold` | 8, 0.05, 0.30 | Hybrid rule thresholds, adopted after benchmark grades |

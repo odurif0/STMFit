@@ -1991,3 +1991,54 @@ aggregates, cut molecules and non-chitosan objects stay out.
   entry).
 - **Next.** Ask the experimenters for their complete January and February
   selections, then run the method on the curated set only.
+
+### 2026-10-25 — Declared campaign: capped support for counting, legacy support for geometry
+
+- **Deliverable** (approved by the user on 2026-10-25, time box until
+  2026-10-27). Long-chain counts closer to the experimenters' length
+  readings, with no regression on the 6-mer benchmark.
+- **Why** (open question 2). The capped support (`half_maximum_cap`)
+  removes truncated long-chain supports: mean |N − N_manual| went from 1.33
+  to 0.92 on 12 reads (2026-09-30). But it collapses the 6-mer assignment
+  (771/88 → 702/24), because the assignment depends on end-lobe geometry.
+  So counting and assignment geometry are separated.
+- **Change** (one new config key, label-free).
+  - `model.geometry_support_threshold_rule` sets the support rule of every
+    fixed-N refit after counting: scan geometry, consensus refits and
+    assignment features. When absent, it equals `support_threshold_rule`
+    and nothing changes.
+  - Counting (`batch_full.jl`) selects N on the capped support.
+  - Each scan is then refit at that N on the legacy support. If that fit is
+    missing or flagged, the scan is refit on the counting support instead.
+  - The choice is recorded per scan (column `support_threshold_rule` of
+    `geometry_summary.tsv`, carried into the consensus summary). Every later
+    refit replays it. Only fit success decides: no label, count or reading.
+  - New configs `config/chitosan_decoupled_support.toml` and
+    `config/chitosan_10_20mer_decoupled_support.toml` equal the two counting
+    configs except `support_threshold_rule = "half_maximum_cap"` and
+    `geometry_support_threshold_rule = "profile_quantile_noise"`.
+- **Runs** (Viper, one each, no retuning after grading).
+  - 6-mer: the 146-scan cohort with `chitosan_decoupled_support.toml`.
+    Reference: run A (12042058), reproduced byte for byte at `b8986a0`.
+  - 10–20mer: the 440 scans of the test run with
+    `chitosan_10_20mer_decoupled_support.toml`. Reference:
+    `app1020_5b706ca`. The code path without the new key is unchanged, so
+    the reference stands.
+- **Criteria, fixed before any run.**
+  - 6-mer (external grade, full145 own-N): no regression against A on exact
+    N (137), within one (145), correct (771), exact chains (88), classified
+    (865) or errors (94).
+  - 10–20mer (grading side only): the 17 lengths the experimenters read on
+    scans of this cohort (16 acetylation sequences, plus the unit count of
+    `251210_029`). The reference run gives mean |N_final − N_read| = 1.47,
+    14/17 within one unit and 4/17 exact. Accepted if the mean decreases and
+    the within-one count does not.
+  - Reported, not criteria:
+    - per-scan counts on the same readings;
+    - `251206_013` (third-party length reading);
+    - the label-free count agreement between repeat scans (reference: 177
+      of 440 scans in a track without a strict majority);
+    - the number of scans that needed the counting-support fallback.
+- **Adoption.** If both criteria hold, the decoupled configs replace the
+  promoted counting configs and every cited headline is updated. Otherwise
+  the campaign is recorded as rejected.

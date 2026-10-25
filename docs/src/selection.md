@@ -73,7 +73,10 @@ This assumes that at least 10% of the bins are background, which fails on
 chains that fill the profile. The alternative `half_maximum_cap` caps the
 threshold at the off-ROI background plus half the peak height. It fixes
 long-chain supports but degrades the 6-mer assignment, so it is not selected
-([journal](journal.md)).
+([journal](journal.md)). The key `geometry_support_threshold_rule` separates the
+two: N is counted on the capped support and the later fixed-N refits use the
+legacy one, or the capped one where that fit fails (experiment declared on
+2026-10-25, configs `*_decoupled_support.toml`).
 
 **Determinism.** `global_maxtime = 0`: the NLopt global search is bounded by
 iterations only, so identical runs give identical outputs on any node.
