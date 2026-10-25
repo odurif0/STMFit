@@ -2579,3 +2579,31 @@ aggregates, cut molecules and non-chitosan objects stay out.
   from a run restricted to 146 scans. The same 145 scans score 697/870 (80%)
   in the 493-scan run, which makes the cohort dependence (open question 8)
   concrete.
+
+### 2026-10-25 — Exploratory: inside the 6-mer, K and N look alike; the bright class mostly marks "not terminal"
+
+- **Why.** The user doubted the edge-adjacency limit (the two GlcN, K, are
+  not at the chain ends) and found it odd that K is not clearly brighter.
+- **Measurement** (493-scan run `results/dec493_c2b954a/`, 105 molecules
+  with 6-lobe scans of the full set, one mean per molecule; labels read
+  only here, for grading). Mean amplitude relative to the chain maximum by
+  position 1–6 (N K N N K N): 0.60, 0.83, 0.80, 0.82, 0.85, 0.63. Lobe
+  widths along the chain: 0.35, 0.42, 0.41, 0.42, 0.42, 0.35 nm.
+- **Paired per molecule, K (2, 5) minus interior N (3, 4):**
+  - amplitude +0.034 (bootstrap 95% [+0.005, +0.062]; K higher in 70 of 105
+    molecules);
+  - width along +0.003 nm [−0.009, +0.014]; width across +0.002 nm
+    [−0.005, +0.010].
+- **K minus terminal N (1, 6):** amplitude +0.225 (K higher in 89 of 105),
+  widths +0.07 and +0.05 nm.
+- **Reading.**
+  - The K are interior units next to the dim, narrow terminal units. Their
+    contrast with the ends is large; against the interior N it is 3% in
+    amplitude and nil in width.
+  - So the bright class on K mostly marks "not terminal". The benchmark
+    shows no size difference between K and interior N, which fits the
+    earlier AUC ≤ 0.66 for position-independent features.
+  - Chemistry predicts that the acetylated unit (N, GlcNAc) is bulkier; the
+    data show no such difference inside the chain. The brightness may track
+    ring orientation (the experimenters' readings encode "3H-up") more than
+    the substituent. Not tested.
