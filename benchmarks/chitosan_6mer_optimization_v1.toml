@@ -1,4 +1,5 @@
-# Chitosan 6-mer optimization-set manifest (v1, 2026-10-25, campaign Q).
+# Chitosan 6-mer manifest of the scans accepted by the automatic quality rule (v1, 2026-10-25, campaign Q): 419 scans.
+# It is not the elite subset: the user wants the elite subset reworked (journal, 2026-10-25).
 #
 # External grading only: never read this from fitting or model-selection code.
 # Files: the entries of chitosan_6mer_benchmark_v2.toml that the human triage kept AND the automatic, label-free

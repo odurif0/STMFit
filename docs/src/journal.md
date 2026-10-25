@@ -2424,3 +2424,29 @@ aggregates, cut molecules and non-chitosan objects stay out.
   cohort was already read by earlier campaigns. The cohort-dependence of
   the assignment remains (full145 697/870 here, against 776/870 in the
   146-scan run).
+
+### 2026-10-25 — Decision: full set of 492 scans; the elite subset is still to be defined
+
+- **Review.** The user viewed the 30 scans of the 145 that the automatic
+  rule rejects (`results/quality_6mer_20261025/review_rejected_145/`). Their
+  judgment: these scans should not be rejected from the global set, except
+  perhaps 240307_019 (several objects), but they are probably not the best
+  images, so they do not belong in an elite subset.
+- **Decision** (the user).
+  - **Full set: 492 scans** = the 493 validated by eye minus 240307_019
+    (`benchmarks/chitosan_6mer_full_v1.toml`: 144 + 260 + 88 per cohort).
+  - **Elite: a subset to rework.** It is neither the 492 nor the 419. The
+    419 scans (`benchmarks/chitosan_6mer_optimization_v1.toml`) are only
+    what the current automatic rule accepts, and that rule is rejected as a
+    definition of "elite": its thresholds were set by hand.
+  - `benchmarks/chitosan_6mer_cu100_quality.tsv` records `in_full`,
+    `rule_accepted` and an empty `elite` column.
+- **Corrects the earlier wording.** The campaign Q entry called the 419 the
+  optimization set; the optimization set will be the elite subset once
+  defined. Campaign C steps 1–2 wait for it.
+- **Measurement on the 419 run** (job 12384419, `results/opt419_d0d342e/`):
+  counting 359/419 exact (419 within one), assignment 1889/2514 correct
+  (75.1%), 105 exact chains. The 493-scan run gave 417/493 (84.6%) and
+  2243/2958 (75.8%). Filtering by the current rule therefore does not
+  improve the assignment: counting gains about one point and the assignment
+  loses less than one point. Different cohorts, so this is indicative.
