@@ -2230,3 +2230,47 @@ aggregates, cut molecules and non-chitosan objects stay out.
   image quality judged before any method output, and the 10–20mer data are
   held to the same standard.
 - Recorded in `AGENTS.md` ("Method development strategy").
+
+### 2026-10-25 — Declared campaign C: optimize the assignment to freeze on the validated 6-mer set, apply it to the curated 10–20mer
+
+- **Deliverable** (user request, 2026-10-25: optimize further on the 6-mer,
+  then give the results and sequences of the selected 10–20mer set). Time
+  box: 2026-10-25 to 2026-10-26.
+  - Strategy: `AGENTS.md`, "Method development strategy". Optimize on the
+    6-mer, freeze, apply unchanged to the 10–20mer.
+  - Optimization set: the 493 user-validated 6-mer scans
+    (`data/sets/6mer_Cu100_benchmark`).
+- **Step 1, measurement.** The promoted method (decoupled supports) on the
+  493 scans, one Viper run. Graded by cohort (full145, added_2024,
+  added_2025) and compared with the legacy-support 493 run (12282486). No
+  criterion: this is the reference for steps 2 and 3.
+- **Step 2, optimization: which assignment to freeze.** Candidates, all
+  label-free at inference:
+  - T, the promoted transductive assignment (learned on each run's own
+    scans);
+  - F(c), the frozen label-free model of campaign A
+    (`unit_assignment_frozen_labelfree.toml`), with the reference cap
+    `reference_max_scans_per_track` c ∈ {1, 3, 5, 10, none}. Only this key
+    varies.
+
+  Each candidate is graded on held-out units only, with
+  `grade_frozen_assignment.jl` on the step-1 run:
+  - every 2024 session is graded with a model built without it;
+  - 2025 is graded with the model built on all 2024 sessions. The 2025
+    sessions were already read by campaigns A and B, so they are not
+    blind.
+
+  **Rule, fixed now.** The selected candidate has the most correct units
+  over all held-out units (2024 held-out plus 2025), with fewer errors as
+  the tie-break. Exact chains and paired per-molecule differences are
+  reported, not used.
+- **Step 3, application.** The promoted counting and geometry
+  (`chitosan_10_20mer_decoupled_support.toml`) run on the 19 curated
+  10–20mer scans (`data/sets/10_20mer_curated`), one Viper run.
+  - If an F(c) wins, its model is rebuilt on all 493 6-mer scans with the
+    selected cap and applied unchanged (`apply_frozen_assignment.jl`). If T
+    wins, the run's own calls are used.
+  - Output: one sequence per scan. The classes are physical (1 = brighter);
+    they are shown as N/K under both conventions.
+  - Nothing is constrained by length, composition or pattern. The
+    experimenters' readings are shown as a comparison only.
