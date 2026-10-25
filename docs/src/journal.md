@@ -2179,3 +2179,32 @@ aggregates, cut molecules and non-chitosan objects stay out.
   - The edge signature remains: terminal units are dimmer than chance
     (transductive 0.40 vs 0.45, p = 0.04; frozen 6-mer model 0.15 vs 0.35,
     p < 0.0001). The readings show no such end effect.
+
+### 2026-10-25 — 10–20mer sequences of the promoted run: isolated bright units, alternating ends (exploratory)
+
+- **Data.** Run `dec1020_70a9baa`: 133 molecules (consensus tracks), 65
+  imaged at least 3 times, 34 with N ≥ 10. One sequence per molecule (the
+  majority of its scans' final calls per lobe); 1 = brighter class.
+  Orientation and true length are unknown.
+- **Structure against a within-chain shuffle** (composition kept; the
+  pattern report, plus orientation-free 3-mer counts on the 95–97 molecules
+  with N ≥ 7, 2000 shuffles):
+  - Isolated bright units are enriched: `010` 133 vs 105 expected
+    (transductive, p < 0.001), 210 vs 115 (frozen 6-mer model, p < 0.001).
+    `101` is also enriched. Adjacent bright units are depleted with the
+    frozen 6-mer model (`011` 77 vs 114, `111` 13 vs 25).
+  - Ends: the terminal unit is dimmer than chance, and the profile oriented
+    by the longer alternating end starts 0-1-0 (class-1 rate 0.36 / 0.61 /
+    0.55 / 0.32 at positions 1–4, then about 0.45). Chains alternate at one
+    end only more often than chance (0.44 vs 0.25, p < 0.001).
+  - Class-1 fraction: 0.45 (transductive), 0.35 (frozen 6-mer model).
+- **Caveats.** These are image classes, not N/K.
+  - Three of the four local features compare a lobe with its neighbours, so
+    adjacent calls are anti-correlated by construction. That alone can
+    produce isolated bright units and alternation.
+  - The frozen 6-mer model learned NKNNKN, whose brighter units are
+    isolated and next to the ends.
+  - Repeat scans disagree (θ0 0.19), and the experimenters' readings are
+    matched no better than chance.
+  - The pattern is not interpreted chemically. The user's N/K pattern for
+    the 10–20mer will test it.
