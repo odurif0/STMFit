@@ -60,10 +60,12 @@ the chain over repeated scans (2026-10-04).
   selected (`benchmarks/chitosan_10_20mer_curated.tsv`); 865 candidates
   remain.
 - Decoupled supports (2026-10-25, promoted): counting on the capped support
-  and geometry on the legacy one bring the 10–20mer lengths closer to the
-  experimenters' readings (mean |ΔN| 1.47 → 1.00, 14/17 within one, 5/17
-  exact; run `dec1020_70a9baa`). The pattern and readings comparisons below
-  are from the earlier legacy-support run `app1020_5b706ca`.
+  and geometry on the legacy one remove the truncated 10–20mer supports. The
+  counts are closer to the experimenters' length readings (mean |ΔN| 1.47 →
+  1.00; run `dec1020_70a9baa`), which are a comparison, not a truth: 10–20mer
+  lengths are not known. Against their acetylation readings the promoted run
+  still recovers no unit order beyond a composition-preserving shuffle.
+  The pattern statistics below are from the earlier run `app1020_5b706ca`.
 - 10–20mer test run (2026-10-21, 440 scans): the predicted unit order does
   not match the 15 manual readings beyond chance once composition is
   accounted for. The only robust structure is the edge signature (terminal
@@ -123,8 +125,8 @@ empirical templates; 10–20mer outputs not validated.
    143 → 145 within one). But it collapses the 6-mer assignment (771/88 →
    702/24), so it is not selected. Decoupling them (2026-10-25: count on the
    capped support, refit geometry on the legacy one) keeps every final 6-mer
-   count and fixes the long chains (mean |N − N_read| 1.47 → 1.00 on 17
-   experimenter readings). The 6-mer assignment still moves through cohort
+   count and removes the truncated long-chain supports (mean |N − N_read|
+   1.47 → 1.00 against 17 experimenter readings, a comparison only). The 6-mer assignment still moves through cohort
    learning (776 correct but 85 exact chains, against 771/88). The declared
    rule rejected it, and the user then adopted it (2026-10-25). What remains
    is open question 8.
@@ -2128,8 +2130,9 @@ aggregates, cut molecules and non-chitosan objects stay out.
     scans); correct units 771 → 776; errors 94 → 89; classified unchanged;
     exact chains 88 → 85. Exact chains come in molecule blocks, and here 43
     of 85 come from one 43-scan molecule.
-  - 10–20mer: mean |ΔN| against 17 experimenter lengths 1.47 → 1.00, with
-    no loss within one unit. Repeat scans agree more often on the count.
+  - 10–20mer: no truncated supports any more, and repeat scans agree more
+    often on the count. The counts are closer to 17 experimenter length
+    readings (mean |ΔN| 1.47 → 1.00), which are a comparison, not a truth.
 - **What changes.**
   - The promoted counting configs are `config/chitosan_decoupled_support.toml`
     (6-mer method) and `config/chitosan_10_20mer_decoupled_support.toml`
@@ -2143,3 +2146,36 @@ aggregates, cut molecules and non-chitosan objects stay out.
   experimenters' acetylation readings are still those of the legacy run
   `app1020_5b706ca`. The 493-scan extended benchmark and the campaigns A and
   B used the legacy support.
+
+### 2026-10-25 — 10–20mer lengths are not a ground truth; N/K comparison on the promoted run
+
+- **User statement.** The experimenters' 10–20mer chain lengths are not
+  trusted as results: they are an interesting comparison, never a truth
+  criterion. Unlike the 6-mer, whose length is known, the 10–20mer length is
+  unknown. The true N/K pattern of the 10–20mer sequence will be provided
+  later by the user, and it will be the reference.
+- **Consequence.** The length criterion of the decoupled-support campaign
+  (mean |ΔN| 1.47 → 1.00 against 17 readings) is a comparison with human
+  readings, not evidence of correct counting. The robust part is
+  label-free: the truncated supports disappear, and repeat scans agree more
+  often on the count (145 scans in a track without a strict majority,
+  against 177). No 10–20mer count is validated.
+- **N/K assignment against the experimenters' acetylation readings**
+  (promoted run `dec1020_70a9baa`, 16 read molecules, 138 units;
+  comparison only, readings untracked):
+
+  | Calls | Brighter read as GlcNAc | p | Brighter read as GlcN | Null mean | p |
+  |---|---:|---:|---:|---:|---:|
+  | per scan | 71 (51%) | 0.96 | 84 (61%) | 84.2 | 0.55 |
+  | transductive (promoted, fused) | 73 (53%) | 0.92 | 84 (61%) | 83.8 | 0.53 |
+  | frozen per campaign | 65 (47%) | 0.80 | 94 (68%) | 89.1 | 0.14 |
+  | frozen 6-mer model | 67 (49%) | 0.97 | 87 (63%) | 86.7 | 0.52 |
+
+  - The null shuffles each scan's calls, keeping its composition.
+  - As on the legacy run (61–67% agreement, p 0.08–0.68), the agreement
+    comes from composition, not from unit order.
+  - The promoted run calls more units brighter: class-1 fraction 0.45,
+    against 0.35 on the legacy run. Fusion π is 0.48.
+  - The edge signature remains: terminal units are dimmer than chance
+    (transductive 0.40 vs 0.45, p = 0.04; frozen 6-mer model 0.15 vs 0.35,
+    p < 0.0001). The readings show no such end effect.

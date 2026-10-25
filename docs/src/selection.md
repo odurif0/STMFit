@@ -99,8 +99,9 @@ then acts down-only on the active support. Known limit: the support baseline
 is the 10% quantile of the axial profile. On long chains that fill most of the
 profile, the baseline lands on the molecule and the support is truncated, so
 long chains are undercounted with the legacy rule. Counting on the capped
-support removes most truncations: against 17 experimenter length readings the
-mean |ΔN| goes from 1.47 to 1.00 ([journal](journal.md), 2026-10-25).
+support removes most truncations. Compared with 17 experimenter length
+readings, which are not a ground truth, the mean |ΔN| goes from 1.47 to 1.00
+([journal](journal.md), 2026-10-25).
 
 ### Other policies
 

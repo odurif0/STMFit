@@ -31,7 +31,10 @@ history is at the tag `archive/pre-cleanup-20260929`.
   Promoted configs are frozen; a change is a new declared experiment.
 - Keep benchmark and application claims separate: the 6-mer set has external
   labels; 10–20mer data do not. "Processed" or visually plausible is not
-  validation. In NKNNKN the two GlcN sit next to the chain ends, so the
+  validation. The 10–20mer chain lengths are unknown: the experimenters'
+  readings (lengths, acetylation) are comparisons, never a truth criterion.
+  The reference N/K pattern of the 10–20mer sequence will come from the user.
+  In NKNNKN the two GlcN sit next to the chain ends, so the
   bright class coincides with both GlcN and edge adjacency; benchmark accuracy
   is not chemical validation.
 - The DFT molds (`dft/molds/chitosan_cc_molds_native_v1.tsv`) are empirical

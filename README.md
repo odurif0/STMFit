@@ -58,11 +58,13 @@ molds barely separate them ([journal](docs/src/journal.md)).
 Exact chains come in molecule-sized blocks (43 of 85 from one 43-scan molecule).
 Only repeatedly imaged molecules are fused. The counting parameters keep their
 historical benchmark-informed provenance ([calibration](docs/src/calibration.md)).
-On unknown 10–20mers, the decoupled supports bring the counts within a mean
-of 1.0 unit of 17 lengths read by the experimenters (1.5 with the legacy
-support). Per-scan calls stay inconsistent across repeat scans (fitted
-false-call rate 0.19), and the unit order does not match the experimenters'
-acetylation readings beyond chance. Those outputs are not chemically validated.
+On unknown 10–20mers the chain lengths are not known. The decoupled supports
+remove the truncated supports, and their counts are closer to 17 lengths read
+by the experimenters (mean difference 1.0 unit, against 1.5 with the legacy
+support), but those readings are a comparison, not a ground truth. Per-scan
+calls stay inconsistent across repeat scans (fitted false-call rate 0.19), and
+the unit order does not match the experimenters' acetylation readings beyond
+chance. Those outputs are not validated.
 
 ## Quick start
 

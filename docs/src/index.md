@@ -24,8 +24,9 @@ benchmark:
 The decoupled supports were adopted by the user's decision after the grade:
 the declared rule required no regression on any figure, and exact chains went
 from 88 to 85 while errors went from 94 to 89. They were adopted for the long
-chains, whose counts come within a mean of 1.0 unit of 17 experimenter
-readings (1.5 before). Identical runs give identical outputs.
+chains, whose truncated supports they remove; their counts are closer to 17
+experimenter length readings (mean difference 1.0 unit, 1.5 before), a
+comparison only, since 10–20mer lengths are not known. Identical runs give identical outputs.
 
 What this does and does not establish:
 
@@ -39,10 +40,10 @@ What this does and does not establish:
   The brighter class falls on them, which contradicts the former naming rule
   "brighter = GlcNAc", and edge adjacency and chemistry are confounded. A
   control molecule with another sequence is needed for chemical validation.
-- The unknown 10–20mer application runs. Its counts are close to the
-  experimenters' length readings, but its unit calls do not match their
-  acetylation readings beyond chance and are not validated
-  ([Runbook](chitosan_runbook.md)).
+- The unknown 10–20mer application runs. Its chain lengths are not known
+  (the experimenters' length readings are a comparison, not a truth), and its
+  unit calls do not match their acetylation readings beyond chance. Nothing
+  there is validated yet ([Runbook](chitosan_runbook.md)).
 
 ## Where to go
 
