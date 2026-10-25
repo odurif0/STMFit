@@ -2627,3 +2627,41 @@ aggregates, cut molecules and non-chitosan objects stay out.
   the two chemistries is small against the variation between molecules and
   sessions. The weighted position profile (all scans, 43-scan molecule
   included) differs from the per-molecule one and is not used.
+
+### 2026-10-25 — Exploratory: terminal, sub-terminal and core units; a position-only rule beats the method on the 6-mer
+
+- **Question** (user): should terminal N be distinguished from core N?
+- **Measurement** (493-scan run, full set, 417 scans counted at 6 units;
+  final calls against NKNNKN; labels read only for grading):
+
+  | Units | Method | Rule "ends dim, interior bright" |
+  |---|---:|---:|
+  | All six | 78.1% | 66.7% |
+  | Terminal N (1, 6) | 89.8% | 100% |
+  | Interior (2–5) | 72.3% | 50% |
+  | K (2, 5) | 79.9% | 100% |
+  | Core N (3, 4) | 64.7% | 0% |
+
+  - Per molecule (98 molecules), interior accuracy of the method minus the
+    ends-only rule: +18.2 points, bootstrap 95% [+13.0, +23.2].
+  - The method calls the K bright in 81% (position 2) and 79% (position 5)
+    of the scans, and the core N bright in 41% (3) and 29% (4).
+- **The control is a position code.** In NKNNKN a unit is K exactly when it
+  is the second from either end. The rule "second from the end is bright"
+  therefore scores 100% on every 6-mer, above the method's 78%. Terminal, K
+  and core N are three position classes, and each coincides with one
+  chemistry.
+- **Reading.**
+  - The method does more than mark the ends: it separates K from the core
+    N, +18 points over the ends-only rule.
+  - That separation is likely to come from adjacency to the dim terminal
+    lobes (features comparing a lobe with its neighbours; AUC 0.75 with the
+    terminal neighbour, 0.62–0.66 without, 2026-09-30), not from the
+    chemistry itself. Position-neutral brightness differs by only 6% (above).
+  - The 6-mer has no K with two interior neighbours on each side, and only
+    two core N. How the method reads a K in the middle of a long chain is
+    untested.
+- **Consequence for the grades.** Report accuracy by position class
+  (terminal, sub-terminal, core) next to the pooled figure, and compare
+  with the position-only baseline. The pooled 76–78% includes terminal
+  units that a trivial rule gets right.
