@@ -2543,3 +2543,39 @@ aggregates, cut molecules and non-chitosan objects stay out.
   on the elite, on the existing 493-scan run (classes learned on all 493
   scans, not on the elite alone). Per-scan results sit next to per-molecule
   ones, and nothing is re-selected after the grade.
+
+### 2026-10-25 — Provisional elite results: selecting the best-scored images does not improve the grade
+
+- **Sets.** Full set 492 scans (`benchmarks/chitosan_6mer_full_v1.toml`),
+  provisional elite 167 scans (`benchmarks/chitosan_6mer_elite_v1.toml`; the
+  top third of the frozen score, 167 rather than 164 because of ties at the
+  threshold 0.565): full145 37, added_2024 72, added_2025 58. Graded on the
+  existing 493-scan run (job 12384144, classes learned on all 493 scans).
+- **Results** (final calls; counts after consensus):
+
+  | Set | Scans | Exact N | Correct units | Exact chains | Errors |
+  |---|---:|---:|---:|---:|---:|
+  | Full | 492 | 417 (84.8%) | 2240/2952 (75.9%) | 122 | 675 |
+  | Elite | 167 | 136 (81.4%) | 675/1002 (67.4%) | 32 | 314 |
+
+- **Pooled, the elite looks worse; per molecule it does not.**
+  - Per molecule (tracks), mean fraction of correct units: full 0.728 over
+    117 molecules, elite 0.726 over 54.
+  - On the 54 molecules in both sets, elite scans minus all scans of the same
+    molecule: +0.004, bootstrap 95% interval [−0.005, +0.019].
+  - The pooled gap is a composition effect: the elite holds 42 scans of the
+    session `Cu100LHe30042025`, which is dominated by the 36-scan molecule
+    whose assignment was already at 50% (2026-10-19).
+- **Reading.** For the same molecule, the best-scored scans are not graded
+  better than the others. With this score, restricting to a sub-dataset
+  changes which molecules are in the set, not how well the method reads
+  them. This answers the open question on the sub-dataset for this score
+  only: it does not say that image quality never matters, only that these
+  seven axes do not capture what drives the errors.
+- **Not done and not to do.** The elite is not re-chosen on this result
+  (that would select on the grade). The elite-only run, with classes
+  learned on the elite, was not made.
+- **Context for the headline.** The 89% (776/870) on the 145 scans comes
+  from a run restricted to 146 scans. The same 145 scans score 697/870 (80%)
+  in the 493-scan run, which makes the cohort dependence (open question 8)
+  concrete.
