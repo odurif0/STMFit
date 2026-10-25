@@ -2933,3 +2933,20 @@ aggregates, cut molecules and non-chitosan objects stay out.
   removes the failure. The unit of a dataset selection is the molecule: a
   selection that splits the scans of a molecule below the 3 scans the consensus
   needs destroys the corroboration. A molecule-level elite is declared next.
+
+### 2026-10-25 — Declared: molecule-level elite (v2), after the scan-level elite broke the molecules
+
+- **Rule, fixed now.** The unit of selection is the molecule: a track of the
+  493-scan run `dec493_c2b954a` (scans grouped from SXM headers and image
+  registration, label-free). Candidates: the tracks of the 492-scan full set
+  with at least 3 scans. Molecule score: the mean frozen image-quality score of
+  its scans. Elite v2: the better half of the candidate molecules, with all
+  their scans, at most 8 per molecule (evenly spaced in file order), so that no
+  molecule dominates and every kept molecule can still be corroborated.
+- **Status.** Provisional, with the weak score (AUC 0.66 against the triage;
+  it does not predict count errors). The scan-level elite (v1) stays recorded
+  as a construction that did not work.
+- **Measurements, not selection.** (a) The existing 493-scan run graded on
+  the elite v2 scans (classes learned on all the scans); (b) an elite-v2-only
+  run on Viper (counting, consensus, classes and fusion learned on those scans
+  only). Nothing is re-chosen from the results.

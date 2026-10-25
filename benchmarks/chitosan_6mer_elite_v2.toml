@@ -1,0 +1,1295 @@
+# Provisional molecule-level elite (v2, 2026-10-25) of the full 6-mer set.
+# Derived from the v2 manifest (2026-10-19):
+#
+# External grading only: never read this from fitting or model-selection code.
+# Files: the 145 graded scans of chitosan_6mer_counting_confirmed.toml (cohort full145), 240310_Cu100009 and the
+# 2024 candidates validated on 2026-10-19 (added_2024), and the 2025 Cu(100) candidates (added_2025). Each shows one
+# intact (NKN)2 molecule by visual review; the unit control is NKNNKN (6 units) for every file. Keys are the names
+# of data/sets/6mer_Cu100_benchmark; raw_path is the file under data/raw/. Built from benchmarks/chitosan_6mer_cu100_triage.tsv.
+
+[benchmark]
+name = "chitosan_6mer_elite_v2"
+system = "chitosan on Cu(100)"
+default_config = "config/chitosan.toml"
+selection_policy = "No expected-N prior; labels are external grading only."
+notes = "141 scans from 26 molecules: the provisional molecule-level elite v2 (2026-10-25), the better half of the molecules of at least 3 scans by mean frozen quality score, at most 8 scans per molecule. Cohorts: {'added_2024': 70, 'full145': 37, 'added_2025': 34}."
+
+[quality_classes]
+clean_target = "Confirmed chitosan 6mer target with expected N=6."
+excluded = "Excluded from strict benchmark scoring."
+
+[evaluation]
+grade_only_manifest_files = true
+primary_exclude_quality = ["excluded"]
+stress_quality = []
+report_columns = ["N_selected", "N_eff", "N_ell", "N_circ", "ambiguous_eff", "artifact_fwd_bwd_corr"]
+
+[files."20241114_LHe_Cu100_241114_015.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/20241114_LHe_Cu100_241114_015.sxm"
+session = "20241114_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241114_LHe_Cu100/241114_015.sxm"
+decided_by = "validation_utilisateur"
+
+[files."240310_Cu100020.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240310_LHe_Cu100/240310_Cu100020.sxm"
+session = "20240310_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20240310_LHe_Cu100/240310_Cu100020.sxm"
+decided_by = "validation_utilisateur"
+
+[files."240310_Cu100021.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240310_LHe_Cu100/240310_Cu100021.sxm"
+session = "20240310_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20240310_LHe_Cu100/240310_Cu100021.sxm"
+decided_by = "validation_utilisateur"
+
+[files."240310_Cu100022.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240310_LHe_Cu100/240310_Cu100022.sxm"
+session = "20240310_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20240310_LHe_Cu100/240310_Cu100022.sxm"
+decided_by = "validation_utilisateur"
+
+[files."240310_Cu100023.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240310_LHe_Cu100/240310_Cu100023.sxm"
+session = "20240310_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20240310_LHe_Cu100/240310_Cu100023.sxm"
+decided_by = "validation_utilisateur"
+
+[files."240310_Cu100031.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240310_LHe_Cu100/240310_Cu100031.sxm"
+session = "20240310_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20240310_LHe_Cu100/240310_Cu100031.sxm"
+decided_by = "validation_utilisateur"
+
+[files."240310_Cu100032.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240310_LHe_Cu100/240310_Cu100032.sxm"
+session = "20240310_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20240310_LHe_Cu100/240310_Cu100032.sxm"
+decided_by = "benchmark_actuel"
+
+[files."240310_Cu100033.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240310_LHe_Cu100/240310_Cu100033.sxm"
+session = "20240310_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20240310_LHe_Cu100/240310_Cu100033.sxm"
+decided_by = "validation_utilisateur"
+
+[files."240314_Cu100_020.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240314_LHe_Cu100/240314_Cu100_020.sxm"
+session = "20240314_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20240314_LHe_Cu100/240314_Cu100_020.sxm"
+decided_by = "validation_utilisateur"
+
+[files."240314_Cu100_023.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240314_LHe_Cu100/240314_Cu100_023.sxm"
+session = "20240314_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20240314_LHe_Cu100/240314_Cu100_023.sxm"
+decided_by = "validation_utilisateur"
+
+[files."240314_Cu100_026.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240314_LHe_Cu100/240314_Cu100_026.sxm"
+session = "20240314_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20240314_LHe_Cu100/240314_Cu100_026.sxm"
+decided_by = "benchmark_actuel"
+
+[files."240314_Cu100_029.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240314_LHe_Cu100/240314_Cu100_029.sxm"
+session = "20240314_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20240314_LHe_Cu100/240314_Cu100_029.sxm"
+decided_by = "validation_utilisateur"
+
+[files."240314_Cu100_033.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240314_LHe_Cu100/240314_Cu100_033.sxm"
+session = "20240314_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20240314_LHe_Cu100/240314_Cu100_033.sxm"
+decided_by = "validation_utilisateur"
+
+[files."240314_Cu100_036.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240314_LHe_Cu100/240314_Cu100_036.sxm"
+session = "20240314_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20240314_LHe_Cu100/240314_Cu100_036.sxm"
+decided_by = "validation_utilisateur"
+
+[files."240314_Cu100_039.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240314_LHe_Cu100/240314_Cu100_039.sxm"
+session = "20240314_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20240314_LHe_Cu100/240314_Cu100_039.sxm"
+decided_by = "validation_utilisateur"
+
+[files."240314_Cu100_043.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240314_LHe_Cu100/240314_Cu100_043.sxm"
+session = "20240314_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20240314_LHe_Cu100/240314_Cu100_043.sxm"
+decided_by = "validation_utilisateur"
+
+[files."240815_060.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240815_LHe_Cu100/240815_060.sxm"
+session = "20240815_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20240815_LHe_Cu100/240815_060.sxm"
+decided_by = "validation_utilisateur"
+
+[files."240815_064.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240815_LHe_Cu100/240815_064.sxm"
+session = "20240815_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20240815_LHe_Cu100/240815_064.sxm"
+decided_by = "validation_utilisateur"
+
+[files."240815_067.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240815_LHe_Cu100/240815_067.sxm"
+session = "20240815_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20240815_LHe_Cu100/240815_067.sxm"
+decided_by = "validation_utilisateur"
+
+[files."240815_070.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240815_LHe_Cu100/240815_070.sxm"
+session = "20240815_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20240815_LHe_Cu100/240815_070.sxm"
+decided_by = "validation_utilisateur"
+
+[files."240815_073.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240815_LHe_Cu100/240815_073.sxm"
+session = "20240815_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20240815_LHe_Cu100/240815_073.sxm"
+decided_by = "validation_utilisateur"
+
+[files."240815_076.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240815_LHe_Cu100/240815_076.sxm"
+session = "20240815_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20240815_LHe_Cu100/240815_076.sxm"
+decided_by = "validation_utilisateur"
+
+[files."240815_079.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240815_LHe_Cu100/240815_079.sxm"
+session = "20240815_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20240815_LHe_Cu100/240815_079.sxm"
+decided_by = "validation_utilisateur"
+
+[files."240815_082.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240815_LHe_Cu100/240815_082.sxm"
+session = "20240815_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20240815_LHe_Cu100/240815_082.sxm"
+decided_by = "validation_utilisateur"
+
+[files."240817_033.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_033.sxm"
+session = "20240817_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20240817_LHe_Cu100/240817_033.sxm"
+decided_by = "benchmark_actuel"
+
+[files."240817_043.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_043.sxm"
+session = "20240817_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20240817_LHe_Cu100/240817_043.sxm"
+decided_by = "benchmark_actuel"
+
+[files."240817_049.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_049.sxm"
+session = "20240817_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20240817_LHe_Cu100/240817_049.sxm"
+decided_by = "benchmark_actuel"
+
+[files."240817_058.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_058.sxm"
+session = "20240817_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20240817_LHe_Cu100/240817_058.sxm"
+decided_by = "benchmark_actuel"
+
+[files."240817_065.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_065.sxm"
+session = "20240817_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20240817_LHe_Cu100/240817_065.sxm"
+decided_by = "benchmark_actuel"
+
+[files."240817_071.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_071.sxm"
+session = "20240817_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20240817_LHe_Cu100/240817_071.sxm"
+decided_by = "benchmark_actuel"
+
+[files."240817_077.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_077.sxm"
+session = "20240817_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20240817_LHe_Cu100/240817_077.sxm"
+decided_by = "benchmark_actuel"
+
+[files."240817_083.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_083.sxm"
+session = "20240817_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20240817_LHe_Cu100/240817_083.sxm"
+decided_by = "benchmark_actuel"
+
+[files."240817_085.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_085.sxm"
+session = "20240817_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20240817_LHe_Cu100/240817_085.sxm"
+decided_by = "benchmark_actuel"
+
+[files."240817_086.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_086.sxm"
+session = "20240817_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20240817_LHe_Cu100/240817_086.sxm"
+decided_by = "benchmark_actuel"
+
+[files."240817_088.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_088.sxm"
+session = "20240817_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20240817_LHe_Cu100/240817_088.sxm"
+decided_by = "benchmark_actuel"
+
+[files."240817_089.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_089.sxm"
+session = "20240817_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20240817_LHe_Cu100/240817_089.sxm"
+decided_by = "benchmark_actuel"
+
+[files."240817_090.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_090.sxm"
+session = "20240817_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20240817_LHe_Cu100/240817_090.sxm"
+decided_by = "benchmark_actuel"
+
+[files."240817_091.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_091.sxm"
+session = "20240817_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20240817_LHe_Cu100/240817_091.sxm"
+decided_by = "benchmark_actuel"
+
+[files."240817_093.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_093.sxm"
+session = "20240817_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20240817_LHe_Cu100/240817_093.sxm"
+decided_by = "benchmark_actuel"
+
+[files."240817_094.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240817_LHe_Cu100/240817_094.sxm"
+session = "20240817_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20240817_LHe_Cu100/240817_094.sxm"
+decided_by = "benchmark_actuel"
+
+[files."240818_025.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240818_LHe_Cu100/240818_025.sxm"
+session = "20240818_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20240818_LHe_Cu100/240818_025.sxm"
+decided_by = "benchmark_actuel"
+
+[files."240818_026.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240818_LHe_Cu100/240818_026.sxm"
+session = "20240818_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20240818_LHe_Cu100/240818_026.sxm"
+decided_by = "benchmark_actuel"
+
+[files."240818_027.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240818_LHe_Cu100/240818_027.sxm"
+session = "20240818_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20240818_LHe_Cu100/240818_027.sxm"
+decided_by = "benchmark_actuel"
+
+[files."240818_028.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20240818_LHe_Cu100/240818_028.sxm"
+session = "20240818_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20240818_LHe_Cu100/240818_028.sxm"
+decided_by = "benchmark_actuel"
+
+[files."241113_071.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_071.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_071.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_072.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_072.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_072.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_073.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_073.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_073.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_074.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_074.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_074.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_075.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_075.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_075.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_077.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_077.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_077.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_078.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_078.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_078.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_079.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_079.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_079.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_080.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_080.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_080.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_081.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_081.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_081.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_086.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_086.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_086.sxm"
+decided_by = "benchmark_actuel"
+
+[files."241113_087.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_087.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_087.sxm"
+decided_by = "benchmark_actuel"
+
+[files."241113_088.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_088.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_088.sxm"
+decided_by = "benchmark_actuel"
+
+[files."241113_089.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_089.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_089.sxm"
+decided_by = "benchmark_actuel"
+
+[files."241113_094.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_094.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_094.sxm"
+decided_by = "benchmark_actuel"
+
+[files."241113_095.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_095.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_095.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_096.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_096.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_096.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_097.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_097.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_097.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_103.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_103.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_103.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_104.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_104.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_104.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_105.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_105.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_105.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_106.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_106.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_106.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_107.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_107.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_107.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_108.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_108.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_108.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_115.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_115.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_115.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_116.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_116.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_116.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_117.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_117.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_117.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_118.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_118.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_118.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_119.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_119.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_119.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_120.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_120.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_120.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_121.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_121.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_121.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_122.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_122.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_122.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_123.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_123.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_123.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_151.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_151.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_151.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_152.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_152.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_152.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_153.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_153.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_153.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_154.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_154.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_154.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_155.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_155.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_155.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_156.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_156.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_156.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241113_157.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241113_LHe_Cu100/241113_157.sxm"
+session = "20241113_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20241113_LHe_Cu100/241113_157.sxm"
+decided_by = "benchmark_actuel"
+
+[files."241114_001.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_001.sxm"
+session = "20241114_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241114_LHe_Cu100/241114_001.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241114_002.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_002.sxm"
+session = "20241114_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241114_LHe_Cu100/241114_002.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241114_003.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_003.sxm"
+session = "20241114_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241114_LHe_Cu100/241114_003.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241114_004.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_004.sxm"
+session = "20241114_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20241114_LHe_Cu100/241114_004.sxm"
+decided_by = "benchmark_actuel"
+
+[files."241114_007.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_007.sxm"
+session = "20241114_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241114_LHe_Cu100/241114_007.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241114_008.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_008.sxm"
+session = "20241114_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241114_LHe_Cu100/241114_008.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241114_009.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_009.sxm"
+session = "20241114_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241114_LHe_Cu100/241114_009.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241114_010.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_010.sxm"
+session = "20241114_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20241114_LHe_Cu100/241114_010.sxm"
+decided_by = "benchmark_actuel"
+
+[files."241114_011.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_011.sxm"
+session = "20241114_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20241114_LHe_Cu100/241114_011.sxm"
+decided_by = "benchmark_actuel"
+
+[files."241114_012.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_012.sxm"
+session = "20241114_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20241114_LHe_Cu100/241114_012.sxm"
+decided_by = "benchmark_actuel"
+
+[files."241114_013.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_013.sxm"
+session = "20241114_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241114_LHe_Cu100/241114_013.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241114_014.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_014.sxm"
+session = "20241114_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241114_LHe_Cu100/241114_014.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241114_016.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_016.sxm"
+session = "20241114_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241114_LHe_Cu100/241114_016.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241114_017.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_017.sxm"
+session = "20241114_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241114_LHe_Cu100/241114_017.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241114_018.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_018.sxm"
+session = "20241114_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241114_LHe_Cu100/241114_018.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241114_038.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_038.sxm"
+session = "20241114_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241114_LHe_Cu100/241114_038.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241114_039.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_039.sxm"
+session = "20241114_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241114_LHe_Cu100/241114_039.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241114_040.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_040.sxm"
+session = "20241114_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20241114_LHe_Cu100/241114_040.sxm"
+decided_by = "benchmark_actuel"
+
+[files."241114_041.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_041.sxm"
+session = "20241114_LHe_Cu100"
+cohort = "added_2024"
+raw_path = "NKN2/20241114_LHe_Cu100/241114_041.sxm"
+decided_by = "validation_utilisateur"
+
+[files."241114_043.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_043.sxm"
+session = "20241114_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20241114_LHe_Cu100/241114_043.sxm"
+decided_by = "benchmark_actuel"
+
+[files."241114_044.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_044.sxm"
+session = "20241114_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20241114_LHe_Cu100/241114_044.sxm"
+decided_by = "benchmark_actuel"
+
+[files."241114_045.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_045.sxm"
+session = "20241114_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20241114_LHe_Cu100/241114_045.sxm"
+decided_by = "benchmark_actuel"
+
+[files."241114_046.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "20241114_LHe_Cu100/241114_046.sxm"
+session = "20241114_LHe_Cu100"
+cohort = "full145"
+raw_path = "NKN2/20241114_LHe_Cu100/241114_046.sxm"
+decided_by = "benchmark_actuel"
+
+[files."250306_017.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe06032025/250306_017.sxm"
+session = "Cu100LHe06032025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe06032025/250306_017.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250306_018.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe06032025/250306_018.sxm"
+session = "Cu100LHe06032025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe06032025/250306_018.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250306_019.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe06032025/250306_019.sxm"
+session = "Cu100LHe06032025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe06032025/250306_019.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250306_031.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe06032025/250306_031.sxm"
+session = "Cu100LHe06032025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe06032025/250306_031.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250306_032.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe06032025/250306_032.sxm"
+session = "Cu100LHe06032025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe06032025/250306_032.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250306_033.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe06032025/250306_033.sxm"
+session = "Cu100LHe06032025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe06032025/250306_033.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250306_036.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe06032025/250306_036.sxm"
+session = "Cu100LHe06032025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe06032025/250306_036.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250306_037.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe06032025/250306_037.sxm"
+session = "Cu100LHe06032025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe06032025/250306_037.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250306_038.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe06032025/250306_038.sxm"
+session = "Cu100LHe06032025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe06032025/250306_038.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250307_026.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe07032025/250307_026.sxm"
+session = "Cu100LHe07032025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe07032025/250307_026.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250307_027.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe07032025/250307_027.sxm"
+session = "Cu100LHe07032025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe07032025/250307_027.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250307_028.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe07032025/250307_028.sxm"
+session = "Cu100LHe07032025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe07032025/250307_028.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250307_029.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe07032025/250307_029.sxm"
+session = "Cu100LHe07032025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe07032025/250307_029.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250307_030.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe07032025/250307_030.sxm"
+session = "Cu100LHe07032025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe07032025/250307_030.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250307_031.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe07032025/250307_031.sxm"
+session = "Cu100LHe07032025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe07032025/250307_031.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250308_039.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe08032025/250308_039.sxm"
+session = "Cu100LHe08032025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe08032025/250308_039.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250308_040.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe08032025/250308_040.sxm"
+session = "Cu100LHe08032025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe08032025/250308_040.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250308_041.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe08032025/250308_041.sxm"
+session = "Cu100LHe08032025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe08032025/250308_041.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250430_005.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe30042025/250430_005.sxm"
+session = "Cu100LHe30042025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe30042025/250430_005.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250430_007.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe30042025/250430_007.sxm"
+session = "Cu100LHe30042025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe30042025/250430_007.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250430_008.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe30042025/250430_008.sxm"
+session = "Cu100LHe30042025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe30042025/250430_008.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250430_009.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe30042025/250430_009.sxm"
+session = "Cu100LHe30042025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe30042025/250430_009.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250430_010.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe30042025/250430_010.sxm"
+session = "Cu100LHe30042025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe30042025/250430_010.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250430_011.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe30042025/250430_011.sxm"
+session = "Cu100LHe30042025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe30042025/250430_011.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250430_012.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe30042025/250430_012.sxm"
+session = "Cu100LHe30042025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe30042025/250430_012.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250430_013.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe30042025/250430_013.sxm"
+session = "Cu100LHe30042025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe30042025/250430_013.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250430_015.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe30042025/250430_015.sxm"
+session = "Cu100LHe30042025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe30042025/250430_015.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250430_020.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe30042025/250430_020.sxm"
+session = "Cu100LHe30042025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe30042025/250430_020.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250430_025.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe30042025/250430_025.sxm"
+session = "Cu100LHe30042025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe30042025/250430_025.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250430_030.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe30042025/250430_030.sxm"
+session = "Cu100LHe30042025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe30042025/250430_030.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250430_035.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe30042025/250430_035.sxm"
+session = "Cu100LHe30042025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe30042025/250430_035.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250430_040.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe30042025/250430_040.sxm"
+session = "Cu100LHe30042025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe30042025/250430_040.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250430_045.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe30042025/250430_045.sxm"
+session = "Cu100LHe30042025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe30042025/250430_045.sxm"
+decided_by = "validation_utilisateur"
+
+[files."250430_050.sxm"]
+quality = "clean_target"
+target_N_for_human_validation = 6
+relative_path = "Cu100LHe30042025/250430_050.sxm"
+session = "Cu100LHe30042025"
+cohort = "added_2025"
+raw_path = "NKN2/Cu100LHe30042025/250430_050.sxm"
+decided_by = "validation_utilisateur"
+
