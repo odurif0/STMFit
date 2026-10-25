@@ -20,6 +20,10 @@
 #            roi_touches_unscanned (molecule may be cut by the end of the scan),
 #            roi_touches_border, several_objects (second ROI component >= 30%
 #            of the largest), fwd_bwd_mismatch (forward/backward correlation < 0.5)
+#   values   (usable scans) second_object_ratio, contrast_to_noise (ROI 99th
+#            percentile minus off-ROI median, over the image noise), fwd_bwd_corr,
+#            fwd_bwd_nrmse, line_discontinuity, stripe_periodicity, roi_length_nm;
+#            scripts/data/decide_scan_quality.jl turns them into a decision
 # --copy-to copies every usable scan once into one flat central folder (basename,
 # or session_basename if the basename is taken) and keeps its MANIFEST.tsv
 # (provenance only). An existing central folder must hold that manifest: its
@@ -106,8 +110,15 @@ function inspect_scan(path, pcfg, max_range)
     thr = G._adaptive_roi_threshold(signal, noise, pcfg.roi_threshold_fraction, 2.5)
     areas = component_areas(signal .>= thr)
     length(areas) >= 2 && areas[2] >= 0.3 * areas[1] && push!(flags, "several_objects")
+    row["second_object_ratio"] = @sprintf("%.4f", length(areas) >= 2 ? areas[2] / areas[1] : 0.0)
+    off = signal[.!mask .& observed]
+    row["contrast_to_noise"] = isempty(off) || !any(mask) ? "NaN" :
+        @sprintf("%.3f", (quantile(signal[mask], 0.99) - median(off)) / noise)
     ad = G.compute_image_artifact_diagnostics(img, pcfg)
     row["fwd_bwd_corr"] = @sprintf("%.3f", ad.fwd_bwd_corr)
+    row["fwd_bwd_nrmse"] = @sprintf("%.4f", ad.fwd_bwd_nrmse)
+    row["line_discontinuity"] = @sprintf("%.4f", ad.line_discontinuity)
+    row["stripe_periodicity"] = @sprintf("%.4f", ad.stripe_periodicity)
     isfinite(ad.fwd_bwd_corr) && ad.fwd_bwd_corr < 0.5 && push!(flags, "fwd_bwd_mismatch")
     ac = G._weighted_roi_axis(x, y, zr)
     row["roi_length_nm"] = @sprintf("%.2f", ac.tmax - ac.tmin)
@@ -214,7 +225,8 @@ function main(args=ARGS)
         println("Central folder $dest: $(length(added)) scans added, $(length(manifest)) in total")
     end
     cols = ["file", "status", "flags", "duplicate_of", "session", "rec_date", "rec_time", "range_nm", "pixels",
-            "angle_deg", "bias_v", "finite_fraction", "fwd_bwd_corr", "roi_length_nm", "central_name",
+            "angle_deg", "bias_v", "finite_fraction", "fwd_bwd_corr", "roi_length_nm",
+            "second_object_ratio", "contrast_to_noise", "fwd_bwd_nrmse", "line_discontinuity", "stripe_periodicity", "central_name",
             "size_bytes", "sha256", "scan_file", "path", "detail"]
     write_table(joinpath(out, "catalog.tsv"), cols,
         [Dict(c => replace(get(r, c, ""), '\t' => ' ', '\n' => ' ') for c in cols) for r in rows])

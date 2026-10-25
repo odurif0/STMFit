@@ -1,0 +1,21 @@
+# Automatic image-quality decision (campaign Q, declared 2026-10-25), read by
+# scripts/data/decide_scan_quality.jl on a catalog of catalog_sxm_candidates.jl.
+# Label-free: image values only, no fit, no count, no method output.
+# The robust bounds were computed once (decide_scan_quality.jl --derive) on the
+# 827 usable Cu(100) 6-mer scans of 2026-10-25, before any comparison with human
+# decisions, and apply unchanged to every data set (10-20mer included).
+
+[model]
+name = "scan_quality_v1"
+
+[selection]
+max_second_object_ratio = 0.3      # second object area / largest (catalog flag several_objects)
+min_fwd_bwd_corr = 0.5             # forward/backward correlation (catalog flag fwd_bwd_mismatch)
+max_line_discontinuity = 52.6123   # exp(median + 3 x 1.4826 x MAD) of log values
+max_stripe_periodicity = 6011.9511 # idem
+max_fwd_bwd_nrmse = 2.2091         # idem
+min_contrast_to_noise = 1.6551     # exp(median - 3 x 1.4826 x MAD) of log values
+size_window = [0.5, 1.5]           # x median ROI length of accepted scans; 6-mer benchmark only (--size-check)
+
+[preprocessing]
+# The values use the counting config's preprocessing (catalog --count-config config/chitosan.toml).

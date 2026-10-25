@@ -2330,3 +2330,25 @@ aggregates, cut molecules and non-chitosan objects stay out.
 - **Optimization set.** Scans kept by the human triage and accepted by the
   rule, size check included, recorded in a tracked table. Campaign C steps
   1–2 are then rerun on it before anything is applied to the 10–20mer.
+
+### 2026-10-25 — Campaign Q, amendment before validation: molecule completeness and log-scale bounds
+
+- **Why.** The catalog of the 1149 Cu(100) 6-mer scans
+  (`results/quality_6mer_20261025/catalog/`: 827 usable, 261 overviews, 61
+  objects crossing the frame) showed two problems with the declared rule.
+  These are label-free distributions; no human decision or grade had been
+  compared yet.
+  - **Frame completeness.** 345 of the 827 usable scans stopped early
+    (observed pixel fraction below 0.99, median 0.74). Their molecule is
+    often whole. The criterion for the molecule is "the ROI touches the
+    unscanned area" (87 scans), so the frame-level 0.99 bound is dropped.
+  - **Bounds.** The values are positive and strongly right-skewed: line
+    discontinuity ranges from 5 to 1e11. On the raw scale the bounds
+    rejected 27% of scans for line discontinuity and were negative, so
+    inactive, for contrast to noise. They are computed on log values
+    instead: exp(median ± 3 × 1.4826 × MAD of the log).
+- **Fixed bounds** (`config/scan_quality.toml`, derived once from the 827
+  usable scans): line discontinuity ≤ 52.6, stripe periodicity ≤ 6012,
+  forward/backward NRMSE ≤ 2.21, contrast to noise ≥ 1.66. The other bounds
+  are unchanged (second-object ratio < 0.3, forward/backward correlation
+  ≥ 0.5, size window 0.5–1.5 for the 6-mer only).
