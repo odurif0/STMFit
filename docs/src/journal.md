@@ -2274,3 +2274,59 @@ aggregates, cut molecules and non-chitosan objects stay out.
     they are shown as N/K under both conventions.
   - Nothing is constrained by length, composition or pattern. The
     experimenters' readings are shown as a comparison only.
+
+### 2026-10-25 — Declared campaign Q: automatic, label-free image-quality decision for the 6-mer optimization set
+
+- **Deliverable** (user request: a blind visual review is hard to make
+  objective, so the decision should be automatic). A reproducible per-scan
+  quality decision, and with it the 6-mer optimization set. Time box:
+  2026-10-25 to 2026-10-26.
+- **Measurements.** Image only: no fit, no count, no label, no method
+  output. They come from `scripts/data/catalog_sxm_candidates.jl`, which
+  now also writes continuous values:
+  - technical status: readable, frame at most 20 nm, object not crossing
+    the frame, not a duplicate;
+  - completeness: observed pixel fraction, and whether the molecule region
+    (ROI) touches the border or the unscanned area;
+  - isolation: area of the second-largest object above the ROI threshold,
+    divided by the largest (`second_object_ratio`);
+  - tip stability: forward/backward correlation and NRMSE, line
+    discontinuity, stripe periodicity;
+  - signal: contrast to noise (99th percentile of the ROI signal minus the
+    off-ROI median, divided by the image noise);
+  - size: axial length of the ROI.
+- **Rule, fixed now** (`config/scan_quality.toml`). A scan is accepted
+  when all of the following hold:
+  1. its technical status is usable;
+  2. the observed pixel fraction is at least 0.99, and the ROI touches
+     neither the border nor the unscanned area;
+  3. `second_object_ratio` < 0.3;
+  4. the forward/backward correlation is at least 0.5;
+  5. line discontinuity, stripe periodicity and NRMSE are below
+     median + 3 × 1.4826 × MAD;
+  6. contrast to noise is above median − 3 × 1.4826 × MAD.
+
+  The values in 2–4 are the catalog's existing flags. The bounds in 5–6
+  are computed once, on the technically usable Cu(100) 6-mer scans, and
+  written into the config as absolute numbers before any comparison with
+  human decisions. The same numbers then apply to any data set, the
+  10–20mer included.
+- **Gross size check (6-mer only).** The ROI length must lie within
+  0.5–1.5 × the median of the accepted scans. One unit is about 17% of a
+  6-mer, so 5- or 7-unit counts stay well inside this window; it only
+  removes objects of under about 3 or over about 9 units. It applies only
+  to the benchmark, whose molecule is known, and never to the 10–20mer,
+  whose length is unknown. Results are also reported without it.
+- **Validation** (grading side). The automatic decision is compared with
+  the earlier human decisions on the same scans
+  (`benchmarks/chitosan_6mer_cu100_triage.tsv`, excluding the automatic
+  overview rejections):
+  - overall agreement;
+  - the share of each human rejection reason that the rule catches;
+  - the reasons for every human-kept scan the rule rejects.
+
+  No benchmark grade is used, and the rule is not changed after this
+  comparison. Any revision would be a new declared step.
+- **Optimization set.** Scans kept by the human triage and accepted by the
+  rule, size check included, recorded in a tracked table. Campaign C steps
+  1–2 are then rerun on it before anything is applied to the 10–20mer.
