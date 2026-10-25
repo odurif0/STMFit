@@ -2352,3 +2352,43 @@ aggregates, cut molecules and non-chitosan objects stay out.
   forward/backward NRMSE ≤ 2.21, contrast to noise ≥ 1.66. The other bounds
   are unchanged (second-object ratio < 0.3, forward/backward correlation
   ≥ 0.5, size window 0.5–1.5 for the 6-mer only).
+
+### 2026-10-25 — Campaign Q results: the automatic rule agrees with the human triage on 78.5% of scans; optimization set of 419
+
+- **Decision** (`config/scan_quality.toml`, size check on): of the 1149
+  Cu(100) 6-mer scans, 536 are accepted (551 without the size check). The
+  median ROI length of accepted scans is 3.94 nm.
+- **Against the human triage** (888 scans, the automatic overview
+  rejections left out; `results/quality_6mer_20261025/validation/`):
+
+  | Human | Scans | Automatic accept | Automatic reject |
+  |---|---:|---:|---:|
+  | kept | 493 | 419 | 74 |
+  | rejected | 395 | 117 | 278 |
+
+  - Agreement: 697/888 (78.5%), or 684 without the size check.
+  - Human rejection reasons the rule catches:
+    - cut molecule 101/101;
+    - no molecule 35/36;
+    - several objects 19/23;
+    - earlier-review ambiguous 34/46 and excluded 7/7;
+    - not a 6-mer: 14/21 too long, 2/4 too short;
+    - uncertain 53/122;
+    - tip artefact 13/35.
+
+    Tip artefacts and uncertain scans are what the generic values miss.
+  - Of the 74 human-kept scans the rule rejects:
+    - reasons: line discontinuity 33, ROI at the edge 24, several objects
+      19, forward/backward mismatch 10, size 1;
+    - by cohort: full145 30 of 145, added_2024 42 of 260, added_2025 2 of
+      88.
+
+    The rejections are therefore not concentrated in the 2024 additions.
+- **Optimization set: 419 scans**, kept by the triage and accepted by the
+  rule (full145 115, added_2024 218, added_2025 86).
+  - Decisions are in `benchmarks/chitosan_6mer_cu100_quality.tsv`, and the
+    manifest is `benchmarks/chitosan_6mer_optimization_v1.toml` (entries of
+    v2, unchanged).
+  - No grade was used. Campaign C steps 1–2 now run on this set. The
+    493-scan grading job was cancelled; the 493-scan run stays as a
+    measurement.
