@@ -10,7 +10,8 @@ set -euo pipefail
 # molecule consensus, corroborated assignment and latent-class fusion.
 # Export the four required paths with sbatch --export. Optional overrides:
 # STMFIT_RAW_SUBDIR (raw subdirectory of STMFIT_INPUT_DIR, default full146_raw),
-# STMFIT_COUNT_CONFIG (e.g. the 10-20mer config), STMFIT_ASSIGNMENT_CONFIG,
+# STMFIT_COUNT_CONFIG (default: the promoted decoupled-support config; e.g. the
+# 10-20mer config), STMFIT_ASSIGNMENT_CONFIG,
 # STMFIT_TEMPLATES (default: tracked frozen molds), STMFIT_SELECTED_SUMMARY
 # (reuse per-scan counts; development only) and STMFIT_COUNT_SHARDS (count in
 # that many single-thread processes; request as many CPUs).
@@ -32,7 +33,7 @@ if [[ $# -eq 0 ]]; then
 fi
 export GKSwstype=100 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 JULIA_NUM_THREADS=4
 exec "$JULIA_BIN" --startup-file=no -t 4 --project=. scripts/pipeline/run_molecule_consensus_chitosan.jl \
-    --data-dir "$STMFIT_INPUT_DIR/${STMFIT_RAW_SUBDIR:-full146_raw}" --count-config "${STMFIT_COUNT_CONFIG:-config/chitosan.toml}" \
+    --data-dir "$STMFIT_INPUT_DIR/${STMFIT_RAW_SUBDIR:-full146_raw}" --count-config "${STMFIT_COUNT_CONFIG:-config/chitosan_decoupled_support.toml}" \
     --config "${STMFIT_ASSIGNMENT_CONFIG:-config/unit_assignment_corroborated_training.toml}" \
     --consensus-config config/molecule_consensus.toml \
     --templates "${STMFIT_TEMPLATES:-dft/molds/chitosan_cc_molds_native_v1.tsv}" --outdir "$STMFIT_OUTDIR" \

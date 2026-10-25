@@ -108,7 +108,15 @@ calibrated probability**. `?` marks a lobe without a valid component (5 of
 | Promoted, per-scan calls (12025539) | 137 | 703 | 33 | 863 | 160 |
 | Promoted, fused (12025539, time-limited fits) | 137 | 772 | 88 | 865 | 93 |
 | Promoted, per-scan calls (12042058, deterministic) | 137 | 702 | 33 | 863 | 161 |
-| **Promoted, fused (12042058, deterministic)** | **137** | **771** | **88** | **865** | **94** |
+| Legacy support, fused (12042058, deterministic) | 137 | 771 | 88 | 865 | 94 |
+| Promoted (decoupled supports), per-scan calls (12380719) | 137 | 694 | 25 | 860 | 166 |
+| **Promoted (decoupled supports), fused (12380719)** | **137** | **776** | **85** | **865** | **89** |
+
+The decoupled supports (2026-10-25) leave every final count unchanged. Eight
+per-scan counts change, which moves the cohort-learned clusters: 17 scans in
+6 molecules change calls. The user adopted them after the grade, for their
+long-chain counts ([journal](journal.md)). The comparison below is the
+legacy-support run (12042058) against the record.
 
 Against the record: 62 scans gain, 21 lose and 62 tie. Exact chains: 51 gained,
 6 lost. Without the 43-scan molecule, the method has 514 correct / 45 exact

@@ -19,18 +19,23 @@ git show archive/pre-cleanup-20260929:docs/src/journal.md
 git show archive/pre-cleanup-20260929:docs/src/journal_archive.md
 ```
 
-## Current state (2026-09-29)
+## Current state (2026-10-25)
 
-**Method** (promoted): per-scan GCV counting (`chitosan.toml`), then
-repeated-scan molecule consensus with registered-ROI refits
-(`molecule_consensus.toml`), then per-scan assignment learned on corroborated
-scans (`unit_assignment_corroborated_training.toml`), then binomial
-latent-class fusion. Entry point: `test/run_molecule_consensus_chitosan.jl`.
+**Method** (promoted): per-scan GCV counting on the capped support, with
+fixed-N geometry refits on the legacy support
+(`chitosan_decoupled_support.toml`, since 2026-10-25), then repeated-scan
+molecule consensus with registered-ROI refits (`molecule_consensus.toml`),
+then per-scan assignment learned on corroborated scans
+(`unit_assignment_corroborated_training.toml`), then binomial latent-class
+fusion. Entry point: `scripts/pipeline/run_molecule_consensus_chitosan.jl`.
+The 10–20mer application uses `chitosan_10_20mer_decoupled_support.toml`.
 
-**Benchmark** (fresh raw run with deterministic fits, 12042058, `486ddec`;
-full145 own-N): 137/145 exact N (145/145 within one), 771/870 correct, 88/145
-exact chains, 865/870 classified, 94 errors, against the previous record
-129/694/43/855/161. Earlier time-limited runs gave 772 (three runs) and 769.
+**Benchmark** (fresh raw run, 12380719, `70a9baa`; full145 own-N): 137/145
+exact N (145/145 within one), 776/870 correct, 85/145 exact chains, 865/870
+classified, 89 errors. The legacy-support run (12042058, `486ddec`) gave
+137/771/88/865/94, and the previous record 129/694/43/855/161. The decoupled
+supports were adopted by the user after the grade, against the declared rule
+(2026-10-25).
 
 **Positions:** lobe positions repeat to 0.07 nm along and 0.09–0.11 nm across
 the chain over repeated scans (2026-10-04).
@@ -54,12 +59,11 @@ the chain over repeated scans (2026-10-04).
   `data/sets/10_20mer_curated`: the 19 usable scans the experimenters
   selected (`benchmarks/chitosan_10_20mer_curated.tsv`); 865 candidates
   remain.
-- Decoupled supports (2026-10-25): counting on the capped support and
-  geometry on the legacy one bring the 10–20mer lengths closer to the
+- Decoupled supports (2026-10-25, promoted): counting on the capped support
+  and geometry on the legacy one bring the 10–20mer lengths closer to the
   experimenters' readings (mean |ΔN| 1.47 → 1.00, 14/17 within one, 5/17
-  exact). On the 6-mer benchmark the final counts are unchanged, but the
-  assignment shifts (776 correct, 85 exact chains, 89 errors), so the
-  declared rule rejected it. The configs stay as a recorded experiment.
+  exact; run `dec1020_70a9baa`). The pattern and readings comparisons below
+  are from the earlier legacy-support run `app1020_5b706ca`.
 - 10–20mer test run (2026-10-21, 440 scans): the predicted unit order does
   not match the 15 manual readings beyond chance once composition is
   accounted for. The only robust structure is the edge signature (terminal
@@ -121,8 +125,9 @@ empirical templates; 10–20mer outputs not validated.
    capped support, refit geometry on the legacy one) keeps every final 6-mer
    count and fixes the long chains (mean |N − N_read| 1.47 → 1.00 on 17
    experimenter readings). The 6-mer assignment still moves through cohort
-   learning (776 correct but 85 exact chains, against 771/88), so the
-   declared rule rejected it. What remains is open question 8.
+   learning (776 correct but 85 exact chains, against 771/88). The declared
+   rule rejected it, and the user then adopted it (2026-10-25). What remains
+   is open question 8.
 3. **Long-chain assignment consistency.** On the 10–20mers the fusion fit gives
    θ0 = 0.45: per-scan calls disagree across repeat scans of the same molecule.
    What makes long-chain per-scan calls stable?
@@ -2107,3 +2112,34 @@ aggregates, cut molecules and non-chitosan objects stay out.
   (open question 8). Using the decoupled counting only for the 10–20mer
   application config would leave the benchmark untouched. That would be a
   new decision for the user, not part of this campaign's rule.
+
+### 2026-10-25 — Decision: decoupled supports promoted for the 6-mer method and the 10–20mer application
+
+- **Decision** (the user, after the grade): "on peut adopter les supports
+  découplés pour 10–20mer ET 6-mer puisque l'ensemble du benchmark est
+  équivalent (pour le 6-mer, même si le nombre de chaînes exactes recule, le
+  nombre d'erreurs recule aussi)".
+- **Against the declared rule.** The campaign rule required no regression
+  on any 6-mer figure, and exact chains fell from 88 to 85. This adoption
+  overrides that rule after seeing the grade. No parameter was retuned: the
+  promoted configs are exactly the declared ones.
+- **Grounds.**
+  - 6-mer: same final counts (137 exact, 145 within one, on all 146
+    scans); correct units 771 → 776; errors 94 → 89; classified unchanged;
+    exact chains 88 → 85. Exact chains come in molecule blocks, and here 43
+    of 85 come from one 43-scan molecule.
+  - 10–20mer: mean |ΔN| against 17 experimenter lengths 1.47 → 1.00, with
+    no loss within one unit. Repeat scans agree more often on the count.
+- **What changes.**
+  - The promoted counting configs are `config/chitosan_decoupled_support.toml`
+    (6-mer method) and `config/chitosan_10_20mer_decoupled_support.toml`
+    (10–20mer application).
+  - `hpc/run_molecule_consensus.sbatch` defaults to the first.
+  - `config/chitosan.toml` stays the base config and the default of the
+    single-stage scripts `batch_full.jl` and `extract_lobe_features.jl`.
+  - Updated headlines: README, docs index, unit-assignment page, runbook,
+    selection, config and calibration pages.
+- **Not redone.** The 10–20mer pattern report and the comparison with the
+  experimenters' acetylation readings are still those of the legacy run
+  `app1020_5b706ca`. The 493-scan extended benchmark and the campaigns A and
+  B used the legacy support.

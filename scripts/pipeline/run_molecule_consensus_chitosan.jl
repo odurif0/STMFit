@@ -3,7 +3,7 @@
 #
 # Usage:
 #   julia -t 4 --project=. scripts/pipeline/run_molecule_consensus_chitosan.jl \
-#       --data-dir RAW_DIR --count-config config/chitosan.toml \
+#       --data-dir RAW_DIR --count-config config/chitosan_decoupled_support.toml \
 #       --config config/unit_assignment_corroborated_training.toml \
 #       --consensus-config config/molecule_consensus.toml \
 #       --templates dft/molds/chitosan_cc_molds_native_v1.tsv --outdir NEW_DIR [--selected-summary TSV] \

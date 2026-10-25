@@ -34,7 +34,7 @@ new parameter.
 
 ### Chitosan policy: `support_midpoint_hybrid`
 
-The default in `config/chitosan.toml`. Two label-free layers act on `N_eff`:
+Used by `config/chitosan.toml` and the promoted `config/chitosan_decoupled_support.toml`. Two label-free layers act on `N_eff`:
 
 **Robust-AICc guard.** An auxiliary exhaustive elliptical candidate set is
 rescored with Student-t robust AICc (`robust_guard_nu = 8`); `robust_aicc_N` is
@@ -72,11 +72,13 @@ it; the run containing the peak is kept and padded by `support_padding_nm`.
 This assumes that at least 10% of the bins are background, which fails on
 chains that fill the profile. The alternative `half_maximum_cap` caps the
 threshold at the off-ROI background plus half the peak height. It fixes
-long-chain supports but degrades the 6-mer assignment, so it is not selected
-([journal](journal.md)). The key `geometry_support_threshold_rule` separates the
-two: N is counted on the capped support and the later fixed-N refits use the
-legacy one, or the capped one where that fit fails (experiment declared on
-2026-10-25, configs `*_decoupled_support.toml`).
+long-chain supports, but used everywhere it degrades the 6-mer assignment
+([journal](journal.md)). The promoted method therefore decouples them with
+`geometry_support_threshold_rule` (2026-10-25, configs
+`*_decoupled_support.toml`). N is counted on the capped support. The later
+fixed-N refits (scan geometry, consensus refits, assignment features) use the
+legacy support, or the capped one for scans whose fit fails or is flagged
+there; `geometry_summary.tsv` records the choice per scan.
 
 **Determinism.** `global_maxtime = 0`: the NLopt global search is bounded by
 iterations only, so identical runs give identical outputs on any node.
@@ -88,14 +90,17 @@ calibration ([Calibration](calibration.md)).
 
 ### Long chains: `adaptive_support_rescue`
 
-Used by `config/chitosan_10_20mer_adaptive_support_rescue.toml` (`n_max = 24`).
+Used by `config/chitosan_10_20mer_adaptive_support_rescue.toml` and the promoted
+application config `config/chitosan_10_20mer_decoupled_support.toml` (`n_max = 24`).
 If `N_eff` sits at the support-feasibility ceiling, a second pass with
 permissive support settings is accepted only when support length and N both
 increase and circular/elliptical counts stay coherent. The robust-AICc guard
 then acts down-only on the active support. Known limit: the support baseline
 is the 10% quantile of the axial profile. On long chains that fill most of the
 profile, the baseline lands on the molecule and the support is truncated, so
-long chains are undercounted ([journal](journal.md)).
+long chains are undercounted with the legacy rule. Counting on the capped
+support removes most truncations: against 17 experimenter length readings the
+mean |ΔN| goes from 1.47 to 1.00 ([journal](journal.md), 2026-10-25).
 
 ### Other policies
 

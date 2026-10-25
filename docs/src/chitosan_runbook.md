@@ -93,19 +93,22 @@ It then filters predictions to the 145 benchmark scans and writes:
   categories. This sorting reads labels and exists only in the grading step;
   a run's own `plots/` is label-free.
 
-Expected for the promoted method (deterministic fits): final 771/870 correct,
-88/145 exact chains, 865/870 classified, 94 errors; counts 137/145 exact,
-145/145 within one; per-scan calls 702/33/863/161. Identical runs must be
-identical byte for byte, except paths and logs.
+Expected for the promoted method (decoupled supports, job 12380719): final
+776/870 correct, 85/145 exact chains, 865/870 classified, 89 errors; counts
+137/145 exact, 145/145 within one; per-scan calls 694/25/860/166. The
+legacy-support run gave 771/88/865/94. Identical runs must be identical byte
+for byte, except paths and logs.
 
 A promotion needs a fresh raw run from a committed source, frozen configs,
 passing verification, and a complete comparison (counts, correct, exact
-chains, errors, abstentions) with no measure regressing.
+chains, errors, abstentions) with no measure regressing. The decoupled
+supports are the one exception so far: the user adopted them after the grade
+(exact chains 88 → 85, errors 94 → 89) for their long-chain counts.
 
 ## Counting only
 
 ```bash
-julia -t 4 --project=. scripts/pipeline/batch_full.jl 146 --config config/chitosan.toml \
+julia -t 4 --project=. scripts/pipeline/batch_full.jl 146 --config config/chitosan_decoupled_support.toml \
     --data-dir RAW_DIR --outdir results/counting_<tag> --skip-1d
 julia --project=. scripts/grading/grade_chitosan_benchmark.jl \
     --manifest benchmarks/chitosan_6mer_counting_confirmed.toml \
@@ -113,7 +116,8 @@ julia --project=. scripts/grading/grade_chitosan_benchmark.jl \
     --column N_selected --out results/counting_<tag>/grade.tsv
 ```
 
-Fresh per-scan counting gives 123/145 exact and 143/145 within one. The
+Fresh per-scan counting on the capped support gives 126/145 exact and 145/145
+within one (legacy support, `config/chitosan.toml`: 123 and 143). The
 historical 129/145 comes from a saved summary that fresh runs do not
 reproduce ([journal](journal.md)).
 
@@ -133,8 +137,8 @@ reproduce ([journal](journal.md)).
        --raw-root RAW_TREE --config config/molecule_consensus.toml --outdir NEW_DIR
    ```
 2. Run the method with the long-chain counting config:
-   `STMFIT_COUNT_CONFIG=config/chitosan_10_20mer_adaptive_support_rescue.toml`
-   (allow ≥ 8 h). Only registration decides which candidates are the same molecule.
+   `STMFIT_COUNT_CONFIG=config/chitosan_10_20mer_decoupled_support.toml`
+   (with 96 counting shards, 440 scans took 2 h). Only registration decides which candidates are the same molecule.
 3. Check integrity with `scripts/grading/grade_consensus_run.jl --run DIR --verify-only`.
    There is no grade, because there are no labels.
 4. Read `chain_report.tsv`, `assignment/review_queue.tsv`, the maps in

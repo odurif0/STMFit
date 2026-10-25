@@ -9,12 +9,15 @@ falls on the two GlcN (journal, 2026-10-22).
 
 ## Current method and benchmark result
 
-The promoted method (September 29, 2026) has four stages. None of them reads a
-benchmark label, expected count, sequence or class proportion:
+The promoted method (September 29, 2026; decoupled supports since October 25)
+has four stages. None of them reads a benchmark label, expected count,
+sequence or class proportion:
 
 1. **Per-scan counting.** A chain of 2D Gaussians is fitted along the molecular
    axis for each candidate N. GCV selects the count, with a robust-AICc guard
-   and a support-midpoint adjustment (`config/chitosan.toml`).
+   and a support-midpoint adjustment. The count uses the capped axial support;
+   every later fixed-N refit uses the legacy support, or the capped one where
+   that fit fails (`config/chitosan_decoupled_support.toml`).
 2. **Repeated-scan molecule consensus.** Consecutive scans of one molecule are
    registered in the absolute piezo frame (NCC ≥ 0.5). A track of ≥3 scans with
    a strict-majority count refits the disagreeing scans at that count
@@ -29,7 +32,7 @@ benchmark label, expected count, sequence or class proportion:
    false-call rate and mixing weight without labels. The posterior is the
    reported per-lobe uncertainty.
 
-Fresh raw-to-prediction run (Viper job 12042058, source `486ddec`), external
+Fresh raw-to-prediction run (Viper job 12380719, source `70a9baa`), external
 grading on the 145-scan NKNNKN 6-mer benchmark (870 positions; N = GlcNAc,
 K = GlcN; "correct" means the brighter class falls on the two GlcN):
 
@@ -37,24 +40,29 @@ K = GlcN; "correct" means the brighter class falls on the two GlcN):
 |---|---:|---:|---:|---:|---:|
 | Historical reference (Aug 2026) | 106 | 677 | 36 | 854 | 177 |
 | Previous record (saved hybrid counts) | 129 | 694 | 43 | 855 | 161 |
-| **Promoted method** (deterministic, job 12042058) | **137** | **771** | **88** | **865** | **94** |
+| Legacy support (deterministic, job 12042058) | 137 | 771 | 88 | 865 | 94 |
+| **Promoted method** (decoupled supports, job 12380719) | **137** | **776** | **85** | **865** | **89** |
 
-All 145 counts are within one lobe. Since 2026-09-30 the fits are
-deterministic: identical runs give identical outputs. The earlier time-limited
-runs gave 772, 772, 772 and 769 correct, each with 88 exact chains and 137/145
-exact N. **Limits:** in the NKNNKN control the two GlcN sit next to the chain
+All 145 counts are within one lobe, and every final count equals the
+legacy-support run's. The decoupled supports were adopted on 2026-10-25 by the
+user's decision after the grade (the declared rule required no regression on
+any figure; exact chains went from 88 to 85 while errors went from 94 to 89),
+for their long-chain counts. Since 2026-09-30 the fits are deterministic:
+identical runs give identical outputs. **Limits:** in the NKNNKN control the two GlcN sit next to the chain
 ends, so the brighter class coincides with both GlcN and edge adjacency, and
 benchmark accuracy is not chemical validation. The former naming rule
 "brighter = GlcNAc" is contradicted by the control. The assignment's benchmark
 signal is the contrast with the dimmer terminal lobe. Without it, amplitude is
 only weakly higher at GlcN than at interior GlcNAc (AUC ≤ 0.66) and the DFT
 molds barely separate them ([journal](docs/src/journal.md)).
-Exact chains come in molecule-sized blocks (43 of 88 from one 43-scan molecule).
+Exact chains come in molecule-sized blocks (43 of 85 from one 43-scan molecule).
 Only repeatedly imaged molecules are fused. The counting parameters keep their
 historical benchmark-informed provenance ([calibration](docs/src/calibration.md)).
-On unknown 10–20mers, some long chains are undercounted (truncated support) and per-scan calls are
-inconsistent across repeat scans (fitted false-call rate 0.45). Those outputs
-are therefore not chemically validated.
+On unknown 10–20mers, the decoupled supports bring the counts within a mean
+of 1.0 unit of 17 lengths read by the experimenters (1.5 with the legacy
+support). Per-scan calls stay inconsistent across repeat scans (fitted
+false-call rate 0.19), and the unit order does not match the experimenters'
+acetylation readings beyond chance. Those outputs are not chemically validated.
 
 ## Quick start
 
@@ -74,12 +82,12 @@ Pkg.instantiate(); Pkg.precompile()'
 julia --project=. scripts/tools/inspect_one_file.jl data/sets/6mer_Cu100_benchmark/240817_004.sxm
 
 # Per-scan counting only
-julia -t 4 --project=. scripts/pipeline/batch_full.jl 146 --config config/chitosan.toml \
+julia -t 4 --project=. scripts/pipeline/batch_full.jl 146 --config config/chitosan_decoupled_support.toml \
     --data-dir RAW_DIR --outdir results/counting
 
 # Complete method, raw scans -> predictions.tsv (run it on Viper for a cohort)
 julia -t 4 --project=. scripts/pipeline/run_molecule_consensus_chitosan.jl \
-    --data-dir RAW_DIR --count-config config/chitosan.toml \
+    --data-dir RAW_DIR --count-config config/chitosan_decoupled_support.toml \
     --config config/unit_assignment_corroborated_training.toml \
     --consensus-config config/molecule_consensus.toml \
     --templates dft/molds/chitosan_cc_molds_native_v1.tsv --outdir NEW_DIR
