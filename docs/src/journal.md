@@ -101,6 +101,23 @@ the chain over repeated scans (2026-10-04).
   (1979/2430 and 188 exact chains, vs 1847 and 104). It transfers worse to
   2025 (305/528 vs 361). It is a candidate, not promoted.
 
+**Per-unit reading and dataset selection (2026-10-25, campaigns R and D):**
+- Per-unit signals repeat across scans of a molecule, but no more in the
+  10–20mer than in the fixed-sequence 6-mer (the variance ratio interval is not
+  above 1), and amplitude alone reads K against N with a ceiling of about 55%.
+  The 6-mer, a position code, cannot validate an N/K reading.
+- The 6-mer subset the assignment is learned on moves one 10–20mer call in
+  five (noise floor: 81.4% agreement with the full-set model) and the bright
+  fraction from 16.5% to 41.3%. No subset is chosen; the full set stays the
+  frozen default.
+- Counting is the measurable weak point of the 10–20mer: 18 of 65 molecules
+  with repeated scans differ by more than 2 units across their scans.
+- Elite subsets: the scan-level elite (167 scans) broke the molecules and gave
+  44% in its own run (not a bug, diagnosis of 2026-10-25). The molecule-level
+  elite v2 (26 molecules, 141 scans), graded on the 493-scan run, gives 601
+  correct of 834 classified units (846 possible), 115/141 exact N and 38 exact
+  chains; its own run (Viper job 12387149) is pending.
+
 **Limits:** NKNNKN edge-adjacency confound (N = GlcNAc, K = GlcN). The
 benchmark signal, the bright class on the two GlcN at positions 2 and 5, is
 the contrast with the dimmer terminal lobe; without it the image features
@@ -117,6 +134,9 @@ empirical templates; 10–20mer outputs not validated.
    with its two GlcN? Either way it falls on the GlcN, opposite to the former
    rule "brighter = GlcNAc" (2026-10-22). A control molecule with a
    non-palindromic or homo-oligomer sequence is needed.
+   Campaign R (2026-10-25): amplitude alone cannot read K against N (ceiling
+   about 55%). Experiments that can: homo-oligomers (all GlcN, all GlcNAc), a
+   bias series, a non-palindromic or interior-K control.
    Position-neutral features recover edge versus interior, not chemistry.
 2. **Long-chain counting vs assignment geometry.** The capped support rule
    (`half_maximum_cap`, 2026-09-30) fixes long-chain supports. Mean
@@ -177,6 +197,17 @@ empirical templates; 10–20mer outputs not validated.
    use, reaches AUC 0.56 in the chemical direction (2026-10-22). A robust and accurate
    assignment needs new information (reference oligomers of known
    composition, other imaging conditions), not another classifier variant.
+
+10. **Counting reproducibility of the 10–20mer (2026-10-25).** 18 of 65
+    molecules with repeated scans differ by more than 2 units across scans,
+    while positions repeat. The instability comes from the extent detection of
+    heterogeneous chains (a bright end blob). A label-free counting rule that
+    reproduces across repeats is the next measurable target.
+11. **Which 6-mer subset to freeze (campaign D, 2026-10-25).** The choice moves
+    one call in five and the bright fraction between 16.5% and 41.3%; only the
+    145 original scans fall beyond the sampling noise. Stability is not
+    correctness. Open: report every application unit with its robustness
+    across the 20 models, and decide the frozen subset only with new controls.
 
 ## Lessons learned
 
@@ -2998,3 +3029,13 @@ aggregates, cut molecules and non-chitosan objects stay out.
   robustness flag (share of the 20 models that call the unit bright, from
   `application_calls.tsv`) is reported with every sequence, so that unstable
   units are not read as units.
+
+### 2026-10-25 — Molecule-level elite v2, measurement (a): the 493-scan run graded on the 141 elite scans
+
+- **Result.** Classes learned on all 492 scans (run `dec493_c2b954a`), graded
+  on the 141 scans of the 26 elite-v2 molecules: 601 correct of 834 classified
+  units (846 possible; 72.1%), 115/141 exact N, 38 exact chains.
+- **Status.** Measurement only, nothing re-chosen. Measurement (b), the
+  elite-v2-only run on Viper (job 12387149, `elite2_241f156`), is pending; the
+  72.1% is the baseline it is compared with. Presentation page 4 and the
+  fusion/consensus counts of that run are updated once it is graded.
