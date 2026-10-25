@@ -43,6 +43,28 @@ history is at the tag `archive/pre-cleanup-20260929`.
   `docs/src/dft_calculation_note.md` before changing cubes, criterion or builder;
   new molds get a new versioned file.
 
+## Method development strategy (user, 2026-10-25)
+
+- The 6-mer benchmark (known length and sequence) is where the method is
+  optimized and selected. The 10–20mer data are the unknown: the method is
+  applied to them unchanged, with no a priori constraint on the result
+  (length, composition, pattern). This is what makes the 10–20mer
+  measurement trustworthy.
+- Freeze what was optimized before applying it, assignment included where
+  possible. Re-learning the classes on the 10–20mer cohort is not the same
+  method.
+- Optimize with held-out sessions or molecules. Prefer correct units, errors
+  and per-molecule scores to exact chains, which come in molecule blocks.
+  NKNNKN confounds K with edge adjacency and has no interior K, so it cannot
+  validate interior assignment.
+- The user's 10–20mer N/K pattern, once given, is a final test, never an
+  optimization target.
+- The optimization dataset decides the result. Its image quality must be
+  impeccable, and more images is not better when they are unusable. Select
+  scans on image quality judged before any method output (visual review or
+  label-free image criteria), never on whether the method succeeds. Apply
+  the same quality standard to the 10–20mer data.
+
 ## Structure and entrypoints
 
 ```

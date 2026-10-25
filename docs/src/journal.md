@@ -2208,3 +2208,23 @@ aggregates, cut molecules and non-chitosan objects stay out.
     matched no better than chance.
   - The pattern is not interpreted chemically. The user's N/K pattern for
     the 10–20mer will test it.
+
+### 2026-10-25 — Method development strategy (user decision)
+
+- **Optimize on the 6-mer, apply to the 10–20mer.** The 6-mer benchmark,
+  whose length and sequence are known, is where the method is optimized and
+  selected. The method is then applied unchanged to the 10–20mer, the
+  unknown, with no a priori constraint on the result. The user's 10–20mer
+  N/K pattern, once given, is a final test only.
+- **Transfer.** Optimized parts are frozen before the application,
+  assignment included where possible, because transductive re-learning on
+  the 10–20mer cohort is not the same method. Optimization uses held-out
+  sessions or molecules and block-robust measures (correct units, errors,
+  per-molecule scores). NKNNKN cannot validate interior assignment: it has
+  no interior K.
+- **Dataset.** The optimization set must have impeccable image quality.
+  More images is not better when they are unusable: the 493-scan extension
+  lowered both counting and assignment (2026-10-19). Scans are selected on
+  image quality judged before any method output, and the 10–20mer data are
+  held to the same standard.
+- Recorded in `AGENTS.md` ("Method development strategy").
