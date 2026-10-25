@@ -20,7 +20,8 @@
 #            roi_touches_unscanned (molecule may be cut by the end of the scan),
 #            roi_touches_border, several_objects (second ROI component >= 30%
 #            of the largest), fwd_bwd_mismatch (forward/backward correlation < 0.5)
-#   values   (usable scans) second_object_ratio, contrast_to_noise (ROI 99th
+#   values   (usable scans) second_object_ratio, roi_border_margin_nm (molecule region to the nearest
+#            frame border), contrast_to_noise (ROI 99th
 #            percentile minus off-ROI median, over the image noise), fwd_bwd_corr,
 #            fwd_bwd_nrmse, line_discontinuity, stripe_periodicity, roi_length_nm;
 #            scripts/data/decide_scan_quality.jl turns them into a decision
@@ -110,6 +111,15 @@ function inspect_scan(path, pcfg, max_range)
     thr = G._adaptive_roi_threshold(signal, noise, pcfg.roi_threshold_fraction, 2.5)
     areas = component_areas(signal .>= thr)
     length(areas) >= 2 && areas[2] >= 0.3 * areas[1] && push!(flags, "several_objects")
+    if any(mask)
+        rows_in = findall(vec(any(mask; dims=2))); cols_in = findall(vec(any(mask; dims=1)))
+        px = img.range_nm[1] / (img.width - 1); py = img.range_nm[2] / (img.height - 1)
+        row["roi_border_margin_nm"] = @sprintf("%.3f", minimum((
+            (first(cols_in) - 1) * px * max(1, st), (size(mask, 2) - last(cols_in)) * px * max(1, st),
+            (first(rows_in) - 1) * py * max(1, st), (size(mask, 1) - last(rows_in)) * py * max(1, st))))
+    else
+        row["roi_border_margin_nm"] = "NaN"
+    end
     row["second_object_ratio"] = @sprintf("%.4f", length(areas) >= 2 ? areas[2] / areas[1] : 0.0)
     off = signal[.!mask .& observed]
     row["contrast_to_noise"] = isempty(off) || !any(mask) ? "NaN" :
@@ -226,7 +236,7 @@ function main(args=ARGS)
     end
     cols = ["file", "status", "flags", "duplicate_of", "session", "rec_date", "rec_time", "range_nm", "pixels",
             "angle_deg", "bias_v", "finite_fraction", "fwd_bwd_corr", "roi_length_nm",
-            "second_object_ratio", "contrast_to_noise", "fwd_bwd_nrmse", "line_discontinuity", "stripe_periodicity", "central_name",
+            "second_object_ratio", "roi_border_margin_nm", "contrast_to_noise", "fwd_bwd_nrmse", "line_discontinuity", "stripe_periodicity", "central_name",
             "size_bytes", "sha256", "scan_file", "path", "detail"]
     write_table(joinpath(out, "catalog.tsv"), cols,
         [Dict(c => replace(get(r, c, ""), '\t' => ' ', '\n' => ' ') for c in cols) for r in rows])

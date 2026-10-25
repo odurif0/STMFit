@@ -19,3 +19,20 @@ size_window = [0.5, 1.5]           # x median ROI length of accepted scans; 6-me
 
 [preprocessing]
 # The values use the counting config's preprocessing (catalog --count-config config/chitosan.toml).
+
+# Frozen percentile reference of the score (campaign E, declared 2026-10-25): 21 quantile knots (0, 5, ..., 100%) of each axis
+# over the 827 technically usable Cu(100) 6-mer scans of 2026-10-25 (score_scan_quality.jl --derive-reference). Never recomputed on another set.
+[reference.contrast_to_noise]
+knots = [0.969, 2.896, 4.7162, 5.8721, 6.785, 7.986, 8.931, 9.8191, 10.7498, 11.7777, 12.586, 13.6083, 14.886, 16.3028, 17.6088, 19.809, 21.3412, 24.0416, 29.2748, 35.246, 216.618]
+[reference.fwd_bwd_corr]
+knots = [0.11, 0.5003, 0.5976, 0.66, 0.71, 0.7515, 0.7768, 0.7961, 0.819, 0.8377, 0.857, 0.8703, 0.8946, 0.905, 0.916, 0.934, 0.943, 0.952, 0.9614, 0.973, 0.996]
+[reference.roi_border_margin_nm]
+knots = [0, 0, 0, 0, 0.1266, 0.379, 0.5098, 0.6304, 0.7444, 0.869, 0.973, 1.0617, 1.137, 1.233, 1.301, 1.397, 1.493, 1.6851, 1.996, 2.407, 6.888]
+[reference.line_discontinuity]
+knots = [4.7477, 5.73474, 6.18436, 6.43733, 6.6642, 6.96265, 7.34034, 7.7916, 8.31516, 8.80913, 9.3226, 10.3006, 11.8954, 15.3551, 20.1677, 27.2995, 42.9664, 69.1721, 97.461, 257.902, 1.22903e+11]
+[reference.stripe_periodicity]
+knots = [5.9227, 79.9725, 107.627, 142.018, 183.14, 249.597, 312.338, 360.779, 410.419, 470.081, 529.484, 599.349, 659.383, 721.408, 779.905, 845.955, 915.233, 973.394, 1108.02, 1309.34, 2411.18]
+[reference.fwd_bwd_nrmse]
+knots = [0.1385, 0.26092, 0.31244, 0.34169, 0.36802, 0.39315, 0.43004, 0.46206, 0.49572, 0.54144, 0.5663, 0.59822, 0.632, 0.66369, 0.69414, 0.73195, 0.7901, 0.86059, 0.95638, 1.0349, 1.3536]
+[reference.second_object_ratio]
+knots = [0, 0, 0, 0, 0, 0, 0, 0.0001, 0.0002, 0.0003, 0.0006, 0.0012, 0.00246, 0.0054, 0.01512, 0.05555, 0.15148, 0.27189, 0.51216, 0.78667, 0.9992]

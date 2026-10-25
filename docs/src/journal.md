@@ -2487,3 +2487,44 @@ aggregates, cut molecules and non-chitosan objects stay out.
   per-molecule results next to per-scan ones. This answers the open
   question on the sub-dataset. It is a measurement: nothing is re-selected
   after it.
+
+### 2026-10-25 — Campaign E results: the declared rule gives an elite of 6 scans; the score is a weak proxy for the triage
+
+- **Score** (`scripts/data/score_scan_quality.jl`, frozen reference deciles in
+  `config/scan_quality.toml`, new catalog value `roi_border_margin_nm`).
+  Median score 0.51 on the 827 usable scans, as expected for percentile
+  ranks.
+- **Validation against the earlier human triage**
+  (`scripts/grading/report_elite_selection.jl`, outputs in
+  `results/quality_6mer_20261025/elite/`):
+  - AUC of the score against kept/rejected: **0.661** (827 scans, 493 kept).
+  - Threshold at 98% precision on all sessions: 0.748. Leave-one-session-out:
+    6 scans predicted elite, 5 of them human-kept (precision 0.833, below
+    the 0.98 target).
+  - **Elite subset: 6 of the 492 full-set scans.** The declared rule says
+    that fewer than 80 scans is reported as too small and the target is not
+    relaxed silently. It is reported as such.
+- **Reading.**
+  - The human triage rejected mostly for molecule integrity (cut molecule,
+    no molecule, several objects, not a 6-mer), not for image sharpness.
+    The seven axes measure image quality and miss these reasons, so the
+    triage is a poor proxy for "best images".
+  - With about 60% of the scored scans human-kept, a 98% precision target
+    is very demanding for a score with AUC 0.66.
+  - Any elite threshold from these data would therefore be a choice, not a
+    validated measure. A reference needs human quality grades of the images
+    themselves (the closing proposal of the presentation).
+- **Track integrity** (`scripts/data/check_track_integrity.jl`, SXM
+  headers and fitted lobe positions only; `results/dec493_c2b954a_integrity/`).
+  On the 493-scan run: 74 tracks of at least 2 scans (449 scans), none with
+  more than one session, no scan of another track interleaved, median span
+  5.8 min, median centroid spread 0.6 nm. Four tracks are flagged
+  (diagnostic thresholds from the collection limits, nothing selected):
+  - track 58 (43 scans, the molecule behind 43 of 85 exact chains): chain
+    axis turns by about 40° over the series, in small steps (median 1.2°,
+    one step of 27°);
+  - track 12 (11 scans): one 5.6 nm jump of the molecule centre between two
+    consecutive scans, with the same axis (86–96°) and count;
+  - track 25 (17 scans): counts range over 3 units;
+  - track 17 (14 scans): a 110 min gap between two scans.
+  The 440-scan 10–20mer run is not checked yet.
