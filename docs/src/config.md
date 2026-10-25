@@ -10,7 +10,7 @@ must update this page and [Calibration](calibration.md).
 |---|---|---|
 | `chitosan.toml` | Per-scan counting (6-mer benchmark, default) | Promoted |
 | `chitosan_10_20mer_adaptive_support_rescue.toml` | Counting for 10–20mer application | Application config |
-| `chitosan_decoupled_support.toml`, `chitosan_10_20mer_decoupled_support.toml` | Counting on the capped support, geometry on the legacy support (the two configs above otherwise unchanged) | Experiment (2026-10-25) |
+| `chitosan_decoupled_support.toml`, `chitosan_10_20mer_decoupled_support.toml` | Counting on the capped support, geometry on the legacy support (the two configs above otherwise unchanged) | Experiment (2026-10-25), not adopted |
 | `molecule_consensus.toml` | Registration, consensus, repeat-scan collection, fusion | Promoted |
 | `unit_assignment_corroborated_training.toml` | Per-scan assignment | Promoted |
 | `unit_assignment_patch_support.toml` | Same, learning on all scans | Previous reference (control) |

@@ -54,6 +54,12 @@ the chain over repeated scans (2026-10-04).
   `data/sets/10_20mer_curated`: the 19 usable scans the experimenters
   selected (`benchmarks/chitosan_10_20mer_curated.tsv`); 865 candidates
   remain.
+- Decoupled supports (2026-10-25): counting on the capped support and
+  geometry on the legacy one bring the 10–20mer lengths closer to the
+  experimenters' readings (mean |ΔN| 1.47 → 1.00, 14/17 within one, 5/17
+  exact). On the 6-mer benchmark the final counts are unchanged, but the
+  assignment shifts (776 correct, 85 exact chains, 89 errors), so the
+  declared rule rejected it. The configs stay as a recorded experiment.
 - 10–20mer test run (2026-10-21, 440 scans): the predicted unit order does
   not match the 15 manual readings beyond chance once composition is
   accounted for. The only robust structure is the edge signature (terminal
@@ -111,8 +117,12 @@ empirical templates; 10–20mer outputs not validated.
    |N − N_manual| drops from 1.33 to 0.92, and `251206_013` goes from 4 to 11
    lobes (12 read). It also improves 6-mer per-scan counts (123 → 126 exact,
    143 → 145 within one). But it collapses the 6-mer assignment (771/88 →
-   702/24), so it is not selected. Counting and assignment must be decoupled,
-   or the assignment made robust to end-lobe geometry, before it can be used.
+   702/24), so it is not selected. Decoupling them (2026-10-25: count on the
+   capped support, refit geometry on the legacy one) keeps every final 6-mer
+   count and fixes the long chains (mean |N − N_read| 1.47 → 1.00 on 17
+   experimenter readings). The 6-mer assignment still moves through cohort
+   learning (776 correct but 85 exact chains, against 771/88), so the
+   declared rule rejected it. What remains is open question 8.
 3. **Long-chain assignment consistency.** On the 10–20mers the fusion fit gives
    θ0 = 0.45: per-scan calls disagree across repeat scans of the same molecule.
    What makes long-chain per-scan calls stable?
@@ -2042,3 +2052,58 @@ aggregates, cut molecules and non-chitosan objects stay out.
 - **Adoption.** If both criteria hold, the decoupled configs replace the
   promoted counting configs and every cited headline is updated. Otherwise
   the campaign is recorded as rejected.
+
+### 2026-10-25 — Decoupled supports: long-chain counts improve, 6-mer exact chains drop; rejected by the declared rule
+
+- **Runs** (code `70a9baa`, all label-free checks pass, outputs in
+  `results/dec6mer_70a9baa/` and `results/dec1020_70a9baa/`):
+  - 6-mer, 146 scans, Viper job 12380719 (38 min, 96 counting shards);
+  - 10–20mer, the 440 scans of the test run, job 12380720 (1 h 59).
+- **Fallback.** Geometry needed the counting support for 1 of 146 6-mer
+  scans (`240818_019`, whose legacy support cannot hold its count) and for
+  59 of 440 10–20mer scans.
+- **6-mer** (external grade, full145 own-N, against run A):
+
+  | Run | Exact N | Within one | Per-scan exact N | Correct | Exact chains | Classified | Errors |
+  |---|---:|---:|---:|---:|---:|---:|---:|
+  | A (legacy support) | 137 | 145 | 123 | 771 | 88 | 865 | 94 |
+  | Decoupled supports | 137 | 145 | 126 | 776 | 85 | 865 | 89 |
+
+  - Every final count equals run A's, on all 146 scans. Eight per-scan
+    counts change, and so do their geometries.
+  - Those eight scans change the cohort-learned clusters. Final calls change
+    on 17 scans in 6 molecules: one 10-scan molecule gains a unit, and three
+    chains lose their exactness. Fusion π is 0.330 (A: 0.342; truth 0.333).
+  - Exact chains drop from 88 to 85, so the 6-mer criterion fails.
+- **10–20mer** (`scripts/grading/report_length_readings.jl`, readings
+  untracked):
+
+  | Run | Readings | Exact (final) | Within one | Mean abs ΔN (final) | Mean abs ΔN (per scan) |
+  |---|---:|---:|---:|---:|---:|
+  | Reference `app1020_5b706ca` | 17 | 4 | 14 | 1.47 | 1.53 |
+  | Decoupled supports | 17 | 5 | 14 | 1.00 | 1.06 |
+
+  - The large truncations are gone: `251206_014` goes from 7 to 11 units
+    (12 read) and `260220_083` from 2 to 9 (8 read). `251206_013`, read by a
+    third party only, goes from 4 to 11 (12 read).
+  - Three chains move by one unit: `251210_018` becomes exact, while
+    `251206_034` and `251206_038` move one unit away from the reading.
+  - The criterion holds: the mean decreases and the within-one count does
+    not drop.
+  - Repeat scans agree more often: 164 scans sit in a track whose counts
+    agree (reference 131), and 145 in a track without a strict majority
+    (reference 177).
+  - 96 final counts change (70 up, 26 down). Fusion: π 0.48, θ0 0.19,
+    θ1 0.71 (reference 0.38 / 0.19 / 0.62).
+- **Decision.** By the declared rule, both criteria had to hold. The 6-mer
+  one fails on exact chains, so the decoupled configs are not adopted and
+  no headline changes. They stay in `config/` as the record of this
+  experiment.
+- **Reading.** Decoupling achieves its counting goal: long chains are
+  counted on full supports, and no 6-mer count is lost. The 6-mer
+  assignment no longer moves through geometry, since the scans with
+  unchanged N keep run A's geometry. It moves through the cohort-wide
+  learning, which a few changed per-scan counts are enough to shift
+  (open question 8). Using the decoupled counting only for the 10–20mer
+  application config would leave the benchmark untouched. That would be a
+  new decision for the user, not part of this campaign's rule.
