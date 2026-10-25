@@ -2722,3 +2722,37 @@ aggregates, cut molecules and non-chitosan objects stay out.
     against 3 and 4) is at least the between-lobe standard deviation σ_b
     (d′ ≥ 1); the accuracy ceiling of a single threshold is Φ(d′/2).
   - No variant is selected on these results: all are reported.
+
+### 2026-10-25 — Elite-only run: learning the assignment on the elite alone gives 44% correct units
+
+- **Run.** `results/elite167_df4a4fa/` (Viper job 12386344, 46 min, code
+  `df4a4fa`): the 167 provisional-elite scans through the promoted method
+  with the decoupled supports, so counting, consensus, classes and fusion
+  are all learned on these scans only. All label-free checks pass; the
+  geometry used the counting support for 10 of 167 scans.
+- **Grade** (elite manifest, `results/elite167_df4a4fa_grade/`):
+
+  | Run on the elite scans | Exact N | Correct units | Exact chains |
+  |---|---:|---:|---:|
+  | classes learned on the 493 scans | 136/167 | 675/1002 (67%) | 32 |
+  | classes learned on the elite alone | 136/167 | 441/992 (44%) | 0 |
+
+  - Correct units by position 1–6 (N K N N K N): 42, 59, 4, 1, 76, 68%,
+    against 68, 62, 51, 74, 79, 86% with the 493-scan classes.
+  - Counting is unchanged (136 exact in both): it does not depend on the
+    cohort.
+- **Mechanism.** The classes learned on 54 molecules put 70% of the units in
+  the bright class (44% with the 493-scan classes on the same scans): 96%
+  and 99% at the core N (positions 3 and 4) and 58% at the first unit. The
+  label-free fusion fit shows it: π 0.66, false-call rate θ0 0.38, detection
+  rate θ1 0.96, against 0.42, 0.05 and 0.74 for the 493 scans. The clusters
+  no longer separate the ends from the interior.
+- **Reading.**
+  - This is the dataset dependence of the assignment (open question 8) at
+    its extreme: 89% (146-scan run), 80% (the same 145 scans in the 493-scan
+    run), 76% (full set), 67% (elite, 493-scan classes) and 44% (elite
+    alone), all from one method. "Optimising on a better subset" is not
+    supported by this run.
+  - A label-free alarm exists: θ0 and π of the fusion fit. θ0 is 0.03–0.05
+    in the 6-mer runs of 146 to 493 scans, 0.38 here, and 0.19 on the
+    10–20mer run, which therefore sits between the two.
