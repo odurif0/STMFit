@@ -2450,3 +2450,40 @@ aggregates, cut molecules and non-chitosan objects stay out.
   2243/2958 (75.8%). Filtering by the current rule therefore does not
   improve the assignment: counting gains about one point and the assignment
   loses less than one point. Different cohorts, so this is indicative.
+
+### 2026-10-25 — Declared campaign E: an automatic, label-free definition of the elite subset
+
+- **Deliverable** (user request: an objective, automatic, efficient
+  selection; the user does not want to rate images, and may ask colleagues
+  later). A frozen image-quality score and an elite subset of the 492-scan
+  full set, with the same standard for the 10–20mer. Time box: 2026-10-25
+  to 2026-10-26.
+- **Score** (image only: no fit, no count, no method output).
+  - Seven axes, each oriented so that higher is better: contrast to noise;
+    line discontinuity (inverted); stripe periodicity (inverted);
+    forward/backward correlation; forward/backward NRMSE (inverted); second-object
+    ratio (inverted); molecule-to-border margin in nm (new catalog value
+    `roi_border_margin_nm`).
+  - Each axis is converted to a percentile rank against a **frozen
+    reference**: the 827 technically usable Cu(100) 6-mer scans of
+    2026-10-25. The reference deciles are written in
+    `config/scan_quality.toml`, so a scan's score does not depend on the
+    set it is in, and the 10–20mer data are scored on the same scale.
+  - Score = mean of the seven percentile ranks.
+- **Validation without new labels.** The earlier human triage is used as
+  weak labels: kept (493) versus rejected (395, overview rejections left
+  out).
+  - Reported: the AUC of the score against the triage, overall and with
+    each session held out in turn.
+  - The elite threshold is not chosen to maximise any method grade.
+- **Threshold, fixed now.** The smallest score above which at least 98% of
+  the scans (all scans with a triage decision) are human-kept, found on the
+  training sessions only and applied to the held-out sessions. Elite = scans
+  of the 492-scan full set above it. The held-out precision and the elite
+  size are reported. If the elite has fewer than 80 scans, it is reported as
+  too small and the target is not relaxed silently.
+- **Then.** The method is graded on the full set and on the elite subset,
+  on the existing 493-scan run (same cohort, nothing re-learned), with
+  per-molecule results next to per-scan ones. This answers the open
+  question on the sub-dataset. It is a measurement: nothing is re-selected
+  after it.
