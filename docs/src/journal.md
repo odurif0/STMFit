@@ -2897,3 +2897,39 @@ aggregates, cut molecules and non-chitosan objects stay out.
   - A subset is not called better or worse on the 6-mer alone: stability on the
     10–20mer says nothing about correctness, and the 6-mer cannot validate an N/K
     reading (campaign R).
+
+### 2026-10-25 — The elite-only result (44%) is not a bug: the scan-level elite broke the molecules; diagnostics
+
+- **Why this entry.** The user found the 44% suspect: a subset of better
+  images should not do worse than the full set. The checks below look for a
+  bug before accepting it.
+- **No bug, three independent checks.**
+  - *Features.* The per-scan features of the 1007 lobes the elite run and the
+    493-scan run share are identical for 974 of them (6 scans differ).
+  - *Naming.* In the elite-only run the class 1 is the brighter one (mean
+    relative amplitude 0.82 against 0.58), as in the 493-scan run (0.88
+    against 0.66).
+  - *Replay.* Learning the assignment from the elite run's own corroborated
+    scans with the frozen-assignment code (no cap, learned weights, the run's own
+    Fisher) reproduces the run's calls exactly (100% identical) and its fit
+    (θ0 0.382, π 0.66 with fusion). The collapse is therefore reproduced
+    offline.
+- **Cause.** The elite was chosen scan by scan, and that fragmented the repeat
+  structure the method relies on.
+  - The 167 elite scans come from 54 molecules (tracks of the 493-scan run);
+    38 of them keep fewer than 3 scans (47 scans) and only 16 keep at least 3.
+  - In the elite run, 88 scans are corroborated, in 13 molecules; the two
+    largest hold 53% (31 and 16 scans). The production assignment has no cap
+    per molecule, so the classes are learned on 13 molecules, two of which
+    dominate.
+  - The same elite-run data with a cap of 5 scans per molecule (frozen design,
+    equal weights, frozen Fisher) give 80.1% correct units (terminal 98.5%, K
+    64.3%, core N 77.6%), and with a cap of 1 scan 72.7%. Frozen models learned
+    on the elite from the 493-scan features give 69–76% on the elite scans and
+    about 84% on the other scans, whatever the cap, weights or Fisher.
+- **Reading.** The elite-only run measures the fragility of a method that
+  re-learns its classes on a small, molecule-poor cohort without a cap. It does
+  not show that better images are worse. The cap per molecule of campaign A
+  removes the failure. The unit of a dataset selection is the molecule: a
+  selection that splits the scans of a molecule below the 3 scans the consensus
+  needs destroys the corroboration. A molecule-level elite is declared next.
