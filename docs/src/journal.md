@@ -2863,3 +2863,37 @@ aggregates, cut molecules and non-chitosan objects stay out.
     several biases test whether the contrast depends on the tunnelling
     conditions; a non-palindromic or interior-K control gives label
     variation at fixed position.
+
+### 2026-10-25 — Declared campaign D: how the 6-mer training subset changes the frozen assignment of the 10–20mer
+
+- **Deliverable** (user idea, 2026-10-25: other groups and sub-data sets of the
+  6-mer, and their impact on the 10–20mer). A measurement of the dependence of
+  the 10–20mer output on the choice of the 6-mer subset the assignment is
+  learned on. Not a selection: no subset is chosen from the result.
+- **Models.** The fully frozen, label-free assignment of campaign A
+  (`config/unit_assignment_frozen_labelfree.toml`, reference rule: corroborated
+  scans, at most 5 per track) learned on a subset of the scans of the 493-scan
+  6-mer run, then applied unchanged to the 440-scan 10–20mer run. Features are
+  the run's own (standardised per scan, Fisher frozen on the reference), so a
+  scan's features do not depend on the subset.
+- **Subsets** (of the 492-scan full set unless stated): the full set; the 167
+  elite scans; the 419 rule-accepted scans; the 145 original scans (cohort
+  `full145`); the 2024 sessions; the 2025 sessions; the full set with a cap of
+  1, 3, 10 scans per track and with none; and the noise floor, 5 random
+  167-scan subsets (scans drawn at random) and 5 random molecule subsets (random
+  tracks until 167 scans are reached), seeds fixed.
+- **Metrics.**
+  - 10–20mer: the fused call of every lobe; pairwise agreement of the calls of
+    two models (lobes classified by both); class-1 fraction by distance class
+    to the nearest end (1, 2, 3, ≥ 4).
+  - 6-mer (grading side): accuracy by position class (terminal, K, core N) on
+    the scans outside the model's training subset, against the position-only
+    rule (100%) and the ends-only rule (66.7%); fitted θ0, θ1, π.
+- **Reading rules, fixed now.**
+  - The noise floor is the pairwise agreement among the random subsets. A
+    structured subset changes the 10–20mer output beyond sampling if its
+    agreement with the full-set model falls below the 5th percentile of the
+    noise floor (agreement of random subsets with the full-set model).
+  - A subset is not called better or worse on the 6-mer alone: stability on the
+    10–20mer says nothing about correctness, and the 6-mer cannot validate an N/K
+    reading (campaign R).
