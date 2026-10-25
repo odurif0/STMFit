@@ -2528,3 +2528,18 @@ aggregates, cut molecules and non-chitosan objects stay out.
   - track 25 (17 scans): counts range over 3 units;
   - track 17 (14 scans): a 110 min gap between two scans.
   The 440-scan 10–20mer run is not checked yet.
+
+### 2026-10-25 — Declared: provisional elite subset = best third of the frozen quality score (user: option 1, "I leave the choice of the best to you")
+
+- **Rule, fixed now.** Elite = the scans of the 492-scan full set whose
+  frozen quality score (`config/scan_quality.toml`) lies in the top third
+  of the full set's scores (about 164 scans). Image values only: no method
+  output and no grade enters the choice.
+- **Status.** Provisional and arbitrary in its size: the score is a weak
+  proxy for the human triage (AUC 0.66), and no human quality grades exist.
+  It stands until colleagues grade the images (closing proposal of the
+  presentation), and is then redone against that reference.
+- **Measurement, not selection.** The method is graded on the full set and
+  on the elite, on the existing 493-scan run (classes learned on all 493
+  scans, not on the elite alone). Per-scan results sit next to per-molecule
+  ones, and nothing is re-selected after the grade.
