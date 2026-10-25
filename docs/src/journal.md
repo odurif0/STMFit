@@ -2756,3 +2756,110 @@ aggregates, cut molecules and non-chitosan objects stay out.
   - A label-free alarm exists: θ0 and π of the fusion fit. θ0 is 0.03–0.05
     in the 6-mer runs of 146 to 493 scans, 0.38 here, and 0.19 on the
     10–20mer run, which therefore sits between the two.
+
+### 2026-10-25 — Campaign R results: per-unit signals repeat, but no more in the 10–20mer than in a fixed-sequence 6-mer; amplitude cannot read K against N
+
+- **Correction of the exploratory disclosure.** The prototype's 10–20mer
+  reproducibility (ICC 0.2–0.3) was wrong: it grouped the lobes of scans
+  whose count differs from the track's, which have no physical lobe, into one
+  pseudo-lobe per track. The repository code skips them. Its numbers
+  replace the prototype's (the 6-mer values and the time-lag values were
+  unaffected). The prototype's covariate regression (explained variance 5% and
+  7%) did not use physical lobes and stands as an exploratory remark.
+- **Data.** 6-mer, 493-scan run `dec493_c2b954a`: 53 tracks of at least 3
+  scans (407 scans). 10–20mer, 440-scan run `dec1020_70a9baa`: 65 tracks (352
+  scans). Outputs in `results/reliability_20261025/` (script
+  `scripts/data/report_unit_reliability.jl`) and `results/ceiling_20261025/`
+  (`scripts/grading/report_contrast_ceiling.jl`). The module has tests
+  (`test/test_unit_reliability.jl`).
+- **Reliability of the amplitude residual** (d ≥ 2, at most 8 scans per track;
+  between-lobe sd, within-lobe sd, ICC with its 95% interval):
+
+  | Set | Tracks | sd between | sd within | ICC |
+  |---|---:|---:|---:|---|
+  | 6-mer (fixed sequence) | 52 | 0.145 | 0.168 | 0.43 [0.34, 0.50] |
+  | 10–20mer | 50 | 0.130 | 0.151 | 0.43 [0.33, 0.50] |
+  | 10–20mer, N 7–9 | 33 | 0.143 | 0.153 | 0.47 [0.35, 0.56] |
+  | 10–20mer, N ≥ 10 | 12 | 0.105 | 0.143 | 0.35 [0.22, 0.47] |
+
+  - Every 6-mer has the same sequence and, once the mean at each distance to
+    the end is removed, nothing that depends on the sequence is left. The
+    persistent unit-level variation of 14.5% in amplitude is therefore not
+    sequence. It comes from the molecule and its environment.
+- **Rule on extra structure** (fixed in advance): the ratio of between-lobe
+  variances 10–20mer over 6-mer is 0.81 [0.52, 1.21] for the amplitude, 0.99
+  [0.59, 1.63] for the integrated amplitude, 1.20 [0.63, 2.76] along and 1.20
+  [0.61, 2.30] across. No interval lies above 1: **no evidence of
+  reproducible unit-level information in the 10–20mer beyond the
+  fixed-sequence level.**
+- **Persistence.** The correlation of the residual profile between two scans
+  of a molecule, amplitude, by lag (0–3, 3–10, 10–30, over 30 min): 6-mer
+  0.81, 0.67, 0.73, 0.62; 10–20mer 0.69, 0.61, 0.51, 0.56. It decays slowly, so
+  the pattern is a property of the molecule, not of a passing tip state.
+- **Order along the chain.** The lag-1 autocorrelation of each molecule's
+  persistent profile is −0.267 in the 6-mer and −0.196 in the 10–20mer, against
+  −0.243 [−0.329, −0.154] and −0.164 [−0.241, −0.081] when the profiles are
+  shuffled along the chain: no alternation beyond chance.
+- **Reading ceiling** (control NKNNKN, 105 molecules, `010010`). Contrast of the
+  K lobes over the core N lobes (positions 3 and 4), in log amplitude:
+  +0.037 [−0.004, +0.074], position effect included, so an upper bound for
+  chemistry. Against the between-lobe sd of 0.145, d′ = 0.25 and the best
+  single threshold reaches 55% [51, 60] for two equally likely classes
+  (53% from one scan). A contrast of 0.24 would be needed for 80%, six times
+  the measured one. Width along and across, and the integrated amplitude, give
+  54%, 52% and 52%. On the 146-scan run (38 molecules) the amplitude contrast
+  is +0.061 [+0.005, +0.124] and the ceiling 59% [51, 69].
+- **The 6-mer cannot test an N/K reading.** In NKNNKN a unit is K exactly
+  when it is the second from either end, so all the molecules carry the same
+  class at a fixed position: there is no variation of the label that is not a
+  variation of the position. Any N/K score on this control measures the
+  sensitivity to position. A position-aware model (idea of the end effect as
+  a nuisance, with per-session normalisation) cannot be graded on it, and is
+  not run.
+- **Counting is the measurable weak point of the 10–20mer.** Range (max − min)
+  of the per-scan counts of one molecule, tracks of at least 3 scans:
+
+  | Run | Tracks | range ≤ 1 | range ≤ 2 | range > 2 |
+  |---|---:|---:|---:|---:|
+  | 6-mer, decoupled supports | 53 | 50 | 52 | 1 |
+  | 10–20mer, legacy support | 65 | 24 | 38 | 27 |
+  | 10–20mer, decoupled supports | 65 | 29 | 47 | 18 |
+
+  - The decoupled supports improve the repeat consistency of the 10–20mer
+    counts without any reading by the experimenters (27 → 18 tracks with a
+    range above 2), which confirms the adoption on an independent criterion.
+  - 18 of 65 repeated molecules still differ by more than 2 units between
+    scans (up to 9). The scans that deviate from their track carry no more
+    quality flags than the others (partial scan 16% against 6%, several
+    objects 8% against 1%, nothing else), and most unstable tracks have none.
+  - The lobe spacing is constant: 0.607 ± 0.082 nm per gap in the correctly
+    counted 6-mers, and the mean spacing of a scan varies by only 0.03 nm.
+    In the unstable 10–20mer tracks the spacing stays normal (0.6–0.7 nm)
+    while the detected extent of the chain changes between scans of one
+    molecule (track 80, 8 scans: 3.5 to 7.4 nm, counts 6 to 12). The
+    instability is in the detection of the extent of a heterogeneous chain (a
+    bright blob at one end and a dim chain), not in the resolution of the
+    units.
+  - In the 6-mer the per-scan errors are as often over- as under-counts (57
+    and 51), and taking the largest count of a track lowers the exact counts
+    from 88.9% (median) to 64.9%: a longest-extent rule is not supported.
+  - The image-quality score does not predict the 6-mer count errors either
+    (AUC 0.49 for the per-scan count, 0.46 after consensus).
+- **Metadata check of the tracks** (`scripts/data/check_track_integrity.jl`).
+  10–20mer, 85 tracks of at least 2 scans: none spans two sessions, none has
+  a scan of another track interleaved, the median centre spread is 1.1 nm
+  (largest 4.3 nm) and one track has an axis spread above 30°. The only
+  frequent flag is the count range (20 tracks).
+- **What the data support.**
+  - Positions repeat (0.07–0.11 nm), the metadata link the scans of a track
+    soundly, and the counts of a molecule are stable in about half of the
+    repeated 10–20mer.
+  - A per-unit N/K reading from these amplitudes is not supported: the
+    contrast to detect is below the unit-level variation that is specific to
+    each molecule, the 10–20mer show no extra reproducible structure, and
+    the 6-mer control cannot validate a reading.
+  - Experiments that would change this: homo-oligomers (all GlcN and all
+    GlcNAc) give the chemical contrast with no position confound; images at
+    several biases test whether the contrast depends on the tunnelling
+    conditions; a non-palindromic or interior-K control gives label
+    variation at fixed position.
