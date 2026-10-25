@@ -116,7 +116,10 @@ the chain over repeated scans (2026-10-04).
   44% in its own run (not a bug, diagnosis of 2026-10-25). The molecule-level
   elite v2 (26 molecules, 141 scans), graded on the 493-scan run, gives 601
   correct of 834 classified units (846 possible), 115/141 exact N and 38 exact
-  chains; its own run (Viper job 12387149) is pending.
+  chains. Its own run (Viper job 12387149, classes learned on those scans)
+  gives 627 correct of 830 classified (846 possible), 105/141 exact N and 34
+  exact chains, with no collapse (fusion π 0.25): +26 correct units, −10 exact
+  counts, −4 exact chains against the same scans in the 493-scan run.
 
 **Limits:** NKNNKN edge-adjacency confound (N = GlcNAc, K = GlcN). The
 benchmark signal, the bright class on the two GlcN at positions 2 and 5, is
@@ -3039,3 +3042,36 @@ aggregates, cut molecules and non-chitosan objects stay out.
   elite-v2-only run on Viper (job 12387149, `elite2_241f156`), is pending; the
   72.1% is the baseline it is compared with. Presentation page 4 and the
   fusion/consensus counts of that run are updated once it is graded.
+
+### 2026-10-25 — Molecule-level elite v2, measurement (b): the elite-v2-only run does not collapse and is not clearly better
+
+- **Run.** Viper job 12387149 (35 min, `elite2_241f156`, code `241f156`,
+  `config/chitosan_decoupled_support.toml`, the promoted pipeline unchanged):
+  the 141 scans of the 26 elite-v2 molecules, counting, consensus, classes and
+  fusion learned on those scans only. Graded with
+  `benchmarks/chitosan_6mer_elite_v2.toml` (`results/elite2_241f156_grade`,
+  untracked).
+- **Results** against measurement (a), the 493-scan run on the same 141 scans
+  (classes learned on all 492):
+
+  | | exact N | correct units | errors | exact chains |
+  |---|---:|---:|---:|---:|
+  | (a) 493-scan run | 115/141 | 601/846 (71.0%) | 233 | 38 |
+  | (b) elite v2 only | 105/141 | 627/846 (74.1%) | 203 | 34 |
+
+  (b) classifies 830 of 846 units (75.5% correct among them); fusion π 0.25
+  (truth 0.33), θ0 0.069, θ1 0.843. Correct units by position 1–6 (scans of
+  six units, identity alignment): 93, 71, 88, 79, 41, 98%, against 87, 84, 77,
+  63, 61, 83% for (a): the K at position 5 is the weak unit of (b).
+- **Reading.** The scan-level collapse (44%, previous entries) came from the
+  fragmented molecules, as diagnosed: with whole molecules the elite-only run
+  gives 74%, no worse than the full-set classes. It is not better on exact
+  counts and exact chains, which the consensus of fewer scans per molecule
+  (at most 8) lowers, and the gain in units is +3.1 points of the possible
+  units. One run of 141 scans, no repeat: the difference is a measurement, not
+  evidence that the elite is better. The quality score that ranked the
+  molecules is a weak proxy (AUC 0.66 against the triage), so this does not
+  test "better images are better" either. No subset is promoted.
+- **Presentation.** Pages 2 and 4 (French and English) show the elite v2 with
+  the full-set classes (71%) and learned on the elite (74%); the scan-level
+  elite is mentioned only here.
