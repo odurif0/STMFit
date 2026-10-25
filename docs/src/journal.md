@@ -2665,3 +2665,60 @@ aggregates, cut molecules and non-chitosan objects stay out.
   (terminal, sub-terminal, core) next to the pooled figure, and compare
   with the position-only baseline. The pooled 76–78% includes terminal
   units that a trivial rule gets right.
+
+### 2026-10-25 — Declared campaign R: benchmark-free reliability of per-unit signals, with the fixed-sequence 6-mer as negative control
+
+- **Deliverable** (user, carte blanche on "a good 6-mer set that helps on the
+  10–20mer, and objectifying the method without a benchmark"). Criteria that
+  need no ground truth on the 10–20mer, and their values for the current
+  data. Time box: 2026-10-25 to 2026-10-27.
+- **Principle.** A property of a molecule that a method reads must come out
+  the same when the same molecule is imaged again. Two label-free facts give
+  a benchmark-free test:
+  1. *Reproducibility across repeated scans* of each physical lobe bounds
+     what any per-unit reading can contain (a reading cannot correlate with
+     the truth better than the square root of its reliability).
+  2. *The 6-mer is a negative control for sequence.* Every 6-mer molecule has
+     the same sequence, and in NKNNKN the sequence is a function of the
+     distance d to the nearest chain end. After removing the mean value at
+     each d, any unit-level variation that repeats across scans of a 6-mer
+     cannot be sequence. If the 10–20mer show no more reproducible unit-level
+     variance than that, there is no evidence of sequence information in the
+     signal.
+- **Exploratory disclosure.** A Python prototype (not in the repository)
+  preceded this entry, to check that the design is not degenerate. Its
+  magnitudes: reproducibility of the amplitude residual (ICC) 0.3–0.4 in the
+  6-mer and 0.2–0.3 in the 10–20mer; between-scan correlation of the
+  residual profile 0.8 (0–3 min) to 0.6 (more than 30 min) in the 6-mer, 0.7
+  to 0.5 in the 10–20mer; geometric covariates (lateral offset, spacing,
+  turning angle, widths) explain 5–7% of the residual variance when
+  cross-validated by molecule; no phase-random alternation along the chain.
+  The repository script, fixed below, replaces the prototype and its numbers
+  are the ones reported.
+- **Definitions** (module `STMFit.UnitReliability`, script
+  `scripts/data/report_unit_reliability.jl`, label-free).
+  - Signal per lobe: log amplitude (primary), log integrated amplitude, log
+    width along, log width across (secondary), from `scan_geometry.tsv`.
+  - Residual: signal minus its scan median, minus the mean at the lobe's
+    distance class d ∈ {1, 2, 3, ≥ 4} (mean of track means within the run).
+  - Units: physical lobes seen in at least 3 scans of a track, tracks with
+    at least 3 scans, at most 8 scans per track (evenly spaced in
+    acquisition order), lobes with d ≥ 2 (d ≥ 3 and d ≥ 1 as sensitivity).
+  - Reliability: one-way random-effects variance components over physical
+    lobes (unbalanced design): σ_b² between lobes, σ_w² within, ICC =
+    σ_b² / (σ_b² + σ_w²). Intervals: bootstrap over tracks, 1000 draws,
+    seed 20261025.
+  - Time lag: Pearson correlation of the residual profiles of two scans of a
+    track (at least 4 shared lobes), by lag 0–3, 3–10, 10–30 and over 30 min,
+    averaged by track then over tracks.
+  - Count reproducibility: per track, the range of the per-scan counts.
+- **Decision rules, fixed now.**
+  - *Extra structure in the 10–20mer* only if the 95% interval of
+    σ_b²(10–20mer) / σ_b²(6-mer) lies above 1, for the amplitude and for at
+    least one other signal. Otherwise the report says that no reproducible
+    unit-level information beyond the fixed-sequence level is evidenced.
+  - A reading from amplitude is *feasible* only if the contrast it must
+    detect (K against core N, measured on the 6-mer, positions 2 and 5
+    against 3 and 4) is at least the between-lobe standard deviation σ_b
+    (d′ ≥ 1); the accuracy ceiling of a single threshold is Φ(d′/2).
+  - No variant is selected on these results: all are reported.
