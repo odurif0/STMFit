@@ -2950,3 +2950,51 @@ aggregates, cut molecules and non-chitosan objects stay out.
   the elite v2 scans (classes learned on all the scans); (b) an elite-v2-only
   run on Viper (counting, consensus, classes and fusion learned on those scans
   only). Nothing is re-chosen from the results.
+
+### 2026-10-25 — Campaign D results: the 6-mer subset moves one call in five and the bright fraction of the 10–20mer from 17% to 41%
+
+- **Run.** `scripts/grading/report_training_stability.jl` on the 493-scan 6-mer
+  run (`dec493_c2b954a`) and the 440-scan 10–20mer run (`dec1020_70a9baa`):
+  20 frozen label-free models (the subsets declared above), outputs in
+  `results/training_stability_20261025/` (untracked: `models.tsv`,
+  `agreement.tsv`, `application_calls.tsv`, `report.md`). The grading side
+  reads the control sequence only for the 6-mer accuracies.
+- **Noise floor** (rule fixed in the declaration). Agreement with the
+  full-set model of the 10 random subsets: mean 81.4%, 5th percentile 78.5%,
+  range 78.3–85.7%. Pairwise among random scan subsets 94.9% (93.0–97.8%),
+  among random molecule subsets 91.9% (86.6–94.7%). About one lobe in five
+  changes call between the full-set model and a model learned on 167 random
+  scans.
+- **Structured subsets.** Only the 145 original scans fall below the noise
+  floor (76.7%, 5th percentile 78.5%). The others are inside it or above:
+  cap 1 per molecule 81.0%, cap 3 87.7%, cap 10 96.2%, no cap 95.9%,
+  elite 85.2%, rule-accepted 93.4%, sessions 2024 89.3%, sessions 2025 87.3%.
+- **Bright fraction of the 10–20mer.** 16.5% to 41.3% over the 20 models
+  (full set 37.7%; cap 1: 22.3%, cap 3: 31.7%, cap 10 and no cap: 41.3%;
+  random 167-scan subsets 16.5–29.8%). It tends to grow with the size of the
+  reference set (63–97 reference scans: 16.5–29.8%; 192: 37.7%; 331: 41.3%).
+  A factor 2.5 in the number of units called bright comes from the subset the
+  classes were learned on.
+- **6-mer, scans outside the training subset.** 76.0–85.6% for every subset
+  except sessions 2024: a model learned on the 404 scans of the 2024 sessions
+  gives 58.5% on the 88 scans of the 2025 sessions (terminal 76.9%, K 42.9%,
+  core N 55.8%), while the reverse (2025 → 2024) gives 85.6%. The held-out
+  sets differ between models, so the comparison is indicative; a session
+  effect is possible and the pooled benchmark hides it.
+- **Per-unit robustness (descriptive, thresholds chosen when reading).** Over
+  the 3624 lobes of the 10–20mer run classified by the models, 65% are dim in
+  at least 80% of the 20 models, 19% bright in at least 80%, and 15% in
+  between. By distance to the nearest end: d = 1: 84% dim, 3% bright, 13% in
+  between; d = 2: 42% dim, 40% bright, 18% in between; d = 3: 64 / 21 / 15%;
+  d ≥ 4: 70 / 15 / 15%. The stable bright calls sit at d = 2, the position of
+  the K of the 6-mer: the 10–20mer output mostly repeats the position code
+  of the training molecule (campaign R).
+- **Reading, by the rules fixed above.** The output depends on the subset
+  beyond sampling only for the 145 original scans, but the sampling noise is
+  itself large (one call in five). Stability across subsets says nothing about
+  correctness: the 6-mer cannot validate an N/K reading, and a call that
+  survives the 20 models is a call the method repeats, not a verified K or N.
+  No subset is chosen from this table. For the application, a per-unit
+  robustness flag (share of the 20 models that call the unit bright, from
+  `application_calls.tsv`) is reported with every sequence, so that unstable
+  units are not read as units.
