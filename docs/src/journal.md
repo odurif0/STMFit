@@ -2392,3 +2392,35 @@ aggregates, cut molecules and non-chitosan objects stay out.
   - No grade was used. Campaign C steps 1–2 now run on this set. The
     493-scan grading job was cancelled; the 493-scan run stays as a
     measurement.
+
+### 2026-10-25 — Decoupled supports on the 493 scans: counting +26 exact, assignment slightly better (measurement)
+
+- **Run** (code `c2b954a`, Viper job 12384144, 1 h 49; all label-free
+  checks pass; `results/dec493_c2b954a/`, grades in
+  `results/dec493_c2b954a_grade/`). Geometry needed the counting support for
+  17 of 493 scans. Reference: the legacy-support run 12282486 (2026-10-19).
+- **Counting** (exact N after consensus, within one):
+
+  | Cohort | Legacy support | Decoupled supports |
+  |---|---:|---:|
+  | full145 | 137/145 | 138/145 (145) |
+  | added_2024 | 177/260 (256) | 201/260 (259) |
+  | added_2025 | 77/88 (88) | 78/88 (88) |
+  | all | 391/493 (489) | 417/493 (492) |
+
+- **Assignment** (final calls: correct units, exact chains):
+
+  | Cohort | Legacy support | Decoupled supports |
+  |---|---:|---:|
+  | full145 | 692/870, 28 | 697/870, 34 |
+  | added_2024 | 1155/1560, 76 | 1184/1560, 74 |
+  | added_2025 | 361/528, 17 | 362/528, 14 |
+  | all | 2208/2958, 121 | 2243/2958, 122 (errors 681 → 677) |
+
+- **Reading.** The gain is largest on the 2024 additions, whose counts
+  were the weakest. Their previous count errors came partly from truncated
+  supports, not only from unusable images. This is a measurement, not a
+  selection: it is not the optimization set (campaign C), and the 2025
+  cohort was already read by earlier campaigns. The cohort-dependence of
+  the assignment remains (full145 697/870 here, against 776/870 in the
+  146-scan run).
