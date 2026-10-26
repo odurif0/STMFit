@@ -294,6 +294,9 @@ function execute_run(o; runner=run_stage, thread_budget=min(Threads.nthreads(), 
         stage = "plots"
         runner(out, stage, "plot_final_molecules.jl", ["--run", out, "--data-dir", raw,
             "--config", abspath(o["--count-config"]), "--outdir", joinpath(out, "plots")]; threads=1)
+        # Label-free quality page of the run (diagnostics only; changes no output).
+        stage = "qc"
+        runner(out, stage, "report_run_qc.jl", ["--run", out, "--data-dir", raw, "--outdir", joinpath(out, "qc")]; threads=1)
     catch e
         write_table(joinpath(out, "failures.tsv"), ["stage", "reason"],
             [Dict("stage" => stage, "reason" => replace(sprint(showerror, e), '\n' => ' ', '\t' => ' '))])

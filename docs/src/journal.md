@@ -3527,3 +3527,20 @@ aggregates, cut molecules and non-chitosan objects stay out.
   entirely below 0 (for errors, above 0), and the 10–20mer split-half
   agreement is higher than with the current application policy. Promotion
   itself stays the user's decision.
+
+### 2026-10-26 — A label-free quality page for every run (process item 3)
+
+- **Why.** The benchmark-free checks of the last days (count reproducibility
+  and split halves, track integrity, position repeatability, fusion false-call
+  rate, brightness and shape variance against the 6-mer control) existed as
+  separate scripts run by hand.
+- **Tool.** `scripts/pipeline/report_run_qc.jl` (tests `test/test_run_qc.jl`)
+  gathers them in one page; `run_molecule_consensus_chitosan.jl` now ends with
+  it (`qc/`, no control run; earlier outputs unchanged). With `--control-run`
+  it adds the variance ratios against a fixed-sequence control. Diagnostics
+  only: nothing is selected or changed from them.
+- **Check.** On `dec1020_70a9baa` with `dec493_c2b954a` as control it
+  reproduces the figures obtained by hand: counts more than 2 units apart in
+  18 of 65 molecules, split halves agree for 21 of 47, θ0 0.185, brightness
+  ratio 0.81 [0.52, 1.21], shape ratios 1.72, 1.75 and 2.27 with 99%
+  intervals above 1.

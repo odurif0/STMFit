@@ -109,7 +109,8 @@ data/  results/  dft/runs/   untracked
   `hpc/run_molecule_consensus.sbatch`). It runs `batch_full.jl` →
   `extract_lobe_features.jl` → `build_molecule_consensus.jl` →
   `run_reconstructed_chitosan.jl` (assignment) → `build_molecule_fusion.jl` →
-  `report_position_repeatability.jl` → `plot_final_molecules.jl`. Shared code
+  `report_position_repeatability.jl` → `plot_final_molecules.jl` →
+  `report_run_qc.jl` (label-free quality page, `qc/`). Shared code
   lives in `src/` (`using STMFit.<Module>`).
 - Verification and external grading: `scripts/grading/grade_consensus_run.jl`.
 - Data: `data/raw/` (one copy of every raw file), `data/sets/` and
