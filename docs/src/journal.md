@@ -3544,3 +3544,37 @@ aggregates, cut molecules and non-chitosan objects stay out.
   18 of 65 molecules, split halves agree for 21 of 47, θ0 0.185, brightness
   ratio 0.81 [0.52, 1.21], shape ratios 1.72, 1.75 and 2.27 with 99%
   intervals above 1.
+
+### 2026-10-26 — Experiment K2 results: without the guard the 10–20mer counts reproduce better, but the 6-mer loses exact counts by molecule; not proposed for promotion
+
+- **Runs.** Viper jobs 12395649 (493 6-mer scans, 1 h 42) and 12395650 (440
+  10–20mer scans, 1 h 54), source `26663d3`,
+  `config/chitosan_unified_midpoint.toml`; `results/k2_6mer_26663d3`,
+  `results/k2_1020_26663d3` (untracked). Grade
+  `results/k2_6mer_26663d3_grade`, comparison `results/k2_6mer_compare`,
+  10–20mer `results/k2_1020_replay`, `results/k2_1020_26663d3_qc`.
+- **6-mer, 492 scans, 117 molecules, paired by molecule against
+  `dec493_c2b954a`.** Exact N −2.9 points [−6.4, −0.2] (75.3% against 78.2%;
+  by scan −0.6 [−2.6, 1.3]); correct units +0.1 [−0.6, 0.7]; errors per scan
+  0.00 [−0.04, 0.04]; exact chains 0.0. Only the counts of a few molecules move;
+  the unit calls of the others are unchanged.
+- **10–20mer, 47 molecules of at least 4 scans, against `dec1020_70a9baa`.**
+  Split halves agree for 29 (62%) against 21 (45%), but differ by more than 2
+  units for 8 against 4 (mean difference 0.98 against 0.96). Per-scan counts:
+  all equal in 14 of 65 molecules (9 before), within one unit in 42 (29),
+  more than 2 apart in 16 (18); scans without a strict majority 82 (145).
+  The transductive assignment moves with the counts: fusion π 0.66 (0.48),
+  θ0 0.29 (0.185).
+- **Decision, by the rule fixed above.** The 6-mer exact N by molecule is
+  worse with an interval entirely below 0, so the policy is not proposed for
+  promotion, although the 10–20mer criterion holds. The fresh run confirms
+  that the guard brings a small benefit on the 6-mer (the offline replay gave
+  an interval reaching 0), and its cost on long chains is real but mixed (more
+  molecules agree exactly, more disagree by more than 2).
+- **What remains open for the process.** The 6-mer and the 10–20mer still use
+  different count policies. Replayed offline on the 10–20mer run, the promoted
+  6-mer policy unchanged (guard and midpoint, n_max 24) gives split halves
+  agreeing for 25 of 47 (53%, against 45% for the application policy), with 5
+  differing by more than 2 (4). It would leave the 6-mer unchanged and apply
+  the 6-mer method to the 10–20mer as the strategy asks; a fresh 10–20mer run
+  would test it.
