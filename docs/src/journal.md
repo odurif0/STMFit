@@ -205,7 +205,11 @@ empirical templates; 10–20mer outputs not validated.
     molecules with repeated scans differ by more than 2 units across scans,
     while positions repeat. The instability comes from the extent detection of
     heterogeneous chains (a bright end blob). A label-free counting rule that
-    reproduces across repeats is the next measurable target.
+    reproduces across repeats is the next measurable target. Campaign J
+    (2026-10-26): pooling the per-scan GCV curves of a molecule does not help
+    (the 6-mer errors are a bias shared by all scans of a molecule, tied to
+    sessions), and the per-scan layers that correct the 6-mer make long-chain
+    counts less reproducible.
 11. **Which 6-mer subset to freeze (campaign D, 2026-10-25).** The choice moves
     one call in five and the bright fraction between 16.5% and 41.3%; only the
     145 original scans fall beyond the sampling noise. Stability is not
@@ -3376,3 +3380,19 @@ aggregates, cut molecules and non-chitosan objects stay out.
   run unless the user asks. Recommendation to the user: close campaign J and
   write the measurement proposal, with resolving the units (imaging
   conditions) added to the list.
+
+### 2026-10-26 — Campaign J closed (user decision)
+
+- **Outcome.** (1) Pooling the GCV curves of a molecule's scans does not fix
+  the count: 362/492 exact against 417 for the consensus; the errors are a
+  bias shared by the scans of a molecule. (2) The local intensity landscape
+  around the units varies more from unit to unit in the 10–20mer than in the
+  6-mer (ratio 1.7–2.3, robust to curvature, merged units and neighbour
+  brightness). (3) A per-unit shape cannot be measured on these images: the
+  units overlap and are not resolved, and a free joint fit is not identifiable.
+- **Kept.** `STMFit.JointCount`, `STMFit.JointShape`, the shape descriptors of
+  `STMFit.UnitReliability`, and the scripts `select_joint_count.jl`,
+  `report_unit_shape.jl`, `fit_joint_shape.jl`, as tested diagnostics. Nothing
+  enters the promoted method.
+- **Next (user, 2026-10-26).** Improve and objectify the process itself rather
+  than add method variants.
