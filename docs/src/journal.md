@@ -3112,3 +3112,32 @@ aggregates, cut molecules and non-chitosan objects stay out.
   --build-only`).
 - **Tests.** The full suite passed on 2026-10-25 before this change (20 runs,
   end-to-end included); the two test files touched here pass on their own.
+
+### 2026-10-26 — Why the elite v2 scores below the full set: session composition, not image quality (exploratory, grading side)
+
+- **Question (user).** The elite v2 scans score below the full set (71% against
+  76% correct units in the 493-scan run). Why would better images do worse?
+- **Measurements** (493-scan run, grade of the 492-scan full set, frozen
+  quality score of campaign E):
+  - Elite v2 scans 71.0% correct units, the other 351 scans 77.8%; per molecule
+    (molecules of at least 3 scans) 71.7% against 78.0%, so the gap is not a
+    scan-weighting effect. The cap of 8 scans per molecule costs little (the
+    elite molecules with all their scans: 73.7%).
+  - Within a session, elite and other scans do equally well: the difference,
+    session by session and weighted by elite scans, is +0.7 point (11
+    sessions hold both).
+  - 80 of the 141 elite scans come from the three hardest sessions: 20241113
+    (40 scans; 67% correct units for the whole session), 20241114 (24; 54%) and
+    30/04/2025 (16; 50%).
+  - Spearman correlation of the quality score with per-scan accuracy: −0.27
+    over all scans, +0.01 within sessions. The strongest single axis is the
+    contrast to noise (−0.34 overall, −0.16 within sessions).
+- **Reading.** The elite is not worse because its images are better. The
+  score ranks sessions more than scans, and it favours the sessions where the
+  method does worst; inside a session it says nothing about how well the
+  method reads a scan. Session (tip state, imaging conditions) dominates the
+  result, so subsets must be compared within sessions or balanced across them.
+  Why high contrast-to-noise sessions read worse is open (a tip state that
+  changes the lobe appearance is one hypothesis, not tested). The image score
+  is not a valid definition of an elite; a human rating (the proposal of the
+  last slide) or an image criterion validated against it is still needed.
