@@ -3186,3 +3186,46 @@ aggregates, cut molecules and non-chitosan objects stay out.
   builds them into the joint criterion (pooled support length and guard). If J
   beats neither, stage 2 keeps the vote for counting and works on the shared
   geometry only.
+
+### 2026-10-26 — Campaign J, stage 1 results: pooling the GCV curves does not fix the count; the errors are a shared bias, not scan noise
+
+- **Run.** `scripts/pipeline/select_joint_count.jl` (module `STMFit.JointCount`,
+  tests `test/test_joint_count.jl`) on the score tables of the 493-scan 6-mer
+  run `dec493_c2b954a` and the 440-scan 10–20mer run `dec1020_70a9baa`,
+  fetched from Viper (`results/joint_scores/`, untracked). Outputs
+  `results/joint_dec493/`, `results/joint_dec1020/`; 6-mer grade
+  `results/joint_dec493_grade/` (`grade_chitosan_benchmark.jl`, manifest
+  `chitosan_6mer_full_v1.toml`).
+- **6-mer, 492 scans, exact N.**
+
+  | count | exact N per scan | over / under | molecules of ≥ 3 scans all exact |
+  |---|---:|---:|---:|
+  | per scan `N_selected` | 384 (78.0%) | 57 / 51 | 16/53 |
+  | current consensus `N_final` | 417 (84.8%) | 39 / 36 | 42/53 |
+  | vote of `N_eff` | 364 (74.0%) | 94 / 34 | 41/53 |
+  | joint `N_joint` | 362 (73.6%) | 93 / 37 | 40/53 |
+
+  The loss is concentrated in two sessions: 30/04/2025 (45 scans: 37 exact with
+  the consensus, 1 with the joint count) and 07/03/2025 (25 scans: 25 against
+  12). In those molecules every scan's GCV curve prefers 7 lobes, and the
+  per-scan layers (robust-AICc guard, support midpoint) bring most scans back to
+  6. Pooling the curves keeps a bias that all scans of a molecule share. Per
+  molecule the joint count is close to the consensus (40 against 42 of 53).
+- **Split-half agreement** (odd against even scans of the tracks of at least 4
+  scans): 6-mer, 38 tracks: consensus rule 92%, vote of `N_eff` 92%, joint 89%.
+  10–20mer, 47 tracks: consensus rule 45% (mean |ΔN| 0.96, 4 tracks above 2),
+  vote of `N_eff` 55% (0.91, 5), joint 57% (0.89, 5).
+- **Decision, by the rule fixed above.** The joint count does not reach the
+  consensus on the 6-mer (362 against 417) and does not beat the vote of
+  `N_eff` there (362 against 364). It is not adopted. Stage 2 keeps the vote
+  for counting and works on the shared geometry only.
+- **What it shows.**
+  - The 6-mer count errors that matter are a bias shared by all scans of a
+    molecule, tied to sessions: more scans of the same molecule do not remove
+    it, whatever the pooling.
+  - On the 10–20mer the gain in reproducibility comes from dropping the
+    per-scan layers (`N_eff` instead of `N_selected`: 45% → 55%), not from
+    pooling (55% → 57%). The robust-AICc guard moves 162 of the 440 scans; the
+    layers that correct the 6-mer over-segmentation make long-chain counts less
+    reproducible. Reproducible is not correct: the 6-mer shows that `N_eff` can
+    be reproducibly wrong (30/04/2025).
