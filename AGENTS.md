@@ -60,6 +60,14 @@ history is at the tag `archive/pre-cleanup-20260929`.
   benchmark cannot validate K deep inside a chain, as in the 10–20mer.
 - The user's 10–20mer N/K pattern, once given, is a final test, never an
   optimization target.
+- Campaigns R and D (2026-10-25): per-unit amplitude repeats across scans, but
+  the 10–20mer holds no more unit-level structure than the fixed-sequence
+  6-mer, and amplitude reads K against N with a ceiling of about 55%. The
+  6-mer is a position code, so a better score on it is not N/K evidence. The
+  6-mer subset the assignment is learned on moves one 10–20mer call in five.
+  Report every application unit with its robustness
+  (`scripts/data/list_application_sequences.jl`); a robust call is a call the
+  method repeats, not a verified K or N.
 - The optimization dataset decides the result. Its image quality must be
   impeccable, and more images is not better when they are unusable. Select
   scans on image quality judged before any method output (visual review or

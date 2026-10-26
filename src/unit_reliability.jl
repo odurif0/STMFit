@@ -24,7 +24,7 @@ using ..ReconstructedUnitAssignment: read_table
 export SIGNALS, Lobe, RunUnits, load_run_units, signal_value, distance_profile, track_groups,
        Moments, moments, variance_components, bootstrap_components, ratio_interval,
        pair_correlations, lag_summary, persistent_profiles, profile_autocorrelation,
-       autocorrelation_null, count_dispersion, capped_files, centred, normal_cdf
+       autocorrelation_null, count_dispersion, capped_files, centred, normal_cdf, call_robustness
 
 "Signals a lobe offers (log scale): amplitude, integrated amplitude, widths."
 const SIGNALS = (:amplitude, :integrated, :width_along, :width_across)
@@ -109,6 +109,23 @@ function centred(lobes::AbstractVector{Lobe}, kind::Symbol)
     ok = filter(!isnan, v)
     isempty(ok) && return fill(NaN, length(v))
     return v .- median(ok)
+end
+
+"""
+    call_robustness(share; threshold=0.8)
+
+Robustness of one unit's call across a set of models, from the share of the
+models that call it bright: `:bright` (share ≥ threshold), `:dim` (share ≤
+1 − threshold), `:unstable` in between, `:unknown` for NaN. Shares written with
+three decimals are compared with a tolerance of 1e-9. A descriptive flag: a call
+that survives the models is a call the method repeats, not a verified identity.
+"""
+function call_robustness(share::Real; threshold::Real=0.8)
+    0.5 < threshold <= 1 || throw(ArgumentError("threshold must lie in (0.5, 1]"))
+    isnan(share) && return :unknown
+    share >= threshold - 1e-9 && return :bright
+    share <= 1 - threshold + 1e-9 && return :dim
+    return :unstable
 end
 
 """

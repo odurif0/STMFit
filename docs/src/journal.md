@@ -3075,3 +3075,40 @@ aggregates, cut molecules and non-chitosan objects stay out.
 - **Presentation.** Pages 2 and 4 (French and English) show the elite v2 with
   the full-set classes (71%) and learned on the elite (74%); the scan-level
   elite is mentioned only here.
+
+### 2026-10-26 — 10–20mer sequences of the frozen model with per-unit robustness (exploratory, label-free)
+
+- **Deliverable.** The sequences of the curated working set (19 scans, 18 of
+  them in the 440-scan run) called by the frozen label-free assignment learned
+  on the full 6-mer set, each unit with its robustness over the 20 models of
+  campaign D. No subset is chosen and nothing is validated.
+- **Tool.** `scripts/data/list_application_sequences.jl` (reads the
+  `application_calls.tsv` of campaign D and a table of scans; no label),
+  `UnitReliability.call_robustness` (bright if at least 80% of the models call
+  the unit bright, dim if at most 20%, unstable between; the 80% is descriptive,
+  not tuned), tests `test/test_application_sequences.jl` and
+  `test/test_unit_reliability.jl`. Output `results/sequences_20261026/`
+  (untracked).
+- **Result.** 166 units in 18 scans: 117 robustly dimmer, 35 robustly brighter,
+  14 unstable. Of the 35 robust bright units, 20 sit at the second unit from a
+  chain end (20 of 36 units at that distance), 5 at the third (of 35) and 10
+  further in (of 59); none of the 36 terminal units. The bright calls follow
+  the position code of the 6-mer control (K second from either end), as
+  campaign R found.
+- **Against the earlier listing.** The sequences on the presentation page came
+  from the transductive 440-scan run (classes learned on the 10–20mer
+  scans). 124 of the 166 units (75%) get the same call with the frozen model,
+  and the bright units drop from 76 to 54: about the one call in five that
+  campaign D measures between training subsets. The page now shows the frozen
+  model, with unstable units drawn as outlines.
+- **Documentation.** README, `docs/src/index.md`, the runbook (benchmark-free
+  checks and tool table) and `AGENTS.md` carry the conclusions of campaigns R
+  and D. The presentation (French and English, `results/presentation_20261025/`,
+  untracked) has the elite v2 on pages 2 and 4 and these sequences on page 7.
+- **Docs build fix.** `docs/make.jl` failed because the generated `journal.md`
+  page (257 KiB) exceeded Documenter's 200 KiB HTML limit. The size check is
+  now disabled (`size_threshold = nothing`): the journal is one long page on
+  purpose. The build passes (`GKSwstype=100 julia --project=. docs/make.jl
+  --build-only`).
+- **Tests.** The full suite passed on 2026-10-25 before this change (20 runs,
+  end-to-end included); the two test files touched here pass on their own.

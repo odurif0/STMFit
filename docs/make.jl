@@ -10,6 +10,8 @@ makedocs(
     format = Documenter.HTML(
         prettyurls = false,
         edit_link = "main",
+        size_threshold = nothing,        # the research journal is one long page on purpose
+        size_threshold_warn = nothing,
     ),
     checkdocs = :none,
     pages = [

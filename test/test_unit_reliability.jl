@@ -135,3 +135,12 @@ end
     @test isapprox(normal_cdf(0.25) + normal_cdf(-0.25), 1; atol=1e-12)
     @test normal_cdf(8) > 0.999999 && normal_cdf(-8) < 1e-6
 end
+
+@testset "call robustness across models" begin
+    @test call_robustness(0.0) == :dim && call_robustness(0.2) == :dim
+    @test call_robustness(0.8) == :bright && call_robustness(1.0) == :bright
+    @test call_robustness(0.5) == :unstable && call_robustness(0.21) == :unstable && call_robustness(0.79) == :unstable
+    @test call_robustness(NaN) == :unknown
+    @test call_robustness(0.7; threshold=0.7) == :bright && call_robustness(0.3; threshold=0.7) == :dim
+    @test_throws ArgumentError call_robustness(0.5; threshold=0.5)
+end

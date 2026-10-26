@@ -156,6 +156,16 @@ gives θ0 = 0.45, so per-scan calls are inconsistent across repeat scans.
 baseline and consistent per-scan assignment on long chains are prerequisites
 ([journal](journal.md)).
 
+**Benchmark-free checks (2026-10-25).** Without labels, three questions can
+still be asked of a 10–20mer run. Do the counts reproduce across the repeat
+scans of one molecule (`report_unit_reliability.jl`, count table: 18 of 65
+molecules differ by more than 2 units)? Does the per-unit signal repeat more
+than in a fixed-sequence control (variance components against the 6-mer: it
+does not)? Is a unit's call stable across 6-mer training subsets
+(`report_training_stability.jl`, then `list_application_sequences.jl`: one call
+in five moves)? Read every application sequence with its robustness string. A
+robust call is a call the method repeats, not a verified K or N.
+
 ## Tests
 
 ```bash
@@ -182,4 +192,10 @@ compares the native mold builder with the Python reference
 | `scripts/grading/search_reference_cohort.jl --protocol TOML --mode nested\|final\|null\|report\|sealed --outdir NEW` | Grading side, campaign B: reference cohort of a frozen assignment chosen by its benchmark score (`benchmarks/reference_cohort_search_v1.toml`, multistart `_v2.toml`; Viper: `hpc/run_reference_cohort_search.sbatch`) |
 | `scripts/pipeline/build_frozen_assignment.jl --run RUN --config TOML --out MODEL.tsv`, `scripts/pipeline/apply_frozen_assignment.jl --run RUN --model MODEL.tsv --config TOML --outdir NEW` | Campaign A: build a fully frozen, label-free assignment model on a reference run, and apply it unchanged to any run ([Pipeline](pipeline.md)) |
 | `scripts/grading/grade_frozen_assignment.jl --run RUN --config TOML --outdir NEW [--other-run RUN2]` | Grading side, campaign A: held-out 2024 sessions, 2024 → 2025 transfer, invariance across runs |
+| `scripts/data/decide_scan_quality.jl --catalog TSV --config config/scan_quality.toml --out TSV`, `scripts/data/score_scan_quality.jl ... --out SCORE_TSV` | Label-free image-quality decision and frozen quality score per scan (campaigns Q and E); `scripts/grading/report_scan_quality.jl` and `report_elite_selection.jl` compare them with the human triage |
+| `scripts/data/check_track_integrity.jl --run RUN --data-dir RAW --outdir NEW` | Label-free metadata and tip-position integrity of every molecule track (sessions, time gaps, absolute centroid and axis spread, count range) |
+| `scripts/data/report_unit_reliability.jl --run NAME=RUN [--run ...] [--raw NAME=RAW] [--control NAME] --outdir NEW` | Label-free reliability of per-unit signals over repeated scans (variance components, bootstrap over molecules, count reproducibility), with a fixed-sequence run as negative control (campaign R) |
+| `scripts/grading/report_contrast_ceiling.jl --run NAME=RUN --outdir NEW [--control 010010]` | Grading side: reading ceiling of K against N from one lobe signal on the control (reads the control sequence) |
+| `scripts/grading/report_training_stability.jl --run6 RUN --run-app RUN --config TOML --manifest TOML --quality TSV --outdir NEW` | Grading side, campaign D: dependence of the frozen assignment of an application run on the 6-mer training subset (20 models); writes `application_calls.tsv` |
+| `scripts/data/list_application_sequences.jl --calls application_calls.tsv --outdir NEW [--model full] [--scans TSV]` | Label-free: application sequences with the robustness of every unit over the models of campaign D |
 | `scripts/pipeline/report_position_repeatability.jl --run RUN --data-dir RAW --outdir NEW` | Label-free lobe-position repeatability across repeated scans ([Pipeline](pipeline.md)) |

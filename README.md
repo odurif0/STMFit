@@ -65,6 +65,15 @@ support), but those readings are a comparison, not a ground truth. Per-scan
 calls stay inconsistent across repeat scans (fitted false-call rate 0.19), and
 the unit order does not match the experimenters' acetylation readings beyond
 chance. Those outputs are not validated.
+Benchmark-free checks (2026-10-25, [journal](docs/src/journal.md)): the per-unit
+amplitude repeats across scans of a molecule, but no more in the 10–20mer than
+in the fixed-sequence 6-mer, and by itself reads K against N with a ceiling of
+about 55%; the 6-mer, a position code, cannot validate an N/K reading. The
+6-mer subset the assignment is learned on moves one 10–20mer call in five, and
+18 of 65 repeated 10–20mer molecules differ by more than 2 units in count
+across their scans. An N/K reading of the 10–20mer is not supported;
+homo-oligomers, a bias series or a non-palindromic control are the experiments
+that can test it.
 
 ## Quick start
 

@@ -44,6 +44,12 @@ What this does and does not establish:
   (the experimenters' length readings are a comparison, not a truth), and its
   unit calls do not match their acetylation readings beyond chance. Nothing
   there is validated yet ([Runbook](chitosan_runbook.md)).
+- Benchmark-free checks on the 10–20mer (2026-10-25, [journal](journal.md)):
+  the per-unit amplitude repeats across scans, but no more than in the
+  fixed-sequence 6-mer, and reads K against N with a ceiling of about 55%. The
+  6-mer cannot validate an N/K reading (it is a position code). The 6-mer
+  subset the assignment is learned on moves one call in five, and 18 of 65
+  repeated molecules differ by more than 2 units in count.
 
 ## Where to go
 
