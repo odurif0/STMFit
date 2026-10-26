@@ -49,7 +49,7 @@ function run_options(args)
     return o
 end
 
-const COUNT_POLICIES = ("support_midpoint_hybrid", "adaptive_support_rescue")
+const COUNT_POLICIES = ("support_midpoint_hybrid", "adaptive_support_rescue", "support_midpoint")
 
 function merge_count_shards(paths, files, output; policy="support_midpoint_hybrid")
     header = String[]; rows = Dict{String,String}[]; seen = Set{String}()

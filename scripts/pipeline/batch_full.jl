@@ -6,7 +6,7 @@
 #   julia --project=. scripts/pipeline/batch_full.jl [N_files]
 #   julia --project=. scripts/pipeline/batch_full.jl [N_files] --config config/my_system.toml
 #   julia --project=. scripts/pipeline/batch_full.jl [N_files] --chunk i/n
-#   julia --project=. scripts/pipeline/batch_full.jl [N_files] --selection-policy gcv|gcv_with_robust_aicc_guard|adaptive_support_rescue|support_midpoint_hybrid
+#   julia --project=. scripts/pipeline/batch_full.jl [N_files] --selection-policy gcv|gcv_with_robust_aicc_guard|adaptive_support_rescue|support_midpoint_hybrid|support_midpoint
 #   julia --project=. scripts/pipeline/batch_full.jl [N_files] --plot-manifest benchmarks/chitosan_manual_20240814_20240818.toml
 
 using STMMolecularFit, GaussianFit2D, GaussianFit1D
@@ -178,8 +178,8 @@ function _parse_cli(args)
     cfg_selection = isfile(config_file) ? get(TOML.parsefile(config_file), "selection", Dict{String,Any}()) : Dict{String,Any}()
     selection_policy_cfg = split(lowercase(String(get(cfg_model, "selection_policy", "gcv"))), "-"; keepempty=false) |> x -> join(x, "_")
     selection_policy = selection_policy_cli === nothing ? selection_policy_cfg : selection_policy_cli
-    selection_policy in ("gcv", "gcv_with_robust_aicc_guard", "adaptive_support_rescue", "support_midpoint_hybrid") ||
-        error("Unknown --selection-policy '$selection_policy'; use gcv, gcv_with_robust_aicc_guard, adaptive_support_rescue or support_midpoint_hybrid")
+    selection_policy in ("gcv", "gcv_with_robust_aicc_guard", "adaptive_support_rescue", "support_midpoint_hybrid", "support_midpoint") ||
+        error("Unknown --selection-policy '$selection_policy'; use gcv, gcv_with_robust_aicc_guard, adaptive_support_rescue, support_midpoint_hybrid or support_midpoint")
     # Selection thresholds: CLI flag overrides TOML [selection], which overrides the built-in default.
     robust_guard_nu = robust_guard_nu_cli === nothing ? Float64(get(cfg_selection, "robust_guard_nu", 8.0)) : robust_guard_nu_cli
     gcv_ambiguity_rel_threshold = gcv_ambiguity_rel_threshold_cli === nothing ? Float64(get(cfg_selection, "gcv_ambiguity_rel_threshold", 0.05)) : gcv_ambiguity_rel_threshold_cli
@@ -566,22 +566,25 @@ function _support_midpoint_n(support_nm::Real, ccfg)
     return round(Int, (lo + hi) / 2)
 end
 
-function _support_midpoint_hybrid_selection(selected, best_n_eff::Int, ambiguity, qc, ccfg)
+# `support_midpoint` (campaign K, 2026-10-26) applies the same rule to N_eff,
+# without the robust-AICc guard; the upward branch then never fires, since it
+# needs N_eff above the current count.
+function _support_midpoint_hybrid_selection(selected, best_n_eff::Int, ambiguity, qc, ccfg; policy="support_midpoint_hybrid")
     current = selected.n_selected
     midpoint = _support_midpoint_n(qc.support_ell, ccfg)
     if midpoint === nothing
-        return (; n_selected=current, policy="support_midpoint_hybrid", source=selected.source)
+        return (; n_selected=current, policy, source=selected.source)
     elseif current > midpoint + 1
         # Gap >= 2: the robust guard over-counted by at least 2 relative to the
         # measured support geometry. Trust the geometry and go to the midpoint.
-        return (; n_selected=midpoint, policy="support_midpoint_hybrid", source="support_midpoint_down_to_mid")
+        return (; n_selected=midpoint, policy, source="support_midpoint_down_to_mid")
     elseif current > midpoint
-        return (; n_selected=current - 1, policy="support_midpoint_hybrid", source="support_midpoint_down")
+        return (; n_selected=current - 1, policy, source="support_midpoint_down")
     elseif current < midpoint && best_n_eff > current && isfinite(ambiguity.dgcv_rel_eff) &&
            ambiguity.dgcv_rel_eff <= SUPPORT_MIDPOINT_UP_GCV_REL_THRESHOLD
-        return (; n_selected=current + 1, policy="support_midpoint_hybrid", source="support_midpoint_up")
+        return (; n_selected=current + 1, policy, source="support_midpoint_up")
     end
-    return (; n_selected=current, policy="support_midpoint_hybrid", source=selected.source)
+    return (; n_selected=current, policy, source=selected.source)
 end
 
 function _adaptive_support_rescue_trigger(n_eff::Int, support_2d::Real, ccfg, model)
@@ -1223,8 +1226,8 @@ Threads.@threads for idx in 1:ntot
         base_policy = SELECTION_POLICY == "support_midpoint_hybrid" ? "gcv_with_robust_aicc_guard" : SELECTION_POLICY
         n_selected, selection_policy, selection_source = _select_primary(best_n_eff, eff_source, refined, base_policy)
         selected = (; n_selected, policy=selection_policy, source=selection_source)
-        if SELECTION_POLICY == "support_midpoint_hybrid"
-            selected = _support_midpoint_hybrid_selection(selected, best_n_eff, ambiguity, qc, ccfg_plot_ell)
+        if SELECTION_POLICY in ("support_midpoint_hybrid", "support_midpoint")
+            selected = _support_midpoint_hybrid_selection(selected, best_n_eff, ambiguity, qc, ccfg_plot_ell; policy=SELECTION_POLICY)
         end
 
         n1d_val = best1d === nothing ? "NA" : best1d.n_peaks

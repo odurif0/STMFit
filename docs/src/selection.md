@@ -88,6 +88,16 @@ iterations only, so identical runs give identical outputs on any node.
 benchmark grades. Inference reads no label, but this is not an independent
 calibration ([Calibration](calibration.md)).
 
+### Without the guard: `support_midpoint` (experiment, 2026-10-26)
+
+The support-midpoint layer applied to `N_eff`, without the robust-AICc guard
+(`config/chitosan_unified_midpoint.toml`, one file for the 6-mer and the
+10–20mer). The upward branch needs `N_eff` above the current count, so it
+never fires here. Campaign K replayed the layers offline: by molecule, the
+midpoint is supported by the benchmark and the guard is not, and without the
+guard the 10–20mer counts agree better between two halves of a molecule's scans
+([journal](journal.md), 2026-10-26).
+
 ### Long chains: `adaptive_support_rescue`
 
 Used by `config/chitosan_10_20mer_adaptive_support_rescue.toml` and the promoted

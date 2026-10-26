@@ -3506,3 +3506,24 @@ aggregates, cut molecules and non-chitosan objects stay out.
   10–20mer counts come from the 6-mer midpoint (V1). (2) The 6-mer config has
   no `n_min`/`n_max`, so the engine defaults (2, 14) bound the midpoint: a
   hidden code default, against the config rule; a new config must state them.
+
+### 2026-10-26 — Declared experiment K2: one count policy for both data sets, support midpoint without the guard (user, 2026-10-26)
+
+- **Change.** New count policy `support_midpoint` in `batch_full.jl` (the
+  support-midpoint rule on `N_eff`, no robust-AICc guard; the existing policies
+  are unchanged) and one config for the 6-mer benchmark and the 10–20mer
+  application, `config/chitosan_unified_midpoint.toml`
+  (`chitosan_decoupled_support.toml` with this policy and `n_min = 2`,
+  `n_max = 24` stated). Everything after counting is unchanged.
+- **Runs.** Two fresh raw runs on Viper from one committed source: the 493
+  6-mer scans and the 440 10–20mer scans of the current runs.
+- **Comparison, fixed now.** 6-mer, 492-scan full set, against
+  `dec493_c2b954a`, paired by molecule (`report_grade_uncertainty.jl`): exact
+  N, correct units, errors per scan, exact chains. 10–20mer, against
+  `dec1020_70a9baa`, label-free: split-half agreement of the consensus count
+  and count range across scans (`replay_count_policy.jl`, own column).
+- **Decision rule, fixed now.** The new policy is proposed for promotion if,
+  by molecule on the 6-mer, no measure is worse with a paired 95% interval
+  entirely below 0 (for errors, above 0), and the 10–20mer split-half
+  agreement is higher than with the current application policy. Promotion
+  itself stays the user's decision.
