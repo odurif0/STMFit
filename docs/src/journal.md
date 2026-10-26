@@ -3465,3 +3465,44 @@ aggregates, cut molecules and non-chitosan objects stay out.
   needs a fresh raw run and an external grade before any promotion. The
   10–20mer reproducibility is reported, and it ranks the removal candidates,
   but it does not overrule the benchmark.
+
+### 2026-10-26 — Campaign K results: the support midpoint is supported by the benchmark, the robust-AICc guard is not, and it costs long-chain reproducibility
+
+- **Tools.** `scripts/data/replay_count_policy.jl` (label-free offline replay;
+  tests `test/test_count_policy.jl`) and `scripts/grading/report_count_variants.jl`
+  (exact N by molecule with paired intervals). Outputs
+  `results/countpolicy_dec493/`, `results/countpolicy_dec493_grade/`,
+  `results/countpolicy_dec1020/` (untracked).
+- **Replay check.** V0 reproduces `N_selected` for 493 of 493 scans of the
+  6-mer run; its consensus differs from the run's `N_final` by 0.1 point by
+  molecule (refit and frame rules).
+- **6-mer, 492 scans, 117 molecules, exact N after the consensus.**
+
+  | variant | by molecule | 95% interval | by scan | difference with V0 by molecule | 95% interval |
+  |---|---:|---|---:|---:|---|
+  | V0 guard + midpoint (current) | 78.1 | 71.3 to 84.6 | 84.6 | | |
+  | V1 midpoint only | 75.2 | 67.5 to 82.1 | 83.9 | −2.9 | −6.3 to 0.0 |
+  | V2 guard only | 66.4 | 58.6 to 74.1 | 67.9 | −11.7 | −19.3 to −4.4 |
+  | V3 neither | 62.8 | 55.0 to 71.1 | 68.3 | −15.3 | −21.8 to −9.3 |
+
+  Without the guard, 7 molecules change: 5 lose (three of them of one or two
+  scans), 2 gain; 2.8% of the bootstrap draws show no loss. The losses of V2
+  and V3 sit in the sessions 30/04/2025 and 07/03/2025 and in 2024 sessions.
+- **10–20mer, 440 scans** (label-free; the run's own policy is the adaptive
+  support rescue with a down-only guard). Split-half agreement of the
+  consensus over 47 tracks: own policy 45%, V0 53%, V1 62%, V2 45%, V3 55%;
+  tracks whose counts range over more than 2 units: V0 18, V1 15, V2 18, V3 17.
+- **Decision, by the rule fixed above.** The support midpoint is supported
+  (removing it costs 11.7 points by molecule, interval below 0): it stays.
+  The robust-AICc guard is not supported (−2.9 points, interval −6.3 to 0.0,
+  which reaches 0): it is proposed for removal, and the 10–20mer ranks it first
+  (without it the split halves agree in 62% of the tracks instead of 45–53%).
+  The evidence against the guard is borderline on the 6-mer; removal is a
+  method change and needs a fresh raw run and a grade by molecule before any
+  promotion.
+- **Two process findings.** (1) The 6-mer and 10–20mer configs use different
+  count policies (support midpoint against adaptive rescue); the strategy says
+  the 10–20mer gets the 6-mer method unchanged, and the most reproducible
+  10–20mer counts come from the 6-mer midpoint (V1). (2) The 6-mer config has
+  no `n_min`/`n_max`, so the engine defaults (2, 14) bound the midpoint: a
+  hidden code default, against the config rule; a new config must state them.
