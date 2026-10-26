@@ -3431,3 +3431,37 @@ aggregates, cut molecules and non-chitosan objects stay out.
   wide (41 molecules): differences of a few points between methods are within
   the molecule-to-molecule variation. Decisions use the molecule-level figures
   and paired intervals from now on (`AGENTS.md`, runbook).
+
+### 2026-10-26 — Declared campaign K: are the per-scan count layers justified? (process)
+
+- **Deliverable** (user plan of 2026-10-26, item 2; one day). For each layer
+  that corrects the per-scan GCV count, a decision backed by the benchmark by
+  molecule: keep, or propose its removal. The layers are the robust-AICc guard
+  (down when robust AICc prefers fewer lobes, up by one when GCV is ambiguous)
+  and the support midpoint (towards the middle of the count range allowed by
+  the measured support length), both chosen historically while looking at
+  benchmark grades. Campaign J showed that they correct the 6-mer and make the
+  10–20mer counts less reproducible.
+- **Variants, replayed offline** from `counting_summary.tsv` (`N_eff`,
+  `robust_aicc_N`, `ambiguous_eff`, `runnerup_N_eff`, `delta_GCV_rel_eff`,
+  `support_2D_ell_nm`) with the rules of `batch_full.jl` and the config
+  bounds; the replay of the current policy must reproduce `N_selected` exactly
+  before anything is read. V0 current (guard, then midpoint); V1 midpoint
+  only; V2 guard only; V3 neither (`N_eff`). Each is followed by the same
+  consensus (strict majority over a track of at least 3 scans, else the
+  per-scan count). On the 10–20mer run, whose config uses another policy
+  (`adaptive_support_rescue` with the guard, n_max 24), the same four
+  variants are replayed with the 10–20mer bounds, beside its own counts.
+- **Measures.** 6-mer, 492-scan full set (grading side): exact N after the
+  consensus, by molecule (primary) and by scan, paired differences against V0
+  with 95% bootstrap intervals over molecules, and by session. 10–20mer
+  (label-free): split-half agreement of the consensus count (odd against even
+  scans, strict majority else lower median) and the count range across the
+  scans of a track.
+- **Decision rule, fixed now.** A layer is supported if removing it lowers the
+  6-mer exact N by molecule with a paired 95% interval below 0 (V1 against V0
+  for the guard, V2 against V0 for the midpoint). A supported layer stays. An
+  unsupported layer is proposed for removal; removal is a method change, so it
+  needs a fresh raw run and an external grade before any promotion. The
+  10–20mer reproducibility is reported, and it ranks the removal candidates,
+  but it does not overrule the benchmark.
