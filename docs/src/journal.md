@@ -3396,3 +3396,38 @@ aggregates, cut molecules and non-chitosan objects stay out.
   enters the promoted method.
 - **Next (user, 2026-10-26).** Improve and objectify the process itself rather
   than add method variants.
+
+### 2026-10-26 — Grades by molecule and by session, with intervals (process); a molecule counts once (user decision)
+
+- **Why.** The grade counted scans only. Repeat scans of a molecule are not
+  independent: in the 145-scan benchmark one molecule holds 43 scans (30%), in
+  the 492-scan set the largest holds 43 and the next 36; errors come in
+  molecule blocks and by session (campaign J). The user asked that every
+  molecule count once, whatever its number of scans.
+- **Tool.** `scripts/grading/report_grade_uncertainty.jl` (grading side; tests
+  `test/test_grade_uncertainty.jl`): per scan, exact N, correct units, emitted
+  errors and exact chain from `units/grades/final.tsv`; molecule = consensus
+  track; session from the manifest path. Primary rates by molecule (mean of
+  each molecule's rates), scan-weighted totals for continuity, per-session
+  rates, and paired differences between grades on shared scans; 95%
+  bootstrap intervals over molecules (2000 draws, seed 20261026).
+  `grade_consensus_run.jl` now writes it to `uncertainty/`.
+- **Headline figures restated** (`results/uncertainty_145_20261026/`,
+  `results/uncertainty_492_20261026/`, untracked).
+
+  | run | by molecule: exact N | correct units | exact chains | errors per scan | by scan: correct units | exact chains |
+  |---|---:|---:|---:|---:|---:|---:|
+  | promoted, 145 scans (41 molecules) | 87.8 [76.8, 96.3] | 79.5 [74.6, 84.3] | 26.8 [14.6, 41.5] | 1.13 [0.85, 1.40] | 89.2 [79.8, 94.5] | 58.6 [22.7, 79.4] |
+  | legacy support, 145 scans | 87.8 | 80.3 [74.8, 85.6] | 32.9 [19.5, 47.6] | 1.09 | 88.6 | 60.7 |
+  | full set, 492 scans (117 molecules) | 78.2 [71.0, 85.0] | 72.8 [69.1, 76.7] | 22.3 [15.4, 29.9] | 1.53 [1.31, 1.74] | 75.9 [69.7, 81.2] | 24.8 [12.3, 38.6] |
+
+  Paired by molecule, promoted minus legacy: correct units −0.8 points
+  [−2.6, 0.8], exact chains −6.1 [−13.4, 0.0], errors per scan +0.05
+  [−0.05, 0.16]; the decoupled supports neither help nor clearly hurt the
+  6-mer. Elite v2 own run minus the full-set classes on its 141 scans: correct
+  units +2.2 [−2.6, 7.0], exact N −4.8 [−10.6, 0.0].
+- **Reading.** By scan, the headline 85/145 exact chains (58.6%) is mostly one
+  molecule; by molecule a quarter of the chains are exact. The intervals are
+  wide (41 molecules): differences of a few points between methods are within
+  the molecule-to-molecule variation. Decisions use the molecule-level figures
+  and paired intervals from now on (`AGENTS.md`, runbook).

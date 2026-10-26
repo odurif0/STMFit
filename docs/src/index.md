@@ -21,6 +21,13 @@ benchmark:
 | Legacy support (job 12042058) | 137 | 771 | 88 | 865 | 94 |
 | **Promoted method** (decoupled supports) | **137** | **776** | **85** | **865** | **89** |
 
+By molecule (41 molecules, each counted once; one holds 43 of the 145 scans):
+exact N 87.8% [76.8, 96.3], correct units 79.5% [74.6, 84.3], exact chains
+26.8% [14.6, 41.5], 1.13 errors per scan (95% intervals, bootstrap over
+molecules). On the 492-scan full set (117 molecules): correct units 72.8%
+[69.1, 76.7], exact chains 22.3% [15.4, 29.9]. Decisions use the molecule-level
+figures (user, 2026-10-26).
+
 The decoupled supports were adopted by the user's decision after the grade:
 the declared rule required no regression on any figure, and exact chains went
 from 88 to 85 while errors went from 94 to 89. They were adopted for the long

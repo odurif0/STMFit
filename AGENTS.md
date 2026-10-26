@@ -55,6 +55,10 @@ history is at the tag `archive/pre-cleanup-20260929`.
   method.
 - Optimize with held-out sessions or molecules. Prefer correct units, errors
   and per-molecule scores to exact chains, which come in molecule blocks.
+- A molecule counts once, whatever its number of scans (user, 2026-10-26).
+  Benchmark figures and comparisons are by molecule, paired, with bootstrap
+  intervals over molecules (`scripts/grading/report_grade_uncertainty.jl`,
+  also written by `grade_consensus_run.jl` to `uncertainty/`).
   In NKNNKN both K (positions 2 and 5) are next to a chain end, and no K has
   two interior neighbours. So K is confounded with edge adjacency, and the
   benchmark cannot validate K deep inside a chain, as in the 10–20mer.

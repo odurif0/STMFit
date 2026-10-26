@@ -82,6 +82,9 @@ It then filters predictions to the 145 benchmark scans and writes:
 - `units/report.md`, `units/summary.tsv`: full145 own-N unit grade for the final
   (`final`) and per-scan (`per_scan`) calls, plus any `--profile`;
 - `counts_final.tsv`, `counts_per_scan.tsv`: count grades (exact and ±1);
+- `uncertainty/`: the grade by molecule (each molecule counted once, the
+  primary figures) and by session, with 95% bootstrap intervals over
+  molecules (`report.md`, `molecules.tsv`, `sessions.tsv`, `scans.tsv`);
 - with `--data-dir`, `plots/`: one image per molecule sorted by benchmark
   outcome:
   - `1_all_exact/`;
@@ -101,7 +104,17 @@ for byte, except paths and logs.
 
 A promotion needs a fresh raw run from a committed source, frozen configs,
 passing verification, and a complete comparison (counts, correct, exact
-chains, errors, abstentions) with no measure regressing. The decoupled
+chains, errors, abstentions) with no measure regressing. Compare runs by
+molecule, paired, with intervals (user, 2026-10-26):
+
+```bash
+julia --project=. scripts/grading/report_grade_uncertainty.jl \
+    --entry old=results/grade_<A>,results/run_<A> --entry new=results/grade_<C>,results/run_<C> \
+    --manifest benchmarks/chitosan_6mer_counting_confirmed.toml --outdir results/compare_<A>_<C>
+```
+
+A difference whose interval contains 0 is within the molecule-to-molecule
+variation of the benchmark. The decoupled
 supports are the one exception so far: the user adopted them after the grade
 (exact chains 88 → 85, errors 94 → 89) for their long-chain counts.
 

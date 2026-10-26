@@ -17,6 +17,8 @@
 #    report_unit_assignment_benchmark.jl --full145-own-n for the final (fused)
 #    and per-scan calls plus any --profile, and grade_chitosan_benchmark.jl for
 #    the per-scan and final counts. Labels are read only here.
+#    report_grade_uncertainty.jl then gives the grade by molecule and by session
+#    with bootstrap intervals over molecules (OUTDIR/uncertainty).
 # 3. With --data-dir: one plot per molecule (scripts/pipeline/plot_final_molecules.jl) in
 #    plots/1_all_exact, 2_N_exact_calls_wrong, 3_N_wrong and 4_not_in_benchmark,
 #    with the truth in the title and wrong lobes circled.
@@ -147,6 +149,8 @@ function grade_run(run, outdir, profiles, manifest=MANIFEST)
         cd(() -> run_cmd(`$julia --project=$ROOT $(joinpath(ROOT, "scripts", "grading", "grade_chitosan_benchmark.jl")) --manifest $manifest
                           --results $summary --column N_selected --out $(joinpath(outdir, "counts_" * name * ".tsv"))`), ROOT)
     end
+    cd(() -> run_cmd(`$julia --project=$ROOT $(joinpath(ROOT, "scripts", "grading", "report_grade_uncertainty.jl"))
+                      --entry final=$outdir,$run --manifest $manifest --outdir $(joinpath(outdir, "uncertainty"))`), ROOT)
 end
 run_cmd(c) = Base.run(c)
 

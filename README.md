@@ -43,6 +43,17 @@ K = GlcN; "correct" means the brighter class falls on the two GlcN):
 | Legacy support (deterministic, job 12042058) | 137 | 771 | 88 | 865 | 94 |
 | **Promoted method** (decoupled supports, job 12380719) | **137** | **776** | **85** | **865** | **89** |
 
+Counted by molecule, each of the 41 molecules once (the scans of a molecule are
+repeated measurements, and one molecule holds 43 of the 145 scans), the
+promoted method gives exact N 87.8% [76.8, 96.3], correct units 79.5%
+[74.6, 84.3], exact chains 26.8% [14.6, 41.5] and 1.13 errors per scan (95%
+bootstrap intervals over molecules, `scripts/grading/report_grade_uncertainty.jl`).
+Paired by molecule against the legacy support: correct units −0.8 points
+[−2.6, 0.8], exact chains −6.1 [−13.4, 0.0]. On the 492-scan full set (117
+molecules): exact N 78.2% [71.0, 85.0], correct units 72.8% [69.1, 76.7],
+exact chains 22.3% [15.4, 29.9]. Decisions use these molecule-level figures
+(user, 2026-10-26).
+
 All 145 counts are within one lobe, and every final count equals the
 legacy-support run's. The decoupled supports were adopted on 2026-10-25 by the
 user's decision after the grade (the declared rule required no regression on
