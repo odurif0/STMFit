@@ -3229,3 +3229,39 @@ aggregates, cut molecules and non-chitosan objects stay out.
     layers that correct the 6-mer over-segmentation make long-chain counts less
     reproducible. Reproducible is not correct: the 6-mer shows that `N_eff` can
     be reproducibly wrong (30/04/2025).
+
+### 2026-10-26 — Campaign J, amendment (user, 2026-10-26): stage 2 starts with a shape test on averaged lobe patches
+
+- **Why.** Stage 1 showed that more scans of a molecule do not correct its
+  count. A joint fit (2–3 days of engine work) would add two measurements, the
+  shape of each unit and the behaviour of the chain ends. Whether that
+  information exists in the images is tested first, without a new fit; the
+  joint fit is built only if the test says so.
+- **Data.** The lobe patches the assignment already extracts
+  (`assignment/patches_fwd17.tsv`, forward Z, 17 × 17 points, 0.04 nm step,
+  ±0.32 nm along t and across u of the chain, centred on the fitted lobe, each
+  patch normalised by its median and standard deviation, so it carries shape,
+  not brightness) of the 493-scan 6-mer run and the 440-scan 10–20mer run.
+  Orientation: within a track, patches of scans whose physical lobe order runs
+  against the lobe index are rotated by 180°; for end lobes, t points to the
+  chain interior. Physical lobes and tracks as in campaign R (at least 3 scans,
+  at most 8 per track).
+- **Descriptors, fixed now** (weights w = P − min P over the patch P):
+  D1 width along t and D2 width across u (weighted standard deviations); D3
+  centroid offset along t and D4 across u; D5 central fraction (weight within
+  0.12 nm of the centre). Residuals as in campaign R: minus the scan median
+  and minus the mean at the distance class to the nearest end.
+- **Decision rule, fixed now.** The joint fit is built if (a) for at least one
+  descriptor the between-lobe variance of the 10–20mer exceeds that of the
+  6-mer (negative control for sequence): the 99% bootstrap interval over
+  tracks of the variance ratio lies above 1 (99% for five descriptors), or (b)
+  the 10–20mer ends differ clearly from the 6-mer ends: for end lobes oriented
+  inward, E = mean of P over the outer third of the patch (t ≤ −0.12 nm,
+  |u| ≤ 0.16 nm) minus the inner third (t ≥ 0.12 nm); the 99% interval over
+  molecules of E(10–20mer ends) − E(6-mer ends) excludes 0 and the difference
+  is at least half of |E(6-mer ends)|. Otherwise the campaign stops, and the
+  remaining time goes to a one-page proposal of measurements for the team.
+- **Reported, not used for the decision:** averaged patches by distance class
+  (6-mer d = 1, 2, 3; 10–20mer d = 1, 2, 3, ≥ 4), and the d = 2 minus d = 3
+  contrast of each descriptor against its between-lobe spread (in the 6-mer this
+  is K minus core N, position included, as in campaign R).
