@@ -3141,3 +3141,48 @@ aggregates, cut molecules and non-chitosan objects stay out.
   changes the lobe appearance is one hypothesis, not tested). The image score
   is not a valid definition of an elite; a human rating (the proposal of the
   last slide) or an image criterion validated against it is still needed.
+
+### 2026-10-26 — Declared campaign J: joint fit of the repeated scans of one molecule (stage 1: joint count from the per-scan GCV curves)
+
+- **Deliverable** (user, approved 2026-10-26; time box 5 working days, until
+  2026-10-31). A molecule-level count, then geometry and unit shape, that uses
+  every repeat scan of a molecule in one criterion instead of a per-scan
+  choice followed by a majority vote. Target: the 10–20mer counting
+  instability (18 of 65 repeated molecules differ by more than 2 units).
+  Stages: (1) joint count from the per-scan fits already computed, no new fit;
+  (2) a joint fit with shared geometry and an end-lobe type (own amplitude,
+  width and spacing for the terminal lobe; not for the second lobe, which is
+  always K in the control, so its own parameters would learn the control's
+  sequence); (3) unit shape as a diagnostic (repeatability, end against core
+  N, which are both N in the control), synthetic long chains for counting.
+- **Stage 1 method, fixed now.** Every counting run writes, per scan, the GCV
+  of each candidate N for the elliptical and circular models
+  (`<scan>/ell_scores.tsv`, `circ_scores.tsv`). The effective score of a scan
+  is the minimum of the valid elliptical and circular GCV at each N (the
+  Level 1 of the per-scan hierarchy; reconstructed exactly from the tables:
+  487/487 scans of the 493-scan run, 429/429 of the 10–20mer run). For a track
+  of at least 3 scans (`consensus/consensus.tsv`, as for the consensus), the
+  joint score is J(N) = Σ_s [log GCV_s(N) − min_N log GCV_s(N)], over the N
+  valid in at least one scan of the track; a scan where N is not valid
+  contributes its own largest log ratio. N_joint = argmin J (ties: the smaller
+  N); scans without any valid candidate do not contribute. Tracks of fewer
+  than 3 scans keep the per-scan count. No parameter is added, no label read.
+  The per-scan layers (robust-AICc guard, support midpoint) are not applied to
+  J at this stage.
+- **Comparisons.** (a) per-scan `N_selected`; (b) the current consensus
+  `N_final` (strict majority of `N_selected`); (c) the vote of the Level-1
+  counts `N_eff` (strict majority, else median); (d) `N_joint`. On the 6-mer
+  (493-scan run `dec493_c2b954a`, 492-scan full set; grading side,
+  `grade_chitosan_benchmark.jl`): exact N per scan and per molecule, by
+  session. On both runs, label-free: split-half agreement. The scans of each
+  track of at least 4 scans are split in time order into odd and even; each
+  half gets its own count by each rule (votes: strict majority, else median);
+  report the share of tracks where the halves agree and the mean |ΔN|.
+- **Decision rule, fixed now.** J becomes the count criterion of stage 2 if,
+  on the 6-mer, its exact N per scan is at least that of the current consensus
+  and, on the 10–20mer, its split-half agreement is higher than that of the
+  current consensus. If J beats the vote of `N_eff` but not the current
+  consensus, the per-scan layers carry information that J lacks, and stage 2
+  builds them into the joint criterion (pooled support length and guard). If J
+  beats neither, stage 2 keeps the vote for counting and works on the shared
+  geometry only.
