@@ -3311,3 +3311,38 @@ aggregates, cut molecules and non-chitosan objects stay out.
   those sessions is not excluded, and the 6-mer still cannot tell which shape
   is N and which is K. A 6-mer imaged in the same sessions as the 10–20mer
   would settle the session question.
+
+### 2026-10-26 — Campaign J, stage 2 declared: joint shape fit of a molecule on its registered scans
+
+- **Design, fixed now.** For each track of at least 3 scans (at most 8, evenly
+  spaced in file order, as in stage 2a):
+  - *Registration.* Every scan is mapped onto a reference scan of the track by
+    a rigid transform (rotation and translation, least squares) between the
+    absolute positions of the physical lobes they share; scans with fewer than
+    3 shared physical lobes are left out. Molecule frame: the reference
+    chain's centroid and principal axis, t increasing with the physical index.
+  - *Stack.* Each scan's flattened forward topography (plane + rows, as the
+    consensus registration) is resampled on a 0.02 nm grid of the molecule
+    frame, ±0.8 nm across and 0.8 nm beyond the end lobes; per scan, minus the
+    median of the pixels with |u| > 0.55 nm, divided by the 95th percentile of
+    the chain pixels (|u| < 0.15 nm); the stack is the mean over the scans of
+    each pixel present in at least half of them.
+  - *Fit.* N elliptical Gaussians at the track's consensus count, each with
+    its own position (within 0.3 nm of the reference), amplitude, widths
+    σ∥ and σ⊥ (0.10–0.60 nm), and orientation (within ±34° of the axis), plus
+    a background plane, by Levenberg–Marquardt with an analytic Jacobian over
+    every pixel of the window (no ±0.16 nm tube, which left σ⊥ at its bound for
+    37% of the per-scan fits). Every lobe, the end lobe included, has its own
+    parameters; nothing is learned on the 6-mer and carried over, so no
+    distance class gets a shared parameter.
+  - *Halves.* The same on the odd and on the even scans of the track.
+- **Success criteria, fixed now.** (1) The joint fit is a usable shape
+  measurement if the split-half reliability (Pearson r over units of the
+  residual: minus the track median and minus the distance-class mean) of σ∥ or
+  σ⊥ is at least 0.5 in both runs. (2) It confirms stage 2a if the between-unit
+  variance of σ∥ or σ⊥ (covariance between halves) is larger in the 10–20mer
+  than in the 6-mer: ratio with a 99% bootstrap interval over tracks above 1.
+  Stage 3 (shape families along the 10–20mer chains, relation to the
+  brightness classes) uses the joint-fit shapes if (1) holds.
+- **Compute.** Development and single-track checks locally; the two cohorts
+  (53 and 65 tracks) in one Viper job.
