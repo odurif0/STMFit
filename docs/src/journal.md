@@ -3578,3 +3578,19 @@ aggregates, cut molecules and non-chitosan objects stay out.
   differing by more than 2 (4). It would leave the 6-mer unchanged and apply
   the 6-mer method to the 10–20mer as the strategy asks; a fresh 10–20mer run
   would test it.
+
+### 2026-10-26 — Declared experiment K3: the promoted 6-mer count policy, unchanged, for the 10–20mer (user, 2026-10-26)
+
+- **Change.** `config/chitosan_unified_hybrid.toml`: the promoted
+  `chitosan_decoupled_support.toml` (policy `support_midpoint_hybrid`, guard
+  and midpoint) with `n_min = 2` and `n_max = 24` stated, for both data sets.
+  The 10–20mer leave the adaptive support rescue; the 6-mer should not change
+  (its supports allow far fewer than 14 units).
+- **Runs.** Two fresh raw runs on Viper from one committed source: the 440
+  10–20mer scans and, to check that the 6-mer does not change, the 493 6-mer
+  scans.
+- **Decision rule, fixed now.** The unified config is proposed for promotion
+  if, by molecule on the 6-mer (paired against `dec493_c2b954a`), no measure is
+  worse with a 95% interval entirely on the wrong side of 0, and the 10–20mer
+  split halves agree more often than with the application policy (21 of 47,
+  `dec1020_70a9baa`). Promotion stays the user's decision.
