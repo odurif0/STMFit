@@ -24,7 +24,8 @@ using ..ReconstructedUnitAssignment: read_table
 export SIGNALS, Lobe, RunUnits, load_run_units, signal_value, distance_profile, track_groups,
        Moments, moments, variance_components, bootstrap_components, ratio_interval,
        pair_correlations, lag_summary, persistent_profiles, profile_autocorrelation,
-       autocorrelation_null, count_dispersion, capped_files, centred, normal_cdf, call_robustness
+       autocorrelation_null, count_dispersion, capped_files, centred, normal_cdf, call_robustness,
+       SHAPE_DESCRIPTORS, patch_descriptors, rotate180, end_asymmetry, scan_orientation
 
 "Signals a lobe offers (log scale): amplitude, integrated amplitude, widths."
 const SIGNALS = (:amplitude, :integrated, :width_along, :width_across)
@@ -109,6 +110,74 @@ function centred(lobes::AbstractVector{Lobe}, kind::Symbol)
     ok = filter(!isnan, v)
     isempty(ok) && return fill(NaN, length(v))
     return v .- median(ok)
+end
+
+"Shape descriptors of a lobe patch (campaign J, 2026-10-26): widths along and across, centroid offsets, central fraction."
+const SHAPE_DESCRIPTORS = (:width_t, :width_u, :offset_t, :offset_u, :central_fraction)
+
+"""
+    patch_descriptors(P; half=0.32, step=0.04, central=0.12)
+
+Shape descriptors of a square lobe patch `P` (side² values, u-major: for each u,
+every t; t along the chain, u across, both from `-half` to `half` by `step`).
+Weights w = P − min P; widths are the weighted standard deviations, offsets
+the weighted centroid, the central fraction the weight within `central` nm of
+the centre. A patch with a non-finite value gives NaNs.
+"""
+function patch_descriptors(P::AbstractVector{<:Real}; half::Real=0.32, step::Real=0.04, central::Real=0.12)
+    c = collect(-half:step:half + step / 2)
+    length(P) == length(c)^2 || throw(ArgumentError("patch of $(length(P)) values, expected $(length(c))²"))
+    nan = NamedTuple{SHAPE_DESCRIPTORS}(ntuple(_ -> NaN, length(SHAPE_DESCRIPTORS)))
+    all(isfinite, P) || return nan
+    lo = minimum(P)
+    W = 0.0; St = 0.0; Su = 0.0
+    for (i, (t, u)) in enumerate(Iterators.product(c, c))
+        w = P[i] - lo; W += w; St += w * t; Su += w * u
+    end
+    W > 0 || return nan
+    mt, mu = St / W, Su / W
+    Vt = 0.0; Vu = 0.0; C = 0.0
+    for (i, (t, u)) in enumerate(Iterators.product(c, c))
+        w = P[i] - lo
+        Vt += w * (t - mt)^2; Vu += w * (u - mu)^2
+        hypot(t, u) <= central + 1e-9 && (C += w)
+    end
+    return (width_t=sqrt(Vt / W), width_u=sqrt(Vu / W), offset_t=mt, offset_u=mu, central_fraction=C / W)
+end
+
+"The patch turned by 180° (t → −t, u → −u)."
+rotate180(P::AbstractVector) = reverse(P)
+
+"""
+    end_asymmetry(P; half=0.32, step=0.04, cut=0.12, band=0.16)
+
+Mean of the patch over the outer part (t ≤ −cut, |u| ≤ band) minus the inner
+part (t ≥ cut, |u| ≤ band), for a patch whose t points to the chain interior.
+"""
+function end_asymmetry(P::AbstractVector{<:Real}; half::Real=0.32, step::Real=0.04, cut::Real=0.12, band::Real=0.16)
+    c = collect(-half:step:half + step / 2)
+    length(P) == length(c)^2 || throw(ArgumentError("patch of $(length(P)) values, expected $(length(c))²"))
+    outer = Float64[]; inner = Float64[]
+    for (i, (t, u)) in enumerate(Iterators.product(c, c))
+        abs(u) <= band + 1e-9 || continue
+        t <= -cut + 1e-9 && push!(outer, P[i])
+        t >= cut - 1e-9 && push!(inner, P[i])
+    end
+    return mean(outer) - mean(inner)
+end
+
+"""
+    scan_orientation(lobes)
+
++1 when the physical lobes of a scan run with its lobe index, −1 when they run
+against it, 0 when the scan has fewer than two physical lobes. The physical
+index is the integer after the last underscore of the physical lobe name.
+"""
+function scan_orientation(lobes::AbstractVector{Lobe})
+    pts = [(l.k, parse(Int, split(l.physical, '_')[end])) for l in lobes if !isempty(l.physical)]
+    length(pts) >= 2 || return 0
+    s = sum((a[1] - b[1]) * (a[2] - b[2]) for a in pts for b in pts)
+    return s > 0 ? 1 : (s < 0 ? -1 : 0)
 end
 
 """

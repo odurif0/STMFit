@@ -3265,3 +3265,49 @@ aggregates, cut molecules and non-chitosan objects stay out.
   (6-mer d = 1, 2, 3; 10–20mer d = 1, 2, 3, ≥ 4), and the d = 2 minus d = 3
   contrast of each descriptor against its between-lobe spread (in the 6-mer this
   is K minus core N, position included, as in campaign R).
+
+### 2026-10-26 — Campaign J, stage 2a results: unit shape varies more from unit to unit in the 10–20mer than in the 6-mer; the rule says build the joint fit
+
+- **Run.** `scripts/data/report_unit_shape.jl` (descriptors in
+  `STMFit.UnitReliability`: `patch_descriptors`, `rotate180`, `end_asymmetry`,
+  `scan_orientation`; tests in `test/test_unit_reliability.jl`) on the 6-mer
+  run `dec493_c2b954a` (control; 53 tracks, 280 scans used) and the 10–20mer
+  run `dec1020_70a9baa` (65 tracks, 327 scans). Output
+  `results/shape_20261026/` (untracked; `mean_patches.png` shows the averaged
+  patches by distance class).
+- **Rule (a), between-lobe variance against the 6-mer (99% intervals).**
+  Width along t: ratio 1.72 [1.03, 2.86]; width across u: 1.75 [1.07, 2.89];
+  central fraction: 2.27 [1.31, 4.00]; centroid offsets: 1.15 [0.78, 1.77]
+  and 1.37 [0.74, 2.63]. Three descriptors lie above 1. In both runs the
+  shape descriptors repeat across scans (ICC 0.36–0.67).
+- **Rule (b), chain ends.** E = −1.587 (6-mer) and −1.448 (10–20mer),
+  difference 0.139 [−0.031, 0.321]: the ends are not clearly different.
+- **Decision, by the rule fixed above:** (a) holds, so the joint fit is built.
+- **Checks after the rule (exploratory, same 99% ratio intervals; a Python
+  re-implementation reproduces the ratios within 0.2).** None explains the
+  excess:
+  - *Curvature.* The patches use the global chain axis, so a curved chain
+    turns its units. Local chain angles are alike in both runs (median 7.4°
+    and 6.7°, repeatable spread 10° and 9°), explain at most 2% of the
+    descriptor variance, and adjusting for them leaves the ratios at 1.81,
+    1.89 and 2.08, intervals above 1.
+  - *Merged units.* The width does not follow the spacing to the neighbours
+    (correlation 0.00–0.03); keeping only spacings ≤ 0.72 nm: 1.92, 1.79,
+    2.11, intervals above 1.
+  - *Neighbour brightness.* Neighbour and own brightness explain at most 2.4%;
+    adjusted ratios 1.73 [0.98, 3.07], 1.76 [1.06, 3.13], 2.09 [1.13, 3.79].
+  - *Unstable counts.* The 29 10–20mer tracks whose counts vary by at most one
+    unit: 1.78 [0.98, 3.22], 1.77 [1.08, 3.27], 2.11 [1.00, 4.24].
+  - *Same distance classes.* 10–20mer lobes at d = 2–3 only: 1.59, 1.68, 2.10,
+    intervals now include 1 (fewer lobes).
+  - *Sessions within the 6-mer.* 2025 against 2024 sessions: 0.65, 0.48,
+    0.99, so session changes inside the control do not create such an excess.
+- **Reading.** This is the first benchmark-free sign of unit-level structure
+  that the 10–20mer have and the fixed-sequence 6-mer lacks, and it is in the
+  shape of the units, not their brightness (campaign R found none in
+  amplitude). It fits a sequence that varies along the 10–20mer chains. It is
+  not proof: the 10–20mer were imaged in other sessions (December 2025 to
+  February 2026) than any 6-mer, so a tip or imaging difference specific to
+  those sessions is not excluded, and the 6-mer still cannot tell which shape
+  is N and which is K. A 6-mer imaged in the same sessions as the 10–20mer
+  would settle the session question.

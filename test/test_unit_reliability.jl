@@ -144,3 +144,22 @@ end
     @test call_robustness(0.7; threshold=0.7) == :bright && call_robustness(0.3; threshold=0.7) == :dim
     @test_throws ArgumentError call_robustness(0.5; threshold=0.5)
 end
+
+@testset "patch shape descriptors, rotation, end asymmetry and orientation" begin
+    g(t0, u0, st, su) = [exp(-((t - t0)^2 / (2st^2) + (u - u0)^2 / (2su^2))) for u in -0.32:0.04:0.32 for t in -0.32:0.04:0.32]
+    d = patch_descriptors(g(0, 0, 0.15, 0.08))
+    @test d.width_t > d.width_u                                   # t is the fast index of the patch
+    @test abs(d.offset_t) < 1e-9 && abs(d.offset_u) < 1e-9
+    s = patch_descriptors(g(0.08, -0.04, 0.1, 0.1))
+    @test s.offset_t > 0.06 && s.offset_u < -0.03
+    r = patch_descriptors(rotate180(g(0.08, -0.04, 0.1, 0.1)))   # a half turn flips both offsets
+    @test isapprox(r.offset_t, -s.offset_t; atol=1e-9) && isapprox(r.offset_u, -s.offset_u; atol=1e-9)
+    @test patch_descriptors(g(0, 0, 0.06, 0.06)).central_fraction > patch_descriptors(g(0, 0, 0.12, 0.12)).central_fraction
+    @test all(isnan, values(patch_descriptors(fill(NaN, 289))))
+    @test_throws ArgumentError patch_descriptors(zeros(100))
+    @test end_asymmetry(g(-0.1, 0, 0.1, 0.1)) > 0.2 && end_asymmetry(g(0.1, 0, 0.1, 0.1)) < -0.2
+    lob(k, p) = Lobe(k, 1, p, 1.0, 0.3, 0.3)
+    @test scan_orientation([lob(1, "track3_1"), lob(2, "track3_2"), lob(3, "track3_3")]) == 1
+    @test scan_orientation([lob(1, "track3_6"), lob(2, "track3_5"), lob(3, "")]) == -1
+    @test scan_orientation([lob(1, "track3_6"), lob(2, "")]) == 0
+end
