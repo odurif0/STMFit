@@ -3346,3 +3346,33 @@ aggregates, cut molecules and non-chitosan objects stay out.
   brightness classes) uses the joint-fit shapes if (1) holds.
 - **Compute.** Development and single-track checks locally; the two cohorts
   (53 and 65 tracks) in one Viper job.
+
+### 2026-10-26 — Campaign J, stage 2 pilot: a free per-unit shape fit is not identifiable on these images
+
+- **Code.** `STMFit.JointShape` (rigid registration, stack, Levenberg–Marquardt
+  fit with an analytic Jacobian; synthetic tests in `test/test_joint_shape.jl`
+  recover positions, widths, orientation and amplitudes of six overlapping
+  units at 0.62 nm spacing) and `scripts/pipeline/fit_joint_shape.jl`.
+- **Pilot before the Viper job** (5 tracks of at least 8 scans per run, local;
+  `results/joint_shape_pilot_20261026/`, untracked). The fits converge and
+  reproduce the stacks (residual 4% of the signal), but the decomposition into
+  units is not determined: orientation at its bound for 57% (6-mer) and 68%
+  (10–20mer) of the units, σ⊥ at a bound for 29% and 28%, σ∥ for 7% and 15%.
+  Split-half agreement of σ∥ over units, before any residualisation (which
+  lowers it): r = 0.07 (28 units, 6-mer) and 0.26 (40 units, 10–20mer); mean
+  |odd − even| 0.11 nm for widths of about 0.3 nm. Criterion (1) asks for 0.5
+  in both runs.
+- **Why.** In the flattened topography a chain is a continuous ridge about
+  1 nm wide with a weak modulation; the units overlap (spacing 0.6 nm,
+  half-widths 0.4–0.6 nm) and are not resolved one by one
+  (`results/shape_20261026/scan_240307_015_raw_and_highpass.png`). A model
+  with free shape per unit fits that ridge in many equivalent ways. The
+  per-scan pipeline gets units only through its constraints (narrow tube,
+  bounded spacing). The stage 2a descriptors measure the local intensity
+  landscape around the fitted centres, not an intrinsic unit shape; their
+  extra variance in the 10–20mer is real in that sense, but it cannot be
+  turned into a per-unit shape measurement with these images.
+- **Status.** Criterion (1) is out of reach on the pilot; the cohort job is not
+  run unless the user asks. Recommendation to the user: close campaign J and
+  write the measurement proposal, with resolving the units (imaging
+  conditions) added to the list.

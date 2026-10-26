@@ -4,7 +4,8 @@
 Library shared by the command-line programs in `scripts/`: molecule
 consensus, latent-class fusion, unit assignment (transductive and frozen), patch preprocessing,
 connected-component molds, empirical Fisher views, benchmark-free reliability of
-per-unit signals, joint counts of repeated scans and script helpers. The fit
+per-unit signals, joint counts and joint shape fits of repeated scans, and
+script helpers. The fit
 engines live in the packages under `packages/`. Scripts load a part with, for
 example, `using STMFit.MoleculeConsensus`.
 """
@@ -21,6 +22,7 @@ include("molecule_fusion.jl")                 # MoleculeFusion
 include("frozen_assignment.jl")               # FrozenAssignment
 include("unit_reliability.jl")                # UnitReliability
 include("joint_count.jl")                     # JointCount
+include("joint_shape.jl")                     # JointShape
 
 "Root folder of the STMFit repository (config/, benchmarks/, dft/, data/)."
 root() = pkgdir(@__MODULE__)
