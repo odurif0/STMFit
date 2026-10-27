@@ -3823,3 +3823,39 @@ aggregates, cut molecules and non-chitosan objects stay out.
   features, end units apart) is a new declared campaign; the decisive step
   remains a control where N and K are known apart from position
   (homo-oligomers, an interior K, same-session imaging).
+
+### 2026-10-27 — Declared campaign T2: unit types along the directions where the 10–20mer vary more than the fixed-sequence 6-mer (user, 2026-10-27; time box until 2026-10-28)
+
+- **Why.** Campaign T typed units along the directions that repeat most, but
+  that variation is the same in the fixed-sequence 6-mer (conformation,
+  adsorption, tip), not sequence. The 10–20mer show excess reproducible
+  variation over the 6-mer in unit shape (ratio 1.7–2.3, stage 2a). T2 looks
+  for the types there. A quick check before declaring: the lateral asymmetry
+  alternates between neighbouring units in both runs (lag-1 r −0.26 and
+  −0.15, lag-2 positive), but in the 6-mer K and N show the same phase-coherent
+  and absolute asymmetry: it marks ring orientation, not acetylation.
+- **Measurements.** Those of campaign T (same features, robust z within scan,
+  distance-class means removed, unit means over odd, even and all scans, at
+  most 16 scans per molecule), with one change: the three patch descriptors
+  are the mean of the forward and the backward patch (`patches_fwd17.tsv`
+  raw, `patches_bwd17.tsv` bwd_raw), two measurements of each scan.
+- **Contrastive directions, fixed now.** Unit means of both runs are scaled by
+  the pooled standard deviation of each feature. For each run, the reproducible
+  covariance is the symmetrised odd × even covariance; the control's is made
+  positive semi-definite and shrunk (eigenvalues below 0 set to 0, plus 0.1 ×
+  its mean eigenvalue on the diagonal). Directions solve C_app v = λ C_ctrl v;
+  the leading direction (largest λ) is kept. Molecules of each run are split
+  in two folds (tracks shuffled with seed 20261027, alternated); the direction
+  learned on one fold of each run scores the units of the other fold, so every
+  score is out of fold.
+- **Typing, fixed now.** On the out-of-fold scores, winsorised at the 2.5 and
+  97.5 percentiles of each run, Gaussian mixtures with 1 and 2 components.
+  Type 1 = the component with the higher mean log-amplitude residual.
+- **Criteria, fixed now (label-free).** (C1) Application: ΔBIC (1 minus 2)
+  ≥ 6 and both weights ≥ 0.15. (C2) Types of the odd-scan and even-scan
+  means (same direction and mixture) agree with κ ≥ 0.5. (C3) Control: not
+  (ΔBIC ≥ 6 and both weights ≥ 0.15). (C4) Type-1 shares by distance class
+  (1, 2, 3, ≥ 4) differ by less than 15 points in the application. Reported:
+  the leading λ of each fold. Output as in campaign T (sequences of molecules
+  with stable counts, posterior ≥ 0.8, at least 3 scans; sample-level
+  predictions with the table's sha256) only if C1–C4 hold.
