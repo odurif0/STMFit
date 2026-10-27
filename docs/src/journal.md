@@ -3594,3 +3594,29 @@ aggregates, cut molecules and non-chitosan objects stay out.
   worse with a 95% interval entirely on the wrong side of 0, and the 10–20mer
   split halves agree more often than with the application policy (21 of 47,
   `dec1020_70a9baa`). Promotion stays the user's decision.
+
+### 2026-10-27 — Experiment K3 results: the 6-mer does not change at all; the 10–20mer split halves agree a little more often, within the noise
+
+- **Runs.** Viper jobs 12399770 (493 6-mer scans, 1 h 50) and 12399771 (440
+  10–20mer scans, 2 h 01), source `e338ec2`,
+  `config/chitosan_unified_hybrid.toml`; `results/k3_6mer_e338ec2`,
+  `results/k3_1020_e338ec2` (untracked; both carry the new `qc/` page). Grade
+  `results/k3_6mer_e338ec2_grade`, comparison `results/k3_6mer_compare`,
+  `results/k3_1020_replay`.
+- **6-mer.** Every per-scan count equals that of `dec493_c2b954a`, and
+  `predictions.tsv` is identical byte for byte: stating `n_min`/`n_max`
+  changes nothing for 6-mers. All paired differences are 0.
+- **10–20mer, against the application policy (`dec1020_70a9baa`).** Split
+  halves agree for 24 of 47 molecules against 21 (9 molecules turn to
+  agreement, 6 away from it; +6.4 points, 95% bootstrap interval −8.5 to
+  23.4); 7 differ by more than 2 units against 4. Per-scan counts within one
+  unit in 35 of 65 molecules (29), more than 2 apart in 19 (18). For
+  comparison, K2 (no guard) gave +17.0 points [2.1, 31.9]. The transductive
+  assignment moves with the counts again: fusion π 0.24 (0.48), θ0 0.06
+  (0.185), θ1 0.54 (0.71).
+- **Decision, by the rule fixed above.** Both criteria hold (6-mer unchanged,
+  10–20mer agreement higher), so the unified config is proposed for
+  promotion; the user decides. The 10–20mer gain is within the noise: the case
+  for it is consistency (one method for both data sets, as the strategy
+  asks, no hidden defaults) at no cost on the benchmark, not better long-chain
+  counts.
