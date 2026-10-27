@@ -3794,3 +3794,32 @@ aggregates, cut molecules and non-chitosan objects stay out.
   length of a type, share of unlike neighbours) written to the journal with the
   table's sha256 before any comparison with the user's knowledge. If a
   criterion fails, the campaign reports which, and stops.
+
+### 2026-10-27 — Campaign T results: no reproducible, position-free pair of unit types; stopped as declared
+
+- **Tools.** `STMFit.UnitTyping` (full-covariance mixtures, BIC,
+  reproducible subspace, κ, robust z; tests `test/test_unit_typing.jl`) and
+  `scripts/data/type_units.jl`. Output `results/typing_20261027/` (untracked).
+- **Results.** Application: 239 units of 29 molecules, 4 reproducible
+  dimensions; control: 215 units of 36 molecules.
+
+  | criterion | application (10–20mer) | control (6-mer) | holds |
+  |---|---:|---:|---|
+  | C1 ΔBIC (1 minus 2 components) ≥ 6 | 20.6 | | yes |
+  | C2 κ odd against even scans ≥ 0.5 | 0.47 | | no |
+  | C3 control ΔBIC < 6 | | 54.0 | no |
+  | C4 spread of type-1 shares by distance class < 15 points | 17 (57 / 69 / 71 / 74%) | | no |
+
+  The two-component fit splits the application units 68 / 32 and the
+  control units 99 / 1: in the control the second component is a handful of
+  outlying units, so ΔBIC rewards heavy tails as much as families. The
+  application types repeat only moderately (κ 0.47), and the end units
+  (d = 1) fall less often in type 1 although the distance-class means were
+  removed.
+- **Decision, as declared.** Three criteria fail; no sequence is written and
+  the campaign stops. With these images and features, the two unit types of
+  the combinatorial 10–20mer cannot be separated reproducibly and
+  independently of position. Any further attempt (robust mixtures, other
+  features, end units apart) is a new declared campaign; the decisive step
+  remains a control where N and K are known apart from position
+  (homo-oligomers, an interior K, same-session imaging).

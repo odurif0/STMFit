@@ -23,6 +23,7 @@ include("frozen_assignment.jl")               # FrozenAssignment
 include("unit_reliability.jl")                # UnitReliability
 include("joint_count.jl")                     # JointCount
 include("joint_shape.jl")                     # JointShape
+include("unit_typing.jl")                     # UnitTyping
 
 "Root folder of the STMFit repository (config/, benchmarks/, dft/, data/)."
 root() = pkgdir(@__MODULE__)
