@@ -5,7 +5,7 @@ predicting. It is *independently calibrated* only when its value was also
 chosen without benchmark grades. This page states which parameters satisfy
 which condition.
 
-## Counting (`config/chitosan.toml`, promoted as `config/chitosan_decoupled_support.toml`)
+## Counting (`config/chitosan.toml`, promoted as `config/chitosan_unified_hybrid.toml`)
 
 | Parameter | Value | Basis |
 |---|---|---|

@@ -34,7 +34,7 @@ new parameter.
 
 ### Chitosan policy: `support_midpoint_hybrid`
 
-Used by `config/chitosan.toml` and the promoted `config/chitosan_decoupled_support.toml`. Two label-free layers act on `N_eff`:
+Used by `config/chitosan.toml` and the promoted `config/chitosan_unified_hybrid.toml`, for the 6-mer and, since 2026-10-27, the 10–20mer (before: `chitosan_decoupled_support.toml`). Two label-free layers act on `N_eff`:
 
 **Robust-AICc guard.** An auxiliary exhaustive elliptical candidate set is
 rescored with Student-t robust AICc (`robust_guard_nu = 8`); `robust_aicc_N` is
@@ -100,8 +100,9 @@ guard the 10–20mer counts agree better between two halves of a molecule's scan
 
 ### Long chains: `adaptive_support_rescue`
 
-Used by `config/chitosan_10_20mer_adaptive_support_rescue.toml` and the promoted
-application config `config/chitosan_10_20mer_decoupled_support.toml` (`n_max = 24`).
+Used by `config/chitosan_10_20mer_adaptive_support_rescue.toml` and
+`config/chitosan_10_20mer_decoupled_support.toml` (`n_max = 24`), the
+application configs until 2026-10-27; the 10–20mer now use the 6-mer policy.
 If `N_eff` sits at the support-feasibility ceiling, a second pass with
 permissive support settings is accepted only when support length and N both
 increase and circular/elliptical counts stay coherent. The robust-AICc guard

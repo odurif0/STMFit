@@ -40,7 +40,7 @@ What this does and does not establish:
 - Inference is label-free end to end. Benchmark membership and the `NKNNKN`
   control are read only by the grading scripts.
 - The counting parameters in `config/chitosan.toml` (the base of
-  `config/chitosan_decoupled_support.toml`) were historically chosen
+  the promoted `config/chitosan_unified_hybrid.toml`) were historically chosen
   with benchmark grades. They are frozen, but they are not independently
   calibrated ([Calibration](calibration.md)).
 - NKNNKN (N = GlcNAc, K = GlcN) places its two GlcN next to the chain ends.

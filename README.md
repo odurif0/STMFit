@@ -17,7 +17,8 @@ sequence or class proportion:
    axis for each candidate N. GCV selects the count, with a robust-AICc guard
    and a support-midpoint adjustment. The count uses the capped axial support;
    every later fixed-N refit uses the legacy support, or the capped one where
-   that fit fails (`config/chitosan_decoupled_support.toml`).
+   that fit fails (`config/chitosan_unified_hybrid.toml`, one file for the 6-mer
+   benchmark and the 10–20mer application since 2026-10-27).
 2. **Repeated-scan molecule consensus.** Consecutive scans of one molecule are
    registered in the absolute piezo frame (NCC ≥ 0.5). A track of ≥3 scans with
    a strict-majority count refits the disagreeing scans at that count
@@ -72,8 +73,10 @@ historical benchmark-informed provenance ([calibration](docs/src/calibration.md)
 On unknown 10–20mers the chain lengths are not known. The decoupled supports
 remove the truncated supports, and their counts are closer to 17 lengths read
 by the experimenters (mean difference 1.0 unit, against 1.5 with the legacy
-support), but those readings are a comparison, not a ground truth. Per-scan
-calls stay inconsistent across repeat scans (fitted false-call rate 0.19), and
+support), but those readings are a comparison, not a ground truth. The per-scan
+calls are learned again on each cohort and move with the counts (fitted
+false-call rate 0.19 with the former application config, 0.06 with the promoted
+one, 2026-10-27), and
 the unit order does not match the experimenters' acetylation readings beyond
 chance. Those outputs are not validated.
 Benchmark-free checks (2026-10-25, [journal](docs/src/journal.md)): the per-unit
@@ -104,12 +107,12 @@ Pkg.instantiate(); Pkg.precompile()'
 julia --project=. scripts/tools/inspect_one_file.jl data/sets/6mer_Cu100_benchmark/240817_004.sxm
 
 # Per-scan counting only
-julia -t 4 --project=. scripts/pipeline/batch_full.jl 146 --config config/chitosan_decoupled_support.toml \
+julia -t 4 --project=. scripts/pipeline/batch_full.jl 146 --config config/chitosan_unified_hybrid.toml \
     --data-dir RAW_DIR --outdir results/counting
 
 # Complete method, raw scans -> predictions.tsv (run it on Viper for a cohort)
 julia -t 4 --project=. scripts/pipeline/run_molecule_consensus_chitosan.jl \
-    --data-dir RAW_DIR --count-config config/chitosan_decoupled_support.toml \
+    --data-dir RAW_DIR --count-config config/chitosan_unified_hybrid.toml \
     --config config/unit_assignment_corroborated_training.toml \
     --consensus-config config/molecule_consensus.toml \
     --templates dft/molds/chitosan_cc_molds_native_v1.tsv --outdir NEW_DIR

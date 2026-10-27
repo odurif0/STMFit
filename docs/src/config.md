@@ -10,9 +10,9 @@ must update this page and [Calibration](calibration.md).
 |---|---|---|
 | `chitosan.toml` | Per-scan counting on the legacy support: default of the single-stage scripts, base of the promoted config | Previous promoted (until 2026-10-25) |
 | `chitosan_10_20mer_adaptive_support_rescue.toml` | Counting for the 10–20mer application, legacy support | Previous application config |
-| `chitosan_unified_hybrid.toml` | The promoted 6-mer count policy (`support_midpoint_hybrid`) for both data sets, `n_min = 2`, `n_max = 24` stated, otherwise `chitosan_decoupled_support.toml` | Experiment (K3, 2026-10-26) |
+| `chitosan_unified_hybrid.toml` | The promoted 6-mer count policy (`support_midpoint_hybrid`) for both data sets, `n_min = 2`, `n_max = 24` stated, otherwise `chitosan_decoupled_support.toml` | **Promoted** (2026-10-27, user decision): 6-mer benchmark and 10–20mer application |
 | `chitosan_unified_midpoint.toml` | One count policy for the 6-mer and the 10–20mer: `selection_policy = "support_midpoint"` (support midpoint on N_eff, no robust-AICc guard), `n_min = 2`, `n_max = 24`, otherwise `chitosan_decoupled_support.toml` | Experiment K2, not promoted (2026-10-26) |
-| `chitosan_decoupled_support.toml`, `chitosan_10_20mer_decoupled_support.toml` | Counting on the capped support, geometry on the legacy support (the two configs above otherwise unchanged): 6-mer method and 10–20mer application | Promoted (2026-10-25, user decision after the grade) |
+| `chitosan_decoupled_support.toml`, `chitosan_10_20mer_decoupled_support.toml` | Counting on the capped support, geometry on the legacy support (the two configs above otherwise unchanged): 6-mer method and 10–20mer application | Promoted 2026-10-25; superseded on 2026-10-27 by `chitosan_unified_hybrid.toml` (identical 6-mer results) |
 | `molecule_consensus.toml` | Registration, consensus, repeat-scan collection, fusion | Promoted |
 | `unit_assignment_corroborated_training.toml` | Per-scan assignment | Promoted |
 | `unit_assignment_patch_support.toml` | Same, learning on all scans | Previous reference (control) |

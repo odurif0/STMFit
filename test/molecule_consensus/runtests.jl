@@ -178,6 +178,11 @@ end
         delete!(b["model"], "geometry_support_threshold_rule"); b["model"]["support_threshold_rule"] = "profile_quantile_noise"
         @test a == b
     end
+    # The promoted unified config is the 6-mer decoupled config with the count range stated (2026-10-27).
+    u = TOML.parsefile(joinpath(repo, "config", "chitosan_unified_hybrid.toml")); d = TOML.parsefile(joinpath(repo, "config", "chitosan_decoupled_support.toml"))
+    @test (u["model"]["n_min"], u["model"]["n_max"]) == (2, 24)
+    delete!(u["model"], "n_min"); delete!(u["model"], "n_max")
+    @test u == d
     mktempdir() do dir
         selected = joinpath(dir, "counting_summary.tsv")
         R.write_table(selected, ["filepath", "status", "N_selected"],

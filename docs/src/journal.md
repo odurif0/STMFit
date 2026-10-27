@@ -19,16 +19,19 @@ git show archive/pre-cleanup-20260929:docs/src/journal.md
 git show archive/pre-cleanup-20260929:docs/src/journal_archive.md
 ```
 
-## Current state (2026-10-25)
+## Current state (2026-10-27)
 
 **Method** (promoted): per-scan GCV counting on the capped support, with
 fixed-N geometry refits on the legacy support
-(`chitosan_decoupled_support.toml`, since 2026-10-25), then repeated-scan
+(`chitosan_unified_hybrid.toml` since 2026-10-27, the decoupled config with
+the count range stated), then repeated-scan
 molecule consensus with registered-ROI refits (`molecule_consensus.toml`),
 then per-scan assignment learned on corroborated scans
 (`unit_assignment_corroborated_training.toml`), then binomial latent-class
 fusion. Entry point: `scripts/pipeline/run_molecule_consensus_chitosan.jl`.
-The 10–20mer application uses `chitosan_10_20mer_decoupled_support.toml`.
+The 10–20mer application uses the same config (experiment K3; current
+application run `k3_1020_e338ec2`); every run ends with its label-free
+quality page `qc/`.
 
 **Benchmark** (fresh raw run, 12380719, `70a9baa`; full145 own-N): 137/145
 exact N (145/145 within one), 776/870 correct, 85/145 exact chains, 865/870
@@ -3620,3 +3623,25 @@ aggregates, cut molecules and non-chitosan objects stay out.
   for it is consistency (one method for both data sets, as the strategy
   asks, no hidden defaults) at no cost on the benchmark, not better long-chain
   counts.
+
+### 2026-10-27 — Decision: one count config for the 6-mer and the 10–20mer (user, after experiment K3)
+
+- **Promoted.** `config/chitosan_unified_hybrid.toml` is the counting config
+  of the 6-mer benchmark and of the 10–20mer application, and the default of
+  `hpc/run_molecule_consensus.sbatch`. It equals
+  `chitosan_decoupled_support.toml` with `n_min = 2`, `n_max = 24` stated
+  (a test in `test/molecule_consensus/runtests.jl` keeps them so); the 6-mer
+  outputs are byte-identical, and the benchmark figures do not change.
+- **Superseded.** `chitosan_decoupled_support.toml` and
+  `chitosan_10_20mer_decoupled_support.toml` (kept for the record). The
+  10–20mer leave the adaptive support rescue: they now get the 6-mer method
+  unchanged, as the strategy asks. The current application run is
+  `k3_1020_e338ec2` (Viper job 12399771).
+- **What changes on the 10–20mer.** Split halves agree for 24 of 47
+  molecules (21 before; within the noise). Against the 17 experimenter length
+  readings, a comparison only: final counts 6 exact, 13 within one unit, mean
+  |ΔN| 1.00, as before (per scan 0.82 against 1.06;
+  `results/k3_1020_lengths`). The transductive assignment changes with the
+  counts (fusion π 0.24, θ0 0.06): the per-unit calls of the earlier
+  application run, and the sequence listings made from it, belong to the
+  superseded config.

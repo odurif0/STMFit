@@ -121,7 +121,7 @@ supports are the one exception so far: the user adopted them after the grade
 ## Counting only
 
 ```bash
-julia -t 4 --project=. scripts/pipeline/batch_full.jl 146 --config config/chitosan_decoupled_support.toml \
+julia -t 4 --project=. scripts/pipeline/batch_full.jl 146 --config config/chitosan_unified_hybrid.toml \
     --data-dir RAW_DIR --outdir results/counting_<tag> --skip-1d
 julia --project=. scripts/grading/grade_chitosan_benchmark.jl \
     --manifest benchmarks/chitosan_6mer_counting_confirmed.toml \
@@ -149,9 +149,10 @@ reproduce ([journal](journal.md)).
    julia --project=. scripts/data/collect_repeat_scans.jl --targets targets.txt \
        --raw-root RAW_TREE --config config/molecule_consensus.toml --outdir NEW_DIR
    ```
-2. Run the method with the long-chain counting config:
-   `STMFIT_COUNT_CONFIG=config/chitosan_10_20mer_decoupled_support.toml`
-   (with 96 counting shards, 440 scans took 2 h). Only registration decides which candidates are the same molecule.
+2. Run the method unchanged: the promoted `config/chitosan_unified_hybrid.toml`
+   is the default of `hpc/run_molecule_consensus.sbatch` for both data sets
+   (since 2026-10-27; with 96 counting shards, 440 scans take 2 h). The run
+   ends with its quality page, `qc/report.md`. Only registration decides which candidates are the same molecule.
 3. Check integrity with `scripts/grading/grade_consensus_run.jl --run DIR --verify-only`.
    There is no grade, because there are no labels.
 4. Read `chain_report.tsv`, `assignment/review_queue.tsv`, the maps in
