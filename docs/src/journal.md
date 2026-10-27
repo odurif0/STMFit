@@ -3645,3 +3645,34 @@ aggregates, cut molecules and non-chitosan objects stay out.
   counts (fusion π 0.24, θ0 0.06): the per-unit calls of the earlier
   application run, and the sequence listings made from it, belong to the
   superseded config.
+
+### 2026-10-27 — Declared experiment F: the frozen 6-mer assignment for the 10–20mer application (user, 2026-10-27)
+
+- **Why.** The production assignment learns its classes again on each cohort;
+  on the 10–20mer they move with the counts (fusion π 0.48 → 0.24 between two
+  count configs). The strategy asks to freeze what was optimised on the 6-mer
+  and apply it unchanged. Campaign A built the tooling (fully frozen,
+  label-free model: corroborated reference scans, at most 5 per molecule,
+  equal GMM weights, fusion prior 0.5, frozen Fisher;
+  `config/unit_assignment_frozen_labelfree.toml`) but it stayed a candidate:
+  better on held-out 2024 sessions, worse on 2025 (scan counts, 2026-10-21).
+- **6-mer, out of sample.** Leave one session out on the promoted 6-mer run
+  (`k3_6mer_e338ec2`): for each session (SXM header date), a frozen model is
+  trained on the other sessions (reference: their corroborated scans, at most 5
+  per molecule; emission rates on all their scans) and applied to the
+  session's scans; fused and per-scan calls are kept. Graded with
+  `grade_consensus_run.jl --profile`, then by molecule
+  (`report_grade_uncertainty.jl`), paired against the transductive final calls
+  of the same run.
+- **10–20mer.** One frozen model trained on the whole 6-mer run, applied to
+  `k3_1020_e338ec2` unchanged. Label-free measures: agreement with the
+  transductive calls; split-half agreement per physical lobe (majority of the
+  per-scan calls of the odd and of the even scans of a molecule, physical
+  lobes seen at least twice in each half) for the frozen and the transductive
+  per-scan calls; class-1 share by distance to the nearest end.
+- **Decision rule, fixed now.** The frozen assignment is proposed for the
+  application if (a) on the 6-mer, out of sample and by molecule, none of
+  correct units, errors per scan and exact chains is worse than the
+  transductive calls with a paired 95% interval entirely on the wrong side of
+  0, and (b) on the 10–20mer its per-scan calls agree between halves at least
+  as often as the transductive ones. The user decides.
