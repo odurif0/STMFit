@@ -3891,3 +3891,31 @@ aggregates, cut molecules and non-chitosan objects stay out.
   same direction (0.27–0.28) is persistent non-sequence variation
   (conformation, adsorption site), which more scans of the same molecule do
   not average out.
+
+### 2026-10-27 — Declared campaign T3: two types or a continuum? A mixture whose type width is calibrated on the fixed-sequence control, with measurement noise and neighbour contamination removed (user, 2026-10-27; time box until 2026-10-28)
+
+- **Question.** Along the 10–20mer-specific direction of T2, is the extra
+  variation two unit types, each as wide as the persistent non-sequence
+  spread, or one broader continuum?
+- **Scores, fixed now.** T2's measurements, scaling, folds and out-of-fold
+  contrastive direction. Per scan and unit, the score is the projection of its
+  residual feature vector. Neighbour contamination: in each run, the per-scan
+  score is regressed on the mean score of its neighbours in the same scan (one
+  pooled slope β per run, least squares, units with at least one scored
+  neighbour) and β times that mean is subtracted.
+- **Noise and width, fixed now.** Within-unit variance of the corrected
+  per-scan scores, pooled per run (σ_w²); the noise variance of a unit mean is
+  σ_w² / n (n scans). Type width τ² = the control's between-unit variance of
+  the corrected scores (unit means' variance minus the mean noise variance).
+- **Models, fixed now.** On the application unit means: (two types) a
+  mixture of two Gaussians with means μ1, μ2, weight π and the same variance
+  τ² + σ_w² / n for every unit; (continuum) one Gaussian of variance
+  τa² + σ_w² / n, τa² free. Maximum likelihood (two types: EM from 20 starts,
+  seed 20261027). ΔBIC = BIC(continuum) − BIC(two types). Type 1 = the type
+  with the higher mean log-amplitude residual.
+- **Criteria, fixed now.** (C1) ΔBIC ≥ 6 and the smaller type ≥ 10% of the
+  units. (C2) Types of the odd-scan and even-scan means (posteriors with the
+  noise variance of each half) agree with κ ≥ 0.5. (C3) The same two models on
+  the control, with its own τ², do not meet C1. (C4) Type-1 shares by
+  distance class (1, 2, 3, ≥ 4) differ by less than 15 points. Output as in
+  campaign T only if C1–C4 hold.
