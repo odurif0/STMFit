@@ -114,8 +114,10 @@ function run_units(run; cap, bwd::Bool=false)
         used = capped_files(sort(fs), cap)
         for (h, f) in enumerate(used), (ph, k, d, z) in obs[f]
             isempty(ph) && continue
-            u = get!(units, (t, ph), (odd=Vector{Float64}[], even=Vector{Float64}[], d=Int[]))
+            u = get!(units, (t, ph), (odd=Vector{Float64}[], even=Vector{Float64}[], d=Int[],
+                                       where_odd=Tuple{String,Int}[], where_even=Tuple{String,Int}[]))
             push!(isodd(h) ? u.odd : u.even, z .- prof[min(d, 4), :]); push!(u.d, d)
+            push!(isodd(h) ? u.where_odd : u.where_even, (f, k))        # scan and lobe of the observation
         end
     end
     return units, members, nscan

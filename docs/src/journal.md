@@ -3919,3 +3919,36 @@ aggregates, cut molecules and non-chitosan objects stay out.
   the control, with its own τ², do not meet C1. (C4) Type-1 shares by
   distance class (1, 2, 3, ≥ 4) differ by less than 15 points. Output as in
   campaign T only if C1–C4 hold.
+
+### 2026-10-27 — Campaign T3 results: the extra 10–20mer variation is not two types of the control's width; stopped as declared
+
+- **Tools.** `scripts/data/type_units_calibrated.jl`; `UnitTyping.fit_two_types`,
+  `fit_continuum`, `type_posterior` (tests in `test/test_unit_typing.jl`);
+  `type_units.jl` records the scan and lobe of each observation. Output
+  `results/typing_t3_20261027/` (untracked).
+- **Measured.** Neighbour slope β −0.123 (application) and −0.244 (control):
+  a unit's score falls when its neighbours' rises. Per-scan noise σ_w² 1.15
+  and 1.30. Type width from the control τ² 0.205; the application's latent
+  spread as one continuum τa² 0.563 (control 0.232): 2.7 times the control,
+  the excess of T2 again.
+- **Criteria.**
+
+  | criterion | value | holds |
+  |---|---|---|
+  | C1 ΔBIC ≥ 6 and smaller type ≥ 10% | ΔBIC 23.2, types 7 / 93%, means −2.10 and 0.15 | no |
+  | C2 κ odd against even scans ≥ 0.5 | 0.22 | no |
+  | C3 control does not meet C1 | ΔBIC 0.1, smaller type 1% | yes |
+  | C4 type-1 shares by distance class within 15 points | 3 / 16 / 7 / 3% | yes |
+
+- **Reading.** If the excess spread were two types as wide as the control's
+  persistent variation, two balanced types would be separated by d′ ≈ 2.6 and
+  a 10% type by d′ ≈ 4.4; either would be bimodal and would repeat between
+  halves (half-mean noise d′ above 3). The best two-type fit instead isolates
+  7% of the units at one extreme, and their membership does not repeat
+  (κ 0.22): a heavy tail, not a type. Campaigns T, T2 and T3 agree: with these
+  images and per-unit measurements, the combinatorial 10–20mer show more
+  unit-level variation than the fixed-sequence 6-mer, but it is not organised
+  in two separable, reproducible families. The per-scan noise along the
+  direction is 5–6 times the persistent width, and the persistent
+  non-sequence variation equals a third of the 10–20mer spread: the
+  measurement, not the classifier, limits the reading.

@@ -8,7 +8,8 @@ module UnitTyping
 using LinearAlgebra, Random, Statistics
 
 export Mixture, fit_mixture, mixture_bic, posterior, reproducible_subspace, cohen_kappa, robust_z,
-       psd_shrink, contrastive_direction, winsorize
+       psd_shrink, contrastive_direction, winsorize,
+       fit_two_types, fit_continuum, type_posterior
 
 "Gaussian mixture with full covariances: weights, means (k × p) and covariances."
 struct Mixture
@@ -121,6 +122,62 @@ end
 function winsorize(v::AbstractVector{<:Real}, lo::Real=0.025, hi::Real=0.975)
     ok = filter(isfinite, v); a, b = quantile(ok, lo), quantile(ok, hi)
     return clamp.(v, a, b)
+end
+
+_normlog(x, m, v) = -0.5 * (log(2π * v) + (x - m)^2 / v)
+
+"""
+    fit_two_types(s, v; starts=20, iters=1000, seed=20261027) -> (π, μ1, μ2, loglik)
+
+Two Gaussian types on scores `s`, every score with its own known variance
+`v[i]` (the same for both types: type width plus measurement noise), weight π
+of type 1; expectation–maximisation from `starts` starts.
+"""
+function fit_two_types(s::AbstractVector, v::AbstractVector; starts::Integer=20, iters::Integer=1000, seed::Integer=20261027)
+    rng = MersenneTwister(seed); best = (π=NaN, μ1=NaN, μ2=NaN, loglik=-Inf)
+    for _ in 1:starts
+        μ1, μ2 = quantile(s, rand(rng) * 0.4 + 0.05), quantile(s, 0.95 - rand(rng) * 0.4); π = 0.5; ll = -Inf
+        for _ in 1:iters
+            a = [log(π) + _normlog(s[i], μ1, v[i]) for i in eachindex(s)]
+            b = [log(1 - π) + _normlog(s[i], μ2, v[i]) for i in eachindex(s)]
+            m = max.(a, b); lse = m .+ log.(exp.(a .- m) .+ exp.(b .- m)); newll = sum(lse)
+            r = exp.(a .- lse)
+            π = clamp(mean(r), 1e-6, 1 - 1e-6)
+            w1 = r ./ v; w2 = (1 .- r) ./ v
+            μ1 = sum(w1 .* s) / sum(w1); μ2 = sum(w2 .* s) / sum(w2)
+            abs(newll - ll) < 1e-10 * max(1.0, abs(newll)) && (ll = newll; break)
+            ll = newll
+        end
+        ll > best.loglik && (best = (π=π, μ1=μ1, μ2=μ2, loglik=ll))
+    end
+    return best
+end
+
+"Posterior probability of type 1 for scores `s` with variances `v` under `fit_two_types` parameters."
+function type_posterior(s::AbstractVector, v::AbstractVector, π, μ1, μ2)
+    return [1 / (1 + exp(log(1 - π) + _normlog(s[i], μ2, v[i]) - log(π) - _normlog(s[i], μ1, v[i]))) for i in eachindex(s)]
+end
+
+"""
+    fit_continuum(s, noise) -> (μ, τ2, loglik)
+
+One Gaussian on scores `s` whose variance is τ2 + noise[i], τ2 ≥ 0 free
+(golden-section search on τ2; μ the weighted mean for each τ2).
+"""
+function fit_continuum(s::AbstractVector, noise::AbstractVector)
+    function ll(t2)
+        v = t2 .+ noise; w = 1 ./ v; μ = sum(w .* s) / sum(w)
+        return sum(_normlog(s[i], μ, v[i]) for i in eachindex(s)), μ
+    end
+    lo, hi = 0.0, 10var(s) + maximum(noise); g = (sqrt(5) - 1) / 2
+    a, b = hi - g * (hi - lo), lo + g * (hi - lo)
+    for _ in 1:200
+        ll(a)[1] > ll(b)[1] ? (hi = b) : (lo = a)
+        a, b = hi - g * (hi - lo), lo + g * (hi - lo)
+    end
+    t2 = (lo + hi) / 2; L, μ = ll(t2)
+    L0, μ0 = ll(0.0)
+    return L0 > L ? (μ=μ0, τ2=0.0, loglik=L0) : (μ=μ, τ2=t2, loglik=L)
 end
 
 "Cohen's κ of two Boolean vectors."

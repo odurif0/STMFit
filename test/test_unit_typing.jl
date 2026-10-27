@@ -50,3 +50,25 @@ end
     w = winsorize(vcat(collect(1.0:100.0), 1000.0))
     @test maximum(w) < 100 && minimum(w) > 1
 end
+
+@testset "two calibrated types against a continuum" begin
+    rng = MersenneTwister(4)
+    n = 300; τ = 0.5; noise = fill(0.05, n)
+    types = rand(rng, n) .< 0.4
+    s2 = ifelse.(types, 1.5, -1.0) .+ τ .* randn(rng, n) .+ sqrt.(noise) .* randn(rng, n)
+    s1 = 1.2 .* randn(rng, n) .+ sqrt.(noise) .* randn(rng, n)              # same spread, no types
+    for (s, expect) in ((s2, true), (s1, false))
+        v = τ^2 .+ noise
+        T = fit_two_types(s, v); C = fit_continuum(s, noise)
+        dbic = (-2C.loglik + 2log(n)) - (-2T.loglik + 3log(n))
+        @test (dbic >= 6 && min(T.π, 1 - T.π) >= 0.1) == expect
+    end
+    T = fit_two_types(s2, τ^2 .+ noise)
+    hi = T.μ1 > T.μ2 ? T.π : 1 - T.π
+    @test isapprox(hi, 0.4; atol=0.07)
+    p = type_posterior(s2, τ^2 .+ noise, T.π, T.μ1, T.μ2)
+    lab = T.μ1 > T.μ2 ? p .> 0.5 : p .< 0.5
+    @test mean(lab .== types) > 0.95
+    C = fit_continuum(1.2 .* randn(rng, 2000), fill(0.0, 2000))
+    @test isapprox(C.τ2, 1.44; rtol=0.1)
+end
