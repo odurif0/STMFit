@@ -4,10 +4,10 @@
 # reads the grades of grade_consensus_run.jl and the benchmark manifest).
 #
 # Usage:
-#   julia --project=. scripts/grading/report_grade_uncertainty.jl --entry NAME=GRADE_DIR,RUN_DIR \
-#       [--entry NAME=GRADE_DIR,RUN_DIR ...] --manifest TOML --outdir NEW_DIR [--draws 2000] [--seed 20261026]
+#   julia --project=. scripts/grading/report_grade_uncertainty.jl --entry NAME=GRADE_DIR,RUN_DIR[,PROFILE] \
+#       [--entry NAME=GRADE_DIR,RUN_DIR[,PROFILE] ...] --manifest TOML --outdir NEW_DIR [--draws 2000] [--seed 20261026]
 #
-# Per scan (GRADE_DIR/units/grades/final.tsv): exact N (N_pred = N_truth),
+# Per scan (GRADE_DIR/units/grades/PROFILE.tsv, default final): exact N (N_pred = N_truth),
 # correct units, emitted errors (false positives + false negatives), exact chain.
 # Molecule = track of RUN_DIR/consensus/consensus.tsv; session = first folder of
 # the manifest's relative_path. Repeat scans of one molecule are not
@@ -25,14 +25,15 @@ using Printf, Random, Statistics, TOML
 
 function uncertainty_options(args)
     ("--help" in args || "-h" in args || isempty(args)) && return nothing
-    o = Dict{String,Any}("--entry" => Tuple{String,String,String}[], "--draws" => "2000", "--seed" => "20261026"); i = 1
+    o = Dict{String,Any}("--entry" => NTuple{4,String}[], "--draws" => "2000", "--seed" => "20261026"); i = 1
     while i <= length(args)
         k = args[i]
         k in ("--entry", "--manifest", "--outdir", "--draws", "--seed") && i < length(args) || error("Unknown option or missing value: $k")
         if k == "--entry"
             name, rest = split(args[i+1], "="; limit=2)
-            grade, run = split(rest, ","; limit=2)
-            push!(o[k], (String(name), String(grade), String(run)))
+            parts = split(rest, ",")
+            length(parts) in (2, 3) || error("--entry NAME=GRADE_DIR,RUN_DIR[,PROFILE]")
+            push!(o[k], (String(name), String(parts[1]), String(parts[2]), length(parts) == 3 ? String(parts[3]) : "final"))
         else
             o[k] = args[i+1]
         end
@@ -65,10 +66,10 @@ struct ScanGrade
     exact_chain::Bool
 end
 
-function load_entry(grade_dir, run_dir, sessions)
+function load_entry(grade_dir, run_dir, sessions; profile="final")
     track = Dict(r["file"] => r["track"] for r in read_tsv(joinpath(run_dir, "consensus", "consensus.tsv")))
     out = ScanGrade[]
-    for r in read_tsv(joinpath(grade_dir, "units", "grades", "final.tsv"))
+    for r in read_tsv(joinpath(grade_dir, "units", "grades", profile * ".tsv"))
         f = basename(r["file"])
         push!(out, ScanGrade(f, get(track, f, "scan:" * f), get(sessions, f, ""), r["N_pred"] == r["N_truth"],
                              parse(Int, r["phys_correct"]), parse(Int, r["N_truth"]),
@@ -146,7 +147,7 @@ function uncertainty_main(args=ARGS)
     o === nothing && return println("report_grade_uncertainty.jl --entry NAME=GRADE_DIR,RUN_DIR [--entry ...] --manifest TOML --outdir NEW_DIR")
     draws = parse(Int, o["--draws"]); rng = MersenneTwister(parse(Int, o["--seed"]))
     sessions = manifest_sessions(o["--manifest"])
-    entries = [(n, load_entry(g, r, sessions)) for (n, g, r) in o["--entry"]]
+    entries = [(n, load_entry(g, r, sessions; profile=p)) for (n, g, r, p) in o["--entry"]]
     out = o["--outdir"]; mkpath(out)
     md = IOBuffer()
     println(md, "# Grade by molecule and session, with intervals\n")

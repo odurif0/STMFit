@@ -3676,3 +3676,38 @@ aggregates, cut molecules and non-chitosan objects stay out.
   transductive calls with a paired 95% interval entirely on the wrong side of
   0, and (b) on the 10–20mer its per-scan calls agree between halves at least
   as often as the transductive ones. The user decides.
+
+### 2026-10-27 — Experiment F results: the frozen 6-mer assignment holds out of sample on the 6-mer; on the 10–20mer the declared repeatability criterion fails, but only through class balance
+
+- **Tools.** `scripts/pipeline/apply_frozen_assignment_loso.jl` (label-free,
+  sessions from the SXM header date); `report_grade_uncertainty.jl` now takes a
+  grade profile (`--entry NAME=GRADE,RUN,PROFILE`). Outputs
+  `results/f_6mer_loso`, `results/f_6mer_grade`, `results/f_6mer_compare`,
+  `results/f_model_6mer_full.tsv`, `results/f_1020_frozen` (untracked).
+- **6-mer, leave one session out (18 sessions, 192 reference scans per model
+  on average).** By scan the frozen calls give 2278/2952 correct units, 637
+  errors and 182/492 exact chains, against 2240, 675 and 122 for the
+  transductive final calls. By molecule, paired: correct units +1.8 points
+  [−0.2, 3.7], errors per scan −0.11 [−0.22, 0.01], exact chains +1.3
+  [−3.8, 6.8]. Better in most 2024 sessions (20241113 +6.2 points, 20240817
+  +4.8), worse in the three 2025 sessions with more than one molecule
+  (06/03 −8.3, 07/03 −5.6, 30/04 −5.6; 3–4 molecules each): the pattern of
+  campaign A. Criterion (a) holds.
+- **10–20mer (`k3_1020_e338ec2`), model trained on the whole 6-mer run.**
+  Frozen and transductive calls agree for 51.6% of the units (fused; 53.7%
+  per scan), about chance. Class-1 share: frozen 36.8% (d = 2: 61.8%, the K
+  position of the 6-mer), transductive 18.3% (d = 2: 8.2%). Split halves per
+  physical lobe (29 molecules): frozen 85.0% (164/193), transductive 90.0%
+  (181/201); difference −5.1 points [−8.4, −1.7].
+- **Decision, by the rule fixed above.** Criterion (b) fails, so the frozen
+  assignment is not proposed for the application. Post hoc, the raw agreement
+  is driven by class balance: the transductive half-majorities are class 0 for
+  87–88% of the lobes, so they agree 78% of the time by chance; chance-corrected
+  agreement (Cohen's κ) is 0.63 for the frozen calls and 0.54 for the
+  transductive ones. The declared measure was a poor choice; this does not
+  change the decision but makes criterion (b) inconclusive rather than
+  negative.
+- **Reading.** Two label-free assignments that do equally well on the 6-mer
+  give unrelated calls on the 10–20mer, and the frozen one mainly repeats the
+  6-mer position code (bright second units). Neither output is a reading of
+  N and K on the 10–20mer; the comparison confirms campaign R.

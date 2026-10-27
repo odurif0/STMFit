@@ -43,7 +43,7 @@ end
         write(man, "[files.\"s1.sxm\"]\nrelative_path = \"sesA/s1.sxm\"\n[files.\"s2.sxm\"]\nrelative_path = \"sesA/s2.sxm\"\n[files.\"s3.sxm\"]\nrelative_path = \"sesB/s3.sxm\"\n")
         out = joinpath(tmp, "out")
         redirect_stdout(devnull) do
-            uncertainty_main(["--entry", "x=$(joinpath(tmp, "grade")),$(joinpath(tmp, "run"))", "--entry", "y=$(joinpath(tmp, "grade")),$(joinpath(tmp, "run"))",
+            uncertainty_main(["--entry", "x=$(joinpath(tmp, "grade")),$(joinpath(tmp, "run"))", "--entry", "y=$(joinpath(tmp, "grade")),$(joinpath(tmp, "run")),final",
                               "--manifest", man, "--outdir", out, "--draws", "200"])
         end
         rep = read(joinpath(out, "report.md"), String)
