@@ -7,7 +7,8 @@ module UnitTyping
 
 using LinearAlgebra, Random, Statistics
 
-export Mixture, fit_mixture, mixture_bic, posterior, reproducible_subspace, cohen_kappa, robust_z
+export Mixture, fit_mixture, mixture_bic, posterior, reproducible_subspace, cohen_kappa, robust_z,
+       psd_shrink, contrastive_direction, winsorize
 
 "Gaussian mixture with full covariances: weights, means (k × p) and covariances."
 struct Mixture
@@ -93,6 +94,33 @@ function reproducible_subspace(A::AbstractMatrix, B::AbstractMatrix; share::Real
         k += 1
     end
     return vecs[:, 1:k], vals
+end
+
+"Symmetric matrix made positive semi-definite (negative eigenvalues set to 0) and shrunk by `shrink` × its mean eigenvalue on the diagonal."
+function psd_shrink(C::AbstractMatrix; shrink::Real=0.1)
+    e = eigen(Symmetric(Matrix(C))); λ = max.(e.values, 0.0)
+    P = e.vectors * Diagonal(λ) * e.vectors'
+    return Symmetric(P + shrink * max(mean(λ), eps()) * I)
+end
+
+"""
+    contrastive_direction(Ca, Cc; shrink=0.1) -> (v, λ)
+
+Leading direction of excess variation of `Ca` over `Cc` (largest λ of
+Ca v = λ Cc v, with `Cc` made positive semi-definite and shrunk), scaled to
+unit length.
+"""
+function contrastive_direction(Ca::AbstractMatrix, Cc::AbstractMatrix; shrink::Real=0.1)
+    B = psd_shrink(Cc; shrink)
+    e = eigen(Symmetric(Matrix((Ca + Ca') / 2)), B)
+    i = argmax(e.values); v = e.vectors[:, i]
+    return v ./ norm(v), e.values[i]
+end
+
+"Values clamped to the `lo` and `hi` quantiles of the finite ones."
+function winsorize(v::AbstractVector{<:Real}, lo::Real=0.025, hi::Real=0.975)
+    ok = filter(isfinite, v); a, b = quantile(ok, lo), quantile(ok, hi)
+    return clamp.(v, a, b)
 end
 
 "Cohen's κ of two Boolean vectors."

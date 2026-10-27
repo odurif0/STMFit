@@ -3859,3 +3859,35 @@ aggregates, cut molecules and non-chitosan objects stay out.
   the leading λ of each fold. Output as in campaign T (sequences of molecules
   with stable counts, posterior ≥ 0.8, at least 3 scans; sample-level
   predictions with the table's sha256) only if C1–C4 hold.
+
+### 2026-10-27 — Campaign T2 results: a direction specific to the 10–20mer exists and holds out of fold, but it does not split into two reproducible families; stopped as declared
+
+- **Tools.** `scripts/data/type_units_contrastive.jl`; `UnitTyping.psd_shrink`,
+  `contrastive_direction`, `winsorize` (tests in `test/test_unit_typing.jl`);
+  `type_units.jl` gains the forward + backward patch option (default
+  unchanged). Output `results/typing_t2_20261027/` (untracked).
+- **Direction.** Leading λ 6.48 and 9.60 on the two training folds. Loadings
+  (fold 1): integrated prominence −0.61, split log skew 0.37, lateral
+  asymmetry −0.36, width along the chain −0.33, forward mold −0.27. On the
+  molecules not used to learn it, the 10–20mer have 2.98 and 1.47 times the
+  reproducible variance of the 6-mer along it (0.84 against 0.28, 0.40
+  against 0.27): the 10–20mer-specific variation is real.
+- **Criteria.**
+
+  | criterion | value | holds |
+  |---|---|---|
+  | C1 application: ΔBIC ≥ 6 and both weights ≥ 0.15 | ΔBIC 25.0, weights 0.07 / 0.93 | no |
+  | C2 κ odd against even scans ≥ 0.5 | 0.34 | no |
+  | C3 control without two families | ΔBIC −7.8 | yes |
+  | C4 type-1 shares by distance class within 15 points | 3 / 16 / 7 / 3% | yes |
+
+  The mixture again isolates a small group (7%), and its membership repeats
+  poorly between halves. The 15 units of this group and the 19 of the earlier
+  exploratory minority share only 3: the small groups depend on the method.
+- **Decision, as declared.** C1 and C2 fail; no sequence is written. The
+  10–20mer carry extra, reproducible unit-level variation that the
+  fixed-sequence 6-mer does not, but at this resolution it is continuous, not
+  two separated families. In the control, the reproducible spread along the
+  same direction (0.27–0.28) is persistent non-sequence variation
+  (conformation, adsorption site), which more scans of the same molecule do
+  not average out.

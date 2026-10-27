@@ -38,3 +38,15 @@ end
     @test z[3] == 0.0 && isnan(z[end]) && z[5] > 10
     @test robust_z([2.0, 2.0, 2.0]) == [0.0, 0.0, 0.0]
 end
+
+@testset "contrastive direction and winsorising" begin
+    rng = MersenneTwister(3)
+    # control: shared variation on feature 1; application: the same plus extra variation on feature 2
+    Cc = [1.0 0.0 0.0; 0.0 0.1 0.0; 0.0 0.0 0.5]
+    Ca = [1.0 0.0 0.0; 0.0 1.0 0.0; 0.0 0.0 0.5]
+    v, λ = contrastive_direction(Ca, Cc)
+    @test abs(v[2]) > 0.99 && λ > 5
+    @test minimum(eigvals(psd_shrink([1.0 0.0; 0.0 -1.0]))) > 0
+    w = winsorize(vcat(collect(1.0:100.0), 1000.0))
+    @test maximum(w) < 100 && minimum(w) > 1
+end

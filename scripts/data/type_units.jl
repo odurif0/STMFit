@@ -35,10 +35,10 @@ end
 
 num(s) = (v = tryparse(Float64, s); v === nothing ? NaN : v)
 
-"Raw patches of a run: (file, lobe) => values."
-function read_patches(run)
-    lines = readlines(joinpath(run, "assignment", "patches_fwd17.tsv"))
-    h = split(lines[1], '\t'); cols = findall(c -> startswith(c, "raw_p"), h)
+"Raw patches of a run: (file, lobe) => values (forward raw, or another table and column prefix)."
+function read_patches(run; table="patches_fwd17.tsv", prefix="raw_p")
+    lines = readlines(joinpath(run, "assignment", table))
+    h = split(lines[1], '\t'); cols = findall(c -> startswith(c, prefix), h)
     out = Dict{Tuple{String,Int},Vector{Float64}}()
     for l in lines[2:end]
         v = split(l, '\t')
@@ -47,13 +47,15 @@ function read_patches(run)
     return out
 end
 
-"Units of a run: per physical unit, its per-scan residual feature vectors, halves and distance class."
-function run_units(run; cap)
+"Units of a run: per physical unit, its per-scan residual feature vectors, halves and distance class.
+With `bwd`, the patch descriptors are the mean of the forward and backward patches (campaign T2)."
+function run_units(run; cap, bwd::Bool=false)
     _, feat = read_table(joinpath(run, "assignment", "features_predictor.tsv"))
     _, pred = read_table(joinpath(run, "predictions.tsv"))
     _, cons = read_table(joinpath(run, "consensus", "consensus.tsv"))
     physical = Dict((r["file"], parse(Int, r["lobe"])) => r["physical_lobe"] for r in pred)
     patches = read_patches(run)
+    patches_bwd = bwd ? read_patches(run; table="patches_bwd17.tsv", prefix="bwd_raw_p") : Dict{Tuple{String,Int},Vector{Float64}}()
     byfile = Dict{String,Vector{Dict{String,String}}}()
     for r in feat
         push!(get!(byfile, r["file"], Dict{String,String}[]), r)
@@ -80,6 +82,15 @@ function run_units(run; cap)
             if P !== nothing && o != 0
                 d = patch_descriptors(o < 0 ? rotate180(P) : P)
                 M[i, 10], M[i, 11], M[i, 12] = d.width_t, d.width_u, d.central_fraction
+                Q = get(patches_bwd, (f, lobes[i].k), nothing)
+                if Q !== nothing
+                    e = patch_descriptors(o < 0 ? rotate180(Q) : Q)
+                    if all(isfinite, (e.width_t, e.width_u, e.central_fraction))
+                        M[i, 10] = (d.width_t + e.width_t) / 2
+                        M[i, 11] = (d.width_u + e.width_u) / 2
+                        M[i, 12] = (d.central_fraction + e.central_fraction) / 2
+                    end
+                end
             end
         end
         for j in axes(M, 2)
