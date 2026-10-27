@@ -3711,3 +3711,40 @@ aggregates, cut molecules and non-chitosan objects stay out.
   give unrelated calls on the 10–20mer, and the frozen one mainly repeats the
   6-mer position code (bright second units). Neither output is a reading of
   N and K on the 10–20mer; the comparison confirms campaign R.
+
+### 2026-10-27 — Exploratory: two families of units in the 10–20mer? No balanced pair, but a reproducible minority of dim, elongated units
+
+- **Question (user).** Can two families of units be told apart on the
+  10–20mer, whatever their names?
+- **Method (exploratory, chosen while looking; scripts and table in
+  `results/families_20261027/`, untracked).** Per lobe of the promoted runs
+  (`k3_6mer_e338ec2` as fixed-sequence control, `k3_1020_e338ec2`): log
+  amplitude and three patch shape descriptors (width along t, width across u,
+  central fraction), minus the scan median and the distance-class mean;
+  interior units (d ≥ 2) of molecules of at least 4 scans (at most 16), mean
+  over the odd and over the even scans (at least 2 each). Two-family tests on
+  the standardised unit means: a 1-D mixture along the most reproducible
+  direction (leading eigenvector of the odd × even covariance) and a 4-D
+  full-covariance mixture, 1 against 2 components by BIC.
+- **Results.** Every feature repeats between halves (r 0.71–0.83 in the
+  10–20mer, 0.72–0.76 in the 6-mer). The most reproducible direction is the
+  same in both (dimmer, wider along the chain, less compact). Along it the
+  6-mer shows one family (ΔBIC −1.0, separation D 0.57) and the 10–20mer a
+  continuum with a small tail (ΔBIC 3.8, second component 3%). In 4-D: 6-mer
+  one family (ΔBIC −10.4); 10–20mer two components weakly preferred
+  (ΔBIC 4.9), a minority of 19 of 177 interior units (11%) that are dimmer
+  (−1.2 SD), wider along the chain (+0.4), narrower across (−0.4) and less
+  compact (−0.7). Classified separately from the odd and from the even scans,
+  13 units are minority in both halves and 11 in one (agreement 94%, κ 0.67).
+  They lie in 14 of 29 molecules (at most 3 per molecule); 53% sit at the
+  second unit from an end (28% of the others); their spacing to the neighbours
+  is that of the other units (no over-segmentation signature).
+- **Reading.** No evidence of two balanced families: the persistent unit
+  variation is mostly continuous, in the 6-mer as in the 10–20mer. The
+  10–20mer hold a reproducible minority type absent from the fixed-sequence
+  control: candidates are the minority chemistry of the sample or a structure
+  next to chain ends (the excess at d = 2 argues for caution). Nothing names
+  it: the 6-mer gives no key for interior units. The table
+  `results/families_20261027/units.tsv` (sha256
+  6c2f79ad31a518f1c2a1c28d226f10cf4cc816ffbdd963d789d83ec3ffc24f60) is kept
+  as written before the user's 10–20mer pattern, for a final test.
