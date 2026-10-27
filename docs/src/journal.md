@@ -3748,3 +3748,49 @@ aggregates, cut molecules and non-chitosan objects stay out.
   `results/families_20261027/units.tsv` (sha256
   6c2f79ad31a518f1c2a1c28d226f10cf4cc816ffbdd963d789d83ec3ffc24f60) is kept
   as written before the user's 10–20mer pattern, for a final test.
+
+### 2026-10-27 — Declared campaign T: two unit types on the 10–20mer, read without position (user, 2026-10-27; time box until 2026-10-28)
+
+- **Why.** The user states that the 10–20mer are combinatorial sequences of
+  two unit types, N and K (no sequence, composition or per-molecule
+  attribution is given). The current calls do not recover the sequences, and
+  their class shares depend strongly on the distance to the chain end
+  (bright share at d = 1, 2, 3, ≥ 4: 9, 8, 25, 28% transductive; 17, 62, 36,
+  34% frozen 6-mer model), which a combinatorial library should not show on
+  average. The deliverable is a label-free typing of the 10–20mer units in two
+  families that cannot use position, with abstention; naming the families N
+  or K is out of reach without controls.
+- **Data.** Promoted runs `k3_1020_e338ec2` (application) and
+  `k3_6mer_e338ec2` (control, fixed sequence). Molecule tracks of at least 4
+  scans (at most 16, evenly spaced in file order); physical units seen in at
+  least 2 odd and 2 even scans.
+- **Features, fixed now** (per lobe, intrinsic measures only; position
+  features `centered_pos`, `edge_distance_norm` and the run-learned
+  `emp_fisher` are excluded): log amplitude, `amp_rel`, `amp_prominence`,
+  `integrated_prominence`, `amp_neighbor_ratio`, `split_log_skew`,
+  `patch_u_asym_reconstructed`, `mold_cc_fwd`, `mold_cc_bwd`
+  (`assignment/features_predictor.tsv`) and the patch widths along and across
+  and central fraction (`patches_fwd17.tsv`, `UnitReliability.patch_descriptors`,
+  track orientation). Each is turned into a robust z within its scan (minus
+  median, over 1.4826 × MAD), then the mean of its distance class (d = 1, 2,
+  3, ≥ 4, every track once) is removed; unit means over the odd, the even and
+  all scans.
+- **Model, fixed now.** Standardised unit means are projected on the
+  reproducible subspace: eigenvectors of the symmetrised odd × even
+  covariance, the leading ones up to 80% of the positive reproducible
+  variance, at most 4. In it, Gaussian mixtures with full covariance (20
+  starts, seed 20261027), 1 against 2 components by BIC. Type 1 is the family
+  with the higher mean log amplitude residual (physical naming).
+- **Criteria, fixed now (all label-free).** (C1) Two families are supported
+  in the 10–20mer: ΔBIC (1 minus 2 components) ≥ 6. (C2) They repeat: types
+  of the odd-scan and even-scan means, classified with the model fitted on
+  all scans, agree with Cohen's κ ≥ 0.5. (C3) The fixed-sequence control does
+  not show two families with the same pipeline: ΔBIC < 6 on the 6-mer. (C4)
+  Position does not decide the type: type-1 shares by distance class differ
+  by less than 15 points in the 10–20mer.
+- **Output.** If C1–C4 hold: sequences of types for molecules whose per-scan
+  counts vary by at most one unit, units with a posterior below 0.8 or fewer
+  than 3 scans written `?`; sample-level predictions (type-1 share, mean run
+  length of a type, share of unlike neighbours) written to the journal with the
+  table's sha256 before any comparison with the user's knowledge. If a
+  criterion fails, the campaign reports which, and stops.
