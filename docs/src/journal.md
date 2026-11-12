@@ -3952,3 +3952,39 @@ aggregates, cut molecules and non-chitosan objects stay out.
   direction is 5–6 times the persistent width, and the persistent
   non-sequence variation equals a third of the 10–20mer spread: the
   measurement, not the classifier, limits the reading.
+
+### 2026-11-12 — Declared experiment FB: align the forward and backward scans on the molecule before fusing them (user, 2026-11-12)
+
+- **Why.** The user asked whether a denoising step would help (SPIDER,
+  Nature Communications 2026: self-supervised Noise2Noise denoising of
+  scanning-probe images from trace/retrace pairs after a sub-pixel hysteresis
+  correction). Campaign T3 already removed measurement noise statistically, so
+  denoising cannot change the unit-typing conclusion; it could help per-scan
+  counting. A first, non-learned step was chosen: the counting already fits the
+  mean of the forward and backward Z images (`fuse_z_bwd`), but without
+  aligning them. Measured before declaring (row-wise sub-pixel
+  cross-correlation, `scripts`-free check): on the background the two
+  directions agree within 5–11 pm, but on the molecule the backward image is
+  shifted against the scan by a median 210 pm (6-mer, 24 scans; IQR 174–277,
+  up to 441) and 262 pm (10–20mer, 31 scans; IQR 165–396, up to 618): a
+  feedback lag. The fused image therefore smears the chain along the fast scan
+  axis by a third to a half of a unit spacing.
+- **Change.** A preprocessing option `fwd_bwd_align` (`[preprocessing]`,
+  default `"none"`: the current fusion, byte-identical). With
+  `"molecule_x_shift"`, `_fused_roi_data` estimates the lag of the backward
+  image on the molecule (window of ±2.5 nm around the centroid of the
+  brightest 3% of the smoothed mean image; median over its rows of the
+  sub-pixel cross-correlation lag, at most ±0.8 nm) and shifts the forward and
+  backward images by half of it each, towards each other, before averaging.
+  It applies wherever the fused image is used (counting, geometry and
+  consensus refits, plots). Config `config/chitosan_unified_hybrid_fbalign.toml`
+  = the promoted config with this option.
+- **Runs.** Fresh raw runs on Viper: the 493 6-mer scans and the 440 10–20mer
+  scans.
+- **Decision rule, fixed now.** Proposed for promotion if, by molecule on the
+  6-mer and paired against `k3_6mer_e338ec2`, none of exact N, correct units,
+  errors per scan and exact chains is worse with a 95% interval entirely on
+  the wrong side of 0, and on the 10–20mer, against `k3_1020_e338ec2`, the
+  consensus split halves agree for more than 24 of 47 molecules and the
+  molecules whose per-scan counts lie within one unit are not fewer than 35 of
+  65. The user decides.
