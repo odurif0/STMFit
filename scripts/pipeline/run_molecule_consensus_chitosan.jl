@@ -140,6 +140,8 @@ function check_consensus_refits(out, raw, count_config, proposed, runner)
         check = joinpath(dir, name * ".tsv")
         runner(out, name, "extract_lobe_features.jl", ["--config", count_config, "--data-dir", raw,
             "--selected-summary", summary, "--files", join(sort(files), ","), "--out", check]; threads=1)
+        # Every scan may fail at the consensus count: a header-only table means none fitted.
+        count(l -> !isempty(strip(l)) && !startswith(strip(l), '#'), readlines(check)) <= 1 && return fitted
         _, fr = read_table(check)
         for r in fr; fitted[r["file"]] = get(fitted, r["file"], 0) + 1; end
         return fitted

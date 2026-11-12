@@ -3988,3 +3988,19 @@ aggregates, cut molecules and non-chitosan objects stay out.
   consensus split halves agree for more than 24 of 47 molecules and the
   molecules whose per-scan counts lie within one unit are not fewer than 35 of
   65. The user decides.
+
+### 2026-11-12 — Bug fix: a consensus refit stage where no scan fits stopped the run
+
+- **Symptom.** Viper job 13072751 (experiment FB, 10–20mer) failed at
+  `consensus_refit_check`: "No data rows" in
+  `consensus/consensus_refit_registered_roi.tsv`. Two scans needed the
+  registered-region retry and neither fitted at the consensus count, so the
+  table had only its header, and `read_table` refuses empty tables.
+- **Fix.** `check_consensus_refits` (`run_molecule_consensus_chitosan.jl`)
+  treats a header-only refit table as "no scan fitted": the declared rule then
+  applies (the scan keeps its own count, `consensus_fit_failed`). Runs where at
+  least one scan fitted are unchanged; the case is now tested
+  (`test/molecule_consensus/runtests.jl`). It was latent in the promoted
+  pipeline: every earlier run had at least one successful retry.
+- **Consequence for FB.** The 6-mer FB run (job 13072750) completed and is
+  unaffected; the 10–20mer FB run is repeated from the fixed source.

@@ -160,6 +160,23 @@ end
         _, rows2 = MCRun.MoleculeConsensusRun.read_table(final2)
         b2 = only(r for r in rows2 if r["filepath"] == "b.sxm")
         @test b2["N_selected"] == "6" && b2["count_rule"] == "consensus_registered_roi" && b2["refit_support"] == "registered_roi"
+        # every retry failing (header-only output, run 13072751) keeps the scan counts instead of stopping the run
+        nothing_fits(out, name, script, args; threads=1) = begin
+            outpath = args[findfirst(==("--out"), args) + 1]
+            open(outpath, "w") do io
+                println(io, "file\tlobe")
+                name == "consensus_refit_check" && for k in 1:6; println(io, "a.sxm\t$k"); end
+            end
+        end
+        dir3 = mkpath(joinpath(dir, "third")); proposed3 = joinpath(dir3, "consensus_summary.tsv"); cp(proposed, proposed3)
+        _, rows3 = MCRun.MoleculeConsensusRun.read_table(MCRun.MoleculeConsensusRun.check_consensus_refits(dir3, dir3, "count.toml", proposed3, nothing_fits))
+        b3 = only(r for r in rows3 if r["filepath"] == "b.sxm")
+        @test b3["N_selected"] == "3" && b3["count_rule"] == "consensus_fit_failed" && b3["refit_support"] == "scan"
+        # and so does a first check where no changed scan fits
+        none(out, name, script, args; threads=1) = open(io -> println(io, "file\tlobe"), args[findfirst(==("--out"), args) + 1], "w")
+        dir4 = mkpath(joinpath(dir, "fourth")); proposed4 = joinpath(dir4, "consensus_summary.tsv"); cp(proposed, proposed4)
+        _, rows4 = MCRun.MoleculeConsensusRun.read_table(MCRun.MoleculeConsensusRun.check_consensus_refits(dir4, dir4, "count.toml", proposed4, none))
+        @test all(r -> r["N_selected"] == r["N_scan"], rows4)
     end
 end
 
