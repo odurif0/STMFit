@@ -353,6 +353,7 @@ function _configs(model, preproc, output_dir; selected_context=nothing, support_
         stride=get(preproc, "stride", 1),
         flatten=get(preproc, "flatten", "plane+rows"),
         smooth_radius_px=get(preproc, "smooth_radius_px", 1),
+        fwd_bwd_align=String(get(preproc, "fwd_bwd_align", "none")),
         output_dir=output_dir, no_plot=true)
     ccfg = ChainSweepConfig(n_min=Int(get(model, "n_min", 2)), n_max=Int(get(model, "n_max", 14)),
         spacing_min_nm=model["spacing_min_nm"], spacing_max_nm=model["spacing_max_nm"],

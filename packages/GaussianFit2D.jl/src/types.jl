@@ -130,6 +130,10 @@ Base.@kwdef mutable struct PatternConfig
     flatten::String = "plane+rows" # none | plane | rows | plane+rows
     smooth_radius_px::Int = 1
     ignore_border_px::Int = 8
+    # Forward/backward alignment before fusing Z fwd + bwd: "none" (plain mean)
+    # or "molecule_x_shift" (half the backward lag on the molecule each way;
+    # experiment FB, docs/src/journal.md 2026-11-12).
+    fwd_bwd_align::String = "none"
 
     # Detection
     contrast::String = "auto" # auto | bright | dark

@@ -500,6 +500,53 @@ function _finalize_chain_result!(r::ChainModelResult, zfit::AbstractVector{Float
     r.reason = r.valid ? "ok" : join(checks, ",")
 end
 
+"Sub-pixel lag l of row `b` against row `a` (b(x) ≈ a(x − l)), from the cross-correlation peak within ±maxlag; NaN at the bound."
+function _row_lag(a::AbstractVector, b::AbstractVector, maxlag::Int)
+    a = a .- mean(a); b = b .- mean(b); n = length(a)
+    cc = [sum(a[max(1, 1 - l):min(n, n - l)] .* b[max(1, 1 + l):min(n, n + l)]) for l in -maxlag:maxlag]
+    i = argmax(cc)
+    (i == 1 || i == length(cc)) && return NaN
+    den = cc[i-1] - 2cc[i] + cc[i+1]
+    return (i - maxlag - 1) + (den == 0 ? 0.0 : (cc[i-1] - cc[i+1]) / (2den))
+end
+
+"Every row moved by `s` pixels along x (out[:, j] = z[:, j − s]), linear interpolation, edges clamped."
+function _shift_rows(z::AbstractMatrix, s::Real)
+    s == 0 && return copy(z)
+    H, W = size(z); out = similar(z, Float64)
+    for j in 1:W
+        p = clamp(j - s, 1.0, Float64(W)); j0 = min(floor(Int, p), W - 1); f = p - j0
+        @views out[:, j] .= (1 - f) .* z[:, j0] .+ f .* z[:, j0 + 1]
+    end
+    return out
+end
+
+"""
+    _fwd_bwd_molecule_lag(z_fwd, z_bwd, zs_mean, xs; window_nm=2.5, maxlag_nm=0.8, top=0.97)
+
+Lag of the backward image against the forward one on the molecule, in pixels:
+median over the rows of a ±`window_nm` window around the centroid of the
+brightest `1 − top` of `zs_mean` (rows that reach half that level) of the
+sub-pixel cross-correlation lag. 0.0 when fewer than 5 rows give a lag.
+"""
+function _fwd_bwd_molecule_lag(z_fwd, z_bwd, zs_mean, xs; window_nm=2.5, maxlag_nm=0.8, top=0.97)
+    px = abs(xs[2] - xs[1]); H, W = size(zs_mean)
+    v = filter(isfinite, zs_mean); isempty(v) && return 0.0
+    thr = quantile(v, top)
+    idx = findall(x -> isfinite(x) && x > thr, zs_mean); isempty(idx) && return 0.0
+    rc = round(Int, mean(i[1] for i in idx)); cc = round(Int, mean(i[2] for i in idx))
+    hw = round(Int, window_nm / px); maxlag = max(1, round(Int, maxlag_nm / px))
+    c1, c2 = max(1, cc - hw), min(W, cc + hw)
+    c2 - c1 > 2maxlag || return 0.0
+    lags = Float64[]
+    for r in max(1, rc - hw):min(H, rc + hw)
+        a, b = z_fwd[r, c1:c2], z_bwd[r, c1:c2]
+        (all(isfinite, a) && all(isfinite, b) && maximum(zs_mean[r, c1:c2]) > thr / 2) || continue
+        l = _row_lag(a, b, maxlag); isfinite(l) && push!(lags, l)
+    end
+    return length(lags) >= 5 ? median(lags) : 0.0
+end
+
 function _fused_roi_data(img::SXMImage, cfg::PatternConfig)
     """Fuse Z fwd + Z bwd for SNR boost. The bwd scan is already flipped in read_sxm."""
     # Fit the mean of the flattened, unsmoothed views, as in the single-view
@@ -508,6 +555,15 @@ function _fused_roi_data(img::SXMImage, cfg::PatternConfig)
     xs, ys, _, z_fwd, zs_fwd, _, noise_fwd = preprocess_channel(img, ch_fwd, cfg)
     ch_bwd = get_channel(img, cfg.roi_channel; direction="bwd")
     _, _, _, z_bwd, zs_bwd, _, noise_bwd = preprocess_channel(img, ch_bwd, cfg)
+    if cfg.fwd_bwd_align == "molecule_x_shift"
+        # Feedback lag: the molecule sits at different x in the two directions.
+        # Move each view half the lag towards the other (experiment FB).
+        l = _fwd_bwd_molecule_lag(z_fwd, z_bwd, (zs_fwd .+ zs_bwd) ./ 2.0, xs)
+        z_fwd, zs_fwd = _shift_rows(z_fwd, l / 2), _shift_rows(zs_fwd, l / 2)
+        z_bwd, zs_bwd = _shift_rows(z_bwd, -l / 2), _shift_rows(zs_bwd, -l / 2)
+    elseif cfg.fwd_bwd_align != "none"
+        error("Unknown fwd_bwd_align: \"$(cfg.fwd_bwd_align)\" (none | molecule_x_shift)")
+    end
     z_fused = (z_fwd .+ z_bwd) ./ 2.0
     zs_fused = (zs_fwd .+ zs_bwd) ./ 2.0
     noise = max(noise_fwd, noise_bwd)

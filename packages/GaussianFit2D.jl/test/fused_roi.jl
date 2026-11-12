@@ -58,3 +58,24 @@ end
         @test meters[4] == fused[4]
     end
 end
+
+@testset "Forward/backward alignment on the molecule (fwd_bwd_align)" begin
+    # A chain of three lobes; the backward view is the forward one moved 6 px along x.
+    base(x0) = [exp(-((y-25)^2)/40) * sum(exp(-((x - x0 - 12k)^2)/20) for k in 0:2) for y in 1:49, x in 1:81]
+    f = base(25.0); b = base(31.0)
+    cfg0 = PatternConfig(flatten="none", stride=1, smooth_radius_px=0, no_plot=true)
+    cfg1 = PatternConfig(flatten="none", stride=1, smooth_radius_px=0, no_plot=true, fwd_bwd_align="molecule_x_shift")
+    xs = collect(range(0, 4.0, length=81))
+    @test isapprox(GaussianFit2D._fwd_bwd_molecule_lag(f, b, (f .+ b) ./ 2, xs), 6.0; atol=0.3)
+    @test GaussianFit2D._shift_rows(f, 6.0)[:, 40:60] ≈ b[:, 40:60]
+    plain = GaussianFit2D._fused_roi_data(fusion_image(f, b), cfg0)[3]
+    aligned = GaussianFit2D._fused_roi_data(fusion_image(f, b), cfg1)[3]
+    # Aligned fusion keeps the lobes sharp: higher peak-to-valley contrast along the chain.
+    contrast(z) = (r = z[25, :]; maximum(r[25:55]) - minimum(r[30:46]))
+    @test contrast(aligned) > 1.5 * contrast(plain)
+    # Swapping the directions gives the same fused image, and identical views are unchanged.
+    @test GaussianFit2D._fused_roi_data(fusion_image(b, f), cfg1)[3] ≈ aligned
+    @test GaussianFit2D._fused_roi_data(fusion_image(f, copy(f)), cfg1)[3] ≈ GaussianFit2D._fused_roi_data(fusion_image(f, copy(f)), cfg0)[3]
+    @test_throws ErrorException GaussianFit2D._fused_roi_data(fusion_image(f, b),
+        PatternConfig(flatten="none", stride=1, smooth_radius_px=0, no_plot=true, fwd_bwd_align="other"))
+end

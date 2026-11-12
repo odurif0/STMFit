@@ -971,6 +971,7 @@ pcfg = GaussianFit2D.PatternConfig(filepath="", channel="Z", direction="fwd",
     stride=get(preproc, "stride", 1),
     flatten=get(preproc, "flatten", "plane+rows"),
     smooth_radius_px=get(preproc, "smooth_radius_px", 1),
+    fwd_bwd_align=String(get(preproc, "fwd_bwd_align", "none")),
     output_dir=OUTDIR, no_plot=true)
 ccfg = GaussianFit2D.ChainSweepConfig(n_min=get(model, "n_min", 2), n_max=get(model, "n_max", 14),
     spacing_min_nm=Float64(get(model, "spacing_min_nm", 0.35)),

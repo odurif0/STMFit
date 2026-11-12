@@ -108,7 +108,8 @@ function main(args=ARGS)
     o === nothing && return println("plot_final_molecules.jl --run RUN_DIR --data-dir RAW_DIR --config COUNT_CONFIG --outdir NEW_DIR [--annotations TSV]")
     run = o["--run"]; pre = get(TOML.parsefile(o["--config"]), "preprocessing", Dict{String,Any}())
     pcfg = G.PatternConfig(filepath="", channel="Z", direction="fwd", stride=get(pre, "stride", 1),
-        flatten=get(pre, "flatten", "plane+rows"), smooth_radius_px=get(pre, "smooth_radius_px", 1), no_plot=true)
+        flatten=get(pre, "flatten", "plane+rows"), smooth_radius_px=get(pre, "smooth_radius_px", 1),
+        fwd_bwd_align=String(get(pre, "fwd_bwd_align", "none")), no_plot=true)
     _, reports = read_table(joinpath(run, "chain_report.tsv"))
     _, pred = lobe_table(joinpath(run, "predictions.tsv"); required=["predicted", "probability_1"])
     _, geo = lobe_table(joinpath(run, "assignment", "features.tsv"); required=["x_nm", "y_nm"])

@@ -10,6 +10,7 @@ must update this page and [Calibration](calibration.md).
 |---|---|---|
 | `chitosan.toml` | Per-scan counting on the legacy support: default of the single-stage scripts, base of the promoted config | Previous promoted (until 2026-10-25) |
 | `chitosan_10_20mer_adaptive_support_rescue.toml` | Counting for the 10–20mer application, legacy support | Previous application config |
+| `chitosan_unified_hybrid_fbalign.toml` | The promoted config with `[preprocessing] fwd_bwd_align = "molecule_x_shift"` | Experiment FB (2026-11-12) |
 | `chitosan_unified_hybrid.toml` | The promoted 6-mer count policy (`support_midpoint_hybrid`) for both data sets, `n_min = 2`, `n_max = 24` stated, otherwise `chitosan_decoupled_support.toml` | **Promoted** (2026-10-27, user decision): 6-mer benchmark and 10–20mer application |
 | `chitosan_unified_midpoint.toml` | One count policy for the 6-mer and the 10–20mer: `selection_policy = "support_midpoint"` (support midpoint on N_eff, no robust-AICc guard), `n_min = 2`, `n_max = 24`, otherwise `chitosan_decoupled_support.toml` | Experiment K2, not promoted (2026-10-26) |
 | `chitosan_decoupled_support.toml`, `chitosan_10_20mer_decoupled_support.toml` | Counting on the capped support, geometry on the legacy support (the two configs above otherwise unchanged): 6-mer method and 10–20mer application | Promoted 2026-10-25; superseded on 2026-10-27 by `chitosan_unified_hybrid.toml` (identical 6-mer results) |
@@ -51,6 +52,12 @@ indistinguishable below this relative GCV gap), `robust_guard_nu = 8.0`,
 
 `[preprocessing]`: `stride = 1`, `flatten = "plane+rows"`,
 `smooth_radius_px = 1`. The same settings drive the assignment patch export.
+`fwd_bwd_align` (default `"none"`): how the forward and backward Z scans are
+aligned before the fit uses their mean. `"molecule_x_shift"` estimates the lag
+of the backward scan on the molecule (median sub-pixel row cross-correlation in
+a ±2.5 nm window, at most ±0.8 nm) and moves each scan half of it towards the
+other; it applies to counting, geometry and consensus refits and plots
+(experiment FB, 2026-11-12).
 
 Other `ChainSweepConfig` fields keep their struct defaults
 (`sigma_perp_min/max_nm = 0.10/0.55`, `intelligent_sweep = true`,
