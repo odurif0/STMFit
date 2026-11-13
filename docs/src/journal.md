@@ -212,7 +212,10 @@ empirical templates; 10–20mer outputs not validated.
     (2026-10-26): pooling the per-scan GCV curves of a molecule does not help
     (the 6-mer errors are a bias shared by all scans of a molecule, tied to
     sessions), and the per-scan layers that correct the 6-mer make long-chain
-    counts less reproducible.
+    counts less reproducible. Experiment FB (2026-11-13): aligning the
+    forward and backward images on the molecule (a 210–260 pm feedback lag)
+    changes a third of the long-chain per-scan counts but not their
+    reproducibility (34 against 35 of 65 within one unit).
 11. **Which 6-mer subset to freeze (campaign D, 2026-10-25).** The choice moves
     one call in five and the bright fraction between 16.5% and 41.3%; only the
     145 original scans fall beyond the sampling noise. Stability is not
@@ -4004,3 +4007,37 @@ aggregates, cut molecules and non-chitosan objects stay out.
   pipeline: every earlier run had at least one successful retry.
 - **Consequence for FB.** The 6-mer FB run (job 13072750) completed and is
   unaffected; the 10–20mer FB run is repeated from the fixed source.
+
+### 2026-11-13 — Experiment FB results: the 6-mer holds, the 10–20mer misses one criterion by one molecule; not proposed
+
+- **Runs.** Viper jobs 13072750 (493 6-mer scans, source `12726b2`, 1 h 50)
+  and 13086803 (440 10–20mer scans, source `d5ab28d`, 2 h 12),
+  `config/chitosan_unified_hybrid_fbalign.toml`; `results/fb_6mer_12726b2`
+  (grade `results/fb_6mer_12726b2_grade`, comparison
+  `results/fb_6mer_compare`), `results/fb_1020_d5ab28d` (replay
+  `results/fb_1020_replay`, length comparison `results/fb_1020_lengths`),
+  untracked. The alignment changes 66 of 493 final 6-mer counts and 147 of
+  440 per-scan 10–20mer counts (141 final), with no net shift (mean −0.03).
+- **6-mer, by molecule (117), paired against `k3_6mer_e338ec2`.** Exact N
+  76.4% against 78.2% (−2.2, 95% interval −9.9 to 4.8); correct units 74.7%
+  against 72.8% (+2.0, −1.3 to 5.2); errors per scan 1.43 against 1.53
+  (−0.10, −0.27 to 0.08); exact chains 26.3% against 22.3% (+4.0, −3.4 to
+  11.5). No interval lies entirely on the wrong side: the 6-mer criterion
+  holds. Every difference is within the noise.
+- **10–20mer, against `k3_1020_e338ec2` (same 65 tracks, same membership).**
+  Split halves agree for 26 of 47 molecules against 24 (8 turn to agreement,
+  6 away; +4.3 points, 95% bootstrap interval −10.7 to 19.1): holds.
+  Per-scan counts within one unit in 34 of 65 molecules against 35 (4 in,
+  5 out): fails, by one molecule. More than 2 apart: 18 against 19. Against
+  the 17 experimenter length readings (comparison only), final counts are
+  unchanged: 6 exact, 13 within one, mean |ΔN| 1.00. The transductive
+  assignment moves with the counts again: 10–20mer fusion π 0.72, θ0 0.45,
+  θ1 0.91 (K3: 0.24, 0.06, 0.54); 6-mer π 0.35, θ0 0.10, θ1 0.83 (0.42,
+  0.05, 0.74).
+- **Decision, by the rule fixed above.** The second 10–20mer criterion fails,
+  so the alignment is not proposed for promotion; the user decides. Read
+  plainly: correcting a measured 210–260 pm feedback lag changes about a
+  third of the long-chain per-scan counts but leaves their reproducibility
+  where it was. The count instability of open question 10 does not come from
+  the forward–backward smear. The option stays in the code (default `none`,
+  byte-identical).
