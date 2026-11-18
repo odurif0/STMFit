@@ -75,9 +75,11 @@ data/
   2026-10-22.
 - The review sheets of the first triage pass are in
   `results/data_review/6mer_Cu100_first_pass_20261005/`.
-- On Viper, the staged copies are temporary:
-  `/ptmp/<user>/stmfit/full146_v1_inputs/full146_raw/` (6-mer cohort) and
-  `/ptmp/<user>/stmfit/data_10_20mer` (10-20mers).
+- On Viper, the staged copies are temporary (cleaned 2026-11-18, only
+  these kept): `/ptmp/<user>/stmfit/bench493_v1_inputs/raw` (493 6-mer
+  scans), `/ptmp/<user>/stmfit/full146_v1_inputs/full146_raw/` (the 145-scan
+  6-mer cohort) and `/ptmp/<user>/stmfit/app1020_inputs/raw` (440 10-20mer
+  scans).
 
 The manifests in `benchmarks/` hold external grading metadata only (quality
 classes, expected counts, control sequences, triage). No fitting, selection
